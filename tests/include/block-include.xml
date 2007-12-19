@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<x:http xmlns:x="http://www.yandex.ru/xscript">
+  <id>getBanner</id>
+  <guard>banner</guard>
+  <method>getHttp</method>
+  <param type="String">http://banner.org</param>
+  <xslt-param id="test" type="statearg">getit</xslt-param>
+  <xpath expr="/banner/result" result="banner_result"/>
+</x:http>

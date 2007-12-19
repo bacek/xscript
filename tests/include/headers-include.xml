@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="windows-1251" ?>
+<add-headers>
+  <header name="Expires" value="0"/>
+  <header name="Content-type" value="text/html; charset=windows-1251"/>
+</add-headers>

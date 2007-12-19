@@ -1,0 +1,33 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <x:mist>
+    <method>set_state_long</method>
+    <param type="string">val1</param>
+    <param type="long">1</param>
+  </x:mist>
+    <x:mist>
+    <method>set_state_long</method>
+    <param type="string">val2</param>
+    <param type="long">2</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_long</method>
+    <param type="string">val3</param>
+    <param type="long">3</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_long</method>
+    <param type="string">new1</param>
+    <param type="long">1</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_long</method>
+    <param type="string">new2</param>
+    <param type="long">2</param>
+  </x:mist>
+  <x:mist>
+    <method>drop_state</method>
+    <param type="string">va</param>
+  </x:mist>
+</page>

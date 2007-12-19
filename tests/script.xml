@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="koi8-r" ?>
+<?xml-stylesheet type="text/xsl" href="script.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<xscript xslt-dont-apply="yes" force-auth="yes" allow-methods="get">
+	  <xi:include href="include/headers-include.xml"/>
+	</xscript>
+	<xi:include href="include.xml"/>
+	<xi:include href="include/block-include.xml"/>
+</page>

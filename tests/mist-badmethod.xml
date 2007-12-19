@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<x:mist>
+	  <method>set_state_bool</method>
+	  <param type="string">val</param>
+	  <param type="boolean">true</param>
+	</x:mist>
+</page>

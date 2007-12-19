@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="x-urlencode.xsl"?>
+<tests>
+  <test name="urlencode">
+    <source>try again later</source>
+    <result>try%20again%20later</result>
+  </test>
+  <test name="urlencode-empty">
+    <source></source>
+    <result></result>
+  </test>
+  <test name="urlencode-single">
+    <source>%</source>
+    <result>%25</result>
+  </test>
+</tests>

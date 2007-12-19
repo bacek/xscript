@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <x:mist>
+    <method>set_state_long</method>
+    <param type="string">val-1</param>
+    <xi:include href="include/param-include.xml"/>
+  </x:mist>
+  <x:mist>
+    <method>set_state_string</method>
+    <param type="string">val-2</param>
+    <param type="string">string-2</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_double</method>
+    <param type="string">val-3</param>
+    <param type="double">3</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_longlong</method>
+    <param type="string">val-4</param>
+    <param type="longlong">4</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_defined</method>
+    <param type="string">prefdef</param>
+    <param type="string">x,z,b,val-4</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_by_keys</method>
+    <param type="string">city_code</param>
+    <param type="string">msc,spb,ros</param>
+    <param type="string">1,3,5</param>
+    <param type="string">spb</param>
+  </x:mist>
+</page>

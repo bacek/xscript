@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xscript xslt-dont-apply="yes" force-auth="yes" allow-methods="get">
+    <add-headers>
+      <header name="Expires" value="0"/>
+      <header name="Content-type" value="text/html; charset=windows-1251"/>
+    </add-headers>
+    <xslt-param id="test-xslt" type="string">1</xslt-param>
+  </xscript>
+  <x:mist id="test-method">
+    <method>set_state_long</method>
+    <xslt>stylesheet.xsl</xslt>
+    <param type="string" id="testkey">val-1</param>
+    <param type="long" id="testvalue">1</param>
+    <xslt-param type="long" id="longparam">23</xslt-param>
+  </x:mist>
+</page>

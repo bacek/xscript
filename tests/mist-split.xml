@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <x:mist>
+    <method>set_state_split_string</method>
+    <param type="string">pref</param>
+    <param type="string">testav string proavperty</param>
+    <param type="string">av</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_concat_string</method>
+    <param type="string">testconcat</param>
+    <param type="statearg">pref0</param>
+    <param type="statearg">pref1</param>
+    <param type="statearg">pref2</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_join_string</method>
+    <param type="string">testjoin</param>
+    <param type="string">pref</param>
+    <param type="string">d</param>
+  </x:mist>
+</page>

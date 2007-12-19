@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="x-urldecode.xsl"?>
+<tests>
+  <test name="urldecode">
+    <source>try%20again%20later</source>
+    <result>try again later</result>
+  </test>
+  <test name="urldecode-empty">
+    <source></source>
+    <result></result>
+  </test>
+  <test name="urldecode-single">
+    <source>%</source>
+    <result>%</result>
+  </test>
+</tests>

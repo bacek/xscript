@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xscript xslt-dont-apply="no" force-auth="yes" allow-methods="get">
+    <xi:include href="include/headers-include.xml"/>
+    <xslt-param id="test-xslt" type="string">1</xslt-param>
+    <xslt-param id="strparam" type="string">1</xslt-param>
+  </xscript>
+  <x:mist>
+    <method>set_state_long</method>
+    <param type="string" id="testkey">val-1</param>
+    <param type="long" id="testvalue">1</param>
+    <xslt-param id="longparam" type="long">23</xslt-param>
+  </x:mist>
+  <nested>
+    <x:mist>
+      <guard>nonexistent</guard>
+      <method>set_state_string</method>
+      <param type="string">val-2</param>
+      <param type="string">string-2</param>
+      <xslt-param id="longparam" type="statearg">val-1</xslt-param>
+    </x:mist>
+	<nested-twice>
+	  <x:mist>
+	  <guard>guardkey</guard>
+	  <method>set_state_long</method>
+	  <param type="string">val-3</param>
+	  <param type="long">3</param>
+	  </x:mist>
+	</nested-twice>
+	<x:mist>
+	  <method>set_state_string</method>
+	  <param type="string">val-4</param>
+	  <param type="string">string-4</param>
+	  <xpath expr="/state/@type" result="result_expr"/>
+	  <xpath expr="/state/@type" result="delim_expr" delim="_"/>
+	</x:mist>
+  </nested>
+  <x:mist>
+    <method>set_state_string</method>
+    <param type="string">val-4</param>
+    <param type="statearg">result_expr</param>
+  </x:mist>
+</page>

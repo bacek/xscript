@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet href="params.xsl" ?>
+<page name="param-test">
+	<xscript>
+		<xslt-param id="test" type="string">test</xslt-param>
+	</xscript>
+	<item>
+		<value>test</value>
+	</item>
+</page>

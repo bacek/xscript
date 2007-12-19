@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xscript all-threaded="yes"/>
+  <x:http>
+    <method>get_http</method>
+    <param type="string">file://include.xml</param>
+  </x:http>
+</page>

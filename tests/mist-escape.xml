@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="mist.xsl" type="text/xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript">
+	<x:mist>
+		<id>mist-id</id>
+		<method>set_state_string</method>
+		<param type="string">name</param>
+		<param type="statearg">data</param>
+	</x:mist>
+</page>
