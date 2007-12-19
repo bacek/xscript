@@ -1,0 +1,42 @@
+Source: xscript
+Priority: optional
+Maintainer: Oleg Obolenskiy <highpower@yandex-team.ru>
+Build-Depends: debhelper (>= 4.0.0), automake1.9, autotools-dev, libboost-dev, libboost-thread-dev, libboost-regex-dev, libboost-filesystem-dev, libcurl3-dev, libfcgi-dev, liblua50-dev, libcppunit-dev, libxml2-dev, libxslt1-dev
+Standards-Version: 3.6.1
+Section: libs
+
+Package: libxscript
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}
+Description: XScript is xml-based application server written in C++. 
+ This is the core package.
+
+Package: libxscript-dev
+Section: libdevel
+Architecture: i386
+Depends: libxscript (=${Source-Version}), libboost-thread-dev, libboost-regex-dev, libxml2-dev, libxslt1-dev
+Description: Xscript is xml-based application server. 
+ Headers and libraries to develop XScript extensions.
+
+Package: xscript-standard
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, libxscript (=${Source-Version})
+Description: XScript is xml-based application server written in C++. 
+ Standard modules such as logger, thread pool and various blocks.
+
+Package: xscript-daemon
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, libxscript (=${Source-Version})
+Description: XScript is xml-based application server written in C++. 
+ Binary that runs as factcgi-daemon.
+
+Package: xscript-utility
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, libxscript (=${Source-Version})
+Description: XScript is xml-based application server written in C++. 
+ XScript offline processor.
+

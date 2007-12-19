@@ -1,0 +1,179 @@
+xscript (5.2-0) unstable; urgency=low
+
+  * Output encoding setup added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 11 Dec 2007 16:11:48 +0300
+
+xscript (5.1-5) unstable; urgency=low
+
+  [ ponomarev ]
+  * fixed HttpDateUtils::format (don't use locale, using snprintf instead strftime)
+
+  [ Ilya Golubtsov (Ilya) ]
+  * Regexp xslt extension prototype removed 
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri,  7 Dec 2007 10:13:23 +0300
+
+xscript (5.1-4) unstable; urgency=low
+
+  * VirtualHostData added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed,  5 Dec 2007 11:47:47 +0300
+
+xscript (5.1-3) unstable; urgency=low
+
+  * fixed a lot of xslt params bugs 
+  * moved init scripts into xscript-daemon packet
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Thu, 22 Nov 2007 13:52:22 +0300
+
+xscript (5.1-2) unstable; urgency=low
+
+  * improve range algorithms 
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri,  9 Nov 2007 15:47:29 +0300
+
+xscript (5.1-1) unstable; urgency=low
+
+  * added init-scripts 
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 22 Oct 2007 13:14:52 +0400
+
+xscript (5.1-0) unstable; urgency=low
+
+  * includes refactored
+  * a lot of inlines was performed
+  * removed useless Component::unload
+  * Implemented splitting url with ';' and '&' both. 
+  * Config functions, StringUtils::urlencode, StringUtils::urldecode, 
+    StringUtils::parse and Encoder::encode implemented as template functions.
+  * Range was replaced with boost::iterator_range<const char*>
+  * include/xscript/helpers.h was renamed to include/xscript/helper.h.
+  * Wrappers around libxml structures was moved to
+    include/xscript/xml_helpers.
+  * Fixed bug with empty parameter in mutlipart POST.
+
+ -- highpower <highpower@yandex-team.ru>  Thu, 04 Oct 2007 11:55:40 +0400
+
+xscript (5.0-19) unstable; urgency=low
+
+  * catch all exceptions in writeFunc()
+  * prefetch data before expiring cache (dynamic prefetch time 1..5 sec)
+  * fixed tagged cache key calculating, use block and xslt names
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon,  1 Oct 2007 19:04:54 +0400
+
+xscript (5.0-18) unstable; urgency=low
+
+  * fixed some bugs
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 17 Sep 2007 17:31:54 +0400
+
+xscript (5.0-17) unstable; urgency=low
+
+  * fixed parsing xml with CDATA
+  * added 2 tests: empty-cdata, using xslt-param per block xslt
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 17 Aug 2007 13:41:39 +0400
+
+xscript (5.0-16) unstable; urgency=low
+
+  * probably fixed "incomplete context" in earlier versions of libxml2.
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Fri, 10 Aug 2007 17:59:02 +0400
+
+xscript (5.0-15) unstable; urgency=low
+
+  * implemented hashmap
+  * some fixes
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 29 Jun 2007 16:36:43 +0400
+
+xscript (5.0-14) unstable; urgency=low
+
+  * some fixes
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Wed,  6 Jun 2007 20:35:14 +0400
+
+xscript (5.0-13) unstable; urgency=low
+
+  * removeStylesheetNode reimplemented
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Wed,  6 Jun 2007 19:28:43 +0400
+
+xscript (5.0-12) unstable; urgency=low
+
+  * fixed request parser
+  * removeStylesheetNode implemented
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Wed,  6 Jun 2007 17:55:33 +0400
+
+xscript (5.0-11) unstable; urgency=low
+
+  * fixed a lot of bugs of different kind
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Wed, 21 Mar 2007 11:06:53 +0300
+
+xscript (5.0-10) unstable; urgency=low
+
+  * fixed bugs in xml creating
+  * fixed error reporting in XML/XSLT subsistem
+  * tests fixed
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Mon, 19 Mar 2007 19:20:53 +0300
+
+xscript (5.0-9) unstable; urgency=low
+
+  * fixed build on 2.95
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Wed, 14 Mar 2007 12:32:30 +0300
+
+xscript (5.0-8) unstable; urgency=low
+
+  * escaping implemented
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Tue, 13 Mar 2007 20:50:14 +0300
+
+xscript (5.0-7) unstable; urgency=low
+
+  * multipart parsing reimplemented
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Tue, 13 Mar 2007 19:03:48 +0300
+
+xscript (5.0-6) unstable; urgency=low
+
+  * request parameter maps implemented as hash_maps
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Sun, 11 Mar 2007 14:49:36 +0300
+
+xscript (5.0-5) unstable; urgency=low
+
+  * fixed build for gcc2.95/stlport4.5/boost1.31
+  * some performance tuning was done
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Sat, 10 Mar 2007 18:00:26 +0300
+
+xscript (5.0-4) unstable; urgency=low
+
+  * added compiled xml cache. some refactoring was done.
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Fri,  9 Mar 2007 18:32:16 +0300
+
+xscript (5.0-3) unstable; urgency=low
+
+  * startup script fixed
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Tue, 13 Feb 2007 18:16:34 +0300
+
+xscript (5.0-2) unstable; urgency=low
+
+  * debian package build fixed
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Tue, 13 Feb 2007 17:12:09 +0300
+
+xscript (5.0-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Oleg Obolenskiy <highpower@yandex-team.ru>  Tue, 13 Feb 2007 15:25:26 +0300
+

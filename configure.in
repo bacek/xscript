@@ -1,0 +1,212 @@
+AC_PREREC(2.5.3)
+AC_INIT([xscript],[5.1.0],[highpower@yandex-team.ru])
+AM_INIT_AUTOMAKE(1.9)
+
+AC_GNU_SOURCE
+AC_CONFIG_HEADERS(config/settings.h)
+
+AC_PROG_CXX
+AC_PROG_CXXCPP
+AC_PROG_LIBTOOL
+
+AC_LANG([C++])
+AM_MAINTAINER_MODE
+
+AC_CHECK_FUNCS(memcmp, [], [])
+AC_CHECK_FUNCS(memchr, [], [])
+AC_CHECK_FUNCS(memmem, [], [])
+
+ac_have_boost="yes"
+ac_stored_libs=$LIBS
+ac_stored_cppflags=$CPPFLAGS
+
+LIBS="$ac_stored_libs -lboost_thread -lboost_regex -lboost_filesystem"
+CPPFLAGS="$ac_stored_cppflags -pthread"
+
+AC_CHECK_HEADER([boost/bind.hpp], [], [ac_have_boost="no"])
+AC_CHECK_HEADER([boost/function.hpp], [], [ac_have_boost="no"])
+AC_CHECK_HEADER([boost/shared_ptr.hpp], [], [ac_have_boost="no"])
+AC_CHECK_HEADER([boost/checked_delete.hpp], [], [ac_have_boost="no"])
+AC_CHECK_HEADER([boost/current_function.hpp], [], [ac_have_boost="no"])
+
+AC_CHECK_HEADER([boost/regex.hpp], [], [ac_have_boost="no"])
+AC_MSG_CHECKING([trying to link with boost regex])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/regex.hpp>]], [[ boost::regex r; ]])],
+	[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no); ac_have_boost="no"])
+
+AC_CHECK_HEADER([boost/thread.hpp], [], [ac_have_boost="no"])
+AC_CHECK_HEADER([boost/thread/once.hpp], [], [ac_have_boost="no"])
+AC_CHECK_HEADER([boost/thread/mutex.hpp], [], [ac_have_boost="no"])
+AC_CHECK_HEADER([boost/thread/thread.hpp], [], [ac_have_boost="no"])
+AC_CHECK_HEADER([boost/thread/condition.hpp], [], [ac_have_boost="no"])
+
+AC_MSG_CHECKING([trying to link with boost threads])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/thread/once.hpp>]], [[ &boost::call_once ]])],
+	[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no);ac_have_boost="no"])
+
+AC_CHECK_HEADER([boost/filesystem/path.hpp], [], [ac_have_boost="no"])
+AC_CHECK_HEADER([boost/filesystem/operations.hpp], [], [ac_have_boost="no"])
+AC_MSG_CHECKING([trying to link with boost filesystem])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/filesystem/path.hpp>]], [[ boost::filesystem::path p; ]])],
+	[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no); ac_have_boost="no"])
+
+CPPFLAGS=$ac_stored_cppflags
+LIBS=$ac_stored_libs
+
+if test "f$ac_have_boost" != "fyes"; then
+	AC_MSG_ERROR([required boost libraries are not found])
+fi
+
+ac_have_fcgi="yes"
+ac_stored_libs=$LIBS
+
+LIBS="$ac_stored_libs -lfcgi -lfcgi++"
+
+AC_CHECK_LIB(fcgi, FCGX_Accept_r, [], [ ac_have_fcgi="no" ])
+AC_MSG_CHECKING([trying to link with libfcgi++.so])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <fcgio.h>]], [[ char buf[256]; fcgi_streambuf stbuf(buf, sizeof(buf)); ]])],
+	[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no); ac_have_fcgi="no"])
+
+LIBS=$ac_stored_libs
+
+if test "f$ac_have_fcgi" != "fyes"; then
+	AC_MSG_ERROR([libfcgi++ not found])
+fi
+
+PKG_CHECK_MODULES(xslt, 
+	[libxslt], [], [ AC_MSG_ERROR([libxslt not found]) ])
+PKG_CHECK_MODULES(exslt, 
+	[libexslt], [], [ AC_MSG_ERROR([libexslt not found]) ])
+PKG_CHECK_MODULES(xml, 
+	[libxml-2.0], [], [ AC_MSG_ERROR([libxml-2.0 not found]) ])
+
+LIBS="$LIBS $xml_LIBS $xslt_LIBS $exslt_LIBS"
+CPPFLAGS="$CPPFLAGS $xml_CFLAGS $xslt_CFLAGS $exslt_CFLAGS"
+
+ac_have_lua="yes"
+ac_lua_found="no"
+
+AC_ARG_ENABLE(lua, 
+	AS_HELP_STRING(--enable-lua,enables lua block compilation),
+	[
+		if test "f$enableval" = "fno"; then
+			ac_have_lua="no"
+		fi
+	])
+
+if test "f$ac_have_lua" = "fyes"; then
+	for i in lua lua5.1; do
+		PKG_CHECK_MODULES(lua, [$i], [ac_lua_found="yes"], [ false ])
+	done
+fi
+
+if test "f$ac_lua_found" = "fyes"; then
+	AC_SUBST(lua_LIBS)
+	AC_SUBST(lua_CFLAGS)
+	AC_DEFINE(HAVE_LUA_BLOCK, 1, [Define to 1 if you want to enable lua block compilation.])
+else
+	AC_MSG_RESULT([lua not found. compilation of lua-block disabled])
+fi
+
+AM_CONDITIONAL(HAVE_LUA_BLOCK, [test "f$ac_lua_found" = "fyes"])
+
+ac_have_mist="yes"
+
+AC_ARG_ENABLE(mist, 
+	AS_HELP_STRING(--enable-mist,enables mist block compilation),
+	[
+		if test "f$enableval" = "fno"; then
+			ac_have_mist="no"
+		fi
+	])
+
+if test "f$ac_have_mist" = "fyes"; then
+	AC_DEFINE(HAVE_MIST_BLOCK, 1, [Define to 1 if you want to enable mist block compilation.])
+fi
+
+AM_CONDITIONAL(HAVE_MIST_BLOCK, [test "f$ac_have_mist" = "fyes"])
+
+ac_have_http="yes"
+ac_curl_found="no"
+
+AC_ARG_ENABLE(http, 
+	AS_HELP_STRING(--enable-http,enables http block compilation),
+	[
+		if test "f$enableval" = "fno"; then
+			ac_have_http="no"
+		fi
+	])
+
+if test "f$ac_have_http" = "fyes"; then
+	AC_CHECK_LIB(curl, curl_global_init, [ ac_curl_found="yes" ], [])
+fi
+
+if test "f$ac_curl_found" = "fyes"; then
+	AC_DEFINE(HAVE_HTTP_BLOCK, 1, [Define to 1 if you want to enable http block compilation.])
+else
+	AC_MSG_RESULT([libcurl not found. compilation of http-block disabled])
+fi
+
+AM_CONDITIONAL(HAVE_HTTP_BLOCK, [test "f$ac_curl_found" = "fyes"])	
+
+ac_have_dmalloc="no"
+ac_dmalloc_found="no"
+
+AC_ARG_ENABLE(dmalloc, 
+	AS_HELP_STRING(--enable-dmalloc,builds xscript with dmalloc support),
+	[
+		if test "f$enableval" = "fyes"; then
+			ac_have_dmalloc="yes"
+		fi			
+	])
+
+if test "f$ac_have_dmalloc" = "fyes"; then
+	ac_dmalloc_found="yes"
+	AC_CHECK_HEADER([dmalloc.h], [], [ac_dmalloc_found="no"])
+	AC_CHECK_LIB(dmallocthcxx, dmalloc_shutdown, [], [ac_dmalloc_found="no"])
+fi
+
+if test "f$ac_dmalloc_found" = "fyes"; then
+	LIBS="$LIBS -ldmallocthcxx"
+	CPPFLAGS="$CPPFLAGS -DDMALLOC_FUNC_CHECK"
+	AC_DEFINE(HAVE_DMALLOC_H, 1, [Define to 1 if you have the <dmalloc.h> header file])
+else
+	AC_MSG_RESULT([dmalloc not found. dmalloc check disabled])
+fi
+
+ac_have_cppunit="no"
+ac_cppunit_found="no"
+
+AC_ARG_ENABLE(cppunit, 
+	AS_HELP_STRING(--enable-cppunit,enables cppunit tests compilation),
+	[
+		if test "f$enableval" = "fyes"; then
+			ac_have_cppunit="yes"
+		fi
+	])
+
+if test "f$ac_have_cppunit" = "fyes"; then
+
+	ac_cppunit_found="yes"
+
+	ac_stored_libs=$LIBS
+	LIBS="$ac_stored_libs -ldl -lcppunit"
+	AM_PATH_CPPUNIT([1.10.0], [], [ ac_cppunit_found="no" ])
+	AC_MSG_CHECKING([trying to link with libcppunit.so])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <cppunit/ui/text/TestRunner.h>]], [[ CppUnit::TextUi::TestRunner r; ]])],
+		[AC_MSG_RESULT(yes)],[ AC_MSG_RESULT(no); ac_cppunit_found="no"])
+	LIBS=$ac_stored_libs
+fi
+	
+if test "f$ac_cppunit_found" != "fyes"; then
+	AC_MSG_RESULT([cppunit not found. compilation of tests disabled])
+fi	
+
+AM_CONDITIONAL(HAVE_TESTS, [test "f$ac_cppunit_found" = "fyes"])
+
+AC_CONFIG_FILES([Makefile
+	include/Makefile include/xscript/Makefile include/internal/Makefile
+	library/Makefile standard/Makefile daemon/Makefile xscript/Makefile
+	lua-block/Makefile mist-block/Makefile http-block/Makefile tests/Makefile])
+
+AC_OUTPUT

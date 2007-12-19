@@ -1,0 +1,41 @@
+#ifndef _XSCRIPT_TAGGED_BLOCK_H_
+#define _XSCRIPT_TAGGED_BLOCK_H_
+
+#include <ctime>
+#include <xscript/tag.h>
+#include <xscript/block.h>
+#include <xscript/xml_helpers.h>
+
+namespace xscript
+{
+
+class TaggedBlock : public virtual Block
+{
+public:
+	TaggedBlock(Xml *owner, xmlNodePtr node);
+	virtual ~TaggedBlock();
+	
+	virtual std::string canonicalMethod(const Context *ctx) const;
+
+	void createCanonicalMethod(const char* prefix);
+
+	virtual bool tagged() const;
+	virtual void tagged(bool tagged);
+	virtual void cacheTime(time_t cache_time);
+
+	virtual XmlDocHelper invoke(Context *ctx);
+	virtual void postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a);
+
+private:
+	TaggedBlock(const TaggedBlock &);
+	TaggedBlock& operator = (const TaggedBlock &);
+
+private:
+	std::string canonical_method_;
+	bool tagged_;
+	time_t cache_time_;
+};
+
+} // namespace xscript
+
+#endif // _XSCRIPT_TAGGED_BLOCK_H_

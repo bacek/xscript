@@ -1,0 +1,15 @@
+pkglib_LTLIBRARIES = xscript-mist.la
+
+xscript_mist_la_SOURCES = xml_node.cpp state_node.cpp state_param_node.cpp \
+	state_prefix_node.cpp mist_block.cpp
+
+
+xscript_mist_la_LIBADD = ../library/libxscript.la
+xscript_mist_la_LDFLAGS = -module
+
+noinst_HEADERS = xml_node.h state_node.h state_param_node.h \
+	state_prefix_node.h mist_block.h
+
+AM_CPPFLAGS = -I../include -I../config -D_REENTRANT
+AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
+AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem

@@ -1,0 +1,64 @@
+#!/bin/sh
+#Iliya Sharov (isharov@yandex-team.ru), 2007
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+NAME=xscript
+DESC=xscript
+PIDFILE=/var/run/xscript/$NAME-init.pid
+XSCRIPT_USER="www-data"
+
+CONFIG="/etc/xscript/xscript.conf"
+PID_DIR="/var/run/xscript"
+LOG_DIR="/var/log/xscript"
+
+RETVAL=0
+
+case "$1" in
+  start)
+	#Create & chown directories for dummy packages makers
+	mkdir -p $PID_DIR
+	mkdir -p $LOG_DIR
+	chown $XSCRIPT_USER $PID_DIR
+	chown $XSCRIPT_USER $LOG_DIR
+	
+	echo "Starting xscript:"
+	if /sbin/start-stop-daemon --quiet --stop --signal 0 --pidfile $PID_DIR/$NAME.pid 2>/dev/null 1>/dev/null
+	then
+            echo "$NAME is already running."
+	    exit 1
+    	fi
+	su $XSCRIPT_USER -c "/sbin/start-stop-daemon --start --background --verbose --name $NAME --exec /usr/bin/xscriptstart.sh $CONFIG $PID_DIR $LOG_DIR"
+        echo "."
+        ;;
+    stop)
+        echo "Stopping xscript: "
+	if ! [ -s $PID_DIR/$NAME.pid ]
+	then
+	    echo Warning:$PID_DIR/$NAME.pid not found
+	continue
+	fi
+	#Kill fastcgistart
+        /sbin/start-stop-daemon --quiet --stop --signal 0 --pidfile $PID_DIR/xscriptstart.pid 2>&1 >/dev/null
+	/sbin/start-stop-daemon --quiet --signal 15 --stop --pidfile $PID_DIR/xscriptstart.pid 2>&1 >/dev/null
+	/sbin/start-stop-daemon --quiet --signal 9 --stop --pidfile $PID_DIR/xscriptstart.pid 2>&1 >/dev/null
+	#Kill daemon
+	/sbin/start-stop-daemon --quiet --stop --signal 0 --pidfile $PID_DIR/$NAME.pid 2>&1 >/dev/null
+	/sbin/start-stop-daemon --quiet --signal 15 --stop --pidfile $PID_DIR/$NAME.pid 2>&1 >/dev/null
+	/sbin/start-stop-daemon --quiet --signal 9 --stop --pidfile $PID_DIR/$NAME.pid 2>&1 >/dev/null
+	#Rm pid files
+	rm $PID_DIR/$NAME.pid  >/dev/null
+        ;;
+    restart)
+	$0 stop $@
+	$0 start $@
+	RETVAL=$?
+	;;
+
+    *)
+        N=/etc/init.d/$NAME
+        echo "Usage: $N {start|stop|restart}" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

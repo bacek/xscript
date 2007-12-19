@@ -1,0 +1,45 @@
+#ifndef _XSCRIPT_EXTENSION_H_
+#define _XSCRIPT_EXTENSION_H_
+
+#include <memory>
+#include <boost/utility.hpp>
+
+#include <xscript/helper.h>
+#include <xscript/component.h>
+#include <libxml/tree.h>
+
+namespace xscript
+{
+
+class Xml;
+class Block;
+class Config;
+class Context;
+
+class Extension : public virtual Component
+{
+public:
+	Extension();
+	virtual ~Extension();
+
+	virtual const char* name() const = 0;
+	virtual const char* nsref() const = 0;
+
+	virtual void initContext(Context *ctx) = 0;
+	virtual void stopContext(Context *ctx) = 0;
+	virtual void destroyContext(Context *ctx) = 0;
+	
+	virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node) = 0;
+};
+
+typedef Helper<Extension*, ComponentTraits<Extension> > ExtensionHelper;
+
+class ExtensionRegisterer : private boost::noncopyable
+{
+public:
+	ExtensionRegisterer(ExtensionHelper helper) throw ();
+};
+
+} // namespace xscript
+
+#endif // _XSCRIPT_EXTENSION_H_

@@ -1,0 +1,118 @@
+#ifndef _XSCRIPT_CONTEXT_H_
+#define _XSCRIPT_CONTEXT_H_
+
+#include <map>
+#include <vector>
+#include <string>
+#include <stdexcept>
+#include <boost/any.hpp>
+#include <boost/thread.hpp>
+#include <boost/utility.hpp>
+#include <boost/shared_ptr.hpp>
+#include <libxml/tree.h>
+
+namespace xscript
+{
+
+class State;
+class Script;
+class Request;
+class Response;
+class Stylesheet;
+class AuthContext;
+class RequestData;
+class DocumentWriter;
+
+class Context : private boost::noncopyable
+{
+public:
+	Context(const boost::shared_ptr<Script> &script, const RequestData &data);
+	virtual ~Context();
+
+	void wait(int millis);
+	void expect(unsigned int count);
+	void result(unsigned int n, xmlDocPtr doc);
+	
+	bool resultsReady() const;
+	boost::xtime delay(int millis) const;
+	xmlDocPtr result(unsigned int n) const;
+	
+	inline Request* request() const {
+		return request_;
+	}
+	
+	inline Response* response() const {
+		return response_;
+	}
+	
+	inline const boost::shared_ptr<State>& state() const {
+		return state_;
+	}
+	
+	inline const boost::shared_ptr<Script>& script() const {
+		return script_;
+	}
+
+	std::string xsltName() const;
+	void xsltName(const std::string &value);
+
+	AuthContext* authContext() const {
+		return auth_.get();
+	}
+	
+	void authContext(std::auto_ptr<AuthContext> auth);
+
+	DocumentWriter* documentWriter();
+	
+	void createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh);
+	
+	template<typename T> T param(const std::string &name) const;
+	template<typename T> void param(const std::string &name, const T &t);
+
+private:
+	bool stopped_;
+	Request *request_;
+	Response *response_;
+	std::string xslt_name_;
+	std::vector<xmlDocPtr> results_;
+	
+	boost::condition condition_;
+	boost::shared_ptr<State> state_;
+	boost::shared_ptr<Script> script_;
+
+	std::auto_ptr<AuthContext> auth_;
+	std::auto_ptr<DocumentWriter> writer_;
+	
+	std::map<std::string, boost::any> params_;
+	mutable boost::mutex params_mutex_, results_mutex_;
+};
+
+template<typename T> inline T
+Context::param(const std::string &name) const {
+	boost::mutex::scoped_lock sl(params_mutex_);
+	std::map<std::string, boost::any>::const_iterator i = params_.find(name);
+	if (params_.end() != i) {
+		return boost::any_cast<T>(i->second);
+	}
+	else {
+		throw std::invalid_argument(std::string("nonexistent param: ").append(name)); 
+	}
+}
+
+template<typename T> inline void
+Context::param(const std::string &name, const T &t) {
+	std::pair<std::string, boost::any> p(name, boost::any(t));
+	boost::mutex::scoped_lock sl(params_mutex_);
+	std::map<std::string, boost::any>::iterator i = params_.find(name);
+	if (params_.end() == i) {
+		params_.insert(p);
+	}
+	else {
+		throw std::invalid_argument(std::string("duplicate param: ").append(name)); 
+	}
+}
+
+
+} // namespace xscript
+
+#endif // _XSCRIPT_CONTEXT_H_

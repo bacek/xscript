@@ -1,0 +1,15 @@
+#!/bin/sh
+
+LOG_DIR=/var/log/xscript
+RUN_DIR=/var/run/xscript
+
+USER=www-data
+
+mkdir -p $LOG_DIR $RUN_DIR
+
+chown $USER $LOG_DIR $RUN_DIR 
+chgrp $USER $LOG_DIR $RUN_DIR
+
+
+
+

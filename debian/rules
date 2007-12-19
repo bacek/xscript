@@ -1,0 +1,82 @@
+#!/usr/bin/make -f
+
+#export DH_VERBOSE=1
+
+CXX = g++
+CPPFLAGS = -D_GNU_SOURCE 
+CXXFLAGS = -I/usr/include/stlport
+LDFLAGS = -lstlport -lm
+
+ACLOCAL = aclocal-1.9
+AUTOMAKE = automake-1.9
+
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CXXFLAGS += -g -O0
+else
+	CXXFLAGS += -O2
+endif
+
+autogen:
+	dh_testdir
+	$(ACLOCAL) -I config 
+	libtoolize --force 
+	autoheader 
+	$(AUTOMAKE) --add-missing
+	autoconf
+	
+configure: configure-stamp
+
+configure-stamp:
+	dh_testdir
+	CXX="$(CXX)" CPPFLAGS="$(CPPFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" \
+		./configure --prefix=/usr --sysconfdir=/etc/xscript \
+		--enable-cppunit --enable-maintainer-mode
+	touch configure-stamp
+
+build: build-stamp
+
+build-stamp: configure-stamp 
+	dh_testdir
+	$(MAKE) release=1
+	touch build-stamp
+
+clean:
+	dh_testdir
+	dh_testroot
+	rm -f build-stamp configure-stamp
+	-$(MAKE) distclean
+	dh_clean 
+
+tests: build
+	dh_testdir
+	$(MAKE) check
+
+install: build tests
+	dh_testdir
+	dh_testroot
+	dh_clean -k 
+	dh_installdirs
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
+	mkdir -p $(CURDIR)/debian/tmp/usr/bin
+	install -m 755 $(CURDIR)/extra/xscriptstart.sh $(CURDIR)/debian/tmp/usr/bin
+
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_movefiles
+	dh_installchangelogs 
+	dh_installinit
+	dh_link
+	# dh_strip
+	dh_compress
+	dh_fixperms
+	dh_makeshlibs -v
+	dh_installdeb
+	dh_shlibdeps
+	dh_gencontrol
+	dh_md5sums
+	dh_builddeb
+
+binary: binary-arch
+
+.PHONY: build clean binary-arch binary install configure
