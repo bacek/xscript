@@ -71,6 +71,10 @@ Block::threaded() const {
 }
 
 void
+Block::threaded(bool value) {
+}
+
+void
 Block::parse() {
 	
 	XmlUtils::visitAttributes(node_->properties, 

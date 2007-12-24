@@ -15,9 +15,9 @@ public:
 	int timeout() const;
 	int remoteTimeout() const;
 	
-	void threaded(bool value);
 	virtual bool threaded() const;
-	
+	virtual void threaded(bool value);
+
 protected:
 	virtual void property(const char *name, const char *value);
 

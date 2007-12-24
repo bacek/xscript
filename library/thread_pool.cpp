@@ -25,4 +25,8 @@ ThreadPool::invoke(boost::function<void()> f) {
 	f();
 }
 
+void
+ThreadPool::stop() {
+}
+
 } // namespace xscript

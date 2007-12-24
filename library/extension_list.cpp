@@ -12,6 +12,7 @@
 #include "details/expect.h"
 #include "details/loader.h"
 #include "details/extension_list.h"
+#include "xscript/thread_pool.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -26,6 +27,7 @@ ExtensionList::ExtensionList()
 }
 
 ExtensionList::~ExtensionList() {
+	ThreadPool::instance()->stop();
 	std::for_each(extensions_.begin(), extensions_.end(), 
 		boost::checked_deleter<Extension>());
 }

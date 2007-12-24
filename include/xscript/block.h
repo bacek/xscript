@@ -42,6 +42,7 @@ public:
 	}
 	
 	virtual bool threaded() const;
+	virtual void threaded(bool value);
 	
 	inline const Param* param(unsigned int n) const {
 		return params_.at(n);

@@ -20,6 +20,7 @@ public:
 	
 	virtual void init(const Config *config);
 	virtual void invoke(boost::function<void()> f);
+	virtual void stop();
 };
 
 } // namespace xscript

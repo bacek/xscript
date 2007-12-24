@@ -3,6 +3,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "xscript/threaded_block.h"
+#include "xscript/script.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -42,7 +43,7 @@ ThreadedBlock::threaded(bool value) {
 void
 ThreadedBlock::property(const char *name, const char *value) {
 	if (strncasecmp(name, "threaded", sizeof("threaded")) == 0) {
-		threaded_ = (strncasecmp(value, "no", sizeof("no")) != 0);
+		threaded_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
 	}
 	else if (strncasecmp(name, "timeout", sizeof("timeout")) == 0) {
 		timeout_ = boost::lexical_cast<int>(value);

@@ -31,11 +31,11 @@ public:
 
 	virtual void init(const Config *config);
 	virtual void invoke(boost::function<void()> f);
+	virtual void stop();
 	
 protected:
 	
 	void handle();
-	void stopThreads();
 	bool canRun() const;
 	boost::function<void()> wait();
 	
@@ -56,8 +56,7 @@ StandardThreadPool::StandardThreadPool() :
 }
 
 StandardThreadPool::~StandardThreadPool() {
-	stopThreads();
-	join_all();
+	stop();
 }
 
 void
@@ -71,7 +70,7 @@ StandardThreadPool::init(const Config *config) {
 		}
 	}
 	catch (const std::exception &e) {
-		stopThreads();
+		stop();
 		throw;
 	}
 }
@@ -79,8 +78,24 @@ StandardThreadPool::init(const Config *config) {
 void
 StandardThreadPool::invoke(boost::function<void()> f) {
 	boost::mutex::scoped_lock sl(mutex_);
-	tasks_.push(f);
-	condition_.notify_all();
+	if (running_) {
+		tasks_.push(f);
+		condition_.notify_all();
+	}
+}
+
+void
+StandardThreadPool::stop() {
+	boost::mutex::scoped_lock sl(mutex_);
+	if (running_) {
+		running_ = false;
+		while (!tasks_.empty()) {
+			tasks_.pop();
+		}
+		condition_.notify_all();
+		sl.unlock();
+		join_all();
+	}
 }
 
 void
@@ -92,13 +107,6 @@ StandardThreadPool::handle() {
 		}
 		f();
 	}
-}
-
-void
-StandardThreadPool::stopThreads() {
-	boost::mutex::scoped_lock sl(mutex_);
-	running_ = false;
-	condition_.notify_all();
 }
 
 bool
