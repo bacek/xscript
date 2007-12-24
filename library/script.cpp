@@ -48,7 +48,7 @@ namespace xscript
 Script::Script(const std::string &name) :
 	modified_(std::numeric_limits<time_t>::min()), doc_(NULL), 
 	name_(name), flags_(FLAG_FORCE_STYLESHEET), expire_time_delta_(300),
-	xscript_node_(NULL), stylesheet_node_(NULL)
+	stylesheet_node_(NULL)
 {
 }
 
@@ -83,7 +83,7 @@ Script::header(const std::string &name) const {
 		std::map<std::string, std::string>::const_iterator i = headers_.find(name);
 		if (headers_.end() == i) {
 			std::stringstream stream;
-			stream << "requsted nonexistent header: " << name;
+			stream << "requested nonexistent header: " << name;
 			throw std::invalid_argument(stream.str());
 		}
 		return i->second;
@@ -115,9 +115,14 @@ Script::parse() {
 		throw std::runtime_error("got empty xml doc");
 	}
 	XmlUtils::throwUnless(xmlXIncludeProcess(doc_.get()) >= 0);
-	parseNode(doc_->children);
+
+	std::vector<xmlNodePtr> xscript_nodes;
+	parseNode(doc_->children, xscript_nodes);
+	parseXScriptNodes(xscript_nodes);
+	parseBlocks();
+	buildXScriptNodeSet(xscript_nodes);
 	postParse();
-		
+
 	modified_ = fs::last_write_time(path);
 }
 
@@ -222,7 +227,7 @@ Script::allowMethods(const char *value) {
 }
 
 void
-Script::parseNode(xmlNodePtr node) {
+Script::parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes) {
 	ExtensionList* elist = ExtensionList::instance();
 	for ( ; node ; node = node->next) {
 		if (XML_PI_NODE == node->type) {
@@ -239,7 +244,7 @@ Script::parseNode(xmlNodePtr node) {
 		}
 		if (XML_ELEMENT_NODE == node->type) {
 			if (xmlStrncasecmp(node->name, (const xmlChar*) "xscript", sizeof("xscript")) == 0) {
-				parseXScriptNode(node);
+				xscript_nodes.push_back(node);
 				continue;
 			}
 			Extension *ext = elist->extension(node);
@@ -248,7 +253,6 @@ Script::parseNode(xmlNodePtr node) {
 				std::auto_ptr<Block> b = ext->createBlock(this, node);
 
 				assert(b.get());
-				b->parse();
 
 				blocks_.push_back(b.get());
 				b.release();
@@ -256,23 +260,22 @@ Script::parseNode(xmlNodePtr node) {
 			}
 		}
 		if (node->children) {
-			parseNode(node->children);
+			parseNode(node->children, xscript_nodes);
 		}
 	}
 }
 
 void
 Script::parseXScriptNode(const xmlNodePtr node) {
-	
+
 	log()->debug("parsing xscript node");
-	
-	xscript_node_ = node;
+
 	XmlUtils::visitAttributes(node->properties, 
 		boost::bind(&Script::property, this, _1, _2));
-	
+
 	xmlNodePtr child = node->children;
 	ParamFactory *pf = ParamFactory::instance();
-	
+
 	for ( ; child; child = child->next) {
 		if (child->name && xmlStrncasecmp(child->name, 
 			(const xmlChar*) "add-headers", sizeof("add-headers")) == 0) {
@@ -292,6 +295,41 @@ Script::parseXScriptNode(const xmlNodePtr node) {
 			continue;
 		}
 	}
+}
+
+void
+Script::parseXScriptNodes(std::vector<xmlNodePtr>& xscript_nodes) {
+
+	log()->debug("parsing xscript nodes");
+
+	for (std::vector<xmlNodePtr>::reverse_iterator i = xscript_nodes.rbegin(), end = xscript_nodes.rend(); i != end; ++i) {
+		parseXScriptNode(*i);
+	}
+}
+
+void
+Script::parseBlocks() {
+
+	log()->debug("parsing blocks");
+
+	bool is_threaded = threaded();
+	for (std::vector<Block*>::iterator i = blocks_.begin(), end = blocks_.end(); i != end; ++i) {
+		Block *block = *i;
+		assert(block);
+		block->threaded(is_threaded);
+		block->parse();
+	}
+}
+
+void
+Script::buildXScriptNodeSet(std::vector<xmlNodePtr>& xscript_nodes) {
+
+	log()->debug("build xscript node set");
+
+	for (std::vector<xmlNodePtr>::iterator i = xscript_nodes.begin(), end = xscript_nodes.end(); i != end; ++i) {
+		xscript_node_set_.insert(*i);
+	}
+	xscript_nodes.clear();
 }
 
 void
@@ -397,10 +435,10 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsign
 			xmlFreeNode(newnode);
 			count++;
 		}
-		else if (xscript_node_ == node) {
+		else if (xscript_node_set_.find(node) != xscript_node_set_.end() ) {
 			replaceXScriptNode(newnode, ctx);
 		}
-		else {
+		else if (node->children) {
 			fetchRecursive(ctx, node->children, newnode->children, count);
 		}
 
@@ -411,16 +449,10 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsign
 
 void
 Script::postParse() {
-	if (threaded()) {
-		for (std::vector<Block*>::iterator i = blocks_.begin(), end = blocks_.end(); i != end; ++i) {
-		}
-	}
 }
 
 void
 Script::property(const char *prop, const char *value) {
-	
-	const std::string yes("yes");
 	
 	log()->debug("%s, setting property: %s=%s", name().c_str(), prop, value);
 	

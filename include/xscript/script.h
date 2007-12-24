@@ -2,6 +2,7 @@
 #define _XSCRIPT_SCRIPT_H_
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <xscript/xml.h>
@@ -97,9 +98,12 @@ protected:
 	
 	void allowMethods(const char *value);
 	
-	void parseNode(xmlNodePtr node);
+	void parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes);
 	void parseHeadersNode(xmlNodePtr node);
 	void parseXScriptNode(const xmlNodePtr node);
+	void parseXScriptNodes(std::vector<xmlNodePtr>& xscript_nodes);
+	void parseBlocks();
+	void buildXScriptNodeSet(std::vector<xmlNodePtr>& xscript_nodes);
 	void parseStylesheetNode(const xmlNodePtr node);
 
 	int countTimeout() const;
@@ -138,7 +142,8 @@ private:
 	std::vector<Block*> blocks_;
 	std::string name_;
 	unsigned int flags_, expire_time_delta_;
-	xmlNodePtr xscript_node_, stylesheet_node_;
+	xmlNodePtr stylesheet_node_;
+	std::set<xmlNodePtr> xscript_node_set_;
 	std::map<std::string, std::string> headers_;
 	std::vector<std::string> allow_methods_;
 };
