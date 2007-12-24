@@ -38,6 +38,8 @@ public:
 	HttpHelper(const std::string &url, long timeout);
 	virtual ~HttpHelper();
 
+	static void init();
+
 	void appendHeaders(const Request* req, bool proxy, const Tag* tag);
 	void postData(const void* data, long size);
 

@@ -277,6 +277,7 @@ HttpExtension::createBlock(Xml *owner, xmlNodePtr node) {
 
 void
 HttpExtension::init(const Config *config) {
+	HttpHelper::init();
 }
 
 HttpMethodRegistrator::HttpMethodRegistrator() 

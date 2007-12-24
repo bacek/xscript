@@ -95,7 +95,6 @@ boost::once_flag HttpHelper::init_flag_ = BOOST_ONCE_INIT;
 HttpHelper::HttpHelper(const std::string &url, long timeout) :
 	curl_(NULL), status_(0), url_(url), sent_modified_since_(false)
 {
-	boost::call_once(&initEnvironment, init_flag_);
 	curl_ = curl_easy_init();
 	if (NULL != curl_) {
 		if (timeout > 0) {
@@ -119,6 +118,11 @@ HttpHelper::~HttpHelper() {
 	if (NULL != curl_) {
 		curl_easy_cleanup(curl_);
 	}
+}
+
+void
+HttpHelper::init() {
+	boost::call_once(&initEnvironment, init_flag_);
 }
 
 void
