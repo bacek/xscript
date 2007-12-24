@@ -343,11 +343,16 @@ ServerRequest::sendError(unsigned short status) {
 void
 ServerRequest::setHeader(const std::string &name, const std::string &value) {
 	boost::mutex::scoped_lock sl(mutex_);
-	if (!headers_sent_) {
-		out_headers_[Parser::normalizeOutputHeaderName(name)] = value;
+	if (headers_sent_) {
+		throw std::runtime_error("headers already sent");
+	}
+	std::string normalized_name = Parser::normalizeOutputHeaderName(name);
+	std::string::size_type pos = value.find_first_of("\r\n");
+	if (pos == std::string::npos) {
+		out_headers_[normalized_name] = value;
 	}
 	else {
-		throw std::runtime_error("headers already sent");
+		out_headers_[normalized_name].assign(value.begin(), value.begin() + pos);
 	}
 }
 
