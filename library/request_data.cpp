@@ -5,7 +5,7 @@
 #include "xscript/state.h"
 #include "xscript/request_data.h"
 
-#ifndef HAVE_DMALLOC_H
+#ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
 
