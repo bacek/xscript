@@ -7,7 +7,7 @@ xscript_bin_LDFLAGS = -lfcgi -lfcgi++ -export-dynamic
 
 noinst_HEADERS = parser.h request.h server.h functors.h
 
-dist_sysconf_DATA = xscript.conf
+dist_sysconf_DATA = xscript.conf xscript-ulimits.conf
 
 AM_CPPFLAGS = -I../include -I../config -D_REENTRANT
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread

@@ -1,3 +1,4 @@
 usr/bin/xscript-bin
 usr/bin/*start.sh
+etc/xscript/xscript-ulimits.conf
 
