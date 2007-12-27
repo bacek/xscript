@@ -22,7 +22,7 @@ public:
 	virtual ~VirtualHostData();
 
 	virtual void init(const Config *config);
-	void set(Request* request);
+	void set(const Request* request);
 
 	virtual bool hasVariable(const Request* request, const std::string& var) const;
 	virtual std::string getVariable(const Request* request, const std::string& var) const;
@@ -30,10 +30,18 @@ public:
 	virtual std::string getOutputEncoding(const Request* request) const;
 
 protected:
-	Request* get() const;
+	const Request* get() const;
 
 private:
-	boost::thread_specific_ptr<Request> request_;
+	class RequestProvider {
+	public:
+		RequestProvider(const Request* request) : request_(request) {}
+		const Request* get() const {return request_;}
+	private:
+		const Request* request_;
+	};
+
+	boost::thread_specific_ptr<RequestProvider> request_provider_;
 };
 
 } // namespace xscript

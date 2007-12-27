@@ -23,20 +23,24 @@ VirtualHostData::init(const Config *config) {
 }
 
 void
-VirtualHostData::set(Request* request) {
-	request_.release();
-	request_.reset(request);
+VirtualHostData::set(const Request* request) {
+	request_provider_.reset(new RequestProvider(request));
 }
 
-Request*
+const Request*
 VirtualHostData::get() const {
-	return request_.get();
+	RequestProvider* provider = request_provider_.get();
+	if (NULL == provider) {
+		return NULL;
+	}
+
+	return provider->get();
 }
 
 bool
 VirtualHostData::hasVariable(const Request* request, const std::string& var) const {
 	if (NULL == request) {
-		request = request_.get();
+		request = get();
 		if (NULL == request) {
 			return false;
 		}
@@ -48,7 +52,7 @@ VirtualHostData::hasVariable(const Request* request, const std::string& var) con
 std::string
 VirtualHostData::getVariable(const Request* request, const std::string& var) const {
 	if (NULL == request) {
-		request = request_.get();
+		request = get();
 		if (NULL == request) {
 			return StringUtils::EMPTY_STRING;
 		}
