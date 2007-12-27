@@ -24,6 +24,7 @@ VirtualHostData::init(const Config *config) {
 
 void
 VirtualHostData::set(Request* request) {
+	request_.release();
 	request_.reset(request);
 }
 
