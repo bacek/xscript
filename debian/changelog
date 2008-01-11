@@ -1,3 +1,9 @@
+xscript (5.2-3) unstable; urgency=low
+
+  * fixed fixed memory leak in memory tagged cache 
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 11 Jan 2008 13:25:54 +0300
+
 xscript (5.2-2) unstable; urgency=low
 
   * VirtualHostData changed 
