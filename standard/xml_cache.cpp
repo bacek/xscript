@@ -321,6 +321,7 @@ XmlCache::init(const char *name, const Config *config) {
 	}
 	catch (const std::exception &e) {
 		std::for_each(storages_.begin(), storages_.end(), boost::checked_deleter<XmlStorage>());
+		storages_.clear();
 		throw;
 	}
 	std::vector<std::string> names;
