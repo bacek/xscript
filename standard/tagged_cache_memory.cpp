@@ -265,6 +265,7 @@ TaggedCacheMemoryPool::loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc) {
 		if (data.pos != keys_.end()) {
 			keys_.erase(data.pos);
 		}
+		data.clearDoc();
 		key2data_.erase(i);
 		return false;
 	}
