@@ -50,7 +50,7 @@ namespace xscript
 {
 
 typedef boost::shared_ptr<Xml> XmlPtr;
-typedef std::list<XmlPtr> XmlList;
+typedef std::list<std::pair<XmlPtr, std::string> > XmlList;
 
 #ifndef HAVE_HASHMAP
 typedef std::map<std::string, XmlList::iterator> XmlMap;
@@ -75,9 +75,9 @@ public:
 	void clear();
 	void enable();
 	
-	void erase(const std::string &name);
-	boost::shared_ptr<Xml> fetch(const std::string &name);
-	void store(const std::string &name, const boost::shared_ptr<Xml> &xml);
+	void erase(const std::string &key);
+	boost::shared_ptr<Xml> fetch(const std::string &key);
+	void store(const std::string &key, const boost::shared_ptr<Xml> &xml);
 	
 private:
 	void removeLast();
@@ -91,7 +91,7 @@ private:
 	unsigned int max_size_;
 	
 	XmlMap iterators_;
-	std::list<XmlPtr> documents_;
+	XmlList documents_;
 };
 
 class XmlCache
@@ -114,6 +114,16 @@ protected:
 private:
 	StringSet denied_;
 	std::vector<XmlStorage*> storages_;
+
+	class StorageContainerHolder {
+	public:
+		StorageContainerHolder();
+		StorageContainerHolder(std::vector<XmlStorage*>& storages);
+		~StorageContainerHolder();
+		void release();
+	private:	
+		std::vector<XmlStorage*>* storages_;
+	};
 };
 
 class StandardScriptCache : public XmlCache, public ScriptCache
@@ -186,9 +196,9 @@ XmlStorage::enable() {
 }
 
 void
-XmlStorage::erase(const std::string &name) {
+XmlStorage::erase(const std::string &key) {
 	
-	log()->debug("erasing %s from storage", name.c_str());
+	log()->debug("erasing %s from storage", key.c_str());
 	
 	boost::mutex::scoped_lock sl(mutex_);
 	if (!enabled_) {
@@ -196,7 +206,7 @@ XmlStorage::erase(const std::string &name) {
 		return;
 	}
 	
-	XmlMap::iterator i = iterators_.find(name);
+	XmlMap::iterator i = iterators_.find(key);
 	if (iterators_.end() != i) {
 		documents_.erase(i->second);
 		iterators_.erase(i);
@@ -204,9 +214,9 @@ XmlStorage::erase(const std::string &name) {
 }
 
 boost::shared_ptr<Xml>
-XmlStorage::fetch(const std::string &name) {
+XmlStorage::fetch(const std::string &key) {
 	
-	log()->debug("trying to fetch %s from storage", name.c_str());
+	log()->debug("trying to fetch %s from storage", key.c_str());
 	
 	boost::mutex::scoped_lock sl(mutex_);
 	if (!enabled_) {
@@ -214,28 +224,28 @@ XmlStorage::fetch(const std::string &name) {
 		return boost::shared_ptr<Xml>();
 	}
 	
-	XmlMap::iterator i = iterators_.find(name);
+	XmlMap::iterator i = iterators_.find(key);
 	if (iterators_.end() == i) {
 		return boost::shared_ptr<Xml>();
 	}
 	
-	if (expired(*i->second)) {
+	if (expired(i->second->first)) {
 		documents_.erase(i->second);
 		iterators_.erase(i);
 		return boost::shared_ptr<Xml>();
 	}
 	
-	XmlPtr xml = (*i->second);
+	XmlPtr xml = i->second->first;
 	updateIterator(i, xml);
 	
-	log()->debug("%s found in storage", name.c_str());
+	log()->debug("%s found in storage", key.c_str());
 	return xml;
 }
 
 void
-XmlStorage::store(const std::string &name, const boost::shared_ptr<Xml> &xml) {
+XmlStorage::store(const std::string &key, const boost::shared_ptr<Xml> &xml) {
 	
-	log()->debug("trying to store %s into storage", name.c_str());
+	log()->debug("trying to store %s into storage", key.c_str());
 	
 	boost::mutex::scoped_lock sl(mutex_);
 	if (!enabled_) {
@@ -243,24 +253,24 @@ XmlStorage::store(const std::string &name, const boost::shared_ptr<Xml> &xml) {
 		return;
 	}
 	
-	XmlMap::iterator i = iterators_.find(name);
+	XmlMap::iterator i = iterators_.find(key);
 	if (iterators_.end() == i) {
 		removeLast();
-		documents_.push_front(xml);
-		iterators_[name] = documents_.begin();
+		documents_.push_front(std::make_pair(xml, key));
+		iterators_[key] = documents_.begin();
 	}
 	else {
 		updateIterator(i, xml);
 	}
-	log()->debug("storing of %s succeeded", name.c_str());
+	log()->debug("storing of %s succeeded", key.c_str());
 }
 
 void
 XmlStorage::removeLast() {
 
 	if (documents_.size() == max_size_) {
-		std::string name = documents_.back()->name();
-		iterators_.erase(name);
+		std::string key = documents_.back().second;
+		iterators_.erase(key);
 		documents_.pop_back();
 	}
 }
@@ -282,7 +292,7 @@ XmlStorage::expired(const boost::shared_ptr<Xml> &xml) const {
 void
 XmlStorage::updateIterator(XmlMap::iterator i, const boost::shared_ptr<Xml> &xml) {
 	documents_.erase(i->second);
-	documents_.push_front(xml);
+	documents_.push_front(std::make_pair(xml, i->first));
 	i->second = documents_.begin();
 }
 
@@ -313,22 +323,18 @@ XmlCache::init(const char *name, const Config *config) {
 	
 	int buckets = config->as<int>(std::string("/xscript/").append(name).append("/buckets"), 10);
 	int bucksize = config->as<int>(std::string("/xscript/").append(name).append("/bucket-size"), 200);
-	try {
-		storages_.reserve(buckets);
-		for (int i = 0; i < buckets; ++i) {
-			storages_.push_back(new XmlStorage(bucksize));
-		}
-	}
-	catch (const std::exception &e) {
-		std::for_each(storages_.begin(), storages_.end(), boost::checked_deleter<XmlStorage>());
-		storages_.clear();
-		throw;
+
+	StorageContainerHolder holder(storages_);
+	storages_.reserve(buckets);
+	for (int i = 0; i < buckets; ++i) {
+		storages_.push_back(new XmlStorage(bucksize));
 	}
 	std::vector<std::string> names;
 	config->subKeys(std::string("/xscript/").append(name).append("/deny"), names);
 	for (std::vector<std::string>::iterator i = names.begin(), end = names.end(); i != end; ++i) {
 		denied_.insert(config->as<std::string>(*i));
 	}
+	holder.release();
 }
 
 boost::shared_ptr<Xml>
@@ -358,6 +364,27 @@ XmlCache::findStorage(const std::string &name) const {
 	boost::crc_32_type crc;
 	crc.process_bytes(name.data(), name.size());
 	return storages_[crc.checksum() % storages_.size()];
+}
+
+
+XmlCache::StorageContainerHolder::StorageContainerHolder():
+	storages_(NULL)
+{}
+
+XmlCache::StorageContainerHolder::StorageContainerHolder(std::vector<XmlStorage*>& storages):
+	storages_(&storages)
+{}
+
+XmlCache::StorageContainerHolder::~StorageContainerHolder() {
+	if (NULL != storages_) {
+		std::for_each(storages_->begin(), storages_->end(), boost::checked_deleter<XmlStorage>());
+		storages_->clear();
+	}
+}
+
+void
+XmlCache::StorageContainerHolder::release() {
+	storages_ = NULL;
 }
 
 StandardScriptCache::StandardScriptCache()
