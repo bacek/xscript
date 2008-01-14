@@ -20,7 +20,8 @@ class XmlUtils : private boost::noncopyable
 public:
 	XmlUtils();
 	virtual ~XmlUtils();
-	
+
+	static void registerReporters();
 	static void throwUnless(bool value);
 	
 	static std::string escape(const Range &value);

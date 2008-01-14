@@ -51,7 +51,7 @@ public:
 	
 private:
 	bool error_;
-	char message_[512];
+	char message_[5120];
 	
 	static boost::thread_specific_ptr<XmlErrorReporter> reporter_;
 };
@@ -85,14 +85,20 @@ XmlUtils::XmlUtils() {
 	exsltSaxonRegister();
 	exsltCommonRegister();
 
-	xmlSetGenericErrorFunc(NULL, &xmlNullError);
-	xsltSetGenericErrorFunc(NULL, &xmlReportPlainError);
-	xmlSetStructuredErrorFunc(NULL, &xmlReportStructuredError);
+	registerReporters();
 }
 
 XmlUtils::~XmlUtils() {
 	xsltCleanupGlobals();
 	xmlCleanupParser();
+}
+
+void
+XmlUtils::registerReporters() {
+	//xmlSetGenericErrorFunc(NULL, &xmlNullError);
+	xmlSetGenericErrorFunc(NULL, &xmlReportPlainError);
+	xsltSetGenericErrorFunc(NULL, &xmlReportPlainError);
+	//xmlSetStructuredErrorFunc(NULL, &xmlReportStructuredError);
 }
 
 void
@@ -356,6 +362,7 @@ XmlErrorReporter::report(const char *format, ...) {
 	va_list args;
 	va_start(args, format);
 	report(format, args);
+	log()->xmllog(format, args);
 	va_end(args);
 }
 

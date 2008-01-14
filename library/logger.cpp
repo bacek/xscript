@@ -82,10 +82,15 @@ Logger::createImpl() {
 }
 
 void
+Logger::xmllog(const char *format, va_list args) {
+	instance()->infoInternal(format, args);
+}
+
+void
 Logger::xmllog(void *ctx, const char *format, ...) {
 	va_list args;
 	va_start(args, format);
-	instance()->infoInternal(format, args);
+	xmllog(format, args);
 	va_end(args);
 }
 

@@ -104,9 +104,9 @@ Server::handle() {
 		log()->error("can not init fastcgi request");
 		return;
 	}
-	xmlSetGenericErrorFunc(NULL, &Logger::xmllog);
-	xsltSetGenericErrorFunc(NULL, &Logger::xmllog);			
-	
+
+	XmlUtils::registerReporters();
+
 	ServerRequest request;
 	
 	while (true) {

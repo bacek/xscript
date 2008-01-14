@@ -1,3 +1,9 @@
+xscript (5.2-5) unstable; urgency=low
+
+  * improve error logging on parse xml (fixed inclomplete context message)
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 14 Jan 2008 14:04:29 +0300
+
 xscript (5.2-4) unstable; urgency=low
 
   * removing documents fixed in XmlStorage

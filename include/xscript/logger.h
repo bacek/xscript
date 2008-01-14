@@ -25,6 +25,7 @@ public:
 	void debug(const char *format, ...);
 	
 	static Logger* createImpl();
+	static void xmllog(const char *format, va_list args);
 	static void xmllog(void *ctx, const char *format, ...);
 
 	virtual unsigned int level() const = 0;
