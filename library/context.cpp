@@ -40,6 +40,7 @@ Context::Context(const boost::shared_ptr<Script> &script, const RequestData &dat
 Context::~Context() {
 	ExtensionList::instance()->destroyContext(this);
 	std::for_each(results_.begin(), results_.end(), boost::bind(&xmlFreeDoc, _1));
+	std::for_each(clear_node_list_.begin(), clear_node_list_.end(), boost::bind(&xmlFreeNode, _1));
 }
 
 void
@@ -104,6 +105,13 @@ Context::resultsReady() const {
 		}
 	}
 	return true;
+}
+
+void
+Context::addNode(xmlNodePtr node) {
+
+	boost::mutex::scoped_lock sl(node_list_mutex_);
+	clear_node_list_.push_back(node);
 }
 
 boost::xtime

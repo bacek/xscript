@@ -221,6 +221,12 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
 		return;
 	}
 
+	xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+	if (NULL == tctx) {
+		xmlXPathReturnEmptyNodeSet(ctxt);
+		return;
+	}
+
 	try {
 		std::stringstream stream;
 		stream << "<sanitized>" << XmlUtils::sanitize(str) << "</sanitized>" << std::endl;
@@ -229,7 +235,12 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
 		XmlDocHelper doc(xmlParseMemory(str.c_str(), str.length()));
 		XmlUtils::throwUnless(NULL != doc.get());
 		
-		xmlNodeSetPtr ret = xmlXPathNodeSetCreate(xmlCopyNode(xmlDocGetRootElement(doc.get()), 1));
+		xmlNodePtr node = xmlCopyNode(xmlDocGetRootElement(doc.get()), 1);
+
+		Context* ctx = Stylesheet::getContext(tctx);
+		ctx->addNode(node);
+
+		xmlNodeSetPtr ret = xmlXPathNodeSetCreate(node);
 		xmlXPathReturnNodeSet(ctxt, ret);
 	}
 	catch (const std::exception &e) {

@@ -32,6 +32,7 @@ public:
 	void wait(int millis);
 	void expect(unsigned int count);
 	void result(unsigned int n, xmlDocPtr doc);
+	void addNode(xmlNodePtr node);
 	
 	bool resultsReady() const;
 	boost::xtime delay(int millis) const;
@@ -75,6 +76,7 @@ private:
 	Response *response_;
 	std::string xslt_name_;
 	std::vector<xmlDocPtr> results_;
+	std::list<xmlNodePtr> clear_node_list_;
 	
 	boost::condition condition_;
 	boost::shared_ptr<State> state_;
@@ -84,7 +86,7 @@ private:
 	std::auto_ptr<DocumentWriter> writer_;
 	
 	std::map<std::string, boost::any> params_;
-	mutable boost::mutex params_mutex_, results_mutex_;
+	mutable boost::mutex params_mutex_, results_mutex_, node_list_mutex_;
 };
 
 template<typename T> inline T

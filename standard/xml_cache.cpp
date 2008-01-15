@@ -50,13 +50,23 @@ namespace xscript
 {
 
 typedef boost::shared_ptr<Xml> XmlPtr;
-typedef std::list<std::pair<XmlPtr, std::string> > XmlList;
+
+struct XmlListElement;
+typedef std::list<XmlListElement> XmlList;
 
 #ifndef HAVE_HASHMAP
 typedef std::map<std::string, XmlList::iterator> XmlMap;
 #else
 typedef details::hash_map<std::string, XmlList::iterator, details::StringHash> XmlMap;
 #endif
+
+struct XmlListElement {
+	XmlListElement(const XmlPtr& document, const XmlMap::iterator& iterator) :
+		document_(document), map_iterator_(iterator) { }
+
+	XmlPtr document_;
+	XmlMap::iterator map_iterator_;
+};
 
 #ifndef HAVE_HASHSET
 typedef std::set<std::string> StringSet;
@@ -229,13 +239,13 @@ XmlStorage::fetch(const std::string &key) {
 		return boost::shared_ptr<Xml>();
 	}
 	
-	if (expired(i->second->first)) {
+	if (expired(i->second->document_)) {
 		documents_.erase(i->second);
 		iterators_.erase(i);
 		return boost::shared_ptr<Xml>();
 	}
 	
-	XmlPtr xml = i->second->first;
+	XmlPtr xml = i->second->document_;
 	updateIterator(i, xml);
 	
 	log()->debug("%s found in storage", key.c_str());
@@ -256,8 +266,9 @@ XmlStorage::store(const std::string &key, const boost::shared_ptr<Xml> &xml) {
 	XmlMap::iterator i = iterators_.find(key);
 	if (iterators_.end() == i) {
 		removeLast();
-		documents_.push_front(std::make_pair(xml, key));
+		documents_.push_front(XmlListElement(xml, i));
 		iterators_[key] = documents_.begin();
+		documents_.begin()->map_iterator_ = iterators_.find(key);
 	}
 	else {
 		updateIterator(i, xml);
@@ -269,8 +280,7 @@ void
 XmlStorage::removeLast() {
 
 	if (documents_.size() == max_size_) {
-		std::string key = documents_.back().second;
-		iterators_.erase(key);
+		iterators_.erase(documents_.back().map_iterator_);
 		documents_.pop_back();
 	}
 }
@@ -292,7 +302,7 @@ XmlStorage::expired(const boost::shared_ptr<Xml> &xml) const {
 void
 XmlStorage::updateIterator(XmlMap::iterator i, const boost::shared_ptr<Xml> &xml) {
 	documents_.erase(i->second);
-	documents_.push_front(std::make_pair(xml, i->first));
+	documents_.push_front(XmlListElement(xml, i));
 	i->second = documents_.begin();
 }
 
