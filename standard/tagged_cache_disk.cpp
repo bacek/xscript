@@ -77,8 +77,8 @@ private:
 };
 
 const time_t TaggedCacheDisk::DEFAULT_CACHE_TIME = 5; // sec
-const boost::uint32_t TaggedCacheDisk::VERSION_SIGNATURE_UNMARKED = 0xdfc00001;
-const boost::uint32_t TaggedCacheDisk::VERSION_SIGNATURE_MARKED = 0xdfc00002;
+const boost::uint32_t TaggedCacheDisk::VERSION_SIGNATURE_UNMARKED = 0xdfc00101;
+const boost::uint32_t TaggedCacheDisk::VERSION_SIGNATURE_MARKED = 0xdfc00102;
 
 TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const TaggedBlock *block) 
 {
@@ -267,7 +267,10 @@ TaggedCacheDisk::load(const std::string &path, const std::string &key, Tag &tag,
 	}
 	is.read((char*) &tag.last_modified, sizeof(time_t));
 
-	if (VERSION_SIGNATURE_UNMARKED == ver && tag.needPrefetch()) {
+	time_t stored_time;
+	is.read((char*) &stored_time, sizeof(time_t));
+
+	if (VERSION_SIGNATURE_UNMARKED == ver && tag.needPrefetch(stored_time)) {
 		log()->info("need prefetch doc");
 		is.seekg(0, std::ios::beg);
 		is.write((const char*) &VERSION_SIGNATURE_MARKED, sizeof(boost::uint32_t));
@@ -312,6 +315,9 @@ TaggedCacheDisk::save(const std::string &path, const std::string &key, const Tag
 		os.write((const char*) &VERSION_SIGNATURE_UNMARKED, sizeof(boost::uint32_t));
 		os.write((const char*) &tag.expire_time, sizeof(time_t));
 		os.write((const char*) &tag.last_modified, sizeof(time_t));
+
+		const time_t now = time(NULL);
+		os.write((const char*) &now, sizeof(time_t));
 
 		boost::uint32_t key_size = key.size();
 		os.write((const char*) &key_size, sizeof(boost::uint32_t));

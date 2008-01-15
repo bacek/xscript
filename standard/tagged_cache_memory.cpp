@@ -64,6 +64,7 @@ private:
 		Tag tag;
 		xmlDocPtr ptr;
 		std::list<std::string>::iterator pos;
+		time_t stored_time;
 		bool prefetch_marked;
 	};
 
@@ -216,6 +217,7 @@ TaggedCacheMemoryPool::DocData::assign(const Tag& t, const xmlDocPtr p) {
 	tag = t;
 	ptr = xmlCopyDoc(p, 1);
 	XmlUtils::throwUnless(NULL != ptr);
+	stored_time = time(NULL);
 	prefetch_marked = false;
 }
 
@@ -269,7 +271,7 @@ TaggedCacheMemoryPool::loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc) {
 		key2data_.erase(i);
 		return false;
 	}
-	if (!data.prefetch_marked && data.tag.needPrefetch()) {
+	if (!data.prefetch_marked && data.tag.needPrefetch(data.stored_time)) {
 		data.prefetch_marked = true;
 		return false;
 	}

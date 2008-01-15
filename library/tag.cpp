@@ -16,7 +16,7 @@ const time_t Tag::UNDEFINED_TIME = 0;
 class TagPrefetchCalculator
 {
 public:
-	static bool needPrefetch(const Tag& tag);
+	static bool needPrefetch(const Tag& tag, time_t stored_time);
 
 private:
 	static const time_t MINIMAL_PREFETCH_TIME = 1;
@@ -25,7 +25,7 @@ private:
 	static const time_t CACHE_TIME_PER_SECOND = LIMIT_CACHE_TIME / (MAXIMAL_PREFETCH_TIME - MINIMAL_PREFETCH_TIME);
 };
 
-bool TagPrefetchCalculator::needPrefetch(const Tag& tag) {
+bool TagPrefetchCalculator::needPrefetch(const Tag& tag, time_t stored_time) {
 	if (Tag::UNDEFINED_TIME == tag.expire_time) {
 		return false;
 	}
@@ -36,11 +36,12 @@ bool TagPrefetchCalculator::needPrefetch(const Tag& tag) {
 	}
 
 	const time_t left_time = tag.expire_time - now;
-	if (Tag::UNDEFINED_TIME == tag.last_modified) {
+	const time_t last_modified_time = tag.last_modified != Tag::UNDEFINED_TIME ? tag.last_modified : stored_time;
+	if (Tag::UNDEFINED_TIME == last_modified_time) {
 		return left_time <= MINIMAL_PREFETCH_TIME;
 	}
 
-	const time_t cache_time = tag.expire_time - tag.last_modified;
+	const time_t cache_time = tag.expire_time - last_modified_time;
 	if (LIMIT_CACHE_TIME <= cache_time) {
 		return left_time <= MAXIMAL_PREFETCH_TIME;
 	}
@@ -66,8 +67,8 @@ Tag::expired() const {
 }
 
 bool
-Tag::needPrefetch() const {
-	return TagPrefetchCalculator::needPrefetch(*this);
+Tag::needPrefetch(time_t stored_time) const {
+	return TagPrefetchCalculator::needPrefetch(*this, stored_time);
 }
 
 

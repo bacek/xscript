@@ -15,7 +15,7 @@ public:
 	bool expired() const;
 	static const time_t UNDEFINED_TIME;
 
-	bool needPrefetch() const;
+	bool needPrefetch(time_t stored_time) const;
 
 public:
 	bool modified;
