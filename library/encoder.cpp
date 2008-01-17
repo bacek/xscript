@@ -141,7 +141,7 @@ Encoder::encode(const Range &range, std::string &dst) const {
 				size_t tmp = n - sch;
 				size_t cur = v.size() - dsize;
 				
-				ctx.len = n - sch;
+				ctx.len = tmp;
 				size_t len = rep(buf, sizeof(buf), ctx);
 				v.insert(v.begin() + cur, buf, buf + len);
 				dch = &v[0] + cur + len;
@@ -215,7 +215,7 @@ IgnoringEncoder::rep(char *buf, size_t size, const EncoderContext &ctx) const {
 EscapingEncoder::EscapingEncoder(const char *from, const char *to) :
 	Encoder(from, to)
 {
-	escaper_ = IconvHelper(iconv_open("UTF-16LE", from));
+	escaper_ = IconvHelper(iconv_open("UCS-2LE", from)); //UTF-16LE
 	check(escaper_);
 }
 
@@ -225,28 +225,28 @@ EscapingEncoder::~EscapingEncoder() {
 size_t
 EscapingEncoder::rep(char *buf, size_t size, const EncoderContext &ctx) const {
 	
-	if (0 != ctx.len) {
-
-		char *ch = ctx.data;
-		size_t len = ctx.len;
-		std::vector<boost::uint16_t> v(len);
-		size_t vlen = len * sizeof(boost::uint16_t);;
-		char *dch = reinterpret_cast<char*>(&v[0]);
-		
-		size_t res = iconv(escaper_.get(), &ch, &len, &dch, &vlen);
-		if (0 != len) {
-			std::stringstream stream;
-			stream << "bad symbol at pos " << (ctx.data - ctx.begin);
-			throw std::runtime_error(stream.str());
-		}
-		if (static_cast<size_t>(-1) == res) {
-			std::stringstream stream;
-			StringUtils::report("encoder error", errno, stream);
-			throw std::runtime_error(stream.str());
-		}
-		return snprintf(buf, size, "&#%u;", static_cast<unsigned int>(v[0]));
+	if (0 == ctx.len) {
+		return 0;
 	}
-	return 0;
+
+	char *ch = ctx.data;
+	size_t len = ctx.len;
+	boost::uint16_t v16;
+	size_t vlen = sizeof(v16);
+	char *dch = reinterpret_cast<char*>(&v16);
+	
+	size_t res = iconv(escaper_.get(), &ch, &len, &dch, &vlen);
+	if (0 != len) {
+		std::stringstream stream;
+		stream << "bad symbol at pos " << (ctx.data - ctx.begin);
+		throw std::runtime_error(stream.str());
+	}
+	if (static_cast<size_t>(-1) == res) {
+		std::stringstream stream;
+		StringUtils::report("encoder error", errno, stream);
+		throw std::runtime_error(stream.str());
+	}
+	return snprintf(buf, size, "&#%u;", static_cast<unsigned int>(v16));
 }
 
 } // namespace yandex

@@ -1,3 +1,9 @@
+xscript (5.3-1) unstable; urgency=low
+
+  * fixed memory leaks when EscapingEncoder used UTF-16LE (UCS-2LE now)
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Thu, 17 Jan 2008 16:43:28 +0300
+
 xscript (5.3-0) unstable; urgency=low
 
   [ ponomarev ]
