@@ -49,10 +49,15 @@ public:
 	void clear();
 
 private:
+	class DocData;
+	typedef std::map<std::string, DocData> Key2Data;
+	typedef std::list<Key2Data::iterator> LRUList;
+
 	class DocData
 	{
 	public:
 		DocData();
+		explicit DocData(LRUList::iterator list_pos);
 
 		void assign(const Tag& tag, const xmlDocPtr ptr);
 
@@ -63,7 +68,7 @@ private:
 	public:
 		Tag tag;
 		xmlDocPtr ptr;
-		std::list<std::string>::iterator pos;
+		LRUList::iterator pos;
 		time_t stored_time;
 		bool prefetch_marked;
 	};
@@ -74,8 +79,9 @@ private:
 private:
 	const TaggedCacheMemory* parent_;
 	boost::mutex mutex_;
-	std::map<std::string, DocData> key2data_;
-	std::list<std::string> keys_;
+
+	Key2Data key2data_;
+	LRUList list_;
 };
 
 class TaggedCacheMemory : public TaggedCache
@@ -209,6 +215,11 @@ TaggedCacheMemoryPool::DocData::DocData() : tag(), ptr(NULL), pos(), prefetch_ma
 {
 }
 
+TaggedCacheMemoryPool::DocData::DocData(LRUList::iterator list_pos) :
+	tag(), ptr(NULL), pos(list_pos), prefetch_marked(false)
+{
+}
+
 void
 TaggedCacheMemoryPool::DocData::assign(const Tag& t, const xmlDocPtr p) {
 	assert(NULL != p);
@@ -237,7 +248,7 @@ TaggedCacheMemoryPool::DocData::clearDoc() {
 
 
 TaggedCacheMemoryPool::TaggedCacheMemoryPool(const TaggedCacheMemory* parent) :
-	parent_(parent), mutex_(), key2data_(), keys_()
+	parent_(parent), mutex_(), key2data_(), list_()
 {
 }
 
@@ -253,34 +264,40 @@ TaggedCacheMemoryPool::loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc) {
 
 	boost::mutex::scoped_lock lock(mutex_);
 
-	if (keys_.empty()) {
+	if (list_.empty()) {
 		return false;
 	}
 	
-	std::map<std::string, DocData>::iterator i = key2data_.find(str);
+	Key2Data::iterator i = key2data_.find(str);
 	if (i == key2data_.end()) {
 		return false;
 	}
 
-	DocData& data = i->second;
+	DocData &data = i->second;
 	if (data.tag.expired()) {
-		if (data.pos != keys_.end()) {
-			keys_.erase(data.pos);
+		if (data.pos != list_.end()) {
+			list_.erase(data.pos);
 		}
 		data.clearDoc();
 		key2data_.erase(i);
+		lock.unlock();
+		log()->debug("%s, key: %s, expired", BOOST_CURRENT_FUNCTION, str.c_str());
 		return false;
 	}
 	if (!data.prefetch_marked && data.tag.needPrefetch(data.stored_time)) {
 		data.prefetch_marked = true;
+		lock.unlock();
+		log()->debug("%s, key: %s, prefetch", BOOST_CURRENT_FUNCTION, str.c_str());
 		return false;
 	}
 
 	tag = data.tag;
 	doc.reset(data.copyDoc());
 
-	keys_.erase(data.pos);
-	data.pos = keys_.insert(keys_.end(), str);
+	if (data.pos != list_.end()) {
+		list_.erase(data.pos);
+	}
+	data.pos = list_.insert(list_.end(), i);
 
 	lock.unlock();
 	log()->info("%s, key: %s, loaded", BOOST_CURRENT_FUNCTION, str.c_str());
@@ -295,15 +312,15 @@ TaggedCacheMemoryPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocHe
 
 	boost::mutex::scoped_lock lock(mutex_);
 
-	std::map<std::string, DocData>::iterator i = key2data_.find(str);
+	Key2Data::iterator i = key2data_.find(str);
 	if (i != key2data_.end()) {
-		DocData& data = i->second;
-		if (data.pos != keys_.end()) {
-			keys_.erase(data.pos);
+		DocData &data = i->second;
+		if (data.pos != list_.end()) {
+			list_.erase(data.pos);
 		}
 
 		data.assign(tag, doc.get());
-		data.pos = keys_.insert(keys_.end(), str);
+		data.pos = list_.insert(list_.end(), i);
 
 		lock.unlock();
 		log()->info("%s, key: %s, updated", BOOST_CURRENT_FUNCTION, str.c_str());
@@ -312,9 +329,11 @@ TaggedCacheMemoryPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocHe
 
 	shrink();
 
-	DocData& data = key2data_[str];
+	//std::pair<Key2Data::iterator, bool> p = 
+	i = key2data_.insert(std::make_pair(str, DocData(list_.end()))).first;
+	DocData &data = i->second;
 	data.assign(tag, doc.get());
-	data.pos = keys_.insert(keys_.end(), str);
+	data.pos = list_.insert(list_.end(), i);
 
 	lock.unlock();
 	log()->info("%s, key: %s, inserted", BOOST_CURRENT_FUNCTION, str.c_str());
@@ -325,20 +344,20 @@ void
 TaggedCacheMemoryPool::clear() {
 	boost::mutex::scoped_lock lock(mutex_);
 
-	keys_.clear();
+	list_.clear();
 
-	std::map<std::string, DocData> tmp;
+	Key2Data tmp;
 	tmp.swap(key2data_);
 
-	for (std::map<std::string, DocData>::iterator i = tmp.begin(), end = tmp.end(); i != end; ++i) {
-		DocData& data = i->second;
+	for (Key2Data::iterator i = tmp.begin(), end = tmp.end(); i != end; ++i) {
+		DocData &data = i->second;
 		data.clearDoc();
 	}
 }
 
 void
 TaggedCacheMemoryPool::shrink() {
-	if (keys_.empty()) {
+	if (list_.empty()) {
 		return;
 	}
 
@@ -348,41 +367,40 @@ TaggedCacheMemoryPool::shrink() {
 		return;
 	}
 
-	if (keys_.size() < max_num) {
+	if (list_.size() < max_num) {
 		return;
 	}
 
 	removeExpiredDocuments();
 
 	// remove least recently used documents
-	while (!keys_.empty() && keys_.size() >= max_num) {
-		const std::string& remove_str = *keys_.begin();
+	while (!list_.empty() && list_.size() >= max_num) {
+		Key2Data::iterator i = *list_.begin();
 
-		std::map<std::string, DocData>::iterator it = key2data_.find(remove_str);
-		if (it != key2data_.end()) {
-			DocData& data = it->second;
+		if (i != key2data_.end()) {
+			DocData &data = i->second;
+			log()->debug("%s, key: %s, shrink", BOOST_CURRENT_FUNCTION, i->first.c_str());
 			data.clearDoc();
-			key2data_.erase(it);
+			key2data_.erase(i);
 		}
 
-		keys_.pop_front();
+		list_.pop_front();
 	}
 }
 
 void
 TaggedCacheMemoryPool::removeExpiredDocuments() {
-	std::list<std::string>::iterator kend = keys_.end();
-	for (std::map<std::string, DocData>::iterator i = key2data_.begin(), end = key2data_.end(); i != end; ) {
-		DocData& data = i->second;
+	for (LRUList::iterator li = list_.begin(), end = list_.end(); li != end; ) {
+		Key2Data::iterator i = *li;
+		DocData &data = i->second;
 		if (data.tag.expired()) {
+			log()->debug("%s, key: %s, remove expired", BOOST_CURRENT_FUNCTION, i->first.c_str());
 			data.clearDoc();
-			if (data.pos != kend) {
-				keys_.erase(data.pos);
-			}
-			key2data_.erase(i++);
+			key2data_.erase(i);
+			list_.erase(li++);
 		}
 		else {
-			++i;
+			++li;
 		}
 	}
 }
