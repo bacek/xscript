@@ -329,7 +329,6 @@ TaggedCacheMemoryPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocHe
 
 	shrink();
 
-	//std::pair<Key2Data::iterator, bool> p = 
 	i = key2data_.insert(std::make_pair(str, DocData(list_.end()))).first;
 	DocData &data = i->second;
 	data.assign(tag, doc.get());
