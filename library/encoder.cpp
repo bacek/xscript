@@ -215,7 +215,7 @@ IgnoringEncoder::rep(char *buf, size_t size, const EncoderContext &ctx) const {
 EscapingEncoder::EscapingEncoder(const char *from, const char *to) :
 	Encoder(from, to)
 {
-	escaper_ = IconvHelper(iconv_open("UCS-2LE", from)); //UTF-16LE
+	escaper_ = IconvHelper(iconv_open("UCS-4LE", from)); //UTF-16LE
 	check(escaper_);
 }
 
@@ -231,9 +231,9 @@ EscapingEncoder::rep(char *buf, size_t size, const EncoderContext &ctx) const {
 
 	char *ch = ctx.data;
 	size_t len = ctx.len;
-	boost::uint16_t v16;
-	size_t vlen = sizeof(v16);
-	char *dch = reinterpret_cast<char*>(&v16);
+	boost::uint32_t value;
+	size_t vlen = sizeof(value);
+	char *dch = reinterpret_cast<char*>(&value);
 	
 	size_t res = iconv(escaper_.get(), &ch, &len, &dch, &vlen);
 	if (0 != len) {
@@ -246,7 +246,7 @@ EscapingEncoder::rep(char *buf, size_t size, const EncoderContext &ctx) const {
 		StringUtils::report("encoder error", errno, stream);
 		throw std::runtime_error(stream.str());
 	}
-	return snprintf(buf, size, "&#%u;", static_cast<unsigned int>(v16));
+	return snprintf(buf, size, "&#%u;", value);
 }
 
 } // namespace yandex
