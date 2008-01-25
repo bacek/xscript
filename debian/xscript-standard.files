@@ -1,1 +1,3 @@
 usr/lib/xscript/xscript*so*
+usr/bin/xscriptcache*
+etc/cron.d/xscript-cache*

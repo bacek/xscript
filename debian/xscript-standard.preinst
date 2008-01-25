@@ -1,0 +1,13 @@
+#!/bin/sh
+
+CACHE_DIR=/var/cache/xscript
+
+USER=www-data
+
+mkdir -p $CACHE_DIR
+
+chown $USER:$USER $CACHE_DIR
+
+
+
+

@@ -59,6 +59,9 @@ install: build tests
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/tmp
 	mkdir -p $(CURDIR)/debian/tmp/usr/bin
 	install -m 755 $(CURDIR)/extra/xscriptstart.sh $(CURDIR)/debian/tmp/usr/bin
+	install -m 755 $(CURDIR)/extra/xscriptcacheclean.sh $(CURDIR)/debian/tmp/usr/bin
+	mkdir -p $(CURDIR)/debian/tmp/etc/cron.d
+	install -m 644 $(CURDIR)/extra/xscript-cache-clean $(CURDIR)/debian/tmp/etc/cron.d
 
 binary-arch: build install
 	dh_testdir

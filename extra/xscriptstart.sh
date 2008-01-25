@@ -34,6 +34,6 @@ if [ -e $XSCRIPT_CONFIG  ]; then
         sleep $RDELAY
     done
 else
-    echo "$XSCRIPT_CONFIG don't found"
+    echo "Can not find $XSCRIPT_CONFIG"
     exit 1
 fi

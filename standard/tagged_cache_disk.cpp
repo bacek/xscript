@@ -25,9 +25,6 @@
 namespace xscript
 {
 
-extern "C" int closeFunc(void *ctx);
-extern "C" int writeFunc(void *ctx, const char *buffer, int len);
-
 class TaggedKeyDisk : public TagKey
 {
 public:
@@ -63,12 +60,26 @@ private:
 	static void createDir(const std::string &name);
 	
 	static bool load(const std::string &path, const std::string &key, Tag &tag, std::vector<char> &doc_data);
-	static bool save(const std::string &path, const std::string &key, const Tag &tag, const std::string &doc);
+	static bool save(const std::string &path, const std::string &key, const Tag &tag, const XmlDocHelper &doc);
 
 
 	static const time_t DEFAULT_CACHE_TIME;
 	static const boost::uint32_t VERSION_SIGNATURE_UNMARKED;
 	static const boost::uint32_t VERSION_SIGNATURE_MARKED;
+	static const boost::uint32_t DOC_SIGNATURE_START;
+	static const boost::uint32_t DOC_SIGNATURE_END;
+
+	class WriteFile
+	{
+	public:
+		WriteFile(FILE *f);
+		~WriteFile();
+
+		void write(const void *ptr, size_t size) const;
+
+	private:
+		FILE *f_;
+	};
 
 private:
 	time_t min_time_;
@@ -77,8 +88,10 @@ private:
 };
 
 const time_t TaggedCacheDisk::DEFAULT_CACHE_TIME = 5; // sec
-const boost::uint32_t TaggedCacheDisk::VERSION_SIGNATURE_UNMARKED = 0xdfc00101;
-const boost::uint32_t TaggedCacheDisk::VERSION_SIGNATURE_MARKED = 0xdfc00102;
+const boost::uint32_t TaggedCacheDisk::VERSION_SIGNATURE_UNMARKED = 0xdfc00201;
+const boost::uint32_t TaggedCacheDisk::VERSION_SIGNATURE_MARKED = 0xdfc00202;
+const boost::uint32_t TaggedCacheDisk::DOC_SIGNATURE_START = 0x0a0b0d0a;
+const boost::uint32_t TaggedCacheDisk::DOC_SIGNATURE_END = 0x0a0e0d0a;
 
 TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const TaggedBlock *block) 
 {
@@ -109,9 +122,8 @@ TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const TaggedBlock *block)
 	boost::uint32_t common = method_sum ^ params_sum;
 	
 	number_ = common & 0xFF;
-	snprintf(buf, sizeof(buf), "%02x/%02x/%04x%04x", number_, 
-		(common & 0xFF00) >> 8, method_sum, params_sum);
-	
+	snprintf(buf, sizeof(buf), "%02x/%08x%08x", number_, method_sum, params_sum);
+
 	filename_.assign(buf);
 	value_.append(param_str);
 }
@@ -129,6 +141,27 @@ TaggedKeyDisk::asString() const {
 const std::string&
 TaggedKeyDisk::filename() const {
 	return filename_;
+}
+
+
+TaggedCacheDisk::WriteFile::WriteFile(FILE *f) : f_(f)
+{
+}
+
+TaggedCacheDisk::WriteFile::~WriteFile()
+{
+	if (f_) {
+		fclose(f_);
+	}
+}
+
+void TaggedCacheDisk::WriteFile::write(const void *ptr, size_t size) const {
+	size_t sz = ::fwrite(ptr, 1, size, f_);
+	if (sz != size) {
+		char buf[60];
+		snprintf(buf, sizeof(buf), "file write error size: %u, written: %u", size, sz);
+		throw std::runtime_error(&buf[0]);
+	}
 }
 
 
@@ -164,10 +197,11 @@ TaggedCacheDisk::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
 	std::string path(root_);
 	path.append(dkey->filename());
 	
+	const std::string &key_str = key->asString();
 	std::vector<char> vec;
 	try {
 		boost::mutex::scoped_lock sl(mutexes_[dkey->number()]);
-		if (!load(path, key->asString(), tag, vec)) {
+		if (!load(path, key_str, tag, vec)) {
 			return false;
 		}
 	}
@@ -193,16 +227,10 @@ TaggedCacheDisk::saveDoc(const TagKey *key, const Tag &tag, const XmlDocHelper &
 	const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
 	assert(NULL != dkey);
 
-	std::string res;
-	xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(writeFunc, closeFunc, &res, NULL);
-	XmlUtils::throwUnless(NULL != buf);
+	const std::string &key_str = key->asString();
 
-	try {
-		xmlSaveFormatFileTo(buf, doc.get(), "utf-8", 1);
-	}
-	catch (const std::exception &e) {
-		xmlOutputBufferClose(buf);
-		log()->error("error while converting doc to string: %s", e.what());
+	if (NULL == xmlDocGetRootElement(doc.get())) {
+		log()->error("skip saving empty doc, key: %s", key_str.c_str());
 		return false;
 	}
 
@@ -212,10 +240,10 @@ TaggedCacheDisk::saveDoc(const TagKey *key, const Tag &tag, const XmlDocHelper &
 	try {
 		boost::mutex::scoped_lock sl(mutexes_[dkey->number()]);
 		createDir(path);
-		return save(path, key->asString(), tag, res);
+		return save(path, key_str, tag, doc);
 	}
 	catch (const std::exception &e) {
-		log()->error("error while saving doc to cache: %s", e.what());
+		log()->error("error while saving doc to cache: %s, key: %s", e.what(), key_str.c_str());
 		return false;
 	}
 }
@@ -238,7 +266,7 @@ TaggedCacheDisk::makeDir(const std::string &name) {
 void
 TaggedCacheDisk::createDir(const std::string &path) {
 
-	std::string::size_type pos = static_cast<std::string::size_type>(-1);
+	std::string::size_type pos = 0;
 	while (true) {
 		pos = path.find('/', pos + 1);
 		if (std::string::npos == pos) {
@@ -252,79 +280,106 @@ bool
 TaggedCacheDisk::load(const std::string &path, const std::string &key, Tag &tag, std::vector<char> &doc_data) {
 
 	std::fstream is(path.c_str(), std::ios::in | std::ios::out);
+	if (!is) {
+		log()->debug("can not find cached doc");
+		return false;
+	}
 	is.exceptions(std::ios::badbit | std::ios::eofbit);
-	
-	boost::uint32_t ver = 0, doclen = 0, key_size = 0;
-	
-	is.read((char*) &ver, sizeof(boost::uint32_t));
-	if (VERSION_SIGNATURE_MARKED != ver && VERSION_SIGNATURE_UNMARKED != ver) {
-		throw std::runtime_error("bad signature");
-	}
-	is.read((char*) &tag.expire_time, sizeof(time_t));
-	if (tag.expired()) {
-		log()->info("tag expired");
-		return false;
-	}
-	is.read((char*) &tag.last_modified, sizeof(time_t));
 
-	time_t stored_time;
-	is.read((char*) &stored_time, sizeof(time_t));
+	try {
+		boost::uint32_t sig = 0, doclen = 0, key_size = 0;
+		std::ifstream::pos_type size = 0;
+		if (!is.seekg(0, std::ios::end)) {
+			throw std::runtime_error("seek error");
+		}
+		size = is.tellg();
+		if (!is.seekg(0, std::ios::beg)) {
+			throw std::runtime_error("seek error");
+		}
 
-	if (VERSION_SIGNATURE_UNMARKED == ver && tag.needPrefetch(stored_time)) {
-		log()->info("need prefetch doc");
-		is.seekg(0, std::ios::beg);
-		is.write((const char*) &VERSION_SIGNATURE_MARKED, sizeof(boost::uint32_t));
-		return false;
-	}
+		is.read((char*) &sig, sizeof(boost::uint32_t));
+		if (VERSION_SIGNATURE_MARKED != sig && VERSION_SIGNATURE_UNMARKED != sig) {
+			throw std::runtime_error("bad signature");
+		}
+		is.read((char*) &tag.expire_time, sizeof(time_t));
+		if (tag.expired()) {
+			log()->info("tag expired");
+			return false;
+		}
+		is.read((char*) &tag.last_modified, sizeof(time_t));
 
-	is.read((char*) &key_size, sizeof(boost::uint32_t));
+		time_t stored_time;
+		is.read((char*) &stored_time, sizeof(time_t));
 
-	std::string key_str;
-	key_str.resize(key_size);
-	is.read((char*) &key_str[0], key_size);
-	if (key != key_str) {
-		log()->info("tag key clashes with other one");
-		return false;
-	}
+		if (VERSION_SIGNATURE_UNMARKED == sig && tag.needPrefetch(stored_time)) {
+			log()->info("need prefetch doc");
+			is.seekg(0, std::ios::beg);
+			is.write((const char*) &VERSION_SIGNATURE_MARKED, sizeof(boost::uint32_t));
+			return false;
+		}
 
-	is.read((char*) &doclen, sizeof(boost::uint32_t));
-	if (0 == doclen) {
-		throw std::runtime_error("empty loading doc");
+		is.read((char*) &key_size, sizeof(boost::uint32_t));
+
+		std::string key_str;
+		key_str.resize(key_size);
+		is.read((char*) &key_str[0], key_size);
+		if (key != key_str) {
+			log()->info("tag key clashes with other one");
+			return false;
+		}
+
+		is.read((char*) &sig, sizeof(boost::uint32_t));
+		if (DOC_SIGNATURE_START != sig) {
+			throw std::runtime_error("bad doc start signature");
+		}
+		size -= ((3 * sizeof(time_t)) + (3 * sizeof(boost::uint32_t)) + key_size);
+		if (size < (std::ifstream::pos_type)(sizeof(boost::uint32_t))) {
+			throw std::runtime_error("can not find doc end signature");
+		}
+		doclen = (boost::uint32_t)(size - sizeof(boost::uint32_t));
+		doc_data.resize(doclen);
+		is.read(&doc_data[0], doclen);
+		is.exceptions(std::ios::badbit);
+		is.read((char*) &sig, sizeof(boost::uint32_t));
+		if (DOC_SIGNATURE_END != sig) {
+			throw std::runtime_error("bad doc end signature");
+		}
+		
+		return true;
 	}
-	
-	doc_data.resize(doclen);
-	is.exceptions(std::ios::badbit);
-	is.read(&doc_data[0], doclen);
-	if (static_cast<std::streamsize>(doclen) != is.gcount()) {
-		throw std::runtime_error("failed to load doc");
+	catch (const std::exception &e) {
+		is.close();
+		unlink(path.c_str());
+		throw;
 	}
-	
-	return true;
 }
 
 bool
-TaggedCacheDisk::save(const std::string &path, const std::string &key, const Tag &tag, const std::string &doc_str) {
+TaggedCacheDisk::save(const std::string &path, const std::string &key, const Tag &tag, const XmlDocHelper &doc) {
 	
-	boost::uint32_t doc_size = doc_str.size();
-	assert(0 != doc_size);
+	log()->debug("saving %s, key: %s", path.c_str(), key.c_str());
 
 	try {
-		std::ofstream os(path.c_str(), std::ios::out | std::ios::trunc);
-		os.exceptions(std::ios::badbit);
-
-		os.write((const char*) &VERSION_SIGNATURE_UNMARKED, sizeof(boost::uint32_t));
-		os.write((const char*) &tag.expire_time, sizeof(time_t));
-		os.write((const char*) &tag.last_modified, sizeof(time_t));
+		FILE *f = fopen(path.c_str(), "w");
+		if (NULL == f) {
+			log()->error("can not create doc: %s, key: %s", path.c_str(), key.c_str());
+			return false;
+		}
+		WriteFile wf(f);
+		wf.write(&VERSION_SIGNATURE_UNMARKED, sizeof(boost::uint32_t));
+		wf.write(&tag.expire_time, sizeof(time_t));
+		wf.write(&tag.last_modified, sizeof(time_t));
 
 		const time_t now = time(NULL);
-		os.write((const char*) &now, sizeof(time_t));
+		wf.write(&now, sizeof(time_t));
 
 		boost::uint32_t key_size = key.size();
-		os.write((const char*) &key_size, sizeof(boost::uint32_t));
-		os.write(key.data(), key_size);
+		wf.write(&key_size, sizeof(boost::uint32_t));
+		wf.write(key.data(), key_size);
 
-		os.write((const char*) &doc_size, sizeof(boost::uint32_t));
-		os.write(doc_str.data(), doc_size);
+		wf.write(&DOC_SIGNATURE_START, sizeof(boost::uint32_t));
+		xmlDocDump(f, doc.get());
+		wf.write(&DOC_SIGNATURE_END, sizeof(boost::uint32_t));
 		
 		return true;
 	}
@@ -332,27 +387,6 @@ TaggedCacheDisk::save(const std::string &path, const std::string &key, const Tag
 		unlink(path.c_str());
 		throw;
 	}
-}
-
-extern "C" int
-closeFunc(void *ctx) {
-	return 0;
-}
-
-extern "C" int
-writeFunc(void *ctx, const char *buf, int len) {
-	try {
-		std::string *str = static_cast<std::string*>(ctx);
-		str->append(buf, buf + len);
-		return len;
-	}
-	catch (const std::exception &e) {
-		log()->error("error while storing doc in cache: %s", e.what());
-	}
-	catch (...) {
-		log()->error("unknown error while storing doc in cache");
-	}
-	return -1;
 }
 
 static ComponentRegisterer<TaggedCache> reg_(new TaggedCacheDisk());
