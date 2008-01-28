@@ -1,1 +1,1 @@
-noinst_HEADERS = algorithm.h hash.h hashmap.h
+noinst_HEADERS = algorithm.h hash.h hashmap.h lrucache.h

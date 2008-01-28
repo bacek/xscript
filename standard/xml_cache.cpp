@@ -25,6 +25,7 @@
 
 #include "internal/hash.h"
 #include "internal/hashmap.h"
+#include "internal/lrucache.h"
 
 #ifndef HAVE_HASHMAP
 #include <map>
@@ -48,25 +49,7 @@
 
 namespace xscript
 {
-
 typedef boost::shared_ptr<Xml> XmlPtr;
-
-struct XmlListElement;
-typedef std::list<XmlListElement> XmlList;
-
-#ifndef HAVE_HASHMAP
-typedef std::map<std::string, XmlList::iterator> XmlMap;
-#else
-typedef details::hash_map<std::string, XmlList::iterator, details::StringHash> XmlMap;
-#endif
-
-struct XmlListElement {
-	XmlListElement(const XmlPtr& document, const XmlMap::iterator& iterator) :
-		document_(document), map_iterator_(iterator) { }
-
-	XmlPtr document_;
-	XmlMap::iterator map_iterator_;
-};
 
 #ifndef HAVE_HASHSET
 typedef std::set<std::string> StringSet;
@@ -90,18 +73,14 @@ public:
 	void store(const std::string &key, const boost::shared_ptr<Xml> &xml);
 	
 private:
-	void removeLast();
 	bool expired(const boost::shared_ptr<Xml> &xml) const;
-	void updateIterator(XmlMap::iterator iter, const boost::shared_ptr<Xml> &xml);
 	
 private:
 	boost::mutex mutex_;
-	
 	bool enabled_;
-	unsigned int max_size_;
-	
-	XmlMap iterators_;
-	XmlList documents_;
+
+	typedef LRUCache<std::string, boost::shared_ptr<Xml> > CacheType;
+	CacheType cache_;
 };
 
 class XmlCache
@@ -175,7 +154,7 @@ private:
 };
 
 XmlStorage::XmlStorage(unsigned int max_size) :
-	enabled_(true), max_size_(max_size)
+	enabled_(true), cache_(max_size)
 {
 }
 
@@ -191,10 +170,7 @@ XmlStorage::clear() {
 	if (!enabled_) {
 		return;
 	}
-	
-	iterators_.clear();
-	documents_.clear();
-	
+	cache_.clear();
 	enabled_ = false;
 }
 
@@ -215,12 +191,8 @@ XmlStorage::erase(const std::string &key) {
 		log()->debug("erasing from disabled storage");
 		return;
 	}
-	
-	XmlMap::iterator i = iterators_.find(key);
-	if (iterators_.end() != i) {
-		documents_.erase(i->second);
-		iterators_.erase(i);
-	}
+
+	cache_.erase(key);
 }
 
 boost::shared_ptr<Xml>
@@ -234,22 +206,18 @@ XmlStorage::fetch(const std::string &key) {
 		return boost::shared_ptr<Xml>();
 	}
 	
-	XmlMap::iterator i = iterators_.find(key);
-	if (iterators_.end() == i) {
+	CacheType::iterator it = cache_.fetch(key);
+	if (cache_.end() == it) {
 		return boost::shared_ptr<Xml>();
 	}
-	
-	if (expired(i->second->document_)) {
-		documents_.erase(i->second);
-		iterators_.erase(i);
+
+	if (expired(cache_.data(it))) {
+		cache_.erase(it);
 		return boost::shared_ptr<Xml>();
 	}
-	
-	XmlPtr xml = i->second->document_;
-	updateIterator(i, xml);
-	
+
 	log()->debug("%s found in storage", key.c_str());
-	return xml;
+	return cache_.data(it);
 }
 
 void
@@ -262,27 +230,9 @@ XmlStorage::store(const std::string &key, const boost::shared_ptr<Xml> &xml) {
 		log()->debug("storing into disabled storage");
 		return;
 	}
-	
-	XmlMap::iterator i = iterators_.find(key);
-	if (iterators_.end() == i) {
-		removeLast();
-		documents_.push_front(XmlListElement(xml, i));
-		iterators_[key] = documents_.begin();
-		documents_.begin()->map_iterator_ = iterators_.find(key);
-	}
-	else {
-		updateIterator(i, xml);
-	}
+
+	cache_.insert(key, xml);
 	log()->debug("storing of %s succeeded", key.c_str());
-}
-
-void
-XmlStorage::removeLast() {
-
-	if (documents_.size() == max_size_) {
-		iterators_.erase(documents_.back().map_iterator_);
-		documents_.pop_back();
-	}
 }
 
 bool
@@ -297,13 +247,6 @@ XmlStorage::expired(const boost::shared_ptr<Xml> &xml) const {
 	log()->debug("is xml expired: %llu, %llu", static_cast<unsigned long long>(modified),
 		static_cast<unsigned long long>(xml->modified()));
 	return modified > xml->modified();
-}
-
-void
-XmlStorage::updateIterator(XmlMap::iterator i, const boost::shared_ptr<Xml> &xml) {
-	documents_.erase(i->second);
-	documents_.push_front(XmlListElement(xml, i));
-	i->second = documents_.begin();
 }
 
 XmlCache::XmlCache() {
