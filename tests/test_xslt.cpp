@@ -59,6 +59,7 @@ XsltTest::testFile(const std::string &name) {
 	using namespace xscript;
 	boost::shared_ptr<Script> script = Script::create(name);
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -77,6 +78,7 @@ XsltTest::testMist() {
 
 	boost::shared_ptr<Script> script = Script::create("mist-extension.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 
 	CPPUNIT_ASSERT_EQUAL(std::string("mist-extension.xsl"), ctx->xsltName());
 

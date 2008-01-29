@@ -54,6 +54,7 @@ InvokeTest::testInvoke() {
 	using namespace xscript;
 	boost::shared_ptr<Script> script = Script::create("invoke.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -65,6 +66,7 @@ InvokeTest::testParams() {
 	using namespace xscript;
 	boost::shared_ptr<Script> script = Script::create("params.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -82,6 +84,7 @@ InvokeTest::testHttpBlockParams() {
 	using namespace xscript;
 	boost::shared_ptr<Script> script = Script::create("http-block-params.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -96,6 +99,7 @@ InvokeTest::testNoBlocks() {
 	using namespace xscript;
 	boost::shared_ptr<Script> script = Script::create("noblocks.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -107,6 +111,7 @@ InvokeTest::testEmptyCDATA() {
 	using namespace xscript;
 	boost::shared_ptr<Script> script = Script::create("empty-cdata.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -119,6 +124,7 @@ InvokeTest::testEvalXPath() {
 	
 	boost::shared_ptr<Script> script = Script::create("invoke.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	boost::shared_ptr<State> state = ctx->state();
 	
@@ -138,6 +144,7 @@ InvokeTest::testCheckGuard() {
 	
 	boost::shared_ptr<Script> script = Script::create("invoke.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	boost::shared_ptr<State> state = ctx->state();
 	state->setString("guardkey", "some value");
@@ -156,6 +163,7 @@ InvokeTest::testStylesheet() {
 	
 	boost::shared_ptr<Script> script = Script::create("xslt.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -171,6 +179,7 @@ InvokeTest::testRemoveStylesheet() {
 	
 	boost::shared_ptr<Script> script = Script::create("invoke.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());

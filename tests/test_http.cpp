@@ -48,6 +48,7 @@ HttpTest::testGet() {
 	
 	boost::shared_ptr<Script> script = Script::create("http-get.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -60,6 +61,7 @@ HttpTest::testGetLocal() {
 	
 	boost::shared_ptr<Script> script = Script::create("http-local.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -74,6 +76,7 @@ HttpTest::testSanitized() {
 	
 	boost::shared_ptr<Script> script = Script::create("http-sanitized.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -86,6 +89,7 @@ HttpTest::testZeroTimeout() {
 	
 	boost::shared_ptr<Script> script = Script::create("http-timeout.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());

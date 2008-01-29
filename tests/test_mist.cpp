@@ -51,6 +51,7 @@ MistTest::testDrop() {
 	
 	boost::shared_ptr<Script> script = Script::create("mist-drop.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -68,6 +69,7 @@ MistTest::testTypes() {
 	
 	boost::shared_ptr<Script> script = Script::create("mist-types.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -90,6 +92,7 @@ MistTest::testDate() {
 
 	boost::shared_ptr<Script> script = Script::create("mist-date.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -114,6 +117,7 @@ MistTest::testSplit() {
 	
 	boost::shared_ptr<Script> script = Script::create("mist-split.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -133,6 +137,7 @@ MistTest::testEscape() {
 	
 	boost::shared_ptr<Script> script = Script::create("mist-escape.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	boost::shared_ptr<State> state = ctx->state();
 	state->setString("data", "<stress>&data;</stress>");
@@ -152,6 +157,7 @@ MistTest::testStylesheet() {
 	
 	boost::shared_ptr<Script> script = Script::create("mist-style.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
 	
 	CPPUNIT_ASSERT_EQUAL(std::string("object.xsl"), ctx->xsltName());
 

@@ -70,6 +70,7 @@ public:
 	template<typename T> T param(const std::string &name) const;
 	template<typename T> void param(const std::string &name, const T &t);
 
+	friend class ContextStopper;
 private:
 	bool stopped_;
 	Request *request_;
@@ -87,6 +88,14 @@ private:
 	
 	std::map<std::string, boost::any> params_;
 	mutable boost::mutex params_mutex_, results_mutex_, node_list_mutex_;
+};
+
+class ContextStopper {
+public:
+	ContextStopper(boost::shared_ptr<Context> ctx);
+	~ContextStopper();
+private:
+	boost::shared_ptr<Context> ctx_;
 };
 
 template<typename T> inline T

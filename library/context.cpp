@@ -59,8 +59,6 @@ Context::wait(int millis) {
 			}
 		}
 	}
-	ExtensionList::instance()->stopContext(this);
-	stopped_ = true;
 }
 
 void
@@ -174,6 +172,14 @@ Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
 	else {
 		writer_ = std::auto_ptr<DocumentWriter>(new HtmlWriter(sh));
 	}
+}
+
+ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {
+}
+
+ContextStopper::~ContextStopper() {
+	ExtensionList::instance()->stopContext(ctx_.get());
+	ctx_->stopped_ = true;
 }
 
 } // namespace xscript

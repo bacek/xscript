@@ -68,6 +68,7 @@ HttpTest::testGetByRequest() {
 
 	boost::shared_ptr<Script> script = Script::create("http-get-by-request.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData(&req, &req, state)));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -95,6 +96,7 @@ HttpTest::testGetByState() {
 
 	boost::shared_ptr<Script> script = Script::create("http-get-by-state.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, RequestData(&req, &req, state)));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());

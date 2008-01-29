@@ -2,6 +2,7 @@ xscript (5.3-4) unstable; urgency=low
 
   * Class LRUCache created
   * LRUCache applied in XMLStorage
+  * Stopping context moved to Server::handleRequest
 
  -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 28 Jan 2008 16:40:10 +0300
 

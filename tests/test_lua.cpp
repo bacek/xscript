@@ -56,6 +56,7 @@ LuaTest::testState() {
 	RequestData data;
 	boost::shared_ptr<Script> script = Script::create("lua-state.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, data));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -89,6 +90,7 @@ LuaTest::testBadType() {
 	RequestData data;
 	boost::shared_ptr<Script> script = Script::create("lua-badtype.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, data));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
@@ -103,6 +105,7 @@ LuaTest::testBadArgCount() {
 	RequestData data;
 	boost::shared_ptr<Script> script = Script::create("lua-badargcount.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, data));
+	ContextStopper ctx_stopper(ctx);
 	
 	XmlDocHelper doc(script->invoke(ctx));
 	CPPUNIT_ASSERT(NULL != doc.get());
