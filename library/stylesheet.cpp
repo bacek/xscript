@@ -4,6 +4,7 @@
 #include <iterator>
 #include <algorithm>
 #include <stdexcept>
+#include <set>
 
 #include <boost/checked_delete.hpp>
 #include <boost/current_function.hpp>
@@ -102,9 +103,17 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 	if (!p.empty()) {
 		tctx->globalVars = xmlHashCreate(p.size());
 		log()->debug("param list contains %llu elements\n", static_cast<unsigned long long>(p.size()));
+
+		typedef std::set<std::string> ParamSetType;
+		ParamSetType unique_params;
 		for (std::vector<Param*>::const_iterator it = p.begin(), end = p.end(); it != end; ++it) {
 			const Param *param = *it;
 			const std::string &id = param->id();
+			std::pair<ParamSetType::iterator, bool> result = unique_params.insert(id);
+			if (result.second == false) {
+				log()->error("duplicated xslt-param: %s\n", id.c_str());
+				throw std::runtime_error(std::string("duplicated xslt-param: ") + id);
+			}
 			std::string value = param->asString(ctx);
 			if (value.empty()) {
 				log()->debug("skip empty xslt-param %s\n", id.c_str());

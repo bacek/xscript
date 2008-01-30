@@ -10,7 +10,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	stylesheet.cpp stylesheet_cache.cpp stylesheet_factory.cpp tag.cpp \
 	tag_param.cpp tagged_block.cpp tagged_cache.cpp thread_pool.cpp \
 	threaded_block.cpp util.cpp writer.cpp xml.cpp xslt_extension.cpp \
-	vhost_data.cpp
+	vhost_data.cpp protocol_arg_param.cpp
 
 noinst_HEADERS = details/expect.h details/extension_list.h details/loader.h \
 	details/logger_impl.h details/param_factory.h details/phoenix_singleton.h \
