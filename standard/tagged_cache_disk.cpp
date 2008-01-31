@@ -336,7 +336,7 @@ TaggedCacheDisk::load(const std::string &path, const std::string &key, Tag &tag,
 		if (size < (std::ifstream::pos_type)(sizeof(boost::uint32_t))) {
 			throw std::runtime_error("can not find doc end signature");
 		}
-		doclen = (boost::uint32_t)(size - sizeof(boost::uint32_t));
+		doclen = (boost::uint32_t)(size) - sizeof(boost::uint32_t);
 		doc_data.resize(doclen);
 		is.read(&doc_data[0], doclen);
 		is.exceptions(std::ios::badbit);

@@ -13,18 +13,18 @@ class LRUCache {
 	typedef std::list<ListElement> List;
 
 #ifndef HAVE_HASHMAP
-	typedef std::map<Key, List::iterator> Map;
+	typedef std::map<Key, typename List::iterator> Map;
 #else
-	typedef details::hash_map<Key, List::iterator> Map;
+	typedef details::hash_map<Key, typename List::iterator> Map;
 #endif
 
 	class ListElement {
 	public:
-		ListElement(const Data& data, const Map::iterator& iterator) :
+		ListElement(const Data& data, const typename Map::iterator& iterator) :
 			data_(data), map_iterator_(iterator) { }
 
 		Data data_;
-		Map::iterator map_iterator_;
+		typename Map::iterator map_iterator_;
 	};
 
 	Map key2data_;
@@ -32,8 +32,8 @@ class LRUCache {
 	unsigned int max_size_;
 
 public:
-	typedef Map::iterator iterator;
-	typedef Map::const_iterator const_iterator;
+	typedef typename Map::iterator iterator;
+	typedef typename Map::const_iterator const_iterator;
 
 	LRUCache(unsigned int size);
 	~LRUCache();
@@ -91,17 +91,17 @@ LRUCache<Key, Data>::erase(const Key& key) {
 	erase(it);
 }
 
-template<typename Key, typename Data> LRUCache<Key, Data>::const_iterator
+template<typename Key, typename Data> typename LRUCache<Key, Data>::const_iterator
 LRUCache<Key, Data>::find(const Key& key) const {
 	return key2data_.find(key);
 }
 
-template<typename Key, typename Data> LRUCache<Key, Data>::iterator
+template<typename Key, typename Data> typename LRUCache<Key, Data>::iterator
 LRUCache<Key, Data>::find(const Key& key) {
 	return key2data_.find(key);
 }
 
-template<typename Key, typename Data> LRUCache<Key, Data>::iterator
+template<typename Key, typename Data> typename LRUCache<Key, Data>::iterator
 LRUCache<Key, Data>::fetch(const Key& key) {
 	iterator it = find(key);
 	if (it != end()) {
@@ -111,22 +111,22 @@ LRUCache<Key, Data>::fetch(const Key& key) {
 	return it;
 }
 
-template<typename Key, typename Data> LRUCache<Key, Data>::iterator
+template<typename Key, typename Data> typename LRUCache<Key, Data>::iterator
 LRUCache<Key, Data>::begin() {
 	return key2data_.begin();
 }
 
-template<typename Key, typename Data> LRUCache<Key, Data>::const_iterator
+template<typename Key, typename Data> typename LRUCache<Key, Data>::const_iterator
 LRUCache<Key, Data>::begin() const {
 	return key2data_.begin();
 }
 
-template<typename Key, typename Data> LRUCache<Key, Data>::iterator
+template<typename Key, typename Data> typename LRUCache<Key, Data>::iterator
 LRUCache<Key, Data>::end() {
 	return key2data_.end();
 }
 
-template<typename Key, typename Data> LRUCache<Key, Data>::const_iterator
+template<typename Key, typename Data> typename LRUCache<Key, Data>::const_iterator
 LRUCache<Key, Data>::end() const {
 	return key2data_.end();
 }
