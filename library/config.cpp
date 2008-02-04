@@ -18,6 +18,7 @@
 #include "xscript/authorizer.h"
 #include "xscript/thread_pool.h"
 #include "xscript/vhost_data.h"
+#include "xscript/checking_policy.h"
 #include "xscript/tagged_cache.h"
 #include "xscript/script_cache.h"
 #include "xscript/script_factory.h"
@@ -60,6 +61,9 @@ Config::startup() {
 	
 	VirtualHostData::instance()->init(this);
 	log()->debug("virtual host data started");
+
+	CheckingPolicyStarter::instance()->init(this);
+	log()->debug("checking policy started");
 
 	ScriptCache::instance()->init(this);	
 	log()->debug("script cache started");

@@ -36,6 +36,7 @@
 #include "xscript/authorizer.h"
 #include "xscript/request_data.h"
 #include "xscript/vhost_data.h"
+#include "xscript/checking_policy.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -164,13 +165,13 @@ Server::handleRequest(ServerRequest *request) {
 		std::pair<std::string, bool> name = findScript(request->getScriptFilename());
 
 		if (!name.second) {
-			request->sendError(404); // not found
+			CheckingPolicy::instance()->sendError(request, 404, request->getScriptFilename() + " not found");
 			return;
 		}
-
+		
 		boost::shared_ptr<Script> script = Script::create(name.first);
 		if (!script->allowMethod(request->getRequestMethod())) {
-			request->sendError(405); // method not allowed
+			CheckingPolicy::instance()->sendError(request, 405, request->getRequestMethod() + " not allowed");
 			return;
 		}
 
@@ -218,7 +219,7 @@ Server::handleRequest(ServerRequest *request) {
 	catch (const std::exception &e) {
 		log()->error("%s: exception caught: %s\n", BOOST_CURRENT_FUNCTION, e.what());
 		xmlOutputBufferClose(buf);
-		request->sendError(500);
+		CheckingPolicy::instance()->sendError(request, 500, e.what());
 	}
 }
 

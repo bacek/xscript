@@ -118,7 +118,7 @@ public:
 	
 	virtual void setCookie(const Cookie &cookie);
 	virtual void setStatus(unsigned short status);
-	virtual void sendError(unsigned short status);
+	virtual void sendError(unsigned short status, const std::string& message);
 	
 	virtual void setHeader(const std::string &name, const std::string &value);
 	virtual std::streamsize write(const char *buf, std::streamsize size);

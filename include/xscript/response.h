@@ -18,7 +18,7 @@ public:
 	
 	virtual void setCookie(const Cookie &cookie) = 0;
 	virtual void setStatus(unsigned short status) = 0;
-	virtual void sendError(unsigned short status) = 0;
+	virtual void sendError(unsigned short status, const std::string& message) = 0;
 	virtual void setHeader(const std::string &name, const std::string &value) = 0;
 
 	virtual std::streamsize write(const char *buf, std::streamsize size) = 0;

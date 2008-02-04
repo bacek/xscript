@@ -29,6 +29,7 @@
 #include "xscript/stylesheet_factory.h"
 #include "xscript/extension.h"
 #include "xscript/vhost_data.h"
+#include "xscript/checking_policy.h"
 
 #include "details/extension_list.h"
 
@@ -111,17 +112,18 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 			const std::string &id = param->id();
 			std::pair<ParamSetType::iterator, bool> result = unique_params.insert(id);
 			if (result.second == false) {
-				log()->error("duplicated xslt-param: %s\n", id.c_str());
-				throw std::runtime_error(std::string("duplicated xslt-param: ") + id);
-			}
-			std::string value = param->asString(ctx);
-			if (value.empty()) {
-				log()->debug("skip empty xslt-param %s\n", id.c_str());
+				CheckingPolicy::instance()->processError(std::string("duplicated xslt-param: ") + id);
 			}
 			else {
-				log()->debug("add xslt-param %s: %s\n", id.c_str(), value.c_str());
-				xsltQuoteOneUserParam(tctx.get(), (const xmlChar*) id.c_str(), 
-					(const xmlChar*) value.c_str());
+				std::string value = param->asString(ctx);
+				if (value.empty()) {
+					log()->debug("skip empty xslt-param %s\n", id.c_str());
+				}
+				else {
+					log()->debug("add xslt-param %s: %s\n", id.c_str(), value.c_str());
+					xsltQuoteOneUserParam(tctx.get(), (const xmlChar*) id.c_str(), 
+						(const xmlChar*) value.c_str());
+				}
 			}
 		}
 	}

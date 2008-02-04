@@ -323,8 +323,9 @@ ServerRequest::setStatus(unsigned short status) {
 	}
 }
 
+
 void
-ServerRequest::sendError(unsigned short status) {
+ServerRequest::sendError(unsigned short status, const std::string& message) {
 	log()->debug("%s, clearing request output", BOOST_CURRENT_FUNCTION);
 	boost::mutex::scoped_lock sl(mutex_);
 	if (!headers_sent_) {
@@ -337,8 +338,10 @@ ServerRequest::sendError(unsigned short status) {
 	status_ = status;
 	out_headers_.insert(std::pair<std::string, std::string>("Content-type", "text/html"));
 	sendHeadersInternal();
-	(*stream_) << "<html><body><h1>" << status << " " << Parser::statusToString(status) << "</h1></body></html>";
+
+	(*stream_) << "<html><body><h1>" << status << " " << Parser::statusToString(status) << "<br>" << message << "</h1></body></html>";
 }
+
 
 void
 ServerRequest::setHeader(const std::string &name, const std::string &value) {

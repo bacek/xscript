@@ -1,3 +1,11 @@
+xscript (5.3-5) unstable; urgency=low
+
+  * ProtocolArg added
+  * Checking of duplicated xslt parameters updated
+  * CheckingPolicy added 
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon,  4 Feb 2008 12:02:05 +0300
+
 xscript (5.3-4) unstable; urgency=low
 
   * Class LRUCache created
