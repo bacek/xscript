@@ -5,6 +5,8 @@
 #include "xscript/response.h"
 #include "xscript/logger.h"
 
+#include <stdexcept>
+
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
