@@ -1,3 +1,9 @@
+xscript (5.3-7) unstable; urgency=low
+
+  * RequestDataParam added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed,  6 Feb 2008 17:37:38 +0300
+
 xscript (5.3-6) unstable; urgency=low
 
   * Assert removed from Context::result
