@@ -85,9 +85,10 @@ Context::result(unsigned int n, xmlDocPtr doc) {
 	XmlDocHelper doc_ptr(doc);
 	boost::mutex::scoped_lock sl(results_mutex_);
 	if (!stopped_ && results_.size() != 0) {
-		assert(NULL == results_[n]);
-		results_[n] = doc_ptr.release();
-		condition_.notify_all();
+		if (NULL == results_[n]) {
+			results_[n] = doc_ptr.release();
+			condition_.notify_all();
+		}
 	}
 	else {
 		log()->debug("%s, error in block %u: context not started or timed out", BOOST_CURRENT_FUNCTION, n);
