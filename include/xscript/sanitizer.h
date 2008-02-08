@@ -10,8 +10,7 @@ namespace xscript
 
 class Sanitizer : 
 	public virtual Component, 
-	public ComponentHolder<Sanitizer>,
-	public ComponentFactory<Sanitizer>
+	public ComponentHolder<Sanitizer>
 {
 public:
 	Sanitizer();

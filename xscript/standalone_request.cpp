@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "request.h"
+#include "standalone_request.h"
 #include "xscript/logger.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -13,6 +13,7 @@ namespace xscript
 {
 
 StandaloneRequest::StandaloneRequest(const std::string &url)
+    : method_("GET")
 {
 }
 
@@ -26,54 +27,62 @@ StandaloneRequest::getServerPort() const {
 
 const std::string&
 StandaloneRequest::getServerAddr() const {
-
+    return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
 StandaloneRequest::getPathInfo() const {
+    return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
 StandaloneRequest::getPathTranslated() const {
+    return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
 StandaloneRequest::getScriptName() const {
+    return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
 StandaloneRequest::getScriptFilename() const {
+    return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
 StandaloneRequest::getDocumentRoot() const {
+    return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
 StandaloneRequest::getRemoteUser() const {
+    return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
 StandaloneRequest::getRemoteAddr() const {
+    return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
 StandaloneRequest::getQueryString() const {
-	
+    return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
 StandaloneRequest::getRequestMethod() const {
-	return "GET";
+	return method_;
 }
 
 std::streamsize
 StandaloneRequest::getContentLength() const {
-	
+    return 0;
 }
 
 const std::string&
 StandaloneRequest::getContentType() const {
+    return StringUtils::EMPTY_STRING;
 }
 	
 unsigned int
@@ -83,10 +92,12 @@ StandaloneRequest::countArgs() const {
 
 bool
 StandaloneRequest::hasArg(const std::string &name) const {
+    return false;
 }
 
 const std::string&
 StandaloneRequest::getArg(const std::string &name) const {
+    return StringUtils::EMPTY_STRING;
 }
 
 void
@@ -185,6 +196,7 @@ StandaloneRequest::remoteFile(const std::string &name) const {
 
 bool
 StandaloneRequest::isSecure() const {
+    return false;
 }
 
 std::pair<const char*, std::streamsize>

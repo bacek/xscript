@@ -12,8 +12,7 @@ class Script;
 
 class ScriptFactory : 
 	public virtual Component,
-	public ComponentHolder<ScriptFactory>,
-	public ComponentFactory<ScriptFactory>
+	public ComponentHolder<ScriptFactory>
 {
 public:
 	ScriptFactory();

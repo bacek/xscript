@@ -14,8 +14,7 @@ namespace xscript
 {
 class VirtualHostData : 
 	public virtual Component, 
-	public ComponentHolder<VirtualHostData>,
-	public ComponentFactory<VirtualHostData>
+	public ComponentHolder<VirtualHostData>
 {
 public:
 	VirtualHostData();

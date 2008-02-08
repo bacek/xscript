@@ -24,8 +24,7 @@ public:
 
 class TaggedCache : 
 	public virtual Component,
-	public ComponentHolder<TaggedCache>,
-	public ComponentFactory<TaggedCache>
+	public ComponentHolder<TaggedCache>
 {
 public:
 	TaggedCache();

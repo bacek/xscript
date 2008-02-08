@@ -80,18 +80,18 @@ private:
 	EscapingEncoder& operator = (const EscapingEncoder &);
 	
 private:
-	IconvHelper escaper_;
+	IconvHolder escaper_;
 };
 
 void
-IconvTraits::clean(iconv_t conv) {
+IconvTraits::destroy(iconv_t conv) {
 	iconv_close(conv);
 }
 
 Encoder::Encoder(const char *from, const char *to) : 
 	from_(from)
 {
-	iconv_ = IconvHelper(iconv_open(to, from));
+	iconv_ = IconvHolder(iconv_open(to, from));
 	check(iconv_);
 }
 
@@ -160,7 +160,7 @@ Encoder::encode(const Range &range, std::string &dst) const {
 }
 
 void
-Encoder::check(const IconvHelper &conv) const {
+Encoder::check(const IconvHolder &conv) const {
 	if (IconvTraits::DEFAULT_VALUE == conv.get()) {
 		std::stringstream stream;
 		StringUtils::report("encoder error: ", errno, stream);
@@ -195,7 +195,7 @@ DefaultEncoder::~DefaultEncoder() {
 }
 
 size_t
-DefaultEncoder::rep(char *buf, size_t size, const EncoderContext &ctx) const {
+DefaultEncoder::rep(char *buf, size_t size, const EncoderContext & /* ctx */) const {
 	return snprintf(buf, size, "?");
 }
 
@@ -208,14 +208,14 @@ IgnoringEncoder::~IgnoringEncoder() {
 }
 
 size_t
-IgnoringEncoder::rep(char *buf, size_t size, const EncoderContext &ctx) const {
+IgnoringEncoder::rep(char * /* buf */, size_t /* size */, const EncoderContext &/* ctx */) const {
 	return 0;
 }
 
 EscapingEncoder::EscapingEncoder(const char *from, const char *to) :
 	Encoder(from, to)
 {
-	escaper_ = IconvHelper(iconv_open("UCS-4LE", from)); //UTF-16LE
+	escaper_ = IconvHolder(iconv_open("UCS-4LE", from)); //UTF-16LE
 	check(escaper_);
 }
 

@@ -82,7 +82,7 @@ ParamFactory::param(Object *owner, xmlNodePtr node) {
 		}
 	}
 	catch (const std::exception &e) {
-		log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
+		log()->crit("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
 		throw;
 	}
 }

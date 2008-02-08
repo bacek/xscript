@@ -7,7 +7,7 @@
 #include <boost/current_function.hpp>
 
 #include "xscript/util.h"
-#include "xscript/helper.h"
+#include "xscript/resource_holder.h"
 #include "xscript/logger.h"
 #include "xscript/context.h"
 
@@ -25,14 +25,12 @@ namespace xscript
 
 static boost::thread_specific_ptr<std::string> error_message_;
 
-struct LuaStateTraits : public TypeTraits<lua_State*> 
-{
-	static void clean(lua_State *state) {
-		lua_close(state);
-	}
-};
+template<>
+inline void ResourceHolderTraits<lua_State*>::destroy(lua_State *state) {
+    lua_close(state);
+}
 
-typedef Helper<lua_State*, LuaStateTraits> LuaHelper;
+typedef ResourceHolder<lua_State*> LuaHolder;
 
 extern "C" int
 luaReportError(lua_State *lua) throw () {
@@ -76,7 +74,7 @@ LuaBlock::parse() {
 	if (NULL == code_) {
 		throw std::runtime_error("empty lua node");
 	}
-	LuaHelper lua(luaL_newstate());
+	LuaHolder lua(luaL_newstate());
 	int res = luaL_loadstring(lua.get(), code_);
 	if (LUA_ERRSYNTAX == res) {
 		throw std::runtime_error("bad lua code");
@@ -153,7 +151,7 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 	
 	log()->entering(BOOST_CURRENT_FUNCTION);
 	
-	LuaHelper lua(luaL_newstate());
+	LuaHolder lua(luaL_newstate());
 	luaL_openlibs(lua.get());
 		
 	Request *request = ctx->request();
@@ -217,6 +215,6 @@ void
 LuaExtension::init(const Config *config) {
 }
 
-static ExtensionRegisterer reg_(ExtensionHelper(new LuaExtension()));
+static ExtensionRegisterer reg_(ExtensionHolder(new LuaExtension()));
 
 } // namespace xscript

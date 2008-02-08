@@ -10,7 +10,7 @@
 #include "xscript/logger.h"
 #include "xscript/object.h"
 #include "xscript/context.h"
-#include "request.h"
+#include "standalone_request.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

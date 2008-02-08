@@ -13,6 +13,7 @@
 #include "xscript/util.h"
 #include "xscript/config.h"
 #include "details/loader.h"
+#include "xscript/logger_factory.h"
 #include "xscript/logger.h"
 #include "xscript/sanitizer.h"
 #include "xscript/authorizer.h"
@@ -44,11 +45,12 @@ Config::~Config() {
 
 void
 Config::startup() {
-	
-	Loader::instance()->init(this);
-	
-	Logger::instance()->init(this);
-	log()->debug("logger started");
+
+	LoggerFactory::instance()->init(this);
+	log()->debug("logger factory started");
+
+    Loader::instance()->init(this);
+	log()->debug("loader started");
 	
 	Authorizer::instance()->init(this);
 	log()->debug("authorizer started");

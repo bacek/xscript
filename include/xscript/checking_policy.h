@@ -12,8 +12,7 @@ class Config;
 
 class CheckingPolicyStarter :
 	public virtual Component, 
-	public ComponentHolder<CheckingPolicyStarter>,
-	public ComponentFactory<CheckingPolicyStarter>
+	public ComponentHolder<CheckingPolicyStarter>
 {
 public:
 	CheckingPolicyStarter();
@@ -26,8 +25,7 @@ public:
 
 class CheckingPolicy :
 	public virtual Component, 
-	public ComponentHolder<CheckingPolicy>,
-	public ComponentFactory<CheckingPolicy>
+	public ComponentHolder<CheckingPolicy>
 {
 public:
 	CheckingPolicy();
@@ -39,3 +37,4 @@ public:
 
 }
 #endif //_XSCRIPT_CHECKING_POLICY_H_
+

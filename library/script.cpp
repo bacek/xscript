@@ -163,7 +163,7 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
 		return fetchResults(ctx.get());
 	}
 	catch (const std::exception &e) {
-		log()->error("%s, %s: caught exception: %s", BOOST_CURRENT_FUNCTION, name().c_str(), e.what());
+		log()->crit("%s, %s: caught exception: %s", BOOST_CURRENT_FUNCTION, name().c_str(), e.what());
 		throw;
 	}
 }

@@ -11,8 +11,7 @@ namespace xscript
 
 class ThreadPool : 
 	public virtual Component, 
-	public ComponentHolder<ThreadPool>,
-	public ComponentFactory<ThreadPool>
+	public ComponentHolder<ThreadPool>
 {
 public:
 	ThreadPool();

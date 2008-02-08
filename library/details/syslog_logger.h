@@ -6,26 +6,28 @@
 namespace xscript
 {
 
-class LoggerImpl : public Logger
+/**
+ * Logger implementation to output using syslog facility
+ */
+class SyslogLogger : public Logger
 {
 public:
-	LoggerImpl();
-	virtual ~LoggerImpl();
-	
-	virtual unsigned int level() const;
-	virtual void level(unsigned int value);
-	
-	virtual void init(const Config *config);
+    /**
+     * Create logger. 
+     * \param key Config key optained via subKeys
+     */
+	SyslogLogger(Logger::LogLevel level, const Config * config, const std::string &key);
+	virtual ~SyslogLogger();
 	
 protected:
+	virtual void critInternal(const char *format, va_list args);
+	virtual void errorInternal(const char *format, va_list args);
 	virtual void warnInternal(const char *format, va_list args);
 	virtual void infoInternal(const char *format, va_list args);
-	virtual void errorInternal(const char *format, va_list args);
 	virtual void debugInternal(const char *format, va_list args);
 
 private:
 	std::string ident_;
-	volatile unsigned int level_;
 };
 
 } // namespace xscript

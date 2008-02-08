@@ -13,7 +13,7 @@
 
 #include "details/loader.h"
 #include "xscript/config.h"
-#include "xscript/helper.h"
+#include "xscript/resource_holder.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -22,12 +22,14 @@
 namespace xscript
 {
 
-struct HandleTraits : public TypeTraits<void*>
-{
-	static void clean(void *handle);
+template<>
+void ResourceHolderTraits<void*>::destroy(void* handle) {
+	if (NULL != handle) {
+		dlclose(handle);
+    }
 };
 
-typedef Helper<void*, HandleTraits> Handle;
+typedef ResourceHolder<void*> Handle;
 
 class LoaderImpl : public Loader
 {
@@ -108,11 +110,5 @@ LoaderImpl::checkLoad(const char *err) {
 	}
 }
 
-void
-HandleTraits::clean(void *handle) {
-	if (NULL != handle) {
-		dlclose(handle);
-	}
-}
 
 } // namespace xscript

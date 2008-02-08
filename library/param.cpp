@@ -38,7 +38,7 @@ private:
 	SimpleParam& operator = (const SimpleParam &);
 };
 
-Param::Param(Object *owner, xmlNodePtr node) :
+Param::Param(Object * /* owner */, xmlNodePtr node) :
 	node_(node)
 {
 	assert(node_);
@@ -122,12 +122,12 @@ SimpleParam<std::string>::typedValue() const {
 }
 
 template<typename T> std::string
-SimpleParam<T>::asString(const Context *ctx) const {
+SimpleParam<T>::asString(const Context * /* ctx */) const {
 	return value();
 }
 
 template<typename T> void
-SimpleParam<T>::add(const Context *ctx, ArgList &al) const {
+SimpleParam<T>::add(const Context * /* ctx */, ArgList &al) const {
 	al.add(typedValue());
 }
 

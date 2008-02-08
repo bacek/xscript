@@ -51,7 +51,7 @@ public:
 			boost::bind(&Extension::init, _1, config));
 	}
 	
-	void registerExtension(ExtensionHelper ext);
+	void registerExtension(ExtensionHolder ext);
 
 	Extension* extension(const xmlNodePtr node) const;
 	Extension* extension(const char *name, const char *ref) const;

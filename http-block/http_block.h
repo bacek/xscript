@@ -48,6 +48,10 @@ protected:
 	virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception);
 	
 	XmlDocHelper getHttp(Context *ctx, boost::any &a);
+
+    // Proxy for getHttp with emiting notice about obsoleted call.
+	XmlDocHelper getHttpObsolete(Context *ctx, boost::any &a);
+
 	XmlDocHelper postHttp(Context *ctx, boost::any &a);
 	XmlDocHelper getByState(Context *ctx, boost::any &a);
 	XmlDocHelper getByRequest(Context *ctx, boost::any &a);

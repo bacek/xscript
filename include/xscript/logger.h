@@ -7,45 +7,57 @@
 namespace xscript
 {
 
-class Logger : 
-	public virtual Component,
-	public ComponentHolder<Logger>
+
+class Logger
 {
 public:
-	Logger();
+    enum LogLevel {
+        LEVEL_CRIT  = 1,
+        LEVEL_ERROR = 2,
+        LEVEL_WARN  = 3,
+        LEVEL_INFO  = 4,
+        LEVEL_DEBUG = 5,
+    };
+
+	Logger(LogLevel level);
 	virtual ~Logger();
 	
 	void exiting(const char *function);
 	void entering(const char *function);
 
-	void warn(const char *format, ...);
-	void info(const char *format, ...);
+	void crit(const char *format, ...);
 
 	void error(const char *format, ...);
+
+	void warn(const char *format, ...);
+
+	void info(const char *format, ...);
+
 	void debug(const char *format, ...);
 	
-	static Logger* createImpl();
 	static void xmllog(const char *format, va_list args);
 	static void xmllog(void *ctx, const char *format, ...);
 
-	virtual unsigned int level() const = 0;
-	virtual void level(unsigned int value) = 0;
-	virtual void init(const Config *config) = 0;
-	
-	static const unsigned int LEVEL_ERROR = 1;
-	static const unsigned int LEVEL_WARN  = 2;
-	static const unsigned int LEVEL_INFO  = 3;
-	static const unsigned int LEVEL_DEBUG = 4;
+	LogLevel level() const {
+        return level_;
+    }
 
+	void level(LogLevel value) {
+        level_ = value;
+    }
+	
 protected:
+    LogLevel level_;
+
+	virtual void critInternal(const char *format, va_list args) = 0;
+	virtual void errorInternal(const char *format, va_list args) = 0;
 	virtual void warnInternal(const char *format, va_list args) = 0;
 	virtual void infoInternal(const char *format, va_list args) = 0;
-	
-	virtual void errorInternal(const char *format, va_list args) = 0;
 	virtual void debugInternal(const char *format, va_list args) = 0;
 };
 
 Logger* log();
+
 
 } // namespace xscript
 

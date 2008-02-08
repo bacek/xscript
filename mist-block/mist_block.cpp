@@ -820,6 +820,6 @@ MistMethodRegistrator::MistMethodRegistrator() {
 }
 
 static MistMethodRegistrator reg_;
-static ExtensionRegisterer ext_(ExtensionHelper(new MistExtension()));
+static ExtensionRegisterer ext_(ExtensionHolder(new MistExtension()));
 
 } // namespace xscript

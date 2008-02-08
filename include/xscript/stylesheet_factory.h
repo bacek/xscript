@@ -12,8 +12,7 @@ class Stylesheet;
 
 class StylesheetFactory : 
 	public virtual Component, 
-	public ComponentHolder<StylesheetFactory>,
-	public ComponentFactory<StylesheetFactory>
+	public ComponentHolder<StylesheetFactory>
 {
 public:
 	StylesheetFactory();

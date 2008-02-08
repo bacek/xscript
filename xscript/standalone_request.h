@@ -88,6 +88,7 @@ private:
 	StandaloneRequest& operator = (const StandaloneRequest &);
 
 private:
+    std::string method_;
 	std::map<std::string, std::string> headers_;
 	std::vector<StringUtils::NamedValue> params_;
 };

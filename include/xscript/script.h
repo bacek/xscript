@@ -68,6 +68,7 @@ public:
 	virtual XmlDocHelper invoke(boost::shared_ptr<Context> ctx);
 	virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc);
 	
+    // TODO: remove this method. It should be in ScriptFactory.
 	static boost::shared_ptr<Script> create(const std::string &name);
 	
 protected:

@@ -12,8 +12,7 @@ class Script;
 
 class ScriptCache : 
 	public virtual Component, 
-	public ComponentHolder<ScriptCache>,
-	public ComponentFactory<ScriptCache>
+	public ComponentHolder<ScriptCache>
 {
 public:
 	ScriptCache();

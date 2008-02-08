@@ -12,8 +12,7 @@ class Stylesheet;
 
 class StylesheetCache : 
 	public virtual Component, 
-	public ComponentHolder<StylesheetCache>,
-	public ComponentFactory<StylesheetCache>
+	public ComponentHolder<StylesheetCache>
 {
 public:
 	StylesheetCache();

@@ -33,7 +33,7 @@ ExtensionList::~ExtensionList() {
 }
 	
 void
-ExtensionList::registerExtension(ExtensionHelper ext) {
+ExtensionList::registerExtension(ExtensionHolder ext) {
 	if (XSCRIPT_UNLIKELY(NULL != extension(ext->name(), ext->nsref()))) {
 		std::stringstream stream;
 		stream << "duplicate extension: " << ext->name();
@@ -45,7 +45,7 @@ ExtensionList::registerExtension(ExtensionHelper ext) {
 		ext.release();
 	}
 	catch (const std::exception &e) {
-		log()->error("failed to register xslt extension: %s", e.what());
+		log()->crit("failed to register xslt extension: %s", e.what());
 		extensions_.pop_back();
 		throw;
 	}
@@ -86,13 +86,13 @@ ExtensionList::accepts(Extension *ext, const char *name, const char *ref) const 
 	return true;
 }
 
-ExtensionRegisterer::ExtensionRegisterer(ExtensionHelper helper) throw ()
+ExtensionRegisterer::ExtensionRegisterer(ExtensionHolder helper) throw ()
 {
 	try {
 		ExtensionList::instance()->registerExtension(helper);
 	}
 	catch (const std::exception &e) {
-		log()->error("caught exception while registering module: %s", e.what());
+		log()->crit("caught exception while registering module: %s", e.what());
 	}
 }
 

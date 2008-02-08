@@ -18,8 +18,7 @@ public:
 
 class Authorizer : 
 	public virtual Component, 
-	public ComponentHolder<Authorizer>, 
-	public ComponentFactory<Authorizer>
+	public ComponentHolder<Authorizer>
 {
 public:
 	Authorizer();

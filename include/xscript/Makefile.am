@@ -1,5 +1,5 @@
 pkginclude_HEADERS = algorithm.h args.h authorizer.h block.h config.h \
-	component.h context.h cookie.h encoder.h extension.h helper.h logger.h \
+	component.h context.h cookie.h encoder.h extension.h resource_holder.h logger.h \
 	object.h param.h range.h request.h request_data.h response.h sanitizer.h \
 	script.h script_cache.h script_factory.h state.h state_value.h \
 	stylesheet.h stylesheet_cache.h stylesheet_factory.h tag.h tagged_block.h \

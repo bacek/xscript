@@ -6,68 +6,53 @@
 #include <libxslt/transform.h>
 #include <libxslt/xsltInternals.h>
 
-#include <xscript/helper.h>
+#include "xscript/resource_holder.h"
 
 namespace xscript
 {
 
-struct XmlDocTraits : public TypeTraits<xmlDocPtr>
-{
-	static inline void clean(xmlDocPtr doc) {
-		xmlFreeDoc(doc);
-	}
+template<> 
+inline void ResourceHolderTraits<xmlDocPtr>::destroy(xmlDocPtr doc) {
+    xmlFreeDoc(doc);
+}
+
+template<> 
+inline void ResourceHolderTraits<xmlChar*>::destroy(xmlChar *value) {
+    xmlFree(value);
 };
 
-struct XmlCharTraits : public TypeTraits<xmlChar*>
-{
-	static inline void clean(xmlChar *value) {
-		xmlFree(value);
-	}
+template<> 
+inline void ResourceHolderTraits<xmlNodePtr>::destroy(xmlNodePtr node) {
+    xmlFreeNode(node);
 };
 
-struct XmlNodeTraits : public TypeTraits<xmlNodePtr>
-{
-	static inline void clean(xmlNodePtr node) {
-		xmlFreeNode(node);
-	}
+template<> 
+inline void ResourceHolderTraits<xmlXPathObjectPtr>::destroy(xmlXPathObjectPtr obj) {
+    xmlXPathFreeObject(obj);
 };
 
-struct XmlXPathObjectTraits : public TypeTraits<xmlXPathObjectPtr>
-{
-	static inline void clean(xmlXPathObjectPtr obj) {
-		xmlXPathFreeObject(obj);
-	}
+template<> 
+inline void ResourceHolderTraits<xmlXPathContextPtr>::destroy(xmlXPathContextPtr ctx) {
+    xmlXPathFreeContext(ctx);
 };
 
-struct XmlXPathContextTraits : public TypeTraits<xmlXPathContextPtr>
-{
-	static inline void clean(xmlXPathContextPtr ctx) {
-		xmlXPathFreeContext(ctx);
-	}
+template<>
+inline void ResourceHolderTraits<xsltStylesheetPtr>::destroy(xsltStylesheetPtr sh) {
+    xsltFreeStylesheet(sh);
 };
 
-struct XsltStylesheetTraits : public TypeTraits<xsltStylesheetPtr>
-{
-	static inline void clean(xsltStylesheetPtr sh) {
-		xsltFreeStylesheet(sh);
-	}
+template<>
+inline void ResourceHolderTraits<xsltTransformContextPtr>::destroy(xsltTransformContextPtr ctx) {
+    xsltFreeTransformContext(ctx);
 };
 
-struct XsltTransformContextTraits : public TypeTraits<xsltTransformContextPtr>
-{
-	static inline void clean(xsltTransformContextPtr ctx) {
-		xsltFreeTransformContext(ctx);
-	}
-};
-
-typedef Helper<xmlDocPtr, XmlDocTraits> XmlDocHelper;
-typedef Helper<xmlChar*, XmlCharTraits> XmlCharHelper;
-typedef Helper<xmlNodePtr, XmlNodeTraits> XmlNodeHelper;
-typedef Helper<xmlXPathObjectPtr, XmlXPathObjectTraits> XmlXPathObjectHelper;
-typedef Helper<xmlXPathContextPtr, XmlXPathContextTraits> XmlXPathContextHelper;
-
-typedef Helper<xsltStylesheetPtr, XsltStylesheetTraits> XsltStylesheetHelper;
-typedef Helper<xsltTransformContextPtr, XsltTransformContextTraits> XsltTransformContextHelper;
+typedef ResourceHolder<xmlDocPtr> XmlDocHelper;
+typedef ResourceHolder<xmlChar*> XmlCharHelper;
+typedef ResourceHolder<xmlNodePtr> XmlNodeHelper;
+typedef ResourceHolder<xmlXPathObjectPtr> XmlXPathObjectHelper;
+typedef ResourceHolder<xmlXPathContextPtr> XmlXPathContextHelper;
+typedef ResourceHolder<xsltStylesheetPtr> XsltStylesheetHelper;
+typedef ResourceHolder<xsltTransformContextPtr> XsltTransformContextHelper;
 
 } // namespace xscript
 

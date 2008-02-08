@@ -5,7 +5,7 @@
 #include <memory>
 #include <boost/utility.hpp>
 #include <xscript/range.h>
-#include <xscript/helper.h>
+#include <xscript/resource_holder.h>
 #include <iconv.h>
 
 namespace xscript
@@ -13,11 +13,11 @@ namespace xscript
 
 struct IconvTraits
 {
-	static void clean(iconv_t conv);
+	static void destroy(iconv_t conv);
 	static const iconv_t DEFAULT_VALUE;
 };
 
-typedef Helper<iconv_t, IconvTraits> IconvHelper;
+typedef ResourceHolder<iconv_t, IconvTraits> IconvHolder;
 
 struct EncoderContext;
 
@@ -44,7 +44,7 @@ protected:
 	Encoder(const char *from, const char *to);
 	virtual ~Encoder();
 	
-	void check(const IconvHelper &conv) const;
+	void check(const IconvHolder &conv) const;
 	char* next(const EncoderContext &ctx) const;
 	
 	virtual size_t rep(char *buf, size_t size, const EncoderContext &ctx) const = 0;
@@ -56,7 +56,7 @@ private:
 	
 private:
 	std::string from_;
-	IconvHelper iconv_;
+	IconvHolder iconv_;
 };
 
 template<typename Cont> inline std::string 

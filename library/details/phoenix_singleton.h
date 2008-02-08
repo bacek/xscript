@@ -13,7 +13,7 @@
 #include <boost/checked_delete.hpp>
 
 #include "xscript/util.h"
-#include "xscript/helper.h"
+#include "xscript/resource_holder.h"
 #include "details/expect.h"
 
 namespace xscript
@@ -38,12 +38,12 @@ template<typename Type> boost::once_flag
 PhoenixSingleton<Type>::init_ = BOOST_ONCE_INIT;
 
 template<typename Type> Type* 
-PhoenixSingleton<Type>::instance_ = TypeTraits<Type*>::DEFAULT_VALUE;
+PhoenixSingleton<Type>::instance_ = ResourceHolderTraits<Type*>::DEFAULT_VALUE;
 
 template<typename Type> inline Type*
 PhoenixSingleton<Type>::instance() {
 	boost::call_once(&initInstance, init_);
-	assert(TypeTraits<Type*>::DEFAULT_VALUE != instance_);
+	assert(ResourceHolderTraits<Type*>::DEFAULT_VALUE != instance_);
 	return instance_;
 }
 
@@ -52,7 +52,7 @@ PhoenixSingleton<Type>::initInstance() {
 	std::auto_ptr<Type> p(new Type());
 	if (XSCRIPT_LIKELY(atexit(&destroyInstance) == 0)) {
 		instance_ = p.release();
-		assert(TypeTraits<Type*>::DEFAULT_VALUE != instance_);
+		assert(ResourceHolderTraits<Type*>::DEFAULT_VALUE != instance_);
 	}
 	else {
 		std::stringstream stream;

@@ -80,7 +80,7 @@ Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh, Context *ctx, XmlDocHe
 		XmlUtils::throwUnless(NULL != doc.get());
 	}
 	catch (const std::exception &e) {
-		log()->error("caught exception while applying xslt [%s]: %s", sh->name().c_str(), e.what());
+		log()->crit("caught exception while applying xslt [%s]: %s", sh->name().c_str(), e.what());
 		throw;
 	}
 }

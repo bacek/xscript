@@ -4,8 +4,8 @@
 #include <memory>
 #include <boost/utility.hpp>
 
-#include <xscript/helper.h>
-#include <xscript/component.h>
+#include "xscript/resource_holder.h"
+#include "xscript/component.h"
 #include <libxml/tree.h>
 
 namespace xscript
@@ -32,12 +32,12 @@ public:
 	virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node) = 0;
 };
 
-typedef Helper<Extension*, ComponentTraits<Extension> > ExtensionHelper;
+typedef ResourceHolder<Extension*, ComponentHolder<Extension>::ResourceTraits > ExtensionHolder;
 
 class ExtensionRegisterer : private boost::noncopyable
 {
 public:
-	ExtensionRegisterer(ExtensionHelper helper) throw ();
+	ExtensionRegisterer(ExtensionHolder holder) throw ();
 };
 
 } // namespace xscript
