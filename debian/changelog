@@ -1,3 +1,9 @@
+xscript (5.4-0) unstable; urgency=low
+
+  * bacek work
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri,  8 Feb 2008 17:40:14 +0300
+
 xscript (5.3-7) unstable; urgency=low
 
   * RequestDataParam added
