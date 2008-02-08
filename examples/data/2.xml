@@ -1,0 +1,12 @@
+    <page title="Another Simple page">
+        <para id="para1">
+            Another First paragraph
+        </para>
+        <para id="para2">
+            Another Second paragraph
+        </para>
+        <para id="para3">
+            Another Third paragraph
+        </para>
+    </page>
+

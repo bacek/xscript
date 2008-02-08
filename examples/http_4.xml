@@ -1,0 +1,30 @@
+<?xml-stylesheet href="http2.xsl"?>
+<doc xmlns:x="http://www.yandex.ru/xscript">
+    <!-- Invoke "mist" to create final url by joining QueryArg -->
+    <mist_result>
+        <x:mist>
+            <method>setStateConcatString</method>
+            <param type="String">uri</param> <!-- state_arg name. "Key" in State -->
+            <param type="String">file:///home/bacek/work/xscript-bacek/examples/data/</param>
+            <!-- QueryArg - simple CGI argument. -->
+            <!--
+                default="1" - default value is "1". Used when QueryArg is not specified.
+
+            -->
+            <param type="QueryArg" default="1">page</param>
+            <param type="String">.xml</param>
+        </x:mist>
+    </mist_result>
+
+    <x:http>
+        <method>getHttp</method>
+        <param type="StateArg" as="String">uri</param>
+    </x:http>
+
+    <current_date>
+        <x:mist>
+            <method>setStateByDate</method>
+            <param type="String">current_date</param> <!-- state_arg name. "Key" in State -->
+        </x:mist>
+    </current_date>
+</doc>

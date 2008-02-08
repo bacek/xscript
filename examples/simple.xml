@@ -1,0 +1,14 @@
+<?xml-stylesheet href="simple.xsl"?>
+<doc>
+    <page title="Simple page">
+        <para id="para1">
+            First paragraph
+        </para>
+        <para id="para2">
+            Second paragraph
+        </para>
+        <para id="para3">
+            Third paragraph
+        </para>
+    </page>
+</doc>

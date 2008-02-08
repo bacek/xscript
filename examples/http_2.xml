@@ -1,0 +1,17 @@
+<?xml-stylesheet href="http.xsl"?>
+<doc xmlns:x="http://www.yandex.ru/xscript">
+    <!-- Invoke "mist" to create final url -->
+    <!-- State is (key,value) pairs exists during Script processing -->
+    <mist_result>
+        <x:mist>
+            <method>setStateConcatString</method>
+            <param type="String">uri</param> <!-- state_arg name. "Key" in State -->
+            <param type="String">file:///home/bacek/work/xscript-bacek/examples/data/</param>
+            <param type="String">1.xml</param>
+        </x:mist>
+    </mist_result>
+    <x:http>
+        <method>getHttp</method>
+        <param type="StateArg" as="String">uri</param>
+    </x:http>
+</doc>

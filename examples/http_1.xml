@@ -1,0 +1,8 @@
+<?xml-stylesheet href="simple.xsl"?>
+<doc xmlns:x="http://www.yandex.ru/xscript">
+    <!-- Simple include some page over http -->
+    <x:http>
+        <method>getHttp</method>
+        <param type="String">file:///home/bacek/work/xscript-bacek/examples/data/1.xml</param>
+    </x:http>
+</doc>
