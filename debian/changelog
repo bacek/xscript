@@ -2,8 +2,9 @@ xscript (5.4-1) unstable; urgency=low
 
   * addInputHeader added to Request
   * XmlErrorReporter fixed
+  * set_state_urlencode, set_state_urldecode mist methods registration added
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 12 Feb 2008 13:33:16 +0300
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 12 Feb 2008 15:56:32 +0300
 
 xscript (5.4-0) unstable; urgency=low
 

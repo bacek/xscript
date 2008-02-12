@@ -764,6 +764,12 @@ MistMethodRegistrator::MistMethodRegistrator() {
 	MistBlock::registerMethod("setStateDefined", &MistBlock::setStateDefined);
 	MistBlock::registerMethod("set_state_defined", &MistBlock::setStateDefined);
 
+	MistBlock::registerMethod("set_state_urlencode", &MistBlock::setStateUrlencode);
+	MistBlock::registerMethod("setStateUrlencode", &MistBlock::setStateUrlencode);
+
+	MistBlock::registerMethod("set_state_urldecode", &MistBlock::setStateUrldecode);
+	MistBlock::registerMethod("setStateUrldecode", &MistBlock::setStateUrldecode);
+
 	MistBlock::registerMethod("setStateByKey", &MistBlock::setStateByKeys);
 	MistBlock::registerMethod("set_state_by_key", &MistBlock::setStateByKeys);
 	
