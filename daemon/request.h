@@ -97,6 +97,7 @@ public:
 	virtual bool hasHeader(const std::string &name) const;
 	virtual const std::string& getHeader(const std::string &name) const;
 	virtual void headerNames(std::vector<std::string> &v) const;
+	virtual void addInputHeader(const std::string &name, const std::string &value);
 	
 	virtual unsigned int countCookies() const;
 	virtual bool hasCookie(const std::string &name) const;

@@ -4,6 +4,7 @@
 #include "xscript/component.h"
 #include "xscript/response.h"
 #include "xscript/logger.h"
+#include "xscript/util.h"
 
 #include <stdexcept>
 
@@ -14,8 +15,8 @@
 namespace xscript
 {
 
-std::string CheckingPolicyStarter::PRODUCTION_ID = "production";
-std::string CheckingPolicyStarter::DEVELOPMENT_ID = "development";
+const std::string CheckingPolicyStarter::PRODUCTION_ID = "production";
+const std::string CheckingPolicyStarter::DEVELOPMENT_ID = "development";
 
 class ProductionCheckingPolicy : public CheckingPolicy
 {
@@ -79,7 +80,7 @@ DevelopmentCheckingPolicy::~DevelopmentCheckingPolicy() {
 void
 DevelopmentCheckingPolicy::processError(const std::string& message) {
 	log()->error("%s\n", message.c_str());
-	throw std::runtime_error(message);
+	throw unbound_runtime_error(message);
 }
 
 void

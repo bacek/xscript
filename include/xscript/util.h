@@ -13,6 +13,15 @@
 namespace xscript
 {
 
+class unbound_runtime_error : public std::exception {
+public:
+	unbound_runtime_error(const std::string& error) : error_(error) {}
+	virtual ~unbound_runtime_error() {}
+	virtual const char* what() const { return error_.c_str(); }
+private:
+	std::string error_;
+};
+
 class Encoder;
 
 class XmlUtils : private boost::noncopyable

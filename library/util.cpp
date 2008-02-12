@@ -42,7 +42,7 @@ public:
 	XmlErrorReporter();
 	
 	void reset();
-	const char* message() const;
+	const std::string& message() const;
 	
 	void report(const char *format, ...);
 	void report(const char *format, va_list args);
@@ -51,13 +51,15 @@ public:
 	
 private:
 	bool error_;
-	char message_[5120];
+	std::string message_;
 	
 	static boost::thread_specific_ptr<XmlErrorReporter> reporter_;
+	static const std::string UNKNOWN_XML_ERROR;
 };
 
 const std::string StringUtils::EMPTY_STRING;
 boost::thread_specific_ptr<XmlErrorReporter> XmlErrorReporter::reporter_;
+const std::string XmlErrorReporter::UNKNOWN_XML_ERROR = "unknown XML error";
 
 extern "C" void xmlNullError(void *, const char *, ...);
 extern "C" void xmlReportPlainError(void *, const char *, ...);
@@ -105,7 +107,7 @@ void
 XmlUtils::throwUnless(bool value) {
 	if (!value) {
 		XmlErrorReporter *rep = XmlErrorReporter::reporter();
-		std::runtime_error e(rep->message());
+		unbound_runtime_error e(rep->message());
 		rep->reset();
 		throw e;
 	}
@@ -343,18 +345,17 @@ HttpDateUtils::parse(const char *value) {
 
 XmlErrorReporter::XmlErrorReporter() :
 	error_(false)
-{
-	memset(message_, 0, sizeof(message_));
-}
+{}
 
 void
 XmlErrorReporter::reset() {
 	error_ = false;
+	message_.clear();
 }
 
-const char*
+const std::string&
 XmlErrorReporter::message() const {
-	return error_ ? message_ : "unknown XML error";
+	return error_ ? message_ : UNKNOWN_XML_ERROR;
 }
 
 void
@@ -368,7 +369,10 @@ XmlErrorReporter::report(const char *format, ...) {
 
 void
 XmlErrorReporter::report(const char *format, va_list args) {
-	vsnprintf(message_, sizeof(message_), format, args);
+	char part_message[5120];
+	vsnprintf(part_message, sizeof(part_message), format, args);
+	part_message[5119] = 0;
+	message_ += part_message;
 	error_ = true;
 }
 

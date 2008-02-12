@@ -339,7 +339,8 @@ ServerRequest::sendError(unsigned short status, const std::string& message) {
 	out_headers_.insert(std::pair<std::string, std::string>("Content-type", "text/html"));
 	sendHeadersInternal();
 
-	(*stream_) << "<html><body><h1>" << status << " " << Parser::statusToString(status) << "<br>" << message << "</h1></body></html>";
+	(*stream_) << "<html><body><h1>" << status << " " << Parser::statusToString(status) << "<br><br>"
+	<< XmlUtils::escape(createRange(message)) << "</h1></body></html>";
 }
 
 
@@ -456,6 +457,15 @@ ServerRequest::sendHeadersInternal() {
 		(*stream_) << "\r\n";
 		headers_sent_ = true;
 	}
+}
+
+void
+ServerRequest::addInputHeader(const std::string &name, const std::string &value) {
+
+	Range key_range = createRange(name);
+	Range value_range = createRange(value);
+	std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
+	Parser::addHeader(this, key_range, value_range, enc.get());
 }
 
 } // namespace xscript

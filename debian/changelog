@@ -1,3 +1,10 @@
+xscript (5.4-1) unstable; urgency=low
+
+  * addInputHeader added to Request
+  * XmlErrorReporter fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 12 Feb 2008 13:33:16 +0300
+
 xscript (5.4-0) unstable; urgency=low
 
   * bacek work

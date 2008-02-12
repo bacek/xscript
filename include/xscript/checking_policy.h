@@ -19,8 +19,8 @@ public:
 	virtual ~CheckingPolicyStarter();
 	virtual void init(const Config *config);
 
-	static std::string PRODUCTION_ID;
-	static std::string DEVELOPMENT_ID;
+	static const std::string PRODUCTION_ID;
+	static const std::string DEVELOPMENT_ID;
 };
 
 class CheckingPolicy :
