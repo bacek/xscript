@@ -101,16 +101,24 @@ XmlUtils::registerReporters() {
 	xmlSetGenericErrorFunc(NULL, &xmlReportPlainError);
 	xsltSetGenericErrorFunc(NULL, &xmlReportPlainError);
 	//xmlSetStructuredErrorFunc(NULL, &xmlReportStructuredError);
+
+	resetReporter();
+}
+
+void
+XmlUtils::resetReporter() {
+	XmlErrorReporter::reporter()->reset();
 }
 
 void
 XmlUtils::throwUnless(bool value) {
+	XmlErrorReporter *rep = XmlErrorReporter::reporter();
 	if (!value) {
-		XmlErrorReporter *rep = XmlErrorReporter::reporter();
 		unbound_runtime_error e(rep->message());
-		rep->reset();
+		resetReporter();
 		throw e;
 	}
+	resetReporter();
 }
 
 std::string

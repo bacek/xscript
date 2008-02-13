@@ -31,6 +31,7 @@ public:
 	virtual ~XmlUtils();
 
 	static void registerReporters();
+	static void resetReporter();
 	static void throwUnless(bool value);
 	
 	static std::string escape(const Range &value);

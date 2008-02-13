@@ -158,6 +158,7 @@ Server::handleRequest(ServerRequest *request) {
 	
 	RequestData data(request, request, boost::shared_ptr<State>(new State()));
 	VirtualHostData::instance()->set(request);
+	XmlUtils::resetReporter();
 	xmlOutputBufferPtr buf = NULL;
 	try {
 		
