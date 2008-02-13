@@ -84,11 +84,12 @@ MistBlock::setStateLong(Context *ctx) {
 	}
 	boost::shared_ptr<State> state = ctx->state();
 	std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
+	boost::int32_t value = boost::lexical_cast<boost::int32_t>(val);
 	
 	state->checkName(n);
-	state->setLong(n, boost::lexical_cast<boost::int32_t>(val));
+	state->setLong(n, value); 
 
-	StateNode node("long", n.c_str(), val.c_str());
+	StateNode node("long", n.c_str(), boost::lexical_cast<std::string>(value).c_str());
 	return node.releaseNode();
 }
 
@@ -123,11 +124,12 @@ MistBlock::setStateDouble(Context *ctx) {
 	}
 	boost::shared_ptr<State> state = ctx->state();
 	std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
+	double value = boost::lexical_cast<double>(val);
 	
 	state->checkName(n);
-	state->setDouble(n, boost::lexical_cast<double>(val));
+	state->setDouble(n, value);
 
-	StateNode node("double", n.c_str(), val.c_str());
+	StateNode node("double", n.c_str(), boost::lexical_cast<std::string>(value).c_str());
 	return node.releaseNode();
 }
 
@@ -142,11 +144,12 @@ MistBlock::setStateLongLong(Context *ctx) {
 	}
 	boost::shared_ptr<State> state = ctx->state();
 	std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
+	boost::int64_t value = boost::lexical_cast<boost::int64_t>(val);
 	
 	state->checkName(n);
-	state->setLongLong(n, boost::lexical_cast<boost::int64_t>(val));
+	state->setLongLong(n, value);
 
-	StateNode node("longlong", n.c_str(), val.c_str());
+	StateNode node("longlong", n.c_str(), boost::lexical_cast<std::string>(value).c_str());
 	return node.releaseNode();
 }
 
@@ -230,6 +233,8 @@ MistBlock::setStateUrlencode(Context *ctx) {
 	}
 	val = StringUtils::urlencode(val);
 
+	state->setString(n, val);
+
 	StateNode node("urlencode", n.c_str(), val.c_str());
 	return node.releaseNode();
 }
@@ -255,6 +260,8 @@ MistBlock::setStateUrldecode(Context *ctx) {
 		val = encoder->encode(val);
 	}
 	
+	state->setString(n, val);
+
 	StateNode node("urldecode", n.c_str(), XmlUtils::escape(val).c_str());
 	return node.releaseNode();
 }
