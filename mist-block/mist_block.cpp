@@ -84,7 +84,13 @@ MistBlock::setStateLong(Context *ctx) {
 	}
 	boost::shared_ptr<State> state = ctx->state();
 	std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
-	boost::int32_t value = boost::lexical_cast<boost::int32_t>(val);
+	boost::int32_t value = 0;
+	try {
+		value = boost::lexical_cast<boost::int32_t>(val);
+	}
+	catch(const boost::bad_lexical_cast &e) {
+		value = 0;
+	}
 	
 	state->checkName(n);
 	state->setLong(n, value); 
@@ -124,7 +130,13 @@ MistBlock::setStateDouble(Context *ctx) {
 	}
 	boost::shared_ptr<State> state = ctx->state();
 	std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
-	double value = boost::lexical_cast<double>(val);
+	double value = 0.0;
+	try {
+		value = boost::lexical_cast<double>(val);
+	}
+	catch(const boost::bad_lexical_cast &e) {
+		value = 0.0;
+	}
 	
 	state->checkName(n);
 	state->setDouble(n, value);
@@ -144,7 +156,13 @@ MistBlock::setStateLongLong(Context *ctx) {
 	}
 	boost::shared_ptr<State> state = ctx->state();
 	std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
-	boost::int64_t value = boost::lexical_cast<boost::int64_t>(val);
+	boost::int64_t value = 0;
+	try {
+		value = boost::lexical_cast<boost::int64_t>(val);
+	}
+	catch(const boost::bad_lexical_cast &e) {
+		value = 0;
+	}
 	
 	state->checkName(n);
 	state->setLongLong(n, value);
@@ -167,9 +185,22 @@ MistBlock::setStateRandom(Context *ctx) {
 	boost::shared_ptr<State> state = ctx->state();
 	state->checkName(n);
 	
-	boost::int32_t lo = boost::lexical_cast<boost::int32_t>(p[1]->asString(ctx));
-	boost::int32_t hi = boost::lexical_cast<boost::int32_t>(p[2]->asString(ctx));
+	boost::int32_t lo = 0;
+	try {
+		lo = boost::lexical_cast<boost::int32_t>(p[1]->asString(ctx));
+	}
+	catch(const boost::bad_lexical_cast &e) {
+		lo = 0;
+	}
 	
+	boost::int32_t hi = 0;
+	try {
+		hi = boost::lexical_cast<boost::int32_t>(p[2]->asString(ctx));
+	}
+	catch(const boost::bad_lexical_cast &e) {
+		hi = 0;
+	}
+
 	if (0 == hi) {
 		hi = std::numeric_limits<boost::uint32_t>::max();
 	}
