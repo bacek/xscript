@@ -71,7 +71,7 @@ Block::threaded() const {
 }
 
 void
-Block::threaded(bool value) {
+Block::threaded(bool) {
 }
 
 void
@@ -270,7 +270,7 @@ Block::property(const char *name, const char *value) {
 }
 
 void
-Block::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a) {
+Block::postCall(Context *, const XmlDocHelper &, const boost::any &) {
 }
 
 void

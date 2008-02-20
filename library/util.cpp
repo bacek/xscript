@@ -114,7 +114,7 @@ void
 XmlUtils::throwUnless(bool value) {
 	XmlErrorReporter *rep = XmlErrorReporter::reporter();
 	if (!value) {
-		unbound_runtime_error e(rep->message());
+		UnboundRuntimeError e(rep->message());
 		resetReporter();
 		throw e;
 	}

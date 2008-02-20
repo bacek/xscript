@@ -24,6 +24,7 @@ protected:
 
 	void setupErrorReport(lua_State *lua);
 	void setupState(State *state, lua_State *lua);
+	void setupRequest(Request *request, lua_State *lua);
 	void setupResponse(Response *response, lua_State *lua);
 	
 	void setupRequestArgs(Request *request, lua_State *lua);

@@ -6,7 +6,7 @@
 namespace xscript
 {
 
-extern "C" int luaResponseIndex(lua_State *lua);
+extern "C" int luaResponseIndex(lua_State *lua) throw ();
 
 } // namespace xscript
 

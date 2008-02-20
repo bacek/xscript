@@ -117,6 +117,24 @@ LuaBlock::setupState(State *state, lua_State *lua) {
 }
 
 void
+LuaBlock::setupRequest(Request *request, lua_State *lua) {
+	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	lua_pushstring(lua, "request");
+	lua_pushlightuserdata(lua, request);
+	if (0 == luaL_newmetatable(lua, "xscript.request")) {
+		throw std::runtime_error("can not register xscript.request");
+	}
+	lua_pushstring(lua, "__index");
+	lua_pushcfunction(lua, &luaRequestIndex);
+	lua_rawset(lua, 3);
+	if (0 == lua_setmetatable(lua, 2)) {
+		throw std::runtime_error("failed to set request metatable");
+	}
+	log()->debug("%s, metatable for xscript.request set up", BOOST_CURRENT_FUNCTION);
+	lua_rawset(lua, LUA_GLOBALSINDEX);
+}
+
+void
 LuaBlock::setupResponse(Response *response, lua_State *lua) {
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 	lua_pushstring(lua, "response");

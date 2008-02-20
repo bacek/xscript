@@ -29,6 +29,8 @@ public:
 	
 	void setContentType(const std::string &type);
 	void setContentEncoding(const std::string &encoding);
+	
+private:
 };
 
 } // namespace xscript

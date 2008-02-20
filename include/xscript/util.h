@@ -13,11 +13,12 @@
 namespace xscript
 {
 
-class unbound_runtime_error : public std::exception {
+class UnboundRuntimeError : public std::exception {
 public:
-	unbound_runtime_error(const std::string& error) : error_(error) {}
-	virtual ~unbound_runtime_error() {}
-	virtual const char* what() const { return error_.c_str(); }
+	UnboundRuntimeError(const std::string& error) : error_(error) {}
+	virtual ~UnboundRuntimeError() throw () {}
+	virtual const char* what() const throw () { return error_.c_str(); }
+	
 private:
 	std::string error_;
 };

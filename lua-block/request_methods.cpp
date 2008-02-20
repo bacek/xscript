@@ -9,6 +9,7 @@
 
 #include "stack.h"
 #include "exception.h"
+#include "method_map.h"
 #include "request_methods.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -17,6 +18,37 @@
 
 namespace xscript
 {
+
+extern "C" int luaRequestHasArg(lua_State *state) throw ();
+extern "C" int luaRequestHasHeader(lua_State *state) throw ();
+extern "C" int luaRequestHasCookie(lua_State *state) throw ();
+
+template<>
+MethodDispatcher<Request>::MethodDispatcher()
+{
+	registerMethod("hasArg", &luaRequestHasArg);
+	registerMethod("hasHeader", &luaRequestHasHeader);
+	registerMethod("hasCookie", &luaRequestHasCookie);
+}
+
+static MethodDispatcher<Request> disp_;
+
+extern "C" int
+luaRequestIndex(lua_State *lua) throw () {
+	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	try {
+		luaCheckStackSize(lua, 2);
+		luaCheckUserData(lua, "xscript.request", 1);
+		std::string method = luaReadStack<std::string>(lua, 2);
+		log()->debug("%s, calling request method: %s", BOOST_CURRENT_FUNCTION, method.c_str());
+		lua_pushcfunction(lua, disp_.findMethod(method));
+		return 1;
+		
+	}
+	catch (const LuaError &e) {
+		return e.translate(lua);
+	}
+}
 
 template<typename Func> int
 luaRequestGet(lua_State *lua, Func func) {
@@ -37,19 +69,19 @@ luaRequestGet(lua_State *lua, Func func) {
 }
 
 extern "C" int
-luaRequestGetArg(lua_State *lua) {
+luaRequestGetArg(lua_State *lua) throw () {
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 	return luaRequestGet(lua, boost::bind(&Request::getArg, _1, _2));
 }
 
 extern "C" int
-luaRequestGetHeader(lua_State *lua) {
+luaRequestGetHeader(lua_State *lua) throw () {
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 	return luaRequestGet(lua, boost::bind(&Request::getHeader, _1, _2));
 }
 
 extern "C" int
-luaRequestGetCookie(lua_State *lua) {
+luaRequestGetCookie(lua_State *lua) throw () {
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 	return luaRequestGet(lua, boost::bind(&Request::getCookie, _1, _2));
 }

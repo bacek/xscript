@@ -38,7 +38,7 @@ static MethodDispatcher<Response> disp_;
 
 
 extern "C" int
-luaResponseIndex(lua_State *lua) {
+luaResponseIndex(lua_State *lua) throw () {
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 	try {
 		luaCheckStackSize(lua, 2);

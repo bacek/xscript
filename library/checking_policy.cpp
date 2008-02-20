@@ -80,7 +80,7 @@ DevelopmentCheckingPolicy::~DevelopmentCheckingPolicy() {
 void
 DevelopmentCheckingPolicy::processError(const std::string& message) {
 	log()->error("%s\n", message.c_str());
-	throw unbound_runtime_error(message);
+	throw UnboundRuntimeError(message);
 }
 
 void
