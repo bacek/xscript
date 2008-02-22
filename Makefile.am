@@ -1,6 +1,6 @@
-EXTRA_DIST = config autogen.sh
 AUTOMAKE_OPTIONS = 1.9 foreign
 SUBDIRS = include library standard xscript daemon
+EXTRA_DIST = config autogen.sh extra debian examples Doxyfile
 
 if HAVE_LUA_BLOCK
 SUBDIRS += lua-block
