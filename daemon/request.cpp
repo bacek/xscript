@@ -139,12 +139,14 @@ ServerRequest::getRequestMethod() const {
 
 std::streamsize
 ServerRequest::getContentLength() const {
+	boost::mutex::scoped_lock sl(mutex_);
 	return boost::lexical_cast<std::streamsize>(
 		Parser::get(headers_, CONTENT_LENGTH_KEY));
 }
 
 const std::string&
 ServerRequest::getContentType() const {
+	boost::mutex::scoped_lock sl(mutex_);
 	return Parser::get(headers_, CONTENT_TYPE_KEY);
 }
 
@@ -200,21 +202,25 @@ ServerRequest::argNames(std::vector<std::string> &v) const {
 
 unsigned int
 ServerRequest::countHeaders() const {
+	boost::mutex::scoped_lock sl(mutex_);
 	return headers_.size();
 }
 
 bool
 ServerRequest::hasHeader(const std::string &name) const {
+	boost::mutex::scoped_lock sl(mutex_);
 	return Parser::has(headers_, name);
 }
 
 const std::string&
 ServerRequest::getHeader(const std::string &name) const {
+	boost::mutex::scoped_lock sl(mutex_);
 	return Parser::get(headers_, name);
 }
 
 void
 ServerRequest::headerNames(std::vector<std::string> &v) const {
+	boost::mutex::scoped_lock sl(mutex_);
 	Parser::keys(headers_, v);
 }
 
@@ -465,6 +471,7 @@ ServerRequest::addInputHeader(const std::string &name, const std::string &value)
 	Range key_range = createRange(name);
 	Range value_range = createRange(value);
 	std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
+	boost::mutex::scoped_lock sl(mutex_);
 	Parser::addHeader(this, key_range, value_range, enc.get());
 }
 

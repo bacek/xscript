@@ -24,6 +24,8 @@ public:
 	virtual std::streamsize write(const char *buf, std::streamsize size) = 0;
 	virtual std::string outputHeader(const std::string &name) const = 0;
 	
+	virtual void sendHeaders() = 0;
+
 	void redirectBack(const Request *req);
 	void redirectToPath(const std::string &path);
 	

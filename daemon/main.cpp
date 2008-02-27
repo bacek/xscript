@@ -20,7 +20,7 @@ main(int argc, char *argv[]) {
 	
 	try {
 		std::auto_ptr<Config> c = Config::create(argc, argv);
-		Server server(c.get());
+		FCGIServer server(c.get());
 		server.run();
 		
 		return EXIT_SUCCESS;

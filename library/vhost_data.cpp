@@ -4,6 +4,8 @@
 
 #include "xscript/logger.h"
 
+#include <boost/lexical_cast.hpp>
+
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
@@ -59,6 +61,21 @@ VirtualHostData::getVariable(const Request* request, const std::string& var) con
 	}
 
 	return request->getVariable(var);
+}
+
+bool
+VirtualHostData::checkVariable(Request* request, const std::string& var) const {
+
+	if (hasVariable(request, var)) {
+		std::string value = VirtualHostData::instance()->getVariable(request, var);
+		if (strncasecmp("yes", value.c_str(), sizeof("yes") - 1) == 0 || 
+			strncasecmp("true", value.c_str(), sizeof("true") - 1) == 0 ||
+			boost::lexical_cast<bool>(value) == 1) {
+				return true;
+		}
+	}
+
+	return false;
 }
 
 std::string

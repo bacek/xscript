@@ -5,6 +5,9 @@
 #include "xscript/response.h"
 #include "xscript/logger.h"
 #include "xscript/util.h"
+#include "xscript/vhost_data.h"
+
+#include <boost/lexical_cast.hpp>
 
 #include <stdexcept>
 
@@ -25,6 +28,8 @@ public:
 	~ProductionCheckingPolicy();
 	void processError(const std::string& message);
 	void sendError(Response* response, unsigned short status, const std::string& message);
+	bool checkVariable(Request* request, const std::string& variable);
+	bool isProduction() const;
 };
 
 class DevelopmentCheckingPolicy : public CheckingPolicy
@@ -34,9 +39,12 @@ public:
 	~DevelopmentCheckingPolicy();
 	void processError(const std::string& message);
 	void sendError(Response* response, unsigned short status, const std::string& message);
+	bool checkVariable(Request* request, const std::string& variable);
+	bool isProduction() const;
 };
 
-CheckingPolicy::CheckingPolicy() 
+CheckingPolicy::CheckingPolicy() :
+	use_profiler_(false)
 {
 }
 
@@ -45,6 +53,9 @@ CheckingPolicy::~CheckingPolicy() {
 
 void
 CheckingPolicy::init(const Config *config) {
+	if (!isProduction()) {
+		use_profiler_ = config->as<bool>("/xscript/xslt/use-profiler", false);
+	}
 }
 
 void
@@ -53,6 +64,16 @@ CheckingPolicy::processError(const std::string& message) {
 
 void
 CheckingPolicy::sendError(Response* response, unsigned short status, const std::string& message) {
+}
+
+bool
+CheckingPolicy::isProduction() const {
+	return true;
+}
+
+bool
+CheckingPolicy::useXSLTProfiler() const {
+	return use_profiler_;
 }
 
 ProductionCheckingPolicy::ProductionCheckingPolicy() {
@@ -68,7 +89,12 @@ ProductionCheckingPolicy::processError(const std::string& message) {
 
 void
 ProductionCheckingPolicy::sendError(Response* response, unsigned short status, const std::string& message) {
-	response->sendError(status, "");
+	response->sendError(status, StringUtils::EMPTY_STRING);
+}
+
+bool
+ProductionCheckingPolicy::isProduction() const {
+	return true;
 }
 
 DevelopmentCheckingPolicy::DevelopmentCheckingPolicy() {
@@ -88,6 +114,11 @@ DevelopmentCheckingPolicy::sendError(Response* response, unsigned short status, 
 	response->sendError(status, message);
 }
 
+bool
+DevelopmentCheckingPolicy::isProduction() const {
+	return false;
+}
+
 CheckingPolicyStarter::CheckingPolicyStarter() 
 {
 }
@@ -104,6 +135,8 @@ CheckingPolicyStarter::init(const Config *config) {
 	else {
 		ComponentRegisterer<CheckingPolicy> reg(new ProductionCheckingPolicy());
 	}
+
+	CheckingPolicy::instance()->init(config);
 }
 
 } // namespace xscript

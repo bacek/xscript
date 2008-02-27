@@ -300,6 +300,22 @@ StringUtils::report(const char *what, int error, std::ostream &stream) {
 	stream << what << msg;
 }
 
+std::string
+StringUtils::tolower(const std::string& str) {
+	std::string result;
+	result.reserve(str.size());
+	std::transform(str.begin(), str.end(), std::back_inserter(result), &std::tolower);
+	return result;
+}
+
+std::string
+StringUtils::toupper(const std::string& str) {
+	std::string result;
+	result.reserve(str.size());
+	std::transform(str.begin(), str.end(), std::back_inserter(result), &std::toupper);
+	return result;
+}
+
 HttpDateUtils::HttpDateUtils() {
 }
 

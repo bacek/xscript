@@ -25,6 +25,7 @@ public:
 
 	virtual bool hasVariable(const Request* request, const std::string& var) const;
 	virtual std::string getVariable(const Request* request, const std::string& var) const;
+	virtual bool checkVariable(Request* request, const std::string& var) const;
 	virtual std::string getKey(const Request* request, const std::string& name) const;
 	virtual std::string getOutputEncoding(const Request* request) const;
 

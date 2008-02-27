@@ -8,6 +8,7 @@ namespace xscript
 {
 
 class Response;
+class Request;
 class Config;
 
 class CheckingPolicyStarter :
@@ -33,6 +34,10 @@ public:
 	virtual void init(const Config *config);
 	virtual void processError(const std::string& message);
 	virtual void sendError(Response* response, unsigned short status, const std::string& message);
+	virtual bool isProduction() const;
+	virtual bool useXSLTProfiler() const;
+private:
+	bool use_profiler_;
 };
 
 }

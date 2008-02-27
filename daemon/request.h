@@ -18,7 +18,7 @@
 #include <ext/hash_map>
 #endif
 
-#include "functors.h"
+#include "internal/functors.h"
 #include "xscript/util.h"
 #include "xscript/range.h"
 #include "xscript/cookie.h"

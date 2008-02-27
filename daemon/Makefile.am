@@ -5,7 +5,7 @@ xscript_bin_SOURCES = parser.cpp request.cpp server.cpp main.cpp
 xscript_bin_LDADD = ../library/libxscript.la
 xscript_bin_LDFLAGS = -lfcgi -lfcgi++ -export-dynamic
 
-noinst_HEADERS = parser.h request.h server.h functors.h
+noinst_HEADERS = parser.h request.h server.h
 
 dist_sysconf_DATA = xscript.conf xscript-ulimits.conf
 

@@ -73,6 +73,9 @@ public:
 	static void parse(const Range &range, std::vector<NamedValue> &v, Encoder *encoder = NULL);
 	template<typename Cont> static void parse(const Cont &cont, std::vector<NamedValue> &v, Encoder *encoder = NULL);
 
+	static std::string tolower(const std::string& str);
+	static std::string toupper(const std::string& str);
+
 private:
 	StringUtils();
 	virtual ~StringUtils();

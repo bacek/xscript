@@ -42,7 +42,6 @@ private:
 
 const ProxyHeadersHelper::StrSize ProxyHeadersHelper::skipped_headers[] = {
 	{ "host", sizeof("host") },
-	{ "accept", sizeof("accept") },
 	{ "if-modified-since", sizeof("if-modified-since") },
 	{ "accept-encoding", sizeof("accept-encoding") },
 	{ "keep-alive", sizeof("keep-alive") },

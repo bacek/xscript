@@ -16,6 +16,7 @@
 #include <libxslt/extensions.h>
 #include <libxslt/attributes.h>
 #include <libxml/uri.h>
+#include <libxslt/xsltutils.h>
 
 #include "xscript/util.h"
 #include "xscript/block.h"
@@ -32,6 +33,7 @@
 #include "xscript/checking_policy.h"
 
 #include "details/extension_list.h"
+#include "internal/profiler.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -99,6 +101,7 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 	log()->debug("%s: transform context created\n", name().c_str());
 	
 	attachContextData(tctx.get(), ctx, this);
+	tctx->profile = CheckingPolicy::instance()->useXSLTProfiler();
 
 	const std::vector<Param*> &p = obj->xsltParams();
 	if (!p.empty()) {
@@ -127,7 +130,16 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 			}
 		}
 	}
+
 	XmlDocHelper newdoc(xsltApplyStylesheetUser(stylesheet_.get(), doc.get(), NULL, NULL, NULL, tctx.get()));
+	if (CheckingPolicy::instance()->useXSLTProfiler()) {
+		Profiler profiler("Total apply time");
+		XmlDocHelper prof_doc(xsltGetProfileInformation(tctx.get()));
+		xmlNodePtr p = xmlAddChild(xmlDocGetRootElement(newdoc.get()),
+			xmlCopyNode(xmlDocGetRootElement(prof_doc.get()), 1));
+		xmlNewTextChild(p, 0, BAD_CAST "total-time", BAD_CAST profiler.getInfo().c_str());
+	}
+
 	log()->debug("%s: %s, checking result document\n", BOOST_CURRENT_FUNCTION, name_.c_str());
 	XmlUtils::throwUnless(NULL != newdoc.get());
 	return newdoc;
