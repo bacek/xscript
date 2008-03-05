@@ -12,12 +12,14 @@ namespace xscript
 class FileLogger : public Logger
 {
 public:
-    /**
-     * Create logger. 
-     * \param key Config key optained via subKeys
-     */
-    FileLogger(Logger::LogLevel level, const Config * config, const std::string& key);
-    ~FileLogger();
+	/**
+	 * Create logger. 
+	 * \param key Config key optained via subKeys
+	 */
+	FileLogger(Logger::LogLevel level, const Config * config, const std::string& key);
+	~FileLogger();
+
+	virtual void logRotate();
 
 protected:
 	virtual void critInternal(const char *format, va_list args);
@@ -27,11 +29,21 @@ protected:
 	virtual void debugInternal(const char *format, va_list args);
 
 private:
-    // File descriptor
+	// File name
+	std::string filename_;
+
+	// Open mode
+	mode_t openMode_;
+
+	// Crash on error
+	bool crash_;
+
+	// File descriptor
 	int fd_;
 
-    void prepareFormat(char * buf, const char* type, const char* format);
-    void write(const char* format, va_list args) const;
+	void openFile();
+	void prepareFormat(char * buf, const char* type, const char* format);
+	void write(const char* format, va_list args) const;
 };
 
 }
