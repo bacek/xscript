@@ -37,6 +37,9 @@ void LoggerFactory::init(const Config * config) {
             logger.reset(new SyslogLogger(level, config, *i));
         }
 
+        std::string pti = config->as<std::string>((*i) + "/print-thread-id", "");
+		logger->printThreadId(pti == "yes");
+
         loggers_[id] = logger;
         if((defaultLogger_ == 0) || (id == "default")) {
             defaultLogger_ = logger.get();

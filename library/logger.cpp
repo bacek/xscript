@@ -3,6 +3,7 @@
 #include <sstream>
 #include <cstring>
 #include <stdexcept>
+#include <functional>
 #include <boost/static_assert.hpp>
 
 #include <syslog.h>
@@ -18,8 +19,8 @@
 namespace xscript
 {
 
-Logger::Logger(LogLevel level)
-    : level_(level)	
+Logger::Logger(LogLevel level, bool printThreadId)
+    : level_(level), printThreadId_(printThreadId)
 {
 }
 
@@ -36,12 +37,26 @@ Logger::entering(const char *function) {
 	debug("entering %s", function);
 }
 
+template<typename F>
+void out(F func, Logger *l, const char* format, va_list args)
+{
+	if(l->printThreadId()) {
+		size_t bufLen = strlen(format) + 30;
+		char buf[bufLen];
+		snprintf(buf, bufLen, "[thread: %lu] %s", pthread_self(), format); 
+		(l->*func)(buf, args);
+	}
+	else {
+		(l->*func)(format, args);
+	}
+}
+
 void
 Logger::crit(const char *format, ...) {
 	if (level() >= LEVEL_CRIT) {
  		va_list args;
 		va_start(args, format);
-		critInternal(format, args);
+		out(&Logger::critInternal, this, format, args);
 		va_end(args);
 	}
 }
@@ -51,7 +66,7 @@ Logger::error(const char *format, ...) {
 	if (level() >= LEVEL_ERROR) {
  		va_list args;
 		va_start(args, format);
-		errorInternal(format, args);
+		out(&Logger::errorInternal, this, format, args);
 		va_end(args);
 	}
 }
@@ -61,7 +76,7 @@ Logger::warn(const char *format, ...) {
 	if (level() >= LEVEL_WARN) {
 		va_list args;
 		va_start(args, format);
-		warnInternal(format, args);
+		out(&Logger::warnInternal, this, format, args);
 		va_end(args);
 	}
 }
@@ -71,7 +86,7 @@ Logger::info(const char *format, ...) {
 	if (level() >= LEVEL_INFO) {
 		va_list args;
 		va_start(args, format);
-		infoInternal(format, args);
+		out(&Logger::infoInternal, this, format, args);
 		va_end(args);
 	}
 }
@@ -81,7 +96,7 @@ Logger::debug(const char *format, ...) {
 	if (level() >= LEVEL_DEBUG) {
 		va_list args;
 		va_start(args, format);
-		debugInternal(format, args);
+		out(&Logger::debugInternal, this, format, args);
 		va_end(args);
 	}
 }

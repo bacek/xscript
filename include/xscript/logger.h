@@ -19,7 +19,7 @@ public:
         LEVEL_DEBUG = 5,
     };
 
-	Logger(LogLevel level);
+	Logger(LogLevel level, bool printThreadId = false);
 	virtual ~Logger();
 	
 	void exiting(const char *function);
@@ -45,9 +45,18 @@ public:
 	void level(LogLevel value) {
         level_ = value;
     }
+
+	bool printThreadId() const {
+		return printThreadId_;
+	}
+
+	void printThreadId(bool p) {
+		printThreadId_ = p;
+	}
 	
 protected:
     LogLevel level_;
+	bool	 printThreadId_;
 
 	virtual void critInternal(const char *format, va_list args) = 0;
 	virtual void errorInternal(const char *format, va_list args) = 0;
