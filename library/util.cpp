@@ -304,7 +304,8 @@ std::string
 StringUtils::tolower(const std::string& str) {
 	std::string result;
 	result.reserve(str.size());
-	std::transform(str.begin(), str.end(), std::back_inserter(result), &std::tolower);
+	int (*func)(int) = &std::tolower;
+	std::transform(str.begin(), str.end(), std::back_inserter(result), func);
 	return result;
 }
 
@@ -312,7 +313,8 @@ std::string
 StringUtils::toupper(const std::string& str) {
 	std::string result;
 	result.reserve(str.size());
-	std::transform(str.begin(), str.end(), std::back_inserter(result), &std::toupper);
+	int (*func)(int) = &std::toupper;
+	std::transform(str.begin(), str.end(), std::back_inserter(result), func);
 	return result;
 }
 
