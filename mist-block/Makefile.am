@@ -5,7 +5,7 @@ xscript_mist_la_SOURCES = xml_node.cpp state_node.cpp state_param_node.cpp \
 
 
 xscript_mist_la_LIBADD = ../library/libxscript.la
-xscript_mist_la_LDFLAGS = -module
+xscript_mist_la_LDFLAGS = -module -avoid-version
 
 noinst_HEADERS = xml_node.h state_node.h state_param_node.h \
 	state_prefix_node.h mist_block.h
