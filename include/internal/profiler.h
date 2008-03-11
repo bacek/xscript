@@ -61,3 +61,4 @@ private:
 } // namespace xscript
 
 #endif //_XSCRIPT_INTERNAL_PROFILER_H_
+
