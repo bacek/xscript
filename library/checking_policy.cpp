@@ -84,7 +84,7 @@ ProductionCheckingPolicy::~ProductionCheckingPolicy() {
 
 void
 ProductionCheckingPolicy::processError(const std::string& message) {
-	log()->debug("%s\n", message.c_str());
+	log()->debug("%s", message.c_str());
 }
 
 void
@@ -105,7 +105,7 @@ DevelopmentCheckingPolicy::~DevelopmentCheckingPolicy() {
 
 void
 DevelopmentCheckingPolicy::processError(const std::string& message) {
-	log()->error("%s\n", message.c_str());
+	log()->error("%s", message.c_str());
 	throw UnboundRuntimeError(message);
 }
 

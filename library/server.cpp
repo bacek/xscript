@@ -119,7 +119,7 @@ Server::handleRequest(RequestData *request_data) {
 		}
 	}
 	catch (const std::exception &e) {
-		log()->error("%s: exception caught: %s\n", BOOST_CURRENT_FUNCTION, e.what());
+		log()->error("%s: exception caught: %s", BOOST_CURRENT_FUNCTION, e.what());
 		xmlOutputBufferClose(buf);
 		CheckingPolicy::instance()->sendError(request_data->response(), 500, e.what());
 	}

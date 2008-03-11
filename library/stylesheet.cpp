@@ -98,7 +98,7 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 	XsltTransformContextHelper tctx(xsltNewTransformContext(stylesheet_.get(), doc.get()));
 	XmlUtils::throwUnless(NULL != tctx.get());
 
-	log()->debug("%s: transform context created\n", name().c_str());
+	log()->debug("%s: transform context created", name().c_str());
 	
 	attachContextData(tctx.get(), ctx, this);
 	tctx->profile = CheckingPolicy::instance()->useXSLTProfiler();
@@ -106,7 +106,7 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 	const std::vector<Param*> &p = obj->xsltParams();
 	if (!p.empty()) {
 		tctx->globalVars = xmlHashCreate(p.size());
-		log()->debug("param list contains %llu elements\n", static_cast<unsigned long long>(p.size()));
+		log()->debug("param list contains %llu elements", static_cast<unsigned long long>(p.size()));
 
 		typedef std::set<std::string> ParamSetType;
 		ParamSetType unique_params;
@@ -120,10 +120,10 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 			else {
 				std::string value = param->asString(ctx);
 				if (value.empty()) {
-					log()->debug("skip empty xslt-param %s\n", id.c_str());
+					log()->debug("skip empty xslt-param %s", id.c_str());
 				}
 				else {
-					log()->debug("add xslt-param %s: %s\n", id.c_str(), value.c_str());
+					log()->debug("add xslt-param %s: %s", id.c_str(), value.c_str());
 					xsltQuoteOneUserParam(tctx.get(), (const xmlChar*) id.c_str(), 
 						(const xmlChar*) value.c_str());
 				}
@@ -140,7 +140,7 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 		xmlNewTextChild(p, 0, BAD_CAST "total-time", BAD_CAST profiler.getInfo().c_str());
 	}
 
-	log()->debug("%s: %s, checking result document\n", BOOST_CURRENT_FUNCTION, name_.c_str());
+	log()->debug("%s: %s, checking result document", BOOST_CURRENT_FUNCTION, name_.c_str());
 	XmlUtils::throwUnless(NULL != newdoc.get());
 	return newdoc;
 }
@@ -162,7 +162,7 @@ Stylesheet::parse() {
 		(const char*) canonic_path.get(), NULL, XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT));
 
 	XmlUtils::throwUnless(NULL != doc.get());
-	log()->debug("%s stylesheet %s document parsed\n", BOOST_CURRENT_FUNCTION,  name_.c_str());
+	log()->debug("%s stylesheet %s document parsed", BOOST_CURRENT_FUNCTION,  name_.c_str());
 	
 	std::string type = detectContentType(doc);
 	if (!type.empty()) {
@@ -190,7 +190,7 @@ Stylesheet::parseNode(xmlNodePtr node) {
 			Extension *ext = elist->extension(node);
 			if (NULL != ext) {
 				
-				log()->debug("%s, creating block %s\n", name().c_str(), ext->name());
+				log()->debug("%s, creating block %s", name().c_str(), ext->name());
 				std::auto_ptr<Block> b = ext->createBlock(this, node);
 
 				assert(b.get());
@@ -319,7 +319,7 @@ Stylesheet::getStylesheet(xsltTransformContextPtr tctx) {
 boost::shared_ptr<Stylesheet>
 Stylesheet::create(const std::string &name) {
 	
-	log()->debug("%s creating stylesheet %s\n", BOOST_CURRENT_FUNCTION, name.c_str());
+	log()->debug("%s creating stylesheet %s", BOOST_CURRENT_FUNCTION, name.c_str());
 	
 	StylesheetCache *cache = StylesheetCache::instance();
 	boost::shared_ptr<Stylesheet> stylesheet = cache->fetch(name);
@@ -355,14 +355,14 @@ void*
 XsltInitalizer::ExtraDataInit(xsltTransformContextPtr, const xmlChar*) {
 	
 	void* data = new ContextData();
-	log()->debug("%s, data is: %p\n", BOOST_CURRENT_FUNCTION, data);
+	log()->debug("%s, data is: %p", BOOST_CURRENT_FUNCTION, data);
 	return data;
 }
 
 void
 XsltInitalizer::ExtraDataShutdown(xsltTransformContextPtr, const xmlChar*, void* data) {
 	
-	log()->debug("%s, data is: %p\n", BOOST_CURRENT_FUNCTION, data);
+	log()->debug("%s, data is: %p", BOOST_CURRENT_FUNCTION, data);
 	delete static_cast<ContextData*>(data);
 }
 
