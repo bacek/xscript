@@ -197,6 +197,17 @@ StateProtocolNode::build(const Request* req) {
 		if (!addr.empty()) {
 			setParameter("remote_ip", addr);
 		}
+
+		std::string length_str = boost::lexical_cast<std::string>(req->getContentLength());
+		if (!length_str.empty()) {
+			setParameter("content-length", length_str);
+		}
+
+		if (req->hasHeader("content-encoding")) {
+			setParameter("content-encoding", req->getHeader("content-encoding"));
+		}
+
+		setParameter("content-type", req->getContentType());
 	}
 }
 

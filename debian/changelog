@@ -1,3 +1,13 @@
+xscript (5.5-1) unstable; urgency=low
+
+  * New variables added to ProtocolArg and
+    MistBlock::set_state_by_protocol
+  * set_state_defined and set_state_by_key fixed
+  * ServerRequest::getContentLength fixed
+  * x:include entity processing fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 12 Mar 2008 11:34:03 +0300
+
 xscript (5.5-0) unstable; urgency=low
 
   * Offline processor implemented

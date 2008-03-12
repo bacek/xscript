@@ -114,7 +114,7 @@ Script::parse() {
 	if (NULL == doc_->children) {
 		throw std::runtime_error("got empty xml doc");
 	}
-	XmlUtils::throwUnless(xmlXIncludeProcess(doc_.get()) >= 0);
+	XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc_.get(), XML_PARSE_NOENT) >= 0);
 
 	std::vector<xmlNodePtr> xscript_nodes;
 	parseNode(doc_->children, xscript_nodes);
@@ -193,7 +193,7 @@ Script::create(const std::string &name) {
 	}
 	script = ScriptFactory::instance()->create(name);
 	script->parse();
-	
+
 	cache->store(name, script);
 	return script;
 }
@@ -414,12 +414,17 @@ Script::fetchResults(Context *ctx) const {
 
 void
 Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsigned int &count) const {
-	
+
 	while (node && count != blocks_.size()) {
+
+		if (newnode == NULL) {
+			throw std::runtime_error(std::string("internal error in node ") + (char*)node->name);
+		}
+
 		xmlNodePtr next = newnode->next;
 		log()->debug("%s, blocks found: %d, %d", BOOST_CURRENT_FUNCTION, blocks_.size(), count);
 		if (blocks_[count]->node() == node) {
-			
+
 			xmlDocPtr doc = ctx->result(count);
 			assert(doc);
 			

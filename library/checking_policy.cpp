@@ -128,7 +128,7 @@ CheckingPolicyStarter::~CheckingPolicyStarter() {
 
 void
 CheckingPolicyStarter::init(const Config *config) {
-	std::string check_mode = config->as<std::string>("/xscript/check_mode", PRODUCTION_ID);
+	std::string check_mode = config->as<std::string>("/xscript/check-mode", PRODUCTION_ID);
 	if (DEVELOPMENT_ID == check_mode){
 		ComponentRegisterer<CheckingPolicy> reg(new DevelopmentCheckingPolicy());
 	}

@@ -140,8 +140,16 @@ ServerRequest::getRequestMethod() const {
 std::streamsize
 ServerRequest::getContentLength() const {
 	boost::mutex::scoped_lock sl(mutex_);
-	return boost::lexical_cast<std::streamsize>(
-		Parser::get(headers_, CONTENT_LENGTH_KEY));
+	const std::string& length = Parser::get(headers_, CONTENT_LENGTH_KEY);
+	if (length.empty()) {
+		return 0;
+	}
+	try {
+		return boost::lexical_cast<std::streamsize>(length);
+	}
+	catch(const boost::bad_lexical_cast &e) {
+		return 0;
+	}
 }
 
 const std::string&

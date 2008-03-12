@@ -231,9 +231,9 @@ MistBlock::setStateDefined(Context *ctx) {
 	typedef boost::tokenizer<Separator> Tokenizer;
 	
 	std::string names = p[1]->asString(ctx), val;
-	Tokenizer tok(names, Separator(", "));
+	Tokenizer tok(names, Separator(","));
 	for (Tokenizer::iterator i = tok.begin(), end = tok.end(); i != end; ++i) {
-		if (state->has(*i)) {
+		if (state->has(*i) && !state->asString(*i).empty()) {
 			state->copy(*i, n);
 			val = state->asString(n);
 		}
@@ -318,7 +318,7 @@ MistBlock::setStateByKeys(Context *ctx) {
 	typedef boost::char_separator<char> Separator;
 	typedef boost::tokenizer<Separator> Tokenizer;
 	
-	Separator sep(", ");
+	Separator sep(",");
 	Tokenizer keytok(keys, sep), valtok(vals, sep);
 	
 	Tokenizer::iterator ki = keytok.begin(), kend = keytok.end();
@@ -333,7 +333,7 @@ MistBlock::setStateByKeys(Context *ctx) {
 	Tokenizer tok(input, sep);
 	for (Tokenizer::iterator i = tok.begin(), end = tok.end(); i != end; ++i) {
 		std::map<std::string, std::string>::iterator mi = m.find(*i);
-		if (m.end() != mi) {
+		if (m.end() != mi && !mi->second.empty()) {
 			res = mi->second;
 			state->setString(n, res);
 			break;

@@ -124,8 +124,10 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 				}
 				else {
 					log()->debug("add xslt-param %s: %s", id.c_str(), value.c_str());
-					xsltQuoteOneUserParam(tctx.get(), (const xmlChar*) id.c_str(), 
-						(const xmlChar*) value.c_str());
+					XmlUtils::throwUnless(
+						xsltQuoteOneUserParam(tctx.get(),
+							xmlStrdup((const xmlChar*)id.c_str()),
+							xmlStrdup((const xmlChar*)value.c_str())) == 0);
 				}
 			}
 		}
