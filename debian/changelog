@@ -1,3 +1,10 @@
+xscript (5.5-2) unstable; urgency=low
+
+  * CheckingPolicy updated
+  * Content-type recognition updated in HttpBlock
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 12 Mar 2008 17:57:26 +0300
+
 xscript (5.5-1) unstable; urgency=low
 
   * New variables added to ProtocolArg and

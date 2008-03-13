@@ -352,4 +352,39 @@ HttpHelper::destroyEnvironment() {
 	curl_global_cleanup();
 }
 
+bool
+HttpHelper::isXml() const {
+	std::string::size_type pos = contentType().find("/");
+	if (pos == std::string::npos) {
+		return false;
+	}
+
+	std::string type = contentType().substr(0, pos);
+	std::string subtype = contentType().substr(pos + 1);
+
+	if (type == "text" && subtype == "xml") {
+		return true;
+	}
+
+	if (type == "application") {
+		if (subtype == "xml") {
+			return true;
+		}
+		
+		std::string::size_type pos_begin = subtype.rfind("+");
+		if (pos_begin == std::string::npos) {
+			pos_begin = 0;
+		}
+		else {
+			pos_begin++;
+		}
+			
+		if (subtype.substr(pos_begin) == "xml") {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 } // namespace xscript

@@ -205,7 +205,7 @@ XmlDocHelper
 HttpBlock::response(const HttpHelper &helper) const {
 	
 	const std::string& str = helper.content();
-	if (helper.contentType() == "text/xml") {
+	if (helper.isXml()) {
 		return XmlDocHelper(xmlParseMemory(str.c_str(), str.size()));
 	}
 	else if (helper.contentType() == "text/plain") {

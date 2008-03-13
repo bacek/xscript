@@ -36,8 +36,17 @@ public:
 	virtual void sendError(Response* response, unsigned short status, const std::string& message);
 	virtual bool isProduction() const;
 	virtual bool useXSLTProfiler() const;
-private:
-	bool use_profiler_;
+};
+
+class DevelopmentCheckingPolicy : public CheckingPolicy
+{
+public:
+	DevelopmentCheckingPolicy();
+	virtual ~DevelopmentCheckingPolicy();
+	virtual void processError(const std::string& message);
+	virtual void sendError(Response* response, unsigned short status, const std::string& message);
+	virtual bool isProduction() const;
+	virtual bool useXSLTProfiler() const;
 };
 
 }

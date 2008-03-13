@@ -21,31 +21,7 @@ namespace xscript
 const std::string CheckingPolicyStarter::PRODUCTION_ID = "production";
 const std::string CheckingPolicyStarter::DEVELOPMENT_ID = "development";
 
-class ProductionCheckingPolicy : public CheckingPolicy
-{
-public:
-	ProductionCheckingPolicy();
-	~ProductionCheckingPolicy();
-	void processError(const std::string& message);
-	void sendError(Response* response, unsigned short status, const std::string& message);
-	bool checkVariable(Request* request, const std::string& variable);
-	bool isProduction() const;
-};
-
-class DevelopmentCheckingPolicy : public CheckingPolicy
-{
-public:
-	DevelopmentCheckingPolicy();
-	~DevelopmentCheckingPolicy();
-	void processError(const std::string& message);
-	void sendError(Response* response, unsigned short status, const std::string& message);
-	bool checkVariable(Request* request, const std::string& variable);
-	bool isProduction() const;
-};
-
-CheckingPolicy::CheckingPolicy() :
-	use_profiler_(false)
-{
+CheckingPolicy::CheckingPolicy() {
 }
 
 CheckingPolicy::~CheckingPolicy() {
@@ -53,17 +29,16 @@ CheckingPolicy::~CheckingPolicy() {
 
 void
 CheckingPolicy::init(const Config *config) {
-	if (!isProduction()) {
-		use_profiler_ = config->as<bool>("/xscript/xslt/use-profiler", false);
-	}
 }
 
 void
 CheckingPolicy::processError(const std::string& message) {
+	log()->debug("%s", message.c_str());
 }
 
 void
 CheckingPolicy::sendError(Response* response, unsigned short status, const std::string& message) {
+	response->sendError(status, StringUtils::EMPTY_STRING);
 }
 
 bool
@@ -73,28 +48,7 @@ CheckingPolicy::isProduction() const {
 
 bool
 CheckingPolicy::useXSLTProfiler() const {
-	return use_profiler_;
-}
-
-ProductionCheckingPolicy::ProductionCheckingPolicy() {
-}
-
-ProductionCheckingPolicy::~ProductionCheckingPolicy() {
-}
-
-void
-ProductionCheckingPolicy::processError(const std::string& message) {
-	log()->debug("%s", message.c_str());
-}
-
-void
-ProductionCheckingPolicy::sendError(Response* response, unsigned short status, const std::string& message) {
-	response->sendError(status, StringUtils::EMPTY_STRING);
-}
-
-bool
-ProductionCheckingPolicy::isProduction() const {
-	return true;
+	return false;
 }
 
 DevelopmentCheckingPolicy::DevelopmentCheckingPolicy() {
@@ -119,6 +73,11 @@ DevelopmentCheckingPolicy::isProduction() const {
 	return false;
 }
 
+bool
+DevelopmentCheckingPolicy::useXSLTProfiler() const {
+	return false;
+}
+
 CheckingPolicyStarter::CheckingPolicyStarter() 
 {
 }
@@ -133,10 +92,8 @@ CheckingPolicyStarter::init(const Config *config) {
 		ComponentRegisterer<CheckingPolicy> reg(new DevelopmentCheckingPolicy());
 	}
 	else {
-		ComponentRegisterer<CheckingPolicy> reg(new ProductionCheckingPolicy());
+		ComponentRegisterer<CheckingPolicy> reg(new CheckingPolicy());
 	}
-
-	CheckingPolicy::instance()->init(config);
 }
 
 } // namespace xscript

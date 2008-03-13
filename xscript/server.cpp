@@ -3,6 +3,7 @@
 #include "request.h"
 #include "server.h"
 
+#include "xscript/checking_policy.h"
 #include "xscript/config.h"
 #include "xscript/request_data.h"
 #include "xscript/state.h"
@@ -12,7 +13,6 @@
 #include <boost/tokenizer.hpp>
 
 #include <string>
-#include <iostream>
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -21,9 +21,19 @@
 namespace xscript
 {
 
+class OfflineCheckingPolicy : public DevelopmentCheckingPolicy
+{
+public:
+	OfflineCheckingPolicy() {}
+	virtual ~OfflineCheckingPolicy() {}
+	bool useXSLTProfiler() const {return true;}
+};
+
 OfflineServer::OfflineServer(Config *config, const std::string& url, const std::multimap<std::string, std::string>& args) :
 	Server(config), url_(url)
 {
+	ComponentRegisterer<CheckingPolicy> reg(new OfflineCheckingPolicy());
+
 	root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");
 
 	apply_stylesheet_ = true;

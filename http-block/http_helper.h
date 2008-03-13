@@ -59,6 +59,8 @@ public:
 
 	Tag createTag() const;
 
+	bool isXml() const;
+
 protected:
 	void detectContentType();
 	void check(CURLcode code) const;

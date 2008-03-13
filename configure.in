@@ -85,7 +85,7 @@ PKG_CHECK_MODULES(xml,
 LIBS="$LIBS $xml_LIBS $xslt_LIBS $exslt_LIBS"
 CPPFLAGS="$CPPFLAGS $xml_CFLAGS $xslt_CFLAGS $exslt_CFLAGS"
 
-ac_have_lua="yes"
+ac_have_lua="no"
 ac_lua_found="no"
 
 AC_ARG_ENABLE(lua, 
