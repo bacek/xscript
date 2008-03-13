@@ -2,8 +2,9 @@ xscript (5.5-2) unstable; urgency=low
 
   * CheckingPolicy updated
   * Content-type recognition updated in HttpBlock
+  * XSLT profiling info saving changed
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 12 Mar 2008 17:57:26 +0300
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 13 Mar 2008 16:29:46 +0300
 
 xscript (5.5-1) unstable; urgency=low
 

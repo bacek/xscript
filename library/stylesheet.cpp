@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include <iostream>
 #include <sstream>
 #include <iterator>
 #include <algorithm>
@@ -24,6 +25,9 @@
 #include "xscript/logger.h"
 #include "xscript/object.h"
 #include "xscript/context.h"
+
+//#include "xscript/writer.h"
+
 #include "xscript/stylesheet.h"
 #include "xscript/xslt_extension.h"
 #include "xscript/stylesheet_cache.h"
@@ -41,6 +45,9 @@
 
 namespace xscript
 {
+
+extern "C" int closeProfileFunc(void *ctx);
+extern "C" int writeProfileFunc(void *ctx, const char *data, int len);
 
 struct ContextData
 {
@@ -137,9 +144,10 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 	if (CheckingPolicy::instance()->useXSLTProfiler()) {
 		Profiler profiler("Total apply time");
 		XmlDocHelper prof_doc(xsltGetProfileInformation(tctx.get()));
-		xmlNodePtr p = xmlAddChild(xmlDocGetRootElement(newdoc.get()),
-			xmlCopyNode(xmlDocGetRootElement(prof_doc.get()), 1));
-		xmlNewTextChild(p, 0, BAD_CAST "total-time", BAD_CAST profiler.getInfo().c_str());
+		xmlNewTextChild(xmlDocGetRootElement(prof_doc.get()), 0, BAD_CAST "total-time", BAD_CAST profiler.getInfo().c_str());
+		xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(&writeProfileFunc, &closeProfileFunc, ctx, NULL);
+		XmlUtils::throwUnless(NULL != buf);
+		xmlSaveFormatFileTo(buf, prof_doc.get(), NULL, 1);
 	}
 
 	log()->debug("%s: %s, checking result document", BOOST_CURRENT_FUNCTION, name_.c_str());
@@ -366,6 +374,30 @@ XsltInitalizer::ExtraDataShutdown(xsltTransformContextPtr, const xmlChar*, void*
 	
 	log()->debug("%s, data is: %p", BOOST_CURRENT_FUNCTION, data);
 	delete static_cast<ContextData*>(data);
+}
+
+extern "C" int
+closeProfileFunc(void *ctx) {
+	return 0;
+}
+
+extern "C" int
+writeProfileFunc(void *ctx, const char *data, int len) {
+	if (0 == len) {
+		return 0;
+	}
+	try {
+		std::cout << "XSLT PROFILE INFO" << std::endl;
+		std::cout.write(data, len);
+		std::cout << "END OF XSLT PROFILE INFO" << std::endl << std::endl;
+		return len;
+	}
+	catch (const std::exception &e) {
+		Context *context = static_cast<Context*>(ctx);
+		log()->error("caught exception while writing result: %s %s", 
+			context->request()->getScriptFilename().c_str(), e.what());
+	}
+	return -1;
 }
 
 } // namespace xscript
