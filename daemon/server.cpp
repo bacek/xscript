@@ -105,8 +105,7 @@ FCGIServer::handle() {
 	XmlUtils::registerReporters();
 
 	ServerRequest request;
-	RequestData data(&request, &request, boost::shared_ptr<State>(new State()));
-	
+		
 	while (true) {
 		if (-1 != FCGX_Accept_r(&req)) {
 			try {
@@ -117,6 +116,7 @@ FCGIServer::handle() {
 				std::ostream os(&outbuf);
 			
 				request.attach(&is, &os, req.envp);
+				RequestData data(&request, &request, boost::shared_ptr<State>(new State()));
 				handleRequest(&data);
 				
 				os << std::flush;

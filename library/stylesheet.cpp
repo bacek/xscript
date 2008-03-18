@@ -26,8 +26,6 @@
 #include "xscript/object.h"
 #include "xscript/context.h"
 
-//#include "xscript/writer.h"
-
 #include "xscript/stylesheet.h"
 #include "xscript/xslt_extension.h"
 #include "xscript/stylesheet_cache.h"
