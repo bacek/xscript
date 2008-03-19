@@ -109,10 +109,12 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 	
 	attachContextData(tctx.get(), ctx, this);
 	tctx->profile = CheckingPolicy::instance()->useXSLTProfiler();
+	if (NULL == tctx->globalVars) {
+		tctx->globalVars = xmlHashCreate(20);
+	}
 
 	const std::vector<Param*> &p = obj->xsltParams();
 	if (!p.empty()) {
-		tctx->globalVars = xmlHashCreate(20);
 		log()->debug("param list contains %llu elements", static_cast<unsigned long long>(p.size()));
 
 		typedef std::set<std::string> ParamSetType;
