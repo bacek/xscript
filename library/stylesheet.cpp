@@ -12,6 +12,8 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
+#include <boost/lexical_cast.hpp>
+
 #include <libxslt/variables.h>
 #include <libxslt/transform.h>
 #include <libxslt/extensions.h>
@@ -110,7 +112,7 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 
 	const std::vector<Param*> &p = obj->xsltParams();
 	if (!p.empty()) {
-		tctx->globalVars = xmlHashCreate(p.size());
+		tctx->globalVars = xmlHashCreate(20);
 		log()->debug("param list contains %llu elements", static_cast<unsigned long long>(p.size()));
 
 		typedef std::set<std::string> ParamSetType;
@@ -131,8 +133,7 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 					log()->debug("add xslt-param %s: %s", id.c_str(), value.c_str());
 					XmlUtils::throwUnless(
 						xsltQuoteOneUserParam(tctx.get(),
-							xmlStrdup((const xmlChar*)id.c_str()),
-							xmlStrdup((const xmlChar*)value.c_str())) == 0);
+						(const xmlChar*)id.c_str(), (const xmlChar*)value.c_str()) == 0);
 				}
 			}
 		}
