@@ -19,16 +19,16 @@
 namespace xscript
 {
 
-extern "C" int luaRequestHasArg(lua_State *state) throw ();
-extern "C" int luaRequestHasHeader(lua_State *state) throw ();
-extern "C" int luaRequestHasCookie(lua_State *state) throw ();
+extern "C" int luaRequestGetArg(lua_State *state) throw ();
+extern "C" int luaRequestGetHeader(lua_State *state) throw ();
+extern "C" int luaRequestGetCookie(lua_State *state) throw ();
 
 template<>
 MethodDispatcher<Request>::MethodDispatcher()
 {
-	registerMethod("hasArg", &luaRequestHasArg);
-	registerMethod("hasHeader", &luaRequestHasHeader);
-	registerMethod("hasCookie", &luaRequestHasCookie);
+	registerMethod("getArg", &luaRequestGetArg);
+	registerMethod("getHeader", &luaRequestGetHeader);
+	registerMethod("getCookie", &luaRequestGetCookie);
 }
 
 static MethodDispatcher<Request> disp_;
