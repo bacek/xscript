@@ -1,3 +1,10 @@
+xscript (5.6-0) unstable; urgency=low
+
+  * dumpState method added to mist block
+  * init script fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 21 Mar 2008 17:59:25 +0300
+
 xscript (5.5-4) unstable; urgency=low
 
   * Passing XSLT parameters bug fixed

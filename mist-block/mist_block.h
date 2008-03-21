@@ -69,6 +69,7 @@ protected:
 	xmlNodePtr setStateConcatString(Context *ctx);
 
 	xmlNodePtr dropState(Context *ctx);
+	xmlNodePtr dumpState(Context *ctx);
 	xmlNodePtr attachStylesheet(Context *ctx);
 
 protected:

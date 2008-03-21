@@ -5,7 +5,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 THIS=`basename $0 | sed 's/^[SK][0123456789]*b/b/' | sed 's/-daemon//g'`
 XSCRIPT_USER="www-data"
-XSCRIPT_PID="/var/run/xscript/xscriptstart.pid"
+XSCRIPT_PID="/var/run/$THIS/xscriptstart.pid"
 PID_DIR="/var/run/$THIS"
 LOG_DIR="/var/log/$THIS"
 
@@ -29,7 +29,7 @@ case "$1" in
         echo "."
 	sleep 1
 	if ! ls $XSCRIPT_PID 2> /dev/null; then
-	    echo "Xscript not started. See logs in /var/log/xscript"
+	    echo "Xscript not started. See logs in /var/log/$THIS"
 	fi;
         ;;
     stop)

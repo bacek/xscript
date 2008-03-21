@@ -703,6 +703,26 @@ MistBlock::dropState(Context *ctx) {
 }
 
 xmlNodePtr
+MistBlock::dumpState(Context *ctx) {
+	log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+
+	boost::shared_ptr<State> state = ctx->state();
+
+	XmlNode node("state_dump");
+
+	std::map<std::string, StateValue> state_info;
+	state->values(state_info);
+
+	for(std::map<std::string, StateValue>::const_iterator it = state_info.begin();
+		it != state_info.end(); ++it) {
+		XmlChildNode child(node.getNode(), "param", it->second.value().c_str());
+		child.setProperty("name", it->first.c_str());
+		child.setProperty("type", it->second.stringType().c_str());
+	}
+	return node.releaseNode();
+}
+
+xmlNodePtr
 MistBlock::attachStylesheet(Context *ctx) {
 	
 	log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
@@ -858,6 +878,9 @@ MistMethodRegistrator::MistMethodRegistrator() {
 
 	MistBlock::registerMethod("dropState", &MistBlock::dropState);
 	MistBlock::registerMethod("drop_state", &MistBlock::dropState);
+
+	MistBlock::registerMethod("dumpState", &MistBlock::dumpState);
+	MistBlock::registerMethod("dump_state", &MistBlock::dumpState);
 	
 	MistBlock::registerMethod("attachStylesheet", &MistBlock::attachStylesheet);	
 	MistBlock::registerMethod("attach_stylesheet", &MistBlock::attachStylesheet);
