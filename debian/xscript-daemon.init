@@ -3,7 +3,7 @@
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
-THIS=`basename $0 | sed 's/^[SK][0123456789]*b/b/' | sed 's/-daemon//g'`
+THIS=`basename $0 | sed 's/-daemon$//g' | sed 's/^[SK][0123456789]*\([a-z]\)/\1/'`
 XSCRIPT_USER="www-data"
 XSCRIPT_PID="/var/run/$THIS/xscriptstart.pid"
 PID_DIR="/var/run/$THIS"

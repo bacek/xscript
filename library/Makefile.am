@@ -12,7 +12,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	tag_param.cpp tagged_block.cpp tagged_cache.cpp thread_pool.cpp \
 	threaded_block.cpp util.cpp writer.cpp xml.cpp xslt_extension.cpp \
 	vhost_data.cpp protocol_arg_param.cpp checking_policy.cpp \
-	logger_factory.cpp syslog_logger.cpp file_logger.cpp server.cpp
+	logger_factory.cpp syslog_logger.cpp file_logger.cpp server.cpp md5.cpp
 
 noinst_HEADERS = details/expect.h details/extension_list.h details/loader.h \
 	details/param_factory.h details/phoenix_singleton.h \

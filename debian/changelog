@@ -1,3 +1,10 @@
+xscript (5.7-0) unstable; urgency=low
+
+  * md5 xslt extension added
+  * init script updated
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 24 Mar 2008 18:37:09 +0300
+
 xscript (5.6-0) unstable; urgency=low
 
   * dumpState method added to mist block

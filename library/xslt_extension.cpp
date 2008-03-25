@@ -23,6 +23,7 @@
 #include "xscript/stylesheet.h"
 #include "xscript/xml_helpers.h"
 #include "xscript/xslt_extension.h"
+#include "xscript/md5.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -425,6 +426,38 @@ xscriptXsltJsQuote(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltMD5(xmlXPathParserContextPtr ctxt, int nargs) {
+
+	log()->entering("xscript:md5");
+	if (ctxt == NULL) {
+		return;
+	}
+	if (1 != nargs) {
+		log()->error("xscript:md5: bad param count");
+		return;
+	}
+
+	XsltParamFetcher params(ctxt, nargs);
+
+	const char* str = params.str(0);
+	if (NULL == str) {
+		log()->error("xscript:md5: bad parameter");
+		xmlXPathReturnEmptyNodeSet(ctxt);
+		return;
+	}
+
+	try {
+		std::string result = MD5_Hex(str);
+		valuePush(ctxt, xmlXPathNewCString(result.c_str()));
+	}
+	catch (const std::exception &e) {
+		log()->error("caught exception in [xscript:md5]: %s", e.what());
+		ctxt->error = XPATH_EXPR_ERROR;
+		xmlXPathReturnEmptyNodeSet(ctxt);
+	}
+}
+
+extern "C" void
 xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
 
 	if (tctx == NULL) {
@@ -523,6 +556,7 @@ XsltExtensions::XsltExtensions() {
 
 	XsltFunctionRegisterer("esc", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltEsc);
 	XsltFunctionRegisterer("js-quote", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltJsQuote);
+	XsltFunctionRegisterer("md5", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltMD5);
 
 	XsltFunctionRegisterer("sanitize", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSanitize);
 	
