@@ -23,7 +23,6 @@
 #include "xscript/stylesheet.h"
 #include "xscript/xml_helpers.h"
 #include "xscript/xslt_extension.h"
-#include "xscript/md5.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -447,7 +446,7 @@ xscriptXsltMD5(xmlXPathParserContextPtr ctxt, int nargs) {
 	}
 
 	try {
-		std::string result = MD5_Hex(str);
+		std::string result = HashUtils::hexMD5(str);
 		valuePush(ctxt, xmlXPathNewCString(result.c_str()));
 	}
 	catch (const std::exception &e) {

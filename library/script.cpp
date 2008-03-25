@@ -148,7 +148,7 @@ Script::removeUnusedNodes(const XmlDocHelper &doc) {
 	
 XmlDocHelper
 Script::invoke(boost::shared_ptr<Context> ctx) {
-	
+
 	log()->info("%s, invoking %s", BOOST_CURRENT_FUNCTION, name().c_str());
 	try {
 		unsigned int count = 0;

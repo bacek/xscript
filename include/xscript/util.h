@@ -92,6 +92,16 @@ private:
 	virtual ~HttpDateUtils();
 };
 
+class HashUtils : private boost::noncopyable
+{
+public:
+	static std::string hexMD5(const char *key);
+
+private:
+	HashUtils();
+	virtual ~HashUtils();
+};
+
 template<typename Cont> inline std::string
 XmlUtils::escape(const Cont &value) {
 	return escape(createRange(value));
