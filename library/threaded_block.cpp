@@ -12,8 +12,9 @@
 namespace xscript
 {
 
-ThreadedBlock::ThreadedBlock(Xml *owner, xmlNodePtr node) :
-	Block(owner, node), threaded_(false), timeout_(5000), remote_timeout_(5000)
+// FIXME: Change hard-coded 5000 to configurable defaults.
+ThreadedBlock::ThreadedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
+	Block(ext, owner, node), threaded_(false), timeout_(5000), remote_timeout_(5000)
 {
 }
 

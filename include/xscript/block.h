@@ -8,6 +8,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <xscript/object.h>
 #include <xscript/xml_helpers.h>
+#include <xscript/extension.h>
 
 namespace xscript
 {
@@ -18,7 +19,7 @@ class ParamFactory;
 class Block : public Object
 {
 public:
-	Block(Xml *owner, xmlNodePtr node);
+	Block(const Extension *ext, Xml *owner, xmlNodePtr node);
 	virtual ~Block();
 	
 	inline Xml* owner() const {
@@ -63,6 +64,9 @@ public:
 	
 	XmlDocHelper errorResult(const char *reason) const;
 	
+	Logger * log() const {
+		return extension_->getLogger();
+	}
 protected:
 
 	typedef boost::tuple<std::string, std::string, std::string> XPathExpr;
@@ -92,6 +96,7 @@ protected:
 	}
 
 private:
+	const Extension *extension_;
 	Xml *owner_;
 	xmlNodePtr node_;
 	std::vector<Param*> params_;

@@ -16,7 +16,7 @@ class Response;
 class LuaBlock : public Block
 {
 public:
-	LuaBlock(Xml *owner, xmlNodePtr node);
+	LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
 	virtual ~LuaBlock();
 	virtual void parse();
 	

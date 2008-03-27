@@ -9,7 +9,7 @@ namespace xscript
 class ThreadedBlock : public virtual Block
 {
 public:
-	ThreadedBlock(Xml* owner, xmlNodePtr node);
+	ThreadedBlock(const Extension *ext, Xml* owner, xmlNodePtr node);
 	virtual ~ThreadedBlock();
 
 	int timeout() const;

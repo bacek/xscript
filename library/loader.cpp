@@ -14,6 +14,8 @@
 #include "details/loader.h"
 #include "xscript/config.h"
 #include "xscript/resource_holder.h"
+#include "xscript/logger_factory.h"
+#include "details/extension_list.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -36,7 +38,7 @@ class LoaderImpl : public Loader
 public:
 	virtual ~LoaderImpl();
 
-	virtual void load(const char *name);
+	virtual ExtensionInfo * load(const char *name);
 	virtual void init(const Config *config);
 	
 	static boost::shared_ptr<Loader> instance();
@@ -90,17 +92,39 @@ LoaderImpl::init(const Config *config) {
 	config->subKeys(key, v);
 	for (std::vector<std::string>::iterator i = v.begin(), end = v.end(); i != end; ++i) {
 		std::string module = (*i) + "/path";
-		load(config->as<std::string>(module).c_str());
+		ExtensionInfo * info = load(config->as<std::string>(module).c_str());
+		
+		// Set appropriate logger if we successfully fetch ExtensionInfo from module
+		if (info != 0)
+		{
+			std::string loggerName = config->as<std::string>(*i + "/logger", "default");
+			std::cerr << "Logger " << loggerName << "\n";
+
+			Extension * ext = ExtensionList::instance()->extension(info->name, info->nsref);
+			if (ext) {
+				ext->setLogger(LoggerFactory::instance()->getLogger(loggerName));
+			}
+		}
 	}
 }
 
-void
+ExtensionInfo *
 LoaderImpl::load(const char *name) {
 	Handle handle(dlopen(name, RTLD_NOW | RTLD_GLOBAL));
-	
+
 	checkLoad(dlerror());
+
+	// Try to fetch extension info from loaded module.
+	ExtensionInfo * info = 0;
+
+	void * p = dlsym(handle.get(), "get_extension_info");
+	ExtensionInfo* (*func)() = (ExtensionInfo *(*)())p;
+	if(func != 0)
+		info = func();
+
 	handles_.push_back(handle.release());
 
+	return info;
 }
 
 void

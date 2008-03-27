@@ -60,4 +60,7 @@ SyslogLogger::debugInternal(const char *format, va_list args) {
 	vsyslog(LOG_DEBUG, format, args);
 }
 
+void SyslogLogger::logRotate() {
+}
+
 } // namespace xscript

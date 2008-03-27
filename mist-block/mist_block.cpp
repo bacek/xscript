@@ -40,8 +40,8 @@ public:
 
 MethodMap MistBlock::methods_;
 
-MistBlock::MistBlock(Xml *owner, xmlNodePtr node) :
-	Block(owner, node), method_(NULL)
+MistBlock::MistBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
+	Block(ext, owner, node), method_(NULL)
 {
 }
 
@@ -758,7 +758,7 @@ MistBlock::registerMethod(const char *name, MistMethod method) {
 		}
 	}
 	catch (const std::exception &e) {
-		log()->error("%s, caught exception: %s",  BOOST_CURRENT_FUNCTION, e.what());
+		xscript::log()->error("%s, caught exception: %s",  BOOST_CURRENT_FUNCTION, e.what());
 		throw;
 	}
 }
@@ -783,23 +783,27 @@ MistExtension::nsref() const {
 
 void
 MistExtension::initContext(Context *ctx) {
+	(void)ctx;
 }
 
 void
 MistExtension::stopContext(Context *ctx) {
+	(void)ctx;
 }
 
 void
 MistExtension::destroyContext(Context *ctx) {
+	(void)ctx;
 }
 	
 std::auto_ptr<Block>
 MistExtension::createBlock(Xml *owner, xmlNodePtr node) {
-	return std::auto_ptr<Block>(new MistBlock(owner, node));
+	return std::auto_ptr<Block>(new MistBlock(this, owner, node));
 }
 
 void
 MistExtension::init(const Config *config) {
+	(void)config;
 }
 
 MistMethodRegistrator::MistMethodRegistrator() {
@@ -890,3 +894,10 @@ static MistMethodRegistrator reg_;
 static ExtensionRegisterer ext_(ExtensionHolder(new MistExtension()));
 
 } // namespace xscript
+
+
+extern "C" ExtensionInfo* get_extension_info() {
+    static ExtensionInfo info = { "mist", xscript::XmlUtils::XSCRIPT_NAMESPACE };
+    return &info;
+}
+

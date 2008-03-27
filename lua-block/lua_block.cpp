@@ -50,8 +50,8 @@ luaReportError(lua_State *lua) throw () {
 	return 0;
 }
 
-LuaBlock::LuaBlock(Xml *owner, xmlNodePtr node) :
-	Block(owner, node), code_(NULL)
+LuaBlock::LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
+	Block(ext, owner, node), code_(NULL)
 {
 }
 
@@ -226,7 +226,7 @@ LuaExtension::destroyContext(Context *ctx) {
 	
 std::auto_ptr<Block>
 LuaExtension::createBlock(Xml *owner, xmlNodePtr node) {
-	return std::auto_ptr<Block>(new LuaBlock(owner, node));
+	return std::auto_ptr<Block>(new LuaBlock(this, owner, node));
 }
 
 void
@@ -236,3 +236,9 @@ LuaExtension::init(const Config *config) {
 static ExtensionRegisterer reg_(ExtensionHolder(new LuaExtension()));
 
 } // namespace xscript
+
+extern "C" ExtensionInfo* get_extension_info() {
+    static ExtensionInfo info = { "lua", xscript::XmlUtils::XSCRIPT_NAMESPACE };
+    return &info;
+}
+

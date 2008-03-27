@@ -54,6 +54,8 @@ public:
 		printThreadId_ = p;
 	}
 	
+    virtual void logRotate() = 0;
+
 protected:
     LogLevel level_;
 	bool	 printThreadId_;

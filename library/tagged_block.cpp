@@ -15,8 +15,8 @@ namespace xscript
 
 static const time_t CACHE_TIME_MINIMUM = 5;
 
-TaggedBlock::TaggedBlock(Xml *owner, xmlNodePtr node) :
-	Block(owner, node), canonical_method_(), tagged_(false), cache_time_(Tag::UNDEFINED_TIME)
+TaggedBlock::TaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
+	Block(ext, owner, node), canonical_method_(), tagged_(false), cache_time_(Tag::UNDEFINED_TIME)
 {
 }
 

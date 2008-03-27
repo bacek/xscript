@@ -1,11 +1,15 @@
 #include <iostream>
 #include <boost/bind.hpp>
 #include <vector>
+#include <ext/functional>
 #include "xscript/logger_factory.h"
 #include "xscript/config.h"
+#include "xscript/control_extension.h"
+#include "xscript/util.h"
 #include "details/syslog_logger.h"
 #include "details/file_logger.h"
 
+using __gnu_cxx::select2nd;
 
 namespace xscript
 {
@@ -13,10 +17,40 @@ namespace xscript
 LoggerFactory::LoggerFactory() 
     : defaultLogger_(0)
 {
+	ControlExtensionRegistry::constructor_t f = boost::bind(boost::mem_fn(&LoggerFactory::createBlock), this, _1, _2, _3);
+
+    ControlExtensionRegistry::registerConstructor("logrotate", f);
 }
 
 LoggerFactory::~LoggerFactory() {
 }
+
+class LoggerFactoryBlock : public Block
+{
+public:
+	LoggerFactoryBlock(const Extension *ext, Xml *owner, xmlNodePtr node)
+        : Block(ext, owner, node)
+    {
+    }
+
+	XmlDocHelper call(Context *, boost::any &) throw (std::exception) {
+        LoggerFactory::instance()->logRotate();
+        XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+        XmlUtils::throwUnless(NULL != doc.get());
+
+        xmlNodePtr node = xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "logroate", (const xmlChar*) "rotated");
+        XmlUtils::throwUnless(NULL != node);
+
+        xmlDocSetRootElement(doc.get(), node);
+
+        return doc;
+    }
+};
+
+std::auto_ptr<Block> LoggerFactory::createBlock(const Extension *ext, Xml *owner, xmlNodePtr node) {
+    return std::auto_ptr<Block>(new LoggerFactoryBlock(ext, owner, node));
+}
+
 
 void LoggerFactory::init(const Config * config) {
 	std::vector<std::string> v;
@@ -87,6 +121,13 @@ Logger::LogLevel LoggerFactory::stringToLevel(const std::string& level)
 Logger* LoggerFactory::getDefaultLogger() const
 {
     return defaultLogger_;
+}
+
+void LoggerFactory::logRotate() const {
+    for(loggerMap_t::const_iterator l = loggers_.begin(); l != loggers_.end(); ++l) {
+        l->second->logRotate();
+    }
+    getDefaultLogger()->info("Log rotated");
 }
 
 }

@@ -37,8 +37,8 @@ public:
 
 MethodMap HttpBlock::methods_;
 
-HttpBlock::HttpBlock(Xml *owner, xmlNodePtr node) :
-	Block(owner, node), ThreadedBlock(owner, node), TaggedBlock(owner, node), proxy_(false), method_(NULL)
+HttpBlock::HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
+	Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node), proxy_(false), method_(NULL)
 {
 }
 
@@ -244,7 +244,7 @@ HttpBlock::registerMethod(const char *name, HttpMethod method) {
 		}
 	}
 	catch (const std::exception &e) {
-		log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
+        xscript::log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
 		throw;
 	}
 }
@@ -279,7 +279,7 @@ HttpExtension::destroyContext(Context *ctx) {
 
 std::auto_ptr<Block>
 HttpExtension::createBlock(Xml *owner, xmlNodePtr node) {
-	return std::auto_ptr<Block>(new HttpBlock(owner, node));
+	return std::auto_ptr<Block>(new HttpBlock(this, owner, node));
 }
 
 void
@@ -310,3 +310,10 @@ static HttpMethodRegistrator reg_;
 static ExtensionRegisterer ext_(ExtensionHolder(new HttpExtension()));
 
 } // namespace xscript
+
+
+extern "C" ExtensionInfo* get_extension_info() {
+    static ExtensionInfo info = { "http", xscript::XmlUtils::XSCRIPT_NAMESPACE };
+    return &info;
+}
+

@@ -1,6 +1,9 @@
 #ifndef _XSCRIPT_FILE_LOGGER_
 #define _XSCRIPT_FILE_LOGGER_
 
+#include <vector>
+#include <string>
+#include <boost/thread.hpp>
 #include "xscript/logger.h"
 
 namespace xscript
@@ -41,9 +44,33 @@ private:
 	// File descriptor
 	int fd_;
 
+	// Lock of file descriptor to avoid logrotate race-condition
+	boost::mutex	fdMutex_;
+
+
+	// Writing queue.
+	// All writes happens in separate thread. All someInternal methods just
+	// push string into queue and signal conditional variable.
+	
+	// Logger is stopping.
+	volatile bool stopping_;
+
+	// Writing queue. 
+	std::vector<std::string>	queue_;
+
+	// Condition and mutex for signalling.
+	boost::condition			queueCondition_;
+	boost::mutex				queueMutex_;
+
+	// Writing thread.
+	boost::thread				writingThread_;
+
+
 	void openFile();
 	void prepareFormat(char * buf, const char* type, const char* format);
-	void write(const char* format, va_list args) const;
+	void pushIntoQueue(const char* type, const char* format, va_list args);
+
+	void writingThread();
 };
 
 }

@@ -7,6 +7,7 @@
 #include <boost/shared_ptr.hpp>
 #include <xscript/component.h>
 #include <xscript/logger.h>
+#include <xscript/block.h>
 
 namespace xscript
 {
@@ -30,6 +31,15 @@ public:
      * Get default logger
      */
     Logger * getDefaultLogger() const;
+
+    /**
+     */
+    std::auto_ptr<Block> createBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+
+    /**
+     * Enforce log rotating.
+     */
+    void logRotate() const;
 
 private:
     LoggerFactory();

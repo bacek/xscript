@@ -30,7 +30,7 @@ typedef details::hash_map<std::string, MistMethod, details::StringHash> MethodMa
 class MistBlock : public Block
 {
 public:
-	MistBlock(Xml *owner, xmlNodePtr node);
+	MistBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
 	virtual ~MistBlock();
 
 protected:

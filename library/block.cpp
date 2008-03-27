@@ -33,8 +33,8 @@
 namespace xscript
 {
 
-Block::Block(Xml *owner, xmlNodePtr node) :
-	owner_(owner), node_(node)
+Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
+	extension_(ext), owner_(owner), node_(node)
 {
 	assert(node_);
 	assert(owner_);

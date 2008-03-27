@@ -1,10 +1,12 @@
 #ifndef _XSCRIPT_LOADER_H_
 #define _XSCRIPT_LOADER_H_
 
+#include "xscript/extension.h"
 #include "settings.h"
 
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
+
 
 namespace xscript
 {
@@ -15,7 +17,7 @@ class Loader : private boost::noncopyable
 {
 public:
 	
-	virtual void load(const char *name) = 0;
+	virtual ExtensionInfo * load(const char *name) = 0;
 	virtual void init(const Config *config) = 0;
 	
 	static boost::shared_ptr<Loader> instance();

@@ -12,7 +12,7 @@ namespace xscript
 class TaggedBlock : public virtual Block
 {
 public:
-	TaggedBlock(Xml *owner, xmlNodePtr node);
+	TaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
 	virtual ~TaggedBlock();
 	
 	virtual std::string canonicalMethod(const Context *ctx) const;

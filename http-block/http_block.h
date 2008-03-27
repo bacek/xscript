@@ -36,10 +36,11 @@ typedef std::map<std::string, HttpMethod> MethodMap;
 typedef details::hash_map<std::string, HttpMethod, details::StringHash> MethodMap;
 #endif
 
+// TODO: Why it is not virtual inherited?
 class HttpBlock : public ThreadedBlock, public TaggedBlock
 {
 public:
-	HttpBlock(Xml *owner, xmlNodePtr node);
+	HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
 	virtual ~HttpBlock();
 
 protected:

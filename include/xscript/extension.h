@@ -15,6 +15,7 @@ class Xml;
 class Block;
 class Config;
 class Context;
+class Logger;
 
 class Extension : public virtual Component
 {
@@ -30,6 +31,17 @@ public:
 	virtual void destroyContext(Context *ctx) = 0;
 	
 	virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node) = 0;
+
+    void setLogger(Logger* logger) {
+        logger_ = logger;
+    }
+
+    Logger *getLogger() const {
+		return logger_;
+	}
+
+private:
+    Logger * logger_;
 };
 
 typedef ResourceHolder<Extension*, ComponentHolder<Extension>::ResourceTraits > ExtensionHolder;
@@ -40,6 +52,22 @@ public:
 	ExtensionRegisterer(ExtensionHolder holder) throw ();
 };
 
+
 } // namespace xscript
+
+
+/**
+ * Extension info. Only name for now.
+ */
+struct ExtensionInfo
+{
+    const char *name;
+    const char *nsref;
+};
+
+/**
+ * Get extension info. 
+ */
+extern "C" ExtensionInfo * get_extension_info();
 
 #endif // _XSCRIPT_EXTENSION_H_

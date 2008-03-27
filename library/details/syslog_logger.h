@@ -19,6 +19,7 @@ public:
 	SyslogLogger(Logger::LogLevel level, const Config * config, const std::string &key);
 	virtual ~SyslogLogger();
 	
+    virtual void logRotate();
 protected:
 	virtual void critInternal(const char *format, va_list args);
 	virtual void errorInternal(const char *format, va_list args);

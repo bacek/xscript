@@ -5,6 +5,8 @@
 
 #include <stdexcept>
 
+#include <boost/bind.hpp>
+
 #include "xscript/config.h"
 #include "xscript/logger.h"
 #include "details/file_logger.h"
@@ -21,7 +23,13 @@ namespace xscript
 
 
 FileLogger::FileLogger(Logger::LogLevel level, const Config * config, const std::string &key)
-	: Logger(level), openMode_(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP), crash_(true), fd_(-1)
+	: 
+		Logger(level), 
+		openMode_(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP), 
+		crash_(true), 
+		fd_(-1),
+		stopping_(false),
+		writingThread_(boost::bind(&FileLogger::writingThread, this))
 {
 	filename_ = config->as<std::string>(key + "/file");
 	
@@ -43,14 +51,21 @@ FileLogger::FileLogger(Logger::LogLevel level, const Config * config, const std:
 		crash_ = false;
 
 	openFile();
+
 }
 
 FileLogger::~FileLogger() {
+	stopping_ = true;
+	queueCondition_.notify_one();
+	writingThread_.join();
+
 	if (fd_ != -1)
 		close(fd_);
 }
 
 void FileLogger::openFile() {
+	boost::mutex::scoped_lock fdLock(fdMutex_);
+
 	if (fd_ != -1)
 		close(fd_);
 	fd_ = open(filename_.c_str(), O_WRONLY | O_CREAT | O_APPEND, openMode_);
@@ -62,6 +77,52 @@ void FileLogger::openFile() {
 
 void FileLogger::logRotate() {
 	openFile();
+}
+
+void
+FileLogger::critInternal(const char *format, va_list args) {
+	pushIntoQueue("crit", format, args);
+}
+
+void
+FileLogger::errorInternal(const char *format, va_list args) {
+	pushIntoQueue("error", format, args);
+}
+
+
+void
+FileLogger::warnInternal(const char *format, va_list args) {
+	pushIntoQueue("warn", format, args);
+}
+
+
+void
+FileLogger::infoInternal(const char *format, va_list args) {
+	pushIntoQueue("info", format, args);
+}
+
+void
+FileLogger::debugInternal(const char *format, va_list args) {
+	pushIntoQueue("debug", format, args);
+}
+
+void 
+FileLogger::pushIntoQueue(const char* type, const char* format, va_list args) {
+
+	// Check without lock!
+	if (fd_ == -1)
+		return;
+
+	char fmt[BUF_SIZE];
+	prepareFormat(fmt, type, format);
+	
+	char buf[BUF_SIZE];
+	size_t size = vsnprintf(buf, BUF_SIZE, fmt, args);
+	// FIXME. We should check "size" here.
+	
+	boost::mutex::scoped_lock lock(queueMutex_);
+	queue_.push_back(buf);
+	queueCondition_.notify_one();
 }
 
 void 
@@ -77,58 +138,26 @@ FileLogger::prepareFormat(char * buf, const char* type, const char* format) {
 	snprintf(buf, BUF_SIZE, "%s %s: %s\n", timestr, type, format);
 }
 
-void 
-FileLogger::write(const char* format, va_list args) const {
-	char buf[BUF_SIZE];
-	size_t size = vsnprintf(buf, BUF_SIZE, format, args);
-	::write(fd_, buf, size);
-}
-
 void
-FileLogger::critInternal(const char *format, va_list args) {
-	if (fd_ != -1) {
-		char fmt[BUF_SIZE];
-		prepareFormat(fmt, "crit", format);
-		write(fmt, args);
+FileLogger::writingThread() {
+	while (!stopping_) {
+		std::vector<std::string> queueCopy;
+
+		{
+			boost::mutex::scoped_lock lock(queueMutex_);
+			queueCondition_.wait(lock);
+			std::swap(queueCopy, queue_);
+			// unlock mutex
+		}
+
+		boost::mutex::scoped_lock fdlock(fdMutex_);
+		if (fd_ != -1) {
+			for (std::vector<std::string>::iterator i = queueCopy.begin(); i != queueCopy.end(); ++i) {
+				::write(fd_, i->c_str(), i->length());
+			}
+		}
 	}
 }
 
-void
-FileLogger::errorInternal(const char *format, va_list args) {
-	if (fd_ != -1) {
-		char fmt[BUF_SIZE];
-		prepareFormat(fmt, "error", format);
-		write(fmt, args);
-	}
-}
-
-
-void
-FileLogger::warnInternal(const char *format, va_list args) {
-	if (fd_ != -1) {
-		char fmt[BUF_SIZE];
-		prepareFormat(fmt, "warn", format);
-		write(fmt, args);
-	}
-}
-
-
-void
-FileLogger::infoInternal(const char *format, va_list args) {
-	if (fd_ != -1) {
-		char fmt[BUF_SIZE];
-		prepareFormat(fmt, "info", format);
-		write(fmt, args);
-	}
-}
-
-void
-FileLogger::debugInternal(const char *format, va_list args) {
-	if (fd_ != -1) {
-		char fmt[BUF_SIZE];
-		prepareFormat(fmt, "debug", format);
-		write(fmt, args);
-	}
-}
 
 } // namespace xscript

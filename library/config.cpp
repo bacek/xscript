@@ -25,6 +25,7 @@
 #include "xscript/script_factory.h"
 #include "xscript/stylesheet_cache.h"
 #include "xscript/stylesheet_factory.h"
+#include "xscript/control_extension.h"
 
 #include "details/xml_config.h"
 #include "details/extension_list.h"
@@ -49,7 +50,7 @@ Config::startup() {
 	LoggerFactory::instance()->init(this);
 	log()->debug("logger factory started");
 
-    Loader::instance()->init(this);
+	Loader::instance()->init(this);
 	log()->debug("loader started");
 	
 	Authorizer::instance()->init(this);
@@ -82,9 +83,10 @@ Config::startup() {
 	TaggedCache::instance()->init(this);
 	log()->debug("tagged cache started");
 	
+	ExtensionList::instance()->registerExtension(ExtensionHolder(new ControlExtension));
+	
 	ExtensionList::instance()->init(this);
 	log()->debug("extension list started");
-	
 }
 
 std::auto_ptr<Config>

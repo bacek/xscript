@@ -12,6 +12,7 @@
 #include "xscript/context.h"
 #include "request.h"
 #include "server.h"
+#include "server.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
