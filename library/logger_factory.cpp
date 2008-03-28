@@ -1,15 +1,12 @@
 #include <iostream>
 #include <boost/bind.hpp>
 #include <vector>
-#include <ext/functional>
 #include "xscript/logger_factory.h"
 #include "xscript/config.h"
 #include "xscript/control_extension.h"
 #include "xscript/util.h"
 #include "details/syslog_logger.h"
 #include "details/file_logger.h"
-
-using __gnu_cxx::select2nd;
 
 namespace xscript
 {
@@ -38,7 +35,7 @@ public:
         XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
         XmlUtils::throwUnless(NULL != doc.get());
 
-        xmlNodePtr node = xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "logroate", (const xmlChar*) "rotated");
+        xmlNodePtr node = xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "logrotate", (const xmlChar*) "rotated");
         XmlUtils::throwUnless(NULL != node);
 
         xmlDocSetRootElement(doc.get(), node);

@@ -1,3 +1,9 @@
+xscript (5.8-0) unstable; urgency=low
+
+  * Logger and ControlExtension changed (bacek)
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 28 Mar 2008 16:25:07 +0300
+
 xscript (5.7-0) unstable; urgency=low
 
   * md5 xslt extension added
