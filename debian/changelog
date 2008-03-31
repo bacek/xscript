@@ -1,6 +1,7 @@
 xscript (5.8-0) unstable; urgency=low
 
   * Logger and ControlExtension changed (bacek)
+  * Fixes in debian/control
 
  -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 28 Mar 2008 16:25:07 +0300
 
