@@ -203,11 +203,15 @@ StateProtocolNode::build(const Request* req) {
 			setParameter("content-length", length_str);
 		}
 
-		if (req->hasHeader("content-encoding")) {
-			setParameter("content-encoding", req->getHeader("content-encoding"));
+		const std::string& enc = req->getContentEncoding();
+		if (!enc.empty()) {
+			setParameter("content-encoding", enc);
 		}
 
-		setParameter("content-type", req->getContentType());
+		const std::string& type = req->getContentType();
+		if (!type.empty()) {
+			setParameter("content-type", type);
+		}
 	}
 }
 
