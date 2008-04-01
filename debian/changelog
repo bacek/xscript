@@ -1,8 +1,9 @@
 xscript (5.8-1) unstable; urgency=low
 
-  * set_state_random fixed 
+  * set_state_random fixed
+  * protocolArg updated
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue,  1 Apr 2008 14:34:11 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue,  1 Apr 2008 16:42:04 +0400
 
 xscript (5.8-0) unstable; urgency=low
 

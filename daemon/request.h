@@ -86,6 +86,7 @@ public:
 	
 	virtual std::streamsize getContentLength() const;
 	virtual const std::string& getContentType() const;
+	virtual const std::string& getContentEncoding() const;
 	
 	virtual unsigned int countArgs() const;
 	virtual bool hasArg(const std::string &name) const;

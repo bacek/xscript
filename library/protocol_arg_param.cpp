@@ -37,16 +37,17 @@ ProtocolArgParam::~ProtocolArgParam() {
 std::string
 ProtocolArgParam::asString(const Context *ctx) const {
 	Request *req = ctx->request();
-	if (value() == "path"){
+	const std::string& val = value();
+	if (val == "path"){
 		return req->getScriptName();
 	}
-	else if (value() == "pathinfo") {
+	else if (val == "pathinfo") {
 		return req->getPathInfo();
 	}
-	else if (value() == "realpath") {
+	else if (val == "realpath") {
 		return req->getPathTranslated();
 	}
-	else if (value() == "originalpath") {
+	else if (val == "originalpath") {
 		std::string name = "X-Original-Path";
 		if (req->hasHeader(name)) {
 			return req->getHeader(name);
@@ -55,13 +56,13 @@ ProtocolArgParam::asString(const Context *ctx) const {
 			return req->getScriptName();
 		}	
 	}
-	else if (value() == "query") {
+	else if (val == "query") {
 		return req->getQueryString();
 	}
-	else if (value() == "remote_ip") {
+	else if (val == "remote_ip") {
 		return req->getRemoteAddr();
 	}
-	else if (value() == "uri") {
+	else if (val == "uri") {
 		const std::string& script_name = req->getScriptName();
 		const std::string& query_string = req->getQueryString();
 		if (query_string.empty()) {
@@ -72,27 +73,22 @@ ProtocolArgParam::asString(const Context *ctx) const {
 			return uri;
 		}
 	}
-	else if (value() == "method") {
+	else if (val == "method") {
 		return req->getRequestMethod();
 	}
-	else if (value() == "secure") {
+	else if (val == "secure") {
 		return req->isSecure() ? "yes" : "no";
 	}
-	else if (value() == "user") {
+	else if (val == "user") {
 		return req->getRemoteUser();
 	}
-	else if (value() == "content-length") {
+	else if (val == "content-length") {
 		return boost::lexical_cast<std::string>(req->getContentLength());
 	}
-	else if (value() == "content-encoding") {
-		if (req->hasHeader("content-encoding")) {
-			return req->getHeader("content-encoding");
-		}
-		else {
-			return StringUtils::EMPTY_STRING;
-		}
+	else if (val == "content-encoding") {
+		return req->getContentEncoding();
 	}
-	else if (value() == "content-type") {
+	else if (val == "content-type") {
 		return req->getContentType();
 	}
 

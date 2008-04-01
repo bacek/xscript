@@ -23,6 +23,7 @@ namespace xscript
 static const std::string HEAD("HEAD");
 static const std::string HOST_KEY("HOST");
 static const std::string CONTENT_TYPE_KEY("Content-Type");
+static const std::string CONTENT_ENCODING_KEY("Content-Encoding");
 static const std::string CONTENT_LENGTH_KEY("Content-Length");
 
 static const std::string HTTPS_KEY("HTTPS");
@@ -156,6 +157,12 @@ const std::string&
 ServerRequest::getContentType() const {
 	boost::mutex::scoped_lock sl(mutex_);
 	return Parser::get(headers_, CONTENT_TYPE_KEY);
+}
+
+const std::string&
+ServerRequest::getContentEncoding() const {
+	boost::mutex::scoped_lock sl(mutex_);
+	return Parser::get(headers_, CONTENT_ENCODING_KEY);
 }
 
 unsigned int

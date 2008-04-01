@@ -89,7 +89,12 @@ const std::string&
 StandaloneRequest::getContentType() const {
 	return StringUtils::EMPTY_STRING;
 }
-	
+
+const std::string&
+StandaloneRequest::getContentEncoding() const {
+	return StringUtils::EMPTY_STRING;
+}
+
 unsigned int
 StandaloneRequest::countArgs() const {
 	boost::mutex::scoped_lock sl(mutex_);
