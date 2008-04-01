@@ -202,7 +202,7 @@ MistBlock::setStateRandom(Context *ctx) {
 	}
 
 	if (0 == hi) {
-		hi = std::numeric_limits<boost::uint32_t>::max();
+		hi = std::numeric_limits<boost::int32_t>::max();
 	}
 	boost::int32_t val = static_cast<boost::int32_t>(random() % (hi - lo) + lo);
 	
