@@ -71,6 +71,11 @@ StandaloneRequest::getRemoteAddr() const {
 }
 
 const std::string&
+StandaloneRequest::getRealIP() const {
+	return getRemoteAddr();
+}
+
+const std::string&
 StandaloneRequest::getQueryString() const {
 	return query_;
 }

@@ -13,12 +13,14 @@
 namespace xscript
 {
 
+const time_t Cookie::MAX_LIVE_TIME = std::numeric_limits<time_t>::max();
+
 Cookie::Cookie()
 {
 }
 
 Cookie::Cookie(const std::string &name, const std::string &value) :
-	secure_(false), expires_(std::numeric_limits<time_t>::max()), 
+	secure_(false), expires_(0), 
 	name_(name), value_(value), path_("/")
 	
 {
@@ -38,7 +40,7 @@ Cookie::toString() const {
 	if (!path_.empty()) {
 		stream << "; path=" << path_;
 	}
-	if (std::numeric_limits<time_t>::max() != expires_) {
+	if (expires_) {
 		stream <<  "; expires=" << HttpDateUtils::format(expires_);
 	}
 	if (secure_) {

@@ -56,6 +56,8 @@ public:
 
 	std::string toString() const;
 
+	static const time_t MAX_LIVE_TIME;
+
 private:
 	bool secure_;
 	time_t expires_;

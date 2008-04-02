@@ -193,7 +193,7 @@ StateProtocolNode::build(const Request* req) {
 			setParameter("http_user", user);
 		}
 
-		const std::string& addr = req->getRemoteAddr();
+		const std::string& addr = req->getRealIP();
 		if (!addr.empty()) {
 			setParameter("remote_ip", addr);
 		}

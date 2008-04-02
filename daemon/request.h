@@ -81,6 +81,7 @@ public:
 	
 	virtual const std::string& getRemoteUser() const;
 	virtual const std::string& getRemoteAddr() const;
+	virtual const std::string& getRealIP() const;
 	virtual const std::string& getQueryString() const;
 	virtual const std::string& getRequestMethod() const;
 	

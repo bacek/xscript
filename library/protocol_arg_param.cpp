@@ -60,7 +60,7 @@ ProtocolArgParam::asString(const Context *ctx) const {
 		return req->getQueryString();
 	}
 	else if (val == "remote_ip") {
-		return req->getRemoteAddr();
+		return req->getRealIP();
 	}
 	else if (val == "uri") {
 		const std::string& script_name = req->getScriptName();

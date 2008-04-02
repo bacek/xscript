@@ -1,9 +1,11 @@
-xscript (5.8-1) unstable; urgency=low
+xscript (5.9-0) unstable; urgency=low
 
   * set_state_random fixed
   * protocolArg updated
+  * getRealIP method added to Request
+  * Cookie expires fixed
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue,  1 Apr 2008 16:42:04 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed,  2 Apr 2008 12:09:37 +0400
 
 xscript (5.8-0) unstable; urgency=low
 

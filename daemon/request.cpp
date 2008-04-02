@@ -39,6 +39,7 @@ static const std::string DOCUMENT_ROOT_KEY("DOCUMENT_ROOT");
 
 static const std::string REMOTE_USER_KEY("REMOTE_USER");
 static const std::string REMOTE_ADDR_KEY("REMOTE_ADDR");
+static const std::string REAL_IP_KEY("X-REAL-IP");
 
 static const std::string QUERY_STRING_KEY("QUERY_STRING");
 static const std::string REQUEST_METHOD_KEY("REQUEST_METHOD");
@@ -126,6 +127,15 @@ ServerRequest::getRemoteUser() const {
 const std::string&
 ServerRequest::getRemoteAddr() const {
 	return Parser::get(vars_, REMOTE_ADDR_KEY);
+}
+
+const std::string& 
+ServerRequest::getRealIP() const {
+	const std::string& ip = Parser::get(headers_, REAL_IP_KEY);
+	if (ip.empty()) {
+		return getRemoteAddr();
+	}
+	return ip;
 }
 
 const std::string&
