@@ -39,14 +39,7 @@ ProtocolArgParam::asString(const Context *ctx) const {
 	Request *req = ctx->request();
 	const std::string& val = value();
 	if (val == "path"){
-		const std::string& script_name = req->getScriptName();
-		const std::string& query_string = req->getQueryString();
-		if (query_string.empty()) {
-			return script_name;
-		}
-		else {
-			return script_name + "?" + query_string;
-		}
+		return req->getScriptName();
 	}
 	else if (val == "pathinfo") {
 		return req->getPathInfo();
@@ -60,13 +53,7 @@ ProtocolArgParam::asString(const Context *ctx) const {
 			return req->getHeader(name);
 		}
 		else {
-			const std::string& query_string = req->getQueryString();
-			if (query_string.empty()) {
-				return req->getScriptName();
-			}
-			else {
-				return req->getScriptName() + "?" + query_string;
-			}
+			return req->getScriptName();
 		}	
 	}
 	else if (val == "query") {
@@ -76,7 +63,15 @@ ProtocolArgParam::asString(const Context *ctx) const {
 		return req->getRealIP();
 	}
 	else if (val == "uri") {
-		return req->getScriptName();
+		const std::string& script_name = req->getScriptName();
+		const std::string& query_string = req->getQueryString();
+		if (query_string.empty()) {
+			return script_name;
+		}
+		else {
+			std::string uri = script_name + "?" + query_string;
+			return uri;
+		}
 	}
 	else if (val == "method") {
 		return req->getRequestMethod();
