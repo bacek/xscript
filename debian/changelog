@@ -1,3 +1,10 @@
+xscript (5.9-1) unstable; urgency=low
+
+  * location method added to mist block
+  * Path and URI variables fixed in ProtocolArg and set_state_by_protocol
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu,  3 Apr 2008 12:06:42 +0400
+
 xscript (5.9-0) unstable; urgency=low
 
   * set_state_random fixed

@@ -164,14 +164,14 @@ StateProtocolNode::build(const Request* req) {
 	if (NULL != req) {
 		const std::string& script_name = req->getScriptName();
 		if (!script_name.empty()) {
-			setParameter("path", script_name);
+			setParameter("uri", script_name);
 			const std::string& query_string = req->getQueryString();
 			if (query_string.empty()) {
-				setParameter("uri", script_name);
+				setParameter("path", script_name);
 			}
 			else {
-				std::string uri = script_name + "?" + query_string;
-				setParameter("uri", uri);
+				std::string path = script_name + "?" + query_string;
+				setParameter("path", path);
 				setParameter("query", query_string);
 			}
 		}

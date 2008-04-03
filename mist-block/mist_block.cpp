@@ -24,6 +24,7 @@
 #include "xscript/logger.h"
 #include "xscript/context.h"
 #include "xscript/encoder.h"
+#include "xscript/response.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -740,6 +741,24 @@ MistBlock::attachStylesheet(Context *ctx) {
 	return node.releaseNode();
 }
 
+xmlNodePtr
+MistBlock::location(Context *ctx) {
+
+	log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+
+	const std::vector<Param*> &p = params();
+	if (1 != p.size()) {
+		throw std::logic_error("location: bad arity");
+	}
+	std::string location = p[0]->asString(ctx);
+	ctx->response()->setStatus(302);
+	ctx->response()->setHeader("Location", location);
+
+	XmlNode node("location");
+	node.setContent(location.c_str());
+	return node.releaseNode();
+}
+
 void
 MistBlock::registerMethod(const char *name, MistMethod method) {
 	
@@ -888,6 +907,8 @@ MistMethodRegistrator::MistMethodRegistrator() {
 	
 	MistBlock::registerMethod("attachStylesheet", &MistBlock::attachStylesheet);	
 	MistBlock::registerMethod("attach_stylesheet", &MistBlock::attachStylesheet);
+
+	MistBlock::registerMethod("location", &MistBlock::location);	
 }
 
 static MistMethodRegistrator reg_;

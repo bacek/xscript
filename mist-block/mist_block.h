@@ -71,6 +71,7 @@ protected:
 	xmlNodePtr dropState(Context *ctx);
 	xmlNodePtr dumpState(Context *ctx);
 	xmlNodePtr attachStylesheet(Context *ctx);
+	xmlNodePtr location(Context *ctx);
 
 protected:
 	xmlNodePtr setStateList(Context *ctx, const char *name);
