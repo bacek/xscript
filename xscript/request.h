@@ -61,6 +61,8 @@ public:
 	virtual const std::string& getRealIP() const;
 	virtual const std::string& getQueryString() const;
 	virtual const std::string& getRequestMethod() const;
+	virtual std::string getURI() const;
+	virtual std::string getOriginalURI() const;
 
 	virtual std::streamsize getContentLength() const;
 	virtual const std::string& getContentType() const;

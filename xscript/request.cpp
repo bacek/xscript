@@ -85,6 +85,23 @@ StandaloneRequest::getRequestMethod() const {
 	return method_;
 }
 
+std::string
+StandaloneRequest::getURI() const {
+	const std::string& script_name = getScriptName();
+	const std::string& query_string = getQueryString();
+	if (query_string.empty()) {
+		return script_name + getPathInfo();
+	}
+	else {
+		return script_name + getPathInfo() + "?" + query_string;;
+	}
+}
+
+std::string
+StandaloneRequest::getOriginalURI() const {
+	return getURI();
+}
+
 std::streamsize
 StandaloneRequest::getContentLength() const {
 	return 0;

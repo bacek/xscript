@@ -148,6 +148,29 @@ ServerRequest::getRequestMethod() const {
 	return Parser::get(vars_, REQUEST_METHOD_KEY);
 }
 
+std::string
+ServerRequest::getURI() const {
+	const std::string& script_name = getScriptName();
+	const std::string& query_string = getQueryString();
+	if (query_string.empty()) {
+		return script_name + getPathInfo();
+	}
+	else {
+		return script_name + getPathInfo() + "?" + query_string;;
+	}
+}
+
+std::string
+ServerRequest::getOriginalURI() const {
+	std::string name = "X-Original-URI";
+	if (hasHeader(name)) {
+		return getHeader(name);
+	}
+	else {
+		return getURI();
+	}
+}
+
 std::streamsize
 ServerRequest::getContentLength() const {
 	boost::mutex::scoped_lock sl(mutex_);

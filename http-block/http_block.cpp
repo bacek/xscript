@@ -206,14 +206,17 @@ HttpBlock::response(const HttpHelper &helper) const {
 	
 	const std::string& str = helper.content();
 	if (helper.isXml()) {
+		log()->debug("%s: XML document: %s", BOOST_CURRENT_FUNCTION, str.c_str());
 		return XmlDocHelper(xmlParseMemory(str.c_str(), str.size()));
 	}
 	else if (helper.contentType() == "text/plain") {
+		log()->debug("%s: Text document", BOOST_CURRENT_FUNCTION);
 		std::string res;
 		res.append("<text>").append(XmlUtils::escape(str)).append("</text>");
 		return XmlDocHelper(xmlParseMemory(res.c_str(), res.size()));
 	}
 	else if (helper.contentType() == "text/html") {
+		log()->debug("%s: HTML document", BOOST_CURRENT_FUNCTION);
 		std::string data = XmlUtils::sanitize(str);
 		return XmlDocHelper(htmlReadDoc((const xmlChar*) data.c_str(), helper.base().c_str(), 
 			helper.charset().c_str(), HTML_PARSE_NOBLANKS | HTML_PARSE_NONET | HTML_PARSE_NOERROR));

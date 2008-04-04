@@ -165,24 +165,31 @@ StateProtocolNode::build(const Request* req) {
 		const std::string& script_name = req->getScriptName();
 		if (!script_name.empty()) {
 			setParameter("path", script_name);
-			const std::string& query_string = req->getQueryString();
-			if (query_string.empty()) {
-				setParameter("uri", script_name);
-			}
-			else {
-				std::string uri = script_name + "?" + query_string;
-				setParameter("uri", uri);
-				setParameter("query", query_string);
-			}
 		}
+
+		const std::string& query_string = req->getQueryString();
+		if (!query_string.empty()) {
+			setParameter("query", query_string);
+		}
+
+		const std::string& uri = req->getURI();
+		if (!uri.empty()) {
+			setParameter("uri", uri);
+		}
+
+		const std::string& original_uri = req->getOriginalURI();
+		if (!original_uri.empty()) {
+			setParameter("originaluri", original_uri);
+		}
+
 		const std::string& path_info = req->getPathInfo();
 		if (!path_info.empty()) {
 			setParameter("pathinfo", path_info);
 		}
 
-		const std::string& path_translated = req->getPathTranslated();
-		if (!path_translated.empty()) {
-			setParameter("realpath", path_translated);
+		const std::string& script_filename = req->getScriptFilename();
+		if (!script_filename.empty()) {
+			setParameter("realpath", script_filename);
 		}
 
 		setParameter("secure", req->isSecure() ? "yes" : "no");
@@ -198,9 +205,12 @@ StateProtocolNode::build(const Request* req) {
 			setParameter("remote_ip", addr);
 		}
 
-		std::string length_str = boost::lexical_cast<std::string>(req->getContentLength());
-		if (!length_str.empty()) {
-			setParameter("content-length", length_str);
+		std::streamsize length = req->getContentLength();
+		if (length > 0) {
+			std::string length_str = boost::lexical_cast<std::string>(length);
+			if (!length_str.empty()) {
+				setParameter("content-length", length_str);
+			}
 		}
 
 		const std::string& enc = req->getContentEncoding();
