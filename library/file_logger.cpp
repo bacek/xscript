@@ -36,7 +36,7 @@ FileLogger::FileLogger(Logger::LogLevel level, const Config * config, const std:
 	std::string read = config->as<std::string>(key + "/read", "");
 	if (!read.empty()) {
 		if (read == "all") {
-			openMode_ = S_IRUSR | S_IWUSR | S_IRGRP | S_IRUSR;
+			openMode_ = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 		}
 		else if (read == "group") {
 			openMode_ = S_IRUSR | S_IWUSR | S_IRGRP;
