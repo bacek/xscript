@@ -171,6 +171,32 @@ ServerRequest::getOriginalURI() const {
 	}
 }
 
+std::string
+ServerRequest::getHost() const {
+	const std::string& host_header = getHeader(HOST_KEY);
+	if (host_header.empty()) {
+		return StringUtils::EMPTY_STRING;
+	}
+
+	if (!isSecure() && host_header.find(':') == std::string::npos) {
+		int port = getServerPort();
+		if (port != 80) {
+			return std::string(host_header).append(":").append(boost::lexical_cast<std::string>(port));
+		}
+	}
+
+	return host_header;
+}
+
+std::string
+ServerRequest::getOriginalHost() const {
+	const std::string& host_header = getHeader("X-Original-Host");
+	if (!host_header.empty()) {
+		return host_header;
+	}
+	return getHost();
+}
+
 std::streamsize
 ServerRequest::getContentLength() const {
 	boost::mutex::scoped_lock sl(mutex_);

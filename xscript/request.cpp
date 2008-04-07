@@ -102,6 +102,28 @@ StandaloneRequest::getOriginalURI() const {
 	return getURI();
 }
 
+std::string
+StandaloneRequest::getHost() const {
+	const std::string& host_header = getHeader("Host");
+	if (host_header.empty()) {
+		return StringUtils::EMPTY_STRING;
+	}
+
+	if (!isSecure() && host_header.find(':') == std::string::npos) {
+		int port = getServerPort();
+		if (port != 80) {
+			return std::string(host_header).append(":").append(boost::lexical_cast<std::string>(port));
+		}
+	}
+
+	return host_header;
+}
+
+std::string
+StandaloneRequest::getOriginalHost() const {
+	return getHost();
+}
+
 std::streamsize
 StandaloneRequest::getContentLength() const {
 	return 0;

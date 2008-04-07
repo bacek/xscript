@@ -59,6 +59,12 @@ ProtocolArgParam::asString(const Context *ctx) const {
 	else if (val == "uri") {
 		return req->getURI();
 	}
+	else if (val == "host") {
+		return req->getHost();
+	}
+	else if (val == "originalhost") {
+		return req->getOriginalHost();
+	}
 	else if (val == "method") {
 		return req->getRequestMethod();
 	}
