@@ -74,6 +74,9 @@ HttpBlock::property(const char *name, const char *value) {
 	if (strncasecmp(name, "proxy", sizeof("proxy")) == 0) {
 		proxy_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
 	}
+	else if (strncasecmp(name, "encoding", sizeof("encoding")) == 0) {
+		charset_ = value;
+	}
 	else {
 		ThreadedBlock::property(name, value);
 	}
@@ -206,17 +209,15 @@ HttpBlock::response(const HttpHelper &helper) const {
 	
 	const std::string& str = helper.content();
 	if (helper.isXml()) {
-		log()->debug("%s: XML document: %s", BOOST_CURRENT_FUNCTION, str.c_str());
-		return XmlDocHelper(xmlParseMemory(str.c_str(), str.size()));
+		return XmlDocHelper(xmlReadMemory(str.c_str(), str.size(), "",
+			charset_.empty() ? NULL : charset_.c_str(), XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT));
 	}
 	else if (helper.contentType() == "text/plain") {
-		log()->debug("%s: Text document", BOOST_CURRENT_FUNCTION);
 		std::string res;
 		res.append("<text>").append(XmlUtils::escape(str)).append("</text>");
 		return XmlDocHelper(xmlParseMemory(res.c_str(), res.size()));
 	}
 	else if (helper.contentType() == "text/html") {
-		log()->debug("%s: HTML document", BOOST_CURRENT_FUNCTION);
 		std::string data = XmlUtils::sanitize(str);
 		return XmlDocHelper(htmlReadDoc((const xmlChar*) data.c_str(), helper.base().c_str(), 
 			helper.charset().c_str(), HTML_PARSE_NOBLANKS | HTML_PARSE_NONET | HTML_PARSE_NOERROR));

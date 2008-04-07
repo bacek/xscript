@@ -3,8 +3,9 @@ xscript (5.9-1) unstable; urgency=low
   * location method added to mist block
   * uri and path parameters fixed in protocolArg and set_state_by_protocol
   * getURI and getOriginalURI added to request
+  * encoding property added to HTTP-block
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri,  4 Apr 2008 13:49:59 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon,  7 Apr 2008 11:35:23 +0400
 
 xscript (5.9-0) unstable; urgency=low
 
