@@ -28,10 +28,6 @@ CheckingPolicy::~CheckingPolicy() {
 }
 
 void
-CheckingPolicy::init(const Config *config) {
-}
-
-void
 CheckingPolicy::processError(const std::string& message) {
 	log()->debug("%s", message.c_str());
 }
@@ -95,5 +91,11 @@ CheckingPolicyStarter::init(const Config *config) {
 		ComponentRegisterer<CheckingPolicy> reg(new CheckingPolicy());
 	}
 }
+
+REGISTER_COMPONENT(CheckingPolicy);
+
+template Component<CheckingPolicyStarter>::Holder Component<CheckingPolicyStarter>::holder_;
+static ComponentRegisterer<CheckingPolicyStarter> reg2_(new CheckingPolicyStarter());
+
 
 } // namespace xscript

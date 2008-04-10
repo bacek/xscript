@@ -2,7 +2,7 @@
 #define _XSCRIPT_WRITER_H_
 
 #include <string>
-#include <boost/utility.hpp>
+#include <boost/noncopyable.hpp>
 #include <xscript/xml_helpers.h>
 
 namespace xscript
@@ -20,10 +20,6 @@ public:
 	
 	virtual void addHeaders(Response *response) = 0;
 	virtual void write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf) = 0;
-	
-private:
-	DocumentWriter(const DocumentWriter &);
-	DocumentWriter& operator = (const DocumentWriter &);
 };
 
 } // namespace xscript

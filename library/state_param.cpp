@@ -25,10 +25,6 @@ public:
 	virtual void add(const Context *ctx, ArgList &al) const;
 
 	static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
-	
-private:
-	StateParam(const StateParam &);
-	StateParam& operator = (const StateParam &);
 };
 
 StateParam::StateParam(Object *owner, xmlNodePtr node) :

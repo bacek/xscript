@@ -32,10 +32,6 @@ public:
 	virtual void add(const Context *ctx, ArgList &al) const;
 	
 	static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
-	
-private:
-	SimpleParam(const SimpleParam &);
-	SimpleParam& operator = (const SimpleParam &);
 };
 
 Param::Param(Object * /* owner */, xmlNodePtr node) :

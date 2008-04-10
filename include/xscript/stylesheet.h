@@ -64,8 +64,6 @@ protected:
 	static void attachContextData(xsltTransformContextPtr tctx, Context *ctx, Stylesheet *stylesheet);
 
 private:
-	Stylesheet(const Stylesheet &);
-	Stylesheet& operator = (const Stylesheet &);
 
 	friend class StylesheetFactory;
 	

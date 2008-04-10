@@ -31,6 +31,7 @@ RequestParam::~RequestParam() {
 
 std::string
 RequestParam::asString(const Context *) const {
+	(void)ctx;
 	return std::string();
 }
 

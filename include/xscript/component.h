@@ -14,35 +14,7 @@ class Loader;
 class Config;
 
 
-class Component : private boost::noncopyable
-{
-public:
-	Component();
-	virtual ~Component();
-
-	virtual void init(const Config *config) = 0;
-
-	inline boost::shared_ptr<Loader> loader() const {
-		return loader_;
-	}
-
-private:
-	boost::shared_ptr<Loader> loader_;
-};
-
-/**
- * Default creation policy for ComponentHolder.
- */
 template<typename Type>
-struct DefaultCreationPolicy
-{
-	static inline Type* createImpl() {
-		return new Type();
-	}
-};
-
-
-template<typename Type, typename CP = DefaultCreationPolicy<Type> >
 class ComponentRegisterer
 {
 public:
@@ -50,10 +22,27 @@ public:
 };
 
 
-/**
- */
-template<typename Type, typename CreationPolicy = DefaultCreationPolicy<Type> > 
-class ComponentHolder
+class ComponentBase : private boost::noncopyable
+{
+public:
+	ComponentBase();
+	virtual ~ComponentBase();
+
+	inline boost::shared_ptr<Loader> loader() const {
+		return loader_;
+	}
+
+	virtual void init(const Config *config) { 
+		(void)config;
+	}
+
+private:
+	boost::shared_ptr<Loader> loader_;
+};
+
+
+template<typename Type> 
+class Component : public ComponentBase
 {
 public:
 	static Type* instance();
@@ -68,47 +57,63 @@ public:
 	
 private:
 	static void attachImpl(Holder helper);
-	friend class ComponentRegisterer<Type, CreationPolicy>;
+	friend class ComponentRegisterer<Type>;
 	
 private:
 	static Holder holder_;
+
 };
 
 
 /**
  * Implementation of ResourceHolderTraits used in ComponentHolder
  */
-template<typename Type, typename CP>
-void ComponentHolder<Type, CP>::ResourceTraits::destroy(Type *component) {
+template<typename Type>
+void Component<Type>::ResourceTraits::destroy(Type *component) {
     // Acquire loader to avoid premature unload of shared library.
     boost::shared_ptr<Loader> loader = component->loader();
     boost::checked_delete(component);
 };
 
-template<typename Type, typename CP>
-Type* const ComponentHolder<Type, CP>::ResourceTraits::DEFAULT_VALUE = static_cast<Type*>(NULL);
+template<typename Type>
+Type* const Component<Type>::ResourceTraits::DEFAULT_VALUE = static_cast<Type*>(NULL);
 
 
-template<typename Type, typename CP> 
-typename ComponentHolder<Type, CP>::Holder 
-ComponentHolder<Type, CP>::holder_(CP::createImpl());
-
-template<typename Type, typename CP> inline Type*
-ComponentHolder<Type, CP>::instance() {
+template<typename Type> inline Type*
+Component<Type>::instance() {
 	assert(Holder::Traits::DEFAULT_VALUE != holder_.get());
 	return holder_.get();
 }
 
-template<typename Type, typename CP> inline void
-ComponentHolder<Type, CP>::attachImpl(typename ComponentHolder<Type, CP>::Holder holder) {
+template<typename Type> inline void
+Component<Type>::attachImpl(typename Component<Type>::Holder holder) {
 	assert(Holder::Traits::DEFAULT_VALUE != holder.get());
 	holder_ = holder;
 }
 
-template<typename Type, typename CP>
-ComponentRegisterer<Type, CP>::ComponentRegisterer(Type *var) {
-	ComponentHolder<Type, CP>::attachImpl(typename ComponentHolder<Type, CP>::Holder(var));
+template<typename Type>
+ComponentRegisterer<Type>::ComponentRegisterer(Type *var) {
+	Component<Type>::attachImpl(typename Component<Type>::Holder(var));
 }
+
+// We can't use default template instantiation. Gcc are too dumb to order
+// constructors in correct order...
+#define REGISTER_COMPONENT(TYPE)								\
+	template<typename Type>										\
+	typename Component<Type>::Holder Component<Type>::holder_;	\
+																\
+	template Component<TYPE>::Holder Component<TYPE>::holder_;	\
+																\
+	static ComponentRegisterer<TYPE> reg_(new TYPE());
+
+#define REGISTER_COMPONENT2(TYPE, IMPL)								\
+	template<typename Type>										\
+	typename Component<Type>::Holder Component<Type>::holder_;	\
+																\
+	template Component<TYPE>::Holder Component<TYPE>::holder_;	\
+																\
+	static ComponentRegisterer<TYPE> reg_(new IMPL());
+
 
 } // namespace xscript
 

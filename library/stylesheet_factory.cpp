@@ -16,13 +16,11 @@ StylesheetFactory::StylesheetFactory()
 StylesheetFactory::~StylesheetFactory() {
 }
 
-void
-StylesheetFactory::init(const Config *config) {
-}
-
 boost::shared_ptr<Stylesheet>
 StylesheetFactory::create(const std::string &name) {
 	return boost::shared_ptr<Stylesheet>(new Stylesheet(name));
 }
+
+REGISTER_COMPONENT(StylesheetFactory);
 
 } // namespace xscript

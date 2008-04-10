@@ -16,13 +16,12 @@ Sanitizer::Sanitizer()
 Sanitizer::~Sanitizer() {
 }
 
-void
-Sanitizer::init(const Config *config) {
-}
-
 std::string
 Sanitizer::sanitize(const Range &range) {
+	(void)range;
 	throw std::runtime_error("not implemented");
 }
+
+REGISTER_COMPONENT(Sanitizer);
 
 } // namespace xscript

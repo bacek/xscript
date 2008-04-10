@@ -16,15 +16,12 @@ public:
 	virtual bool authorized() const;
 };
 
-class Authorizer : 
-	public virtual Component, 
-	public ComponentHolder<Authorizer>
+class Authorizer : public virtual Component<Authorizer>
 {
 public:
 	Authorizer();
 	virtual ~Authorizer();
 
-	virtual void init(const Config *config);
 	virtual std::auto_ptr<AuthContext> checkAuth(const boost::shared_ptr<Context> &ctx) const;
 	virtual void redirectToAuth(const boost::shared_ptr<Context> &ctx, const AuthContext *auth) const;
 };

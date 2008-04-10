@@ -5,7 +5,7 @@
 #include <vector>
 #include <memory>
 #include <iosfwd>
-#include <boost/utility.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/lexical_cast.hpp>
 
 namespace xscript
@@ -29,10 +29,6 @@ public:
 
 	static std::auto_ptr<Config> create(const char *file);
 	static std::auto_ptr<Config> create(int &argc, char *argv[], HelpFunc func = NULL);
-	
-private:
-	Config(const Config &);
-	Config& operator = (const Config &);
 };
 
 template<typename T> inline T

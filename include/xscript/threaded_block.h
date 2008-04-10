@@ -22,10 +22,6 @@ protected:
 	virtual void property(const char *name, const char *value);
 
 private:
-	ThreadedBlock(const ThreadedBlock &);
-	ThreadedBlock& operator = (const ThreadedBlock &);
-	
-private:
 	bool threaded_;
 	int timeout_, remote_timeout_;
 };

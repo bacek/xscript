@@ -50,10 +50,11 @@ public:
 
 	virtual time_t minimalCacheTime() const;
 	
-	virtual bool loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc);
-	virtual bool saveDoc(const TagKey *key, const Tag &tag, const XmlDocHelper &doc);
 	virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const TaggedBlock *block) const;
 
+protected:
+	virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc);
+	virtual bool saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper &doc);
 private:
 	
 	static void makeDir(const std::string &name);
@@ -175,6 +176,7 @@ TaggedCacheDisk::~TaggedCacheDisk() {
 
 void
 TaggedCacheDisk::init(const Config *config) {
+	TaggedCache::init(config);
 	
 	root_ = config->as<std::string>("/xscript/tagged-cache-disk/root-dir", "").append("/");
 	min_time_ = config->as<time_t>("/xscript/tagged-cache-disk/min-cache-time", DEFAULT_CACHE_TIME);
@@ -189,7 +191,7 @@ TaggedCacheDisk::minimalCacheTime() const {
 }
 
 bool
-TaggedCacheDisk::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
+TaggedCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
 	
 	const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
 	assert(NULL != dkey);
@@ -222,7 +224,7 @@ TaggedCacheDisk::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
 }
 
 bool
-TaggedCacheDisk::saveDoc(const TagKey *key, const Tag &tag, const XmlDocHelper &doc) {
+TaggedCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper &doc) {
 	
 	const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
 	assert(NULL != dkey);

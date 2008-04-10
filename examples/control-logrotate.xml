@@ -1,0 +1,7 @@
+<page xmlns:x="http://www.yandex.ru/xscript"
+    >
+
+    <x:control>
+        <method>logrotate</method>
+    </x:control>
+</page>

@@ -10,21 +10,14 @@ namespace xscript
 
 class Stylesheet;
 
-class StylesheetCache : 
-	public virtual Component, 
-	public ComponentHolder<StylesheetCache>
+class StylesheetCache : public Component<StylesheetCache>
 {
 public:
-	StylesheetCache();
-	virtual ~StylesheetCache();
-	
-	virtual void init(const Config *config);
-	
-	virtual void clear();
-	virtual void erase(const std::string &name);
+	virtual void clear() = 0;
+	virtual void erase(const std::string &name) = 0;
 
-	virtual boost::shared_ptr<Stylesheet> fetch(const std::string &name);
-	virtual void store(const std::string &name, const boost::shared_ptr<Stylesheet> &stylesheet);
+	virtual boost::shared_ptr<Stylesheet> fetch(const std::string &name) = 0;
+	virtual void store(const std::string &name, const boost::shared_ptr<Stylesheet> &stylesheet) = 0;
 };
 
 } // namespace xscript

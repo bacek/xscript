@@ -10,12 +10,12 @@
 namespace xscript
 {
 
-Component::Component() 
+ComponentBase::ComponentBase() 
 	: loader_(Loader::instance())
 {
 }
 
-Component::~Component() {
+ComponentBase::~ComponentBase() {
 }
 
 } // namespace xscript

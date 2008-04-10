@@ -17,12 +17,12 @@ class Config;
 class Context;
 class Logger;
 
-class Extension : public virtual Component
+class Extension : public virtual Component<Extension>
 {
 public:
 	Extension();
 	virtual ~Extension();
-
+	
 	virtual const char* name() const = 0;
 	virtual const char* nsref() const = 0;
 
@@ -44,7 +44,7 @@ private:
     Logger * logger_;
 };
 
-typedef ResourceHolder<Extension*, ComponentHolder<Extension>::ResourceTraits > ExtensionHolder;
+typedef ResourceHolder<Extension*, Component<Extension>::ResourceTraits > ExtensionHolder;
 
 class ExtensionRegisterer : private boost::noncopyable
 {

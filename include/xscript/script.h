@@ -132,9 +132,6 @@ protected:
 	static const unsigned int FLAG_FORCE_AUTH = 1 << 3;
 
 private:	
-	Script(const Script &);
-	Script& operator = (const Script &);
-
 	friend class ScriptFactory;
 	
 private:

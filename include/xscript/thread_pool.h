@@ -9,17 +9,11 @@
 namespace xscript
 {
 
-class ThreadPool : 
-	public virtual Component, 
-	public ComponentHolder<ThreadPool>
+class ThreadPool : public Component<ThreadPool>
 {
 public:
-	ThreadPool();
-	virtual ~ThreadPool();
-	
-	virtual void init(const Config *config);
-	virtual void invoke(boost::function<void()> f);
-	virtual void stop();
+	virtual void invoke(boost::function<void()> f) = 0;
+	virtual void stop() = 0;
 };
 
 } // namespace xscript

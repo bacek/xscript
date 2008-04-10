@@ -19,9 +19,6 @@ const char* ControlExtension::nsref() const {
     return "http://www.yandex.ru/xscript";
 }
 	
-void ControlExtension::init(const Config *) {
-}
-    
 void ControlExtension::initContext(Context *) {
 }
 
@@ -51,7 +48,7 @@ std::auto_ptr<Block> ControlExtension::createBlock(Xml *owner, xmlNodePtr orig) 
         throw std::runtime_error("method is not provided");
     }
 
-    return ControlExtensionRegistry::instance()->findConstructor(method)(this, owner, orig);
+    return ControlExtensionRegistry::findConstructor(method)(this, owner, orig);
 }
 
 
@@ -62,7 +59,7 @@ void ControlExtensionRegistry::registerConstructor(const std::string & method, c
 }
 
 ControlExtensionRegistry::constructor_t
-ControlExtensionRegistry::findConstructor(const std::string& method) const {
+ControlExtensionRegistry::findConstructor(const std::string& method) {
     constructorMap_t::const_iterator m = constructors_.find(method);
     if(m == constructors_.end()) {
         throw std::runtime_error("method doesn't exists");
@@ -70,8 +67,8 @@ ControlExtensionRegistry::findConstructor(const std::string& method) const {
     return m->second;
 }
 
-
-//static ExtensionRegisterer ext_(ExtensionHolder(new ControlExtension()));
+// We should not register ControlExtension. It will be registred in Config::startup
+//REGISTER_COMPONENT(ControlExtension);
 
 }
 

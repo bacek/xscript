@@ -31,6 +31,7 @@ RequestDataParam::~RequestDataParam() {
 
 std::string
 RequestDataParam::asString(const Context *ctx) const {
+	(void)ctx;
 	return std::string();
 }
 
@@ -47,3 +48,4 @@ RequestDataParam::create(Object *owner, xmlNodePtr node) {
 static CreatorRegisterer reg_("requestdata", &RequestDataParam::create);
 
 } // namespace xscript
+

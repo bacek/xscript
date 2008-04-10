@@ -27,6 +27,25 @@ namespace xscript
 
 class TaggedCacheMemory;
 
+
+class CacheCounter : public CounterBase
+{
+public:
+	CacheCounter(const std::string& name);
+	virtual XmlNodeHelper createReport() const;
+
+	void incLoaded() { ++loaded_; }
+	void incStored() { ++stored_; }
+	void incRemoved() { ++removed_; }
+
+private:
+	size_t stored_;
+	size_t loaded_;
+	size_t removed_;
+};
+
+
+
 class TagKeyMemory : public TagKey
 {
 public:
@@ -40,13 +59,15 @@ private:
 class TaggedCacheMemoryPool : private boost::noncopyable
 {
 public:
-	explicit TaggedCacheMemoryPool(const TaggedCacheMemory* parent = NULL);
+	explicit TaggedCacheMemoryPool(const TaggedCacheMemory* parent, const std::string& name);
 	virtual ~TaggedCacheMemoryPool();
 
 	bool loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc);
 	bool saveDoc(const TagKey &key, const Tag& tag, const XmlDocHelper &doc);
 
 	void clear();
+
+	const CacheCounter& getCounter() const;
 
 private:
 	class DocData;
@@ -78,6 +99,7 @@ private:
 
 private:
 	const TaggedCacheMemory* parent_;
+	CacheCounter counter_;
 	boost::mutex mutex_;
 
 	Key2Data key2data_;
@@ -94,11 +116,13 @@ public:
 
 	virtual time_t minimalCacheTime() const;
 	
-	virtual bool loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc);
-	virtual bool saveDoc(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);
 	virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const TaggedBlock *block) const;
 
 	unsigned int maxSize() const;
+
+protected:
+	virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc);
+	virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);
 
 private:
 	TaggedCacheMemoryPool* pool(const TagKey *key) const;
@@ -116,6 +140,23 @@ private:
 const int TaggedCacheMemory::DEFAULT_POOL_COUNT = 16;
 const int TaggedCacheMemory::DEFAULT_POOL_SIZE = 128;
 const time_t TaggedCacheMemory::DEFAULT_CACHE_TIME = 5; // sec
+
+
+CacheCounter::CacheCounter(const std::string& name)
+	: CounterBase(name), stored_(0), loaded_(0), removed_(0)
+{
+}
+
+XmlNodeHelper CacheCounter::createReport() const {
+	XmlNodeHelper line(xmlNewNode(0, BAD_CAST name_.c_str()));
+
+	xmlSetProp(line.get(), BAD_CAST "stored", BAD_CAST boost::lexical_cast<std::string>(stored_).c_str());
+	xmlSetProp(line.get(), BAD_CAST "loaded", BAD_CAST boost::lexical_cast<std::string>(loaded_).c_str());
+	xmlSetProp(line.get(), BAD_CAST "removed", BAD_CAST boost::lexical_cast<std::string>(removed_).c_str());
+
+	return line;
+}
+
 
 TagKeyMemory::TagKeyMemory(const Context *ctx, const TaggedBlock *block) : value_()
 {
@@ -142,6 +183,7 @@ TagKeyMemory::asString() const {
 TaggedCacheMemory::TaggedCacheMemory() : 
 	min_time_(Tag::UNDEFINED_TIME), max_size_(0)
 {
+	statBuilder_.setName("tagged-cache-memory");
 }
 
 TaggedCacheMemory::~TaggedCacheMemory() {
@@ -155,6 +197,7 @@ TaggedCacheMemory::createKey(const Context *ctx, const TaggedBlock *block) const
 
 void
 TaggedCacheMemory::init(const Config *config) {
+	TaggedCache::init(config);
 
 	assert(pools_.empty());
 
@@ -163,7 +206,10 @@ TaggedCacheMemory::init(const Config *config) {
 
 	max_size_ = pool_size;
 	for (unsigned int i = 0; i < pools; ++i) {
-		pools_.push_back(new TaggedCacheMemoryPool(this));
+		char buf[20];
+		snprintf(buf, 20, "pool%d", i);
+		pools_.push_back(new TaggedCacheMemoryPool(this, buf));
+		statBuilder_.addCounter((*pools_.rbegin())->getCounter());
 	}
 	min_time_ = config->as<time_t>("/xscript/tagged-cache-memory/min-cache-time", DEFAULT_CACHE_TIME);
 	if (min_time_ <= 0) {
@@ -177,14 +223,14 @@ TaggedCacheMemory::minimalCacheTime() const {
 }
 
 bool
-TaggedCacheMemory::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
+TaggedCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
 	TaggedCacheMemoryPool *mpool = pool(key);
 	assert(NULL != mpool);
 	return mpool->loadDoc(*key, tag, doc);
 }
 
 bool
-TaggedCacheMemory::saveDoc(const TagKey *key, const Tag &tag, const XmlDocHelper &doc) {
+TaggedCacheMemory::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper &doc) {
 	TaggedCacheMemoryPool *mpool = pool(key);
 	assert(NULL != mpool);
 	return mpool->saveDoc(*key, tag, doc);
@@ -210,6 +256,9 @@ TaggedCacheMemory::pool(const TagKey *key) const {
 	return pools_[index];
 }
 
+const CacheCounter& TaggedCacheMemoryPool::getCounter() const {
+	return counter_;
+}
 
 TaggedCacheMemoryPool::DocData::DocData() : tag(), ptr(NULL), pos(), prefetch_marked(false)
 {
@@ -247,8 +296,8 @@ TaggedCacheMemoryPool::DocData::clearDoc() {
 }
 
 
-TaggedCacheMemoryPool::TaggedCacheMemoryPool(const TaggedCacheMemory* parent) :
-	parent_(parent), mutex_(), key2data_(), list_()
+TaggedCacheMemoryPool::TaggedCacheMemoryPool(const TaggedCacheMemory* parent, const std::string& name) :
+	parent_(parent), counter_(name), mutex_(), key2data_(), list_()
 {
 }
 
@@ -301,6 +350,7 @@ TaggedCacheMemoryPool::loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc) {
 
 	lock.unlock();
 	log()->info("%s, key: %s, loaded", BOOST_CURRENT_FUNCTION, str.c_str());
+	counter_.incLoaded();
 	return true;
 }
 
@@ -311,6 +361,8 @@ TaggedCacheMemoryPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocHe
 	log()->debug("%s, key: %s", BOOST_CURRENT_FUNCTION, str.c_str());
 
 	boost::mutex::scoped_lock lock(mutex_);
+
+	counter_.incStored();
 
 	Key2Data::iterator i = key2data_.find(str);
 	if (i != key2data_.end()) {
@@ -381,6 +433,7 @@ TaggedCacheMemoryPool::shrink() {
 			log()->debug("%s, key: %s, shrink", BOOST_CURRENT_FUNCTION, i->first.c_str());
 			data.clearDoc();
 			key2data_.erase(i);
+			counter_.incRemoved();
 		}
 
 		list_.pop_front();
@@ -390,6 +443,7 @@ TaggedCacheMemoryPool::shrink() {
 void
 TaggedCacheMemoryPool::removeExpiredDocuments() {
 	for (LRUList::iterator li = list_.begin(), end = list_.end(); li != end; ) {
+		counter_.incRemoved();
 		Key2Data::iterator i = *li;
 		DocData &data = i->second;
 		if (data.tag.expired()) {

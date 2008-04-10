@@ -5,6 +5,7 @@
 #include <boost/thread.hpp>
 
 #include "xscript/server.h"
+#include "xscript/simple_counter.h"
 
 namespace xscript
 {
@@ -31,6 +32,8 @@ private:
 	int socket_;
 	int inbuf_size_, outbuf_size_;
 	unsigned short alternate_port_;
+
+	SimpleCounter workerCounter_;
 };
 
 } // namespace xscript

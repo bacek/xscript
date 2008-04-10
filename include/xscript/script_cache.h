@@ -10,21 +10,15 @@ namespace xscript
 
 class Script;
 
-class ScriptCache : 
-	public virtual Component, 
-	public ComponentHolder<ScriptCache>
+class ScriptCache : public Component<ScriptCache>
 {
 public:
-	ScriptCache();
-	virtual ~ScriptCache();
 
-	virtual void init(const Config *config);
-	
-	virtual void clear();
-	virtual void erase(const std::string &name);
+	virtual void clear() = 0;
+	virtual void erase(const std::string &name) = 0;
 
-	virtual boost::shared_ptr<Script> fetch(const std::string &name);
-	virtual void store(const std::string &name, const boost::shared_ptr<Script> &xml);
+	virtual boost::shared_ptr<Script> fetch(const std::string &name) = 0;
+	virtual void store(const std::string &name, const boost::shared_ptr<Script> &xml) = 0;
 };
 
 } // namespace xscript

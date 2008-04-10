@@ -46,10 +46,6 @@ public:
 
 protected:
 	size_t rep(char *buf, size_t size, const EncoderContext &ctx) const;
-	
-private:
-	DefaultEncoder(const DefaultEncoder &);
-	DefaultEncoder& operator = (const DefaultEncoder &);
 };
 
 class IgnoringEncoder : public Encoder
@@ -61,9 +57,6 @@ public:
 protected:
 	size_t rep(char *buf, size_t size, const EncoderContext &ctx) const;
 	
-private:
-	IgnoringEncoder(const IgnoringEncoder &);
-	IgnoringEncoder& operator = (const IgnoringEncoder &);
 };
 
 class EscapingEncoder : public Encoder
@@ -74,10 +67,6 @@ public:
 	
 protected:
 	size_t rep(char *buf, size_t size, const EncoderContext &ctx) const;
-	
-private:
-	EscapingEncoder(const EscapingEncoder &);
-	EscapingEncoder& operator = (const EscapingEncoder &);
 	
 private:
 	IconvHolder escaper_;

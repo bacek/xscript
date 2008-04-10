@@ -37,6 +37,7 @@
 #include "xscript/request_data.h"
 #include "xscript/vhost_data.h"
 #include "xscript/checking_policy.h"
+#include "xscript/status_info.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -46,11 +47,12 @@ namespace xscript
 {
 
 FCGIServer::FCGIServer(Config *config) : 
-	Server(config), socket_(-1), inbuf_size_(0), outbuf_size_(0), alternate_port_(0)
+	Server(config), socket_(-1), inbuf_size_(0), outbuf_size_(0), alternate_port_(0), workerCounter_("fcgi-workers")
 {
 	if (0 != FCGX_Init()) {
 		throw std::runtime_error("can not init fastcgi library");
 	}
+	StatusInfo::instance()->getStatBuilder().addCounter(workerCounter_);
 }
 
 FCGIServer::~FCGIServer() {
@@ -109,6 +111,8 @@ FCGIServer::handle() {
 	while (true) {
 		if (-1 != FCGX_Accept_r(&req)) {
 			try {
+				SimpleCounter::ScopedCount c(workerCounter_);
+
 				fcgi_streambuf inbuf(req.in, &inv[0], inv.size());
 				fcgi_streambuf outbuf(req.out, &outv[0], outv.size());
 			

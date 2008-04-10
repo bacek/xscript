@@ -486,6 +486,7 @@ Script::property(const char *prop, const char *value) {
 
 void
 Script::replaceXScriptNode(xmlNodePtr node, Context *ctx) const {
+	(void)ctx;
 	xmlUnlinkNode(node);
 	xmlFreeNode(node);
 }

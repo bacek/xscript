@@ -48,10 +48,6 @@ protected:
 	void checkLoad(const char *err);
 
 private:
-	LoaderImpl(const LoaderImpl &);
-	LoaderImpl& operator = (const LoaderImpl &);
-
-private:
 	std::vector<void*> handles_;
 	static boost::shared_ptr<Loader> instance_;
 };

@@ -21,10 +21,6 @@ VirtualHostData::~VirtualHostData() {
 }
 
 void
-VirtualHostData::init(const Config *config) {
-}
-
-void
 VirtualHostData::set(const Request* request) {
 	request_provider_.reset(new RequestProvider(request));
 }
@@ -87,5 +83,7 @@ std::string
 VirtualHostData::getOutputEncoding(const Request* request) const {
 	return std::string("utf-8");
 }
+
+REGISTER_COMPONENT(VirtualHostData);
 
 } // namespace xscript

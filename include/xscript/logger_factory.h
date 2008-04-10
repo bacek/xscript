@@ -12,12 +12,12 @@
 namespace xscript
 {
 
-class LoggerFactory :
-	public virtual Component,
-	public ComponentHolder<LoggerFactory>
+class LoggerFactory : public Component<LoggerFactory>
 {
 public:
-    friend class DefaultCreationPolicy<LoggerFactory>;
+    LoggerFactory();
+
+    friend class ComponentRegisterer<LoggerFactory>;
     ~LoggerFactory();
 
 	virtual void init(const Config *config);
@@ -42,8 +42,6 @@ public:
     void logRotate() const;
 
 private:
-    LoggerFactory();
-
     // Get level from string. Fallback to LEVEL_CRIT if passed something wrong.
     Logger::LogLevel stringToLevel(const std::string& level);
 

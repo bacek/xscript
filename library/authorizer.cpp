@@ -32,18 +32,19 @@ Authorizer::Authorizer()
 Authorizer::~Authorizer() {
 }
 
-void
-Authorizer::init(const Config *config) {
-}
-
 std::auto_ptr<AuthContext>
 Authorizer::checkAuth(const boost::shared_ptr<Context> &ctx) const {
+	(void)ctx;
 	return std::auto_ptr<AuthContext>(new AuthContext());
 }
 
 void
 Authorizer::redirectToAuth(const boost::shared_ptr<Context> &ctx, const AuthContext *auth) const {
+	(void)ctx;
+	(void)auth;
 	ctx->response()->redirectToPath("/");
 }
+
+REGISTER_COMPONENT(Authorizer);
 
 } // namespace xscript

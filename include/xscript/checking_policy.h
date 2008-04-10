@@ -11,9 +11,7 @@ class Response;
 class Request;
 class Config;
 
-class CheckingPolicyStarter :
-	public virtual Component, 
-	public ComponentHolder<CheckingPolicyStarter>
+class CheckingPolicyStarter : public Component<CheckingPolicyStarter>
 {
 public:
 	CheckingPolicyStarter();
@@ -24,14 +22,11 @@ public:
 	static const std::string DEVELOPMENT_ID;
 };
 
-class CheckingPolicy :
-	public virtual Component, 
-	public ComponentHolder<CheckingPolicy>
+class CheckingPolicy : public Component<CheckingPolicy>
 {
 public:
 	CheckingPolicy();
 	virtual ~CheckingPolicy();
-	virtual void init(const Config *config);
 	virtual void processError(const std::string& message);
 	virtual void sendError(Response* response, unsigned short status, const std::string& message);
 	virtual bool isProduction() const;

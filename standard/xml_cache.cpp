@@ -128,10 +128,6 @@ public:
 	
 	virtual boost::shared_ptr<Script> fetch(const std::string &name);
 	virtual void store(const std::string &name, const boost::shared_ptr<Script> &script);
-
-private:
-	StandardScriptCache(const StandardScriptCache &);
-	StandardScriptCache& operator = (const StandardScriptCache &);
 };
 
 class StandardStylesheetCache : public XmlCache, public StylesheetCache
@@ -147,10 +143,6 @@ public:
 	
 	virtual boost::shared_ptr<Stylesheet> fetch(const std::string &name);
 	virtual void store(const std::string &name, const boost::shared_ptr<Stylesheet> &stylesheet);
-
-private:
-	StandardStylesheetCache(const StandardStylesheetCache &);
-	StandardStylesheetCache& operator = (const StandardStylesheetCache &);
 };
 
 XmlStorage::XmlStorage(unsigned int max_size) :

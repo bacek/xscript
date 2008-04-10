@@ -10,15 +10,12 @@ namespace xscript
 
 class Stylesheet;
 
-class StylesheetFactory : 
-	public virtual Component, 
-	public ComponentHolder<StylesheetFactory>
+class StylesheetFactory : public Component<StylesheetFactory>
 {
 public:
 	StylesheetFactory();
 	virtual ~StylesheetFactory();
 	
-	virtual void init(const Config *config);
 	virtual boost::shared_ptr<Stylesheet> create(const std::string &name);
 };
 

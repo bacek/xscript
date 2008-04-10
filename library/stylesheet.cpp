@@ -379,6 +379,7 @@ XsltInitalizer::ExtraDataShutdown(xsltTransformContextPtr, const xmlChar*, void*
 
 extern "C" int
 closeProfileFunc(void *ctx) {
+	(void)ctx;
 	return 0;
 }
 

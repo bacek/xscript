@@ -8,15 +8,12 @@
 namespace xscript
 {
 
-class Sanitizer : 
-	public virtual Component, 
-	public ComponentHolder<Sanitizer>
+class Sanitizer : public Component<Sanitizer>
 {
 public:
 	Sanitizer();
 	virtual ~Sanitizer();
 	
-	virtual void init(const Config *config);
 	virtual std::string sanitize(const Range &range);
 };
 

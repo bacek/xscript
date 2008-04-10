@@ -25,6 +25,7 @@ TaggedBlock::~TaggedBlock() {
 
 std::string
 TaggedBlock::canonicalMethod(const Context *ctx) const {
+	(void)ctx;
 	return canonical_method_;
 }
 

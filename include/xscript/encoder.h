@@ -3,7 +3,7 @@
 
 #include <string>
 #include <memory>
-#include <boost/utility.hpp>
+#include <boost/noncopyable.hpp>
 #include <xscript/range.h>
 #include <xscript/resource_holder.h>
 #include <iconv.h>
@@ -50,8 +50,6 @@ protected:
 	virtual size_t rep(char *buf, size_t size, const EncoderContext &ctx) const = 0;
 	
 private:
-	Encoder(const Encoder &);
-	Encoder& operator = (const Encoder &);
 	friend class std::auto_ptr<Encoder>;
 	
 private:

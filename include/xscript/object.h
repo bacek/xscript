@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include <boost/utility.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 #include <xscript/xml_helpers.h>
 

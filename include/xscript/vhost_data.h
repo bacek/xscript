@@ -12,15 +12,12 @@
 
 namespace xscript
 {
-class VirtualHostData : 
-	public virtual Component, 
-	public ComponentHolder<VirtualHostData>
+class VirtualHostData : public Component<VirtualHostData>
 {
 public:
 	VirtualHostData();
 	virtual ~VirtualHostData();
 
-	virtual void init(const Config *config);
 	void set(const Request* request);
 
 	virtual bool hasVariable(const Request* request, const std::string& var) const;

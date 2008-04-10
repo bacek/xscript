@@ -27,10 +27,6 @@ public:
 	virtual void postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a);
 
 private:
-	TaggedBlock(const TaggedBlock &);
-	TaggedBlock& operator = (const TaggedBlock &);
-
-private:
 	std::string canonical_method_;
 	bool tagged_;
 	time_t cache_time_;

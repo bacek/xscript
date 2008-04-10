@@ -49,6 +49,7 @@ TagParam::parse() {
 	
 std::string
 TagParam::asString(const Context *ctx) const {
+	(void)ctx;
 	return std::string();
 }
 

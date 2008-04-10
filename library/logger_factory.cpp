@@ -127,4 +127,6 @@ void LoggerFactory::logRotate() const {
     getDefaultLogger()->info("Log rotated");
 }
 
+REGISTER_COMPONENT(LoggerFactory);
+
 }

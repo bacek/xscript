@@ -15,6 +15,8 @@
 #include "xscript/config.h"
 #include "xscript/logger.h"
 #include "xscript/thread_pool.h"
+#include "xscript/simple_counter.h"
+#include "xscript/status_info.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -48,10 +50,12 @@ private:
 	
 	boost::mutex mutex_;
 	boost::condition condition_;
+
+	SimpleCounter counter_;
 };
 
 StandardThreadPool::StandardThreadPool() : 
-	running_(true)
+	running_(true), counter_("working-threads")
 {
 }
 
@@ -73,6 +77,8 @@ StandardThreadPool::init(const Config *config) {
 		stop();
 		throw;
 	}
+
+	StatusInfo::instance()->getStatBuilder().addCounter(counter_);
 }
 
 void
@@ -105,6 +111,7 @@ StandardThreadPool::handle() {
 		if (f.empty()) {
 			return;
 		}
+		SimpleCounter::ScopedCount c(counter_);
 		f();
 	}
 }

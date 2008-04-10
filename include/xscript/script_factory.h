@@ -10,15 +10,12 @@ namespace xscript
 
 class Script;
 
-class ScriptFactory : 
-	public virtual Component,
-	public ComponentHolder<ScriptFactory>
+class ScriptFactory : public Component<ScriptFactory>
 {
 public:
 	ScriptFactory();
 	virtual ~ScriptFactory();
 
-	virtual void init(const Config *config);
 	virtual boost::shared_ptr<Script> create(const std::string &name);
 };
 
