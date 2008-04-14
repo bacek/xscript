@@ -1,6 +1,7 @@
 #ifndef _XSCRIPT_LINE_COUNTER_H_
 #define _XSCRIPT_LINE_COUNTER_H_
 
+#include <stdint.h>
 #include <xscript/counter_base.h>
 #include <boost/thread/mutex.hpp>
 
