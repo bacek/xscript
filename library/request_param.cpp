@@ -30,7 +30,7 @@ RequestParam::~RequestParam() {
 }
 
 std::string
-RequestParam::asString(const Context *) const {
+RequestParam::asString(const Context *ctx) const {
 	(void)ctx;
 	return std::string();
 }
