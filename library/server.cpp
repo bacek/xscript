@@ -137,12 +137,19 @@ Server::findScript(const std::string &name) {
 	fs::path path(name);
 	bool path_exists = fs::exists(path);
 
-	if (path_exists && fs::is_directory(path)) {
-		path = path / "index.html";
-		path_exists = fs::exists(path);
+	if (!path_exists || !fs::is_directory(path)) {
+		return std::make_pair(path.native_file_string(), path_exists);
 	}
 
-	return std::make_pair(path.native_file_string(), path_exists);
+	fs::path path_local = path / "index.html";
+	path_exists = fs::exists(path_local);
+	if (path_exists) {
+		return std::make_pair(path_local.native_file_string(), path_exists);
+	}
+		
+	path_local = path / "index.xml";
+	path_exists = fs::exists(path_local);
+	return std::make_pair(path_local.native_file_string(), path_exists);
 }
 
 extern "C" int

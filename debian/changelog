@@ -1,3 +1,16 @@
+xscript (5.11-0) unstable; urgency=low
+
+  * Bacek work
+  * Server::findScript updated
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 15 Apr 2008 10:55:56 +0400
+
+xscript (5.10-1) unstable; urgency=low
+
+  * findScript fixed in Server
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 11 Apr 2008 16:36:03 +0400
+
 xscript (5.10-0) unstable; urgency=low
 
   * location method added to mist block
