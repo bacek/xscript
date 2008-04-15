@@ -449,10 +449,13 @@ XmlErrorReporter::reporter() {
 
 extern "C" void
 xmlNullError(void *ctx, const char *format, ...) {
+	(void)ctx;
+	(void)format;
 }
 
 extern "C" void
 xmlReportPlainError(void *ctx, const char *format, ...) {
+	(void)ctx;
 	try {
 		va_list args;
 		va_start(args, format);
@@ -466,6 +469,7 @@ xmlReportPlainError(void *ctx, const char *format, ...) {
 
 extern "C" void
 xmlReportStructuredError(void *ctx, xmlErrorPtr error) {
+	(void)ctx;
 	try {
 		const char *message = error->message ? error->message : "unknown XML error";
 		XmlErrorReporter::reporter()->report("%s line %d", message, error->line);

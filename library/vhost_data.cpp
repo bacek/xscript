@@ -76,11 +76,13 @@ VirtualHostData::checkVariable(Request* request, const std::string& var) const {
 
 std::string
 VirtualHostData::getKey(const Request* request, const std::string& name) const {
+	(void)request;
 	return name;
 }
 
 std::string
 VirtualHostData::getOutputEncoding(const Request* request) const {
+	(void)request;
 	return std::string("utf-8");
 }
 

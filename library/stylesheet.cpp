@@ -270,6 +270,7 @@ Stylesheet::detectOutputMethod(const XsltStylesheetHelper &sh) {
 
 void
 Stylesheet::detectOutputEncoding(const XsltStylesheetHelper &sh) {
+	(void)sh;
 	if (NULL == stylesheet_->encoding) {
 		output_encoding_.assign(VirtualHostData::instance()->getOutputEncoding(NULL));
 		stylesheet_->encoding = xmlStrdup((const xmlChar*)(output_encoding_.c_str()));

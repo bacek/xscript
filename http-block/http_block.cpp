@@ -141,6 +141,7 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
 
 XmlDocHelper
 HttpBlock::getByState(Context *ctx, boost::any &a) {
+	(void)a;
 
 	log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
@@ -178,6 +179,7 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
 
 XmlDocHelper
 HttpBlock::getByRequest(Context *ctx, boost::any &a) {
+	(void)a;
 
 	log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
@@ -271,14 +273,17 @@ HttpExtension::nsref() const {
 
 void
 HttpExtension::initContext(Context *ctx) {
+	(void)ctx;
 }
 
 void
 HttpExtension::stopContext(Context *ctx) {
+	(void)ctx;
 }
 
 void
 HttpExtension::destroyContext(Context *ctx) {
+	(void)ctx;
 }
 
 std::auto_ptr<Block>
@@ -288,6 +293,7 @@ HttpExtension::createBlock(Xml *owner, xmlNodePtr node) {
 
 void
 HttpExtension::init(const Config *config) {
+	(void)config;
 	HttpHelper::init();
 }
 

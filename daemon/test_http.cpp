@@ -4,7 +4,7 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "request.h"
+#include "server_request.h"
 #include "xscript/state.h"
 #include "xscript/script.h"
 #include "xscript/context.h"

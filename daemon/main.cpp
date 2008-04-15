@@ -5,7 +5,7 @@
 #include <iostream>
 #include <exception>
 
-#include "server.h"
+#include "fcgi_server.h"
 #include "xscript/config.h"
 #include "xscript/logger.h"
 

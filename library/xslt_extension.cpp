@@ -458,7 +458,7 @@ xscriptXsltMD5(xmlXPathParserContextPtr ctxt, int nargs) {
 
 extern "C" void
 xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
-
+	(void)comp;
 	if (tctx == NULL) {
 		log()->error("%s: no transformation context", BOOST_CURRENT_FUNCTION);
 		return;

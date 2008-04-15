@@ -127,6 +127,7 @@ Server::handleRequest(RequestData *request_data) {
 
 bool
 Server::needApplyStylesheet(Request *request) const {
+	(void)request;
 	return true;
 }
 
@@ -154,6 +155,7 @@ Server::findScript(const std::string &name) {
 
 extern "C" int
 closeFunc(void *ctx) {
+	(void)ctx;
 	return 0;
 }
 

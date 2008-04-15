@@ -154,14 +154,20 @@ LuaBlock::setupResponse(Response *response, lua_State *lua) {
 
 void
 LuaBlock::setupRequestArgs(Request *req, lua_State *lua) {
+	(void)req;
+	(void)lua;
 }
 
 void
 LuaBlock::setupRequestHeaders(Request *req, lua_State *lua) {
+	(void)req;
+	(void)lua;
 }
 
 void
 LuaBlock::setupRequestCookies(Request *req, lua_State *lua) {
+	(void)req;
+	(void)lua;
 }
 
 XmlDocHelper
@@ -214,14 +220,17 @@ LuaExtension::nsref() const {
 	
 void
 LuaExtension::initContext(Context *ctx) {
+	(void)ctx;
 }
 
 void
 LuaExtension::stopContext(Context *ctx) {
+	(void)ctx;
 }
 
 void
 LuaExtension::destroyContext(Context *ctx) {
+	(void)ctx;
 }
 	
 std::auto_ptr<Block>
@@ -231,6 +240,7 @@ LuaExtension::createBlock(Xml *owner, xmlNodePtr node) {
 
 void
 LuaExtension::init(const Config *config) {
+	(void)config;
 }
 
 static ExtensionRegisterer reg_(ExtensionHolder(new LuaExtension()));

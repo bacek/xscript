@@ -34,6 +34,7 @@ CheckingPolicy::processError(const std::string& message) {
 
 void
 CheckingPolicy::sendError(Response* response, unsigned short status, const std::string& message) {
+	(void)message;
 	response->sendError(status, StringUtils::EMPTY_STRING);
 }
 
@@ -86,9 +87,11 @@ CheckingPolicyStarter::init(const Config *config) {
 	std::string check_mode = config->as<std::string>("/xscript/check-mode", PRODUCTION_ID);
 	if (DEVELOPMENT_ID == check_mode){
 		ComponentRegisterer<CheckingPolicy> reg(new DevelopmentCheckingPolicy());
+		(void)reg;
 	}
 	else {
 		ComponentRegisterer<CheckingPolicy> reg(new CheckingPolicy());
+		(void)reg;
 	}
 }
 

@@ -7,7 +7,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "parser.h"
-#include "request.h"
+#include "server_request.h"
 #include "xscript/config.h"
 
 #ifdef HAVE_DMALLOC_H

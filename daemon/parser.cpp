@@ -10,7 +10,7 @@
 #include <boost/bind.hpp>
 
 #include "parser.h"
-#include "request.h"
+#include "server_request.h"
 #include "xscript/range.h"
 #include "xscript/encoder.h"
 #include "internal/algorithm.h"

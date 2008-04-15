@@ -95,6 +95,7 @@ extern "C" int
 luaResponseSetCookie(lua_State *lua) throw () {
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 	try {
+		return 0;
 	}
 	catch (const std::exception &e) {
 		return luaL_error(lua, "caught exception in state.setBool: %s", e.what());
