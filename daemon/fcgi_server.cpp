@@ -24,8 +24,8 @@
 #include <libxml/encoding.h>
 #include <libxslt/xsltutils.h>
 
-#include "server.h"
-#include "request.h"
+#include "fcgi_server.h"
+#include "server_request.h"
 #include "xscript/util.h"
 #include "xscript/state.h"
 #include "xscript/config.h"

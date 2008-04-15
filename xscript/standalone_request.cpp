@@ -7,7 +7,7 @@
 #include <boost/regex.hpp>
 #include <boost/tokenizer.hpp>
 
-#include "request.h"
+#include "standalone_request.h"
 #include "xscript/logger.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -303,21 +303,25 @@ StandaloneRequest::setVariable(const std::string &name, const std::string &value
 
 bool
 StandaloneRequest::hasFile(const std::string &name) const {
+	(void)name;
 	return false;
 }
 
 const std::string&
 StandaloneRequest::remoteFileName(const std::string &name) const {
+	(void)name;
 	return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
 StandaloneRequest::remoteFileType(const std::string &name) const {
+	(void)name;
 	return StringUtils::EMPTY_STRING;
 }
 
 std::pair<const char*, std::streamsize>
 StandaloneRequest::remoteFile(const std::string &name) const {
+	(void)name;
 	return std::pair<const char*, std::streamsize>(NULL, 0);
 }
 
@@ -341,14 +345,18 @@ StandaloneRequest::reset() {
 
 void
 StandaloneRequest::setCookie(const Cookie &cookie) {
+	(void)cookie;
 }
 
 void
 StandaloneRequest::setStatus(unsigned short status) {
+	(void)status;
 }
 
 void
 StandaloneRequest::setHeader(const std::string &name, const std::string &value) {
+	(void)name;
+	(void)value;
 }
 
 std::streamsize
@@ -359,6 +367,7 @@ StandaloneRequest::write(const char *buf, std::streamsize size) {
 
 std::string
 StandaloneRequest::outputHeader(const std::string &name) const {
+	(void)name;
 	return StringUtils::EMPTY_STRING;
 }
 

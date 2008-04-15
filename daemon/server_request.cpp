@@ -8,7 +8,7 @@
 #include <boost/current_function.hpp>
 
 #include "parser.h"
-#include "request.h"
+#include "server_request.h"
 #include "xscript/range.h"
 #include "xscript/logger.h"
 #include "xscript/encoder.h"

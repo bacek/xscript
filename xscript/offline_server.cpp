@@ -1,7 +1,7 @@
 #include "settings.h"
 
-#include "request.h"
-#include "server.h"
+#include "standalone_request.h"
+#include "offline_server.h"
 
 #include "xscript/checking_policy.h"
 #include "xscript/config.h"
@@ -33,6 +33,7 @@ OfflineServer::OfflineServer(Config *config, const std::string& url, const std::
 	Server(config), url_(url)
 {
 	ComponentRegisterer<CheckingPolicy> reg(new OfflineCheckingPolicy());
+	(void)reg;
 
 	root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");
 
@@ -97,6 +98,7 @@ OfflineServer::run() {
 
 bool
 OfflineServer::needApplyStylesheet(Request *request) const {
+	(void)request;
 	return apply_stylesheet_;
 }
 
