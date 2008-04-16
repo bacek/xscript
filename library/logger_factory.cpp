@@ -11,6 +11,8 @@
 namespace xscript
 {
 
+REGISTER_COMPONENT(LoggerFactory);
+
 LoggerFactory::LoggerFactory() 
     : defaultLogger_(0)
 {
@@ -126,7 +128,5 @@ void LoggerFactory::logRotate() const {
     }
     getDefaultLogger()->info("Log rotated");
 }
-
-REGISTER_COMPONENT(LoggerFactory);
 
 }

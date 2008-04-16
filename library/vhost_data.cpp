@@ -13,6 +13,8 @@
 namespace xscript
 {
 
+REGISTER_COMPONENT(VirtualHostData);
+
 VirtualHostData::VirtualHostData() 
 {
 }
@@ -86,6 +88,5 @@ VirtualHostData::getOutputEncoding(const Request* request) const {
 	return std::string("utf-8");
 }
 
-REGISTER_COMPONENT(VirtualHostData);
 
 } // namespace xscript
