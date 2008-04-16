@@ -9,6 +9,7 @@
 
 #include <boost/current_function.hpp>
 
+#include "xscript/block.h"
 #include "xscript/util.h"
 #include "xscript/range.h"
 #include "xscript/logger.h"
@@ -82,8 +83,18 @@ ParamFactory::param(Object *owner, xmlNodePtr node) {
 		}
 	}
 	catch (const std::exception &e) {
-		log()->crit("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
-		throw;
+		std::string error_msg;
+		Block* block = dynamic_cast<Block*>(owner);
+		if (NULL != block) {
+			std::stringstream stream;
+			stream << "Error in " << block->name() << "::" << block->method() << ": " << e.what();
+			error_msg = stream.str();
+		}
+		else {
+			error_msg = e.what();
+		}
+		log()->crit("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, error_msg.c_str());
+		throw std::runtime_error(error_msg.c_str());
 	}
 }
 

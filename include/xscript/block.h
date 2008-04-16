@@ -42,6 +42,10 @@ public:
 		return method_;
 	}
 	
+	const char* name() const {
+		return extension_->name();
+	}
+
 	virtual bool threaded() const;
 	virtual void threaded(bool value);
 	
