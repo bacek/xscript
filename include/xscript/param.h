@@ -38,29 +38,42 @@ private:
 	std::string id_, value_;
 };
 
-class TypedParam : public Param
+class ConvertedParam : public Param
 {
 public:
-	TypedParam(Object *owner, xmlNodePtr node);
-	virtual ~TypedParam();
-	
-	virtual const std::string& value() const;
+	ConvertedParam(Object *owner, xmlNodePtr node);
+	virtual ~ConvertedParam();
 
 	inline const std::string& as() const {
 		return as_;
 	}
-	
+
+	virtual void add(const Context *ctx, ArgList &al) const;
+
+protected:
+	virtual void property(const char *name, const char *value);
+
+private:
+	std::string as_;
+};
+
+class TypedParam : public ConvertedParam
+{
+public:
+	TypedParam(Object *owner, xmlNodePtr node);
+	virtual ~TypedParam();
+
 	inline const std::string& defaultValue() const {
 		return default_value_;
 	}
-	
-	virtual void add(const Context *ctx, ArgList &al) const;
-	
+
+	virtual const std::string& value() const;
+
 protected:
 	virtual void property(const char *name, const char *value);
-	
+
 private:
-	std::string as_, default_value_;
+	std::string default_value_;
 };
 
 typedef std::auto_ptr<Param> (*ParamCreator)(Object *owner, xmlNodePtr node);

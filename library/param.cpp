@@ -132,8 +132,33 @@ SimpleParam<T>::create(Object *owner, xmlNodePtr node) {
 	return std::auto_ptr<Param>(new SimpleParam<T>(owner, node));
 }
 
+
+ConvertedParam::ConvertedParam(Object *owner, xmlNodePtr node) : 
+Param(owner, node)
+{
+
+}
+
+ConvertedParam::~ConvertedParam() {
+}
+
+
+void
+ConvertedParam::add(const Context *ctx, ArgList &al) const {
+	al.addAs(as(), asString(ctx));
+}
+
+void
+ConvertedParam::property(const char *name, const char *value) {
+	if (strncasecmp(name, "as", sizeof("as")) == 0) {
+		as_.assign(value);
+	}
+	else Param::property(name, value);
+}
+
+
 TypedParam::TypedParam(Object *owner, xmlNodePtr node) : 
-	Param(owner, node)
+	ConvertedParam(owner, node)
 {
 	
 }
@@ -141,30 +166,23 @@ TypedParam::TypedParam(Object *owner, xmlNodePtr node) :
 TypedParam::~TypedParam() {
 }
 
+void
+TypedParam::property(const char *name, const char *value) {
+	if (strncasecmp(name, "default", sizeof("default")) == 0) {
+		default_value_.assign(value);
+	}
+	else ConvertedParam::property(name, value);
+}
+
 const std::string&
 TypedParam::value() const {
-        const std::string &v = Param::value();
+	const std::string &v = ConvertedParam::value();
 	if (!v.empty()) {
 		return v;
 	}
 	return id();
 }
 
-void
-TypedParam::add(const Context *ctx, ArgList &al) const {
-	al.addAs(as(), asString(ctx));
-}
-
-void
-TypedParam::property(const char *name, const char *value) {
-	if (strncasecmp(name, "as", sizeof("as")) == 0) {
-		as_.assign(value);
-	}
-	else if (strncasecmp(name, "default", sizeof("default")) == 0) {
-		default_value_.assign(value);
-	}
-	else Param::property(name, value);
-}
 
 class SimpleParamRegisterer
 {
