@@ -214,7 +214,7 @@ StandaloneRequest::hasHeader(const std::string &name) const {
 const std::string&
 StandaloneRequest::getHeader(const std::string &name) const {
 	boost::mutex::scoped_lock lock(mutex_);
-	std::map<std::string, std::string>::const_iterator i = headers_.find(name);
+	HeaderMap::const_iterator i = headers_.find(name);
 	return headers_.end() != i ? i->second : StringUtils::EMPTY_STRING;
 }
 
@@ -223,7 +223,7 @@ StandaloneRequest::headerNames(std::vector<std::string> &v) const {
 	boost::mutex::scoped_lock lock(mutex_);
 	std::vector<std::string> tmp;
 	tmp.reserve(headers_.size());
-	for (std::map<std::string, std::string>::const_iterator i = headers_.begin(), end = headers_.end(); i != end; ++i) {
+	for (HeaderMap::const_iterator i = headers_.begin(), end = headers_.end(); i != end; ++i) {
 		tmp.push_back(i->first);
 	}
 	v.swap(tmp);
