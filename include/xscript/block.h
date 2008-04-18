@@ -2,10 +2,10 @@
 #define _XSCRIPT_BLOCK_H_
 
 #include <map>
+#include <list>
 #include <vector>
 #include <exception>
 #include <boost/any.hpp>
-#include <boost/tuple/tuple.hpp>
 #include <xscript/object.h>
 #include <xscript/xml_helpers.h>
 #include <xscript/extension.h>
@@ -19,6 +19,8 @@ class ParamFactory;
 class Block : public Object
 {
 public:
+	class XPathExpr;
+
 	Block(const Extension *ext, Xml *owner, xmlNodePtr node);
 	virtual ~Block();
 	
@@ -73,8 +75,6 @@ public:
 	}
 protected:
 
-	typedef boost::tuple<std::string, std::string, std::string> XPathExpr;
-
 	virtual void postParse();
 	virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception) = 0;
 	
@@ -106,6 +106,47 @@ private:
 	std::vector<Param*> params_;
 	std::vector<XPathExpr> xpath_;
 	std::string id_, guard_, method_;
+
+public:
+	class XPathExpr {
+	public:
+		XPathExpr(const char* expression, const char* result, const char* delimeter) :
+			expression_(expression ? expression : ""),
+			result_(result ? result : ""),
+			delimeter_(delimeter ? delimeter : "")
+		{}
+		~XPathExpr() {}
+
+		typedef std::list<std::pair<std::string, std::string> > NamespaceListType;
+
+		const std::string& expression() const {
+			return expression_;
+		}
+
+		const std::string& result() const {
+			return result_;
+		}
+
+		const std::string& delimeter() const {
+			return delimeter_;
+		}
+
+		const NamespaceListType& namespaces() const {
+			return namespaces_;
+		}
+
+		void addNamespace(const char* prefix, const char* uri) {
+			if (prefix && uri) {
+				namespaces_.push_back(std::make_pair(std::string(prefix), std::string(uri)));
+			}
+		}
+
+	private:
+		std::string expression_;
+		std::string result_;
+		std::string delimeter_;
+		NamespaceListType namespaces_;
+	};
 };
 
 } // namespace xscript

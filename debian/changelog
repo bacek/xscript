@@ -3,8 +3,12 @@ xscript (5.12-0) unstable; urgency=low
   * Source file names refactoring
   * Param factory error handling updated
   * Converted Param added
+  * Namespace declaration processing added to xpath tag
+  * getHttp methon updated: local files parsed by libxml instead of using
+    libcurl
+  * error logging improved in HttpBlock
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 17 Apr 2008 12:46:48 +0400
+ --  Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 18 Apr 2008 18:02:46 +0400
 
 xscript (5.11-0) unstable; urgency=low
 

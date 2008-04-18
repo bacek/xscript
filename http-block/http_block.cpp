@@ -8,6 +8,8 @@
 
 #include <boost/tokenizer.hpp>
 #include <boost/current_function.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include <libxml/HTMLparser.h>
 
@@ -93,8 +95,29 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
 		throw std::logic_error("getHttp: bad arity");
 	}
 
+	std::string url = p[0]->asString(ctx);
+	if (strncasecmp(url.c_str(), "file://", sizeof("file://") - 1) == 0) {
+		namespace fs = boost::filesystem;
+		url = url.substr(sizeof("file://") - 1);
+		fs::path file_path(url);
+		if (!fs::exists(file_path)) {
+			throw std::runtime_error(url + " is not exist");
+		}
+
+		XmlDocHelper doc = XmlDocHelper(xmlParseFile(file_path.native_file_string().c_str()));
+		if (doc.get() == NULL){
+			throw std::runtime_error(std::string("Got empty document. URL: ") + url);
+		}
+
+		if (tagged()) {
+			a = boost::any(Tag());
+		}
+
+		return doc;
+	}
+
 	const Tag* tag = boost::any_cast<Tag>(&a);
-	HttpHelper helper(p[0]->asString(ctx), remoteTimeout());
+	HttpHelper helper(url, remoteTimeout());
 	helper.appendHeaders(ctx->request(), proxy_, tag);
 
 	helper.perform();

@@ -12,6 +12,7 @@
 #include <boost/current_function.hpp>
 
 #include <libxml/xpath.h>
+#include <libxml/xpathInternals.h>
 
 #include "xscript/xml.h"
 #include "xscript/util.h"
@@ -192,23 +193,27 @@ Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
 	XmlUtils::throwUnless(NULL != xctx.get());
 
 	for (std::vector<XPathExpr>::const_iterator iter = xpath_.begin(), end = xpath_.end(); iter != end; ++iter) {
-		
-		XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*) iter->get<0>().c_str(), xctx.get()));
+		const XPathExpr::NamespaceListType& ns_list = iter->namespaces();
+		for (XPathExpr::NamespaceListType::const_iterator it_ns = ns_list.begin(); it_ns != ns_list.end(); ++it_ns) {
+			xmlXPathRegisterNs(xctx.get(), (const xmlChar *)it_ns->first.c_str(), (const xmlChar *)it_ns->second.c_str());
+		}
+		XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*)iter->expression().c_str(), xctx.get()));
 		XmlUtils::throwUnless(NULL != object.get());
-		
+
 		if (NULL != object->nodesetval && 0 != object->nodesetval->nodeNr) {
 			std::string val;
 			for (int i = 0; i < object->nodesetval->nodeNr; ++i) {
 				xmlNodePtr node = object->nodesetval->nodeTab[i];
 				appendNodeValue(node, val);
 				if (object->nodesetval->nodeNr - 1 != i) {
-					val.append(iter->get<2>());
+					val.append(iter->delimeter());
 				}
 			}
+
 			if (!val.empty()) {
 				boost::shared_ptr<State> state = ctx->state();
-				state->checkName(iter->get<1>());
-				state->setString(iter->get<1>(), val);
+				state->checkName(iter->result());
+				state->setString(iter->result(), val);
 			}
 		}
 	}
@@ -304,7 +309,12 @@ Block::parseXPathNode(const xmlNodePtr node) {
 		if (!delim || !*delim) {
 			delim = " ";
 		}
-		xpath_.push_back(boost::make_tuple<std::string, std::string, std::string>(expr, result, delim));
+		xpath_.push_back(XPathExpr(expr, result, delim));
+		xmlNs* ns = node->nsDef;
+		while(ns) {
+			xpath_.back().addNamespace((const char*)ns->prefix, (const char*)ns->href);
+			ns = ns->next;
+		}
 	}
 }
 

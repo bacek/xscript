@@ -233,13 +233,15 @@ HttpHelper::checkStatus() const {
 	if (status_ >= 400) {
 		std::stringstream stream;
 		stream << "server responded " << status_;
-		throw std::runtime_error(stream.str());
+		throw std::runtime_error(stream.str() + ". URL: " + url());
 	}
 	else if (0 == status_ && 0 == content_.size()) {
-		throw std::runtime_error("empty local content: possibly not performed");
+		throw std::runtime_error(
+			std::string("empty local content: possibly not performed") + ". URL: " + url());
 	}
 	else if (304 == status_ && !sent_modified_since_) {
-		throw std::runtime_error("server responded not-modified but if-modified-since was not sent");
+		throw std::runtime_error(
+			std::string("server responded not-modified but if-modified-since was not sent") + ". URL: " + url());
 	}
 }
 
@@ -296,7 +298,7 @@ HttpHelper::detectContentType() {
 void
 HttpHelper::check(CURLcode code) const {
 	if (CURLE_OK != code) {
-		throw std::runtime_error(curl_easy_strerror(code));
+		throw std::runtime_error(std::string(curl_easy_strerror(code)) + ". URL: " + url());
 	}
 }
 

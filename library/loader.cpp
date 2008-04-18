@@ -94,7 +94,7 @@ LoaderImpl::init(const Config *config) {
 		if (info != 0)
 		{
 			std::string loggerName = config->as<std::string>(*i + "/logger", "default");
-			std::cerr << "Logger " << loggerName << "\n";
+//			std::cerr << "Logger " << loggerName << "\n";
 
 			Extension * ext = ExtensionList::instance()->extension(info->name, info->nsref);
 			if (ext) {
