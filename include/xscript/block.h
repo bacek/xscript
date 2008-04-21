@@ -107,7 +107,7 @@ private:
 	std::vector<XPathExpr> xpath_;
 	std::string id_, guard_, method_;
 
-public:
+private:
 	class XPathExpr {
 	public:
 		XPathExpr(const char* expression, const char* result, const char* delimeter) :
