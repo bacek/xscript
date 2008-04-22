@@ -1,3 +1,9 @@
+xscript (5.13-0) unstable; urgency=low
+
+  * binary-page added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 22 Apr 2008 10:28:21 +0400
+
 xscript (5.12-0) unstable; urgency=low
 
   * Source file names refactoring

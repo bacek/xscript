@@ -10,6 +10,7 @@ namespace xscript
 class Config;
 class RequestData;
 class Request;
+class Context;
 
 class Server : private boost::noncopyable
 {
@@ -23,6 +24,7 @@ protected:
 	virtual void handleRequest(RequestData *request_data);
 	virtual bool needApplyStylesheet(Request *request) const;
 	static std::pair<std::string, bool> findScript(const std::string &name);
+	void sendHeaders(Context *ctx);
 
 protected:
 	Config *config_;

@@ -36,6 +36,10 @@ public:
 	inline bool forceStylesheet() const {
 		return flags_ & FLAG_FORCE_STYLESHEET;
 	}
+
+	inline bool binaryPage() const {
+		return flags_ & FLAG_BINARY_PAGE;
+	}
 	
 	inline unsigned int expireTimeDelta() const {
 		return expire_time_delta_;
@@ -92,6 +96,10 @@ protected:
 	inline void expireTimeDelta(unsigned int value) {
 		expire_time_delta_ = value;
 	}
+
+	inline void binaryPage(bool value) {
+		flag(FLAG_BINARY_PAGE, value);
+	}
 	
 	inline void flag(unsigned int type, bool value) {
 		flags_ = value ? (flags_ | type) : (flags_ &= ~type);
@@ -130,6 +138,7 @@ protected:
 
 	static const unsigned int FLAG_NEED_AUTH = 1 << 2;
 	static const unsigned int FLAG_FORCE_AUTH = 1 << 3;
+	static const unsigned int FLAG_BINARY_PAGE = 1 << 4;
 
 private:	
 	friend class ScriptFactory;

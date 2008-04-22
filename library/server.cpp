@@ -85,7 +85,7 @@ Server::handleRequest(RequestData *request_data) {
 
 		if (!auth->authorized()) {
 			authorizer->redirectToAuth(ctx, auth.get());
-			request_data->response()->sendHeaders();
+			ctx->response()->sendHeaders();
 			return;
 		}
 		ctx->authContext(auth);
@@ -93,7 +93,12 @@ Server::handleRequest(RequestData *request_data) {
 		XmlDocHelper doc = script->invoke(ctx);
 		XmlUtils::throwUnless(NULL != doc.get());
 
-		if (script->forceStylesheet() && needApplyStylesheet(request_data->request())) {
+		if (script->binaryPage()) {
+			sendHeaders(ctx.get());
+			return;
+		}
+
+		if (script->forceStylesheet() && needApplyStylesheet(ctx->request())) {
 			log()->info("applying stylesheet to %s", script->name().c_str());
 			script->applyStylesheet(ctx.get(), doc);
 		}
@@ -101,21 +106,17 @@ Server::handleRequest(RequestData *request_data) {
 			script->removeUnusedNodes(doc);
 		}
 
-		DocumentWriter* writer = ctx->documentWriter();
-		assert(NULL != writer);
-
-		writer->addHeaders(request_data->response());
-		request_data->response()->sendHeaders();
+		sendHeaders(ctx.get());
 
 		if (!request_data->request()->suppressBody()) {
 			xmlCharEncodingHandlerPtr encoder = NULL;
-			const std::string &encoding = writer->outputEncoding();
+			const std::string &encoding = ctx->documentWriter()->outputEncoding();
 			if (!encoding.empty()) {
 				encoder = xmlFindCharEncodingHandler(encoding.c_str());
 			}
 			buf = xmlOutputBufferCreateIO(&writeFunc, &closeFunc, ctx.get(), encoder);
 			XmlUtils::throwUnless(NULL != buf);
-			writer->write(request_data->response(), doc, buf);
+			ctx->documentWriter()->write(ctx->response(), doc, buf);
 		}
 	}
 	catch (const std::exception &e) {
@@ -151,6 +152,15 @@ Server::findScript(const std::string &name) {
 	path_local = path / "index.xml";
 	path_exists = fs::exists(path_local);
 	return std::make_pair(path_local.native_file_string(), path_exists);
+}
+
+void
+Server::sendHeaders(Context *ctx) {
+	DocumentWriter* writer = ctx->documentWriter();
+	assert(NULL != writer);
+
+	writer->addHeaders(ctx->response());
+	ctx->response()->sendHeaders();
 }
 
 extern "C" int

@@ -479,6 +479,9 @@ Script::property(const char *prop, const char *value) {
 	else if (strncasecmp(prop, "http-expire-time-delta", sizeof("http-expire-time-delta")) == 0) {
 		expireTimeDelta(boost::lexical_cast<unsigned int>(value));
 	}
+	else if (strncasecmp(prop, "binary-page", sizeof("binary-page")) == 0) {
+		binaryPage(strncasecmp(value, "yes", sizeof("yes")) == 0);
+	}
 	else {
 		throw std::runtime_error(std::string("invalid script property: ").append(prop));
 	}
