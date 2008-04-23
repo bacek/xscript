@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="x-md5.xsl"?>
+<tests>
+  <test name="md5">
+    <source>example md5</source>
+    <result>c07f10b430c87649e452adaf64f443a6</result>
+  </test>
+</tests>

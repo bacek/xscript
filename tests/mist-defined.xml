@@ -1,0 +1,19 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <x:mist>
+    <method>set_state_string</method>
+    <param type="string">match_var</param>
+    <param type="Long">15</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_string</method>
+    <param type="string">replace_var</param>
+    <param type="Long">25</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_defined</method>
+    <param type="string">replace_var</param>
+    <param type="string">var1,var2,match_var,var3</param>
+  </x:mist>
+</page>
