@@ -20,6 +20,7 @@ public:
 	void testEsc();
 	void testUrlencode();
 	void testUrldecode();
+	void testMD5();
 	void testMist();
 	void testMistAgain();
 	
@@ -31,6 +32,7 @@ private:
 	CPPUNIT_TEST(testEsc);
 	CPPUNIT_TEST(testUrlencode);
 	CPPUNIT_TEST(testUrldecode);
+	CPPUNIT_TEST(testMD5);
 	CPPUNIT_TEST(testMist);
 	CPPUNIT_TEST(testMistAgain);
 	CPPUNIT_TEST_SUITE_END();
@@ -51,6 +53,11 @@ XsltTest::testUrlencode() {
 void
 XsltTest::testUrldecode() {
 	testFile("x-urldecode.xml");
+}
+
+void
+XsltTest::testMD5() {
+	testFile("x-md5.xml");
 }
 
 void

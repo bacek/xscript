@@ -237,6 +237,7 @@ MistBlock::setStateDefined(Context *ctx) {
 		if (state->has(*i) && !state->asString(*i).empty()) {
 			state->copy(*i, n);
 			val = state->asString(n);
+			break;
 		}
 	}
 

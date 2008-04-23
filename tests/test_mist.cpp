@@ -23,6 +23,8 @@ public:
 	void testEncode();
 	void testBadMethod();
 	void testStylesheet();
+	void testDefined();
+	void testKeys();
 
 private:
 	CPPUNIT_TEST_SUITE(MistTest);
@@ -33,6 +35,8 @@ private:
 	CPPUNIT_TEST(testEscape);
 	CPPUNIT_TEST(testEncode);
 	CPPUNIT_TEST(testStylesheet);
+	CPPUNIT_TEST(testDefined);
+	CPPUNIT_TEST(testKeys);
 	CPPUNIT_TEST_EXCEPTION(testBadMethod, std::exception);
 	CPPUNIT_TEST_SUITE_END();
 };
@@ -166,6 +170,42 @@ MistTest::testStylesheet() {
 
 	CPPUNIT_ASSERT_EQUAL(std::string("stylesheet.xsl"), ctx->xsltName());
 }
+
+
+void
+MistTest::testDefined() {
+
+	using namespace xscript;
+
+	boost::shared_ptr<Script> script = Script::create("mist-defined.xml");
+	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
+
+	XmlDocHelper doc(script->invoke(ctx));
+	CPPUNIT_ASSERT(NULL != doc.get());
+
+	boost::shared_ptr<State> state = ctx->state();
+
+	CPPUNIT_ASSERT_EQUAL(std::string("15"), state->asString("replace_var"));
+}
+
+void
+MistTest::testKeys() {
+
+	using namespace xscript;
+
+	boost::shared_ptr<Script> script = Script::create("mist-keys.xml");
+	boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+	ContextStopper ctx_stopper(ctx);
+
+	XmlDocHelper doc(script->invoke(ctx));
+	CPPUNIT_ASSERT(NULL != doc.get());
+
+	boost::shared_ptr<State> state = ctx->state();
+
+	CPPUNIT_ASSERT_EQUAL(std::string("value3"), state->asString("var"));
+}
+
 
 void
 MistTest::testBadMethod() {
