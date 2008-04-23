@@ -19,8 +19,6 @@ class ParamFactory;
 class Block : public Object
 {
 public:
-	class XPathExpr;
-
 	Block(const Extension *ext, Xml *owner, xmlNodePtr node);
 	virtual ~Block();
 	
@@ -74,6 +72,7 @@ public:
 		return extension_->getLogger();
 	}
 protected:
+	class XPathExpr;
 
 	virtual void postParse();
 	virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception) = 0;
@@ -107,7 +106,7 @@ private:
 	std::vector<XPathExpr> xpath_;
 	std::string id_, guard_, method_;
 
-private:
+protected:
 	class XPathExpr {
 	public:
 		XPathExpr(const char* expression, const char* result, const char* delimeter) :

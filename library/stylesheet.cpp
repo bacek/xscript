@@ -188,7 +188,6 @@ Stylesheet::parse() {
 	detectOutputMethod(stylesheet_);
 	detectOutputEncoding(stylesheet_);
 
-	stylesheet_->omitXmlDeclaration = 1;
 	modified_ = fs::last_write_time(path);
 }
 
@@ -251,6 +250,7 @@ Stylesheet::detectOutputMethod(const XsltStylesheetHelper &sh) {
 		xmlFree(sh->methodURI);
 		
 		sh->methodURI = NULL;
+		sh->omitXmlDeclaration = 0;
 		sh->method = xmlStrdup((const xmlChar*) "xml");
 	}
 

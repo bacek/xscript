@@ -1,8 +1,10 @@
 xscript (5.13-0) unstable; urgency=low
 
   * binary-page added
+  * set_state_defined fixed
+  * omit_xml_declaration fixed
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 22 Apr 2008 10:28:21 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 23 Apr 2008 15:35:31 +0400
 
 xscript (5.12-0) unstable; urgency=low
 
