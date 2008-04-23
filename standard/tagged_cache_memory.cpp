@@ -12,6 +12,7 @@
 #include "xscript/param.h"
 #include "xscript/tagged_block.h"
 #include "xscript/tagged_cache.h"
+#include "xscript/memory_statistic.h"
 
 #include <boost/crc.hpp>
 #include <boost/thread/mutex.hpp>
@@ -34,11 +35,15 @@ public:
 	CacheCounter(const std::string& name);
 	virtual XmlNodeHelper createReport() const;
 
+	void incUsedMemory(size_t amount) { usedMemory_ += amount; }
+	void decUsedMemory(size_t amount) { usedMemory_ -= amount; }
+
 	void incLoaded() { ++loaded_; }
 	void incStored() { ++stored_; }
 	void incRemoved() { ++removed_; }
 
 private:
+	size_t usedMemory_;
 	size_t stored_;
 	size_t loaded_;
 	size_t removed_;
@@ -68,6 +73,7 @@ public:
 	void clear();
 
 	const CacheCounter& getCounter() const;
+	const AverageCounter& getMemoryCounter() const;
 
 private:
 	class DocData;
@@ -92,6 +98,7 @@ private:
 		LRUList::iterator pos;
 		time_t stored_time;
 		bool prefetch_marked;
+		size_t doc_size;
 	};
 
 	void shrink();
@@ -100,6 +107,8 @@ private:
 private:
 	const TaggedCacheMemory* parent_;
 	CacheCounter counter_;
+	AverageCounter memoryCounter_;
+
 	boost::mutex mutex_;
 
 	Key2Data key2data_;
@@ -143,13 +152,14 @@ const time_t TaggedCacheMemory::DEFAULT_CACHE_TIME = 5; // sec
 
 
 CacheCounter::CacheCounter(const std::string& name)
-	: CounterBase(name), stored_(0), loaded_(0), removed_(0)
+	: CounterBase(name), usedMemory_(0), stored_(0), loaded_(0), removed_(0)
 {
 }
 
 XmlNodeHelper CacheCounter::createReport() const {
 	XmlNodeHelper line(xmlNewNode(0, BAD_CAST name_.c_str()));
 
+	xmlSetProp(line.get(), BAD_CAST "used-memory", BAD_CAST boost::lexical_cast<std::string>(usedMemory_).c_str());
 	xmlSetProp(line.get(), BAD_CAST "stored", BAD_CAST boost::lexical_cast<std::string>(stored_).c_str());
 	xmlSetProp(line.get(), BAD_CAST "loaded", BAD_CAST boost::lexical_cast<std::string>(loaded_).c_str());
 	xmlSetProp(line.get(), BAD_CAST "removed", BAD_CAST boost::lexical_cast<std::string>(removed_).c_str());
@@ -210,6 +220,7 @@ TaggedCacheMemory::init(const Config *config) {
 		snprintf(buf, 20, "pool%d", i);
 		pools_.push_back(new TaggedCacheMemoryPool(this, buf));
 		statBuilder_.addCounter((*pools_.rbegin())->getCounter());
+		statBuilder_.addCounter((*pools_.rbegin())->getMemoryCounter());
 	}
 	min_time_ = config->as<time_t>("/xscript/tagged-cache-memory/min-cache-time", DEFAULT_CACHE_TIME);
 	if (min_time_ <= 0) {
@@ -260,12 +271,16 @@ const CacheCounter& TaggedCacheMemoryPool::getCounter() const {
 	return counter_;
 }
 
-TaggedCacheMemoryPool::DocData::DocData() : tag(), ptr(NULL), pos(), prefetch_marked(false)
+const AverageCounter& TaggedCacheMemoryPool::getMemoryCounter() const {
+	return memoryCounter_;
+}
+
+TaggedCacheMemoryPool::DocData::DocData() : tag(), ptr(NULL), pos(), prefetch_marked(false), doc_size(0)
 {
 }
 
 TaggedCacheMemoryPool::DocData::DocData(LRUList::iterator list_pos) :
-	tag(), ptr(NULL), pos(list_pos), prefetch_marked(false)
+	tag(), ptr(NULL), pos(list_pos), prefetch_marked(false), doc_size(0)
 {
 }
 
@@ -275,7 +290,12 @@ TaggedCacheMemoryPool::DocData::assign(const Tag& t, const xmlDocPtr p) {
 	clearDoc();
 
 	tag = t;
+	size_t s1 = getAllocatedMemory();
 	ptr = xmlCopyDoc(p, 1);
+	size_t s2 = getAllocatedMemory();
+
+	doc_size = s2-s1;
+
 	XmlUtils::throwUnless(NULL != ptr);
 	stored_time = time(NULL);
 	prefetch_marked = false;
@@ -297,7 +317,7 @@ TaggedCacheMemoryPool::DocData::clearDoc() {
 
 
 TaggedCacheMemoryPool::TaggedCacheMemoryPool(const TaggedCacheMemory* parent, const std::string& name) :
-	parent_(parent), counter_(name), mutex_(), key2data_(), list_()
+	parent_(parent), counter_(name), memoryCounter_(name+"-memory"), mutex_(), key2data_(), list_()
 {
 }
 
@@ -327,6 +347,8 @@ TaggedCacheMemoryPool::loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc) {
 		if (data.pos != list_.end()) {
 			list_.erase(data.pos);
 		}
+		counter_.decUsedMemory(data.doc_size);
+		counter_.incRemoved();
 		data.clearDoc();
 		key2data_.erase(i);
 		lock.unlock();
@@ -372,6 +394,8 @@ TaggedCacheMemoryPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocHe
 		}
 
 		data.assign(tag, doc.get());
+		counter_.incUsedMemory(data.doc_size);
+		memoryCounter_.add(data.doc_size);
 		data.pos = list_.insert(list_.end(), i);
 
 		lock.unlock();
@@ -383,7 +407,10 @@ TaggedCacheMemoryPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocHe
 
 	i = key2data_.insert(std::make_pair(str, DocData(list_.end()))).first;
 	DocData &data = i->second;
+		
 	data.assign(tag, doc.get());
+	counter_.incUsedMemory(data.doc_size);
+	memoryCounter_.add(data.doc_size);
 	data.pos = list_.insert(list_.end(), i);
 
 	lock.unlock();
@@ -402,6 +429,7 @@ TaggedCacheMemoryPool::clear() {
 
 	for (Key2Data::iterator i = tmp.begin(), end = tmp.end(); i != end; ++i) {
 		DocData &data = i->second;
+		counter_.decUsedMemory(data.doc_size);
 		data.clearDoc();
 	}
 }
@@ -431,9 +459,10 @@ TaggedCacheMemoryPool::shrink() {
 		if (i != key2data_.end()) {
 			DocData &data = i->second;
 			log()->debug("%s, key: %s, shrink", BOOST_CURRENT_FUNCTION, i->first.c_str());
+			counter_.decUsedMemory(data.doc_size);
+			counter_.incRemoved();
 			data.clearDoc();
 			key2data_.erase(i);
-			counter_.incRemoved();
 		}
 
 		list_.pop_front();
@@ -448,6 +477,7 @@ TaggedCacheMemoryPool::removeExpiredDocuments() {
 		DocData &data = i->second;
 		if (data.tag.expired()) {
 			log()->debug("%s, key: %s, remove expired", BOOST_CURRENT_FUNCTION, i->first.c_str());
+			counter_.decUsedMemory(data.doc_size);
 			data.clearDoc();
 			key2data_.erase(i);
 			list_.erase(li++);

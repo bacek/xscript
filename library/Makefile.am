@@ -17,7 +17,8 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	dummy_tagged_cache.cpp dummy_thread_pool.cpp dummy_script_cache.cpp \
 	dummy_stylesheet_cache.cpp \
 	stat_builder.cpp average_counter.cpp simple_counter.cpp \
-	status_info.cpp
+	status_info.cpp \
+	memory_statistic.cpp
 
 noinst_HEADERS = details/expect.h details/extension_list.h details/loader.h \
 	details/param_factory.h details/phoenix_singleton.h \
