@@ -12,9 +12,8 @@
 namespace xscript
 {
 
-// FIXME: Change hard-coded 5000 to configurable defaults.
 ThreadedBlock::ThreadedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-	Block(ext, owner, node), threaded_(false), timeout_(5000), remote_timeout_(5000)
+	Block(ext, owner, node), threaded_(false), timeout_(0), remote_timeout_(0)
 {
 }
 
@@ -23,12 +22,13 @@ ThreadedBlock::~ThreadedBlock() {
 
 int
 ThreadedBlock::timeout() const {
-	return timeout_;
+// FIXME: Change hard-coded 5000 to configurable defaults.
+	return timeout_ > 0 ? timeout_ : 5000;
 }
 
 int
 ThreadedBlock::remoteTimeout() const {
-	return remote_timeout_;
+	return remote_timeout_ > 0 ? remote_timeout_ : timeout();
 }
 
 bool
