@@ -68,7 +68,7 @@ binary-arch: build install
 	dh_testroot
 	dh_movefiles
 	dh_installchangelogs 
-	#dh_installinit
+	dh_installinit --no-start
 	dh_link
 	# dh_strip
 	dh_compress
