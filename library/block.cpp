@@ -130,11 +130,8 @@ Block::invoke(Context *ctx) {
 		log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
 		applyStylesheet(ctx, doc);
 
-		XmlUtils::throwUnless(NULL != doc.get());
-		log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
-
-		evalXPath(ctx, doc);
 		postCall(ctx, doc, a);
+		evalXPath(ctx, doc);
 		return doc;
 	}
 	catch (const std::exception &e) {
@@ -159,6 +156,9 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
 	if (!xsltName().empty()) {
 		boost::shared_ptr<Stylesheet> sh = Stylesheet::create(xsltName());
 		Object::applyStylesheet(sh, ctx, doc, true);
+
+		XmlUtils::throwUnless(NULL != doc.get());
+		log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
 	}
 }
 
