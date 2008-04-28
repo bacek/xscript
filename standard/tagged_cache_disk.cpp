@@ -85,7 +85,7 @@ private:
 private:
 	time_t min_time_;
 	std::string root_;
-	boost::mutex mutexes_[256];
+	//boost::mutex mutexes_[256];
 };
 
 const time_t TaggedCacheDisk::DEFAULT_CACHE_TIME = 5; // sec
@@ -169,6 +169,7 @@ void TaggedCacheDisk::WriteFile::write(const void *ptr, size_t size) const {
 TaggedCacheDisk::TaggedCacheDisk() : 
 	min_time_(DEFAULT_CACHE_TIME)
 {
+	statBuilder_.setName("tagged-cache-disk");
 }
 
 TaggedCacheDisk::~TaggedCacheDisk() {
@@ -202,7 +203,7 @@ TaggedCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
 	const std::string &key_str = key->asString();
 	std::vector<char> vec;
 	try {
-		boost::mutex::scoped_lock sl(mutexes_[dkey->number()]);
+		//boost::mutex::scoped_lock sl(mutexes_[dkey->number()]);
 		if (!load(path, key_str, tag, vec)) {
 			return false;
 		}
@@ -240,9 +241,25 @@ TaggedCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelp
 	path.append(dkey->filename());
 
 	try {
-		boost::mutex::scoped_lock sl(mutexes_[dkey->number()]);
 		createDir(path);
-		return save(path, key_str, tag, doc);
+
+		char buf[path.length() + 8];
+		buf[0] = 0;
+		strcat(buf, path.c_str());
+		strcat(buf, ".XXXXXX");
+		mkstemp(buf);
+		
+		if (!save(buf, key_str, tag, doc)) {
+			log()->error("can not create doc: %s, key: %s", path.c_str(), key_str.c_str());
+			return false;
+		}
+
+		if (rename(buf, path.c_str()) == 0) {
+			return true;
+		}
+		
+		log()->error("error while saving doc to cache: %d, key: %s", errno, key_str.c_str());
+		return false;
 	}
 	catch (const std::exception &e) {
 		log()->error("error while saving doc to cache: %s, key: %s", e.what(), key_str.c_str());
@@ -364,7 +381,6 @@ TaggedCacheDisk::save(const std::string &path, const std::string &key, const Tag
 	try {
 		FILE *f = fopen(path.c_str(), "w");
 		if (NULL == f) {
-			log()->error("can not create doc: %s, key: %s", path.c_str(), key.c_str());
 			return false;
 		}
 		WriteFile wf(f);
