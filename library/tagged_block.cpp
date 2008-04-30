@@ -14,9 +14,10 @@ namespace xscript
 {
 
 static const time_t CACHE_TIME_MINIMUM = 5;
+static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
 
 TaggedBlock::TaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-	Block(ext, owner, node), canonical_method_(), tagged_(false), cache_time_(Tag::UNDEFINED_TIME)
+	Block(ext, owner, node), canonical_method_(), tagged_(false), cache_time_(CACHE_TIME_UNDEFINED)
 {
 }
 
@@ -53,14 +54,16 @@ TaggedBlock::invoke(Context *ctx) {
 	if (!tagged()) {
 		return Block::invoke(ctx);
 	}
-	
 	try {
-		Tag tag;
-		XmlDocHelper doc(NULL);
-		
 		TaggedCache *cache = TaggedCache::instance();
+		if ((CACHE_TIME_UNDEFINED != cache_time_) && (cache_time_ < cache->minimalCacheTime())) {
+			return Block::invoke(ctx);
+		}
+
 		std::auto_ptr<TagKey> key = cache->createKey(ctx, this);
 		
+		Tag tag;
+		XmlDocHelper doc(NULL);
 		if (!cache->loadDoc(key.get(), tag, doc)) {
 			return Block::invoke(ctx);
 		}
@@ -107,7 +110,7 @@ TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a
 	TaggedCache *cache = TaggedCache::instance();
 	
 	bool can_store = false;
-	if (Tag::UNDEFINED_TIME != cache_time_) {
+	if (CACHE_TIME_UNDEFINED != cache_time_) {
 		if (cache_time_ >= cache->minimalCacheTime()) {
 			tag.expire_time = now + cache_time_;
 			can_store = true;
