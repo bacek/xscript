@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iterator>
 #include <algorithm>
+#include <stdexcept>
 #include <boost/bind.hpp>
 
 #include "xscript/parser.h"

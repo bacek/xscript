@@ -4,6 +4,7 @@
 #include <iostream>
 #include <iterator>
 #include <algorithm>
+#include <stdexcept>
 #include <boost/lexical_cast.hpp>
 #include <boost/current_function.hpp>
 
