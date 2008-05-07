@@ -7,7 +7,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/current_function.hpp>
 
-#include "parser.h"
+#include "xscript/parser.h"
 #include "server_request.h"
 #include "xscript/range.h"
 #include "xscript/logger.h"
@@ -20,64 +20,9 @@
 namespace xscript
 {
 
-static const std::string HEAD("HEAD");
-static const std::string HOST_KEY("HOST");
-static const std::string CONTENT_TYPE_KEY("Content-Type");
-static const std::string CONTENT_ENCODING_KEY("Content-Encoding");
-static const std::string CONTENT_LENGTH_KEY("Content-Length");
-
-static const std::string HTTPS_KEY("HTTPS");
-static const std::string SERVER_ADDR_KEY("SERVER_ADDR");
-static const std::string SERVER_PORT_KEY("SERVER_PORT");
-
-static const std::string PATH_INFO_KEY("PATH_INFO");
-static const std::string PATH_TRANSLATED_KEY("PATH_TRANSLATED");
-
-static const std::string SCRIPT_NAME_KEY("SCRIPT_NAME");
-static const std::string SCRIPT_FILENAME_KEY("SCRIPT_FILENAME");
-static const std::string DOCUMENT_ROOT_KEY("DOCUMENT_ROOT");
-
-static const std::string REMOTE_USER_KEY("REMOTE_USER");
-static const std::string REMOTE_ADDR_KEY("REMOTE_ADDR");
-static const std::string REAL_IP_KEY("X-REAL-IP");
-
-static const std::string QUERY_STRING_KEY("QUERY_STRING");
-static const std::string REQUEST_METHOD_KEY("REQUEST_METHOD");
-
-File::File(const std::map<Range, Range, RangeCILess> &m, const Range &content) :
-	data_(content.begin(), static_cast<std::streamsize>(content.size()))
+ServerRequest::ServerRequest() :
+	impl_(RequestFactory::instance()->create())
 {
-	std::map<Range, Range, RangeCILess>::const_iterator i;
-	i = m.find(Parser::CONTENT_TYPE_RANGE);
-	if (m.end() != i) {
-		type_.assign(i->second.begin(), i->second.end());
-	}
-	i = m.find(Parser::FILENAME_RANGE);
-	if (m.end() != i) {
-		name_.assign(i->second.begin(), i->second.end());
-	}
-	else {
-		throw std::runtime_error("uploaded file without name"); 
-	}
-}
-
-const std::string&
-File::type() const {
-	return type_;
-}
-
-const std::string&
-File::remoteName() const {
-	return name_;
-}
-
-std::pair<const char*, std::streamsize>
-File::data() const {
-	return data_;
-}
-
-ServerRequest::ServerRequest() {
-	reset();
 }
 
 ServerRequest::~ServerRequest() {
@@ -85,300 +30,219 @@ ServerRequest::~ServerRequest() {
 
 unsigned short
 ServerRequest::getServerPort() const {
-	const std::string &res = Parser::get(vars_, SERVER_PORT_KEY);
-	return (!res.empty()) ? boost::lexical_cast<unsigned short>(res) : 80;
+	return impl_->getServerPort();
 }
 
 const std::string&
 ServerRequest::getServerAddr() const {
-	return Parser::get(vars_, SERVER_ADDR_KEY);
+	return impl_->getServerAddr();
 }
 
 const std::string&
 ServerRequest::getPathInfo() const {
-	return Parser::get(vars_, PATH_INFO_KEY);
+	return impl_->getPathInfo();
 }
 
 const std::string&
 ServerRequest::getPathTranslated() const {
-		return Parser::get(vars_, PATH_TRANSLATED_KEY);
+	return impl_->getPathTranslated();
 }
 
 const std::string&
 ServerRequest::getScriptName() const {
-	return Parser::get(vars_, SCRIPT_NAME_KEY);
+	return impl_->getScriptName();
 }
 
 const std::string&
 ServerRequest::getScriptFilename() const {
-	return Parser::get(vars_, SCRIPT_FILENAME_KEY);
+	return impl_->getScriptFilename();
 }
 
 const std::string&
 ServerRequest::getDocumentRoot() const {
-	return Parser::get(vars_, DOCUMENT_ROOT_KEY);
+	return impl_->getDocumentRoot();
 }
 
 const std::string&
 ServerRequest::getRemoteUser() const {
-	return Parser::get(vars_, REMOTE_USER_KEY);
+	return impl_->getRemoteUser();
 }
 
 const std::string&
 ServerRequest::getRemoteAddr() const {
-	return Parser::get(vars_, REMOTE_ADDR_KEY);
+	return impl_->getRemoteAddr();
 }
 
 const std::string& 
 ServerRequest::getRealIP() const {
-	const std::string& ip = Parser::get(headers_, REAL_IP_KEY);
-	if (ip.empty()) {
-		return getRemoteAddr();
-	}
-	return ip;
+	return impl_->getRealIP();
 }
 
 const std::string&
 ServerRequest::getQueryString() const {
-	return Parser::get(vars_, QUERY_STRING_KEY);
+	return impl_->getQueryString();
 }
 
 const std::string&
 ServerRequest::getRequestMethod() const {
-	return Parser::get(vars_, REQUEST_METHOD_KEY);
+	return impl_->getRequestMethod();
 }
 
 std::string
 ServerRequest::getURI() const {
-	const std::string& script_name = getScriptName();
-	const std::string& query_string = getQueryString();
-	if (query_string.empty()) {
-		return script_name + getPathInfo();
-	}
-	else {
-		return script_name + getPathInfo() + "?" + query_string;;
-	}
+	return impl_->getURI();
 }
 
 std::string
 ServerRequest::getOriginalURI() const {
-	std::string name = "X-Original-URI";
-	if (hasHeader(name)) {
-		return getHeader(name);
-	}
-	else {
-		return getURI();
-	}
+	return impl_->getOriginalURI();
 }
 
 std::string
 ServerRequest::getHost() const {
-	const std::string& host_header = getHeader(HOST_KEY);
-	if (host_header.empty()) {
-		return StringUtils::EMPTY_STRING;
-	}
-
-	if (!isSecure() && host_header.find(':') == std::string::npos) {
-		int port = getServerPort();
-		if (port != 80) {
-			return std::string(host_header).append(":").append(boost::lexical_cast<std::string>(port));
-		}
-	}
-
-	return host_header;
+	return impl_->getHost();
 }
 
 std::string
 ServerRequest::getOriginalHost() const {
-	const std::string& host_header = getHeader("X-Original-Host");
-	if (!host_header.empty()) {
-		return host_header;
-	}
-	return getHost();
+	return impl_->getOriginalHost();
 }
 
 std::streamsize
 ServerRequest::getContentLength() const {
 	boost::mutex::scoped_lock sl(mutex_);
-	const std::string& length = Parser::get(headers_, CONTENT_LENGTH_KEY);
-	if (length.empty()) {
-		return 0;
-	}
-	try {
-		return boost::lexical_cast<std::streamsize>(length);
-	}
-	catch(const boost::bad_lexical_cast &e) {
-		return 0;
-	}
+	return impl_->getContentLength();
 }
 
 const std::string&
 ServerRequest::getContentType() const {
 	boost::mutex::scoped_lock sl(mutex_);
-	return Parser::get(headers_, CONTENT_TYPE_KEY);
+	return impl_->getContentType();
 }
 
 const std::string&
 ServerRequest::getContentEncoding() const {
 	boost::mutex::scoped_lock sl(mutex_);
-	return Parser::get(headers_, CONTENT_ENCODING_KEY);
+	return impl_->getContentEncoding();
 }
 
 unsigned int
 ServerRequest::countArgs() const {
-	return args_.size();
+	return impl_->countArgs();
 }
 
 bool
 ServerRequest::hasArg(const std::string &name) const {
-	for (std::vector<StringUtils::NamedValue>::const_iterator i = args_.begin(), end = args_.end(); i != end; ++i) {
-		if (i->first == name) {
-			return true;
-		}
-	}
-	return false;
+	return impl_->hasArg(name);
 }
 
 const std::string&
 ServerRequest::getArg(const std::string &name) const {
-	for (std::vector<StringUtils::NamedValue>::const_iterator i = args_.begin(), end = args_.end(); i != end; ++i) {
-		if (i->first == name) {
-			return i->second;
-		}
-	}
-	return StringUtils::EMPTY_STRING;
+	return impl_->getArg(name);
 }
 
 void
 ServerRequest::getArg(const std::string &name, std::vector<std::string> &v) const {
-	
-	std::vector<std::string> tmp;
-	tmp.reserve(args_.size());
-	for (std::vector<StringUtils::NamedValue>::const_iterator i = args_.begin(), end = args_.end(); i != end; ++i) {
-		if (i->first == name) {
-			tmp.push_back(i->second);
-		}
-	}
-	v.swap(tmp);
+	impl_->getArg(name, v);
 }
 
 void
 ServerRequest::argNames(std::vector<std::string> &v) const {
-	std::set<std::string> names;
-	for (std::vector<StringUtils::NamedValue>::const_iterator i = args_.begin(), end = args_.end(); i != end; ++i) {
-		names.insert(i->first);
-	}
-	std::vector<std::string> tmp;
-	tmp.reserve(names.size());
-	std::copy(names.begin(), names.end(), std::back_inserter(tmp));
-	v.swap(tmp);
+	impl_->argNames(v);
 }
 
 unsigned int
 ServerRequest::countHeaders() const {
 	boost::mutex::scoped_lock sl(mutex_);
-	return headers_.size();
+	return impl_->countHeaders();
 }
 
 bool
 ServerRequest::hasHeader(const std::string &name) const {
 	boost::mutex::scoped_lock sl(mutex_);
-	return Parser::has(headers_, name);
+	return impl_->hasHeader(name);
 }
 
 const std::string&
 ServerRequest::getHeader(const std::string &name) const {
 	boost::mutex::scoped_lock sl(mutex_);
-	return Parser::get(headers_, name);
+	return impl_->getHeader(name);
 }
 
 void
 ServerRequest::headerNames(std::vector<std::string> &v) const {
 	boost::mutex::scoped_lock sl(mutex_);
-	Parser::keys(headers_, v);
+	impl_->headerNames(v);
 }
 
 unsigned int
 ServerRequest::countCookies() const {
-	return cookies_.size();
+	return impl_->countCookies();
 }
 
 bool
 ServerRequest::hasCookie(const std::string &name) const {
-	return Parser::has(cookies_, name);
+	return impl_->hasCookie(name);
 }
 
 const std::string&
 ServerRequest::getCookie(const std::string &name) const {
-	return Parser::get(cookies_, name);
+	return impl_->getCookie(name);
 }
 
 void
 ServerRequest::cookieNames(std::vector<std::string> &v) const {
-	Parser::keys(cookies_, v);
+	impl_->cookieNames(v);
 }
 
 unsigned int
 ServerRequest::countVariables() const {
-	return vars_.size();
+	return impl_->countVariables();
 }
 
 bool
 ServerRequest::hasVariable(const std::string &name) const {
-	return Parser::has(vars_, name);
+	return impl_->hasVariable(name);
 }
 
 const std::string&
 ServerRequest::getVariable(const std::string &name) const {
-	return Parser::get(vars_, name);
+	return impl_->getVariable(name);
 }
 
 void
 ServerRequest::variableNames(std::vector<std::string> &v) const {
-	Parser::keys(vars_, v);
+	impl_->variableNames(v);
 }
 
 bool
 ServerRequest::hasFile(const std::string &name) const {
-	return files_.find(name) != files_.end();
+	return impl_->hasFile(name);
 }
 
 const std::string&
 ServerRequest::remoteFileName(const std::string &name) const {
-	std::map<std::string, File>::const_iterator i = files_.find(name);
-	if (files_.end() != i) {
-		return i->second.remoteName();
-	}
-	return StringUtils::EMPTY_STRING;
+	return impl_->remoteFileName(name);
 }
 
 const std::string&
 ServerRequest::remoteFileType(const std::string &name) const {
-	std::map<std::string, File>::const_iterator i = files_.find(name);
-	if (files_.end() != i) {
-		return i->second.type();
-	}
-	return StringUtils::EMPTY_STRING;
+	return impl_->remoteFileType(name);
 }
 
 std::pair<const char*, std::streamsize>
 ServerRequest::remoteFile(const std::string &name) const {
-	std::map<std::string, File>::const_iterator i = files_.find(name);
-	if (files_.end() != i) {
-		return i->second.data();
-	}
-	return std::make_pair<const char*, std::streamsize>(NULL, 0);
+	return impl_->remoteFile(name);
 }
 
 bool
 ServerRequest::isSecure() const {
-	const std::string &val = Parser::get(vars_, HTTPS_KEY);
-	return !val.empty() && ("on" == val);
+	return impl_->isSecure();
 }
 
 std::pair<const char*, std::streamsize>
 ServerRequest::requestBody() const {
-	return std::make_pair<const char*, std::streamsize>(&body_[0], body_.size());
+	return impl_->requestBody();
 }
 
 void
@@ -457,23 +321,17 @@ ServerRequest::outputHeader(const std::string &name) const {
 
 bool
 ServerRequest::suppressBody() const {
-	return HEAD == getRequestMethod() || 204 == status_ || 304 == status_;
+	return impl_->suppressBody() || 204 == status_ || 304 == status_;
 }
 
 void
 ServerRequest::reset() {
-	
+
+	impl_->reset();
+
 	status_ = 200;
 	stream_ = NULL;
 	headers_sent_ = false;
-
-	body_.clear();
-	args_.clear();
-	vars_.clear();
-	
-	files_.clear();
-	cookies_.clear();
-	headers_.clear();
 	out_cookies_.clear();
 	out_headers_.clear();
 }
@@ -489,34 +347,7 @@ void
 ServerRequest::attach(std::istream *is, std::ostream *os, char *env[]) {
 
 	stream_ = os;
-	
-	std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
-	Parser::parse(this, env, enc.get());
-	
-	if ("POST" == getRequestMethod()) {
-		
-		body_.resize(getContentLength());
-		is->exceptions(std::ios::badbit);
-		is->read(&body_[0], body_.size());
-		
-		if (is->gcount() != static_cast<std::streamsize>(body_.size())) {
-			throw std::runtime_error("failed to read request entity");
-		}
-	}
-	else {
-		const std::string &query = getQueryString();
-		body_.assign(query.begin(), query.end());
-	}
-
-	const std::string &type = getContentType();
-	if (strncasecmp("multipart/form-data", type.c_str(), sizeof("multipart/form-data") - 1) == 0) {
-		Range body = createRange(body_);
-		std::string boundary = Parser::getBoundary(createRange(type));
-		Parser::parseMultipart(this, body, boundary, enc.get());
-	}
-	else {
-		StringUtils::parse(createRange(body_), args_, enc.get());
-	}
+	impl_->attach(is, env);
 	stream_->exceptions(std::ios::badbit);
 }
 
@@ -541,12 +372,8 @@ ServerRequest::sendHeadersInternal() {
 
 void
 ServerRequest::addInputHeader(const std::string &name, const std::string &value) {
-
-	Range key_range = createRange(name);
-	Range value_range = createRange(value);
-	std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
 	boost::mutex::scoped_lock sl(mutex_);
-	Parser::addHeader(this, key_range, value_range, enc.get());
+	impl_->addInputHeader(name, value);
 }
 
 } // namespace xscript

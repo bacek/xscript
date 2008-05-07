@@ -8,7 +8,6 @@
 #include <functional>
 #include <boost/bind.hpp>
 
-#include "settings.h"
 #include "xscript/range.h"
 #include "xscript/cookie.h"
 

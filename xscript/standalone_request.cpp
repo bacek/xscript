@@ -18,6 +18,7 @@ namespace xscript
 {
 
 StandaloneRequest::StandaloneRequest() :
+	impl_(RequestFactory::instance()->create()),
 	isSecure_(false), port_(80), path_("/"), method_("GET")
 {
 }
@@ -87,41 +88,22 @@ StandaloneRequest::getRequestMethod() const {
 
 std::string
 StandaloneRequest::getURI() const {
-	const std::string& script_name = getScriptName();
-	const std::string& query_string = getQueryString();
-	if (query_string.empty()) {
-		return script_name + getPathInfo();
-	}
-	else {
-		return script_name + getPathInfo() + "?" + query_string;;
-	}
+	return impl_->getURI();
 }
 
 std::string
 StandaloneRequest::getOriginalURI() const {
-	return getURI();
+	return impl_->getOriginalURI();
 }
 
 std::string
 StandaloneRequest::getHost() const {
-	const std::string& host_header = getHeader("Host");
-	if (host_header.empty()) {
-		return StringUtils::EMPTY_STRING;
-	}
-
-	if (!isSecure() && host_header.find(':') == std::string::npos) {
-		int port = getServerPort();
-		if (port != 80) {
-			return std::string(host_header).append(":").append(boost::lexical_cast<std::string>(port));
-		}
-	}
-
-	return host_header;
+	return impl_->getHost();
 }
 
 std::string
 StandaloneRequest::getOriginalHost() const {
-	return getHost();
+	return impl_->getOriginalHost();
 }
 
 std::streamsize
@@ -142,187 +124,148 @@ StandaloneRequest::getContentEncoding() const {
 unsigned int
 StandaloneRequest::countArgs() const {
 	boost::mutex::scoped_lock sl(mutex_);
-	return args_.size();
+	return impl_->countArgs();
 }
 
 bool
 StandaloneRequest::hasArg(const std::string &name) const {
 	boost::mutex::scoped_lock sl(mutex_);
-	for (std::vector<StringUtils::NamedValue>::const_iterator i = args_.begin(), end = args_.end(); i != end; ++i) {
-		if (i->first == name) {
-			return true;
-		}
-	}
-	return false;
+	return impl_->hasArg(name);
 }
 
 const std::string&
 StandaloneRequest::getArg(const std::string &name) const {
 	boost::mutex::scoped_lock sl(mutex_);
-	for (std::vector<StringUtils::NamedValue>::const_iterator i = args_.begin(), end = args_.end(); i != end; ++i) {
-		if (i->first == name) {
-			return i->second;
-		}
-	}
-	return StringUtils::EMPTY_STRING;
+	return impl_->getArg(name);
 }
 
 void
 StandaloneRequest::getArg(const std::string &name, std::vector<std::string> &v) const {
 	boost::mutex::scoped_lock sl(mutex_);
-	std::vector<std::string> tmp;
-	tmp.reserve(args_.size());
-	for (std::vector<StringUtils::NamedValue>::const_iterator i = args_.begin(), end = args_.end(); i != end; ++i) {
-		if (i->first == name) {
-			tmp.push_back(i->second);
-		}
-	}
-	v.swap(tmp);
+	return impl_->getArg(name, v);
 }
 
 void
 StandaloneRequest::argNames(std::vector<std::string> &v) const {
 	boost::mutex::scoped_lock sl(mutex_);
-	std::set<std::string> names;
-	for (std::vector<StringUtils::NamedValue>::const_iterator i = args_.begin(), end = args_.end(); i != end; ++i) {
-		names.insert(i->first);
-	}
-	std::vector<std::string> tmp;
-	tmp.reserve(names.size());
-	std::copy(names.begin(), names.end(), std::back_inserter(tmp));
-	v.swap(tmp);
+	impl_->argNames(v);
 }
 
 void
 StandaloneRequest::setArg(const std::string &name, const std::string &value) {
 	boost::mutex::scoped_lock sl(mutex_);
-	args_.push_back(std::make_pair(name, value));
+	impl_->setArg(name, value);
 }
 
 unsigned int
 StandaloneRequest::countHeaders() const {
 	boost::mutex::scoped_lock lock(mutex_);
-	return headers_.size();
+	return impl_->countHeaders();
 }
 
 bool
 StandaloneRequest::hasHeader(const std::string &name) const {
 	boost::mutex::scoped_lock lock(mutex_);
-	return headers_.find(name) != headers_.end();
+	return impl_->hasHeader(name);
 }
 
 const std::string&
 StandaloneRequest::getHeader(const std::string &name) const {
 	boost::mutex::scoped_lock lock(mutex_);
-	HeaderMap::const_iterator i = headers_.find(name);
-	return headers_.end() != i ? i->second : StringUtils::EMPTY_STRING;
+	return impl_->getHeader(name);
 }
 
 void
 StandaloneRequest::headerNames(std::vector<std::string> &v) const {
 	boost::mutex::scoped_lock lock(mutex_);
-	std::vector<std::string> tmp;
-	tmp.reserve(headers_.size());
-	for (HeaderMap::const_iterator i = headers_.begin(), end = headers_.end(); i != end; ++i) {
-		tmp.push_back(i->first);
-	}
-	v.swap(tmp);
+	impl_->headerNames(v);
+}
+
+
+void
+StandaloneRequest::addInputHeader(const std::string &name, const std::string &value) {
+	boost::mutex::scoped_lock lock(mutex_);
+	impl_->addInputHeader(name, value);
 }
 
 unsigned int
 StandaloneRequest::countCookies() const {
 	boost::mutex::scoped_lock lock(mutex_);
-	return cookies_.size();
+	return impl_->countCookies();
 }
 
 bool
 StandaloneRequest::hasCookie(const std::string &name) const {
 	boost::mutex::scoped_lock lock(mutex_);
-	return cookies_.find(name) != cookies_.end();
+	return impl_->hasCookie(name);
 }
 
 const std::string&
 StandaloneRequest::getCookie(const std::string &name) const {
 	boost::mutex::scoped_lock lock(mutex_);
-	std::map<std::string, std::string>::const_iterator i = cookies_.find(name);
-	return cookies_.end() != i ? i->second : StringUtils::EMPTY_STRING;
+	return impl_->getCookie(name);
 }
 
 void
 StandaloneRequest::cookieNames(std::vector<std::string> &v) const {
 	boost::mutex::scoped_lock lock(mutex_);
-	std::vector<std::string> tmp;
-	tmp.reserve(cookies_.size());
-	for (std::map<std::string, std::string>::const_iterator i = cookies_.begin(), end = cookies_.end(); i != end; ++i) {
-		tmp.push_back(i->first);
-	}
-	v.swap(tmp);
+	impl_->cookieNames(v);
 }
 
 void
 StandaloneRequest::addInputCookie(const std::string &name, const std::string &value) {
 	boost::mutex::scoped_lock lock(mutex_);
-	cookies_.insert(std::make_pair(name, value));
+	impl_->addInputCookie(name, value);
 }
 
 unsigned int
 StandaloneRequest::countVariables() const {
 	boost::mutex::scoped_lock lock(mutex_);
-	return vars_.size();
+	return impl_->countVariables();
 }
 
 bool
 StandaloneRequest::hasVariable(const std::string &name) const {
 	boost::mutex::scoped_lock lock(mutex_);
-	return vars_.find(name) != vars_.end();
+	return impl_->hasVariable(name);
 }
 
 const std::string&
 StandaloneRequest::getVariable(const std::string &name) const {
 	boost::mutex::scoped_lock lock(mutex_);
-	std::map<std::string, std::string>::const_iterator i = vars_.find(name);
-	return vars_.end() != i ? i->second : StringUtils::EMPTY_STRING;
+	return impl_->getVariable(name);
 }
 
 void
 StandaloneRequest::variableNames(std::vector<std::string> &v) const {
 	boost::mutex::scoped_lock lock(mutex_);
-	std::vector<std::string> tmp;
-	tmp.reserve(vars_.size());
-	for (std::map<std::string, std::string>::const_iterator i = vars_.begin(), end = vars_.end(); i != end; ++i) {
-		tmp.push_back(i->first);
-	}
-	v.swap(tmp);
+	impl_->variableNames(v);
 }
 
 void
 StandaloneRequest::setVariable(const std::string &name, const std::string &value) {
 	boost::mutex::scoped_lock lock(mutex_);
-	vars_.insert(std::make_pair(name, value));
+	impl_->setVariable(name, value);
 }
 
 bool
 StandaloneRequest::hasFile(const std::string &name) const {
-	(void)name;
-	return false;
+	return impl_->hasFile(name);
 }
 
 const std::string&
 StandaloneRequest::remoteFileName(const std::string &name) const {
-	(void)name;
-	return StringUtils::EMPTY_STRING;
+	return impl_->remoteFileName(name);
 }
 
 const std::string&
 StandaloneRequest::remoteFileType(const std::string &name) const {
-	(void)name;
-	return StringUtils::EMPTY_STRING;
+	return impl_->remoteFileType(name);
 }
 
 std::pair<const char*, std::streamsize>
 StandaloneRequest::remoteFile(const std::string &name) const {
-	(void)name;
-	return std::pair<const char*, std::streamsize>(NULL, 0);
+	return impl_->remoteFile(name);
 }
 
 bool
@@ -337,10 +280,7 @@ StandaloneRequest::requestBody() const {
 
 void
 StandaloneRequest::reset() {
-	args_.clear();
-	headers_.clear();
-	vars_.clear();
-	cookies_.clear();
+	impl_->reset();
 }
 
 void
@@ -372,18 +312,13 @@ StandaloneRequest::outputHeader(const std::string &name) const {
 }
 
 void
-StandaloneRequest::addInputHeader(const std::string &name, const std::string &value) {
-	boost::mutex::scoped_lock lock(mutex_);
-	headers_.insert(std::make_pair(name, value));
-}
-
-void
 StandaloneRequest::sendError(unsigned short status, const std::string& message) {
 	std::cerr << status << std::endl << message << std::endl;
 }
 
 void
-StandaloneRequest::sendHeaders() {}
+StandaloneRequest::sendHeaders() {
+}
 
 bool
 StandaloneRequest::suppressBody() const {

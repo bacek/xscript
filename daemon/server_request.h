@@ -10,14 +10,7 @@
 
 #include "settings.h"
 
-#if defined(HAVE_STLPORT_HASHMAP)
-#include <hash_set>
-#include <hash_map>
-#elif defined(HAVE_EXT_HASH_MAP) || defined(HAVE_GNUCXX_HASHMAP)
-#include <ext/hash_set>
-#include <ext/hash_map>
-#endif
-
+#include "xscript/request_impl.h"
 #include "internal/functors.h"
 #include "xscript/util.h"
 #include "xscript/range.h"
@@ -27,40 +20,6 @@
 
 namespace xscript
 {
-
-class File
-{
-public:
-	File(const std::map<Range, Range, RangeCILess> &m, const Range &content);
-	
-	const std::string& type() const;
-	const std::string& remoteName() const;
-	
-	std::pair<const char*, std::streamsize> data() const;
-	
-private:
-	std::string name_, type_;
-	std::pair<const char*, std::streamsize> data_;
-};
-
-#if defined(HAVE_GNUCXX_HASHMAP)
-
-typedef __gnu_cxx::hash_map<std::string, std::string, StringCIHash> VarMap;
-typedef __gnu_cxx::hash_map<std::string, std::string, StringCIHash, StringCIEqual> HeaderMap;
-
-#elif defined(HAVE_EXT_HASH_MAP) || defined(HAVE_STLPORT_HASHMAP)
-
-typedef std::hash_map<std::string, std::string, StringCIHash> VarMap;
-typedef std::hash_map<std::string, std::string, StringCIHash, StringCIEqual> HeaderMap;
-
-#else
-
-typedef std::map<std::string, std::string> VarMap;
-typedef std::map<std::string, std::string, StringCILess> HeaderMap;
-
-#endif
-
-class Parser;
 
 class ServerRequest : public Request, public Response
 {
@@ -141,22 +100,18 @@ private:
 	ServerRequest(const ServerRequest &);
 	ServerRequest& operator = (const ServerRequest &);
 	void sendHeadersInternal();
-	friend class Parser;
 
 private:
+	std::auto_ptr<RequestImpl> impl_;
+
 	bool headers_sent_;
 	unsigned short status_;
 	
 	std::ostream *stream_;
 	mutable boost::mutex mutex_;
 	
-	VarMap vars_, cookies_;
-	std::vector<char> body_;
-	HeaderMap headers_, out_headers_;
-
-	std::map<std::string, File> files_;
+	HeaderMap out_headers_;
 	std::set<Cookie, CookieLess> out_cookies_;
-	std::vector<StringUtils::NamedValue> args_;
 };
 
 } // namespace xscript

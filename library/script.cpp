@@ -400,22 +400,23 @@ Script::fetchResults(Context *ctx) const {
 	XmlDocHelper newdoc(xmlCopyDoc(doc_.get(), 1));
 	XmlUtils::throwUnless(NULL != newdoc.get());
 	
-	unsigned int count = 0;
+	unsigned int count = 0, xscript_count = 0;
 		
 	xmlNodePtr node = xmlDocGetRootElement(doc_.get());
 	assert(node);
 			
 	xmlNodePtr newnode = xmlDocGetRootElement(newdoc.get());
 	assert(newnode);
-			
-	fetchRecursive(ctx, node, newnode, count);
+
+	fetchRecursive(ctx, node, newnode, count, xscript_count);
 	return newdoc;
 }
 
 void
-Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsigned int &count) const {
+Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
+					   unsigned int &count, unsigned int &xscript_count) const {
 
-	while (node && count != blocks_.size()) {
+	while (node && count + xscript_count != blocks_.size() + xscript_node_set_.size()) {
 
 		if (newnode == NULL) {
 			throw std::runtime_error(std::string("internal error in node ") + (char*)node->name);
@@ -423,7 +424,7 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsign
 
 		xmlNodePtr next = newnode->next;
 		log()->debug("%s, blocks found: %d, %d", BOOST_CURRENT_FUNCTION, blocks_.size(), count);
-		if (blocks_[count]->node() == node) {
+		if (!blocks_.empty() && blocks_[count]->node() == node) {
 
 			xmlDocPtr doc = ctx->result(count);
 			assert(doc);
@@ -442,9 +443,10 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsign
 		}
 		else if (xscript_node_set_.find(node) != xscript_node_set_.end() ) {
 			replaceXScriptNode(newnode, ctx);
+			xscript_count++;
 		}
 		else if (node->children) {
-			fetchRecursive(ctx, node->children, newnode->children, count);
+			fetchRecursive(ctx, node->children, newnode->children, count, xscript_count);
 		}
 
 		node = node->next;

@@ -1,11 +1,11 @@
 bin_PROGRAMS = xscript-bin
 
-xscript_bin_SOURCES = parser.cpp server_request.cpp fcgi_server.cpp main.cpp 
+xscript_bin_SOURCES = server_request.cpp fcgi_server.cpp main.cpp 
 
 xscript_bin_LDADD = ../library/libxscript.la
 xscript_bin_LDFLAGS = -lfcgi -lfcgi++ -export-dynamic
 
-noinst_HEADERS = parser.h server_request.h fcgi_server.h
+noinst_HEADERS = server_request.h fcgi_server.h
 
 dist_sysconf_DATA = xscript.conf xscript-ulimits.conf
 

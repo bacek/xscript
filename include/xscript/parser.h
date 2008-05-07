@@ -17,7 +17,7 @@ namespace xscript
 
 class File;
 class Encoder;
-class ServerRequest;
+class RequestImpl;
 
 class Parser : private boost::noncopyable
 {
@@ -26,15 +26,15 @@ public:
 	static const char* statusToString(short status);
 	static std::string getBoundary(const Range &range);
 	
-	static void addCookie(ServerRequest *req, const Range &range, Encoder *encoder);
-	static void addHeader(ServerRequest *req, const Range &key, const Range &value, Encoder *encoder);
+	static void addCookie(RequestImpl *req, const Range &range, Encoder *encoder);
+	static void addHeader(RequestImpl *req, const Range &key, const Range &value, Encoder *encoder);
 
-	static void parse(ServerRequest *req, char *env[], Encoder *encoder);
-	static void parseCookies(ServerRequest *req, const Range &range, Encoder *encoder);
+	static void parse(RequestImpl *req, char *env[], Encoder *encoder);
+	static void parseCookies(RequestImpl *req, const Range &range, Encoder *encoder);
 	
-	static void parsePart(ServerRequest *req, Range &part, Encoder *encoder);
+	static void parsePart(RequestImpl *req, Range &part, Encoder *encoder);
 	static void parseLine(Range &line, std::map<Range, Range, RangeCILess> &m);
-	static void parseMultipart(ServerRequest *req, Range &data, const std::string &boundary, Encoder *encoder);
+	static void parseMultipart(RequestImpl *req, Range &data, const std::string &boundary, Encoder *encoder);
 
 	template<typename Map> static bool has(const Map &m, const std::string &key);
 	template<typename Map> static void keys(const Map &m, std::vector<std::string> &v);

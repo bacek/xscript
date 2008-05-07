@@ -9,8 +9,8 @@
 #include <algorithm>
 #include <boost/bind.hpp>
 
-#include "parser.h"
-#include "server_request.h"
+#include "xscript/parser.h"
+#include "xscript/request_impl.h"
 #include "xscript/range.h"
 #include "xscript/encoder.h"
 #include "internal/algorithm.h"
@@ -78,7 +78,7 @@ Parser::getBoundary(const Range &range) {
 }
 
 void
-Parser::addCookie(ServerRequest *req, const Range &range, Encoder *encoder) {
+Parser::addCookie(RequestImpl *req, const Range &range, Encoder *encoder) {
 	
 	Range part = trim(range), head, tail;
 	split(part, '=', head, tail);
@@ -95,7 +95,7 @@ Parser::addCookie(ServerRequest *req, const Range &range, Encoder *encoder) {
 }
 
 void
-Parser::addHeader(ServerRequest *req, const Range &key, const Range &value, Encoder *encoder) {
+Parser::addHeader(RequestImpl *req, const Range &key, const Range &value, Encoder *encoder) {
 	std::string header = normalizeInputHeaderName(key);
 	if (!xmlCheckUTF8((const xmlChar*) value.begin())) {
 		encoder->encode(value).swap(req->headers_[header]);
@@ -108,7 +108,7 @@ Parser::addHeader(ServerRequest *req, const Range &key, const Range &value, Enco
 }
 
 void
-Parser::parse(ServerRequest *req, char *env[], Encoder *encoder) {
+Parser::parse(RequestImpl *req, char *env[], Encoder *encoder) {
 	for (int i = 0; NULL != env[i]; ++i) {
 		Range key, value;
 		split(createRange(env[i]), '=', key, value);
@@ -137,7 +137,7 @@ Parser::parse(ServerRequest *req, char *env[], Encoder *encoder) {
 }
 
 void
-Parser::parseCookies(ServerRequest *req, const Range &range, Encoder *encoder) {
+Parser::parseCookies(RequestImpl *req, const Range &range, Encoder *encoder) {
 	Range part = trim(range), head, tail;
 	while (!part.empty()) {
 		split(part, ';', head, tail);
@@ -162,7 +162,7 @@ Parser::parseLine(Range &line, std::map<Range, Range, RangeCILess> &m) {
 }
 
 void
-Parser::parsePart(ServerRequest *req, Range &part, Encoder *encoder) {
+Parser::parsePart(RequestImpl *req, Range &part, Encoder *encoder) {
 	
 	Range headers, content, line, tail;
 	std::map<Range, Range, RangeCILess> params;
@@ -198,7 +198,7 @@ Parser::parsePart(ServerRequest *req, Range &part, Encoder *encoder) {
 }
 
 void
-Parser::parseMultipart(ServerRequest *req, Range &data, const std::string &boundary, Encoder *encoder) {
+Parser::parseMultipart(RequestImpl *req, Range &data, const std::string &boundary, Encoder *encoder) {
 	Range head, tail, bound = createRange(boundary);
 	while (!data.empty()) {
 		split(data, bound, head, tail);

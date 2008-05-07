@@ -123,7 +123,7 @@ protected:
 	}
 	
 	XmlDocHelper fetchResults(Context *ctx) const;
-	void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsigned int &count) const;
+	void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsigned int &count, unsigned int &xscript_count) const;
 	
 	virtual void parse();
 	virtual void postParse();

@@ -1,28 +1,70 @@
- #ifndef _XSCRIPT_STANDALONE_REQUEST_H_
-#define _XSCRIPT_STANDALONE_REQUEST_H_
+#ifndef _XSCRIPT_REQUEST_IMPL_H_
+#define _XSCRIPT_REQUEST_IMPL_H_
 
+#include <set>
 #include <map>
-#include <vector>
-#include <libxml/tree.h>
-#include <libxml/xpath.h>
-#include <boost/thread/mutex.hpp>
+#include <iosfwd>
+#include <functional>
+#include <boost/cstdint.hpp>
 
-#include "xscript/request_impl.h"
+#if defined(HAVE_STLPORT_HASHMAP)
+#include <hash_set>
+#include <hash_map>
+#elif defined(HAVE_EXT_HASH_MAP) || defined(HAVE_GNUCXX_HASHMAP)
+#include <ext/hash_set>
+#include <ext/hash_map>
+#endif
 
-#include "xscript/util.h"
-#include "xscript/request.h"
-#include "xscript/response.h"
+#include "xscript/component.h"
 #include "internal/functors.h"
+#include "xscript/util.h"
+#include "xscript/range.h"
+#include "xscript/cookie.h"
+#include "xscript/request.h"
 
 namespace xscript
 {
 
-class StandaloneRequest : public Request, public Response
+class File
 {
 public:
-	StandaloneRequest();
-	virtual ~StandaloneRequest();
+	File(const std::map<Range, Range, RangeCILess> &m, const Range &content);
 	
+	const std::string& type() const;
+	const std::string& remoteName() const;
+	
+	std::pair<const char*, std::streamsize> data() const;
+	
+private:
+	std::string name_, type_;
+	std::pair<const char*, std::streamsize> data_;
+};
+
+#if defined(HAVE_GNUCXX_HASHMAP)
+
+typedef __gnu_cxx::hash_map<std::string, std::string, StringCIHash> VarMap;
+typedef __gnu_cxx::hash_map<std::string, std::string, StringCIHash, StringCIEqual> HeaderMap;
+
+#elif defined(HAVE_EXT_HASH_MAP) || defined(HAVE_STLPORT_HASHMAP)
+
+typedef std::hash_map<std::string, std::string, StringCIHash> VarMap;
+typedef std::hash_map<std::string, std::string, StringCIHash, StringCIEqual> HeaderMap;
+
+#else
+
+typedef std::map<std::string, std::string> VarMap;
+typedef std::map<std::string, std::string, StringCILess> HeaderMap;
+
+#endif
+
+class Parser;
+
+class RequestImpl : public Request
+{
+public:
+	RequestImpl();
+	virtual ~RequestImpl();
+
 	virtual unsigned short getServerPort() const;
 	virtual const std::string& getServerAddr() const;
 
@@ -31,6 +73,7 @@ public:
 	
 	virtual const std::string& getScriptName() const;
 	virtual const std::string& getScriptFilename() const;
+	
 	virtual const std::string& getDocumentRoot() const;
 	
 	virtual const std::string& getRemoteUser() const;
@@ -79,35 +122,34 @@ public:
 
 	virtual bool isSecure() const;
 	virtual std::pair<const char*, std::streamsize> requestBody() const;
+	virtual bool suppressBody() const;
 	
 	virtual void reset();
-	
-	virtual void setCookie(const Cookie &cookie);
-	virtual void setStatus(unsigned short status);
-	
-	virtual void setHeader(const std::string &name, const std::string &value);
-	virtual std::streamsize write(const char *buf, std::streamsize size);
-	virtual std::string outputHeader(const std::string &name) const;
-
-	virtual void sendError(unsigned short status, const std::string& message);
-	virtual void sendHeaders();
-	virtual bool suppressBody() const;
-	virtual void attach(const std::string& url, const std::string& doc_root);
+	void attach(std::istream *is, char *env[]);
 
 private:
-	StandaloneRequest(const StandaloneRequest &);
-	StandaloneRequest& operator = (const StandaloneRequest &);
+	RequestImpl(const RequestImpl &);
+	RequestImpl& operator = (const RequestImpl &);
+	friend class Parser;
 
 private:
-	std::auto_ptr<RequestImpl> impl_;
+	VarMap vars_, cookies_;
+	std::vector<char> body_;
+	HeaderMap headers_;
 
-	mutable boost::mutex mutex_;
+	std::map<std::string, File> files_;
+	std::vector<StringUtils::NamedValue> args_;
+};
 
-	bool isSecure_;
-	unsigned short port_;
-	std::string host_, path_, script_name_, script_file_name_, query_, method_, root_directory_;
+class RequestFactory : public Component<RequestFactory>
+{
+public:
+	RequestFactory();
+	virtual ~RequestFactory();
+
+	virtual std::auto_ptr<RequestImpl> create();
 };
 
 } // namespace xscript
 
-#endif // _XSCRIPT_STANDALONE_REQUEST_H_
+#endif // _XSCRIPT_REQUEST_IMPL_H_

@@ -1,3 +1,10 @@
+xscript (5.14-0) unstable; urgency=low
+
+  * RequestImpl added
+  * xscript tag removing in output xml added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue,  6 May 2008 16:51:56 +0400
+
 xscript (5.13-0) unstable; urgency=low
 
   * binary-page added
