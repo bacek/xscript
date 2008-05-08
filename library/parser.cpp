@@ -69,6 +69,12 @@ Parser::getBoundary(const Range &range) {
 	split(range, ';', head, tail);
 	
 	tail = trim(tail);
+
+	Range comma = createRange("\"");
+	if (startsWith(tail, comma) && endsWith(tail, comma)) {
+		tail = Range(tail.begin() + 1, tail.end() - 1);
+	}
+
 	if (strncasecmp("boundary", tail.begin(), sizeof("boundary") - 1) == 0) {
 		Range key, value;
 		split(tail, '=', key, value);
