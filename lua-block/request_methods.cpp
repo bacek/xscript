@@ -43,10 +43,12 @@ luaRequestIndex(lua_State *lua) throw () {
 		log()->debug("%s, calling request method: %s", BOOST_CURRENT_FUNCTION, method.c_str());
 		lua_pushcfunction(lua, disp_.findMethod(method));
 		return 1;
-		
 	}
 	catch (const LuaError &e) {
 		return e.translate(lua);
+	}
+	catch (const std::exception &e) {
+		return luaL_error(lua, "caught exception in request index: %s", e.what());
 	}
 }
 
