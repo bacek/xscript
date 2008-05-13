@@ -151,6 +151,23 @@ fi
 
 AM_CONDITIONAL(HAVE_HTTP_BLOCK, [test "f$ac_curl_found" = "fyes"])	
 
+ac_have_file="yes"
+
+AC_ARG_ENABLE(file, 
+			  AS_HELP_STRING(--enable-file,enables file block compilation),
+	[
+		if test "f$enableval" = "fno"; then
+			ac_have_file="no"
+		fi
+	])
+
+if test "f$ac_have_file" = "fyes"; then
+	AC_DEFINE(HAVE_FILE_BLOCK, 1, [Define to 1 if you want to enable file block compilation.])
+fi
+
+AM_CONDITIONAL(HAVE_FILE_BLOCK, [test "f$ac_have_file" = "fyes"])
+
+
 ac_have_dmalloc="no"
 ac_dmalloc_found="no"
 
@@ -209,6 +226,7 @@ AM_CONDITIONAL(HAVE_TESTS, [test "f$ac_cppunit_found" = "fyes"])
 AC_CONFIG_FILES([Makefile
 	include/Makefile include/xscript/Makefile include/internal/Makefile
 	library/Makefile standard/Makefile daemon/Makefile xscript/Makefile
-	lua-block/Makefile mist-block/Makefile http-block/Makefile tests/Makefile])
+	lua-block/Makefile mist-block/Makefile http-block/Makefile file-block/Makefile
+	tests/Makefile])
 
 AC_OUTPUT

@@ -14,6 +14,10 @@ if HAVE_HTTP_BLOCK
 SUBDIRS += http-block
 endif
 
+if HAVE_FILE_BLOCK
+SUBDIRS += file-block
+endif
+
 if HAVE_TESTS
 SUBDIRS += tests
 endif

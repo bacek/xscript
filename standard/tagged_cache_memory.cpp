@@ -12,12 +12,17 @@
 #include "xscript/param.h"
 #include "xscript/tagged_block.h"
 #include "xscript/tagged_cache.h"
+#include "xscript/cache_counter.h"
 #include "xscript/memory_statistic.h"
+
+#include "doc_pool.h"
 
 #include <boost/crc.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/checked_delete.hpp>
 #include <boost/current_function.hpp>
+
+
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -25,30 +30,6 @@
 
 namespace xscript
 {
-
-class TaggedCacheMemory;
-
-
-class CacheCounter : public CounterBase
-{
-public:
-	CacheCounter(const std::string& name);
-	virtual XmlNodeHelper createReport() const;
-
-	void incUsedMemory(size_t amount) { usedMemory_ += amount; }
-	void decUsedMemory(size_t amount) { usedMemory_ -= amount; }
-
-	void incLoaded() { ++loaded_; }
-	void incStored() { ++stored_; }
-	void incRemoved() { ++removed_; }
-
-private:
-	size_t usedMemory_;
-	size_t stored_;
-	size_t loaded_;
-	size_t removed_;
-};
-
 
 
 class TagKeyMemory : public TagKey
@@ -59,60 +40,6 @@ public:
 
 private:
 	std::string value_;
-};
-
-class TaggedCacheMemoryPool : private boost::noncopyable
-{
-public:
-	explicit TaggedCacheMemoryPool(const TaggedCacheMemory* parent, const std::string& name);
-	virtual ~TaggedCacheMemoryPool();
-
-	bool loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc);
-	bool saveDoc(const TagKey &key, const Tag& tag, const XmlDocHelper &doc);
-
-	void clear();
-
-	const CacheCounter& getCounter() const;
-	const AverageCounter& getMemoryCounter() const;
-
-private:
-	class DocData;
-	typedef std::map<std::string, DocData> Key2Data;
-	typedef std::list<Key2Data::iterator> LRUList;
-
-	class DocData
-	{
-	public:
-		DocData();
-		explicit DocData(LRUList::iterator list_pos);
-
-		void assign(const Tag& tag, const xmlDocPtr ptr);
-
-		xmlDocPtr copyDoc() const;
-			
-		void clearDoc();
-
-	public:
-		Tag tag;
-		xmlDocPtr ptr;
-		LRUList::iterator pos;
-		time_t stored_time;
-		bool prefetch_marked;
-		size_t doc_size;
-	};
-
-	void shrink();
-	void removeExpiredDocuments();
-
-private:
-	const TaggedCacheMemory* parent_;
-	CacheCounter counter_;
-	AverageCounter memoryCounter_;
-
-	boost::mutex mutex_;
-
-	Key2Data key2data_;
-	LRUList list_;
 };
 
 class TaggedCacheMemory : public TaggedCache
@@ -134,7 +61,7 @@ protected:
 	virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);
 
 private:
-	TaggedCacheMemoryPool* pool(const TagKey *key) const;
+	DocPool* pool(const TagKey *key) const;
 
 	static const int DEFAULT_POOL_COUNT;
 	static const int DEFAULT_POOL_SIZE;
@@ -143,30 +70,12 @@ private:
 private:
 	time_t min_time_;
 	unsigned int max_size_;
-	std::vector<TaggedCacheMemoryPool*> pools_;
+	std::vector<DocPool*> pools_;
 };
 
 const int TaggedCacheMemory::DEFAULT_POOL_COUNT = 16;
 const int TaggedCacheMemory::DEFAULT_POOL_SIZE = 128;
 const time_t TaggedCacheMemory::DEFAULT_CACHE_TIME = 5; // sec
-
-
-CacheCounter::CacheCounter(const std::string& name)
-	: CounterBase(name), usedMemory_(0), stored_(0), loaded_(0), removed_(0)
-{
-}
-
-XmlNodeHelper CacheCounter::createReport() const {
-	XmlNodeHelper line(xmlNewNode(0, BAD_CAST name_.c_str()));
-
-	xmlSetProp(line.get(), BAD_CAST "used-memory", BAD_CAST boost::lexical_cast<std::string>(usedMemory_).c_str());
-	xmlSetProp(line.get(), BAD_CAST "stored", BAD_CAST boost::lexical_cast<std::string>(stored_).c_str());
-	xmlSetProp(line.get(), BAD_CAST "loaded", BAD_CAST boost::lexical_cast<std::string>(loaded_).c_str());
-	xmlSetProp(line.get(), BAD_CAST "removed", BAD_CAST boost::lexical_cast<std::string>(removed_).c_str());
-
-	return line;
-}
-
 
 TagKeyMemory::TagKeyMemory(const Context *ctx, const TaggedBlock *block) : value_()
 {
@@ -197,7 +106,7 @@ TaggedCacheMemory::TaggedCacheMemory() :
 }
 
 TaggedCacheMemory::~TaggedCacheMemory() {
-	std::for_each(pools_.begin(), pools_.end(), boost::checked_deleter<TaggedCacheMemoryPool>());
+	std::for_each(pools_.begin(), pools_.end(), boost::checked_deleter<DocPool>());
 }
 
 std::auto_ptr<TagKey>
@@ -218,7 +127,7 @@ TaggedCacheMemory::init(const Config *config) {
 	for (unsigned int i = 0; i < pools; ++i) {
 		char buf[20];
 		snprintf(buf, 20, "pool%d", i);
-		pools_.push_back(new TaggedCacheMemoryPool(this, buf));
+		pools_.push_back(new DocPool(max_size_, buf));
 		statBuilder_.addCounter((*pools_.rbegin())->getCounter());
 		statBuilder_.addCounter((*pools_.rbegin())->getMemoryCounter());
 	}
@@ -235,14 +144,14 @@ TaggedCacheMemory::minimalCacheTime() const {
 
 bool
 TaggedCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
-	TaggedCacheMemoryPool *mpool = pool(key);
+	DocPool *mpool = pool(key);
 	assert(NULL != mpool);
 	return mpool->loadDoc(*key, tag, doc);
 }
 
 bool
 TaggedCacheMemory::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper &doc) {
-	TaggedCacheMemoryPool *mpool = pool(key);
+	DocPool *mpool = pool(key);
 	assert(NULL != mpool);
 	return mpool->saveDoc(*key, tag, doc);
 }
@@ -252,7 +161,7 @@ TaggedCacheMemory::maxSize() const {
 	return max_size_;
 }
 
-TaggedCacheMemoryPool*
+DocPool*
 TaggedCacheMemory::pool(const TagKey *key) const {
 	assert(NULL != key);
 
@@ -265,227 +174,6 @@ TaggedCacheMemory::pool(const TagKey *key) const {
 	result.process_bytes(str.data(), str.size());
 	unsigned int index = result.checksum() % sz;
 	return pools_[index];
-}
-
-const CacheCounter& TaggedCacheMemoryPool::getCounter() const {
-	return counter_;
-}
-
-const AverageCounter& TaggedCacheMemoryPool::getMemoryCounter() const {
-	return memoryCounter_;
-}
-
-TaggedCacheMemoryPool::DocData::DocData() : tag(), ptr(NULL), pos(), prefetch_marked(false), doc_size(0)
-{
-}
-
-TaggedCacheMemoryPool::DocData::DocData(LRUList::iterator list_pos) :
-	tag(), ptr(NULL), pos(list_pos), prefetch_marked(false), doc_size(0)
-{
-}
-
-void
-TaggedCacheMemoryPool::DocData::assign(const Tag& t, const xmlDocPtr p) {
-	assert(NULL != p);
-	clearDoc();
-
-	tag = t;
-	size_t s1 = getAllocatedMemory();
-	ptr = xmlCopyDoc(p, 1);
-	size_t s2 = getAllocatedMemory();
-
-	doc_size = s2-s1;
-
-	XmlUtils::throwUnless(NULL != ptr);
-	stored_time = time(NULL);
-	prefetch_marked = false;
-}
-
-xmlDocPtr
-TaggedCacheMemoryPool::DocData::copyDoc() const {
-	assert(ptr);
-	xmlDocPtr p = xmlCopyDoc(ptr, 1);
-	XmlUtils::throwUnless(NULL != p);
-	return p;
-}
-
-void
-TaggedCacheMemoryPool::DocData::clearDoc() {
-	XmlDocHelper cleanup(ptr);
-	ptr = NULL;
-}
-
-
-TaggedCacheMemoryPool::TaggedCacheMemoryPool(const TaggedCacheMemory* parent, const std::string& name) :
-	parent_(parent), counter_(name), memoryCounter_(name+"-memory"), mutex_(), key2data_(), list_()
-{
-}
-
-TaggedCacheMemoryPool::~TaggedCacheMemoryPool() {
-	clear();
-}
-
-bool
-TaggedCacheMemoryPool::loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc) {
-
-	const std::string &str = key.asString();
-	log()->debug("%s, key: %s", BOOST_CURRENT_FUNCTION, str.c_str());
-
-	boost::mutex::scoped_lock lock(mutex_);
-
-	if (list_.empty()) {
-		return false;
-	}
-	
-	Key2Data::iterator i = key2data_.find(str);
-	if (i == key2data_.end()) {
-		return false;
-	}
-
-	DocData &data = i->second;
-	if (data.tag.expired()) {
-		if (data.pos != list_.end()) {
-			list_.erase(data.pos);
-		}
-		counter_.decUsedMemory(data.doc_size);
-		counter_.incRemoved();
-		data.clearDoc();
-		key2data_.erase(i);
-		lock.unlock();
-		log()->debug("%s, key: %s, expired", BOOST_CURRENT_FUNCTION, str.c_str());
-		return false;
-	}
-	if (!data.prefetch_marked && data.tag.needPrefetch(data.stored_time)) {
-		data.prefetch_marked = true;
-		lock.unlock();
-		log()->debug("%s, key: %s, prefetch", BOOST_CURRENT_FUNCTION, str.c_str());
-		return false;
-	}
-
-	tag = data.tag;
-	doc.reset(data.copyDoc());
-
-	if (data.pos != list_.end()) {
-		list_.erase(data.pos);
-	}
-	data.pos = list_.insert(list_.end(), i);
-
-	lock.unlock();
-	log()->info("%s, key: %s, loaded", BOOST_CURRENT_FUNCTION, str.c_str());
-	counter_.incLoaded();
-	return true;
-}
-
-bool
-TaggedCacheMemoryPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocHelper &doc) {
-
-	const std::string &str = key.asString();
-	log()->debug("%s, key: %s", BOOST_CURRENT_FUNCTION, str.c_str());
-
-	boost::mutex::scoped_lock lock(mutex_);
-
-	counter_.incStored();
-
-	Key2Data::iterator i = key2data_.find(str);
-	if (i != key2data_.end()) {
-		DocData &data = i->second;
-		if (data.pos != list_.end()) {
-			list_.erase(data.pos);
-		}
-
-		data.assign(tag, doc.get());
-		counter_.incUsedMemory(data.doc_size);
-		memoryCounter_.add(data.doc_size);
-		data.pos = list_.insert(list_.end(), i);
-
-		lock.unlock();
-		log()->info("%s, key: %s, updated", BOOST_CURRENT_FUNCTION, str.c_str());
-		return true;
-	}
-
-	shrink();
-
-	i = key2data_.insert(std::make_pair(str, DocData(list_.end()))).first;
-	DocData &data = i->second;
-		
-	data.assign(tag, doc.get());
-	counter_.incUsedMemory(data.doc_size);
-	memoryCounter_.add(data.doc_size);
-	data.pos = list_.insert(list_.end(), i);
-
-	lock.unlock();
-	log()->info("%s, key: %s, inserted", BOOST_CURRENT_FUNCTION, str.c_str());
-	return true;
-}
-
-void
-TaggedCacheMemoryPool::clear() {
-	boost::mutex::scoped_lock lock(mutex_);
-
-	list_.clear();
-
-	Key2Data tmp;
-	tmp.swap(key2data_);
-
-	for (Key2Data::iterator i = tmp.begin(), end = tmp.end(); i != end; ++i) {
-		DocData &data = i->second;
-		counter_.decUsedMemory(data.doc_size);
-		data.clearDoc();
-	}
-}
-
-void
-TaggedCacheMemoryPool::shrink() {
-	if (list_.empty()) {
-		return;
-	}
-
-	unsigned int max_num = parent_->maxSize();
-	if (0 == max_num) {
-		removeExpiredDocuments();
-		return;
-	}
-
-	if (list_.size() < max_num) {
-		return;
-	}
-
-	removeExpiredDocuments();
-
-	// remove least recently used documents
-	while (!list_.empty() && list_.size() >= max_num) {
-		Key2Data::iterator i = *list_.begin();
-
-		if (i != key2data_.end()) {
-			DocData &data = i->second;
-			log()->debug("%s, key: %s, shrink", BOOST_CURRENT_FUNCTION, i->first.c_str());
-			counter_.decUsedMemory(data.doc_size);
-			counter_.incRemoved();
-			data.clearDoc();
-			key2data_.erase(i);
-		}
-
-		list_.pop_front();
-	}
-}
-
-void
-TaggedCacheMemoryPool::removeExpiredDocuments() {
-	for (LRUList::iterator li = list_.begin(), end = list_.end(); li != end; ) {
-		counter_.incRemoved();
-		Key2Data::iterator i = *li;
-		DocData &data = i->second;
-		if (data.tag.expired()) {
-			log()->debug("%s, key: %s, remove expired", BOOST_CURRENT_FUNCTION, i->first.c_str());
-			counter_.decUsedMemory(data.doc_size);
-			data.clearDoc();
-			key2data_.erase(i);
-			list_.erase(li++);
-		}
-		else {
-			++li;
-		}
-	}
 }
 
 static ComponentRegisterer<TaggedCache> reg_(new TaggedCacheMemory());

@@ -1,7 +1,6 @@
 #ifndef _XSCRIPT_LINE_COUNTER_H_
 #define _XSCRIPT_LINE_COUNTER_H_
 
-#include <stdint.h>
 #include <xscript/counter_base.h>
 #include <boost/thread/mutex.hpp>
 
@@ -20,6 +19,11 @@ namespace xscript
 		 * Add single measure.
 		 */
 		void add(uint64_t value);
+
+		/**
+		 * Remove single measure.
+		 */
+		void remove(uint64_t value);
 
 		virtual XmlNodeHelper createReport() const;
 

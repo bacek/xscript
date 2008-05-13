@@ -9,4 +9,4 @@ pkginclude_HEADERS = algorithm.h args.h authorizer.h block.h \
 	control_extension.h \
 	stat_builder.h counter_base.h average_counter.h simple_counter.h \
 	status_info.h \
-	memory_statistic.h
+	memory_statistic.h cache_counter.h

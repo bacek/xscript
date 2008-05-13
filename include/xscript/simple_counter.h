@@ -1,7 +1,6 @@
 #ifndef _XSCRIPT_SIMPLE_COUNTER_H_
 #define _XSCRIPT_SIMPLE_COUNTER_H_
 
-#include <stdint.h>
 #include <boost/thread/mutex.hpp>
 #include <xscript/counter_base.h>
 

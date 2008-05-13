@@ -22,10 +22,11 @@ TagKey::~TagKey() {
 }
 
 TaggedCache::TaggedCache()
-	: statBuilder_("tagged-cache"), hitCounter_("hits"), missCounter_("miss")
+	: statBuilder_("tagged-cache"), hitCounter_("hits"), missCounter_("miss"), saveCounter_("save")
 {
 	statBuilder_.addCounter(hitCounter_);
 	statBuilder_.addCounter(missCounter_);
+	statBuilder_.addCounter(saveCounter_);
 }
 
 TaggedCache::~TaggedCache() {
@@ -56,7 +57,10 @@ bool TaggedCache::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
 }
 
 bool TaggedCache::saveDoc(const TagKey *key, const Tag& tag, const XmlDocHelper &doc) {
-	return saveDocImpl(key, tag, doc);
+	boost::function<bool ()> f = boost::bind(&TaggedCache::saveDocImpl, this, boost::cref(key), boost::ref(tag), boost::ref(doc));
+	std::pair<bool, uint64_t> res = profile(f);
+	saveCounter_.add(res.second);
+	return res.first;
 }
 
 REGISTER_COMPONENT2(TaggedCache, DummyTaggedCache);

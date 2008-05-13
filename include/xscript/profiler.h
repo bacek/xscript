@@ -1,7 +1,6 @@
 #ifndef _XSCRIPT_PROFILER_H_
 #define _XSCRIPT_PROFILER_H_
 
-#include <stdint.h>
 #include <sys/time.h>
 #include <boost/function.hpp>
 

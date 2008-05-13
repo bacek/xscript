@@ -47,6 +47,7 @@ protected:
 	StatBuilder statBuilder_;
 	AverageCounter hitCounter_;
 	AverageCounter missCounter_;
+	AverageCounter saveCounter_;
 };
 
 } // namespace xscript

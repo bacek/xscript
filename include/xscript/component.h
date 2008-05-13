@@ -61,9 +61,6 @@ private:
 	
 private:
 	static Holder holder_;
-
-	static Type* createImpl();
-
 };
 
 
@@ -79,10 +76,6 @@ void Component<Type>::ResourceTraits::destroy(Type *component) {
 
 template<typename Type>
 Type* const Component<Type>::ResourceTraits::DEFAULT_VALUE = static_cast<Type*>(NULL);
-
-template<typename Type>  
-typename Component<Type>::Holder  
-Component<Type>::holder_(Component<Type>::createImpl()); 
 
 template<typename Type> inline Type*
 Component<Type>::instance() {
@@ -101,18 +94,24 @@ ComponentRegisterer<Type>::ComponentRegisterer(Type *var) {
 	Component<Type>::attachImpl(typename Component<Type>::Holder(var));
 }
 
+// We can't use default template instantiation. Gcc are too dumb to order
+// constructors in correct order...
 #define REGISTER_COMPONENT(TYPE)								\
-	template<> \
-	TYPE * Component<TYPE>::createImpl() { \
-		return new TYPE(); \
-	}
-
+	template<typename Type>										\
+	typename Component<Type>::Holder Component<Type>::holder_;	\
+																\
+	template Component<TYPE>::Holder Component<TYPE>::holder_;	\
+																\
+	static ComponentRegisterer<TYPE> reg_(new TYPE());
 
 #define REGISTER_COMPONENT2(TYPE, IMPL)								\
-	template<> \
-	TYPE * Component<TYPE>::createImpl() { \
-		return new IMPL(); \
-	}
+	template<typename Type>										\
+	typename Component<Type>::Holder Component<Type>::holder_;	\
+																\
+	template Component<TYPE>::Holder Component<TYPE>::holder_;	\
+																\
+	static ComponentRegisterer<TYPE> reg_(new IMPL());
+
 
 } // namespace xscript
 

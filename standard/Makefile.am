@@ -5,7 +5,7 @@ xscript_thrpool_la_SOURCES = thread_pool.cpp
 xscript_thrpool_la_LIBADD = ../library/libxscript.la
 xscript_thrpool_la_LDFLAGS = -module
 
-xscript_memcache_la_SOURCES = tagged_cache_memory.cpp
+xscript_memcache_la_SOURCES = tagged_cache_memory.cpp doc_pool.cpp
 
 xscript_memcache_la_LIBADD = ../library/libxscript.la
 xscript_memcache_la_LDFLAGS = -module
@@ -23,3 +23,15 @@ xscript_xmlcache_la_LDFLAGS = -module
 AM_CPPFLAGS = -I../include -I../config -D_REENTRANT
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem
+
+if HAVE_TESTS
+
+TESTS = test
+check_PROGRAMS = test
+
+test_SOURCES = test_main.cpp doc_pool_test.cpp
+
+test_LDADD = ../library/libxscript.la xscript-memcache.la
+test_LDFLAGS = -ldl -lcppunit -export-dynamic
+
+endif

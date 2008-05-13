@@ -96,6 +96,9 @@ CheckingPolicyStarter::init(const Config *config) {
 }
 
 REGISTER_COMPONENT(CheckingPolicy);
-REGISTER_COMPONENT(CheckingPolicyStarter);
+
+template Component<CheckingPolicyStarter>::Holder Component<CheckingPolicyStarter>::holder_;
+static ComponentRegisterer<CheckingPolicyStarter> reg2_(new CheckingPolicyStarter());
+
 
 } // namespace xscript

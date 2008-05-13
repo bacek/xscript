@@ -48,3 +48,4 @@ RequestParam::create(Object *owner, xmlNodePtr node) {
 static CreatorRegisterer reg_("request", &RequestParam::create);
 
 } // namespace xscript
+

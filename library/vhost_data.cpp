@@ -88,5 +88,4 @@ VirtualHostData::getOutputEncoding(const Request* request) const {
 	return std::string("utf-8");
 }
 
-
 } // namespace xscript

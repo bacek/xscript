@@ -25,18 +25,39 @@ public:
 	void exiting(const char *function);
 	void entering(const char *function);
 
-	void crit(const char *format, ...);
+	void crit(const char *format, ...)
+#ifdef __GNUC__
+		 __attribute__ ((format (printf, 2, 3)))
+#endif
+		;
 
-	void error(const char *format, ...);
+	void error(const char *format, ...)
+#ifdef __GNUC__
+		 __attribute__ ((format (printf, 2, 3)))
+#endif
+		;
 
-	void warn(const char *format, ...);
+	void warn(const char *format, ...)
+#ifdef __GNUC__
+		 __attribute__ ((format (printf, 2, 3)))
+#endif
+		;
 
-	void info(const char *format, ...);
+	void info(const char *format, ...)
+#ifdef __GNUC__
+		 __attribute__ ((format (printf, 2, 3)))
+#endif
+		;
 
-	void debug(const char *format, ...);
+	void debug(const char *format, ...)
+#ifdef __GNUC__
+		 __attribute__ ((format (printf, 2, 3)))
+#endif
+		;
 	
 	static void xmllog(const char *format, va_list args);
 	static void xmllog(void *ctx, const char *format, ...);
+
 
 	LogLevel level() const {
         return level_;

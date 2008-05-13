@@ -16,11 +16,27 @@ AverageCounter::~AverageCounter()
 }
 
 void AverageCounter::add(uint64_t value) {
+	if (value == 0) {
+		return;
+	}
+
 	boost::mutex::scoped_lock lock(mtx_);
+
 	count_++;
 	total_ += value;
 	max_ = std::max(max_, value);
 	min_ = std::min(min_, value);
+}
+
+void AverageCounter::remove(uint64_t value) {
+	if (value == 0) {
+		return;
+	}
+
+	boost::mutex::scoped_lock lock(mtx_);
+
+	count_--;
+	total_ -= value;
 }
 
 XmlNodeHelper AverageCounter::createReport() const {
