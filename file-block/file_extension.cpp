@@ -20,13 +20,16 @@ const char* FileExtension::nsref() const {
 }
 
 void FileExtension::initContext(Context *ctx) {
+	(void)ctx;
 }
 
 
 void FileExtension::stopContext(Context *ctx) {
+	(void)ctx;
 }
 
 void FileExtension::destroyContext(Context *ctx) {
+	(void)ctx;
 }
 
 std::auto_ptr<Block> FileExtension::createBlock(Xml *owner, xmlNodePtr node) {
@@ -34,6 +37,7 @@ std::auto_ptr<Block> FileExtension::createBlock(Xml *owner, xmlNodePtr node) {
 }
 
 void FileExtension::init(const Config *config) {
+	(void)config;
 }
 
 

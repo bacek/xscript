@@ -3,7 +3,7 @@
 <page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
   <xscript all-threaded="yes"/>
   <x:http>
-    <method>get_http</method>
+    <method>getHttp</method>
     <timeout>0</timeout>
     <param type="string">http://blogs.yandex.ru/?xslt</param>
   </x:http>

@@ -117,12 +117,12 @@ FileLogger::pushIntoQueue(const char* type, const char* format, va_list args) {
 	prepareFormat(fmt, type, format);
 	
 	char buf[BUF_SIZE];
-	size_t size = vsnprintf(buf, BUF_SIZE, fmt, args);
-	// FIXME. We should check "size" here.
-	
-	boost::mutex::scoped_lock lock(queueMutex_);
-	queue_.push_back(buf);
-	queueCondition_.notify_one();
+	int size = vsnprintf(buf, BUF_SIZE, fmt, args);
+	if (size > 0) {
+		boost::mutex::scoped_lock lock(queueMutex_);
+		queue_.push_back(buf);
+		queueCondition_.notify_one();
+	}
 }
 
 void 

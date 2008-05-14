@@ -3,6 +3,7 @@
 
 #include <boost/thread/mutex.hpp>
 #include <xscript/counter_base.h>
+#include <boost/cstdint.hpp>
 
 namespace xscript
 {

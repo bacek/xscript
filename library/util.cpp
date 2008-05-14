@@ -288,7 +288,7 @@ StringUtils::parse(const Range &range, std::vector<NamedValue> &v, Encoder *enco
 				v.push_back(p);
 			}
 			catch (const std::exception &e) {
-				log()->error("%s, caught exception: %s", e.what());
+				log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
 			}
 		}
 		part = tail;

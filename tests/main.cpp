@@ -59,7 +59,7 @@ main(int argc, char *argv[]) {
 		CppUnit::TextUi::TestRunner r;
 		r.addTest(CppUnit::TestFactoryRegistry::getRegistry("load").makeTest());
 		r.addTest(CppUnit::TestFactoryRegistry::getRegistry("xscript").makeTest());
-		return r.run("", false) ? EXIT_SUCCESS : EXIT_FAILURE;
+		return r.run((argc > 1) ? argv[1] : "", false) ? EXIT_SUCCESS : EXIT_FAILURE;
 		
 	}
 	catch (const std::exception &e) {

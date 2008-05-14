@@ -133,7 +133,7 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
 XmlDocHelper 
 HttpBlock::getHttpObsolete(Context *ctx, boost::any &a)
 {
-    log()->warn("Obsolted call");
+    log()->warn("Obsoleted call");
     return getHttp(ctx, a);
 }
 

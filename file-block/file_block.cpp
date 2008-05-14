@@ -2,7 +2,7 @@
 
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/path.hpp>
 #include <xscript/logger.h>
 #include <xscript/xml.h>
 #include <xscript/param.h>
@@ -85,7 +85,7 @@ XmlDocHelper FileBlock::call(Context *ctx, boost::any &a) throw (std::exception)
 }
 
 XmlDocHelper FileBlock::loadFile(const std::string& fileName) {
-	log()->debug("%s: loading file %s", fileName.c_str());
+	log()->debug("%s: loading file %s", BOOST_CURRENT_FUNCTION, fileName.c_str());
 
 	XmlDocHelper doc(xmlReadFile(
 		fileName.c_str(), 
@@ -101,10 +101,30 @@ XmlDocHelper FileBlock::loadFile(const std::string& fileName) {
 
 
 std::string FileBlock::createFilename(const std::string& relativeName) {
-	fs::path base = owner()->name();
-	base.remove_leaf();
 
-	fs::path path =  base / relativeName;
+	//Used in boost version >= 1.34
+	//
+	//fs::path base = owner()->name();
+	//base.remove_leaf();
+	//fs::path path =  base / relativeName;
+
+	const std::string &owner_name = owner()->name();
+	fs::path path;
+	if (owner_name.empty()) {
+		path = fs::path(relativeName);
+	}
+	else if (*owner_name.rbegin() == '/') {
+		path = fs::path(owner_name + relativeName);
+	}
+	else {
+		std::string::size_type pos = owner_name.find_last_of('/');
+		if (pos == std::string::npos) {
+			path = fs::path(relativeName);
+		}
+		else {
+			path = fs::path(owner_name.substr(0, pos + 1) + relativeName);
+		}
+	}
 
 	XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar *) path.native_file_string().c_str()));
 

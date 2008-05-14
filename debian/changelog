@@ -1,3 +1,10 @@
+xscript (5.15-0) unstable; urgency=low
+
+  * bacek work
+  * fixed a lot of compiler errors and warnings
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Wed, 14 May 2008 13:59:47 +0400
+
 xscript (5.14-1) unstable; urgency=low
 
   * Comma boundary bug fixed in multipart parsing

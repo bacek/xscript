@@ -1,7 +1,7 @@
 #include <iostream>
 #include <boost/bind.hpp>
 #include <vector>
-#include <ext/functional>
+//#include <ext/functional>
 #include "xscript/logger_factory.h"
 #include "xscript/config.h"
 #include "xscript/control_extension.h"
@@ -9,7 +9,7 @@
 #include "details/syslog_logger.h"
 #include "details/file_logger.h"
 
-using __gnu_cxx::select2nd;
+//using __gnu_cxx::select2nd;
 
 namespace xscript
 {

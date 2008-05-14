@@ -42,7 +42,7 @@ TaggedBlock::tagged(bool tagged) {
 
 void
 TaggedBlock::cacheTime(time_t cache_time) {
-	log()->debug("%s, cache_time: %u", BOOST_CURRENT_FUNCTION, cache_time);
+	log()->debug("%s, cache_time: %lu", BOOST_CURRENT_FUNCTION, static_cast<unsigned long>(cache_time));
 	cache_time_ = cache_time;
 }
 
