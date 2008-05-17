@@ -16,7 +16,7 @@ LuaError::~LuaError() throw () {
 }
 
 BadType::BadType(const char *name, int index) : 
-	index_(index), name_(name)
+	index_(index), name_(name), what_("bad argument type:" + name_)
 {
 }
 
@@ -26,7 +26,7 @@ BadType::~BadType() throw () {
 
 const char*
 BadType::what() const throw () {
-	return "bad argument type";
+	return what_.c_str();
 }
 
 int

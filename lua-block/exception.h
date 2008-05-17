@@ -27,6 +27,7 @@ public:
 private:
 	int index_;
 	std::string name_;
+	std::string what_;
 };
 
 class BadArgCount : public LuaError 

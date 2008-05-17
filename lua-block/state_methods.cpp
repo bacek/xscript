@@ -31,47 +31,44 @@ extern "C" int luaStateSetULongLong(lua_State *lua) throw ();
 extern "C" int luaStateSetDouble(lua_State *lua) throw ();
 extern "C" int luaStateSetString(lua_State *lua) throw ();
 
-template<>
-MethodDispatcher<State>::MethodDispatcher() {
-	registerMethod("get", &luaStateGet);
-	registerMethod("setBool", &luaStateSetBool);
-	registerMethod("setLong", &luaStateSetLong);
-	registerMethod("setLongLong", &luaStateSetLongLong);
-	registerMethod("setULong", &luaStateSetULong);
-	registerMethod("setULongLong", &luaStateSetULongLong);
-	registerMethod("setString", &luaStateSetString);
-	registerMethod("setDouble", &luaStateSetDouble);
+static const struct luaL_reg statelib [] = {
+      {"get",			luaStateGet},
+      {"setBool",		luaStateSetBool},
+	  {"setLong",		luaStateSetLong},
+	  {"setLongLong",	luaStateSetLongLong},
+	  {"setULong",		luaStateSetULong},
+	  {"setULongLong",	luaStateSetULongLong},
+	  {"setString",		luaStateSetString},
+	  {"setDouble",		luaStateSetDouble},
+      {NULL, NULL}
+    };
+    
+const struct luaL_reg * getStatelib() {
+	return statelib;
 }
 
-static MethodDispatcher<State> disp_;
 
+template<typename T>
+struct pointer {
+	T* ptr;
+};
+typedef pointer<State> statePtr;
 
-extern "C" int
-luaStateIndex(lua_State *lua) throw () {
-	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-	try {
-		luaCheckStackSize(lua, 2);
-		luaCheckUserData(lua, "xscript.state", 1);
-		std::string method = luaReadStack<std::string>(lua, 2);
-		log()->debug("%s, calling state method: %s", BOOST_CURRENT_FUNCTION, method.c_str());
-		lua_pushcfunction(lua, disp_.findMethod(method));
-		return 1;
-	}
-	catch (const LuaError &e) {
-		return e.translate(lua);
-	}
-	catch (const std::exception &e) {
-		return luaL_error(lua, "caught exception in state index: %s", e.what());
-	}
+State * getState(lua_State *lua) {
+	void *ud = luaL_checkudata(lua, 1, "xscript.state");
+	luaL_argcheck(lua, ud != NULL, 1, "`state' expected");
+	return ((statePtr *)ud)->ptr;
 }
+
 
 extern "C" int
 luaStateGet(lua_State *lua) throw () {
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 	try {
-		luaCheckStackSize(lua, 2);
-		State *state = luaReadStack<State>(lua, "xscript.state", 1);
-		std::string value = state->asString(luaReadStack<std::string>(lua, 2));
+		State* s = getState(lua);
+		std::string key = luaReadStack<std::string>(lua, 2);
+		log()->debug("luaStateGet: %s", key.c_str());
+		std::string value = s->asString(key);
 		lua_pushstring(lua, value.c_str());
 		return 1;
 	}
@@ -84,18 +81,23 @@ luaStateGet(lua_State *lua) throw () {
 	}
 }
 
+
+
 template<typename Type> int
 luaStateSet(lua_State *lua) throw () {
 	try {
-		luaCheckStackSize(lua, 3);
-		State *state = luaReadStack<State>(lua, "xscript.state", 1);
-		state->set(luaReadStack<std::string>(lua, 2), luaReadStack<Type>(lua, 3));
+		State* s = getState(lua);
+		std::string key = luaReadStack<std::string>(lua, 2);
+		Type value = luaReadStack<Type>(lua, 3);
+		log()->debug("luaStateSet: %s", key.c_str());
+		s->set(key, value);
 		return 0;
 	}
 	catch (const LuaError &e) {
 		return e.translate(lua);
 	}
 	catch (const std::exception &e) {
+		log()->debug("caught exception in state.set: %s", e.what());
 		return luaL_error(lua, "caught exception in state.set: %s", e.what());
 	}
 }

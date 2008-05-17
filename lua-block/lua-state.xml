@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xscript xslt-dont-apply="yes" force-auth="yes" allow-methods="get"/>
+  <x:lua>
+	  <![CDATA[
+  	for i = 1, 10 do
+	  local key = string.format("long %d", i);
+	  xscript.state:setLong(key, i)
+	  xscript.state:setString(string.format("string %d", i), string.format("%d", i * 2));
+	  xscript.state:setLongLong(string.format("long long %d", i), xscript.state:get(key) * 3);
+    end
+  ]]>
+  </x:lua>
+</page>

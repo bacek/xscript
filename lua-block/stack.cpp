@@ -20,7 +20,7 @@ luaCheckNumber(lua_State *lua, int index) {
 void
 luaCheckString(lua_State *lua, int index) {
 	if (!lua_isstring(lua, index)) {
-		throw BadType("number", index);
+		throw BadType("string", index);
 	}
 }
 
