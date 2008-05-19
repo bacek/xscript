@@ -78,7 +78,7 @@ XmlDocHelper FileBlock::call(Context *ctx, boost::any &a) throw (std::exception)
 		doc = loadFile(file);
 	}
 
-	Tag local_tag(modified, st.st_mtime, 0);
+	Tag local_tag(modified, st.st_mtime, Tag::UNDEFINED_TIME);
 	a = boost::any(local_tag);
 
 	return doc;
@@ -102,27 +102,30 @@ XmlDocHelper FileBlock::loadFile(const std::string& fileName) {
 
 std::string FileBlock::createFilename(const std::string& relativeName) {
 
-	//Used in boost version >= 1.34
-	//
-	//fs::path base = owner()->name();
-	//base.remove_leaf();
-	//fs::path path =  base / relativeName;
+	if (relativeName.empty()) {
+		throw std::runtime_error("Empty relative path in file block");
+	}
 
-	const std::string &owner_name = owner()->name();
 	fs::path path;
-	if (owner_name.empty()) {
+	if (*relativeName.begin() == '/') {
 		path = fs::path(relativeName);
 	}
-	else if (*owner_name.rbegin() == '/') {
-		path = fs::path(owner_name + relativeName);
-	}
 	else {
-		std::string::size_type pos = owner_name.find_last_of('/');
-		if (pos == std::string::npos) {
+		const std::string &owner_name = owner()->name();
+		if (owner_name.empty()) {
 			path = fs::path(relativeName);
 		}
+		else if (*owner_name.rbegin() == '/') {
+			path = fs::path(owner_name + relativeName);
+		}
 		else {
-			path = fs::path(owner_name.substr(0, pos + 1) + relativeName);
+			std::string::size_type pos = owner_name.find_last_of('/');
+			if (pos == std::string::npos) {
+				path = fs::path(relativeName);
+			}
+			else {
+				path = fs::path(owner_name.substr(0, pos + 1) + relativeName);
+			}
 		}
 	}
 
