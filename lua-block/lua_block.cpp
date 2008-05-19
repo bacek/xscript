@@ -70,127 +70,79 @@ extern "C" void luaHook(lua_State * lua, lua_Debug *ar) {
 	(void)ar;
 };
 
-void
-LuaBlock::setupState(State *state, lua_State *lua) {
-	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 
-	lua_newtable(lua);
-	lua_setglobal(lua, "xscript");
+/**
+ * Setup userdata for lua.
+ * We create lua's userdata with single poiner to our data inside, attach metatable
+ * with methods and attach it as field to global 'xscript' variable with particular
+ * name.
+ * E.g. xscript::State::someMethod will be available as xscript.state:someMethod.
+ */
+template<typename Type>
+void
+setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_reg * lib) {
+	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 
 	//lua_sethook(lua, luaHook, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE, 1);
 
-	luaL_newmetatable(lua, "xscript.state");
+	std::string tableName = "xscript.";
+	tableName += name;
+
+	luaL_newmetatable(lua, tableName.c_str());
 	lua_pushstring(lua, "__index");
 	lua_pushvalue(lua, -2);  /* pushes the metatable */
 	lua_settable(lua, -3);  /* metatable.__index = metatable */
 	
-	luaL_openlib(lua, 0, getStatelib(), 0);
-	luaL_openlib(lua, "xscript_state", getStatelib(), 0);
+	luaL_openlib(lua, 0, lib, 0);
+	luaL_openlib(lua, tableName.c_str(), lib, 0);
 	
 	// Get global xscript. We will set 'state' field later
 	lua_getglobal(lua, "xscript");
 
-    statePtr *p = (statePtr *)lua_newuserdata(lua, sizeof(statePtr));
-	p->ptr = state;
+    pointer<Type> *p = (pointer<Type> *)lua_newuserdata(lua, sizeof(pointer<Type>));
+	p->ptr = type;
 
-	luaL_getmetatable(lua, "xscript.state");
+	luaL_getmetatable(lua, tableName.c_str());
 	lua_setmetatable(lua, -2); // points to new userdata
 	
 	// Our userdata is on top of stack.
 	// Assign it to 'state'
-	lua_setfield(lua, -2, "state"); 
+	lua_setfield(lua, -2, name); 
 
 	// And remove it from stack
 	lua_remove(lua, -1);
 
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	return;
+};
+
+void
+LuaBlock::setupState(State *state, lua_State *lua) {
+	setupUserdata(lua, state, "state", getStatelib());
 	return;
 }
 
 
 void
 LuaBlock::setupRequest(Request *request, lua_State *lua) {
-	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-
-	luaL_newmetatable(lua, "xscript.request");
-	lua_pushstring(lua, "__index");
-	lua_pushvalue(lua, -2);  /* pushes the metatable */
-	lua_settable(lua, -3);  /* metatable.__index = metatable */
-	
-	luaL_openlib(lua, 0, getRequestLib(), 0);
-	luaL_openlib(lua, "xscript_state", getRequestLib(), 0);
-	
-	// Get global xscript. We will set 'state' field later
-	lua_getglobal(lua, "xscript");
-
-    requestPtr *p = (requestPtr *)lua_newuserdata(lua, sizeof(requestPtr));
-	p->ptr = request;
-
-	luaL_getmetatable(lua, "xscript.request");
-	lua_setmetatable(lua, -2); // points to new userdata
-	
-	// Our userdata is on top of stack.
-	// Assign it to 'state'
-	lua_setfield(lua, -2, "request"); 
-
-	// And remove it from stack
-	lua_remove(lua, -1);
-
-	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	setupUserdata(lua, request, "request", getRequestLib());
 	return;
-
-	lua_pushstring(lua, "request");
-	lua_pushlightuserdata(lua, request);
-	if (0 == luaL_newmetatable(lua, "xscript.request")) {
-		throw std::runtime_error("can not register xscript.request");
-	}
-	lua_pushstring(lua, "__index");
-	lua_pushcfunction(lua, &luaRequestIndex);
-	lua_rawset(lua, 3);
-	if (0 == lua_setmetatable(lua, 2)) {
-		throw std::runtime_error("failed to set request metatable");
-	}
-	log()->debug("%s, metatable for xscript.request set up", BOOST_CURRENT_FUNCTION);
-	lua_rawset(lua, LUA_GLOBALSINDEX);
 }
 
 void
 LuaBlock::setupResponse(Response *response, lua_State *lua) {
-	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-
-	return;
-
-	lua_pushstring(lua, "response");
-	lua_pushlightuserdata(lua, response);
-	if (0 == luaL_newmetatable(lua, "xscript.response")) {
-		throw std::runtime_error("can not register xscript.response");
-	}
-	lua_pushstring(lua, "__index");
-	lua_pushcfunction(lua, &luaResponseIndex);
-	lua_rawset(lua, 3);
-	if (0 == lua_setmetatable(lua, 2)) {
-		throw std::runtime_error("failed to set response metatable");
-	}
-	log()->debug("%s, metatable for xscript.response set up", BOOST_CURRENT_FUNCTION);
-	lua_rawset(lua, LUA_GLOBALSINDEX);
 }
 
 void
 LuaBlock::setupRequestArgs(Request *req, lua_State *lua) {
-	(void)req;
-	(void)lua;
 }
 
 void
 LuaBlock::setupRequestHeaders(Request *req, lua_State *lua) {
-	(void)req;
-	(void)lua;
 }
 
 void
 LuaBlock::setupRequestCookies(Request *req, lua_State *lua) {
-	(void)req;
-	(void)lua;
 }
 
 XmlDocHelper
@@ -204,6 +156,9 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 	Request *request = ctx->request();
 	boost::shared_ptr<State> state = ctx->state();
 	
+	lua_newtable(lua.get());
+	lua_setglobal(lua.get(), "xscript");
+
 	setupState(state.get(), lua.get());
 	setupRequest(request, lua.get());
 	setupRequestArgs(request, lua.get());
