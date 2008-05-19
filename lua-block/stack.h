@@ -10,6 +10,21 @@
 namespace xscript
 {
 
+class Request;
+class Response;
+class State;
+
+template<typename T>
+struct pointer {
+	T* ptr;
+};
+
+
+typedef pointer<State> statePtr;
+typedef pointer<Request> requestPtr;
+typedef pointer<Response> responsePtr;
+
+
 void luaCheckNumber(lua_State *lua, int index);
 void luaCheckString(lua_State *lua, int index);
 void luaCheckBoolean(lua_State *lua, int index);
@@ -25,7 +40,8 @@ luaReadStack(lua_State *lua, int index) {
 
 template<typename Type> inline Type*
 luaReadStack(lua_State *lua, const char *name, int index) {
-	return static_cast<Type*>(luaCheckUserData(lua, name, index));
+	void *ud = luaCheckUserData(lua, name, index);
+	return ((pointer<Type> *)ud)->ptr;
 }
 
 template<> inline bool

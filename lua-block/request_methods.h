@@ -14,6 +14,8 @@ extern "C" int luaRequestGetHeader(lua_State *lua) throw ();
 
 extern "C" int luaRequestGetCookie(lua_State *lua) throw ();
 
+const struct luaL_reg * getRequestLib();
+
 } // namespace xscript
 
 #endif // _XSCRIPT_LUA_REQUEST_METHODS_H_

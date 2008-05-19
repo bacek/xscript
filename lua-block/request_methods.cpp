@@ -23,41 +23,27 @@ extern "C" int luaRequestGetArg(lua_State *state) throw ();
 extern "C" int luaRequestGetHeader(lua_State *state) throw ();
 extern "C" int luaRequestGetCookie(lua_State *state) throw ();
 
-template<>
-MethodDispatcher<Request>::MethodDispatcher()
-{
-	registerMethod("getArg", &luaRequestGetArg);
-	registerMethod("getHeader", &luaRequestGetHeader);
-	registerMethod("getCookie", &luaRequestGetCookie);
+static const struct luaL_reg requestlib [] = {
+      {"getArg",		luaRequestGetArg},
+	  {"getHeader",		luaRequestGetHeader},
+	  {"getCookie",		luaRequestGetCookie},
+      {NULL, NULL}
+    };
+    
+const struct luaL_reg * getRequestLib() {
+	return requestlib;
 }
 
-static MethodDispatcher<Request> disp_;
-
-extern "C" int
-luaRequestIndex(lua_State *lua) throw () {
-	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-	try {
-		luaCheckStackSize(lua, 2);
-		luaCheckUserData(lua, "xscript.request", 1);
-		std::string method = luaReadStack<std::string>(lua, 2);
-		log()->debug("%s, calling request method: %s", BOOST_CURRENT_FUNCTION, method.c_str());
-		lua_pushcfunction(lua, disp_.findMethod(method));
-		return 1;
-	}
-	catch (const LuaError &e) {
-		return e.translate(lua);
-	}
-	catch (const std::exception &e) {
-		return luaL_error(lua, "caught exception in request index: %s", e.what());
-	}
-}
 
 template<typename Func> int
 luaRequestGet(lua_State *lua, Func func) {
 	try {
 		luaCheckStackSize(lua, 2);
-		Request *req = luaReadStack<Request>(lua, "xscript.args", 1);
+		log()->debug("%s: fetching request", BOOST_CURRENT_FUNCTION);
+		Request *req = luaReadStack<Request>(lua, "xscript.request", 1);
+		log()->debug("%s: fetching argument", BOOST_CURRENT_FUNCTION);
 		std::string key = luaReadStack<std::string>(lua, 2);
+		log()->debug("%s: invoking function with key %s", BOOST_CURRENT_FUNCTION, key.c_str());
 		const std::string &val = func(req, key);
 		lua_pushstring(lua, val.c_str());
 		return 1;

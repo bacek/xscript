@@ -3,9 +3,9 @@
 <page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
   <x:lua>
   <![CDATA[
-    state:setString("test args", args["query"]);
-    state:setString("test headers", headers["Host"]);
-    state:setString("test headers", cookies["SessionId"]);
+    xscript.state:setString("test args", xscript.request:getArg("query"));
+    xscript.state:setString("test headers", xscript.request:getHeader("Host"));
+    xscript.state:setString("test cookies", xscript.request:getCookie("SessionId"));
   ]]>
   </x:lua>
 </page>

@@ -44,6 +44,7 @@ luaCheckUserData(lua_State *lua, const char *name, int index) {
 	if (NULL == ptr) {
 		throw BadType(name, index);
 	}
+	luaL_argcheck(lua, ptr != NULL, index, "`ud' expected");
 	return ptr;
 
 }

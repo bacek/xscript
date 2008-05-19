@@ -47,25 +47,11 @@ const struct luaL_reg * getStatelib() {
 	return statelib;
 }
 
-
-template<typename T>
-struct pointer {
-	T* ptr;
-};
-typedef pointer<State> statePtr;
-
-State * getState(lua_State *lua) {
-	void *ud = luaL_checkudata(lua, 1, "xscript.state");
-	luaL_argcheck(lua, ud != NULL, 1, "`state' expected");
-	return ((statePtr *)ud)->ptr;
-}
-
-
 extern "C" int
 luaStateGet(lua_State *lua) throw () {
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 	try {
-		State* s = getState(lua);
+		State* s = luaReadStack<State>(lua, "xscript.state", 1);
 		std::string key = luaReadStack<std::string>(lua, 2);
 		log()->debug("luaStateGet: %s", key.c_str());
 		std::string value = s->asString(key);
@@ -86,7 +72,7 @@ luaStateGet(lua_State *lua) throw () {
 template<typename Type> int
 luaStateSet(lua_State *lua) throw () {
 	try {
-		State* s = getState(lua);
+		State* s = luaReadStack<State>(lua, "xscript.state", 1);
 		std::string key = luaReadStack<std::string>(lua, 2);
 		Type value = luaReadStack<Type>(lua, 3);
 		log()->debug("luaStateSet: %s", key.c_str());
