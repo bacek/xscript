@@ -184,6 +184,7 @@ Stylesheet::parse() {
 	XmlUtils::throwUnless(NULL != stylesheet_.get());
 	
 	parseNode(xmlDocGetRootElement(doc.release()));
+	parseImport(stylesheet_->imports);
 	
 	detectOutputMethod(stylesheet_);
 	detectOutputEncoding(stylesheet_);
@@ -192,15 +193,29 @@ Stylesheet::parse() {
 }
 
 void
+Stylesheet::parseImport(xsltStylesheetPtr imp) {
+	for ( ; imp ; imp = imp->next) {
+		if (imp->doc) {
+			parseNode(xmlDocGetRootElement(imp->doc));
+		}
+		parseImport(imp->imports);
+	}
+}
+
+void
 Stylesheet::parseNode(xmlNodePtr node) {
 
 	ExtensionList* elist = ExtensionList::instance();
 	for ( ; node ; node = node->next) {
 		if (XML_ELEMENT_NODE == node->type) {
+			Block *prev_block = block(node);
+			if (NULL != prev_block) {
+				log()->debug("%s, block %s already created (node %p)", name().c_str(), prev_block->name(), node);
+				continue;
+			}
 			Extension *ext = elist->extension(node);
 			if (NULL != ext) {
-				
-				log()->debug("%s, creating block %s", name().c_str(), ext->name());
+				log()->debug("%s, creating block %s (node %p)", name().c_str(), ext->name(), node);
 				std::auto_ptr<Block> b = ext->createBlock(this, node);
 
 				assert(b.get());
@@ -209,13 +224,12 @@ Stylesheet::parseNode(xmlNodePtr node) {
 				blocks_[node] = b.get();
 				b.release();
 			}
-			else {
+			else if (node->children) {
 				parseNode(node->children);
 			}
 		}
 	}
 }
-
 
 void
 Stylesheet::detectOutputMethod(const XsltStylesheetHelper &sh) {

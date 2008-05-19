@@ -53,6 +53,7 @@ protected:
 	Stylesheet(const std::string &name);
 	
 	virtual void parse();
+	void parseImport(xsltStylesheetPtr imp);
 	void parseNode(xmlNodePtr node);
 
 	void detectOutputMethod(const XsltStylesheetHelper &sh);

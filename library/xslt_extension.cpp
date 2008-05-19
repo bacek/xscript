@@ -483,7 +483,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
 	}
 	Block *block = stylesheet->block(inst);
 	if (NULL == block) {
-		log()->error("%s: no block found", BOOST_CURRENT_FUNCTION);
+		log()->error("%s: no block found (inst %p)", BOOST_CURRENT_FUNCTION, inst);
 		return;
 	}
 	try {

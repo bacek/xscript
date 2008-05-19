@@ -2,8 +2,10 @@ xscript (5.15-0) unstable; urgency=low
 
   * bacek work
   * fixed a lot of compiler errors and warnings
+  * added file-block
+  * fixed block using from imported xsl
 
- -- ponomarev <ponomarev@yandex-team.ru>  Wed, 14 May 2008 13:59:47 +0400
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 19 May 2008 13:10:42 +0400
 
 xscript (5.14-1) unstable; urgency=low
 
