@@ -70,15 +70,16 @@ Parser::getBoundary(const Range &range) {
 	
 	tail = trim(tail);
 
-	Range comma = createRange("\"");
-	if (startsWith(tail, comma) && endsWith(tail, comma)) {
-		tail = Range(tail.begin() + 1, tail.end() - 1);
-	}
-
 	if (strncasecmp("boundary", tail.begin(), sizeof("boundary") - 1) == 0) {
 		Range key, value;
 		split(tail, '=', key, value);
 		Range boundary = trim(value);
+
+		Range comma = createRange("\"");
+		if (startsWith(boundary, comma) && endsWith(boundary, comma)) {
+			return std::string("--").append(boundary.begin() + 1, boundary.end() - 1);
+		}
+
 		return std::string("--").append(boundary.begin(), boundary.end());
 	}
 	throw std::runtime_error("no boundary found");
