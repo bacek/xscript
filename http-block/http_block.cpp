@@ -1,6 +1,7 @@
 #include "settings.h"
 
 #include <sys/stat.h>
+#include <iostream>
 
 #include <cerrno>
 #include <cstring>
@@ -106,15 +107,14 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
 			throw std::runtime_error(url + " is not exist");
 		}
 
-		const char* path = file_path.native_file_string().c_str();
-		XmlDocHelper doc = XmlDocHelper(xmlParseFile(path));
+		XmlDocHelper doc = XmlDocHelper(xmlParseFile(file_path.native_file_string().c_str()));
 		if (doc.get() == NULL){
 			throw std::runtime_error(std::string("Got empty document. URL: ") + url);
 		}
 
 		if (tagged()) {
 			struct stat st;
-			int res = stat(path, &st);
+			int res = stat(url.c_str(), &st);
 			if (res != 0) {
 				return XmlDocHelper();
 			}
