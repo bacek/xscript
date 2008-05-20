@@ -1,3 +1,10 @@
+xscript (5.15-2) unstable; urgency=low
+
+  * Script::fetchRecursive fixed
+  * HttpBlock::getHttp for file updated
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 20 May 2008 16:27:01 +0400
+
 xscript (5.15-1) unstable; urgency=low
 
   * Multipart boundary parsing updated

@@ -424,8 +424,7 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
 
 		xmlNodePtr next = newnode->next;
 		log()->debug("%s, blocks found: %d, %d", BOOST_CURRENT_FUNCTION, blocks_.size(), count);
-		if (!blocks_.empty() && blocks_[count]->node() == node) {
-
+		if (count < blocks_.size() && blocks_[count]->node() == node) {
 			xmlDocPtr doc = ctx->result(count);
 			assert(doc);
 			
