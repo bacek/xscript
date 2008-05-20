@@ -23,6 +23,7 @@ namespace xscript
 ServerRequest::ServerRequest() :
 	impl_(RequestFactory::instance()->create())
 {
+	reset();
 }
 
 ServerRequest::~ServerRequest() {
