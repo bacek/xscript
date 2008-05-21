@@ -61,14 +61,14 @@ TaggedBlock::invokeInternal(Context *ctx) {
 			return Block::invokeInternal(ctx);
 		}
 
-		bool have_result;
+		bool have_cached_doc = false;
 		Tag tag;
 		XmlDocHelper doc(NULL);
 		try {
 			std::auto_ptr<TagKey> key = cache->createKey(ctx, this);
-			have_result = cache->loadDoc(key.get(), tag, doc);
+			have_cached_doc = cache->loadDoc(key.get(), tag, doc);
 
-			if (have_result && Tag::UNDEFINED_TIME == tag.expire_time) {
+			if (have_cached_doc && Tag::UNDEFINED_TIME == tag.expire_time) {
 				
 				tag.modified = true;
 				
@@ -85,21 +85,23 @@ TaggedBlock::invokeInternal(Context *ctx) {
 					return newdoc;
 				}
 				else if (tag.modified) {
-					have_result = false;
+					have_cached_doc = false;
+				}
+				else {
+					log()->error("%s. Got empty document in tagged block", BOOST_CURRENT_FUNCTION);
 				}
 			}
 		}
 		catch (const std::exception &e) {
-			log()->error("caught exception while invoking tagged block: %s", e.what());
-			return Block::invokeInternal(ctx);			
+			log()->error("caught exception while invoking tagged block: %s", e.what());		
 		}
 
-		if (!have_result) {
-			return Block::invokeInternal(ctx);
+		if (have_cached_doc) {
+			evalXPath(ctx, doc);
+			return doc;
 		}
 
-		evalXPath(ctx, doc);
-		return doc;
+		return Block::invokeInternal(ctx);
 	}
 	catch (const std::exception &e) {
 		log()->error("caught exception while invoking tagged block: %s", e.what());

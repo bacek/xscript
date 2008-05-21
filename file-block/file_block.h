@@ -32,12 +32,12 @@ protected:
 	/**
 	 * Loading file with optional xinclude processing.
 	 */
-	XmlDocHelper loadFile(const std::string& file);
+	XmlDocHelper loadFile(const std::string& file_name);
 
 	/**
 	 * Create full filename based on relative name in first arg.
 	 */
-	std::string createFilename(const std::string& relativeName);
+	std::string createFilename(const std::string& relative_name);
 	
 private:
 	bool processXInclude_;
