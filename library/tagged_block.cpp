@@ -47,54 +47,64 @@ TaggedBlock::cacheTime(time_t cache_time) {
 }
 
 XmlDocHelper
-TaggedBlock::invoke(Context *ctx) {
+TaggedBlock::invokeInternal(Context *ctx) {
 	
 	log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
 	if (!tagged()) {
-		return Block::invoke(ctx);
+		return Block::invokeInternal(ctx);
 	}
+
 	try {
 		TaggedCache *cache = TaggedCache::instance();
 		if ((CACHE_TIME_UNDEFINED != cache_time_) && (cache_time_ < cache->minimalCacheTime())) {
-			return Block::invoke(ctx);
+			return Block::invokeInternal(ctx);
 		}
 
-		std::auto_ptr<TagKey> key = cache->createKey(ctx, this);
-		
+		bool have_result;
 		Tag tag;
 		XmlDocHelper doc(NULL);
-		if (!cache->loadDoc(key.get(), tag, doc)) {
-			return Block::invoke(ctx);
+		try {
+			std::auto_ptr<TagKey> key = cache->createKey(ctx, this);
+			have_result = cache->loadDoc(key.get(), tag, doc);
+
+			if (have_result && Tag::UNDEFINED_TIME == tag.expire_time) {
+				
+				tag.modified = true;
+				
+				boost::any a(tag);
+				XmlDocHelper newdoc = call(ctx, a);
+				tag = boost::any_cast<Tag>(a);
+				
+				if (NULL != newdoc.get()) {
+					log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, newdoc.get());
+					applyStylesheet(ctx, newdoc);
+
+					postCall(ctx, newdoc, a);
+					evalXPath(ctx, newdoc);
+					return newdoc;
+				}
+				else if (tag.modified) {
+					have_result = false;
+				}
+			}
+		}
+		catch (const std::exception &e) {
+			log()->error("caught exception while invoking tagged block: %s", e.what());
+			return Block::invokeInternal(ctx);			
 		}
 
-		if (Tag::UNDEFINED_TIME == tag.expire_time) {
-			
-			tag.modified = true;
-			
-			boost::any a(tag);
-			XmlDocHelper newdoc = call(ctx, a);
-			tag = boost::any_cast<Tag>(a);
-			
-			if (NULL != newdoc.get()) {
-				log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, newdoc.get());
-				applyStylesheet(ctx, newdoc);
-
-				postCall(ctx, newdoc, a);
-				evalXPath(ctx, newdoc);
-				return newdoc;
-			}
-			else if (tag.modified) {
-				return Block::invoke(ctx);
-			}
+		if (!have_result) {
+			return Block::invokeInternal(ctx);
 		}
+
 		evalXPath(ctx, doc);
 		return doc;
 	}
 	catch (const std::exception &e) {
 		log()->error("caught exception while invoking tagged block: %s", e.what());
+		return errorResult(e.what());
 	}
-	return Block::invoke(ctx);
 }
 
 void

@@ -74,6 +74,7 @@ public:
 protected:
 	class XPathExpr;
 
+	virtual XmlDocHelper invokeInternal(Context *ctx);
 	virtual void postParse();
 	virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception) = 0;
 	

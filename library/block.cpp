@@ -112,13 +112,22 @@ Block::fullName(const std::string &name) const {
 	return owner()->fullName(name);
 }
 
+
 XmlDocHelper
 Block::invoke(Context *ctx) {
-
 	log()->debug("%s", BOOST_CURRENT_FUNCTION);
 	if (!checkGuard(ctx)) {
 		return fakeResult();
 	}
+
+	return invokeInternal(ctx);
+}
+
+XmlDocHelper
+Block::invokeInternal(Context *ctx) {
+
+	log()->debug("%s", BOOST_CURRENT_FUNCTION);
+
 	try {
 		boost::any a;
 		XmlDocHelper doc(call(ctx, a));
@@ -139,6 +148,7 @@ Block::invoke(Context *ctx) {
 		return errorResult(e.what());
 	}
 }
+
 
 void
 Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {

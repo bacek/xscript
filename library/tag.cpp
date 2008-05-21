@@ -26,6 +26,7 @@ private:
 };
 
 bool TagPrefetchCalculator::needPrefetch(const Tag& tag, time_t stored_time) {
+
 	if (Tag::UNDEFINED_TIME == tag.expire_time) {
 		return false;
 	}
@@ -36,12 +37,14 @@ bool TagPrefetchCalculator::needPrefetch(const Tag& tag, time_t stored_time) {
 	}
 
 	const time_t left_time = tag.expire_time - now;
-	const time_t last_modified_time = tag.last_modified != Tag::UNDEFINED_TIME ? tag.last_modified : stored_time;
-	if (Tag::UNDEFINED_TIME == last_modified_time) {
-		return left_time <= MINIMAL_PREFETCH_TIME;
+	if (stored_time == Tag::UNDEFINED_TIME) {
+		if (Tag::UNDEFINED_TIME == tag.last_modified) {
+			return left_time <= MINIMAL_PREFETCH_TIME;
+		}
+		stored_time = tag.last_modified;
 	}
 
-	const time_t cache_time = tag.expire_time - last_modified_time;
+	const time_t cache_time = tag.expire_time - stored_time;
 	if (LIMIT_CACHE_TIME <= cache_time) {
 		return left_time <= MAXIMAL_PREFETCH_TIME;
 	}

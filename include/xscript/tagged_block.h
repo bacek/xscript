@@ -22,8 +22,9 @@ public:
 	virtual bool tagged() const;
 	virtual void tagged(bool tagged);
 	virtual void cacheTime(time_t cache_time);
-
-	virtual XmlDocHelper invoke(Context *ctx);
+	
+protected:
+	virtual XmlDocHelper invokeInternal(Context *ctx);
 	virtual void postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a);
 
 private:
