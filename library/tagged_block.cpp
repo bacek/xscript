@@ -85,10 +85,10 @@ TaggedBlock::invokeInternal(Context *ctx) {
 					return newdoc;
 				}
 				else if (tag.modified) {
-					have_cached_doc = false;
+					log()->error("Got empty document in tagged block. Cached copy used");
 				}
 				else {
-					log()->error("%s. Got empty document in tagged block", BOOST_CURRENT_FUNCTION);
+					log()->debug("Got empty document and tag not modified. Cached copy used");
 				}
 			}
 		}
