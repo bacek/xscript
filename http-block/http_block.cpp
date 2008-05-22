@@ -142,9 +142,13 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
 	log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
 	helper.checkStatus();
 	
-	if (tagged()) {
-		createTagInfo(helper, a);
+	createTagInfo(helper, a);
+	const Tag* result_tag = boost::any_cast<Tag>(&a);
+
+	if (result_tag && !result_tag->modified) {
+		return XmlDocHelper();
 	}
+
 	return response(helper);
 }
 	
@@ -177,6 +181,12 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
 	helper.checkStatus();
 	
 	createTagInfo(helper, a);
+	const Tag* result_tag = boost::any_cast<Tag>(&a);
+
+	if (result_tag && !result_tag->modified) {
+		return XmlDocHelper();
+	}
+
 	return response(helper);
 }
 
@@ -270,7 +280,11 @@ HttpBlock::response(const HttpHelper &helper) const {
 
 void
 HttpBlock::createTagInfo(const HttpHelper &helper, boost::any &a) const {
-	Tag tag = helper.createTag();
+	if (!tagged()) {
+		return;
+	}
+
+	Tag tag = helper.createTag(a);
 	a = boost::any(tag);
 }
 

@@ -77,14 +77,10 @@ TaggedBlock::invokeInternal(Context *ctx) {
 				tag = boost::any_cast<Tag>(a);
 				
 				if (NULL != newdoc.get()) {
-					log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, newdoc.get());
-					applyStylesheet(ctx, newdoc);
-
-					postCall(ctx, newdoc, a);
-					evalXPath(ctx, newdoc);
-					return newdoc;
+					return processResponse(ctx, newdoc, a);
 				}
-				else if (tag.modified) {
+
+				if (tag.modified) {
 					log()->error("Got empty document in tagged block. Cached copy used");
 				}
 				else {

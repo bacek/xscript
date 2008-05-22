@@ -131,17 +131,13 @@ Block::invokeInternal(Context *ctx) {
 	try {
 		boost::any a;
 		XmlDocHelper doc(call(ctx, a));
+
 		if (NULL == doc.get()) {
 			log()->error("%s, got empty document", BOOST_CURRENT_FUNCTION);
 			return errorResult("got empty document");
 		}
 
-		log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
-		applyStylesheet(ctx, doc);
-
-		postCall(ctx, doc, a);
-		evalXPath(ctx, doc);
-		return doc;
+		return processResponse(ctx, doc, a);
 	}
 	catch (const std::exception &e) {
 		log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
@@ -159,6 +155,26 @@ Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
 	else {
 		callInternal(ctx, slot);
 	}
+}
+
+XmlDocHelper
+Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
+	if (NULL == doc.get()) {
+		throw std::runtime_error("Null response document");
+	}
+
+	if (NULL == xmlDocGetRootElement(doc.get())) {
+		log()->error("%s, got document with no root", BOOST_CURRENT_FUNCTION);
+		return errorResult("got document with no root");
+	}
+
+	log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
+	applyStylesheet(ctx, doc);
+
+	postCall(ctx, doc, a);
+	evalXPath(ctx, doc);
+
+	return doc;
 }
 
 void
