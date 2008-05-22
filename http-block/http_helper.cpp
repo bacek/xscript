@@ -246,33 +246,27 @@ HttpHelper::checkStatus() const {
 }
 
 Tag
-HttpHelper::createTag(boost::any &a) const {
+HttpHelper::createTag() const {
 	
-	const Tag* tag = boost::any_cast<Tag>(&a);
-	Tag result_tag;
-	if (tag) {
-		result_tag = *tag;
-	}
-
+	Tag tag;
 	if (304 == status_) {
-		result_tag.modified = false;
+		tag.modified = false;
 	}
 	else if (200 == status_ || 0 == status_) {
-		result_tag = Tag();
 		std::multimap<std::string, std::string>::const_iterator im = headers_.find("last-modified");
 		
 		if (im != headers_.end()) {
-			result_tag.last_modified = HttpDateUtils::parse(im->second.c_str());
-			log()->debug("%s, last_modified: %lu", BOOST_CURRENT_FUNCTION, result_tag.last_modified);
+			tag.last_modified = HttpDateUtils::parse(im->second.c_str());
+			log()->debug("%s, last_modified: %lu", BOOST_CURRENT_FUNCTION, tag.last_modified);
 		}
 		std::multimap<std::string, std::string>::const_iterator ie = headers_.find("expires");
 		if (ie != headers_.end()) {
-			result_tag.expire_time = HttpDateUtils::parse(ie->second.c_str());
-			log()->debug("%s, expire_time: %lu", BOOST_CURRENT_FUNCTION, result_tag.expire_time);
+			tag.expire_time = HttpDateUtils::parse(ie->second.c_str());
+			log()->debug("%s, expire_time: %lu", BOOST_CURRENT_FUNCTION, tag.expire_time);
 		}
 	}
 
-	return result_tag;
+	return tag;
 }
 
 void

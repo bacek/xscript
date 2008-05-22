@@ -284,7 +284,7 @@ HttpBlock::createTagInfo(const HttpHelper &helper, boost::any &a) const {
 		return;
 	}
 
-	Tag tag = helper.createTag(a);
+	Tag tag = helper.createTag();
 	a = boost::any(tag);
 }
 

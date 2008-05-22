@@ -4,7 +4,6 @@
 #include <map>
 #include <string>
 #include <time.h>
-#include <boost/any.hpp>
 #include <boost/utility.hpp>
 #include <boost/thread/once.hpp>
 #include <curl/curl.h>
@@ -58,7 +57,7 @@ public:
 	std::string base() const;
 	void checkStatus() const;
 
-	Tag createTag(boost::any &a) const;
+	Tag createTag() const;
 
 	bool isXml() const;
 
