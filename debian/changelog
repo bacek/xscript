@@ -1,9 +1,9 @@
-xscript (5.16-1) unstable; urgency=low
+xscript (5.17-0) unstable; urgency=low
 
   * checking document root in block added
-  * tag processing updated in HttpBlock
+  * tag processing updated in HttpBlock 
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 22 May 2008 12:49:42 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 22 May 2008 13:32:02 +0400
 
 xscript (5.16-0) unstable; urgency=low
 
