@@ -32,6 +32,8 @@ public:
 	void testResponse();
 	void testResponseRedirect();
 	
+	void testEncode();
+
 	void testBadCode();
 	void testBadType();
 	void testBadArgCount();
@@ -43,6 +45,7 @@ private:
 	CPPUNIT_TEST(testRequest);
 	CPPUNIT_TEST(testResponse);
 	CPPUNIT_TEST(testResponseRedirect);
+	CPPUNIT_TEST(testEncode);
 	CPPUNIT_TEST(testBadType);
 	CPPUNIT_TEST(testBadArgCount);
 	CPPUNIT_TEST_EXCEPTION(testBadCode, std::runtime_error);
@@ -191,6 +194,26 @@ LuaTest::testResponseRedirect() {
 	CPPUNIT_ASSERT_EQUAL(std::string("http://example.com/"), response.headers["Location"]);
 
 }
+
+void
+LuaTest::testEncode() {
+	
+	using namespace xscript;
+	
+	RequestData data;
+	boost::shared_ptr<Script> script = Script::create("lua-encode.xml");
+	boost::shared_ptr<Context> ctx(new Context(script, data));
+	ContextStopper ctx_stopper(ctx);
+	
+	XmlDocHelper doc(script->invoke(ctx));
+	CPPUNIT_ASSERT(NULL != doc.get());
+	CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
+	CPPUNIT_ASSERT_EQUAL(
+		std::string("%CF%F0%E5%E2%E5%E4\nПревед\n"),
+		XmlUtils::xpathValue(doc.get(), "/page/lua", "Bye")
+	);
+}
+
 
 void
 LuaTest::testBadType() {

@@ -9,6 +9,7 @@
 #include "xscript/resource_holder.h"
 #include "xscript/logger.h"
 #include "xscript/context.h"
+#include "xscript/encoder.h"
 
 #include "stack.h"
 #include "lua_block.h"
@@ -180,9 +181,57 @@ static int luaPrint (lua_State *lua) {
 	return 0;
 }
 
+static int 
+luaUrlEncode(lua_State *lua) {
+	try {
+		luaCheckStackSize(lua, 2);
+		std::string value = luaReadStack<std::string>(lua, 1);
+		std::string encoding = luaReadStack<std::string>(lua, 2);
+
+		std::auto_ptr<Encoder> encoder = Encoder::createEscaping("utf-8", encoding.c_str());
+		std::string encoded;
+		encoder->encode(createRange(value), encoded);
+
+		lua_pushstring(lua, StringUtils::urlencode(encoded).c_str());
+		// Our value on stack
+		return 1;
+	}
+	catch (const std::exception &e) {
+		log()->error("caught exception in [xscript:urlencode]: %s", e.what());
+		luaL_error(lua, e.what());
+	}
+	return 0;
+}
+
+static int 
+luaUrlDecode(lua_State *lua) {
+	try {
+		luaCheckStackSize(lua, 2);
+		std::string value = luaReadStack<std::string>(lua, 1);
+		std::string encoding = luaReadStack<std::string>(lua, 2);
+
+		std::auto_ptr<Encoder> encoder = Encoder::createEscaping(encoding.c_str(), "utf-8");
+
+		std::string decoded;
+		encoder->encode(StringUtils::urldecode(value), decoded);
+		lua_pushstring(lua, decoded.c_str());
+		// Our value on stack
+		return 1;
+	}
+	catch (const std::exception &e) {
+		log()->error("caught exception in [xscript:urlencode]: %s", e.what());
+		luaL_error(lua, e.what());
+	}
+	return 0;
+}
+
 void
-setupOutput(lua_State *lua, std::string * buf) {
-	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+setupXScript(lua_State *lua, std::string * buf) {
+	log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	
+	lua_newtable(lua);
+	lua_setglobal(lua, "xscript");
+
 	lua_getglobal(lua, "_G");
 	lua_pushcfunction(lua, &luaPrint);
 	lua_setfield(lua, -2, "print");
@@ -196,9 +245,16 @@ setupOutput(lua_State *lua, std::string * buf) {
 	// Assign it to '_buf'
 	lua_setfield(lua, -2, "_buf"); 
 
+	// Setup urlencode and urldecode
+	lua_pushcfunction(lua, &luaUrlEncode);
+	lua_setfield(lua, -2, "urlencode");
+	lua_pushcfunction(lua, &luaUrlDecode);
+	lua_setfield(lua, -2, "urldecode");
+
+
 	lua_pop(lua, 2); // pop _G and xscript
 
-	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 }
 
 
@@ -211,12 +267,9 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 	lua_State *lua = lua_holder.get();
 	luaL_openlibs(lua);
 		
-	lua_newtable(lua);
-	lua_setglobal(lua, "xscript");
-
 	// Buffer to store output from lua
 	std::string buffer;
-	setupOutput(lua, &buffer);
+	setupXScript(lua, &buffer);
 	
 	Request *request = ctx->request();
 	

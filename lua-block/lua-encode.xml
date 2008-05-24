@@ -1,0 +1,10 @@
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+	<x:lua>
+		<![CDATA[
+		enc = xscript.urlencode("Превед", "cp1251");
+		print(enc);
+		dec = xscript.urldecode(enc, "cp1251")
+		print(dec);
+	]]>
+	</x:lua>
+</page>
