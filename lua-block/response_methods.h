@@ -8,6 +8,8 @@ namespace xscript
 
 extern "C" int luaResponseIndex(lua_State *lua) throw ();
 
+const struct luaL_reg * getResponseLib();
+
 } // namespace xscript
 
 #endif // _XSCRIPT_LUA_RESPONSE_METHODS_H_

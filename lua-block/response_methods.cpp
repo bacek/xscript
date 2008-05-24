@@ -24,36 +24,19 @@ extern "C" int luaResponseSetCookie(lua_State *lua) throw ();
 extern "C" int luaResponseRedirectToPath(lua_State *lua) throw ();
 extern "C" int luaResponseSetContentType(lua_State *lua) throw ();
 
-template<>
-MethodDispatcher<Response>::MethodDispatcher()
-{
-	registerMethod("setStatus", &luaResponseSetStatus);
-	registerMethod("setHeader", &luaResponseSetHeader);
-	registerMethod("setCookie", &luaResponseSetCookie);
-	registerMethod("redirectToPath", &luaResponseRedirectToPath);
-	registerMethod("setContentType", &luaResponseSetContentType);
-}
-
 static MethodDispatcher<Response> disp_;
 
-
-extern "C" int
-luaResponseIndex(lua_State *lua) throw () {
-	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-	try {
-		luaCheckStackSize(lua, 2);
-		luaCheckUserData(lua, "xscript.response", 1);
-		std::string method = luaReadStack<std::string>(lua, 2);
-		log()->debug("%s, calling response method: %s", BOOST_CURRENT_FUNCTION, method.c_str());
-		lua_pushcfunction(lua, disp_.findMethod(method));
-		return 1;
-	}
-	catch (const LuaError &e) {
-		return e.translate(lua);
-	}
-	catch (const std::exception &e) {
-		return luaL_error(lua, "caught exception in response index: %s", e.what());
-	}
+static const struct luaL_reg responselib [] = {
+	{"setStatus",		luaResponseSetStatus},
+	{"setHeader",		luaResponseSetHeader},
+	{"setCookie",		luaResponseSetCookie},
+	{"redirectToPath",	luaResponseRedirectToPath},
+	{"setContentType",	luaResponseSetContentType},
+	{NULL, NULL}
+};
+    
+const struct luaL_reg * getResponseLib() {
+	return responselib;
 }
 
 extern "C" int
