@@ -30,6 +30,7 @@ public:
 	void testState();
 	void testRequest();
 	void testResponse();
+	void testResponseRedirect();
 	
 	void testBadCode();
 	void testBadType();
@@ -41,6 +42,7 @@ private:
 	CPPUNIT_TEST(testState);
 	CPPUNIT_TEST(testRequest);
 	CPPUNIT_TEST(testResponse);
+	CPPUNIT_TEST(testResponseRedirect);
 	CPPUNIT_TEST(testBadType);
 	CPPUNIT_TEST(testBadArgCount);
 	CPPUNIT_TEST_EXCEPTION(testBadCode, std::runtime_error);
@@ -165,10 +167,29 @@ LuaTest::testResponse() {
 	CPPUNIT_ASSERT_EQUAL((unsigned short)404, response.status);
 	CPPUNIT_ASSERT_EQUAL(std::string("Foo Bar"), response.headers["X-Header"]);
 	CPPUNIT_ASSERT_EQUAL(std::string("application/binary"), response.headers["Content-type"]);
+}
 
-//	CPPUNIT_ASSERT("QUERY" == state->asString("test args"));
-//	CPPUNIT_ASSERT("fireball.yandex.ru" == state->asString("test headers"));
-//	CPPUNIT_ASSERT("2.12.85.0.6" == state->asString("test cookies"));
+void
+LuaTest::testResponseRedirect() {
+	RequestImpl request;
+	FakeResponse response;
+	boost::shared_ptr<State> state(new State());
+
+	request.setArg("query", "QUERY");
+	request.addInputHeader("Host", "fireball.yandex.ru");
+	request.addInputCookie("SessionId", "2.12.85.0.6");
+
+
+	RequestData data = RequestData(&request, &response, state);
+	boost::shared_ptr<Script> script = Script::create("lua-response-redirect.xml");
+	boost::shared_ptr<Context> ctx(new Context(script, data));
+	ContextStopper ctx_stopper(ctx);
+	
+	XmlDocHelper doc(script->invoke(ctx));
+
+	CPPUNIT_ASSERT_EQUAL((unsigned short)302, response.status);
+	CPPUNIT_ASSERT_EQUAL(std::string("http://example.com/"), response.headers["Location"]);
+
 }
 
 void
