@@ -25,6 +25,8 @@ class LuaTest : public CppUnit::TestFixture
 {
 public:
 	
+	void testPrint();
+
 	void testState();
 	void testRequest();
 	void testResponse();
@@ -35,6 +37,7 @@ public:
 
 private:
 	CPPUNIT_TEST_SUITE(LuaTest);
+	CPPUNIT_TEST(testPrint);
 	CPPUNIT_TEST(testState);
 	CPPUNIT_TEST(testRequest);
 	CPPUNIT_TEST(testResponse);
@@ -49,6 +52,26 @@ private:
 CPPUNIT_TEST_SUITE_REGISTRATION( LuaTest );
 
 #endif
+
+void
+LuaTest::testPrint() {
+	
+	using namespace xscript;
+	
+	RequestData data;
+	boost::shared_ptr<Script> script = Script::create("lua-print.xml");
+	boost::shared_ptr<Context> ctx(new Context(script, data));
+	ContextStopper ctx_stopper(ctx);
+	
+	XmlDocHelper doc(script->invoke(ctx));
+	CPPUNIT_ASSERT(NULL != doc.get());
+	CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
+	CPPUNIT_ASSERT_EQUAL(
+		std::string("Hello\nWorld!\n"),
+		XmlUtils::xpathValue(doc.get(), "/page/lua", "Bye")
+	);
+}
+
 
 void
 LuaTest::testState() {
