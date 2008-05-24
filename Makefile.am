@@ -23,7 +23,7 @@ SUBDIRS += tests
 endif
 
 
-coverage: check
+coverage: 
 	lcov -c -d . -o lcov.tmp
 	lcov -r lcov.tmp '/usr*' -o lcov.info
 	genhtml -o lcov lcov.info
