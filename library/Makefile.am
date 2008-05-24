@@ -29,6 +29,5 @@ noinst_HEADERS = details/expect.h details/extension_list.h details/loader.h \
 
 libxscript_la_LDFLAGS = -lpthread -ldl
 
-AM_CPPFLAGS = -I../include -I../config -D_REENTRANT
-AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
-AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem -lcrypto
+AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread -I@top_srcdir@/include -I@builddir@
+AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem -lcrypto -I@top_srcdir@/include

@@ -9,6 +9,6 @@ noinst_HEADERS = server_request.h fcgi_server.h uptime_counter.h
 
 dist_sysconf_DATA = xscript.conf xscript-ulimits.conf
 
-AM_CPPFLAGS = -I../include -I../config -D_REENTRANT
+AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem

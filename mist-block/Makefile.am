@@ -10,6 +10,6 @@ xscript_mist_la_LDFLAGS = -module -avoid-version
 noinst_HEADERS = xml_node.h state_node.h state_param_node.h \
 	state_prefix_node.h mist_block.h
 
-AM_CPPFLAGS = -I../include -I../config -D_REENTRANT
+AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem

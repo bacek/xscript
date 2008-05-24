@@ -15,7 +15,7 @@ test_LDFLAGS = -ldl -lcppunit -export-dynamic
 
 endif
 
-AM_CPPFLAGS = -I../include -I../config -I../library -D_REENTRANT
+AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem
 
