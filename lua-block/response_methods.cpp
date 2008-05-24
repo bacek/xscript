@@ -24,8 +24,6 @@ extern "C" int luaResponseSetCookie(lua_State *lua) throw ();
 extern "C" int luaResponseRedirectToPath(lua_State *lua) throw ();
 extern "C" int luaResponseSetContentType(lua_State *lua) throw ();
 
-static MethodDispatcher<Response> disp_;
-
 static const struct luaL_reg responselib [] = {
 	{"setStatus",		luaResponseSetStatus},
 	{"setHeader",		luaResponseSetHeader},
