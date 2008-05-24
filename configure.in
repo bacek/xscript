@@ -23,7 +23,7 @@ ac_stored_cxxflags=$CXXFLAGS
 
 LIBS="$ac_stored_libs -lboost_thread -lboost_regex -lboost_filesystem"
 CPPFLAGS="$ac_stored_cppflags -pthread"
-CXXFLAGS="$ac_stored_cxxflags -W -Wall"
+CXXFLAGS="$ac_stored_cxxflags -W -Wall -pthread"
 
 AC_CHECK_HEADER([boost/bind.hpp], [], [ac_have_boost="no"])
 AC_CHECK_HEADER([boost/function.hpp], [], [ac_have_boost="no"])
@@ -222,6 +222,16 @@ if test "f$ac_cppunit_found" != "fyes"; then
 fi	
 
 AM_CONDITIONAL(HAVE_TESTS, [test "f$ac_cppunit_found" = "fyes"])
+
+AC_ARG_ENABLE(coverage,
+	AS_HELP_STRING(--enable-coverage,enables coverage tests compilation),
+	[
+		if test "f$enableval" = "fyes"; then
+			CXXFLAGS="$CXXFLAGS --coverage"
+			LDFLAGS="$LDFLAGS --coverage"
+		fi
+	]
+	)
 
 AC_CONFIG_FILES([Makefile
 	include/Makefile include/xscript/Makefile include/internal/Makefile
