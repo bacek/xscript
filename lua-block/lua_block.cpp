@@ -3,7 +3,6 @@
 #include <new>
 #include <memory>
 #include <stdexcept>
-#include <boost/thread/tss.hpp>
 #include <boost/current_function.hpp>
 
 #include "xscript/util.h"
@@ -30,6 +29,21 @@ inline void ResourceHolderTraits<lua_State*>::destroy(lua_State *state) {
 }
 
 typedef ResourceHolder<lua_State*> LuaHolder;
+
+static int
+luaReportError(lua_State * lua) {
+
+	if (lua_isstring(lua, 1)) { 
+		const char *val = lua_tostring(lua, 1); 
+		log()->error("lua block failed: %s", val);
+	}
+	else
+		log()->error("failed to report lua error: can not get error message"); 
+	} 
+
+	return 0;
+}
+
 
 LuaBlock::LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
 	Block(ext, owner, node), code_(NULL)
@@ -81,7 +95,7 @@ extern "C" void luaHook(lua_State * lua, lua_Debug *ar) {
 template<typename Type>
 void
 setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_reg * lib) {
-	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 
 	//lua_sethook(lua, luaHook, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE, 1);
 
@@ -111,10 +125,12 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
 
 	// And remove it from stack
 	lua_remove(lua, -1);
+	lua_pop(lua, 2); // pop xscript, __metatable and UD
 
-	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 	return;
 };
+
 
 void
 LuaBlock::setupState(State *state, lua_State *lua) {
@@ -131,6 +147,8 @@ LuaBlock::setupRequest(Request *request, lua_State *lua) {
 
 void
 LuaBlock::setupResponse(Response *response, lua_State *lua) {
+	setupUserdata(lua, response, "response", getResponseLib());
+	return;
 }
 
 void
@@ -145,11 +163,69 @@ void
 LuaBlock::setupRequestCookies(Request *req, lua_State *lua) {
 }
 
+static int luaPrint (lua_State *lua) {
+	int n = lua_gettop(lua);  /* number of arguments */
+	int i;
+	
+	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	lua_getglobal(lua, "xscript");
+	lua_getfield(lua, -1, "_buf");
+
+	pointer<std::string> * p = (pointer<std::string>*)lua_touserdata(lua, -1);
+	assert(p);
+	std::string* buf = p->ptr;
+	assert(buf);
+
+	lua_pop(lua, 2); // pop xscript and buf
+	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+
+	//std::string* buf = output_buffer_.get();
+
+	lua_getglobal(lua, "tostring");
+	for (i=1; i<=n; i++) {
+		const char *s;
+		lua_pushvalue(lua, -1);  /* function to be called */
+		lua_pushvalue(lua, i);   /* value to print */
+		lua_call(lua, 1, 1);
+		s = lua_tostring(lua, -1);  /* get result */
+		if (s == NULL)
+			return luaL_error(lua, LUA_QL("tostring") " must return a string to "
+				LUA_QL("print"));
+		if (i>1) buf->append("\t");
+		buf->append(s);
+		lua_pop(lua, 1);  /* pop result */
+	}
+	buf->append("\n");
+	return 0;
+}
+
+void
+setupOutput(lua_State *lua, std::string * buf) {
+	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	lua_getglobal(lua, "_G");
+	lua_pushcfunction(lua, &luaPrint);
+	lua_setfield(lua, -2, "print");
+	
+	lua_getglobal(lua, "xscript");
+
+    pointer<std::string> *p = (pointer<std::string> *)lua_newuserdata(lua, sizeof(pointer<std::string>));
+	p->ptr = buf;
+	
+	// Our userdata is on top of stack.
+	// Assign it to '_buf'
+	lua_setfield(lua, -2, "_buf"); 
+
+	lua_pop(lua, 2); // pop _G and xscript
+
+	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+}
+
+
 XmlDocHelper
 LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 	
 	log()->entering(BOOST_CURRENT_FUNCTION);
-	
+
 	LuaHolder lua(luaL_newstate());
 	luaL_openlibs(lua.get());
 		
@@ -159,23 +235,42 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 	lua_newtable(lua.get());
 	lua_setglobal(lua.get(), "xscript");
 
+	// Buffer to store output from lua
+	std::string buffer;
+	setupOutput(lua.get(), &buffer);
+	
 	setupState(state.get(), lua.get());
 	setupRequest(request, lua.get());
 	setupRequestArgs(request, lua.get());
 	setupRequestHeaders(request, lua.get());
 	setupRequestCookies(request, lua.get());
-	
+
+
+	// Top function of stack is error reporting function.
+	lua_pushcfunction(lua.get(), &luaReportError);
+
 	if (LUA_ERRMEM == luaL_loadstring(lua.get(), code_)) {
 		throw std::bad_alloc();
 	}
+
+
 	int res = lua_pcall(lua.get(), 0, LUA_MULTRET, 1);
 	if (res != 0) {
 		std::string msg = luaReadStack<std::string>(lua.get(), 1);
 		log()->error("%s, Lua block failed: %s", BOOST_CURRENT_FUNCTION, msg.c_str());
-		throw (msg);
+		throw std::runtime_error(msg);
 	}
 	
-	return fakeResult();
+	XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+	XmlUtils::throwUnless(NULL != doc.get());
+
+	log()->debug("Lua output: %s", buffer.c_str());
+	XmlNodeHelper node(xmlNewDocNode( doc.get(), 0, BAD_CAST "lua", BAD_CAST buffer.c_str()));
+
+	xmlDocSetRootElement(doc.get(), node.get());
+	node.release();
+
+	return doc;
 }
 
 LuaExtension::LuaExtension() {
