@@ -6,8 +6,6 @@
 namespace xscript
 {
 
-extern "C" int luaResponseIndex(lua_State *lua) throw ();
-
 const struct luaL_reg * getResponseLib();
 
 } // namespace xscript

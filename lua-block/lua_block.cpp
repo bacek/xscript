@@ -37,7 +37,7 @@ luaReportError(lua_State * lua) {
 		const char *val = lua_tostring(lua, 1); 
 		log()->error("lua block failed: %s", val);
 	}
-	else
+	else {
 		log()->error("failed to report lua error: can not get error message"); 
 	} 
 
@@ -125,31 +125,12 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
 
 	// And remove it from stack
 	lua_remove(lua, -1);
-	lua_pop(lua, 2); // pop xscript, __metatable and UD
+	lua_pop(lua, 2); // pop xscript, __metatable
 
 	log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 	return;
 };
 
-
-void
-LuaBlock::setupState(State *state, lua_State *lua) {
-	setupUserdata(lua, state, "state", getStatelib());
-	return;
-}
-
-
-void
-LuaBlock::setupRequest(Request *request, lua_State *lua) {
-	setupUserdata(lua, request, "request", getRequestLib());
-	return;
-}
-
-void
-LuaBlock::setupResponse(Response *response, lua_State *lua) {
-	setupUserdata(lua, response, "response", getResponseLib());
-	return;
-}
 
 void
 LuaBlock::setupRequestArgs(Request *req, lua_State *lua) {
@@ -226,37 +207,39 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 	
 	log()->entering(BOOST_CURRENT_FUNCTION);
 
-	LuaHolder lua(luaL_newstate());
-	luaL_openlibs(lua.get());
+	LuaHolder lua_holder(luaL_newstate());
+	lua_State *lua = lua_holder.get();
+	luaL_openlibs(lua);
 		
-	Request *request = ctx->request();
-	boost::shared_ptr<State> state = ctx->state();
-	
-	lua_newtable(lua.get());
-	lua_setglobal(lua.get(), "xscript");
+	lua_newtable(lua);
+	lua_setglobal(lua, "xscript");
 
 	// Buffer to store output from lua
 	std::string buffer;
-	setupOutput(lua.get(), &buffer);
+	setupOutput(lua, &buffer);
 	
-	setupState(state.get(), lua.get());
-	setupRequest(request, lua.get());
-	setupRequestArgs(request, lua.get());
-	setupRequestHeaders(request, lua.get());
-	setupRequestCookies(request, lua.get());
+	Request *request = ctx->request();
+	
+	setupUserdata(lua, request, "request", getRequestLib());
+	setupUserdata(lua, ctx->state().get(), "state", getStateLib());
+	setupUserdata(lua, ctx->response(), "response", getResponseLib());
+
+	setupRequestArgs(request, lua);
+	setupRequestHeaders(request, lua);
+	setupRequestCookies(request, lua);
 
 
 	// Top function of stack is error reporting function.
-	lua_pushcfunction(lua.get(), &luaReportError);
+	lua_pushcfunction(lua, &luaReportError);
 
-	if (LUA_ERRMEM == luaL_loadstring(lua.get(), code_)) {
+	if (LUA_ERRMEM == luaL_loadstring(lua, code_)) {
 		throw std::bad_alloc();
 	}
 
 
-	int res = lua_pcall(lua.get(), 0, LUA_MULTRET, 1);
+	int res = lua_pcall(lua, 0, LUA_MULTRET, 1);
 	if (res != 0) {
-		std::string msg = luaReadStack<std::string>(lua.get(), 1);
+		std::string msg = luaReadStack<std::string>(lua, 1);
 		log()->error("%s, Lua block failed: %s", BOOST_CURRENT_FUNCTION, msg.c_str());
 		throw std::runtime_error(msg);
 	}

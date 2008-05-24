@@ -43,7 +43,7 @@ static const struct luaL_reg statelib [] = {
       {NULL, NULL}
     };
     
-const struct luaL_reg * getStatelib() {
+const struct luaL_reg * getStateLib() {
 	return statelib;
 }
 

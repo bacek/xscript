@@ -6,9 +6,7 @@
 namespace xscript
 {
 
-extern "C" int luaStateIndex(lua_State *lua) throw ();
-
-const struct luaL_reg * getStatelib();
+const struct luaL_reg * getStateLib();
 
 } // namespace xscript
 

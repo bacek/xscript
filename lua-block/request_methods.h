@@ -6,14 +6,6 @@
 namespace xscript
 {
 
-extern "C" int luaRequestIndex(lua_State *lua) throw ();
-
-extern "C" int luaRequestGetArg(lua_State *lua) throw ();
-
-extern "C" int luaRequestGetHeader(lua_State *lua) throw ();
-
-extern "C" int luaRequestGetCookie(lua_State *lua) throw ();
-
 const struct luaL_reg * getRequestLib();
 
 } // namespace xscript
