@@ -19,17 +19,17 @@
 namespace xscript
 {
 
-extern "C" int luaStateGet(lua_State *lua) throw ();
-extern "C" int luaStateSetBool(lua_State *lua) throw ();
+extern "C" int luaStateGet(lua_State *lua);
+extern "C" int luaStateSetBool(lua_State *lua);
 
-extern "C" int luaStateSetLong(lua_State *lua) throw ();
-extern "C" int luaStateSetLongLong(lua_State *lua) throw ();
+extern "C" int luaStateSetLong(lua_State *lua);
+extern "C" int luaStateSetLongLong(lua_State *lua);
 
-extern "C" int luaStateSetULong(lua_State *lua) throw ();
-extern "C" int luaStateSetULongLong(lua_State *lua) throw ();
+extern "C" int luaStateSetULong(lua_State *lua);
+extern "C" int luaStateSetULongLong(lua_State *lua);
 
-extern "C" int luaStateSetDouble(lua_State *lua) throw ();
-extern "C" int luaStateSetString(lua_State *lua) throw ();
+extern "C" int luaStateSetDouble(lua_State *lua);
+extern "C" int luaStateSetString(lua_State *lua);
 
 static const struct luaL_reg statelib [] = {
       {"get",			luaStateGet},
@@ -48,9 +48,11 @@ const struct luaL_reg * getStatelib() {
 }
 
 extern "C" int
-luaStateGet(lua_State *lua) throw () {
+luaStateGet(lua_State *lua) {
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 	try {
+		luaCheckStackSize(lua, 2);
+
 		State* s = luaReadStack<State>(lua, "xscript.state", 1);
 		std::string key = luaReadStack<std::string>(lua, 2);
 		log()->debug("luaStateGet: %s", key.c_str());
@@ -70,8 +72,10 @@ luaStateGet(lua_State *lua) throw () {
 
 
 template<typename Type> int
-luaStateSet(lua_State *lua) throw () {
+luaStateSet(lua_State *lua) {
 	try {
+		luaCheckStackSize(lua, 3);
+
 		State* s = luaReadStack<State>(lua, "xscript.state", 1);
 		std::string key = luaReadStack<std::string>(lua, 2);
 		Type value = luaReadStack<Type>(lua, 3);
@@ -89,37 +93,37 @@ luaStateSet(lua_State *lua) throw () {
 }
 
 extern "C" int
-luaStateSetBool(lua_State *lua) throw () {
+luaStateSetBool(lua_State *lua) {
 	return luaStateSet<bool>(lua);
 }
 
 extern "C" int
-luaStateSetLong(lua_State *lua) throw () {
+luaStateSetLong(lua_State *lua) {
 	return luaStateSet<boost::int32_t>(lua);
 }
 
 extern "C" int
-luaStateSetLongLong(lua_State *lua) throw () {
+luaStateSetLongLong(lua_State *lua) {
 	return luaStateSet<boost::int64_t>(lua);
 }
 
 extern "C" int
-luaStateSetULong(lua_State *lua) throw () {
+luaStateSetULong(lua_State *lua) {
 	return luaStateSet<boost::uint32_t>(lua);
 }
 
 extern "C" int
-luaStateSetULongLong(lua_State *lua) throw () {
+luaStateSetULongLong(lua_State *lua) {
 	return luaStateSet<boost::uint64_t>(lua);
 }
 
 extern "C" int
-luaStateSetString(lua_State *lua) throw () {
+luaStateSetString(lua_State *lua) {
 	return luaStateSet<std::string>(lua);
 }
 
 extern "C" int
-luaStateSetDouble(lua_State *lua) throw () {
+luaStateSetDouble(lua_State *lua) {
 	return luaStateSet<double>(lua);
 }
 
