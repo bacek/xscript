@@ -77,7 +77,7 @@ static XsltInitalizer xsltInitalizer;
 
 Stylesheet::Stylesheet(const std::string &name) :
 	modified_(std::numeric_limits<time_t>::min()),
-	name_(name), stylesheet_(NULL), blocks_()
+	name_(name), stylesheet_(NULL), blocks_(), have_output_info_(false)
 {
 }
 
@@ -188,6 +188,7 @@ Stylesheet::parse() {
 	
 	detectOutputMethod(stylesheet_);
 	detectOutputEncoding(stylesheet_);
+	detectOutputInfo(stylesheet_);
 
 	modified_ = fs::last_write_time(path);
 }
@@ -291,6 +292,17 @@ Stylesheet::detectOutputEncoding(const XsltStylesheetHelper &sh) {
 	}
 	else {
 		output_encoding_.assign((const char*) stylesheet_->encoding);
+	}
+}
+
+void
+Stylesheet::detectOutputInfo(const XsltStylesheetHelper &sh) {
+	(void)sh;
+	if (stylesheet_->omitXmlDeclaration || stylesheet_->indent) {
+		have_output_info_ = true;
+	}
+	else {
+		have_output_info_ = false;
 	}
 }
 

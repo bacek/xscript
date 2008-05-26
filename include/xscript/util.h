@@ -7,6 +7,7 @@
 #include <iosfwd>
 #include <boost/cstdint.hpp>
 #include <boost/utility.hpp>
+#include <xscript/config.h>
 #include <xscript/range.h>
 #include <libxml/tree.h>
 
@@ -30,6 +31,8 @@ class XmlUtils : private boost::noncopyable
 public:
 	XmlUtils();
 	virtual ~XmlUtils();
+
+	static void init(const Config *config);
 
 	static void registerReporters();
 	static void resetReporter();

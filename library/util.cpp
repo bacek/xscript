@@ -76,8 +76,6 @@ XmlUtils::XmlUtils() {
 	xmlLoadExtDtdDefaultValue |= XML_COMPLETE_ATTRS;
 	xmlSubstituteEntitiesDefault(1); // 0
 
-	xsltMaxDepth = 40;
-
 	exsltStrRegister();
 	exsltDynRegister();
 	
@@ -95,6 +93,11 @@ XmlUtils::XmlUtils() {
 XmlUtils::~XmlUtils() {
 	xsltCleanupGlobals();
 	xmlCleanupParser();
+}
+
+void
+XmlUtils::init(const Config *config) {
+	xsltMaxDepth = config->as<int>("/xscript/xslt/max-depth", 300);
 }
 
 void

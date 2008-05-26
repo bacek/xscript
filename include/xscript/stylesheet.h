@@ -40,6 +40,10 @@ public:
 	inline const std::string& outputEncoding() const {
 		return output_encoding_;
 	}
+
+	inline bool haveOutputInfo() const {
+		return have_output_info_;
+	}
 	
 	XmlDocHelper apply(Object *obj, Context *ctx, const XmlDocHelper &doc);
 
@@ -58,6 +62,7 @@ protected:
 
 	void detectOutputMethod(const XsltStylesheetHelper &sh);
 	void detectOutputEncoding(const XsltStylesheetHelper &sh);
+	void detectOutputInfo(const XsltStylesheetHelper &sh);
 	
 	void setupContentType(const char *type);
 	std::string detectContentType(const XmlDocHelper &doc) const;
@@ -74,6 +79,7 @@ private:
 	XsltStylesheetHelper stylesheet_;
 	std::map<xmlNodePtr, Block*> blocks_;
 	std::string content_type_, output_method_, output_encoding_;
+	bool have_output_info_;
 };
 
 } // namespace xscript

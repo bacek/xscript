@@ -51,6 +51,8 @@ Config::startup() {
 	LoggerFactory::instance()->init(this);
 	log()->debug("logger factory started");
 
+	XmlUtils::init(this);
+
 	Loader::instance()->init(this);
 	log()->debug("loader started");
 	

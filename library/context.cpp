@@ -167,7 +167,7 @@ Context::documentWriter() {
 
 void
 Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
-	if ("xml" == sh->outputMethod()) {
+	if ("xml" == sh->outputMethod() && !sh->haveOutputInfo()) {
 		writer_ = std::auto_ptr<DocumentWriter>(new XmlWriter(sh->outputEncoding()));
 	}
 	else {
