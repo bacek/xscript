@@ -3,7 +3,7 @@
 <page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
   <x:lua>
 	  <![CDATA[
-	  c = new xscript.cookie('foo', 'bar');
+	  c = xscript.cookie.new('foo', 'bar');
 	  xscript.response:setCookie(c);
   ]]>
   </x:lua>
