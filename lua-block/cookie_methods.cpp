@@ -30,6 +30,10 @@ const struct luaL_reg * getCookieLib() {
 	return cookielib;
 }
 
+void registerCookieMethods(lua_State *lua) {
+}
+
+
 extern "C" {
 
 int luaCookieNew(lua_State *){
