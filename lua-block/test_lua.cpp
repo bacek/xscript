@@ -33,6 +33,7 @@ public:
 	void testResponseRedirect();
 	
 	void testEncode();
+	void testCookie();
 
 	void testBadCode();
 	void testBadType();
@@ -45,7 +46,10 @@ private:
 	CPPUNIT_TEST(testRequest);
 	CPPUNIT_TEST(testResponse);
 	CPPUNIT_TEST(testResponseRedirect);
+
 	CPPUNIT_TEST(testEncode);
+	CPPUNIT_TEST(testCookie);
+
 	CPPUNIT_TEST(testBadType);
 	CPPUNIT_TEST(testBadArgCount);
 	CPPUNIT_TEST_EXCEPTION(testBadCode, std::runtime_error);
@@ -212,6 +216,23 @@ LuaTest::testEncode() {
 		std::string("%CF%F0%E5%E2%E5%E4\nПревед\n"),
 		XmlUtils::xpathValue(doc.get(), "/page/lua", "Bye")
 	);
+}
+
+void
+LuaTest::testCookie() {
+	RequestImpl request;
+	FakeResponse response;
+	boost::shared_ptr<State> state(new State());
+
+
+	RequestData data = RequestData(&request, &response, state);
+	boost::shared_ptr<Script> script = Script::create("lua-cookie.xml");
+	boost::shared_ptr<Context> ctx(new Context(script, data));
+	ContextStopper ctx_stopper(ctx);
+	
+	XmlDocHelper doc(script->invoke(ctx));
+
+	CPPUNIT_ASSERT(NULL != doc.get());
 }
 
 
