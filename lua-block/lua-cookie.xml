@@ -1,0 +1,11 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <x:lua>
+	  <![CDATA[
+	  c = new xscript.cookie('foo', 'bar');
+	  xscript.response:setCookie(c);
+  ]]>
+  </x:lua>
+</page>
+
