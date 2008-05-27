@@ -111,7 +111,7 @@ LuaTest::testState() {
 class FakeResponse : public xscript::Response
 {
 public:
-	void setCookie(const xscript::Cookie &cookie) {};
+	void setCookie(const xscript::Cookie &cookie) { cookies[cookie.name()] = cookie; };
 	void setStatus(unsigned short s) { status = s; };
 	void sendError(unsigned short s, const std::string& message) {};
 	void setHeader(const std::string &name, const std::string &value) {
@@ -126,6 +126,7 @@ public:
 	unsigned short status;
 	std::string content_type;
 	std::map<std::string, std::string> headers;
+	std::map<std::string, Cookie> cookies;
 };
 	
 
@@ -233,6 +234,7 @@ LuaTest::testCookie() {
 	XmlDocHelper doc(script->invoke(ctx));
 
 	CPPUNIT_ASSERT(NULL != doc.get());
+	CPPUNIT_ASSERT(response.cookies.end() != response.cookies.find("foo"));
 }
 
 
