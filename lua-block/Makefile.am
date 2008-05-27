@@ -1,7 +1,7 @@
 pkglib_LTLIBRARIES = xscript-lua.la
 
 xscript_lua_la_SOURCES = exception.cpp lua_block.cpp request_methods.cpp \
-	response_methods.cpp stack.cpp state_methods.cpp
+	response_methods.cpp stack.cpp state_methods.cpp cookie_methods.cpp
 
 xscript_lua_la_LIBADD = ../library/libxscript.la
 xscript_lua_la_LDFLAGS = @lua_LIBS@ -module -avoid-version
