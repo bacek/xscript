@@ -16,6 +16,7 @@
 #include "state_methods.h"
 #include "request_methods.h"
 #include "response_methods.h"
+#include "cookie_methods.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -132,18 +133,6 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
 	return;
 };
 
-
-void
-LuaBlock::setupRequestArgs(Request *req, lua_State *lua) {
-}
-
-void
-LuaBlock::setupRequestHeaders(Request *req, lua_State *lua) {
-}
-
-void
-LuaBlock::setupRequestCookies(Request *req, lua_State *lua) {
-}
 
 static int luaPrint (lua_State *lua) {
 	int n = lua_gettop(lua);  /* number of arguments */
@@ -277,10 +266,7 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 	setupUserdata(lua, ctx->state().get(), "state", getStateLib());
 	setupUserdata(lua, ctx->response(), "response", getResponseLib());
 
-	setupRequestArgs(request, lua);
-	setupRequestHeaders(request, lua);
-	setupRequestCookies(request, lua);
-
+	registerCookieMethods(lua);
 
 	// Top function of stack is error reporting function.
 	lua_pushcfunction(lua, &luaReportError);

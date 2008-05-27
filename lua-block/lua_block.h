@@ -22,10 +22,6 @@ public:
 	
 protected:
 
-	void setupRequestArgs(Request *request, lua_State *lua);
-	void setupRequestHeaders(Request *request, lua_State *lua);
-	void setupRequestCookies(Request *request, lua_State *lua);
-	
 	void reportError(const char *message, lua_State *lua);
 	virtual XmlDocHelper call(Context *ctx, boost::any &) throw (std::exception);
 	
