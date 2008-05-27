@@ -247,8 +247,15 @@ TaggedCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelp
 		buf[0] = 0;
 		strcat(buf, path.c_str());
 		strcat(buf, ".XXXXXX");
-		mkstemp(buf);
+		int fd = mkstemp(buf);
+
+		if (fd == -1) {
+			log()->error("can not create filename: %s", buf);
+			return false;
+		}
 		
+		close(fd);
+
 		if (!save(buf, key_str, tag, doc)) {
 			log()->error("can not create doc: %s, key: %s", path.c_str(), key_str.c_str());
 			return false;
