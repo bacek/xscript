@@ -4,6 +4,8 @@
 	  <![CDATA[
 	  c = xscript.cookie.new('foo', 'bar')
 	  print(c:name())
+	  c:path(".example.com");
+	  print("path:", c:path())
 	  xscript.response:setCookie(c)
   ]]>
   </x:lua>
