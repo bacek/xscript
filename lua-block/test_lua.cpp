@@ -236,11 +236,17 @@ LuaTest::testCookie() {
 	CPPUNIT_ASSERT(NULL != doc.get());
 	CPPUNIT_ASSERT(response.cookies.end() != response.cookies.find("foo"));
 	Cookie c = response.cookies["foo"];
-	CPPUNIT_ASSERT_EQUAL(std::string(".example.com"), c.path());
+	CPPUNIT_ASSERT_EQUAL(std::string("/some/path"), c.path());
+	CPPUNIT_ASSERT_EQUAL(std::string(".example.com"), c.domain());
 
 	CPPUNIT_ASSERT(
 		XmlUtils::xpathValue(doc.get(), "/page/lua", "Bye").find(
 			".example.com"
+		) != std::string::npos
+	);
+	CPPUNIT_ASSERT(
+		XmlUtils::xpathValue(doc.get(), "/page/lua", "Bye").find(
+			"/some/path"
 		) != std::string::npos
 	);
 }
