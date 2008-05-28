@@ -111,11 +111,35 @@ int luaCookieValue(lua_State * lua){
 
 int luaCookieSecure(lua_State * lua){
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	int size = lua_gettop(lua);
+	Cookie * c = luaReadStack<Cookie>(lua, "xscript.cookie", 1);
+	if (size == 1) {
+		lua_pushboolean(lua, c->secure());
+		return 1;
+	}
+	else if (size == 2) {
+		bool value = luaReadStack<bool>(lua, 2);
+		c->secure(value);
+		return 0;
+	}
+	luaL_error(lua, "Invalid arity");
 	return 0;
 }
 
 int luaCookieExpires(lua_State * lua){
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	int size = lua_gettop(lua);
+	Cookie * c = luaReadStack<Cookie>(lua, "xscript.cookie", 1);
+	if (size == 1) {
+		lua_pushnumber(lua, c->expires());
+		return 1;
+	}
+	else if (size == 2) {
+		time_t value = luaReadStack<time_t>(lua, 2);
+		c->expires(value);
+		return 0;
+	}
+	luaL_error(lua, "Invalid arity");
 	return 0;
 }
 

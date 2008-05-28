@@ -6,8 +6,12 @@
 	  print(c:name())
 	  c:path("/some/path");
 	  c:domain(".example.com");
+	  c:secure(true);
+	  c:expires(123456789);
 	  print("path:", c:path())
 	  print("domain:", c:domain())
+	  print("secure:", c:secure())
+	  print("expires:", c:expires())
 	  xscript.response:setCookie(c)
   ]]>
   </x:lua>
