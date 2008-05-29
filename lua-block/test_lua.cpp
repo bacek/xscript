@@ -244,6 +244,9 @@ LuaTest::testCookie() {
 	CPPUNIT_ASSERT(out.find(".example.com") != std::string::npos);
 	CPPUNIT_ASSERT(out.find( "/some/path") != std::string::npos);
 	CPPUNIT_ASSERT(out.find( "123456789") != std::string::npos);
+
+	Cookie c2 = response.cookies["baz"];
+	CPPUNIT_ASSERT_EQUAL(time_t(Cookie::MAX_LIVE_TIME), c2.expires());
 }
 
 

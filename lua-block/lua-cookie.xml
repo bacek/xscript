@@ -13,6 +13,13 @@
 	  print("secure:", c:secure())
 	  print("expires:", c:expires())
 	  xscript.response:setCookie(c)
+
+	  c2 = xscript.cookie.new('baz', 'foo')
+	  print("perm1", c2:permanent())
+	  c2:permanent(true)
+	  print("perm2", c2:permanent())
+	  print("expires2:", c2:expires())
+	  xscript.response:setCookie(c2)
   ]]>
   </x:lua>
 </page>

@@ -32,7 +32,7 @@ static const struct luaL_reg cookielib_m [] = {
 	  {"expires",	luaCookieExpires},
 	  {"path",		luaCookiePath},
 	  {"domain",	luaCookieDomain},
-	  {"permananet",luaCookiePermanent},
+	  {"permanent", luaCookiePermanent},
       {NULL, NULL}
     };
     
@@ -179,6 +179,18 @@ int luaCookieDomain(lua_State * lua){
 
 int luaCookiePermanent(lua_State * lua){
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	int size = lua_gettop(lua);
+	Cookie * c = luaReadStack<Cookie>(lua, "xscript.cookie", 1);
+	if (size == 1) {
+		lua_pushboolean(lua, c->permanent());
+		return 1;
+	}
+	else if (size == 2) {
+		bool value = luaReadStack<bool>(lua, 2);
+		c->permanent(value);
+		return 0;
+	}
+	luaL_error(lua, "Invalid arity");
 	return 0;
 }
 
