@@ -54,6 +54,15 @@ public:
 		domain_ = value;
 	}
 
+	inline time_t permanent() const {
+		return expires_ == MAX_LIVE_TIME;
+	}
+	
+	inline void permanent(bool) {
+		expires_ = MAX_LIVE_TIME;
+	}
+
+
 	std::string toString() const;
 
 	static const time_t MAX_LIVE_TIME;
