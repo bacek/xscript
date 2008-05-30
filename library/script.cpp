@@ -441,7 +441,7 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
 			count++;
 		}
 		else if (xscript_node_set_.find(node) != xscript_node_set_.end() ) {
-			replaceXScriptNode(newnode, ctx);
+			replaceXScriptNode(node, newnode, ctx);
 			xscript_count++;
 		}
 		else if (node->children) {
@@ -489,10 +489,11 @@ Script::property(const char *prop, const char *value) {
 }
 
 void
-Script::replaceXScriptNode(xmlNodePtr node, Context *ctx) const {
+Script::replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const {
 	(void)ctx;
-	xmlUnlinkNode(node);
-	xmlFreeNode(node);
+	(void)node;
+	xmlUnlinkNode(newnode);
+	xmlFreeNode(newnode);
 }
 
 void

@@ -75,7 +75,7 @@ InvokeTest::testParams() {
 	script->applyStylesheet(ctx.get(), doc);
 	
 	CPPUNIT_ASSERT_EQUAL(std::string("success"), 
-		XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
+	XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
 }
 
 void
@@ -90,7 +90,7 @@ InvokeTest::testHttpBlockParams() {
 	CPPUNIT_ASSERT(NULL != doc.get());
 	
 	CPPUNIT_ASSERT_EQUAL(std::string("success"), 
-		XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
+	XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
 }
 
 void
@@ -169,7 +169,7 @@ InvokeTest::testStylesheet() {
 	CPPUNIT_ASSERT(NULL != doc.get());
 	
 	CPPUNIT_ASSERT_EQUAL(std::string("long"), 
-		XmlUtils::xpathValue(doc.get(), "/page/state-results/type", "failed"));
+	XmlUtils::xpathValue(doc.get(), "/page/state-results/type", "failed"));
 }
 
 void

@@ -109,7 +109,7 @@ protected:
 	
 	void parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes);
 	void parseHeadersNode(xmlNodePtr node);
-	void parseXScriptNode(const xmlNodePtr node);
+	virtual void parseXScriptNode(const xmlNodePtr node);
 	void parseXScriptNodes(std::vector<xmlNodePtr>& xscript_nodes);
 	void parseBlocks();
 	void buildXScriptNodeSet(std::vector<xmlNodePtr>& xscript_nodes);
@@ -128,7 +128,8 @@ protected:
 	virtual void parse();
 	virtual void postParse();
 	virtual void property(const char *name, const char *value);
-	virtual void replaceXScriptNode(xmlNodePtr node, Context *ctx) const;
+
+	virtual void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const;
 
 	void removeUnusedNode(const XmlDocHelper &doc, xmlNodePtr orig);
 	bool removeUnusedNode(xmlNodePtr node, xmlNodePtr newnode, xmlNodePtr orig);
