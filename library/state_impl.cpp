@@ -1,6 +1,7 @@
 #include "settings.h"
 
 #include <cstring>
+#include <limits>
 #include <sstream>
 #include <iterator>
 #include <stdexcept>
@@ -9,6 +10,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
 
+#include "xscript/algorithm.h"
+#include "xscript/range.h"
 #include "xscript/logger.h"
 #include "details/state_impl.h"
 
@@ -39,12 +42,28 @@ StateImpl::erasePrefix(const std::string &prefix) {
 		}
 	}
 }
-	
+
 bool
 StateImpl::asBool(const std::string &name) const {
 	boost::mutex::scoped_lock sl(mutex_);
 	const StateValue &val = find(name);
-	return (!val.value().empty() && val.value() != "0");
+
+	if (trim(createRange(val.value())).empty()) {
+		return false;
+	}
+	else if (val.type() == StateValue::TYPE_STRING) {
+		return true;
+	}
+	else if (val.type() == StateValue::TYPE_DOUBLE) {
+		if (fabs(boost::lexical_cast<double>(val.value())) >
+			std::numeric_limits<double>::epsilon()) {
+			return true;
+		}
+		return false;
+	}
+	else {
+		return val.value() != "0";
+	}
 }
 
 void
