@@ -58,8 +58,8 @@ public:
 		return expires_ == MAX_LIVE_TIME;
 	}
 	
-	inline void permanent(bool) {
-		expires_ = MAX_LIVE_TIME;
+	inline void permanent(bool value) {
+		expires_ = value ? MAX_LIVE_TIME : 0;
 	}
 
 
