@@ -1,6 +1,7 @@
 #include "settings.h"
 
 #include <cstring>
+#include <cmath>
 #include <limits>
 #include <sstream>
 #include <iterator>
