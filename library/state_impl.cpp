@@ -1,7 +1,6 @@
 #include "settings.h"
 
 #include <cstring>
-#include <cmath>
 #include <limits>
 #include <sstream>
 #include <iterator>
@@ -56,8 +55,9 @@ StateImpl::asBool(const std::string &name) const {
 		return true;
 	}
 	else if (val.type() == StateValue::TYPE_DOUBLE) {
-		if (fabs(boost::lexical_cast<double>(val.value())) >
-			std::numeric_limits<double>::epsilon()) {
+		double value = boost::lexical_cast<double>(val.value());
+		if (value > std::numeric_limits<double>::epsilon() ||
+			value < -std::numeric_limits<double>::epsilon()) {
 			return true;
 		}
 		return false;

@@ -2,8 +2,9 @@ xscript (5.19-0) unstable; urgency=low
 
   * parseXScriptNode changed to virtual
   * replaceXScriptNode changed
+  * guard processing updated
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 29 May 2008 18:48:13 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon,  2 Jun 2008 10:17:16 +0400
 
 xscript (5.18-1) unstable; urgency=low
 
