@@ -49,6 +49,8 @@ public:
 	void report(const char *format, ...);
 	void report(const char *format, va_list args);
 	
+	bool hasError() const {return error_;}
+
 	static XmlErrorReporter* reporter();
 	
 private:
@@ -123,7 +125,13 @@ XmlUtils::throwUnless(bool value) {
 		resetReporter();
 		throw e;
 	}
-	resetReporter();
+}
+
+void
+XmlUtils::printXMLError() {
+	if (XmlErrorReporter::reporter()->hasError()) {
+		log()->error("Got XML error: %s", XmlErrorReporter::reporter()->message().c_str());
+	}
 }
 
 std::string

@@ -118,6 +118,8 @@ Server::handleRequest(RequestData *request_data) {
 			XmlUtils::throwUnless(NULL != buf);
 			ctx->documentWriter()->write(ctx->response(), doc, buf);
 		}
+
+		XmlUtils::printXMLError();
 	}
 	catch (const std::exception &e) {
 		log()->error("%s: exception caught: %s", BOOST_CURRENT_FUNCTION, e.what());

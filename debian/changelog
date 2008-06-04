@@ -1,3 +1,9 @@
+xscript (5.19-1) unstable; urgency=low
+
+  * xsl:message processing added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed,  4 Jun 2008 17:25:25 +0400
+
 xscript (5.19-0) unstable; urgency=low
 
   * parseXScriptNode changed to virtual

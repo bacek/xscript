@@ -37,6 +37,7 @@ public:
 	static void registerReporters();
 	static void resetReporter();
 	static void throwUnless(bool value);
+	static void printXMLError();
 	
 	static std::string escape(const Range &value);
 	template<typename Cont> static std::string escape(const Cont &value);
