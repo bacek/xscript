@@ -38,6 +38,7 @@ Context::Context(const boost::shared_ptr<Script> &script, const RequestData &dat
 }
 
 Context::~Context() {
+	XmlUtils::printXMLError();
 	ExtensionList::instance()->destroyContext(this);
 	std::for_each(results_.begin(), results_.end(), boost::bind(&xmlFreeDoc, _1));
 	std::for_each(clear_node_list_.begin(), clear_node_list_.end(), boost::bind(&xmlFreeNode, _1));
