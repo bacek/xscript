@@ -510,8 +510,8 @@ TimeoutCounter::reset(int timeout) {
 	}
 	else {
 		timeout_ = timeout;
+		gettimeofday(&init_time_, 0);
 	}
-	gettimeofday(&init_time_, 0);
 }
 
 int

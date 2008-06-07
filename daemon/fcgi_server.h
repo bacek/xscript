@@ -7,6 +7,8 @@
 #include "xscript/server.h"
 #include "xscript/simple_counter.h"
 
+#include "uptime_counter.h"
+
 namespace xscript
 {
 
@@ -34,6 +36,7 @@ private:
 	unsigned short alternate_port_;
 
 	SimpleCounter workerCounter_;
+	UptimeCounter uptimeCounter_;
 };
 
 } // namespace xscript

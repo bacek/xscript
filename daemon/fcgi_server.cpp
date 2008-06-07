@@ -47,12 +47,14 @@ namespace xscript
 {
 
 FCGIServer::FCGIServer(Config *config) : 
-	Server(config), socket_(-1), inbuf_size_(0), outbuf_size_(0), alternate_port_(0), workerCounter_("fcgi-workers")
+	Server(config), socket_(-1), inbuf_size_(0), outbuf_size_(0), alternate_port_(0),
+	workerCounter_("fcgi-workers"), uptimeCounter_()
 {
 	if (0 != FCGX_Init()) {
 		throw std::runtime_error("can not init fastcgi library");
 	}
 	StatusInfo::instance()->getStatBuilder().addCounter(workerCounter_);
+	StatusInfo::instance()->getStatBuilder().addCounter(uptimeCounter_);
 }
 
 FCGIServer::~FCGIServer() {
