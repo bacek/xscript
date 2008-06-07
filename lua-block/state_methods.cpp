@@ -19,19 +19,19 @@
 namespace xscript
 {
 
+extern "C" int luaStateHas(lua_State *lua);
 extern "C" int luaStateGet(lua_State *lua);
-extern "C" int luaStateSetBool(lua_State *lua);
 
+extern "C" int luaStateSetBool(lua_State *lua);
 extern "C" int luaStateSetLong(lua_State *lua);
 extern "C" int luaStateSetLongLong(lua_State *lua);
-
 extern "C" int luaStateSetULong(lua_State *lua);
 extern "C" int luaStateSetULongLong(lua_State *lua);
-
 extern "C" int luaStateSetDouble(lua_State *lua);
 extern "C" int luaStateSetString(lua_State *lua);
 
 static const struct luaL_reg statelib [] = {
+      {"has",			luaStateHas},
       {"get",			luaStateGet},
       {"setBool",		luaStateSetBool},
 	  {"setLong",		luaStateSetLong},
@@ -48,6 +48,27 @@ const struct luaL_reg * getStateLib() {
 }
 
 extern "C" int
+luaStateHas(lua_State *lua) {
+	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+	try {
+		luaCheckStackSize(lua, 2);
+
+		State* s = luaReadStack<State>(lua, "xscript.state", 1);
+		std::string key = luaReadStack<std::string>(lua, 2);
+		log()->debug("luaStateHas: %s", key.c_str());
+		lua_pushboolean(lua, s->has(key));
+		return 1;
+	}
+	catch (const LuaError &e) {
+		return e.translate(lua);
+	}
+	catch (const std::exception &e) {
+		luaL_error(lua, "caught exception in state.get: %s", e.what());
+		return 0;
+	}
+}
+
+extern "C" int
 luaStateGet(lua_State *lua) {
 	log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 	try {
@@ -56,8 +77,13 @@ luaStateGet(lua_State *lua) {
 		State* s = luaReadStack<State>(lua, "xscript.state", 1);
 		std::string key = luaReadStack<std::string>(lua, 2);
 		log()->debug("luaStateGet: %s", key.c_str());
-		std::string value = s->asString(key);
-		lua_pushstring(lua, value.c_str());
+		if (s->has(key)) {
+			std::string value = s->asString(key);
+			lua_pushstring(lua, value.c_str());
+		}
+		else {
+			lua_pushnil(lua);
+		}
 		return 1;
 	}
 	catch (const LuaError &e) {
