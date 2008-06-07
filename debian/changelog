@@ -1,3 +1,9 @@
+xscript (5.20-0) unstable; urgency=low
+
+  * TimeoutCounter added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Sat,  7 Jun 2008 14:49:31 +0400
+
 xscript (5.19-1) unstable; urgency=low
 
   * xsl:message processing added

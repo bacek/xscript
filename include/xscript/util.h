@@ -1,6 +1,7 @@
 #ifndef _XSCRIPT_UTIL_H_
 #define _XSCRIPT_UTIL_H_
 
+#include <sys/time.h>
 #include <ctime>
 #include <string>
 #include <vector>
@@ -154,6 +155,23 @@ template<typename Cont> inline void
 StringUtils::parse(const Cont &cont, std::vector<NamedValue> &v, Encoder *encoder) {
 	parse(createRange(cont), v, encoder);
 }
+
+class TimeoutCounter {
+public:
+	TimeoutCounter();
+	TimeoutCounter(int timeout);
+	~TimeoutCounter();
+
+	void reset(int timeout);
+	bool unlimited() const;
+	bool expired() const;
+	int remained() const;
+
+	static const int UNDEFINED_TIME;
+private:
+	struct timeval init_time_;
+	int timeout_;
+};
 
 } // namespace xscript
 

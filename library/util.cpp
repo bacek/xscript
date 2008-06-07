@@ -490,6 +490,59 @@ xmlReportStructuredError(void *ctx, xmlErrorPtr error) {
 	}
 }
 
+const int TimeoutCounter::UNDEFINED_TIME = std::numeric_limits<int>::min();
+
+TimeoutCounter::TimeoutCounter() {
+	reset(0);
+}
+
+TimeoutCounter::TimeoutCounter(int timeout) {
+	reset(timeout);
+}
+
+TimeoutCounter::~TimeoutCounter() {
+}
+
+void
+TimeoutCounter::reset(int timeout) {
+	if (timeout <= 0) {
+		timeout_ = UNDEFINED_TIME;
+	}
+	else {
+		timeout_ = timeout;
+	}
+	gettimeofday(&init_time_, 0);
+}
+
+int
+TimeoutCounter::remained() const {
+
+	if (unlimited()) {
+		return UNDEFINED_TIME;
+	}
+
+	struct timeval current;
+	gettimeofday(&current, 0);
+
+	return timeout_ - (current.tv_sec - init_time_.tv_sec) * 1000 +
+		(current.tv_usec - init_time_.tv_usec) / 1000;
+
+}
+
+bool
+TimeoutCounter::unlimited() const {
+	return timeout_ == UNDEFINED_TIME;
+}
+
+bool
+TimeoutCounter::expired() const {
+	if (unlimited()) {
+		return false;
+	}
+
+	return remained() <= 0;
+}
+
 static XmlUtils utils_;
 
 } // namespace xscript
