@@ -8,7 +8,8 @@ test_SOURCES = main.cpp test_config.cpp test_date.cpp test_encoder.cpp \
 	test_script.cpp test_invoke.cpp test_mist.cpp test_range.cpp \
 	test_state.cpp test_string.cpp test_stylesheet.cpp \
 	test_xmlcache.cpp test_xslt.cpp \
-	test_file.cpp
+	test_file.cpp \
+	test_doc_cache.cpp
 
 test_LDADD = ../library/libxscript.la
 test_LDFLAGS = -ldl -lcppunit -export-dynamic

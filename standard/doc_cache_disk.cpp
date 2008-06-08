@@ -17,6 +17,7 @@
 #include "xscript/config.h"
 #include "xscript/context.h"
 #include "xscript/doc_cache_strategy.h"
+#include "xscript/doc_cache.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -40,7 +41,9 @@ private:
 	boost::uint32_t number_;
 };
 
-class DocCacheDisk : public DocCacheStrategy
+class DocCacheDisk : 
+    public Component<DocCacheDisk>,
+    public DocCacheStrategy
 {
 public:
 	DocCacheDisk();
@@ -170,6 +173,7 @@ DocCacheDisk::DocCacheDisk() :
 	min_time_(DEFAULT_CACHE_TIME)
 {
 	statBuilder_.setName("tagged-cache-disk");
+    DocCache::instance()->addStrategy(this, "disk");
 }
 
 DocCacheDisk::~DocCacheDisk() {
@@ -411,6 +415,12 @@ DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &t
 		unlink(path.c_str());
 		throw;
 	}
+}
+
+//REGISTER_COMPONENT(DocCacheDisk);
+//static ComponentRegisterer<DocCacheDisk> reg_(new DocCacheDisk());
+namespace {
+    static DocCacheDisk cache;
 }
 
 } // namespace xscript

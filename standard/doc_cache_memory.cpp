@@ -12,8 +12,10 @@
 #include "xscript/param.h"
 #include "xscript/tagged_block.h"
 #include "xscript/doc_cache_strategy.h"
+#include "xscript/doc_cache.h"
 #include "xscript/cache_counter.h"
 #include "xscript/memory_statistic.h"
+#include "xscript/doc_cache.h"
 
 #include "doc_pool.h"
 
@@ -43,8 +45,8 @@ private:
 };
 
 class DocCacheMemory : 
-	public DocCacheStrategy, 
-	public Component<DocCacheMemory>
+	public Component<DocCacheMemory>,
+	public DocCacheStrategy
 {
 public:
 	DocCacheMemory();
@@ -105,6 +107,7 @@ DocCacheMemory::DocCacheMemory() :
 	min_time_(Tag::UNDEFINED_TIME), max_size_(0)
 {
 	statBuilder_.setName("tagged-cache-memory");
+    DocCache::instance()->addStrategy(this, "memory");
 }
 
 DocCacheMemory::~DocCacheMemory() {
@@ -175,6 +178,12 @@ DocCacheMemory::pool(const TagKey *key) const {
 	result.process_bytes(str.data(), str.size());
 	unsigned int index = result.checksum() % sz;
 	return pools_[index];
+}
+
+//REGISTER_COMPONENT(DocCacheMemory);
+namespace {
+    static DocCacheMemory cache_;
+//static ComponentRegisterer<DocCacheMemory> reg_(new DocCacheMemory());
 }
 
 } // namespace xscript
