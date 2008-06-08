@@ -8,7 +8,7 @@
 #include <boost/noncopyable.hpp>
 
 #include "xscript/tag.h"
-#include "xscript/tagged_cache.h"
+#include "xscript/doc_cache_strategy.h"
 #include "xscript/xml_helpers.h"
 #include "xscript/cache_counter.h"
 #include "xscript/memory_statistic.h"

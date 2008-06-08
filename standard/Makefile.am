@@ -5,12 +5,12 @@ xscript_thrpool_la_SOURCES = thread_pool.cpp
 xscript_thrpool_la_LIBADD = ../library/libxscript.la
 xscript_thrpool_la_LDFLAGS = -module
 
-xscript_memcache_la_SOURCES = tagged_cache_memory.cpp doc_pool.cpp
+xscript_memcache_la_SOURCES = doc_cache_memory.cpp doc_pool.cpp
 
 xscript_memcache_la_LIBADD = ../library/libxscript.la
 xscript_memcache_la_LDFLAGS = -module
 
-xscript_diskcache_la_SOURCES = tagged_cache_disk.cpp
+xscript_diskcache_la_SOURCES = doc_cache_disk.cpp
 
 xscript_diskcache_la_LIBADD = ../library/libxscript.la
 xscript_diskcache_la_LDFLAGS = -module

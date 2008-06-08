@@ -24,7 +24,6 @@
 #include "xscript/context.h"
 #include "xscript/request.h"
 #include "xscript/state.h"
-#include "xscript/tagged_cache.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

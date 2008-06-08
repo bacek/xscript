@@ -20,7 +20,7 @@
 #include "xscript/thread_pool.h"
 #include "xscript/vhost_data.h"
 #include "xscript/checking_policy.h"
-#include "xscript/tagged_cache.h"
+#include "xscript/doc_cache.h"
 #include "xscript/script_cache.h"
 #include "xscript/script_factory.h"
 #include "xscript/stylesheet_cache.h"
@@ -51,6 +51,9 @@ Config::startup() {
 	LoggerFactory::instance()->init(this);
 	log()->debug("logger factory started");
 
+	DocCache::instance()->init(this);
+	log()->debug("doc cache started");
+	
 	XmlUtils::init(this);
 
 	Loader::instance()->init(this);
@@ -85,9 +88,6 @@ Config::startup() {
 	
 	StylesheetFactory::instance()->init(this);
 	log()->debug("stylesheet factory started");
-	
-	TaggedCache::instance()->init(this);
-	log()->debug("tagged cache started");
 	
 	ExtensionList::instance()->registerExtension(ExtensionHolder(new ControlExtension));
 	

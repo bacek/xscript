@@ -6,7 +6,7 @@ check_PROGRAMS = test
 test_SOURCES = main.cpp test_config.cpp test_date.cpp test_encoder.cpp \
 	test_factories.cpp test_http.cpp test_loader.cpp \
 	test_script.cpp test_invoke.cpp test_mist.cpp test_range.cpp \
-	test_state.cpp test_string.cpp test_stylesheet.cpp test_tagged_cache.cpp \
+	test_state.cpp test_string.cpp test_stylesheet.cpp \
 	test_xmlcache.cpp test_xslt.cpp \
 	test_file.cpp
 

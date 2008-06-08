@@ -3,7 +3,7 @@
 #include <boost/current_function.hpp>
 
 #include "xscript/logger.h"
-#include "xscript/tagged_cache.h"
+#include "xscript/doc_cache.h"
 #include "xscript/tagged_block.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -56,7 +56,7 @@ TaggedBlock::invokeInternal(Context *ctx) {
 	}
 
 	try {
-		TaggedCache *cache = TaggedCache::instance();
+		DocCache *cache = DocCache::instance();
 		if ((CACHE_TIME_UNDEFINED != cache_time_) && (cache_time_ < cache->minimalCacheTime())) {
 			return Block::invokeInternal(ctx);
 		}
@@ -65,8 +65,7 @@ TaggedBlock::invokeInternal(Context *ctx) {
 		Tag tag;
 		XmlDocHelper doc(NULL);
 		try {
-			std::auto_ptr<TagKey> key = cache->createKey(ctx, this);
-			have_cached_doc = cache->loadDoc(key.get(), tag, doc);
+			have_cached_doc = cache->loadDoc(ctx, this, tag, doc);
 
 			if (have_cached_doc && Tag::UNDEFINED_TIME == tag.expire_time) {
 				
@@ -115,7 +114,7 @@ TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a
 	
 	time_t now = time(NULL);
 	Tag tag = boost::any_cast<Tag>(a);
-	TaggedCache *cache = TaggedCache::instance();
+	DocCache *cache = DocCache::instance();
 	
 	bool can_store = false;
 	if (CACHE_TIME_UNDEFINED != cache_time_) {
@@ -132,8 +131,7 @@ TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a
 	}
 
 	if (can_store) {
-		std::auto_ptr<TagKey> key = cache->createKey(ctx, this);
-		cache->saveDoc(key.get(), tag, doc);
+		cache->saveDoc(ctx, this, tag, doc);
 	}
 }
 
