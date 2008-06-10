@@ -29,9 +29,13 @@ if HAVE_TESTS
 TESTS = test
 check_PROGRAMS = test
 
-test_SOURCES = test_main.cpp doc_pool_test.cpp
+noinst_LTLIBRARIES = libtest.la
+libtest_la_SOURCES = doc_pool.cpp
+libtest_la_LDFLAGS = -static
 
-test_LDADD = ../library/libxscript.la xscript-memcache.la
+test_SOURCES = test_main.cpp doc_pool_test.cpp 
+
+test_LDADD = ../library/libxscript.la libtest.la
 test_LDFLAGS = -ldl -lcppunit -export-dynamic
 
 endif
