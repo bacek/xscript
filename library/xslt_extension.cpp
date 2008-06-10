@@ -457,6 +457,106 @@ xscriptXsltMD5(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
+
+	log()->entering("xscript:wbr");
+	if (ctxt == NULL) {
+		return;
+	}
+
+	if (2 != nargs) {
+		log()->error("xscript:wbr: bad param count");
+		return;
+	}
+
+	XsltParamFetcher params(ctxt, nargs);
+
+	const char* str = params.str(0);
+	if (NULL == str) {
+		log()->error("xscript:wbr: bad first parameter");
+		xmlXPathReturnEmptyNodeSet(ctxt);
+		return;
+	}
+
+	if (*str == '\0') {
+		xmlXPathReturnEmptyNodeSet(ctxt);
+		return;
+	}
+
+	const char* str2 = params.str(1);
+	if (NULL == str2) {
+		log()->error("xscript:wbr: bad second parameter");
+		xmlXPathReturnEmptyNodeSet(ctxt);
+		return;
+	}
+
+	long int length;
+	try {
+		length = boost::lexical_cast<long int>(str2);
+	}
+	catch(const boost::bad_lexical_cast&) {
+		log()->error("xscript:wbr: incorrect length format");
+		xmlXPathReturnEmptyNodeSet(ctxt);
+		return;
+	}
+
+	if (length <= 0) {
+		log()->error("xscript:wbr: incorrect length value");
+		xmlXPathReturnEmptyNodeSet(ctxt);
+		return;
+	}
+
+	xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+	if (NULL == tctx) {
+		xmlXPathReturnEmptyNodeSet(ctxt);
+		return;
+	}
+
+	try {
+		Context* ctx = Stylesheet::getContext(tctx);
+		xmlNodeSetPtr ret = xmlXPathNodeSetCreate(NULL);
+
+		const char* end = str + strlen(str);
+		const char* chunk_begin = str;
+		if (end - str > length)  {
+			long int char_passed = 0;
+			while (str != end) {
+				if (isspace(*str)) {
+					char_passed = 0;
+				}
+				else {
+					if (char_passed == length) {
+						xmlNodePtr node = xmlNewTextLen((xmlChar*)chunk_begin, str - chunk_begin);
+						xmlXPathNodeSetAdd(ret, node);
+						ctx->addNode(node);
+
+						node = xmlNewNode(NULL, (xmlChar*)"wbr");
+						xmlXPathNodeSetAdd(ret, node);
+						ctx->addNode(node);
+
+						chunk_begin = str;
+						char_passed = 0;
+					}
+					++char_passed;
+				}
+				str = StringUtils::nextUTF8(str);
+			}
+		}
+
+		xmlNodePtr node = xmlNewTextLen((xmlChar*)chunk_begin, end - chunk_begin);
+		xmlXPathNodeSetAdd(ret, node);
+		ctx->addNode(node);
+
+		xmlXPathReturnNodeSet(ctxt, ret);
+	}
+	catch (const std::exception &e) {
+		log()->error("caught exception in [xscript::wbr]: %s", e.what());
+		ctxt->error = XPATH_EXPR_ERROR;
+		xmlXPathReturnEmptyNodeSet(ctxt);
+	}
+}
+
+extern "C" void
 xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
 	(void)comp;
 	if (tctx == NULL) {
@@ -556,6 +656,7 @@ XsltExtensions::XsltExtensions() {
 	XsltFunctionRegisterer("esc", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltEsc);
 	XsltFunctionRegisterer("js-quote", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltJsQuote);
 	XsltFunctionRegisterer("md5", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltMD5);
+	XsltFunctionRegisterer("wbr", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltWbr);
 
 	XsltFunctionRegisterer("sanitize", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSanitize);
 	

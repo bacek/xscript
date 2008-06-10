@@ -21,17 +21,6 @@ namespace xscript
 
 const iconv_t IconvTraits::DEFAULT_VALUE = reinterpret_cast<iconv_t>(-1);
 
-static const int NEXT_UTF8[256] = {
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-  2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
-  3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,6,6,1,1
-};
-
 struct EncoderContext
 {
 	size_t len;
@@ -162,7 +151,7 @@ Encoder::next(const EncoderContext &ctx) const {
 	
 	char *data = ctx.data;
 	if (strncasecmp(from_.c_str(), "utf-8", sizeof("utf-8")) == 0) {
-		return data + NEXT_UTF8[static_cast<unsigned char>(*data)];
+		return const_cast<char*>(StringUtils::nextUTF8(data));
 	}
 	else if (strncasecmp(from_.c_str(), "utf-16", sizeof("utf-16") - 1) == 0) {
 		return data + 2;

@@ -1,8 +1,9 @@
 xscript (5.20-0) unstable; urgency=low
 
   * TimeoutCounter added
+  * wbr xslt extenstion added
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Sat,  7 Jun 2008 14:49:31 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 10 Jun 2008 15:15:56 +0400
 
 xscript (5.19-1) unstable; urgency=low
 

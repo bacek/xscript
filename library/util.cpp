@@ -38,6 +38,17 @@ namespace xscript
 static const Range ESCAPE_PATTERN = createRange("&'\"<>");
 const char * const XmlUtils::XSCRIPT_NAMESPACE = "http://www.yandex.ru/xscript";
 
+static const int NEXT_UTF8[256] = {
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+	2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+	3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,6,6,1,1
+};
+
 class XmlErrorReporter
 {
 public:
@@ -329,6 +340,11 @@ StringUtils::toupper(const std::string& str) {
 	int (*func)(int) = &std::toupper;
 	std::transform(str.begin(), str.end(), std::back_inserter(result), func);
 	return result;
+}
+
+const char*
+StringUtils::nextUTF8(const char* data) {
+	return data + NEXT_UTF8[static_cast<unsigned char>(*data)];
 }
 
 HttpDateUtils::HttpDateUtils() {

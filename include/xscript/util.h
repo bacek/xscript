@@ -80,6 +80,7 @@ public:
 
 	static std::string tolower(const std::string& str);
 	static std::string toupper(const std::string& str);
+	static const char* nextUTF8(const char* data);
 
 private:
 	StringUtils();
