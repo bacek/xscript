@@ -106,6 +106,9 @@ LuaTest::testState() {
 		CPPUNIT_ASSERT_EQUAL(state->asString("long long " + num),
 			boost::lexical_cast<std::string>(i * 3));
 	}
+
+    // Unknown param returns empty string
+	CPPUNIT_ASSERT_EQUAL(state->asString("unknown_param"), std::string(""));
 }
 
 class FakeResponse : public xscript::Response

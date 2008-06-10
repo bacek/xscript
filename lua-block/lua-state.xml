@@ -4,6 +4,7 @@
   <xscript xslt-dont-apply="yes" force-auth="yes" allow-methods="get"/>
   <x:lua>
 	  <![CDATA[
+    xscript.state:setString('unknown_param', xscript.state:get('unknown_param'));
   	for i = 1, 10 do
 	  local key = string.format("long %d", i);
 	  xscript.state:setLong(key, i)
@@ -16,7 +17,7 @@
 	if xscript.state:has('long 1') then
 	  xscript.state:setString('has passed');
 	end
-	print(xscript.state:get('bar'));
+    print(xscript.state:get('bar'));
   ]]>
   </x:lua>
 </page>

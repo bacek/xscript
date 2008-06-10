@@ -82,7 +82,7 @@ luaStateGet(lua_State *lua) {
 			lua_pushstring(lua, value.c_str());
 		}
 		else {
-			lua_pushnil(lua);
+			lua_pushstring(lua, "");
 		}
 		return 1;
 	}
