@@ -108,6 +108,14 @@ LuaTest::testState() {
 		CPPUNIT_ASSERT_EQUAL(state->asString("long long " + num),
 			boost::lexical_cast<std::string>(i * 3));
 	}
+
+	try {
+		std::string str = state->asString("unknown_param");
+		throw std::logic_error("State must throw exception for not existed element");
+	}
+	catch (std::invalid_argument &) {
+	    //ok
+	}
 }
 
 void
@@ -140,13 +148,13 @@ class FakeResponse : public xscript::Response
 public:
 	void setCookie(const xscript::Cookie &cookie) { cookies[cookie.name()] = cookie; };
 	void setStatus(unsigned short s) { status = s; };
-	void sendError(unsigned short s, const std::string& message) {};
+	void sendError(unsigned short, const std::string&) {};
 	void setHeader(const std::string &name, const std::string &value) {
 		headers[name] = value;
 	};
 	
-	std::streamsize write(const char *buf, std::streamsize size) { return size; };
-	std::string outputHeader(const std::string &name) const { return ""; };
+	std::streamsize write(const char *, std::streamsize size) { return size; };
+	std::string outputHeader(const std::string &) const { return std::string(); };
 	
 	void sendHeaders() {};
 

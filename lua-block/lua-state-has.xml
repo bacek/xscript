@@ -18,8 +18,8 @@
 	print(xscript.state:get('bar'));
 
 	xscript.state:setLong('xxx', 0);
-	xscript.state:setLong('art', art_get('xxx',1))
-	xscript.state:setLong('xxx_art', art_get('xxx',1))
+	xscript.state:setLong('art', art_get('xxx', 1))
+	xscript.state:setLong('xxx_art', art_get('xxx', 1))
   ]]>
   </x:lua>
 </page>
