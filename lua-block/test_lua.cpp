@@ -28,6 +28,7 @@ public:
 	void testPrint();
 
 	void testState();
+	void testStateHas();
 	void testRequest();
 	void testResponse();
 	void testResponseRedirect();
@@ -43,6 +44,7 @@ private:
 	CPPUNIT_TEST_SUITE(LuaTest);
 	CPPUNIT_TEST(testPrint);
 	CPPUNIT_TEST(testState);
+	CPPUNIT_TEST(testStateHas);
 	CPPUNIT_TEST(testRequest);
 	CPPUNIT_TEST(testResponse);
 	CPPUNIT_TEST(testResponseRedirect);
@@ -106,9 +108,31 @@ LuaTest::testState() {
 		CPPUNIT_ASSERT_EQUAL(state->asString("long long " + num),
 			boost::lexical_cast<std::string>(i * 3));
 	}
+}
 
-    // Unknown param returns empty string
-	CPPUNIT_ASSERT_EQUAL(state->asString("unknown_param"), std::string(""));
+void
+LuaTest::testStateHas() {
+	
+	using namespace xscript;
+	
+	RequestData data;
+	boost::shared_ptr<Script> script = Script::create("lua-state-has.xml");
+	boost::shared_ptr<Context> ctx(new Context(script, data));
+	ContextStopper ctx_stopper(ctx);
+	
+	XmlDocHelper doc(script->invoke(ctx));
+	CPPUNIT_ASSERT(NULL != doc.get());
+	
+	boost::shared_ptr<State> state = data.state();
+
+	// Unknown param returns empty string
+	CPPUNIT_ASSERT_EQUAL(std::string(""), state->asString("unknown_param"));
+
+	CPPUNIT_ASSERT_EQUAL(std::string("has1 passed"), state->asString("has1"));
+	CPPUNIT_ASSERT_EQUAL(std::string("has2 passed"), state->asString("has2"));
+
+	CPPUNIT_ASSERT_EQUAL(std::string("0"), state->asString("art"));
+	CPPUNIT_ASSERT_EQUAL(std::string("0"), state->asString("xxx_art"));
 }
 
 class FakeResponse : public xscript::Response

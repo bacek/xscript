@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xscript xslt-dont-apply="yes" force-auth="yes" allow-methods="get"/>
+  <x:lua>
+	  <![CDATA[
+	s = xscript.state
+	function art_get(param, default)
+		return s:has(param) and s:get(param) or default end
+    
+	xscript.state:setString('unknown_param', xscript.state:get('unknown_param'));
+	if not xscript.state:has('foooo') then
+	  xscript.state:setString('has1', 'has1 passed');
+	end
+	if xscript.state:has('unknown_param') then
+	  xscript.state:setString('has2', 'has2 passed');
+	end
+	print(xscript.state:get('bar'));
+
+	xscript.state:setLong('xxx', 0);
+	xscript.state:setLong('art', art_get('xxx',1))
+	xscript.state:setLong('xxx_art', art_get('xxx',1))
+  ]]>
+  </x:lua>
+</page>

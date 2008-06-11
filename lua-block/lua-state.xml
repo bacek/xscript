@@ -4,20 +4,12 @@
   <xscript xslt-dont-apply="yes" force-auth="yes" allow-methods="get"/>
   <x:lua>
 	  <![CDATA[
-    xscript.state:setString('unknown_param', xscript.state:get('unknown_param'));
   	for i = 1, 10 do
 	  local key = string.format("long %d", i);
 	  xscript.state:setLong(key, i)
 	  xscript.state:setString(string.format("string %d", i), string.format("%d", i * 2));
 	  xscript.state:setLongLong(string.format("long long %d", i), xscript.state:get(key) * 3);
 	end
-	if xscript.state:has('foooo') then
-	  xscript.state:setString('has failed');
-	end
-	if xscript.state:has('long 1') then
-	  xscript.state:setString('has passed');
-	end
-    print(xscript.state:get('bar'));
   ]]>
   </x:lua>
 </page>
