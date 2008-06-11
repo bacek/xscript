@@ -13,6 +13,10 @@ namespace xscript
 	class Tag;
     class DocCacheStrategy;
 
+    class Block;
+    class Extension;
+    class Xml;
+
 	/**
 	 * Cache result of block invokations using sequence of different strategies.
 	 */
@@ -29,6 +33,17 @@ namespace xscript
 
 	    void init(const Config *config);
         void addStrategy(DocCacheStrategy* strategy, const std::string& name);
+
+		/**
+		 * Create block to output statistic in xscript page.
+		 */
+		std::auto_ptr<Block> createBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+
+		/**
+		 * Create aggregate report. Caller must free result.
+		 */
+		XmlDocHelper createReport() const;
+
 	private:
         // Used for init added strategies
         const Config                    *config_;

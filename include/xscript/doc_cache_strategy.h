@@ -31,14 +31,20 @@ public:
 	DocCacheStrategy();
 	virtual ~DocCacheStrategy();
 
-	virtual void init(const Config *config);
-
-	virtual time_t minimalCacheTime() const = 0;
+    virtual void init(const Config *config);
+	
+    virtual time_t minimalCacheTime() const = 0;
 	virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const TaggedBlock *block) const = 0;
 
 	virtual bool loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc);
 	virtual bool saveDoc(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);
 	
+    /**
+     * Create aggregate report. Caller must free result.
+     */
+    XmlDocHelper createReport() const {
+        return statBuilder_.createReport();
+    }
 protected:
 	virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) = 0;
 	virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHelper &doc) = 0;

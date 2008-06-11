@@ -32,10 +32,6 @@ DocCacheStrategy::~DocCacheStrategy() {
 
 void DocCacheStrategy::init(const Config *config) {
 	(void)config;
-
-	ControlExtensionRegistry::constructor_t f = boost::bind(boost::mem_fn(&StatBuilder::createBlock), &statBuilder_, _1, _2, _3);
-
-    ControlExtensionRegistry::registerConstructor("tagged-cache-stat", f);
 }
 
 
