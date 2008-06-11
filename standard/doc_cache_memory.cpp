@@ -121,6 +121,7 @@ DocCacheMemory::createKey(const Context *ctx, const TaggedBlock *block) const {
 
 void
 DocCacheMemory::init(const Config *config) {
+    DocCacheStrategy::init(config);
 
 	assert(pools_.empty());
 
