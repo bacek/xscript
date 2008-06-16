@@ -1,6 +1,8 @@
 #include "settings.h"
 #include "xscript/args.h"
+#include "xscript/context.h"
 #include "xscript/param.h"
+#include "xscript/request.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -31,8 +33,7 @@ RequestDataParam::~RequestDataParam() {
 
 std::string
 RequestDataParam::asString(const Context *ctx) const {
-	(void)ctx;
-	return std::string();
+	return ctx->request()->getQueryString();
 }
 
 void

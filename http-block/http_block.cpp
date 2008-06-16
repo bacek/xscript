@@ -64,6 +64,10 @@ HttpBlock::postParse() {
 		stream << "nonexistent http method call: " << method();
 		throw std::invalid_argument(stream.str());
 	}
+
+	if (proxy_) {
+		tagged(false);
+	}
 }
 
 XmlDocHelper

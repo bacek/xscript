@@ -322,13 +322,12 @@ xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
 	}
 }
 
-void
-xscriptXsltEscStr(const char *str, std::string &result) {
 
-	// "\r\n" => "\n"
-	
-	log()->debug("escStr: %s", str);
-	
+void
+xscriptTemplatedEscStr(const char *str, const char *esc_template, std::string &result) {
+
+	log()->debug("templatedEscStr: %s", str);
+
 	std::string s(str);
 	std::string::size_type pos = (std::string::size_type)-1;
 	while (true) {
@@ -339,7 +338,6 @@ xscriptXsltEscStr(const char *str, std::string &result) {
 		s.erase(pos, 1);
 	}
 
-	// '\r'|'\n' => "\\n", '\\' => "\\\\", '/' => "\\/", "'" => "\\'", '\"' => "\\\"", '-' => "\\'"
 	for (std::string::const_iterator i = s.begin(), end = s.end(); i != end; ++i) {
 		char ch = *i;
 		if (ch == '\r' || ch == '\n') {
@@ -347,13 +345,27 @@ xscriptXsltEscStr(const char *str, std::string &result) {
 			ch = 'n';
 		}
 		else {
-			const char *res = strchr("\\/-'\"", ch);
+			const char *res = strchr(esc_template, ch);
 			if (NULL != res) {
 				result.append(1, '\\');
 			}
 		}
 		result.append(1, ch);
 	}
+}
+
+void
+xscriptXsltEscStr(const char *str, std::string &result) {
+
+	log()->debug("xscriptXsltEscStr: %s", str);
+	xscriptTemplatedEscStr(str, "\\/-'\"", result);
+}
+
+void
+xscriptXsltJSQuoteStr(const char *str, std::string &result) {
+
+	log()->debug("xscriptXsltJSQuoteStr: %s", str);
+	xscriptTemplatedEscStr(str, "\\/-'", result);
 }
 
 extern "C" void
@@ -413,7 +425,7 @@ xscriptXsltJsQuote(xmlXPathParserContextPtr ctxt, int nargs) {
 	try {
 		std::string result;
 		result.append(1,'\'');
-		xscriptXsltEscStr(str, result);
+		xscriptXsltJSQuoteStr(str, result);
 		result.append(1, '\'');
 		valuePush(ctxt, xmlXPathNewCString(result.c_str()));
 	}
@@ -514,24 +526,24 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
 
 	try {
 		Context* ctx = Stylesheet::getContext(tctx);
-		xmlNodeSetPtr ret = xmlXPathNodeSetCreate(NULL);
+		xmlNodeSetHelper ret(xmlXPathNodeSetCreate(NULL));
 
 		const char* end = str + strlen(str);
 		const char* chunk_begin = str;
 		if (end - str > length)  {
 			long int char_passed = 0;
-			while (str != end) {
+			while (str < end) {
 				if (isspace(*str)) {
 					char_passed = 0;
 				}
 				else {
 					if (char_passed == length) {
 						xmlNodePtr node = xmlNewTextLen((xmlChar*)chunk_begin, str - chunk_begin);
-						xmlXPathNodeSetAdd(ret, node);
+						xmlXPathNodeSetAdd(ret.get(), node);
 						ctx->addNode(node);
 
 						node = xmlNewNode(NULL, (xmlChar*)"wbr");
-						xmlXPathNodeSetAdd(ret, node);
+						xmlXPathNodeSetAdd(ret.get(), node);
 						ctx->addNode(node);
 
 						chunk_begin = str;
@@ -541,13 +553,17 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
 				}
 				str = StringUtils::nextUTF8(str);
 			}
+
+			if (str > end) {
+				throw std::runtime_error("incorrect UTF8 data");
+			}
 		}
 
 		xmlNodePtr node = xmlNewTextLen((xmlChar*)chunk_begin, end - chunk_begin);
-		xmlXPathNodeSetAdd(ret, node);
+		xmlXPathNodeSetAdd(ret.get(), node);
 		ctx->addNode(node);
 
-		xmlXPathReturnNodeSet(ctxt, ret);
+		xmlXPathReturnNodeSet(ctxt, ret.release());
 	}
 	catch (const std::exception &e) {
 		log()->error("caught exception in [xscript::wbr]: %s", e.what());

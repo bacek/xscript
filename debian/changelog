@@ -1,3 +1,12 @@
+xscript (5.20-2) unstable; urgency=low
+
+  * query info added to asString method in Request and RequestData
+  * disable tagging for proxy http-block
+  * wbr xslt extenstion updated
+  * js-quoting changed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 16 Jun 2008 11:57:35 +0400
+
 xscript (5.20-1) unstable; urgency=low
 
   * [lua] state:get returns empty string for unknown params

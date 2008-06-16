@@ -27,6 +27,11 @@ inline void ResourceHolderTraits<xmlNodePtr>::destroy(xmlNodePtr node) {
 };
 
 template<> 
+inline void ResourceHolderTraits<xmlNodeSetPtr>::destroy(xmlNodeSetPtr node_set) {
+	xmlXPathFreeNodeSet(node_set);
+};
+
+template<> 
 inline void ResourceHolderTraits<xmlXPathObjectPtr>::destroy(xmlXPathObjectPtr obj) {
     xmlXPathFreeObject(obj);
 };
@@ -49,10 +54,12 @@ inline void ResourceHolderTraits<xsltTransformContextPtr>::destroy(xsltTransform
 typedef ResourceHolder<xmlDocPtr> XmlDocHelper;
 typedef ResourceHolder<xmlChar*> XmlCharHelper;
 typedef ResourceHolder<xmlNodePtr> XmlNodeHelper;
+typedef ResourceHolder<xmlNodeSetPtr> xmlNodeSetHelper;
 typedef ResourceHolder<xmlXPathObjectPtr> XmlXPathObjectHelper;
 typedef ResourceHolder<xmlXPathContextPtr> XmlXPathContextHelper;
 typedef ResourceHolder<xsltStylesheetPtr> XsltStylesheetHelper;
 typedef ResourceHolder<xsltTransformContextPtr> XsltTransformContextHelper;
+
 
 } // namespace xscript
 
