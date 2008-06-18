@@ -526,7 +526,7 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
 
 	try {
 		Context* ctx = Stylesheet::getContext(tctx);
-		xmlNodeSetHelper ret(xmlXPathNodeSetCreate(NULL));
+		XmlNodeSetHelper ret(xmlXPathNodeSetCreate(NULL));
 
 		const char* end = str + strlen(str);
 		const char* chunk_begin = str;

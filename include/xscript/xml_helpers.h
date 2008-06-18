@@ -54,7 +54,7 @@ inline void ResourceHolderTraits<xsltTransformContextPtr>::destroy(xsltTransform
 typedef ResourceHolder<xmlDocPtr> XmlDocHelper;
 typedef ResourceHolder<xmlChar*> XmlCharHelper;
 typedef ResourceHolder<xmlNodePtr> XmlNodeHelper;
-typedef ResourceHolder<xmlNodeSetPtr> xmlNodeSetHelper;
+typedef ResourceHolder<xmlNodeSetPtr> XmlNodeSetHelper;
 typedef ResourceHolder<xmlXPathObjectPtr> XmlXPathObjectHelper;
 typedef ResourceHolder<xmlXPathContextPtr> XmlXPathContextHelper;
 typedef ResourceHolder<xsltStylesheetPtr> XsltStylesheetHelper;

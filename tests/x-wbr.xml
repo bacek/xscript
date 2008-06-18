@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="x-wbr.xsl"?>
+<tests url="test.xml" name="x:wbr">
+    <test>
+	<source length="5">asdfgghaaaaa</source>
+	<result>
+	    <node-name/>
+	    <node-content>asdfg</node-content>
+	</result>
+	<result>
+	    <node-name>wbr</node-name>
+	    <node-content/>
+	</result>
+	<result>
+	    <node-name/>
+	    <node-content>ghaaa</node-content>
+	</result>
+	<result>
+	    <node-name>wbr</node-name>
+	    <node-content/>
+	</result>
+	<result>
+	    <node-name/>
+	    <node-content>aa</node-content>
+	</result>	
+    </test>
+        
+    <test>
+	<source length="5">asdfg ghaaa aa</source>
+	<result>
+	    <node-name/>
+	    <node-content>asdfg ghaaa aa</node-content>
+	</result>	
+    </test>
+
+    <test>
+	<source length="5">asdfg ghaaabb</source>
+	<result>
+	    <node-name/>
+	    <node-content>asdfg ghaaa</node-content>
+	</result>
+	<result>
+	    <node-name>wbr</node-name>
+	    <node-content/>
+	</result>	
+	<result>
+	    <node-name/>
+	    <node-content>bb</node-content>
+	</result>
+    </test>
+    
+</tests>

@@ -65,7 +65,8 @@ HttpBlock::postParse() {
 		throw std::invalid_argument(stream.str());
 	}
 
-	if (proxy_) {
+	if (proxy_ && tagged()) {
+		log()->warn("%s, proxy in tagged http-block: %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 		tagged(false);
 	}
 }
