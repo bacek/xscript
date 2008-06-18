@@ -1,3 +1,10 @@
+xscript (5.20-3) unstable; urgency=low
+
+  * wbr test added
+  * http tagged block logging improved
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 18 Jun 2008 14:57:03 +0400
+
 xscript (5.20-2) unstable; urgency=low
 
   * query info added to asString method in Request and RequestData
