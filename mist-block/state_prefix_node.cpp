@@ -182,6 +182,11 @@ StateProtocolNode::build(const Request* req) {
 			setParameter("originaluri", originaluri);
 		}
 
+		std::string originalurl = req->getOriginalUrl();
+		if (!originalurl.empty()) {
+			setParameter("originalurl", originalurl);
+		}
+
 		std::string host = req->getHost();
 		if (!host.empty()) {
 			setParameter("host", host);

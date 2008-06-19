@@ -35,7 +35,7 @@ namespace xscript
 {
 
 Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
-	extension_(ext), owner_(owner), node_(node)
+	extension_(ext), owner_(owner), node_(node), strip_root_element_(false)
 {
 	assert(node_);
 	assert(owner_);
@@ -292,6 +292,9 @@ Block::property(const char *name, const char *value) {
 	}
 	else if (strncasecmp(name, "xslt", sizeof("xslt")) == 0) {
 		xsltName(value);
+	}
+	else if (strncasecmp(name, "strip-root-element", sizeof("strip-root-element")) == 0) {
+		stripRootElement((strncasecmp(value, "yes", sizeof("yes")) == 0));
 	}
 	else {
 		std::stringstream stream;

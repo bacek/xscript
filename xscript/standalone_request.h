@@ -42,6 +42,7 @@ public:
 	virtual std::string getOriginalURI() const;
 	virtual std::string getHost() const;
 	virtual std::string getOriginalHost() const;
+	virtual std::string getOriginalUrl() const;
 
 	virtual std::streamsize getContentLength() const;
 	virtual const std::string& getContentType() const;

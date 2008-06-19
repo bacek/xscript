@@ -50,6 +50,9 @@ ProtocolArgParam::asString(const Context *ctx) const {
 	else if (val == "originaluri") {
 		return req->getOriginalURI();
 	}
+	else if (val == "originalurl") {
+		return req->getOriginalUrl();
+	}
 	else if (val == "query") {
 		return req->getQueryString();
 	}

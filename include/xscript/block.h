@@ -41,14 +41,22 @@ public:
 	inline const std::string& method() const {
 		return method_;
 	}
-	
+
 	const char* name() const {
 		return extension_->name();
 	}
-
+	
 	virtual bool threaded() const;
 	virtual void threaded(bool value);
-	
+
+	inline bool stripRootElement() const {
+		return strip_root_element_;
+	}
+
+	inline void stripRootElement(bool value) {
+		strip_root_element_ = value;
+	}
+
 	inline const Param* param(unsigned int n) const {
 		return params_.at(n);
 	}
@@ -106,6 +114,7 @@ private:
 	std::vector<Param*> params_;
 	std::vector<XPathExpr> xpath_;
 	std::string id_, guard_, method_;
+	bool strip_root_element_;
 
 protected:
 	class XPathExpr {

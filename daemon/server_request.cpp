@@ -96,17 +96,26 @@ ServerRequest::getURI() const {
 
 std::string
 ServerRequest::getOriginalURI() const {
+	boost::mutex::scoped_lock sl(mutex_);
 	return impl_->getOriginalURI();
 }
 
 std::string
 ServerRequest::getHost() const {
+	boost::mutex::scoped_lock sl(mutex_);
 	return impl_->getHost();
 }
 
 std::string
 ServerRequest::getOriginalHost() const {
+	boost::mutex::scoped_lock sl(mutex_);
 	return impl_->getOriginalHost();
+}
+
+std::string
+ServerRequest::getOriginalUrl() const {
+	boost::mutex::scoped_lock sl(mutex_);
+	return impl_->getOriginalUrl();
 }
 
 std::streamsize

@@ -48,5 +48,28 @@
 	    <node-content>bb</node-content>
 	</result>
     </test>
-    
+
+    <test>
+	<source length="5">asdfg ghaaa</source>
+	<result>
+	    <node-name/>
+	    <node-content>asdfg ghaaa</node-content>
+	</result>
+    </test>
+
+    <test>
+	<source length="7">pqffasdfg ghaaabb</source>
+	<result>
+	    <node-name/>
+	    <node-content>pqffasd</node-content>
+	</result>	
+	<result>
+	    <node-name>wbr</node-name>
+	    <node-content/>
+	</result>	
+	<result>
+	    <node-name/>
+	    <node-content>fg ghaaabb</node-content>
+	</result>
+    </test>
 </tests>

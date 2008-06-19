@@ -430,9 +430,26 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
 			
 			xmlNodePtr result = xmlDocGetRootElement(doc);
 			if (result) {
-				// xmlUnlinkNode(result);
-				// xmlReplaceNode(newnode, result);
-				xmlReplaceNode(newnode, xmlCopyNode(result, 1));
+				if (blocks_[count]->stripRootElement()) {
+					xmlNodePtr result_node = result->children;
+					if (result_node) {
+						xmlNodePtr last_insert_node = xmlCopyNode(result_node, 1);
+						xmlReplaceNode(newnode, last_insert_node);
+						result_node = result_node->next;
+						while(result_node) {
+							xmlNodePtr insert_node = xmlCopyNode(result_node, 1);
+							xmlAddNextSibling(last_insert_node, insert_node);
+							last_insert_node = insert_node;
+							result_node = result_node->next;
+						}
+					}
+					else {
+						xmlUnlinkNode(newnode);
+					}
+				}
+				else {
+					xmlReplaceNode(newnode, xmlCopyNode(result, 1));
+				}
 			}
 			else {
 				xmlUnlinkNode(newnode);

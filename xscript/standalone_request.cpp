@@ -106,6 +106,11 @@ StandaloneRequest::getOriginalHost() const {
 	return impl_->getOriginalHost();
 }
 
+std::string
+StandaloneRequest::getOriginalUrl() const {
+	return impl_->getOriginalUrl();
+}
+
 std::streamsize
 StandaloneRequest::getContentLength() const {
 	return 0;

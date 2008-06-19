@@ -161,6 +161,15 @@ RequestImpl::getOriginalURI() const {
 }
 
 std::string
+RequestImpl::getOriginalUrl() const {
+	std::string url(isSecure() ? "https://" : "http://");
+	url.append(getOriginalHost());
+	url.append(getOriginalURI());
+	return url;
+}
+
+
+std::string
 RequestImpl::getHost() const {
 	const std::string& host_header = getHeader(HOST_KEY);
 	if (host_header.empty()) {
