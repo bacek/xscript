@@ -4,6 +4,7 @@
 #include <cstdarg>
 #include <cassert>
 #include <stdexcept>
+#include <iostream>
 
 #include <boost/thread/tss.hpp>
 #include <boost/current_function.hpp>
@@ -557,6 +558,12 @@ TimeoutCounter::expired() const {
 	}
 
 	return remained() <= 0;
+}
+
+void terminate(int status, const char* message) {
+	std::cerr << "Xscript is terminating: " << message;
+	log()->crit("Xscript is terminating: %s", message);
+	exit(status);
 }
 
 static XmlUtils utils_;

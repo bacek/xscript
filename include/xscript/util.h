@@ -174,6 +174,8 @@ private:
 	int timeout_;
 };
 
+void terminate(int status, const char* message);
+
 } // namespace xscript
 
 #endif // _XSCRIPT_UTIL_H_

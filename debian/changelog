@@ -1,3 +1,9 @@
+xscript (5.22-0) unstable; urgency=low
+
+  * terminate function added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 24 Jun 2008 12:58:22 +0400
+
 xscript (5.21-0) unstable; urgency=low
 
   * wbr test added
