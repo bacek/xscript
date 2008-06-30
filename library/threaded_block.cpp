@@ -1,3 +1,4 @@
+#include <cstring>
 #include "settings.h"
 
 #include <boost/lexical_cast.hpp>

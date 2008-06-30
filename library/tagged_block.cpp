@@ -1,6 +1,7 @@
 #include "settings.h"
 
 #include <boost/current_function.hpp>
+#include <limits>
 
 #include "xscript/logger.h"
 #include "xscript/doc_cache.h"
