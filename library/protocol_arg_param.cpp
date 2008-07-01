@@ -37,7 +37,7 @@ ProtocolArgParam::~ProtocolArgParam() {
 std::string
 ProtocolArgParam::asString(const Context *ctx) const {
 	Request *req = ctx->request();
-	const std::string& val = value();
+	std::string val = StringUtils::tolower(value());
 	if (val == "path"){
 		return req->getScriptName();
 	}
