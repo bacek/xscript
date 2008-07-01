@@ -174,7 +174,7 @@ private:
 	int timeout_;
 };
 
-void terminate(int status, const char* message);
+void terminate(int status, const char* message, bool write_log);
 
 } // namespace xscript
 

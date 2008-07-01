@@ -1,3 +1,11 @@
+xscript (5.23-0) unstable; urgency=low
+
+  * xslt profile output fixed
+  * terminate function changed
+  * checking xslt parameters added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue,  1 Jul 2008 11:29:31 +0400
+
 xscript (5.22-0) unstable; urgency=low
 
   * terminate function added

@@ -113,33 +113,7 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 		tctx->globalVars = xmlHashCreate(20);
 	}
 
-	const std::vector<Param*> &p = obj->xsltParams();
-	if (!p.empty()) {
-		log()->debug("param list contains %llu elements", static_cast<unsigned long long>(p.size()));
-
-		typedef std::set<std::string> ParamSetType;
-		ParamSetType unique_params;
-		for (std::vector<Param*>::const_iterator it = p.begin(), end = p.end(); it != end; ++it) {
-			const Param *param = *it;
-			const std::string &id = param->id();
-			std::pair<ParamSetType::iterator, bool> result = unique_params.insert(id);
-			if (result.second == false) {
-				CheckingPolicy::instance()->processError(std::string("duplicated xslt-param: ") + id);
-			}
-			else {
-				std::string value = param->asString(ctx);
-				if (value.empty()) {
-					log()->debug("skip empty xslt-param %s", id.c_str());
-				}
-				else {
-					log()->debug("add xslt-param %s: %s", id.c_str(), value.c_str());
-					XmlUtils::throwUnless(
-						xsltQuoteOneUserParam(tctx.get(),
-						(const xmlChar*)id.c_str(), (const xmlChar*)value.c_str()) == 0);
-				}
-			}
-		}
-	}
+	appendXsltParams(obj->xsltParams(), ctx, tctx.get());
 
 	XmlDocHelper newdoc(xsltApplyStylesheetUser(stylesheet_.get(), doc.get(), NULL, NULL, NULL, tctx.get()));
 	if (CheckingPolicy::instance()->useXSLTProfiler()) {
@@ -148,12 +122,81 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 		xmlNewTextChild(xmlDocGetRootElement(prof_doc.get()), 0, BAD_CAST "total-time", BAD_CAST profiler.getInfo().c_str());
 		xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(&writeProfileFunc, &closeProfileFunc, ctx, NULL);
 		XmlUtils::throwUnless(NULL != buf);
+		std::cout << "XSLT PROFILE INFO" << std::endl;
 		xmlSaveFormatFileTo(buf, prof_doc.get(), NULL, 1);
+		std::cout << "END OF XSLT PROFILE INFO" << std::endl << std::endl;
 	}
 
 	log()->debug("%s: %s, checking result document", BOOST_CURRENT_FUNCTION, name_.c_str());
 	XmlUtils::throwUnless(NULL != newdoc.get());
 	return newdoc;
+}
+
+
+void
+Stylesheet::appendXsltParams(const std::vector<Param*>& params, const Context *ctx, xsltTransformContextPtr tctx) {
+
+	if (params.empty()) {
+		return;
+	}
+
+	log()->debug("param list contains %llu elements", static_cast<unsigned long long>(params.size()));
+
+	typedef std::set<std::string> ParamSetType;
+	ParamSetType unique_params;
+	for (std::vector<Param*>::const_iterator it = params.begin(), end = params.end(); it != end; ++it) {
+		const Param *param = *it;
+		const std::string &id = param->id();
+		std::pair<ParamSetType::iterator, bool> result = unique_params.insert(id);
+		if (result.second == false) {
+			CheckingPolicy::instance()->processError(std::string("duplicated xslt-param: ") + id);
+		}
+		else {
+			std::string value = param->asString(ctx);
+			if (checkXsltParam(id, value)) {
+				log()->debug("add xslt-param %s: %s", id.c_str(), value.c_str());
+				XmlUtils::throwUnless(
+					xsltQuoteOneUserParam(
+						tctx, (const xmlChar*)id.c_str(), (const xmlChar*)value.c_str()) == 0);
+			}
+		}
+	}
+}
+
+bool
+Stylesheet::checkXsltParam(const std::string& id, const std::string& value) {
+
+	if (id.empty()) {
+		log()->debug("skip xslt-param with empty id");
+		return false;
+	}
+
+	if (value.empty()) {
+		log()->debug("skip empty xslt-param: %s", id.c_str());
+		return false;
+	}
+
+	if (id.size() > 128) {
+		log()->debug("skip xslt-param with too long id: %s", id.c_str());
+		return false;
+	}
+
+	if (!isalpha(id[0]) && id[0] != '_') {
+		log()->debug("skip xslt-param with incorrect 1 character in id: %s", id.c_str());
+		return false;
+	}
+
+	int size = id.size();
+	for(int i = 1; i < size; ++i) {
+		char character = id[i];
+		if (isalnum(character) || character == '-' || character == '_') {
+			continue;
+		}
+		log()->debug("skip xslt-param with incorrect %d character in id: %s", i + 1, id.c_str());
+		return false;
+	}
+
+	return true;
 }
 
 void
@@ -416,9 +459,9 @@ writeProfileFunc(void *ctx, const char *data, int len) {
 		return 0;
 	}
 	try {
-		std::cout << "XSLT PROFILE INFO" << std::endl;
+
 		std::cout.write(data, len);
-		std::cout << "END OF XSLT PROFILE INFO" << std::endl << std::endl;
+
 		return len;
 	}
 	catch (const std::exception &e) {

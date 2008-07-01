@@ -2,6 +2,7 @@
 #define _XSCRIPT_STYLESHEET_H_
 
 #include <map>
+#include <vector>
 #include <boost/shared_ptr.hpp>
 
 #include <xscript/xml.h>
@@ -66,6 +67,9 @@ protected:
 	
 	void setupContentType(const char *type);
 	std::string detectContentType(const XmlDocHelper &doc) const;
+
+	void appendXsltParams(const std::vector<Param*>& params, const Context *ctx, xsltTransformContextPtr tctx);
+	bool checkXsltParam(const std::string& id, const std::string& value);
 	
 	static void attachContextData(xsltTransformContextPtr tctx, Context *ctx, Stylesheet *stylesheet);
 

@@ -9,6 +9,7 @@
 
 #include "xscript/config.h"
 #include "xscript/logger.h"
+#include "xscript/util.h"
 #include "details/file_logger.h"
 
 
@@ -70,8 +71,10 @@ void FileLogger::openFile() {
 		close(fd_);
 	fd_ = open(filename_.c_str(), O_WRONLY | O_CREAT | O_APPEND, openMode_);
 	if (fd_ == -1) {
-		if (crash_)
-			exit(42);
+		if (crash_) {
+			std::string message = "Cannot open file for writing: " + filename_;
+			terminate(42, message.c_str(), false);
+		}
 	}
 }
 

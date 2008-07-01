@@ -30,15 +30,12 @@ public:
 };
 
 OfflineServer::OfflineServer(Config *config, const std::string& url, const std::multimap<std::string, std::string>& args) :
-	Server(config), url_(url)
+	Server(config), url_(url), apply_stylesheet_(true), use_remote_call_(true)
 {
 	ComponentRegisterer<CheckingPolicy> reg(new OfflineCheckingPolicy());
 	(void)reg;
 
 	root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");
-
-	apply_stylesheet_ = true;
-	use_remote_call_ = true;
 
 	for (std::multimap<std::string, std::string>::const_iterator it = args.begin(); it != args.end(); ++it) {
 		if (it->first == "header") {

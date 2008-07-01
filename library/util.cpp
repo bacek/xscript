@@ -560,9 +560,11 @@ TimeoutCounter::expired() const {
 	return remained() <= 0;
 }
 
-void terminate(int status, const char* message) {
-	std::cerr << "Xscript is terminating: " << message;
-	log()->crit("Xscript is terminating: %s", message);
+void terminate(int status, const char* message, bool write_log) {
+	std::cerr << "Xscript is terminating: " << message << std::endl;
+	if (write_log) {
+		log()->crit("Xscript is terminating: %s", message);
+	}
 	exit(status);
 }
 
