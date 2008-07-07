@@ -359,6 +359,8 @@ MistBlock::setStateByDate(Context *ctx) {
 	boost::shared_ptr<State> state = ctx->state();
 	std::string name = p[0]->asString(ctx);
 	state->checkName(name);
+	std::string name_timestamp = name + std::string("_timestamp");
+	state->checkName(name_timestamp);
 
 	time_t now_seconds = time(NULL);
 	const char* date_format_iso = "%Y-%m-%d";
@@ -372,6 +374,8 @@ MistBlock::setStateByDate(Context *ctx) {
 
 	std::string now_str(buf);
 	state->setString(name, now_str);
+	std::string timestamp_str = boost::lexical_cast<std::string>(now_seconds);
+	state->setLongLong(name_timestamp, now_seconds);
 
 	StateNode node("date", name.c_str(), now_str.c_str());
 
@@ -380,6 +384,8 @@ MistBlock::setStateByDate(Context *ctx) {
 
 	strftime(buf, sizeof(buf), "%u", &ttm);
 	node.setProperty("weekday", buf);
+
+	node.setProperty("timestamp", timestamp_str.c_str());
 
 	now_seconds -= 86400; // seconds in one day
 
