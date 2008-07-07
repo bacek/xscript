@@ -152,7 +152,7 @@ Context::xsltName(const std::string &value) {
 }
 
 void
-Context::authContext(std::auto_ptr<AuthContext> auth) {
+Context::authContext(const boost::shared_ptr<AuthContext> &auth) {
 	auth_ = auth;
 }
 

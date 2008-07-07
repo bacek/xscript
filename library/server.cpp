@@ -80,7 +80,7 @@ Server::handleRequest(RequestData *request_data) {
 		Authorizer *authorizer = Authorizer::instance();
 		boost::shared_ptr<Context> ctx(new Context(script, *request_data));
 		ContextStopper ctx_stopper(ctx);
-		std::auto_ptr<AuthContext> auth = authorizer->checkAuth(ctx);
+		boost::shared_ptr<AuthContext> auth(authorizer->checkAuth(ctx).release());
 		assert(NULL != auth.get());
 
 		if (!auth->authorized()) {

@@ -56,6 +56,10 @@ public:
 	}
 	
 	const Block* block(const std::string &id, bool throw_error = true) const;
+
+	unsigned int blocksNumber() const {
+		return blocks_.size();
+	}
 	
 	const std::string& header(const std::string &name) const;
 	

@@ -57,11 +57,11 @@ public:
 	std::string xsltName() const;
 	void xsltName(const std::string &value);
 
-	AuthContext* authContext() const {
-		return auth_.get();
+	inline const boost::shared_ptr<AuthContext>& authContext() const {
+		return auth_;
 	}
 	
-	void authContext(std::auto_ptr<AuthContext> auth);
+	void authContext(const boost::shared_ptr<AuthContext> &auth);
 
 	DocumentWriter* documentWriter();
 	
@@ -83,7 +83,7 @@ private:
 	boost::shared_ptr<State> state_;
 	boost::shared_ptr<Script> script_;
 
-	std::auto_ptr<AuthContext> auth_;
+	boost::shared_ptr<AuthContext> auth_;
 	std::auto_ptr<DocumentWriter> writer_;
 	
 	std::map<std::string, boost::any> params_;

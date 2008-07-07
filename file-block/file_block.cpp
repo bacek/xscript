@@ -3,7 +3,10 @@
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
 #include <boost/filesystem/path.hpp>
+#include <xscript/context.h>
 #include <xscript/logger.h>
+#include <xscript/request_data.h>
+#include <xscript/script.h>
 #include <xscript/xml.h>
 #include <xscript/param.h>
 #include <xscript/util.h>
@@ -17,7 +20,8 @@ namespace xscript
 namespace fs = boost::filesystem;
 
 FileBlock::FileBlock(const Extension *ext, Xml *owner, xmlNodePtr node) 
-	: Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node), processXInclude_(false)
+	: Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node),
+	method_(NULL), processXInclude_(false)
 {
 }
 
@@ -32,10 +36,15 @@ FileBlock::postParse() {
 	createCanonicalMethod("file.");
 
 	if (method() == "include") {
+		method_ = &FileBlock::loadFile;
 		processXInclude_ = true;
 	}
 	else if (method() == "load") {
+		method_ = &FileBlock::loadFile;
 		processXInclude_ = false;
+	}
+	else if (method() == "invoke") {
+		method_ = &FileBlock::invokeFile;
 	}
 	else {
 		throw std::invalid_argument("Unknown method for file-block: " + method());
@@ -54,8 +63,9 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
 
 	std::string file = createFilename(p[0]->asString(ctx));
 
-	if (!tagged()) 
-		return loadFile(file);
+	if (!tagged()) {
+		return (this->*method_)(file, ctx);
+	}
 
 	struct stat st;
 	int res = stat(file.c_str(), &st);
@@ -76,7 +86,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
 	}
 	else {
 		modified = true;
-		doc = loadFile(file);
+		doc = (this->*method_)(file, ctx);
 	}
 
 	Tag local_tag(modified, st.st_mtime, Tag::UNDEFINED_TIME);
@@ -86,7 +96,8 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
 }
 
 XmlDocHelper
-FileBlock::loadFile(const std::string& file_name) {
+FileBlock::loadFile(const std::string& file_name, Context *ctx) {
+	(void)ctx;
 	log()->debug("%s: loading file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
 	XmlDocHelper doc(xmlReadFile(
@@ -103,6 +114,29 @@ FileBlock::loadFile(const std::string& file_name) {
 	return doc;
 }
 
+XmlDocHelper
+FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
+	log()->debug("%s: invoking file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
+
+	boost::shared_ptr<Script> script = Script::create(file_name);
+
+	RequestData request_data(ctx->request(), ctx->response(), ctx->state());
+	boost::shared_ptr<Context> local_ctx(new Context(script, request_data));
+	ContextStopper ctx_stopper(local_ctx);
+
+	local_ctx->authContext(ctx->authContext());
+	
+	unsigned int size = script->blocksNumber();
+	for(unsigned int i = 0; i < size; ++i) {
+		Block* block = const_cast<Block*>(script->block(i));
+		block->threaded(false);
+	}
+
+	XmlDocHelper doc = script->invoke(local_ctx);
+	XmlUtils::throwUnless(NULL != doc.get());
+
+	return doc;
+}
 
 std::string
 FileBlock::createFilename(const std::string& relative_name) {

@@ -8,6 +8,9 @@
 
 namespace xscript
 {
+class FileBlock;
+
+typedef XmlDocHelper (FileBlock::*Method)(const std::string&, Context*);
 
 /**
  * x:file block. Loading local files with <s>jackpot and hookers</s> with
@@ -32,14 +35,18 @@ protected:
 	/**
 	 * Loading file with optional xinclude processing.
 	 */
-	XmlDocHelper loadFile(const std::string& file_name);
+	XmlDocHelper loadFile(const std::string& file_name, Context *ctx);
 
 	/**
 	 * Create full filename based on relative name in first arg.
 	 */
+
+	XmlDocHelper invokeFile(const std::string& file_name, Context *ctx);
+
 	std::string createFilename(const std::string& relative_name);
-	
+
 private:
+	Method method_;
 	bool processXInclude_;
 };
 

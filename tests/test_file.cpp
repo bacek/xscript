@@ -69,7 +69,6 @@ FileTest::testInclude() {
 	CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "//include-data"));
 }
 
-
 void
 FileTest::testTag() {
 	/*
