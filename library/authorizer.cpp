@@ -32,10 +32,10 @@ Authorizer::Authorizer()
 Authorizer::~Authorizer() {
 }
 
-std::auto_ptr<AuthContext>
+boost::shared_ptr<AuthContext>
 Authorizer::checkAuth(const boost::shared_ptr<Context> &ctx) const {
 	(void)ctx;
-	return std::auto_ptr<AuthContext>(new AuthContext());
+	return boost::shared_ptr<AuthContext>(new AuthContext());
 }
 
 void

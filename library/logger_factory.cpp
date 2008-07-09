@@ -40,7 +40,7 @@ public:
         XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
         XmlUtils::throwUnless(NULL != doc.get());
 
-        xmlNodePtr node = xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "logroate", (const xmlChar*) "rotated");
+        xmlNodePtr node = xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "logrotate", (const xmlChar*) "rotated");
         XmlUtils::throwUnless(NULL != node);
 
         xmlDocSetRootElement(doc.get(), node);

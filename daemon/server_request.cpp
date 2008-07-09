@@ -373,7 +373,7 @@ ServerRequest::sendHeadersInternal() {
 			(*stream_) << i->first << ": " << i->second << "\r\n";
 		}
 		for (std::set<Cookie, CookieLess>::const_iterator i = out_cookies_.begin(), end = out_cookies_.end(); i != end; ++i) {
-			(*stream_) << "set-Cookie: " << i->toString() << "\r\n";
+			(*stream_) << "Set-Cookie: " << i->toString() << "\r\n";
 		}
 		(*stream_) << "\r\n";
 		headers_sent_ = true;

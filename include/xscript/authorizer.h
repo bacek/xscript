@@ -22,7 +22,7 @@ public:
 	Authorizer();
 	virtual ~Authorizer();
 
-	virtual std::auto_ptr<AuthContext> checkAuth(const boost::shared_ptr<Context> &ctx) const;
+	virtual boost::shared_ptr<AuthContext> checkAuth(const boost::shared_ptr<Context> &ctx) const;
 	virtual void redirectToAuth(const boost::shared_ptr<Context> &ctx, const AuthContext *auth) const;
 };
 
