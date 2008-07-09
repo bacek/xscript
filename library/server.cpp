@@ -80,7 +80,7 @@ Server::handleRequest(RequestData *request_data) {
 		Authorizer *authorizer = Authorizer::instance();
 		boost::shared_ptr<Context> ctx(new Context(script, *request_data));
 		ContextStopper ctx_stopper(ctx);
-		boost::shared_ptr<AuthContext> auth(authorizer->checkAuth(ctx).release());
+		boost::shared_ptr<AuthContext> auth = authorizer->checkAuth(ctx);
 		assert(NULL != auth.get());
 
 		if (!auth->authorized()) {
