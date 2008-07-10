@@ -276,7 +276,7 @@ HttpBlock::response(const HttpHelper &helper) const {
 	}
 	else if (helper.contentType() == "text/html") {
 		std::string data = XmlUtils::sanitize(str);
-		return XmlDocHelper(htmlReadDoc((const xmlChar*) data.c_str(), helper.base().c_str(), 
+		return XmlDocHelper(htmlReadMemory(data.c_str(), data.size(), helper.base().c_str(), 
 			helper.charset().c_str(), HTML_PARSE_NOBLANKS | HTML_PARSE_NONET | HTML_PARSE_NOERROR));
 	}
 	throw std::runtime_error("format is not recognized");
