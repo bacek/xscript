@@ -2,6 +2,7 @@
 #define _XSCRIPT_PROFILER_H_
 
 #include <sys/time.h>
+#include <boost/cstdint.hpp>
 #include <boost/function.hpp>
 
 namespace xscript
