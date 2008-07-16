@@ -26,7 +26,7 @@ namespace xscript
 FileLogger::FileLogger(Logger::LogLevel level, const Config * config, const std::string &key)
 	: 
 		Logger(level), 
-		openMode_(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP), 
+		openMode_(S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH), 
 		crash_(true), 
 		fd_(-1),
 		stopping_(false),
