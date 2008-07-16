@@ -2,7 +2,6 @@
 #define _XSCRIPT_LOGGER_H_
 
 #include <cstdarg>
-#include <xscript/component.h>
 
 namespace xscript
 {
