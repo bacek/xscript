@@ -11,7 +11,7 @@ namespace xscript
     /**
      * Calculate timeval delta in milliseconds
      */
-    uint64_t operator-(const timeval& endTime, const timeval &startTime) {
+    inline uint64_t operator-(const timeval& endTime, const timeval &startTime) {
 		return (endTime.tv_sec - startTime.tv_sec) * 1000000 
             + endTime.tv_usec - startTime.tv_usec;
     };
@@ -35,7 +35,7 @@ namespace xscript
      * Specialisation of profile for functions returning void.
      * Return just passed time.
      */
-	uint64_t profile(const boost::function<void ()>& f) {
+	inline uint64_t profile(const boost::function<void ()>& f) {
 		struct timeval startTime, endTime;
 		gettimeofday(&startTime, 0);
 
