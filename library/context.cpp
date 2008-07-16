@@ -148,7 +148,12 @@ Context::xsltName() const {
 void
 Context::xsltName(const std::string &value) {
 	boost::mutex::scoped_lock sl(params_mutex_);
-	xslt_name_ = value;
+        if (value.empty()) {
+                xslt_name_.erase();
+        }
+        else {
+                xslt_name_ = script_->fullName(value);
+        }
 }
 
 void

@@ -357,6 +357,9 @@ Script::parseStylesheetNode(const xmlNodePtr node) {
 				begin += 1;
 				const xmlChar* end = xmlStrchr(begin, '"');
 				if (NULL != end) {
+					if (begin == end) {
+						throw std::runtime_error("empty href in stylesheet node");
+					}
 					xsltName(std::string((const char*) begin, (const char*) end));
 					stylesheet_node_ = node;
 					return;

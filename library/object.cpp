@@ -36,9 +36,6 @@ Object::xsltName(const std::string &value) {
 	if (value.empty()) {
 		xslt_name_.erase();
 	}
-	else if (value[0] == '/') {
-		xslt_name_ = value;
-	}
 	else {
 		xslt_name_ = fullName(value);
 	}

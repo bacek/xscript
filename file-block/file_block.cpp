@@ -10,7 +10,6 @@
 #include <xscript/xml.h>
 #include <xscript/param.h>
 #include <xscript/util.h>
-#include <libxml/uri.h>
 #include <libxml/xinclude.h>
 #include "file_block.h"
 
@@ -61,7 +60,11 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
 		throw std::logic_error("file-block: bad arity");
 	}
 
-	std::string file = createFilename(p[0]->asString(ctx));
+	std::string filename = p[0]->asString(ctx);
+	if (filename.empty()) {
+		throw std::runtime_error("Empty path in file block");
+	}
+	std::string file = fullName(filename);
 
 	if (!tagged()) {
 		return (this->*method_)(file, ctx);
@@ -136,41 +139,6 @@ FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
 	XmlUtils::throwUnless(NULL != doc.get());
 
 	return doc;
-}
-
-std::string
-FileBlock::createFilename(const std::string& relative_name) {
-
-	if (relative_name.empty()) {
-		throw std::runtime_error("Empty relative path in file block");
-	}
-
-	fs::path path;
-	if (*relative_name.begin() == '/') {
-		path = fs::path(relative_name);
-	}
-	else {
-		const std::string &owner_name = owner()->name();
-		if (owner_name.empty()) {
-			path = fs::path(relative_name);
-		}
-		else if (*owner_name.rbegin() == '/') {
-			path = fs::path(owner_name + relative_name);
-		}
-		else {
-			std::string::size_type pos = owner_name.find_last_of('/');
-			if (pos == std::string::npos) {
-				path = fs::path(relative_name);
-			}
-			else {
-				path = fs::path(owner_name.substr(0, pos + 1) + relative_name);
-			}
-		}
-	}
-
-	XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar *) path.native_file_string().c_str()));
-
-	return (const char*) canonic_path.get();
 }
 
 }
