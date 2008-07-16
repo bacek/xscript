@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include <cstring>
 #include <map>
 #include <cstdlib>
 #include <fstream>
