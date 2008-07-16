@@ -25,6 +25,7 @@
 #include "xscript/vhost_data.h"
 #include "xscript/stylesheet.h"
 #include "xscript/thread_pool.h"
+#include "xscript/profiler.h"
 #include "details/param_factory.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -181,7 +182,10 @@ void
 Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
 	if (!xsltName().empty()) {
 		boost::shared_ptr<Stylesheet> sh = Stylesheet::create(xsltName());
-		Object::applyStylesheet(sh, ctx, doc, true);
+        {
+            Profiler __p(log(), std::string("per-block-xslt: '") + xsltName() + "' block-id: '" + id() + "' method: '" + method() + "' owner: '" + owner()->name() + "'");
+            Object::applyStylesheet(sh, ctx, doc, true);
+        }
 
 		XmlUtils::throwUnless(NULL != doc.get());
 		log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
