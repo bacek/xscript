@@ -6,6 +6,7 @@
 
 namespace xscript
 {
+    class Logger;
 
     /**
      * Calculate timeval delta in milliseconds
@@ -45,6 +46,31 @@ namespace xscript
 		return endTime - startTime;
 	}
 
+    /**
+     * Scoped profiler.
+     */
+    class Profiler {
+    public:
+        /**
+         * Create profiler.
+         * \param log   Logger to output to.
+         * \param info  Info string appened to output.
+         */
+        Profiler(Logger* log, const std::string& info)
+            : log_(log), info_(info)
+        {
+            gettimeofday(&startTime_, 0);
+        }
+
+        /**
+         * Destructor which output profiling info into log.
+         */
+        ~Profiler();
+    private:
+        Logger          *log_;
+        std::string     info_;
+        timeval         startTime_;
+    };
 }
 
 
