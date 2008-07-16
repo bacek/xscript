@@ -12,7 +12,7 @@ namespace xscript
      * Calculate timeval delta in milliseconds
      */
     inline uint64_t operator-(const timeval& endTime, const timeval &startTime) {
-		return (endTime.tv_sec - startTime.tv_sec) * 1000000 
+		return (endTime.tv_sec - startTime.tv_sec) * (uint64_t)1000000 
             + endTime.tv_usec - startTime.tv_usec;
     };
 
