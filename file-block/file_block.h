@@ -43,8 +43,6 @@ protected:
 
 	XmlDocHelper invokeFile(const std::string& file_name, Context *ctx);
 
-	std::string createFilename(const std::string& relative_name);
-
 private:
 	Method method_;
 	bool processXInclude_;
