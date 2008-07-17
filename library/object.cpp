@@ -43,8 +43,30 @@ Object::xsltName(const std::string &value) {
 
 void
 Object::checkParam(const Param *param) const {
-	if (param->id().empty()) {
+	const std::string& id = param->id();
+	if (id.empty()) {
 		throw std::runtime_error("xsl param without id");
+	}
+
+	int size = id.size();
+	if (size > 128) {
+		throw UnboundRuntimeError(std::string("xsl param with too big size id: ") + id);
+	}
+
+	if (!isalpha(id[0]) && id[0] != '_') {
+		throw std::runtime_error(std::string("xsl param with incorrect 1 character in id: ") + id);
+	}
+
+	for(int i = 1; i < size; ++i) {
+		char character = id[i];
+		if (isalnum(character) || character == '-' || character == '_') {
+			continue;
+		}
+
+		throw std::runtime_error(
+			std::string("xsl param with incorrect ") + 
+			boost::lexical_cast<std::string>(i + 1) + 
+			std::string(" character in id: ") + id);
 	}
 }
 

@@ -153,50 +153,17 @@ Stylesheet::appendXsltParams(const std::vector<Param*>& params, const Context *c
 		}
 		else {
 			std::string value = param->asString(ctx);
-			if (checkXsltParam(id, value)) {
+			if (!value.empty()) {
 				log()->debug("add xslt-param %s: %s", id.c_str(), value.c_str());
 				XmlUtils::throwUnless(
 					xsltQuoteOneUserParam(
 						tctx, (const xmlChar*)id.c_str(), (const xmlChar*)value.c_str()) == 0);
 			}
+			else {
+				log()->debug("skip empty xslt-param: %s", id.c_str());
+			}
 		}
 	}
-}
-
-bool
-Stylesheet::checkXsltParam(const std::string& id, const std::string& value) {
-
-	if (id.empty()) {
-		log()->debug("skip xslt-param with empty id");
-		return false;
-	}
-
-	if (value.empty()) {
-		log()->debug("skip empty xslt-param: %s", id.c_str());
-		return false;
-	}
-
-	if (id.size() > 128) {
-		log()->debug("skip xslt-param with too long id: %s", id.c_str());
-		return false;
-	}
-
-	if (!isalpha(id[0]) && id[0] != '_') {
-		log()->debug("skip xslt-param with incorrect 1 character in id: %s", id.c_str());
-		return false;
-	}
-
-	int size = id.size();
-	for(int i = 1; i < size; ++i) {
-		char character = id[i];
-		if (isalnum(character) || character == '-' || character == '_') {
-			continue;
-		}
-		log()->debug("skip xslt-param with incorrect %d character in id: %s", i + 1, id.c_str());
-		return false;
-	}
-
-	return true;
 }
 
 void

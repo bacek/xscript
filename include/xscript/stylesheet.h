@@ -69,7 +69,6 @@ protected:
 	std::string detectContentType(const XmlDocHelper &doc) const;
 
 	void appendXsltParams(const std::vector<Param*>& params, const Context *ctx, xsltTransformContextPtr tctx);
-	bool checkXsltParam(const std::string& id, const std::string& value);
 	
 	static void attachContextData(xsltTransformContextPtr tctx, Context *ctx, Stylesheet *stylesheet);
 
