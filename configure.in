@@ -16,14 +16,20 @@ AC_CHECK_FUNCS(memcmp, [], [])
 AC_CHECK_FUNCS(memchr, [], [])
 AC_CHECK_FUNCS(memmem, [], [])
 
+PKG_CHECK_MODULES(yandex_platform,
+        [yandex-platform], [], [echo yandex-platform not found])
+
 ac_have_boost="yes"
 ac_stored_libs=$LIBS
 ac_stored_cppflags=$CPPFLAGS
 ac_stored_cxxflags=$CXXFLAGS
-
-LIBS="$ac_stored_libs -lboost_thread -lboost_regex -lboost_filesystem"
-CPPFLAGS="$ac_stored_cppflags -pthread"
+ 
+LIBS="$ac_stored_libs -lboost_thread -lboost_regex -lboost_filesystem $yandex_platform_LIBS"
+CPPFLAGS="$ac_stored_cppflags -pthread $yandex_platform_CFLAGS"
 CXXFLAGS="$ac_stored_cxxflags -W -Wall -pthread"
+
+AC_SUBST(yandex_platform_LIBS)
+AC_SUBST(yandex_platform_CFLAGS)
 
 AC_CHECK_HEADER([boost/bind.hpp], [], [ac_have_boost="no"])
 AC_CHECK_HEADER([boost/function.hpp], [], [ac_have_boost="no"])
@@ -82,8 +88,8 @@ PKG_CHECK_MODULES(exslt,
 PKG_CHECK_MODULES(xml, 
 	[libxml-2.0], [], [ AC_MSG_ERROR([libxml-2.0 not found]) ])
 
-LIBS="$LIBS $xml_LIBS $xslt_LIBS $exslt_LIBS"
-CPPFLAGS="$CPPFLAGS $xml_CFLAGS $xslt_CFLAGS $exslt_CFLAGS"
+LIBS="$LIBS $xml_LIBS $xslt_LIBS $exslt_LIBS $yandex_platform_LIBS"
+CPPFLAGS="$CPPFLAGS $xml_CFLAGS $xslt_CFLAGS $exslt_CFLAGS $yandex_platform_CFLABS"
 
 ac_have_lua="yes"
 ac_lua_found="no"

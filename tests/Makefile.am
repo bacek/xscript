@@ -16,9 +16,9 @@ test_LDFLAGS = -ldl -lcppunit -export-dynamic
 
 endif
 
-AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -I@top_srcdir@/library -D_REENTRANT
+AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -I@top_srcdir@/library -D_REENTRANT @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
-AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem
+AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem @yandex_platform_LIBS@
 
 EXTRA_DIST = test.conf badinclude.xml http-get.xml http-local-tagged.xml \
 	http-block-params.xml http-block-params.xsl empty-cdata.xml \

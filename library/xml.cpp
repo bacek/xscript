@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include <stdexcept>
 #include <boost/filesystem/path.hpp>
 
 #include "xscript/xml.h"
