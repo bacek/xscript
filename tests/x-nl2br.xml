@@ -26,4 +26,41 @@ gh</source>
 	    <node-content>gh</node-content>
 	</result>	
     </test>
+    
+    <test>
+	<source>abc
+def
+
+gh
+</source>
+	<result>
+	    <node-name/>
+	    <node-content>abc</node-content>
+	</result>
+	<result>
+	    <node-name>br</node-name>
+	    <node-content/>
+	</result>
+	<result>
+	    <node-name/>
+	    <node-content>def</node-content>
+	</result>
+	<result>
+	    <node-name>br</node-name>
+	    <node-content/>
+	</result>
+	<result>
+	    <node-name>br</node-name>
+	    <node-content/>
+	</result>
+	<result>
+	    <node-name/>
+	    <node-content>gh</node-content>
+	</result>	
+	<result>
+	    <node-name>br</node-name>
+	    <node-content/>
+	</result>
+    </test>    
+    
 </tests>
