@@ -24,6 +24,7 @@
 #include "xscript/context.h"
 #include "xscript/request.h"
 #include "xscript/state.h"
+#include "xscript/profiler.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -138,6 +139,7 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
 		return doc;
 	}
 
+    PROFILER(log(), std::string("getHttp: ") + url);
 	const Tag* tag = boost::any_cast<Tag>(&a);
 	HttpHelper helper(url, remoteTimeout());
 	helper.appendHeaders(ctx->request(), proxy_, tag);
