@@ -573,6 +573,85 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltNl2br(xmlXPathParserContextPtr ctxt, int nargs) {
+
+	log()->entering("xscript:nl2br");
+	if (ctxt == NULL) {
+		return;
+	}
+
+	if (1 != nargs) {
+		log()->error("xscript:nl2br: bad param count");
+		return;
+	}
+
+	XsltParamFetcher params(ctxt, nargs);
+
+	const char* str = params.str(0);
+	if (NULL == str) {
+		log()->error("xscript:nl2br: bad first parameter");
+		xmlXPathReturnEmptyNodeSet(ctxt);
+		return;
+	}
+
+	if (*str == '\0') {
+		xmlXPathReturnEmptyNodeSet(ctxt);
+		return;
+	}
+
+	xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+	if (NULL == tctx) {
+		xmlXPathReturnEmptyNodeSet(ctxt);
+		return;
+	}
+
+	try {
+		Context* ctx = Stylesheet::getContext(tctx);
+		XmlNodeSetHelper ret(xmlXPathNodeSetCreate(NULL));
+
+		const char* end = str + strlen(str);
+		const char* chunk_begin = str;
+
+		while (str < end) {
+			if (*str == '\n') {
+				if (str - chunk_begin > 0) {
+					xmlNodePtr node = xmlNewTextLen((xmlChar*)chunk_begin, str - chunk_begin);
+					xmlXPathNodeSetAdd(ret.get(), node);
+					ctx->addNode(node);
+				}
+
+				xmlNodePtr node = xmlNewNode(NULL, (xmlChar*)"br");
+				xmlXPathNodeSetAdd(ret.get(), node);
+				ctx->addNode(node);
+
+				str = StringUtils::nextUTF8(str);
+				chunk_begin = str;
+			}
+			else {
+				str = StringUtils::nextUTF8(str);
+			}
+		}
+
+		if (str > end) {
+			throw std::runtime_error("incorrect UTF8 data");
+		}
+
+		if (end - chunk_begin > 0) {
+			xmlNodePtr node = xmlNewTextLen((xmlChar*)chunk_begin, end - chunk_begin);
+			xmlXPathNodeSetAdd(ret.get(), node);
+			ctx->addNode(node);
+		}
+
+		xmlXPathReturnNodeSet(ctxt, ret.release());
+	}
+	catch (const std::exception &e) {
+		log()->error("caught exception in [xscript::nl2br]: %s", e.what());
+		ctxt->error = XPATH_EXPR_ERROR;
+		xmlXPathReturnEmptyNodeSet(ctxt);
+	}
+}
+
+extern "C" void
 xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
 	(void)comp;
 	if (tctx == NULL) {
@@ -673,6 +752,7 @@ XsltExtensions::XsltExtensions() {
 	XsltFunctionRegisterer("js-quote", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltJsQuote);
 	XsltFunctionRegisterer("md5", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltMD5);
 	XsltFunctionRegisterer("wbr", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltWbr);
+	XsltFunctionRegisterer("nl2br", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltNl2br);
 
 	XsltFunctionRegisterer("sanitize", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSanitize);
 	
