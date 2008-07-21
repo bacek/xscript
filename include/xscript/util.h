@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 #include <iosfwd>
+#include <stdexcept>
 #include <boost/cstdint.hpp>
 #include <boost/utility.hpp>
 #include <xscript/config.h>
