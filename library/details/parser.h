@@ -8,7 +8,7 @@
 #include <boost/utility.hpp>
 
 #include "settings.h"
-#include "internal/functors.h"
+#include "xscript/functors.h"
 #include "xscript/util.h"
 #include "xscript/range.h"
 

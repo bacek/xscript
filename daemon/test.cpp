@@ -6,7 +6,6 @@
 #include <cppunit/ui/text/TestRunner.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "parser.h"
 #include "server_request.h"
 #include "xscript/config.h"
 

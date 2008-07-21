@@ -27,7 +27,7 @@ noinst_HEADERS = details/expect.h details/extension_list.h details/loader.h \
 	details/state_impl.h details/writer_impl.h details/xml_config.h \
 	details/syslog_logger.h details/file_logger.h \
 	details/dummy_thread_pool.h details/dummy_script_cache.h \
-	details/dummy_stylesheet_cache.h
+	details/dummy_stylesheet_cache.h details/parser.h
 
 libxscript_la_LDFLAGS = -lpthread -ldl
 

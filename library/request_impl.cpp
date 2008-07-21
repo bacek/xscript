@@ -9,7 +9,7 @@
 #include <boost/current_function.hpp>
 
 #include "xscript/request_impl.h"
-#include "xscript/parser.h"
+#include "details/parser.h"
 #include "xscript/range.h"
 #include "xscript/logger.h"
 #include "xscript/encoder.h"

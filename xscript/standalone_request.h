@@ -12,7 +12,7 @@
 #include "xscript/util.h"
 #include "xscript/request.h"
 #include "xscript/response.h"
-#include "internal/functors.h"
+#include "xscript/functors.h"
 
 namespace xscript
 {

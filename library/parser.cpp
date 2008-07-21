@@ -10,7 +10,7 @@
 #include <stdexcept>
 #include <boost/bind.hpp>
 
-#include "xscript/parser.h"
+#include "details/parser.h"
 #include "xscript/request_impl.h"
 #include "xscript/range.h"
 #include "xscript/encoder.h"
