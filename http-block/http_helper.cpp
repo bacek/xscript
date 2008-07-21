@@ -233,16 +233,25 @@ HttpHelper::checkStatus() const {
 	if (status_ >= 400) {
 		std::stringstream stream;
 		stream << "server responded " << status_;
-		throw std::runtime_error(stream.str() + ". URL: " + url());
+		processStatusError(stream.str());
 	}
 	else if (0 == status_ && 0 == content_.size()) {
-		throw std::runtime_error(
-			std::string("empty local content: possibly not performed") + ". URL: " + url());
+		processStatusError("empty local content: possibly not performed");
 	}
 	else if (304 == status_ && !sent_modified_since_) {
-		throw std::runtime_error(
-			std::string("server responded not-modified but if-modified-since was not sent") + ". URL: " + url());
+		processStatusError("server responded not-modified but if-modified-since was not sent");
 	}
+}
+
+void
+HttpHelper::processStatusError(const std::string& error_msg) const {
+
+	XmlNodeHelper error_node(xmlNewNode(NULL, (const xmlChar*)"http check status error"));
+	std::string status = boost::lexical_cast<std::string>(status_);
+	xmlNewChild(error_node.get(), NULL, (const xmlChar*)"message", (const xmlChar*)error_msg.c_str());
+	xmlNewChild(error_node.get(), NULL, (const xmlChar*)"status", (const xmlChar*)status.c_str());
+	xmlNewChild(error_node.get(), NULL, (const xmlChar*)"url", (const xmlChar*)url().c_str());
+	throw XmlNodeRuntimeError(error_msg + ". URL: " + url(), error_node);
 }
 
 Tag

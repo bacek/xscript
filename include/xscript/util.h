@@ -10,6 +10,7 @@
 #include <boost/utility.hpp>
 #include <xscript/config.h>
 #include <xscript/range.h>
+#include <xscript/xml_helpers.h>
 #include <libxml/tree.h>
 
 namespace xscript
@@ -23,6 +24,17 @@ public:
 	
 private:
 	std::string error_;
+};
+
+class XmlNodeRuntimeError : public std::runtime_error {
+public:
+	XmlNodeRuntimeError(const std::string& error) : std::runtime_error(error) {}
+	XmlNodeRuntimeError(const std::string& error, XmlNodeHelper node) : std::runtime_error(error), node_(node) {}
+	virtual ~XmlNodeRuntimeError() throw () {}
+	virtual xmlNodePtr what_node() const throw() { return node_.get(); }
+
+private:
+	XmlNodeHelper node_;
 };
 
 class Encoder;

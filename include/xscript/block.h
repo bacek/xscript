@@ -74,7 +74,8 @@ public:
 	virtual void invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
 	virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc);
 	
-	XmlDocHelper errorResult(const char *reason) const;
+	XmlDocHelper errorResult(const char *error) const;
+	XmlDocHelper errorResult(xmlNodePtr error_node) const;
 	
 	Logger * log() const {
 		return extension_->getLogger();
@@ -106,6 +107,8 @@ protected:
 	inline const std::vector<XPathExpr>& xpath() const {
 		return xpath_;
 	}
+
+	XmlDocHelper errorResult(const char *error, xmlNodePtr error_node) const;
 
 private:
 	const Extension *extension_;

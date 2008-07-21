@@ -2,8 +2,10 @@ xscript (5.25-3) unstable; urgency=low
 
   * checking xslt params moved to Object::checkParam
   * Xml::fullName fixed
+  * Nl2Br added
+  * error reporting changed in http-block
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 17 Jul 2008 15:02:15 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 21 Jul 2008 15:43:28 +0400
 
 xscript (5.25-2) unstable; urgency=low
 

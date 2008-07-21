@@ -140,6 +140,10 @@ Block::invokeInternal(Context *ctx) {
 
 		return processResponse(ctx, doc, a);
 	}
+	catch (const XmlNodeRuntimeError &e) {
+		log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
+		return errorResult(e.what_node());
+	}
 	catch (const std::exception &e) {
 		log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
 		return errorResult(e.what());
@@ -193,18 +197,36 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
 }
 
 XmlDocHelper
-Block::errorResult(const char *error) const {
-	
+Block::errorResult(const char *error, xmlNodePtr error_node) const {
+
 	XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
 	XmlUtils::throwUnless(NULL != doc.get());
 
-	xmlNodePtr node = xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "error", (const xmlChar*) error);
+	xmlNodePtr node = xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "error", (const xmlChar*)error);
 	XmlUtils::throwUnless(NULL != node);
-		
+
 	xmlNewProp(node, (const xmlChar*) "method", (const xmlChar*) method_.c_str());
 	xmlDocSetRootElement(doc.get(), node);
-		
+
+	if (error_node != NULL) {
+		xmlNodePtr result_node = error_node->children;
+		while(result_node) {
+			xmlAddChild(node, xmlCopyNode(result_node, 1));
+			result_node = result_node->next;
+		}
+	}
+
 	return doc;
+}
+
+XmlDocHelper
+Block::errorResult(xmlNodePtr error_node) const {
+	return errorResult(NULL, error_node);
+}
+
+XmlDocHelper
+Block::errorResult(const char *error) const {
+	return errorResult(error, NULL);
 }
 
 bool
