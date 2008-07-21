@@ -12,7 +12,12 @@
 
 namespace xscript
 {
+namespace internal
+{
 
+/**
+ * TODO: Remove this class?
+ */
 class Profiler {
 public:
 	Profiler(const std::string& funcName) :
@@ -58,6 +63,7 @@ private:
 	struct tms finishCPUTime_;
 };
 
+} // namespace internal
 } // namespace xscript
 
 #endif //_XSCRIPT_INTERNAL_PROFILER_H_

@@ -35,6 +35,7 @@
 #include "xscript/extension.h"
 #include "xscript/vhost_data.h"
 #include "xscript/checking_policy.h"
+#include "xscript/profiler.h"
 
 #include "details/extension_list.h"
 #include "internal/profiler.h"
@@ -115,9 +116,11 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 
 	appendXsltParams(obj->xsltParams(), ctx, tctx.get());
 
+    PROFILER(log(), "apply stylesheet " + name_);
+    internal::Profiler profiler("Total apply time");
 	XmlDocHelper newdoc(xsltApplyStylesheetUser(stylesheet_.get(), doc.get(), NULL, NULL, NULL, tctx.get()));
+    // Looks like we have to do something with this.
 	if (CheckingPolicy::instance()->useXSLTProfiler()) {
-		Profiler profiler("Total apply time");
 		XmlDocHelper prof_doc(xsltGetProfileInformation(tctx.get()));
 		xmlNewTextChild(xmlDocGetRootElement(prof_doc.get()), 0, BAD_CAST "total-time", BAD_CAST profiler.getInfo().c_str());
 		xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(&writeProfileFunc, &closeProfileFunc, ctx, NULL);
