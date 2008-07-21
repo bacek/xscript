@@ -33,7 +33,7 @@
 
 // NB: Multiline macro for function prologue
 #define PRLOGUE                                                         \
-    Profiler __p(                                                       \
+    PROFILER(                                                       \
         log(),                                                          \
         std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name()    \
     );  \

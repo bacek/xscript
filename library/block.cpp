@@ -187,7 +187,7 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
 	if (!xsltName().empty()) {
 		boost::shared_ptr<Stylesheet> sh = Stylesheet::create(xsltName());
         {
-            Profiler __p(log(), std::string("per-block-xslt: '") + xsltName() + "' block-id: '" + id() + "' method: '" + method() + "' owner: '" + owner()->name() + "'");
+            PROFILER(log(), std::string("per-block-xslt: '") + xsltName() + "' block-id: '" + id() + "' method: '" + method() + "' owner: '" + owner()->name() + "'");
             Object::applyStylesheet(sh, ctx, doc, true);
         }
 
