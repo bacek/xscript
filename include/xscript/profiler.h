@@ -74,5 +74,12 @@ namespace xscript
     };
 }
 
+/**
+ * Macro for lazy evaluating Profiler info.
+ */
+#define PROFILER(log,info) \
+    std::auto_ptr<xscript::Profiler> __p; \
+    if ((log)->level() >= xscript::Logger::LEVEL_INFO) \
+        __p.reset(new xscript::Profiler((log), (info)));
 
 #endif
