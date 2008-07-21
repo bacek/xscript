@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="x-nl2br.xsl"?>
+<tests url="test.xml" name="x:nl2br">
+    <test>
+	<source>abc
+def
+gh</source>
+	<result>
+	    <node-name/>
+	    <node-content>abc</node-content>
+	</result>
+	<result>
+	    <node-name>br</node-name>
+	    <node-content/>
+	</result>
+	<result>
+	    <node-name/>
+	    <node-content>def</node-content>
+	</result>
+	<result>
+	    <node-name>br</node-name>
+	    <node-content/>
+	</result>
+	<result>
+	    <node-name/>
+	    <node-content>gh</node-content>
+	</result>	
+    </test>
+</tests>

@@ -22,6 +22,7 @@ public:
 	void testUrldecode();
 	void testMD5();
 	void testWbr();
+	void testNl2br();
 	void testMist();
 	void testMistAgain();
 	
@@ -35,6 +36,7 @@ private:
 	CPPUNIT_TEST(testUrldecode);
 	CPPUNIT_TEST(testMD5);
 	CPPUNIT_TEST(testWbr);
+	CPPUNIT_TEST(testNl2br);
 	CPPUNIT_TEST(testMist);
 	CPPUNIT_TEST(testMistAgain);
 	CPPUNIT_TEST_SUITE_END();
@@ -65,6 +67,11 @@ XsltTest::testMD5() {
 void
 XsltTest::testWbr() {
 	testFile("x-wbr.xml");
+}
+
+void
+XsltTest::testNl2br() {
+	testFile("x-nl2br.xml");
 }
 
 void
