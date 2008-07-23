@@ -18,8 +18,7 @@ Sanitizer::~Sanitizer() {
 
 std::string
 Sanitizer::sanitize(const Range &range) {
-	(void)range;
-	throw std::runtime_error("not implemented");
+	return std::string(range.begin(), range.end());
 }
 
 REGISTER_COMPONENT(Sanitizer);

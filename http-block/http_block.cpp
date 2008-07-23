@@ -42,7 +42,7 @@ public:
 MethodMap HttpBlock::methods_;
 
 HttpBlock::HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-	Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node), proxy_(false), method_(NULL)
+	Block(ext, owner, node), ThreadedTaggedBlock(ext, owner, node), proxy_(false), method_(NULL)
 {
 }
 
@@ -51,8 +51,13 @@ HttpBlock::~HttpBlock() {
 
 void
 HttpBlock::postParse() {
-	ThreadedBlock::postParse();
-	TaggedBlock::postParse();
+
+	if (proxy_ && tagged()) {
+		log()->warn("%s, proxy in tagged http-block: %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+		tagged(false);
+	}
+
+	ThreadedTaggedBlock::postParse();
 
 	createCanonicalMethod("http.");
 
@@ -64,11 +69,6 @@ HttpBlock::postParse() {
 		std::stringstream stream;
 		stream << "nonexistent http method call: " << method();
 		throw std::invalid_argument(stream.str());
-	}
-
-	if (proxy_ && tagged()) {
-		log()->warn("%s, proxy in tagged http-block: %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
-		tagged(false);
 	}
 }
 
@@ -87,7 +87,7 @@ HttpBlock::property(const char *name, const char *value) {
 		charset_ = value;
 	}
 	else {
-		ThreadedBlock::property(name, value);
+		ThreadedTaggedBlock::property(name, value);
 	}
 }
 

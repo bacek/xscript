@@ -3,8 +3,7 @@
 
 #include <boost/function.hpp>
 #include <xscript/extension.h>
-#include <xscript/threaded_block.h>
-#include <xscript/tagged_block.h>
+#include <xscript/threaded_tagged_block.h>
 
 namespace xscript
 {
@@ -22,7 +21,7 @@ typedef XmlDocHelper (FileBlock::*Method)(const std::string&, Context*);
  *
  * Both methods support tagging based on file modification time.
  */
-class FileBlock : public ThreadedBlock, public TaggedBlock
+class FileBlock : public ThreadedTaggedBlock
 {
 public:
 	FileBlock(const Extension *ext, Xml *owner, xmlNodePtr node);

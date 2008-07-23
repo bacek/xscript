@@ -32,6 +32,11 @@ ThreadedBlock::remoteTimeout() const {
 	return remote_timeout_ > 0 ? remote_timeout_ : timeout();
 }
 
+void
+ThreadedBlock::remoteTimeout(int timeout) {
+	remote_timeout_ = timeout;
+}
+
 bool
 ThreadedBlock::threaded() const {
 	return threaded_;

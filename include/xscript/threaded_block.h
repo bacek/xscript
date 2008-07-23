@@ -14,6 +14,7 @@ public:
 
 	int timeout() const;
 	int remoteTimeout() const;
+	void remoteTimeout(int timeout);
 	
 	virtual bool threaded() const;
 	virtual void threaded(bool value);

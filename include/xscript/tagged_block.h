@@ -21,6 +21,7 @@ public:
 
 	virtual bool tagged() const;
 	virtual void tagged(bool tagged);
+	virtual time_t cacheTime() const;
 	virtual void cacheTime(time_t cache_time);
 	
 protected:

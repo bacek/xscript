@@ -246,7 +246,7 @@ HttpHelper::checkStatus() const {
 void
 HttpHelper::processStatusError(const std::string& error_msg) const {
 
-	XmlNodeHelper error_node(xmlNewNode(NULL, (const xmlChar*)"http check status error"));
+	XmlNodeHelper error_node(xmlNewNode(NULL, (const xmlChar*)"http-check-status-error"));
 	std::string status = boost::lexical_cast<std::string>(status_);
 	xmlNewChild(error_node.get(), NULL, (const xmlChar*)"message", (const xmlChar*)error_msg.c_str());
 	xmlNewChild(error_node.get(), NULL, (const xmlChar*)"status", (const xmlChar*)status.c_str());
@@ -308,7 +308,11 @@ HttpHelper::detectContentType() {
 void
 HttpHelper::check(CURLcode code) const {
 	if (CURLE_OK != code) {
-		throw std::runtime_error(std::string(curl_easy_strerror(code)) + ". URL: " + url());
+		std::string error_msg(curl_easy_strerror(code));
+		XmlNodeHelper error_node(xmlNewNode(NULL, (const xmlChar*)"http-error"));
+		xmlNewChild(error_node.get(), NULL, (const xmlChar*)"message", (const xmlChar*)error_msg.c_str());
+		xmlNewChild(error_node.get(), NULL, (const xmlChar*)"url", (const xmlChar*)url().c_str());
+		throw XmlNodeRuntimeError(error_msg + ". URL: " + url(), error_node);
 	}
 }
 

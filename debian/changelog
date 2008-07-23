@@ -1,3 +1,10 @@
+xscript (5.26-0) unstable; urgency=low
+
+  * ThreadedTagged block added
+  * checking remote timeout in tagged blocks added 
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 23 Jul 2008 13:08:23 +0400
+
 xscript (5.25-3) unstable; urgency=low
 
   * checking xslt params moved to Object::checkParam
