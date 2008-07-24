@@ -3,7 +3,9 @@
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
 #include <boost/filesystem/path.hpp>
+
 #include <xscript/context.h>
+#include <xscript/checking_policy.h>
 #include <xscript/logger.h>
 #include <xscript/request_data.h>
 #include <xscript/script.h>
@@ -29,6 +31,17 @@ FileBlock::~FileBlock() {
 
 void
 FileBlock::postParse() {
+	if (!isDefaultRemoteTimeout()) {
+		if (CheckingPolicy::instance()->isProduction()) {
+			setDefaultRemoteTimeout();
+			log()->warn("%s, remote-timeout setup is not allowed in FileBlock: %s",
+				BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+		}
+		else {
+			throw std::runtime_error("remote-timeout setup is not allowed in FileBlock");
+		}
+	}
+
 	ThreadedTaggedBlock::postParse();
 
 	createCanonicalMethod("file.");
@@ -124,16 +137,10 @@ FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
 
 	RequestData request_data(ctx->request(), ctx->response(), ctx->state());
 	boost::shared_ptr<Context> local_ctx(new Context(script, request_data));
+	local_ctx->forceNoThreaded(true);
 	ContextStopper ctx_stopper(local_ctx);
-
 	local_ctx->authContext(ctx->authContext());
 	
-	unsigned int size = script->blocksNumber();
-	for(unsigned int i = 0; i < size; ++i) {
-		Block* block = const_cast<Block*>(script->block(i));
-		block->threaded(false);
-	}
-
 	XmlDocHelper doc = script->invoke(local_ctx);
 	XmlUtils::throwUnless(NULL != doc.get());
 

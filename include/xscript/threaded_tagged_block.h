@@ -14,9 +14,17 @@ public:
 	ThreadedTaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
 	virtual ~ThreadedTaggedBlock();
 	
+	int remoteTimeout() const;
+	void remoteTimeout(int timeout);
+	bool isDefaultRemoteTimeout() const;
+	void setDefaultRemoteTimeout();
+
 protected:
 	virtual void property(const char *name, const char *value);
 	virtual void postParse();
+
+private:
+	int remote_timeout_;
 };
 
 } // namespace xscript

@@ -1,3 +1,11 @@
+xscript (5.27-0) unstable; urgency=low
+
+  * move remote-timeout to ThreadedTagged block
+  * forceNoThread flag added
+  * file-block invoke fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 24 Jul 2008 17:59:01 +0400
+
 xscript (5.26-0) unstable; urgency=low
 
   * ThreadedTagged block added

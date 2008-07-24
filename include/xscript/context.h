@@ -54,6 +54,9 @@ public:
 		return script_;
 	}
 
+	void forceNoThreaded(bool flag);
+	bool forceNoThreaded() const;
+
 	std::string xsltName() const;
 	void xsltName(const std::string &value);
 
@@ -73,6 +76,7 @@ public:
 	friend class ContextStopper;
 private:
 	bool stopped_;
+	bool force_no_threaded_;
 	Request *request_;
 	Response *response_;
 	std::string xslt_name_;

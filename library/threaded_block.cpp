@@ -1,6 +1,5 @@
-#include <cstring>
 #include "settings.h"
-
+#include <cstring>
 #include <boost/lexical_cast.hpp>
 
 #include "xscript/threaded_block.h"
@@ -14,7 +13,7 @@ namespace xscript
 {
 
 ThreadedBlock::ThreadedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-	Block(ext, owner, node), threaded_(false), timeout_(0), remote_timeout_(0)
+	Block(ext, owner, node), threaded_(false), timeout_(0)
 {
 }
 
@@ -25,16 +24,6 @@ int
 ThreadedBlock::timeout() const {
 // FIXME: Change hard-coded 5000 to configurable defaults.
 	return timeout_ > 0 ? timeout_ : 5000;
-}
-
-int
-ThreadedBlock::remoteTimeout() const {
-	return remote_timeout_ > 0 ? remote_timeout_ : timeout();
-}
-
-void
-ThreadedBlock::remoteTimeout(int timeout) {
-	remote_timeout_ = timeout;
 }
 
 bool
@@ -54,9 +43,6 @@ ThreadedBlock::property(const char *name, const char *value) {
 	}
 	else if (strncasecmp(name, "timeout", sizeof("timeout")) == 0) {
 		timeout_ = boost::lexical_cast<int>(value);
-	}
-	else if (strncasecmp(name, "remote-timeout", sizeof("remote-timeout")) == 0) {
-		remote_timeout_ = boost::lexical_cast<int>(value);
 	}
 	else {
 		Block::property(name, value);

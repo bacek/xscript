@@ -13,8 +13,6 @@ public:
 	virtual ~ThreadedBlock();
 
 	int timeout() const;
-	int remoteTimeout() const;
-	void remoteTimeout(int timeout);
 	
 	virtual bool threaded() const;
 	virtual void threaded(bool value);
@@ -24,7 +22,7 @@ protected:
 
 private:
 	bool threaded_;
-	int timeout_, remote_timeout_;
+	int timeout_;
 };
 
 } // namespace xscript

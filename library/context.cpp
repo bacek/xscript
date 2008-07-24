@@ -29,7 +29,7 @@ namespace xscript
 {
 
 Context::Context(const boost::shared_ptr<Script> &script, const RequestData &data) :
-	stopped_(false), request_(data.request()), response_(data.response()),
+	stopped_(false), force_no_threaded_(false), request_(data.request()), response_(data.response()),
 	xslt_name_(script->xsltName()), state_(data.state()), script_(script),
 	writer_()
 {
@@ -182,6 +182,16 @@ Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
 		writer_ = std::auto_ptr<DocumentWriter>(new HtmlWriter(sh));
 		log()->debug("html writer created");
 	}
+}
+
+void
+Context::forceNoThreaded(bool flag) {
+	force_no_threaded_ = flag;
+}
+
+bool
+Context::forceNoThreaded() const {
+	return force_no_threaded_;
 }
 
 ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {

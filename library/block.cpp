@@ -153,7 +153,7 @@ Block::invokeInternal(Context *ctx) {
 
 void
 Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
-	if (threaded()) {
+	if (threaded() && !ctx->forceNoThreaded()) {
 		boost::function<void()> f = boost::bind(&Block::callInternalThreaded, this, ctx, slot);
 		ThreadPool::instance()->invoke(f);
 	}
