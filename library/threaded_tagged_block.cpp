@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include <cstring>
 #include <stdexcept>
 
 #include <boost/current_function.hpp>
