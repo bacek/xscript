@@ -23,6 +23,12 @@ class AuthContext;
 class RequestData;
 class DocumentWriter;
 
+/**
+ * Class for storing Context during single page processing.
+ *
+ * Stores incoming Request, outgoing Response, State and classical
+ * key-value pairs for any required data. 
+ */
 class Context : private boost::noncopyable
 {
 public:
