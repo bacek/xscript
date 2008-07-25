@@ -26,6 +26,9 @@ public:
 	void testGetLocalTagged();
 	void testGetLocalTaggedPrefetch();
 
+    // TODO Create mockup strategy to check, that loaded doc from second 
+    // strategy was stored in first.
+
 private:
 	CPPUNIT_TEST_SUITE(DocCacheTest);
 	CPPUNIT_TEST(testMissed);

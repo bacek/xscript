@@ -59,12 +59,21 @@ bool DocCache::loadDoc(const Context *ctx, const TaggedBlock *block, Tag &tag, X
     // FIXME Add saving of loaded doc into higher-order caches.
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     bool loaded = false;
-    for(std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
-        !loaded && i != strategies_.end();
-        ++i) {
+    std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
+    while( !loaded && i != strategies_.end()) {
         std::auto_ptr<TagKey> key = (*i)->createKey(ctx, block);
         loaded = (*i)->loadDoc(key.get(), tag, doc);
+        ++i;
     }
+
+    if (loaded) {
+        --i; // Do not store in cache from doc was loaded.
+        for (std::vector<DocCacheStrategy*>::iterator j = strategies_.begin(); j != i; ++j) {
+            std::auto_ptr<TagKey> key = (*j)->createKey(ctx, block);
+            (*j)->saveDoc(key.get(), tag, doc);
+        }
+    }
+
 	return loaded;
 }
 
