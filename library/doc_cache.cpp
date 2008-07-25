@@ -69,7 +69,6 @@ bool DocCache::loadDoc(const Context *ctx, const TaggedBlock *block, Tag &tag, X
 }
 
 bool DocCache::saveDoc(const Context *ctx, const TaggedBlock *block, const Tag& tag, const XmlDocHelper &doc) {
-    // FIXME Save doc in first cache only. Use separate thread to save in other caches.
     bool saved = false;
     for(std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
         i != strategies_.end();
