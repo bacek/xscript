@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <boost/current_function.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/bind.hpp>
 
 #include "xscript/util.h"
 #include "xscript/resource_holder.h"
@@ -258,6 +259,23 @@ setupXScript(lua_State *lua, std::string * buf) {
     log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 }
 
+LuaSharedContext create_lua(Context *ctx, std::string &buffer) {
+    LuaSharedContext lua_context(new LuaState(luaL_newstate()));
+    lua_State * lua = lua_context->lua.get();
+    luaL_openlibs(lua);
+
+    setupXScript(lua, &buffer);
+
+    Request *request = ctx->request();
+
+    setupUserdata(lua, request, "request", getRequestLib());
+    setupUserdata(lua, ctx->state().get(), "state", getStateLib());
+    setupUserdata(lua, ctx->response(), "response", getResponseLib());
+
+    registerCookieMethods(lua);
+
+    return lua_context;
+}
 
 XmlDocHelper
 LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
@@ -270,28 +288,13 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     std::string buffer;
     
     // Try to fetch previously created lua interpret. If failed - create new one.
-    LuaSharedContext lua_context;
-    try {
-        lua_context = ctx->param<LuaSharedContext>("xscript.lua");
-        lua = lua_context->lua.get();
-    }
-    catch(...) {
-        lua_context.reset(new LuaState(luaL_newstate()));
-        lua = lua_context->lua.get();
-        luaL_openlibs(lua);
+    boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx, boost::ref(buffer));
 
-        setupXScript(lua, &buffer);
-
-        Request *request = ctx->request();
-
-        setupUserdata(lua, request, "request", getRequestLib());
-        setupUserdata(lua, ctx->state().get(), "state", getStateLib());
-        setupUserdata(lua, ctx->response(), "response", getResponseLib());
-
-        registerCookieMethods(lua);
-
-        ctx->param("xscript.lua", lua_context);
-    }
+    LuaSharedContext lua_context = ctx->param(
+        std::string("xscript.lua"), 
+        creator
+    );
+    lua = lua_context->lua.get();
 
     // Lock interpreter during processing.
     boost::mutex::scoped_lock lock(lua_context->mutex);
