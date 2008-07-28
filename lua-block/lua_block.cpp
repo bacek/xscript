@@ -143,7 +143,6 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
     lua_pop(lua, 2); // pop xscript, __metatable
 
     log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-    return;
 };
 
 
