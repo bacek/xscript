@@ -4,20 +4,23 @@
     <xscript xslt-dont-apply="yes" force-auth="yes" allow-methods="get"/>
 
     <!-- check that we can share lua functions -->
-  <x:lua>
-      <![CDATA[
+    <x:lua>
+        <![CDATA[
 
-      function foo(key, value)
-        xscript.state:setString(key, value)
-      end
-  ]]>
-  </x:lua>
+        function foo(key, value)
+            xscript.state:setString(key, value)
+        end
 
-  <x:lua>
-      <![CDATA[
-      foo("bar", "baz")
-  ]]>
-  </x:lua>
+        ]]>
+    </x:lua>
+
+    <x:lua>
+        <![CDATA[
+
+        foo("bar", "baz")
+
+        ]]>
+    </x:lua>
 
 
 </page>
