@@ -9,6 +9,7 @@
 #include <boost/thread.hpp>
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/function.hpp>
 #include <libxml/tree.h>
 
 namespace xscript
@@ -79,6 +80,9 @@ public:
 	template<typename T> T param(const std::string &name) const;
 	template<typename T> void param(const std::string &name, const T &t);
 
+    // Get or create param
+    template<typename T> T param(const std::string &name, const boost::function<T ()>& creator);
+
 	friend class ContextStopper;
 private:
 	bool stopped_;
@@ -133,6 +137,20 @@ Context::param(const std::string &name, const T &t) {
 	}
 }
 
+template<typename T> inline T
+Context::param(const std::string &name, const boost::function<T ()>& creator) {
+	boost::mutex::scoped_lock sl(params_mutex_);
+	std::map<std::string, boost::any>::const_iterator i = params_.find(name);
+	if (params_.end() != i) {
+		return boost::any_cast<T>(i->second);
+	}
+	else {
+        T t = creator();
+	    std::pair<std::string, boost::any> p(name, boost::any(t));
+		params_.insert(p);
+        return t;
+	}
+}
 
 } // namespace xscript
 
