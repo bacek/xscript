@@ -4,6 +4,7 @@
 #include <memory>
 #include <stdexcept>
 #include <boost/current_function.hpp>
+#include <boost/thread/mutex.hpp>
 
 #include "xscript/util.h"
 #include "xscript/resource_holder.h"
@@ -31,7 +32,17 @@ inline void ResourceHolderTraits<lua_State*>::destroy(lua_State *state) {
 }
 
 typedef ResourceHolder<lua_State*> LuaHolder;
-typedef boost::shared_ptr<LuaHolder> SharedLuaHolder;
+
+// Struct to store lua_State and mutex in Context
+struct LuaState {
+    LuaHolder       lua;
+    boost::mutex    mutex;
+
+    LuaState(lua_State * l) : lua(l) {
+    };
+};
+
+typedef boost::shared_ptr<LuaState> LuaSharedContext;
 
 static int
 luaReportError(lua_State * lua) {
@@ -259,16 +270,14 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     std::string buffer;
     
     // Try to fetch previously created lua interpret. If failed - create new one.
+    LuaSharedContext lua_context;
     try {
-        SharedLuaHolder old_holder = ctx->param<SharedLuaHolder>("xscript.lua");
-        lua = old_holder.get()->get();
+        lua_context = ctx->param<LuaSharedContext>("xscript.lua");
+        lua = lua_context->lua.get();
     }
     catch(...) {
-        // This initialisation is kinda ugly.
-        SharedLuaHolder lua_holder(new LuaHolder(luaL_newstate()));
-        ctx->param("xscript.lua", lua_holder);
-        // And this one too.
-        lua = lua_holder.get()->get();
+        lua_context.reset(new LuaState(luaL_newstate()));
+        lua = lua_context->lua.get();
         luaL_openlibs(lua);
 
         setupXScript(lua, &buffer);
@@ -281,7 +290,11 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 
         registerCookieMethods(lua);
 
+        ctx->param("xscript.lua", lua_context);
     }
+
+    // Lock interpreter during processing.
+    boost::mutex::scoped_lock lock(lua_context->mutex);
 
     // Top function of stack is error reporting function.
     lua_pushcfunction(lua, &luaReportError);
