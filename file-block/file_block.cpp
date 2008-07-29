@@ -133,11 +133,34 @@ XmlDocHelper
 FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
 	log()->debug("%s: invoking file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
+	Context* tmp_ctx = ctx;
+	while(tmp_ctx) {
+		if (file_name == tmp_ctx->script()->name()) {
+			throw std::runtime_error(std::string("Recursive invocation: ") + file_name);
+		}
+		tmp_ctx = tmp_ctx->parentContext();
+	}
+
 	boost::shared_ptr<Script> script = Script::create(file_name);
 
 	RequestData request_data(ctx->request(), ctx->response(), ctx->state());
 	boost::shared_ptr<Context> local_ctx(new Context(script, request_data));
-	local_ctx->forceNoThreaded(true);
+	local_ctx->parentContext(ctx);
+
+	if (threaded()) {
+		local_ctx->forceNoThreaded(true);
+	}
+	else {
+		tmp_ctx = ctx;
+		while(tmp_ctx) {
+			if (tmp_ctx->forceNoThreaded()) {
+				local_ctx->forceNoThreaded(true);
+				break;
+			}
+			tmp_ctx = tmp_ctx->parentContext();
+		}
+	}
+
 	ContextStopper ctx_stopper(local_ctx);
 	local_ctx->authContext(ctx->authContext());
 	

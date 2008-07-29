@@ -1,3 +1,12 @@
+xscript (5.28-0) unstable; urgency=low
+
+  * setStatus added to Mist block
+  * threaded invocation of child script allowed for non-threaded File::invoke
+  * checking of recursive script invocation added to File::invoke
+  * 
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 29 Jul 2008 13:06:42 +0400
+
 xscript (5.27-0) unstable; urgency=low
 
   * move remote-timeout to ThreadedTagged block

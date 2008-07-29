@@ -775,6 +775,32 @@ MistBlock::location(Context *ctx) {
 	return node.releaseNode();
 }
 
+xmlNodePtr
+MistBlock::setStatus(Context *ctx) {
+
+	PRLOGUE;
+
+	const std::vector<Param*> &p = params();
+	if (1 != p.size()) {
+		throw std::logic_error("setStatus: bad arity");
+	}
+
+	std::string val = p[0]->asString(ctx);
+	boost::int32_t status = 0;
+	try {
+		status = boost::lexical_cast<boost::int32_t>(val);
+	}
+	catch(const boost::bad_lexical_cast &e) {
+		throw std::runtime_error("setStatus: unknown status");
+	}
+
+	ctx->response()->setStatus(status);
+
+	XmlNode node("status");
+	node.setContent(val.c_str());
+	return node.releaseNode();
+}
+
 void
 MistBlock::registerMethod(const char *name, MistMethod method) {
 	
@@ -924,7 +950,8 @@ MistMethodRegistrator::MistMethodRegistrator() {
 	MistBlock::registerMethod("attachStylesheet", &MistBlock::attachStylesheet);	
 	MistBlock::registerMethod("attach_stylesheet", &MistBlock::attachStylesheet);
 
-	MistBlock::registerMethod("location", &MistBlock::location);	
+	MistBlock::registerMethod("location", &MistBlock::location);
+	MistBlock::registerMethod("setStatus", &MistBlock::setStatus);
 }
 
 static MistMethodRegistrator reg_;
