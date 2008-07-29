@@ -147,18 +147,8 @@ FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
 	boost::shared_ptr<Context> local_ctx(new Context(script, request_data));
 	local_ctx->parentContext(ctx);
 
-	if (threaded()) {
+	if (threaded() || ctx->forceNoThreaded()) {
 		local_ctx->forceNoThreaded(true);
-	}
-	else {
-		tmp_ctx = ctx;
-		while(tmp_ctx) {
-			if (tmp_ctx->forceNoThreaded()) {
-				local_ctx->forceNoThreaded(true);
-				break;
-			}
-			tmp_ctx = tmp_ctx->parentContext();
-		}
 	}
 
 	ContextStopper ctx_stopper(local_ctx);

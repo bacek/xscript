@@ -88,7 +88,7 @@ public:
 
 	friend class ContextStopper;
 private:
-	bool stopped_;
+	volatile bool stopped_;
 	bool force_no_threaded_;
 	Request *request_;
 	Response *response_;
