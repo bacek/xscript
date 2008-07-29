@@ -5,7 +5,7 @@ namespace xscript
 {
 
 CacheCounter::CacheCounter(const std::string& name)
-	: CounterBase(name), usedMemory_(0), stored_(0), loaded_(0), removed_(0)
+	: name_(name), usedMemory_(0), stored_(0), loaded_(0), removed_(0)
 {
 }
 

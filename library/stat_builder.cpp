@@ -34,8 +34,9 @@ XmlDocHelper StatBuilder::createReport() const {
 	return doc;
 }
 
-void StatBuilder::addCounter(const CounterBase& counter) {
-	counters_.push_back(&counter);
+void StatBuilder::addCounter(const CounterBase* counter) {
+    assert(counter);
+	counters_.push_back(counter);
 }
 
 std::auto_ptr<Block> StatBuilder::createBlock(const Extension *ext, Xml *owner, xmlNodePtr node) {

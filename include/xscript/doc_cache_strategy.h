@@ -51,9 +51,9 @@ protected:
 	
 
 	StatBuilder statBuilder_;
-	AverageCounter hitCounter_;
-	AverageCounter missCounter_;
-	AverageCounter saveCounter_;
+    std::auto_ptr<AverageCounter> hitCounter_;
+    std::auto_ptr<AverageCounter> missCounter_;
+    std::auto_ptr<AverageCounter> saveCounter_;
 };
 
 } // namespace xscript

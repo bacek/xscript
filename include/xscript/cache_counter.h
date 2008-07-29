@@ -25,6 +25,7 @@ namespace xscript
 		void incRemoved() { ++removed_; }
 
 	private:
+        std::string name_;
 		size_t usedMemory_;
 		size_t stored_;
 		size_t loaded_;
