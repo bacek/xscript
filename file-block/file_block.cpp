@@ -14,6 +14,7 @@
 #include <xscript/util.h>
 #include <libxml/xinclude.h>
 #include "file_block.h"
+#include "file_extension.h"
 
 namespace xscript
 {
@@ -134,10 +135,18 @@ FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
 	log()->debug("%s: invoking file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
 	Context* tmp_ctx = ctx;
+	unsigned int depth = 0;
 	while(tmp_ctx) {
 		if (file_name == tmp_ctx->script()->name()) {
-			throw std::runtime_error(std::string("Recursive invocation: ") + file_name);
+			throw std::runtime_error(std::string("Self-recursive invocation: ") + file_name);
 		}
+
+		++depth;
+		if (depth > FileExtension::max_invoke_depth_) {
+			throw std::runtime_error(std::string("Too much recursive invocation depth. Max is ") +
+				boost::lexical_cast<std::string>(FileExtension::max_invoke_depth_));
+		}
+
 		tmp_ctx = tmp_ctx->parentContext();
 	}
 
