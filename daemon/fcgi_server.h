@@ -35,7 +35,7 @@ private:
 	int inbuf_size_, outbuf_size_;
 	unsigned short alternate_port_;
 
-	SimpleCounter workerCounter_;
+    std::auto_ptr<SimpleCounter> workerCounter_;
 	UptimeCounter uptimeCounter_;
 };
 
