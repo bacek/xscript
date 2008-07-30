@@ -4,8 +4,7 @@
 namespace xscript
 {
 
-UptimeCounter::UptimeCounter(const std::string& name)
-	: CounterBase(name)
+UptimeCounter::UptimeCounter()
 {
 	time(&startTime_);
 }
@@ -16,7 +15,7 @@ XmlNodeHelper UptimeCounter::createReport() const {
 
 	time_t delta = currentTime - startTime_;
 
-	XmlNodeHelper line(xmlNewNode(0, BAD_CAST name_.c_str()));
+	XmlNodeHelper line(xmlNewNode(0, BAD_CAST "uptime"));
 
 	xmlSetProp(line.get(), BAD_CAST "uptime", BAD_CAST boost::lexical_cast<std::string>(delta).c_str());
 
