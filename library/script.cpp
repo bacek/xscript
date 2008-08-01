@@ -30,6 +30,7 @@
 #include "xscript/context.h"
 #include "xscript/response.h"
 #include "xscript/extension.h"
+#include "xscript/profiler.h"
 #include "xscript/stylesheet.h"
 #include "xscript/script_cache.h"
 #include "xscript/threaded_block.h"
@@ -151,6 +152,8 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
 
 	log()->info("%s, invoking %s", BOOST_CURRENT_FUNCTION, name().c_str());
 	try {
+		PROFILER(log(), std::string("invoke script ") + name().c_str());
+
 		unsigned int count = 0;
 		int to = countTimeout();
 		ctx->expect(blocks_.size());
@@ -178,6 +181,7 @@ Script::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
 		stylesheet = Stylesheet::create(xsltName());
 	}
 	if (NULL != stylesheet.get()) {
+		log()->info("applying stylesheet to %s", name().c_str());
 		ctx->createDocumentWriter(stylesheet);
 		Object::applyStylesheet(stylesheet, ctx, doc, false);
 	}
