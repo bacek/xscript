@@ -32,7 +32,7 @@
 #endif
 
 // NB: Multiline macro for function prologue
-#define PRLOGUE                                                         \
+#define PROLOGUE                                                         \
     PROFILER(                                                       \
         log(),                                                          \
         std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name()    \
@@ -86,7 +86,7 @@ MistBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 xmlNodePtr
 MistBlock::setStateLong(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 	
 	const std::vector<Param*> &p = params();
 	if (2 != p.size()) {
@@ -112,7 +112,7 @@ MistBlock::setStateLong(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateString(Context *ctx) {
 	
-    PRLOGUE;
+    PROLOGUE;
 	
 	const std::vector<Param*> &p = params();
 	if (2 != p.size()) {
@@ -132,7 +132,7 @@ MistBlock::setStateString(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateDouble(Context *ctx) {
 	
-    PRLOGUE;
+    PROLOGUE;
 	
 	const std::vector<Param*> &p = params();
 	if (2 != p.size()) {
@@ -158,7 +158,7 @@ MistBlock::setStateDouble(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateLongLong(Context *ctx) {
 	
-    PRLOGUE;
+    PROLOGUE;
 	
 	const std::vector<Param*> &p = params();
 	if (2 != p.size()) {
@@ -184,7 +184,7 @@ MistBlock::setStateLongLong(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateRandom(Context *ctx) {
 	
-    PRLOGUE;
+    PROLOGUE;
 	
 	const std::vector<Param*> &p = params();
 	if (3 != p.size()) {
@@ -225,7 +225,7 @@ MistBlock::setStateRandom(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateDefined(Context *ctx) {
 	
-    PRLOGUE;
+    PROLOGUE;
 	
 	const std::vector<Param*> &p = params();
 	if (2 != p.size()) {
@@ -257,7 +257,7 @@ MistBlock::setStateDefined(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateUrlencode(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 	
 	const std::vector<Param*> &p = params();
 	if (2 != p.size() && 3 != p.size()) {
@@ -284,7 +284,7 @@ MistBlock::setStateUrlencode(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateUrldecode(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 	
 	const std::vector<Param*> &p = params();
 	if (2 != p.size() && 3 != p.size()) {
@@ -311,7 +311,7 @@ MistBlock::setStateUrldecode(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateByKeys(Context *ctx) {
 	
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (4 != p.size()) {
@@ -358,7 +358,7 @@ MistBlock::setStateByKeys(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateByDate(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (1 != p.size()) {
@@ -408,7 +408,7 @@ MistBlock::setStateByDate(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateByQuery(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (2 != p.size()) {
@@ -428,7 +428,7 @@ MistBlock::setStateByQuery(Context *ctx) {
 xmlNodePtr
 MistBlock::echoQuery(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (2 != p.size()) {
@@ -446,7 +446,7 @@ MistBlock::echoQuery(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateByRequest(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (1 != p.size()) {
@@ -465,7 +465,7 @@ MistBlock::setStateByRequest(Context *ctx) {
 xmlNodePtr
 MistBlock::echoRequest(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (1 != p.size()) {
@@ -482,7 +482,7 @@ MistBlock::echoRequest(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateByHeaders(Context *ctx) {
 	
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (1 != p.size()) {
@@ -501,7 +501,7 @@ MistBlock::setStateByHeaders(Context *ctx) {
 xmlNodePtr
 MistBlock::echoHeaders(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (1 != p.size()) {
@@ -518,7 +518,7 @@ MistBlock::echoHeaders(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateByCookies(Context *ctx) {
 	
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (1 != p.size()) {
@@ -537,7 +537,7 @@ MistBlock::setStateByCookies(Context *ctx) {
 xmlNodePtr
 MistBlock::echoCookies(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (1 != p.size()) {
@@ -554,7 +554,7 @@ MistBlock::echoCookies(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateByProtocol(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (1 != p.size()) {
@@ -573,7 +573,7 @@ MistBlock::setStateByProtocol(Context *ctx) {
 xmlNodePtr
 MistBlock::echoProtocol(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (1 != p.size()) {
@@ -590,7 +590,7 @@ MistBlock::echoProtocol(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateJoinString(Context *ctx) {
 	
-    PRLOGUE;
+    PROLOGUE;
 	
 	const std::vector<Param*> &p = params();
 	if (3 != p.size()) {
@@ -634,7 +634,7 @@ MistBlock::setStateJoinString(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateSplitString(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 	
 	const std::vector<Param*> &p = params();
 	if (3 != p.size()) {
@@ -672,7 +672,7 @@ MistBlock::setStateSplitString(Context *ctx) {
 xmlNodePtr
 MistBlock::setStateConcatString(Context *ctx) {
 	
-    PRLOGUE;
+    PROLOGUE;
 	
 	const std::vector<Param*> &p = params();
 	if (p.size() < 3) {
@@ -696,7 +696,7 @@ MistBlock::setStateConcatString(Context *ctx) {
 xmlNodePtr
 MistBlock::dropState(Context *ctx) {
 	
-    PRLOGUE;
+    PROLOGUE;
 	
 	std::string prefix;
 	const std::vector<Param*> &p = params();
@@ -721,7 +721,7 @@ MistBlock::dropState(Context *ctx) {
 
 xmlNodePtr
 MistBlock::dumpState(Context *ctx) {
-    PRLOGUE;
+    PROLOGUE;
 
 	boost::shared_ptr<State> state = ctx->state();
 
@@ -742,7 +742,7 @@ MistBlock::dumpState(Context *ctx) {
 xmlNodePtr
 MistBlock::attachStylesheet(Context *ctx) {
 	
-    PRLOGUE;
+    PROLOGUE;
 	
 	const std::vector<Param*> &p = params();
 	if (1 != p.size()) {
@@ -760,7 +760,7 @@ MistBlock::attachStylesheet(Context *ctx) {
 xmlNodePtr
 MistBlock::location(Context *ctx) {
 
-    PRLOGUE;
+    PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (1 != p.size()) {
@@ -778,7 +778,7 @@ MistBlock::location(Context *ctx) {
 xmlNodePtr
 MistBlock::setStatus(Context *ctx) {
 
-	PRLOGUE;
+	PROLOGUE;
 
 	const std::vector<Param*> &p = params();
 	if (1 != p.size()) {

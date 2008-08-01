@@ -1,3 +1,9 @@
+xscript (5.28-1) unstable; urgency=low
+
+  * Profiler added to all blocks
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri,  1 Aug 2008 14:42:18 +0400
+
 xscript (5.28-0) unstable; urgency=low
 
   * setStatus added to Mist block

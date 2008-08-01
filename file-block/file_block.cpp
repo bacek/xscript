@@ -11,6 +11,7 @@
 #include <xscript/script.h>
 #include <xscript/xml.h>
 #include <xscript/param.h>
+#include <xscript/profiler.h>
 #include <xscript/util.h>
 #include <libxml/xinclude.h>
 #include "file_block.h"
@@ -116,6 +117,8 @@ FileBlock::loadFile(const std::string& file_name, Context *ctx) {
 	(void)ctx;
 	log()->debug("%s: loading file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
+	PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
+
 	XmlDocHelper doc(xmlReadFile(
 		file_name.c_str(), 
 		NULL,
@@ -133,6 +136,8 @@ FileBlock::loadFile(const std::string& file_name, Context *ctx) {
 XmlDocHelper
 FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
 	log()->debug("%s: invoking file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
+
+	PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
 
 	Context* tmp_ctx = ctx;
 	unsigned int depth = 0;
