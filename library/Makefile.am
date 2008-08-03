@@ -22,8 +22,12 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	doc_cache.cpp doc_cache_strategy.cpp \
 	profiler.cpp \
 	dummy_average_counter.cpp \
+<<<<<<< HEAD:library/Makefile.am
 	dummy_simple_counter.cpp \
 	dummy_cache_counter.cpp 
+=======
+	dummy_simple_counter.cpp
+>>>>>>> SimpleCounter splitter:library/Makefile.am
 
 noinst_HEADERS = details/expect.h details/extension_list.h details/loader.h \
 	details/param_factory.h details/phoenix_singleton.h \
