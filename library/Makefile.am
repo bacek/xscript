@@ -21,14 +21,17 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	memory_statistic.cpp cache_counter.cpp \
 	doc_cache.cpp doc_cache_strategy.cpp \
 	profiler.cpp \
-	dummy_average_counter.cpp
+	dummy_average_counter.cpp \
+	dummy_simple_counter.cpp
 
 noinst_HEADERS = details/expect.h details/extension_list.h details/loader.h \
 	details/param_factory.h details/phoenix_singleton.h \
 	details/state_impl.h details/writer_impl.h details/xml_config.h \
 	details/syslog_logger.h details/file_logger.h \
 	details/dummy_thread_pool.h details/dummy_script_cache.h \
-	details/dummy_stylesheet_cache.h details/parser.h
+	details/dummy_stylesheet_cache.h details/parser.h \
+	details/dummy_average_counter.h \
+	details/dummy_simple_counter.h
 
 libxscript_la_LDFLAGS = -lpthread -ldl
 

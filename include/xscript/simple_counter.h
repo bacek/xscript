@@ -34,14 +34,9 @@ namespace xscript
     class SimpleCounterFactory : public Component<SimpleCounterFactory>
     {
     public:
-        SimpleCounterFactory();
-        ~SimpleCounterFactory();
-
         friend class ComponentRegisterer<SimpleCounterFactory>;
 
-        virtual void init(const Config *config);
-
-        std::auto_ptr<SimpleCounter> createCounter(const std::string& name);
+        virtual std::auto_ptr<SimpleCounter> createCounter(const std::string& name) = 0;
     };
 }
 
