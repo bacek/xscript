@@ -11,9 +11,11 @@
 #include <xscript/script.h>
 #include <xscript/xml.h>
 #include <xscript/param.h>
+#include <xscript/profiler.h>
 #include <xscript/util.h>
 #include <libxml/xinclude.h>
 #include "file_block.h"
+#include "file_extension.h"
 
 namespace xscript
 {
@@ -115,6 +117,8 @@ FileBlock::loadFile(const std::string& file_name, Context *ctx) {
 	(void)ctx;
 	log()->debug("%s: loading file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
+	PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
+
 	XmlDocHelper doc(xmlReadFile(
 		file_name.c_str(), 
 		NULL,
@@ -133,11 +137,34 @@ XmlDocHelper
 FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
 	log()->debug("%s: invoking file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
+	PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
+
+	Context* tmp_ctx = ctx;
+	unsigned int depth = 0;
+	while(tmp_ctx) {
+		if (file_name == tmp_ctx->script()->name()) {
+			throw std::runtime_error(std::string("Self-recursive invocation: ") + file_name);
+		}
+
+		++depth;
+		if (depth > FileExtension::max_invoke_depth_) {
+			throw std::runtime_error(std::string("Too much recursive invocation depth. Max is ") +
+				boost::lexical_cast<std::string>(FileExtension::max_invoke_depth_));
+		}
+
+		tmp_ctx = tmp_ctx->parentContext();
+	}
+
 	boost::shared_ptr<Script> script = Script::create(file_name);
 
 	RequestData request_data(ctx->request(), ctx->response(), ctx->state());
 	boost::shared_ptr<Context> local_ctx(new Context(script, request_data));
-	local_ctx->forceNoThreaded(true);
+	local_ctx->parentContext(ctx);
+
+	if (threaded() || ctx->forceNoThreaded()) {
+		local_ctx->forceNoThreaded(true);
+	}
+
 	ContextStopper ctx_stopper(local_ctx);
 	local_ctx->authContext(ctx->authContext());
 	

@@ -64,6 +64,9 @@ public:
 	void forceNoThreaded(bool flag);
 	bool forceNoThreaded() const;
 
+	void parentContext(Context* context);
+	Context* parentContext() const;
+
 	std::string xsltName() const;
 	void xsltName(const std::string &value);
 
@@ -85,10 +88,11 @@ public:
 
 	friend class ContextStopper;
 private:
-	bool stopped_;
+	volatile bool stopped_;
 	bool force_no_threaded_;
 	Request *request_;
 	Response *response_;
+	Context* parent_context_;
 	std::string xslt_name_;
 	std::vector<xmlDocPtr> results_;
 	std::list<xmlNodePtr> clear_node_list_;

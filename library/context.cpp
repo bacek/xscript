@@ -30,7 +30,7 @@ namespace xscript
 
 Context::Context(const boost::shared_ptr<Script> &script, const RequestData &data) :
 	stopped_(false), force_no_threaded_(false), request_(data.request()), response_(data.response()),
-	xslt_name_(script->xsltName()), state_(data.state()), script_(script),
+	parent_context_(NULL), xslt_name_(script->xsltName()), state_(data.state()), script_(script),
 	writer_()
 {
 	assert(script_.get());
@@ -192,6 +192,16 @@ Context::forceNoThreaded(bool flag) {
 bool
 Context::forceNoThreaded() const {
 	return force_no_threaded_;
+}
+
+void
+Context::parentContext(Context* context) {
+	parent_context_ = context;
+}
+
+Context*
+Context::parentContext() const {
+	return parent_context_;
 }
 
 ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {

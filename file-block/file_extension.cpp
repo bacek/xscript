@@ -5,6 +5,8 @@
 namespace xscript
 {
 
+unsigned int FileExtension::max_invoke_depth_;
+
 FileExtension::FileExtension() {
 }
 
@@ -37,7 +39,7 @@ std::auto_ptr<Block> FileExtension::createBlock(Xml *owner, xmlNodePtr node) {
 }
 
 void FileExtension::init(const Config *config) {
-	(void)config;
+	max_invoke_depth_ = config->as<unsigned int>("/xscript/file-block/max-invoke-depth", 10);
 }
 
 

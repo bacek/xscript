@@ -99,7 +99,6 @@ Server::handleRequest(RequestData *request_data) {
 		}
 
 		if (script->forceStylesheet() && needApplyStylesheet(ctx->request())) {
-			log()->info("applying stylesheet to %s", script->name().c_str());
 			script->applyStylesheet(ctx.get(), doc);
 		}
 		else {

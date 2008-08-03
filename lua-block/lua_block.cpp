@@ -12,6 +12,8 @@
 #include "xscript/logger.h"
 #include "xscript/context.h"
 #include "xscript/encoder.h"
+#include "xscript/profiler.h"
+#include "xscript/xml.h"
 
 #include "stack.h"
 #include "lua_block.h"
@@ -280,6 +282,8 @@ XmlDocHelper
 LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     
     log()->entering(BOOST_CURRENT_FUNCTION);
+
+	PROFILER(log(), std::string("Lua block execution, ") + owner()->name()); 
 
     lua_State * lua = 0;
     
