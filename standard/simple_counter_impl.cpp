@@ -10,21 +10,20 @@ SimpleCounterImpl::SimpleCounterImpl(const std::string& name)
 }
 
 void SimpleCounterImpl::inc() {
-	boost::mutex::scoped_lock l(mtx_);
+	boost::mutex::scoped_lock lock(mtx_);
 	++count_;
 	peak_ = std::max(peak_, count_);
 }
 
 void SimpleCounterImpl::dec() {
-	boost::mutex::scoped_lock l(mtx_);
+	boost::mutex::scoped_lock lock(mtx_);
 	--count_;
 }
 
 XmlNodeHelper SimpleCounterImpl::createReport() const {
-	boost::mutex::scoped_lock l(mtx_);
-
 	XmlNodeHelper line(xmlNewNode(0, BAD_CAST name_.c_str()));
 
+    boost::mutex::scoped_lock lock(mtx_);
 	xmlSetProp(line.get(), BAD_CAST "count", BAD_CAST boost::lexical_cast<std::string>(count_).c_str());
 	xmlSetProp(line.get(), BAD_CAST "peak", BAD_CAST boost::lexical_cast<std::string>(peak_).c_str());
 
@@ -41,7 +40,6 @@ SimpleCounterFactoryImpl::createCounter(const std::string &name) {
     return std::auto_ptr<SimpleCounter>(new SimpleCounterImpl(name));
 }
 
-REGISTER_COMPONENT2(SimpleCounterFactory, SimpleCounterFactoryImpl);
-
+static ComponentRegisterer<SimpleCounterFactory> reg_(new SimpleCounterFactoryImpl());
 
 }
