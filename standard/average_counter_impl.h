@@ -19,12 +19,12 @@ namespace xscript
 		/**
 		 * Add single measure.
 		 */
-		virtual void add(uint64_t value) = 0;
+		virtual void add(uint64_t value);
 
 		/**
 		 * Remove single measure.
 		 */
-		virtual void remove(uint64_t value) = 0;
+		virtual void remove(uint64_t value);
 
 		virtual XmlNodeHelper createReport() const;
 

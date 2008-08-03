@@ -53,4 +53,19 @@ XmlNodeHelper AverageCounterImpl::createReport() const {
 	return line;
 }
 
+
+
+class AverageCounterFactoryImpl : public AverageCounterFactory {
+public:
+    virtual std::auto_ptr<AverageCounter> createCounter(const std::string& name);
+};
+
+std::auto_ptr<AverageCounter> 
+AverageCounterFactoryImpl::createCounter(const std::string &name) {
+    return std::auto_ptr<AverageCounter>(new AverageCounterImpl(name));
+}
+
+REGISTER_COMPONENT2(AverageCounterFactory, AverageCounterFactoryImpl);
+
+
 }
