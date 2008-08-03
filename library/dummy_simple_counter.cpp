@@ -26,5 +26,6 @@ std::auto_ptr<SimpleCounter> DummySimpleCounterFactory::createCounter(const std:
 }
 
 REGISTER_COMPONENT2(SimpleCounterFactory, DummySimpleCounterFactory);
+static ComponentRegisterer<SimpleCounterFactory> reg_(new DummySimpleCounterFactory());
 
 }
