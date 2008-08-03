@@ -37,5 +37,6 @@ DummyCacheCounterFactory::createCounter(const std::string& name) {
 }
 
 REGISTER_COMPONENT2(CacheCounterFactory, DummyCacheCounterFactory);
+static ComponentRegisterer<CacheCounterFactory> reg_(new DummyCacheCounterFactory());
 
 }

@@ -37,5 +37,6 @@ std::auto_ptr<AverageCounter> DummyAverageCounterFactory::createCounter(const st
 }
 
 REGISTER_COMPONENT2(AverageCounterFactory, DummyAverageCounterFactory);
+static ComponentRegisterer<AverageCounterFactory> reg_(new DummyAverageCounterFactory());
 
 }
