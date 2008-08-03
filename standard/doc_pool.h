@@ -58,8 +58,8 @@ namespace xscript
 
 		void clear();
 
-		const CacheCounter& getCounter() const;
-		const AverageCounter& getMemoryCounter() const;
+		const CacheCounter* getCounter() const;
+		const AverageCounter* getMemoryCounter() const;
 
 	private:
 		class DocData;
@@ -95,7 +95,7 @@ namespace xscript
 	private:
 		size_t			capacity_;
 		CacheCounter	counter_;
-		AverageCounter	memoryCounter_;
+        std::auto_ptr<AverageCounter> memoryCounter_;
 
 		boost::mutex	mutex_;
 

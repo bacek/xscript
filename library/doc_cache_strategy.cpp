@@ -20,11 +20,14 @@ TagKey::~TagKey() {
 }
 
 DocCacheStrategy::DocCacheStrategy()
-	: statBuilder_("tagged-cache"), hitCounter_("hits"), missCounter_("miss"), saveCounter_("save")
+	: statBuilder_("tagged-cache"), 
+    hitCounter_(AverageCounterFactory::instance()->createCounter("hits")), 
+    missCounter_(AverageCounterFactory::instance()->createCounter("miss")), 
+    saveCounter_(AverageCounterFactory::instance()->createCounter("save"))
 {
-	statBuilder_.addCounter(hitCounter_);
-	statBuilder_.addCounter(missCounter_);
-	statBuilder_.addCounter(saveCounter_);
+	statBuilder_.addCounter(hitCounter_.get());
+	statBuilder_.addCounter(missCounter_.get());
+	statBuilder_.addCounter(saveCounter_.get());
 }
 
 DocCacheStrategy::~DocCacheStrategy() {
@@ -47,9 +50,9 @@ bool DocCacheStrategy::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
 	std::pair<bool, uint64_t> res = profile(f);
 
 	if (res.first) 
-		hitCounter_.add(res.second);
+		hitCounter_->add(res.second);
 	else
-		missCounter_.add(res.second);
+		missCounter_->add(res.second);
 	return res.first;
 }
 
@@ -59,7 +62,7 @@ bool DocCacheStrategy::saveDoc(const TagKey *key, const Tag& tag, const XmlDocHe
 		this, boost::cref(key), boost::ref(tag), boost::ref(doc)
 	);
 	std::pair<bool, uint64_t> res = profile(f);
-	saveCounter_.add(res.second);
+	saveCounter_->add(res.second);
 	return res.first;
 }
 

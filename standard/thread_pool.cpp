@@ -51,11 +51,12 @@ private:
 	boost::mutex mutex_;
 	boost::condition condition_;
 
-	SimpleCounter counter_;
+    std::auto_ptr<SimpleCounter> counter_;
 };
 
 StandardThreadPool::StandardThreadPool() : 
-	running_(true), counter_("working-threads")
+	running_(true), 
+    counter_(SimpleCounterFactory::instance()->createCounter("working-threads"))
 {
 }
 
@@ -78,7 +79,7 @@ StandardThreadPool::init(const Config *config) {
 		throw;
 	}
 
-	StatusInfo::instance()->getStatBuilder().addCounter(counter_);
+	StatusInfo::instance()->getStatBuilder().addCounter(counter_.get());
 }
 
 void
@@ -111,7 +112,7 @@ StandardThreadPool::handle() {
 		if (f.empty()) {
 			return;
 		}
-		SimpleCounter::ScopedCount c(counter_);
+		SimpleCounter::ScopedCount c(counter_.get());
 		f();
 	}
 }

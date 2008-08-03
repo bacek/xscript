@@ -1,4 +1,9 @@
-pkglib_LTLIBRARIES = xscript-thrpool.la xscript-xmlcache.la xscript-memcache.la xscript-diskcache.la
+pkglib_LTLIBRARIES = \
+	xscript-thrpool.la \
+	xscript-xmlcache.la \
+	xscript-memcache.la \
+	xscript-diskcache.la \
+	xscript-statistics.la
 
 xscript_thrpool_la_SOURCES = thread_pool.cpp
 
@@ -19,6 +24,9 @@ xscript_xmlcache_la_SOURCES = xml_cache.cpp
 
 xscript_xmlcache_la_LIBADD = ../library/libxscript.la
 xscript_xmlcache_la_LDFLAGS = -module
+
+xscript_statistics_la_SOURCES = average_counter_impl.cpp
+xscript_statistics_la_LDFLAGS = -module
 
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread

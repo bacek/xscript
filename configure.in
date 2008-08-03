@@ -88,7 +88,7 @@ PKG_CHECK_MODULES(exslt,
 PKG_CHECK_MODULES(xml, 
 	[libxml-2.0], [], [ AC_MSG_ERROR([libxml-2.0 not found]) ])
 
-LIBS="$LIBS $xml_LIBS $xslt_LIBS $exslt_LIBS $yandex_platform_LIBS"
+LIBS="$LIBS $xml_LIBS $xslt_LIBS $exslt_LIBS $yandex_platform_LIBS -lcrypto"
 CPPFLAGS="$CPPFLAGS $xml_CFLAGS $xslt_CFLAGS $exslt_CFLAGS $yandex_platform_CFLABS"
 
 ac_have_lua="yes"

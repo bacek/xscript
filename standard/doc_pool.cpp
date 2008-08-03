@@ -7,7 +7,9 @@ namespace xscript
 {
 
 DocPool::DocPool(size_t capacity, const std::string& name) :
-	capacity_(capacity), counter_(name), memoryCounter_(name+"-memory")
+	capacity_(capacity), 
+    counter_(name), 
+    memoryCounter_(AverageCounterFactory::instance()->createCounter(name+"-memory"))
 {
 }
 
@@ -15,12 +17,12 @@ DocPool::~DocPool() {
 	clear();
 }
 
-const CacheCounter& DocPool::getCounter() const {
-	return counter_;
+const CacheCounter* DocPool::getCounter() const {
+	return &counter_;
 }
 
-const AverageCounter& DocPool::getMemoryCounter() const {
-	return memoryCounter_;
+const AverageCounter* DocPool::getMemoryCounter() const {
+	return memoryCounter_.get();
 }
 
 bool
@@ -134,12 +136,12 @@ void DocPool::saveAtIterator(const Key2Data::iterator& i, const Tag& tag, const 
 	}
 
 	counter_.decUsedMemory(data.doc_size);
-	memoryCounter_.remove(data.doc_size);
+	memoryCounter_->remove(data.doc_size);
 
 	data.assign(tag, doc.get());
 
 	counter_.incUsedMemory(data.doc_size);
-	memoryCounter_.add(data.doc_size);
+	memoryCounter_->add(data.doc_size);
 	data.pos = list_.insert(list_.end(), i);
 }
 

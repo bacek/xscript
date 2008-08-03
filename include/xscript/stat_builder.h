@@ -33,7 +33,7 @@ namespace xscript
 		/**
 		 * Add counter to report.
 		 */
-		void addCounter(const CounterBase& counter);
+		void addCounter(const CounterBase* counter);
 
 		/**
 		 * Create block to output statistic in xscript page.
