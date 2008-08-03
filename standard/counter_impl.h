@@ -17,8 +17,8 @@ namespace xscript
         }
 
     protected:
-        std::string     name_;
-		boost::mutex    mtx_;
+        std::string             name_;
+        mutable boost::mutex    mtx_;
     };
 
 } // namespace xscript
