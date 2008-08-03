@@ -31,5 +31,17 @@ XmlNodeHelper SimpleCounterImpl::createReport() const {
 	return line;
 }
 
+class SimpleCounterFactoryImpl : public SimpleCounterFactory {
+public:
+    virtual std::auto_ptr<SimpleCounter> createCounter(const std::string& name);
+};
+
+std::auto_ptr<SimpleCounter> 
+SimpleCounterFactoryImpl::createCounter(const std::string &name) {
+    return std::auto_ptr<SimpleCounter>(new SimpleCounterImpl(name));
+}
+
+REGISTER_COMPONENT2(SimpleCounterFactory, SimpleCounterFactoryImpl);
+
 
 }
