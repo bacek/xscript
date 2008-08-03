@@ -1,16 +1,17 @@
-#ifndef _XSCRIPT_SIMPLE_COUNTER_H_
-#define _XSCRIPT_SIMPLE_COUNTER_H_
+#ifndef _XSCRIPT_SIMPLE_COUNTER_IMPL_H_
+#define _XSCRIPT_SIMPLE_COUNTER_IMPL_H_
 
 #include <boost/thread/mutex.hpp>
-#include <xscript/counter_base.h>
 #include <boost/cstdint.hpp>
+#include <xscript/simple_counter.h>
+#include "counter_impl.h"
 
 namespace xscript
 {
-	class SimpleCounter : public CounterBase
+	class SimpleCounterImpl : public SimpleCounter, private CounterImpl
 	{
 	public:
-		SimpleCounter(const std::string& name);
+		SimpleCounterImpl(const std::string& name);
 
 		virtual XmlNodeHelper createReport() const;
 
@@ -18,25 +19,24 @@ namespace xscript
 		void dec();
 
 	private:
-		// Counter lock. Defined as mutable to use in 'createReport' method
-		mutable boost::mutex mtx_;
-
 		uint64_t count_;
 		uint64_t peak_;
 	};
 
-    class SimpleCounterFactory : public Component<SimpleCounterFactory>
+    /*
+    class SimpleCounterFactoryImpl : public Component<SimpleCounterFactory>
     {
     public:
-        SimpleCounterFactory();
-        ~SimpleCounterFactory();
+        SimpleCounterFactoryImpl();
+        ~SimpleCounterFactoryImpl();
 
         friend class ComponentRegisterer<SimpleCounterFactory>;
 
         virtual void init(const Config *config);
 
         std::auto_ptr<SimpleCounter> createCounter(const std::string& name);
-    }
+    };
+    */
 }
 
 #endif
