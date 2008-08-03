@@ -1,8 +1,9 @@
-#ifndef _XSCRIPT_CACHE_COUNTER_
-#define _XSCRIPT_CACHE_COUNTER_
+#ifndef _XSCRIPT_CACHE_COUNTER_H_
+#define _XSCRIPT_CACHE_COUNTER_H_
 
 #include <string>
 #include <xscript/counter_base.h>
+#include <xscript/component.h>
 
 namespace xscript
 {
@@ -14,23 +15,21 @@ namespace xscript
 	class CacheCounter : public CounterBase
 	{
 	public:
-		CacheCounter(const std::string& name);
-		virtual XmlNodeHelper createReport() const;
+		virtual void incUsedMemory(size_t amount) = 0;
+		virtual void decUsedMemory(size_t amount) = 0;
 
-		void incUsedMemory(size_t amount) { usedMemory_ += amount; }
-		void decUsedMemory(size_t amount) { usedMemory_ -= amount; }
-
-		void incLoaded() { ++loaded_; }
-		void incStored() { ++stored_; }
-		void incRemoved() { ++removed_; }
-
-	private:
-        std::string name_;
-		size_t usedMemory_;
-		size_t stored_;
-		size_t loaded_;
-		size_t removed_;
+		virtual void incLoaded() = 0;
+		virtual void incStored() = 0;
+		virtual void incRemoved() = 0;
 	};
+    
+    
+    class CacheCounterFactory : public Component<CacheCounterFactory> {
+    public:
+        friend class ComponentRegisterer<CacheCounterFactory>;
+
+        virtual std::auto_ptr<CacheCounter> createCounter(const std::string& name) = 0;
+    };
 }
 
 #endif
