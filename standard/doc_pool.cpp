@@ -8,7 +8,7 @@ namespace xscript
 
 DocPool::DocPool(size_t capacity, const std::string& name) :
 	capacity_(capacity), 
-    counter_(name), 
+    counter_(CacheCounterFactory::instance()->createCounter(name)), 
     memoryCounter_(AverageCounterFactory::instance()->createCounter(name+"-memory"))
 {
 }
@@ -18,7 +18,7 @@ DocPool::~DocPool() {
 }
 
 const CacheCounter* DocPool::getCounter() const {
-	return &counter_;
+	return counter_.get();
 }
 
 const AverageCounter* DocPool::getMemoryCounter() const {
@@ -67,8 +67,8 @@ DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocHelper &doc) {
 		if (data.pos != list_.end()) {
 			list_.erase(data.pos);
 		}
-		counter_.decUsedMemory(data.doc_size);
-		counter_.incRemoved();
+		counter_->decUsedMemory(data.doc_size);
+		counter_->incRemoved();
 		data.clearDoc();
 		key2data_.erase(i);
 		return LOAD_EXPIRED;
@@ -86,7 +86,7 @@ DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocHelper &doc) {
 	}
 	data.pos = list_.insert(list_.end(), i);
 
-	counter_.incLoaded();
+	counter_->incLoaded();
 	return LOAD_SUCCESSFUL;
 }
 
@@ -113,7 +113,7 @@ DocPool::saveDocImpl(const std::string &keyStr, const Tag& tag, const XmlDocHelp
 
 	boost::mutex::scoped_lock lock(mutex_);
 
-	counter_.incStored();
+	counter_->incStored();
 
 	SaveResult res = SAVE_STORED;
 	Key2Data::iterator i = key2data_.find(keyStr);
@@ -135,12 +135,12 @@ void DocPool::saveAtIterator(const Key2Data::iterator& i, const Tag& tag, const 
 		list_.erase(data.pos);
 	}
 
-	counter_.decUsedMemory(data.doc_size);
+	counter_->decUsedMemory(data.doc_size);
 	memoryCounter_->remove(data.doc_size);
 
 	data.assign(tag, doc.get());
 
-	counter_.incUsedMemory(data.doc_size);
+	counter_->incUsedMemory(data.doc_size);
 	memoryCounter_->add(data.doc_size);
 	data.pos = list_.insert(list_.end(), i);
 }
@@ -156,7 +156,7 @@ DocPool::clear() {
 
 	for (Key2Data::iterator i = tmp.begin(), end = tmp.end(); i != end; ++i) {
 		DocData &data = i->second;
-		counter_.decUsedMemory(data.doc_size);
+		counter_->decUsedMemory(data.doc_size);
 		data.clearDoc();
 	}
 }
@@ -185,8 +185,8 @@ DocPool::shrink() {
 		if (i != key2data_.end()) {
 			DocData &data = i->second;
 			log()->debug("%s, key: %s, shrink", BOOST_CURRENT_FUNCTION, i->first.c_str());
-			counter_.decUsedMemory(data.doc_size);
-			counter_.incRemoved();
+			counter_->decUsedMemory(data.doc_size);
+			counter_->incRemoved();
 			data.clearDoc();
 			key2data_.erase(i);
 		}
@@ -202,8 +202,8 @@ DocPool::removeExpiredDocuments() {
 		DocData &data = i->second;
 		if (data.tag.expired()) {
 			log()->debug("%s, key: %s, remove expired", BOOST_CURRENT_FUNCTION, i->first.c_str());
-			counter_.decUsedMemory(data.doc_size);
-			counter_.incRemoved();
+			counter_->decUsedMemory(data.doc_size);
+			counter_->incRemoved();
 			data.clearDoc();
 			key2data_.erase(i);
 			list_.erase(li++);
