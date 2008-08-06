@@ -2,6 +2,7 @@
 
 #include "standalone_request.h"
 #include "offline_server.h"
+#include "xslt_profiler.h"
 
 #include "xscript/checking_policy.h"
 #include "xscript/config.h"
@@ -26,7 +27,7 @@ class OfflineCheckingPolicy : public DevelopmentCheckingPolicy
 public:
 	OfflineCheckingPolicy() {}
 	virtual ~OfflineCheckingPolicy() {}
-	bool useXSLTProfiler() const {return true;}
+	bool isOffline() const {return true;}
 };
 
 OfflineServer::OfflineServer(Config *config, const std::string& url, const std::multimap<std::string, std::string>& args) :
@@ -34,6 +35,12 @@ OfflineServer::OfflineServer(Config *config, const std::string& url, const std::
 {
 	ComponentRegisterer<CheckingPolicy> reg(new OfflineCheckingPolicy());
 	(void)reg;
+
+	std::string xslt_path = config->as<std::string>("/xscript/offline/xslt-profile-path",
+		"/etc/share/xscript/profile.xsl");
+
+	ComponentRegisterer<XsltProfiler> reg2(new OfflineXsltProfiler(xslt_path));
+	(void)reg2;
 
 	root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");
 

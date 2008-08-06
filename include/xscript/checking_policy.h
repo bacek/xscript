@@ -30,7 +30,7 @@ public:
 	virtual void processError(const std::string& message);
 	virtual void sendError(Response* response, unsigned short status, const std::string& message);
 	virtual bool isProduction() const;
-	virtual bool useXSLTProfiler() const;
+	virtual bool isOffline() const;
 };
 
 class DevelopmentCheckingPolicy : public CheckingPolicy
@@ -41,7 +41,7 @@ public:
 	virtual void processError(const std::string& message);
 	virtual void sendError(Response* response, unsigned short status, const std::string& message);
 	virtual bool isProduction() const;
-	virtual bool useXSLTProfiler() const;
+	virtual bool isOffline() const;
 };
 
 }

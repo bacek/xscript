@@ -44,7 +44,7 @@ CheckingPolicy::isProduction() const {
 }
 
 bool
-CheckingPolicy::useXSLTProfiler() const {
+CheckingPolicy::isOffline() const {
 	return false;
 }
 
@@ -71,7 +71,7 @@ DevelopmentCheckingPolicy::isProduction() const {
 }
 
 bool
-DevelopmentCheckingPolicy::useXSLTProfiler() const {
+DevelopmentCheckingPolicy::isOffline() const {
 	return false;
 }
 

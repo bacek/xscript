@@ -27,7 +27,6 @@
 #include "xscript/logger.h"
 #include "xscript/object.h"
 #include "xscript/context.h"
-
 #include "xscript/stylesheet.h"
 #include "xscript/xslt_extension.h"
 #include "xscript/stylesheet_cache.h"
@@ -36,6 +35,7 @@
 #include "xscript/vhost_data.h"
 #include "xscript/checking_policy.h"
 #include "xscript/profiler.h"
+#include "xscript/xslt_profiler.h"
 
 #include "details/extension_list.h"
 #include "internal/profiler.h"
@@ -46,9 +46,6 @@
 
 namespace xscript
 {
-
-extern "C" int closeProfileFunc(void *ctx);
-extern "C" int writeProfileFunc(void *ctx, const char *data, int len);
 
 struct ContextData
 {
@@ -107,27 +104,28 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 	XmlUtils::throwUnless(NULL != tctx.get());
 
 	log()->debug("%s: transform context created", name().c_str());
-	
+
 	attachContextData(tctx.get(), ctx, this);
-	tctx->profile = CheckingPolicy::instance()->useXSLTProfiler();
+
+	tctx->profile = CheckingPolicy::instance()->isOffline();
 	if (NULL == tctx->globalVars) {
 		tctx->globalVars = xmlHashCreate(20);
 	}
 
-	appendXsltParams(obj->xsltParams(), ctx, tctx.get());
+	if (NULL != obj) {
+		appendXsltParams(obj->xsltParams(), ctx, tctx.get());
+	}
 
     PROFILER(log(), "apply stylesheet " + name_);
     internal::Profiler profiler("Total apply time");
+
 	XmlDocHelper newdoc(xsltApplyStylesheetUser(stylesheet_.get(), doc.get(), NULL, NULL, NULL, tctx.get()));
+
     // Looks like we have to do something with this.
-	if (CheckingPolicy::instance()->useXSLTProfiler()) {
+	if (CheckingPolicy::instance()->isOffline() && obj) {
 		XmlDocHelper prof_doc(xsltGetProfileInformation(tctx.get()));
 		xmlNewTextChild(xmlDocGetRootElement(prof_doc.get()), 0, BAD_CAST "total-time", BAD_CAST profiler.getInfo().c_str());
-		xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(&writeProfileFunc, &closeProfileFunc, ctx, NULL);
-		XmlUtils::throwUnless(NULL != buf);
-		std::cout << "XSLT PROFILE INFO" << std::endl;
-		xmlSaveFormatFileTo(buf, prof_doc.get(), NULL, 1);
-		std::cout << "END OF XSLT PROFILE INFO" << std::endl << std::endl;
+		XsltProfiler::instance()->insertProfileDoc(name_, prof_doc.release());
 	}
 
 	log()->debug("%s: %s, checking result document", BOOST_CURRENT_FUNCTION, name_.c_str());
@@ -415,31 +413,6 @@ XsltInitalizer::ExtraDataShutdown(xsltTransformContextPtr, const xmlChar*, void*
 	
 	log()->debug("%s, data is: %p", BOOST_CURRENT_FUNCTION, data);
 	delete static_cast<ContextData*>(data);
-}
-
-extern "C" int
-closeProfileFunc(void *ctx) {
-	(void)ctx;
-	return 0;
-}
-
-extern "C" int
-writeProfileFunc(void *ctx, const char *data, int len) {
-	if (0 == len) {
-		return 0;
-	}
-	try {
-
-		std::cout.write(data, len);
-
-		return len;
-	}
-	catch (const std::exception &e) {
-		Context *context = static_cast<Context*>(ctx);
-		log()->error("caught exception while writing result: %s %s", 
-			context->request()->getScriptFilename().c_str(), e.what());
-	}
-	return -1;
 }
 
 } // namespace xscript

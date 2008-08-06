@@ -34,6 +34,7 @@
 #include "xscript/response.h"
 #include "xscript/vhost_data.h"
 #include "xscript/checking_policy.h"
+#include "xscript/xslt_profiler.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -117,6 +118,8 @@ Server::handleRequest(RequestData *request_data) {
 			XmlUtils::throwUnless(NULL != buf);
 			ctx->documentWriter()->write(ctx->response(), doc, buf);
 		}
+
+		XsltProfiler::instance()->dumpProfileInfo(ctx.get());
 	}
 	catch (const std::exception &e) {
 		log()->error("%s: exception caught: %s", BOOST_CURRENT_FUNCTION, e.what());

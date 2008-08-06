@@ -20,7 +20,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	status_info.cpp \
 	memory_statistic.cpp \
 	doc_cache.cpp doc_cache_strategy.cpp \
-	profiler.cpp \
+	profiler.cpp xslt_profiler.cpp \
 	dummy_average_counter.cpp \
 	dummy_simple_counter.cpp \
 	dummy_cache_counter.cpp 
