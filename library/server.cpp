@@ -40,16 +40,14 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 extern "C" int closeFunc(void *ctx);
 extern "C" int writeFunc(void *ctx, const char *data, int len);
 
-Server::Server(Config *config) : 
-	config_(config)
-{
-	config_->startup();
+Server::Server(Config *config) :
+        config_(config) {
+    config_->startup();
 }
 
 Server::~Server() {
@@ -58,133 +56,133 @@ Server::~Server() {
 void
 Server::handleRequest(RequestData *request_data) {
 
-	VirtualHostData::instance()->set(request_data->request());
-	XmlUtils::resetReporter();
-	xmlOutputBufferPtr buf = NULL;
-	try {
-		log()->info("requested file: %s", request_data->request()->getScriptFilename().c_str());
-		std::pair<std::string, bool> name = findScript(request_data->request()->getScriptFilename());
+    VirtualHostData::instance()->set(request_data->request());
+    XmlUtils::resetReporter();
+    xmlOutputBufferPtr buf = NULL;
+    try {
+        log()->info("requested file: %s", request_data->request()->getScriptFilename().c_str());
+        std::pair<std::string, bool> name = findScript(request_data->request()->getScriptFilename());
 
-		if (!name.second) {
-			CheckingPolicy::instance()->sendError(request_data->response(), 404,
-				request_data->request()->getScriptFilename() + " not found");
-			return;
-		}
+        if (!name.second) {
+            CheckingPolicy::instance()->sendError(request_data->response(), 404,
+                                                  request_data->request()->getScriptFilename() + " not found");
+            return;
+        }
 
-		boost::shared_ptr<Script> script = Script::create(name.first);
-		if (!script->allowMethod(request_data->request()->getRequestMethod())) {
-			CheckingPolicy::instance()->sendError(request_data->response(), 405,
-				request_data->request()->getRequestMethod() + " not allowed");
-			return;
-		}
+        boost::shared_ptr<Script> script = Script::create(name.first);
+        if (!script->allowMethod(request_data->request()->getRequestMethod())) {
+            CheckingPolicy::instance()->sendError(request_data->response(), 405,
+                                                  request_data->request()->getRequestMethod() + " not allowed");
+            return;
+        }
 
-		Authorizer *authorizer = Authorizer::instance();
-		boost::shared_ptr<Context> ctx(new Context(script, *request_data));
-		ContextStopper ctx_stopper(ctx);
-		boost::shared_ptr<AuthContext> auth = authorizer->checkAuth(ctx);
-		assert(NULL != auth.get());
+        Authorizer *authorizer = Authorizer::instance();
+        boost::shared_ptr<Context> ctx(new Context(script, *request_data));
+        ContextStopper ctx_stopper(ctx);
+        boost::shared_ptr<AuthContext> auth = authorizer->checkAuth(ctx);
+        assert(NULL != auth.get());
 
-		if (!auth->authorized()) {
-			authorizer->redirectToAuth(ctx, auth.get());
-			ctx->response()->sendHeaders();
-			return;
-		}
-		ctx->authContext(auth);
+        if (!auth->authorized()) {
+            authorizer->redirectToAuth(ctx, auth.get());
+            ctx->response()->sendHeaders();
+            return;
+        }
+        ctx->authContext(auth);
 
-		XmlDocHelper doc = script->invoke(ctx);
-		XmlUtils::throwUnless(NULL != doc.get());
+        XmlDocHelper doc = script->invoke(ctx);
+        XmlUtils::throwUnless(NULL != doc.get());
 
-		if (script->binaryPage()) {
-			sendHeaders(ctx.get());
-			return;
-		}
+        if (script->binaryPage()) {
+            sendHeaders(ctx.get());
+            return;
+        }
 
-		if (script->forceStylesheet() && needApplyStylesheet(ctx->request())) {
-			script->applyStylesheet(ctx.get(), doc);
-		}
-		else {
-			script->removeUnusedNodes(doc);
-		}
+        if (script->forceStylesheet() && needApplyStylesheet(ctx->request())) {
+            script->applyStylesheet(ctx.get(), doc);
+        }
+        else {
+            script->removeUnusedNodes(doc);
+        }
 
-		sendHeaders(ctx.get());
+        sendHeaders(ctx.get());
 
-		if (!request_data->request()->suppressBody()) {
-			xmlCharEncodingHandlerPtr encoder = NULL;
-			const std::string &encoding = ctx->documentWriter()->outputEncoding();
-			if (!encoding.empty()) {
-				encoder = xmlFindCharEncodingHandler(encoding.c_str());
-			}
-			buf = xmlOutputBufferCreateIO(&writeFunc, &closeFunc, ctx.get(), encoder);
-			XmlUtils::throwUnless(NULL != buf);
-			ctx->documentWriter()->write(ctx->response(), doc, buf);
-		}
+        if (!request_data->request()->suppressBody()) {
+            xmlCharEncodingHandlerPtr encoder = NULL;
+            const std::string &encoding = ctx->documentWriter()->outputEncoding();
+            if (!encoding.empty()) {
+                encoder = xmlFindCharEncodingHandler(encoding.c_str());
+            }
+            buf = xmlOutputBufferCreateIO(&writeFunc, &closeFunc, ctx.get(), encoder);
+            XmlUtils::throwUnless(NULL != buf);
+            ctx->documentWriter()->write(ctx->response(), doc, buf);
+        }
 
-		XsltProfiler::instance()->dumpProfileInfo(ctx.get());
-	}
-	catch (const std::exception &e) {
-		log()->error("%s: exception caught: %s", BOOST_CURRENT_FUNCTION, e.what());
-		xmlOutputBufferClose(buf);
-		CheckingPolicy::instance()->sendError(request_data->response(), 500, e.what());
-	}
+        XsltProfiler::instance()->dumpProfileInfo(ctx.get());
+    }
+    catch (const std::exception &e) {
+        log()->error("%s: exception caught: %s", BOOST_CURRENT_FUNCTION, e.what());
+        xmlOutputBufferClose(buf);
+        CheckingPolicy::instance()->sendError(request_data->response(), 500, e.what());
+    }
 }
 
 bool
 Server::needApplyStylesheet(Request *request) const {
-	(void)request;
-	return true;
+    (void)request;
+    return true;
 }
 
 std::pair<std::string, bool>
 Server::findScript(const std::string &name) {
 
-	namespace fs = boost::filesystem;
-	fs::path path(name);
-	bool path_exists = fs::exists(path);
+    namespace fs = boost::filesystem;
+    fs::path path(name);
+    bool path_exists = fs::exists(path);
 
-	if (!path_exists || !fs::is_directory(path)) {
-		return std::make_pair(path.native_file_string(), path_exists);
-	}
+    if (!path_exists || !fs::is_directory(path)) {
+        return std::make_pair(path.native_file_string(), path_exists);
+    }
 
-	fs::path path_local = path / "index.html";
-	path_exists = fs::exists(path_local);
-	if (path_exists) {
-		return std::make_pair(path_local.native_file_string(), path_exists);
-	}
-		
-	path_local = path / "index.xml";
-	path_exists = fs::exists(path_local);
-	return std::make_pair(path_local.native_file_string(), path_exists);
+    fs::path path_local = path / "index.html";
+    path_exists = fs::exists(path_local);
+    if (path_exists) {
+        return std::make_pair(path_local.native_file_string(), path_exists);
+    }
+
+    path_local = path / "index.xml";
+    path_exists = fs::exists(path_local);
+    return std::make_pair(path_local.native_file_string(), path_exists);
 }
 
 void
 Server::sendHeaders(Context *ctx) {
-	DocumentWriter* writer = ctx->documentWriter();
-	assert(NULL != writer);
+    DocumentWriter* writer = ctx->documentWriter();
+    assert(NULL != writer);
 
-	writer->addHeaders(ctx->response());
-	ctx->response()->sendHeaders();
+    writer->addHeaders(ctx->response());
+    ctx->response()->sendHeaders();
 }
 
 extern "C" int
-closeFunc(void *ctx) {
-	(void)ctx;
-	return 0;
+    closeFunc(void *ctx) {
+    (void)ctx;
+    return 0;
 }
 
 extern "C" int
-writeFunc(void *ctx, const char *data, int len) {
-	if (0 == len) {
-		return 0;
-	}
-	Context *context = static_cast<Context*>(ctx);
-	try {
-		return context->response()->write(data, len);
-	}
-	catch (const std::exception &e) {
-		log()->error("caught exception while writing result: %s %s", 
-		context->request()->getScriptFilename().c_str(), e.what());
-	}
-	return -1;
+    writeFunc(void *ctx, const char *data, int len) {
+    if (0 == len) {
+        return 0;
+    }
+    Context *context = static_cast<Context*>(ctx);
+    try {
+        return context->response()->write(data, len);
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception while writing result: %s %s",
+                     context->request()->getScriptFilename().c_str(), e.what());
+    }
+    return -1;
 }
 
 } // namespace xscript

@@ -11,90 +11,87 @@
 #include "xscript/tag.h"
 
 
-namespace xscript
-{
+namespace xscript {
 
-class HeadersHelper : private boost::noncopyable
-{
+class HeadersHelper : private boost::noncopyable {
 public:
-	HeadersHelper();
-	~HeadersHelper();
+    HeadersHelper();
+    ~HeadersHelper();
 
-	const curl_slist* get() const;
+    const curl_slist* get() const;
 
-	void append(const char *header);
-	void clear();
+    void append(const char *header);
+    void clear();
 
 private:
-	curl_slist *headers_;
+    curl_slist *headers_;
 };
 
 
 class Request;
 
-class HttpHelper : private boost::noncopyable
-{
+class HttpHelper : private boost::noncopyable {
 public:
-	HttpHelper(const std::string &url, long timeout);
-	virtual ~HttpHelper();
+    HttpHelper(const std::string &url, long timeout);
+    virtual ~HttpHelper();
 
-	static void init();
+    static void init();
 
-	void appendHeaders(const Request* req, bool proxy, const Tag* tag);
-	void postData(const void* data, long size);
+    void appendHeaders(const Request* req, bool proxy, const Tag* tag);
+    void postData(const void* data, long size);
 
-	long perform();
-	template<typename T> void setopt(CURLoption opt, T t);
-	template<typename T> void getinfo(CURLINFO info, T *t);
+    long perform();
+    template<typename T> void setopt(CURLoption opt, T t);
+    template<typename T> void getinfo(CURLINFO info, T *t);
 
-	long status() const;
-	const std::string& url() const;
-	const std::string& charset() const;
-	const std::string& content() const;
-	const std::string& contentType() const;
-	const std::multimap<std::string, std::string>& headers() const;
+    long status() const;
+    const std::string& url() const;
+    const std::string& charset() const;
+    const std::string& content() const;
+    const std::string& contentType() const;
+    const std::multimap<std::string, std::string>& headers() const;
 
-	std::string base() const;
-	void checkStatus() const;
+    std::string base() const;
+    void checkStatus() const;
 
-	Tag createTag() const;
+    Tag createTag() const;
 
-	bool isXml() const;
+    bool isXml() const;
 
 protected:
-	void detectContentType();
-	void check(CURLcode code) const;
-	static size_t curlWrite(void *ptr, size_t size, size_t nmemb, void *arg);
-	static size_t curlHeaders(void *ptr, size_t size, size_t nmemb, void *arg);
-	void processStatusError(const std::string& error_msg) const;
-	
-private:
-	HttpHelper(const HttpHelper &);
-	HttpHelper& operator = (const HttpHelper &);
+    void detectContentType();
+    void check(CURLcode code) const;
+    static size_t curlWrite(void *ptr, size_t size, size_t nmemb, void *arg);
+    static size_t curlHeaders(void *ptr, size_t size, size_t nmemb, void *arg);
+    void processStatusError(const std::string& error_msg) const;
 
-	static void initEnvironment();
-	static void destroyEnvironment();
-	
 private:
-	HeadersHelper headers_helper_;
-	CURL *curl_;
-	long status_;
-	std::multimap<std::string, std::string> headers_;
-	std::string url_, charset_, content_, content_type_;
-	bool sent_modified_since_;
-	
-	static boost::once_flag init_flag_;
+    HttpHelper(const HttpHelper &);
+    HttpHelper& operator = (const HttpHelper &);
+
+    static void initEnvironment();
+    static void destroyEnvironment();
+
+private:
+    HeadersHelper headers_helper_;
+    CURL *curl_;
+    long status_;
+    std::multimap<std::string, std::string> headers_;
+    std::string url_, charset_, content_, content_type_;
+    bool sent_modified_since_;
+
+    static boost::once_flag init_flag_;
 };
 
 
 template<typename T> void
 HttpHelper::setopt(CURLoption opt, T t) {
-	check(curl_easy_setopt(curl_, opt, t));
+    check(curl_easy_setopt(curl_, opt, t));
 }
 
 template<typename T> void
 HttpHelper::getinfo(CURLINFO info, T *t) {
-	check(curl_easy_getinfo(curl_, info, t));
+    check(curl_easy_getinfo(curl_, info, t));
 }
 
 } // namespace xscript

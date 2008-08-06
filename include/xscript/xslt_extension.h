@@ -7,34 +7,30 @@
 #include <libxslt/xsltInternals.h>
 #include <boost/utility.hpp>
 
-namespace xscript
-{
+namespace xscript {
 
-class XsltFunctionRegisterer : private boost::noncopyable
-{
+class XsltFunctionRegisterer : private boost::noncopyable {
 public:
-	XsltFunctionRegisterer(const char* name, const char* nsref, xmlXPathFunction function);
+    XsltFunctionRegisterer(const char* name, const char* nsref, xmlXPathFunction function);
 };
 
-class XsltElementRegisterer : private boost::noncopyable
-{
+class XsltElementRegisterer : private boost::noncopyable {
 public:
-	XsltElementRegisterer(const char* name, const char* nsref, xsltTransformFunction func);
-	static void registerBlockInvokation(const char *name, const char *nsref);
+    XsltElementRegisterer(const char* name, const char* nsref, xsltTransformFunction func);
+    static void registerBlockInvokation(const char *name, const char *nsref);
 };
 
-class XsltParamFetcher : private boost::noncopyable
-{
+class XsltParamFetcher : private boost::noncopyable {
 public:
-	XsltParamFetcher(xmlXPathParserContextPtr ctxt, int nargs);
-	virtual ~XsltParamFetcher();
-		
-	void clear();
-	unsigned int size() const;
-	const char* str(unsigned int index) const;
+    XsltParamFetcher(xmlXPathParserContextPtr ctxt, int nargs);
+    virtual ~XsltParamFetcher();
+
+    void clear();
+    unsigned int size() const;
+    const char* str(unsigned int index) const;
 
 private:
-	std::vector<xmlChar*> strings_;
+    std::vector<xmlChar*> strings_;
 };
 
 } // namespace xscript

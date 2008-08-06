@@ -5,21 +5,19 @@
 #include <string>
 #include <boost/noncopyable.hpp>
 
-namespace xscript
-{
+namespace xscript {
 
 class Config;
 
-class Xml : private boost::noncopyable
-{
+class Xml : private boost::noncopyable {
 public:
-	Xml();
-	virtual ~Xml();
-	
-	virtual void parse() = 0;
-	virtual time_t modified() const = 0;
-	virtual const std::string& name() const = 0;
-	virtual std::string fullName(const std::string &name) const;
+    Xml();
+    virtual ~Xml();
+
+    virtual void parse() = 0;
+    virtual time_t modified() const = 0;
+    virtual const std::string& name() const = 0;
+    virtual std::string fullName(const std::string &name) const;
 };
 
 } // namespace xscript

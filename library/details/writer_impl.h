@@ -7,39 +7,36 @@
 
 #include "xscript/writer.h"
 
-namespace xscript
-{
+namespace xscript {
 
 class Stylesheet;
 
-class XmlWriter : public DocumentWriter
-{
+class XmlWriter : public DocumentWriter {
 public:
-	XmlWriter(const std::string &encoding);
-	virtual ~XmlWriter();
-	
-	virtual const std::string& outputEncoding() const;
-	
-	virtual void addHeaders(Response *response);
-	virtual void write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf);
+    XmlWriter(const std::string &encoding);
+    virtual ~XmlWriter();
+
+    virtual const std::string& outputEncoding() const;
+
+    virtual void addHeaders(Response *response);
+    virtual void write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf);
 
 private:
-	std::string encoding_;
+    std::string encoding_;
 };
 
-class HtmlWriter : public DocumentWriter
-{
+class HtmlWriter : public DocumentWriter {
 public:
-	HtmlWriter(const boost::shared_ptr<Stylesheet> &sh);
-	virtual ~HtmlWriter();
-	
-	virtual const std::string& outputEncoding() const;
-	
-	virtual void addHeaders(Response *response);
-	virtual void write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf);
+    HtmlWriter(const boost::shared_ptr<Stylesheet> &sh);
+    virtual ~HtmlWriter();
+
+    virtual const std::string& outputEncoding() const;
+
+    virtual void addHeaders(Response *response);
+    virtual void write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf);
 
 private:
-	boost::shared_ptr<Stylesheet> stylesheet_;
+    boost::shared_ptr<Stylesheet> stylesheet_;
 };
 
 } // namespace xscript

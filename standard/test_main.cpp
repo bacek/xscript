@@ -19,14 +19,14 @@
 
 int
 main(int argc, char *argv[]) {
-	try {
-		CppUnit::TextUi::TestRunner r;
-		r.addTest(CppUnit::TestFactoryRegistry::getRegistry().makeTest());
-		return r.run("", false) ? EXIT_SUCCESS : EXIT_FAILURE;
-		
-	}
-	catch (const std::exception &e) {
-		std::cerr << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
+    try {
+        CppUnit::TextUi::TestRunner r;
+        r.addTest(CppUnit::TestFactoryRegistry::getRegistry().makeTest());
+        return r.run("", false) ? EXIT_SUCCESS : EXIT_FAILURE;
+
+    }
+    catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
 }

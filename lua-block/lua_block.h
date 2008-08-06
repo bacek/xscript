@@ -6,48 +6,45 @@
 #include "xscript/block.h"
 #include "xscript/extension.h"
 
-namespace xscript
-{
+namespace xscript {
 
 class State;
 class Request;
 class Response;
 
-class LuaBlock : public Block
-{
+class LuaBlock : public Block {
 public:
-	LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
-	virtual ~LuaBlock();
-	virtual void parse();
-	
+    LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    virtual ~LuaBlock();
+    virtual void parse();
+
 protected:
 
-	void reportError(const char *message, lua_State *lua);
-	virtual XmlDocHelper call(Context *ctx, boost::any &) throw (std::exception);
-	
+    void reportError(const char *message, lua_State *lua);
+    virtual XmlDocHelper call(Context *ctx, boost::any &) throw (std::exception);
+
 private:
-	const char *code_;
+    const char *code_;
 };
 
-class LuaExtension : public Extension
-{
+class LuaExtension : public Extension {
 public:
-	LuaExtension();
-	virtual ~LuaExtension();
-	
-	virtual const char* name() const;
-	virtual const char* nsref() const;
-	
-	virtual void initContext(Context *ctx);
-	virtual void stopContext(Context *ctx);
-	virtual void destroyContext(Context *ctx);
-	
-	virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);
-	virtual void init(const Config *config);
+    LuaExtension();
+    virtual ~LuaExtension();
+
+    virtual const char* name() const;
+    virtual const char* nsref() const;
+
+    virtual void initContext(Context *ctx);
+    virtual void stopContext(Context *ctx);
+    virtual void destroyContext(Context *ctx);
+
+    virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);
+    virtual void init(const Config *config);
 
 private:
-	LuaExtension(const LuaExtension &);
-	LuaExtension& operator = (const LuaExtension &);
+    LuaExtension(const LuaExtension &);
+    LuaExtension& operator = (const LuaExtension &);
 };
 
 

@@ -6,8 +6,7 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 void
 DummyScriptCache::clear() {
@@ -15,19 +14,19 @@ DummyScriptCache::clear() {
 
 void
 DummyScriptCache::erase(const std::string &name) {
-	(void)name;
+    (void)name;
 }
 
 boost::shared_ptr<Script>
 DummyScriptCache::fetch(const std::string &name) {
-	(void)name;
-	return boost::shared_ptr<Script>();
+    (void)name;
+    return boost::shared_ptr<Script>();
 }
 
 void
 DummyScriptCache::store(const std::string &name, const boost::shared_ptr<Script> &script) {
-	(void)name;
-	(void)script;
+    (void)name;
+    (void)script;
 }
 
 REGISTER_COMPONENT2(ScriptCache, DummyScriptCache);

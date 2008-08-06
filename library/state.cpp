@@ -16,12 +16,10 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 State::State() :
-	impl_(new StateImpl())
-{
+        impl_(new StateImpl()) {
 }
 
 State::~State() {
@@ -29,119 +27,119 @@ State::~State() {
 
 void
 State::clear() {
-	impl_->clear();
+    impl_->clear();
 }
 
 void
 State::erase(const std::string &key) {
-	impl_->erase(key);
+    impl_->erase(key);
 }
-	
+
 void
 State::erasePrefix(const std::string &prefix) {
-	impl_->erasePrefix(prefix);
+    impl_->erasePrefix(prefix);
 }
-	
+
 bool
 State::asBool(const std::string &name) const {
-	return impl_->asBool(name);
+    return impl_->asBool(name);
 }
 
 void
 State::setBool(const std::string &name, bool value) {
-	impl_->setBool(name, value);
+    impl_->setBool(name, value);
 }
-	
+
 boost::int32_t
 State::asLong(const std::string &name) const {
-	return impl_->asLong(name);
+    return impl_->asLong(name);
 }
 
 void
 State::setLong(const std::string &name, boost::int32_t value) {
-	impl_->setLong(name, value);
+    impl_->setLong(name, value);
 }
-	
+
 boost::int64_t
 State::asLongLong(const std::string &name) const {
-	return impl_->asLongLong(name);
+    return impl_->asLongLong(name);
 }
 
 void
 State::setLongLong(const std::string &name, boost::int64_t value) {
-	impl_->setLongLong(name, value);
+    impl_->setLongLong(name, value);
 }
-	
+
 boost::uint32_t
 State::asULong(const std::string &name) const {
-	return impl_->asULong(name);
+    return impl_->asULong(name);
 }
 
 void
 State::setULong(const std::string &name, boost::uint32_t value) {
-	impl_->setULong(name, value);
+    impl_->setULong(name, value);
 }
-	
+
 boost::uint64_t
 State::asULongLong(const std::string &name) const {
-	return impl_->asULongLong(name);
+    return impl_->asULongLong(name);
 }
 
 void
 State::setULongLong(const std::string &name, boost::uint64_t value) {
-	impl_->setULongLong(name, value);
+    impl_->setULongLong(name, value);
 }
-	
+
 double
 State::asDouble(const std::string &name) const {
-	return impl_->asDouble(name);
+    return impl_->asDouble(name);
 }
 
 void
 State::setDouble(const std::string &name, double value) {
-	impl_->setDouble(name, value);
+    impl_->setDouble(name, value);
 }
 
 std::string
 State::asString(const std::string &name) const {
-	return impl_->asString(name);
+    return impl_->asString(name);
 }
 
 void
 State::setString(const std::string &name, const std::string &value) {
-	impl_->setString(name, value);
+    impl_->setString(name, value);
 }
-	
+
 bool
 State::has(const std::string &name) const {
-	return impl_->has(name);
+    return impl_->has(name);
 }
 
 void
 State::keys(std::vector<std::string> &v) const {
-	impl_->keys(v);
+    impl_->keys(v);
 }
 
 void
 State::values(std::map<std::string, StateValue> &v) const {
-	impl_->values(v);
+    impl_->values(v);
 }
 
 void
 State::copy(const std::string &src, const std::string &dest) {
-	impl_->copy(src, dest);
+    impl_->copy(src, dest);
 }
-	
+
 StateValue
 State::typedValue(const std::string &name) const {
-	return impl_->typedValue(name);
+    return impl_->typedValue(name);
 }
 
 void
 State::checkName(const std::string &name) const {
-	if (name.empty()) {
-		throw std::invalid_argument("empty state name");
-	}
+    if (name.empty()) {
+        throw std::invalid_argument("empty state name");
+    }
 }
 
 } // namespace xscript

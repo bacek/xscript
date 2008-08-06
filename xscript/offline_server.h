@@ -3,27 +3,25 @@
 
 #include "xscript/server.h"
 
-namespace xscript
-{
+namespace xscript {
 
 class Config;
 
-class OfflineServer : public Server
-{
+class OfflineServer : public Server {
 public:
-	OfflineServer(Config *config, const std::string& url, const std::multimap<std::string, std::string>& args);
-	virtual ~OfflineServer();
+    OfflineServer(Config *config, const std::string& url, const std::multimap<std::string, std::string>& args);
+    virtual ~OfflineServer();
 
-	void run();
+    void run();
 
 protected:
-	bool needApplyStylesheet(Request *request) const;
+    bool needApplyStylesheet(Request *request) const;
 
 private:
-	std::string root_;
-	std::string url_;
-	bool apply_stylesheet_, use_remote_call_;
-	std::map<std::string, std::string> headers_;
+    std::string root_;
+    std::string url_;
+    bool apply_stylesheet_, use_remote_call_;
+    std::map<std::string, std::string> headers_;
 };
 
 } // namespace xscript

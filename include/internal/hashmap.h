@@ -11,10 +11,8 @@
 #include <ext/hash_map>
 #endif
 
-namespace xscript
-{
-namespace details
-{
+namespace xscript {
+namespace details {
 
 #if defined (HAVE_GNUCXX_HASHMAP)
 using __gnu_cxx::hash_map;

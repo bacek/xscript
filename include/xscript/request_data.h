@@ -3,36 +3,34 @@
 
 #include <boost/shared_ptr.hpp>
 
-namespace xscript
-{
+namespace xscript {
 
 class State;
 class Request;
 class Response;
 
-class RequestData
-{
+class RequestData {
 public:
-	RequestData();
-	RequestData(Request *req, Response *resp, const boost::shared_ptr<State> &state);
-	virtual ~RequestData();
-	
-	inline Request* request() const {
-		return request_;
-	}
+    RequestData();
+    RequestData(Request *req, Response *resp, const boost::shared_ptr<State> &state);
+    virtual ~RequestData();
 
-	inline Response* response() const {
-		return response_;
-	}
+    inline Request* request() const {
+        return request_;
+    }
 
-	inline const boost::shared_ptr<State>& state() const {
-		return state_;
-	}
+    inline Response* response() const {
+        return response_;
+    }
+
+    inline const boost::shared_ptr<State>& state() const {
+        return state_;
+    }
 
 private:
-	Request *request_;
-	Response *response_;
-	boost::shared_ptr<State> state_;
+    Request *request_;
+    Response *response_;
+    boost::shared_ptr<State> state_;
 };
 
 } // namespace xscript

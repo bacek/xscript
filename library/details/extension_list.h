@@ -16,53 +16,51 @@
 #include "xscript/extension.h"
 #include "details/phoenix_singleton.h"
 
-namespace xscript
-{
+namespace xscript {
 
 class Loader;
 class Config;
 class Context;
 
-class ExtensionList : 
-	private boost::noncopyable,
-	public PhoenixSingleton<ExtensionList>
-{
+class ExtensionList :
+            private boost::noncopyable,
+            public PhoenixSingleton<ExtensionList> {
 public:
-	ExtensionList();
-	virtual ~ExtensionList();
+    ExtensionList();
+    virtual ~ExtensionList();
 
-	inline void initContext(Context *ctx) {
-		std::for_each(extensions_.begin(), extensions_.end(), 
-			boost::bind(&Extension::initContext, _1, ctx));
-	}
-	
-	inline void stopContext(Context *ctx) {
-		std::for_each(extensions_.begin(), extensions_.end(), 
-			boost::bind(&Extension::stopContext, _1, ctx));
-	}
-	
-	inline void destroyContext(Context *ctx) {
-		std::for_each(extensions_.begin(), extensions_.end(), 
-			boost::bind(&Extension::destroyContext, _1, ctx));
-	}
-	
-	inline void init(const Config *config) {
-		std::for_each(extensions_.begin(), extensions_.end(), 
-			boost::bind(&Extension::init, _1, config));
-	}
-	
-	void registerExtension(ExtensionHolder ext);
+    inline void initContext(Context *ctx) {
+        std::for_each(extensions_.begin(), extensions_.end(),
+                      boost::bind(&Extension::initContext, _1, ctx));
+    }
 
-	Extension* extension(const xmlNodePtr node) const;
-	Extension* extension(const char *name, const char *ref) const;
+    inline void stopContext(Context *ctx) {
+        std::for_each(extensions_.begin(), extensions_.end(),
+                      boost::bind(&Extension::stopContext, _1, ctx));
+    }
 
-private:
-	friend class std::auto_ptr<ExtensionList>;
-	bool accepts(Extension *ext, const char *name, const char *ref) const;
+    inline void destroyContext(Context *ctx) {
+        std::for_each(extensions_.begin(), extensions_.end(),
+                      boost::bind(&Extension::destroyContext, _1, ctx));
+    }
+
+    inline void init(const Config *config) {
+        std::for_each(extensions_.begin(), extensions_.end(),
+                      boost::bind(&Extension::init, _1, config));
+    }
+
+    void registerExtension(ExtensionHolder ext);
+
+    Extension* extension(const xmlNodePtr node) const;
+    Extension* extension(const char *name, const char *ref) const;
 
 private:
-	boost::shared_ptr<Loader> loader_;
-	std::vector<Extension*> extensions_;
+    friend class std::auto_ptr<ExtensionList>;
+    bool accepts(Extension *ext, const char *name, const char *ref) const;
+
+private:
+    boost::shared_ptr<Loader> loader_;
+    std::vector<Extension*> extensions_;
 };
 
 } // namespace xscript

@@ -16,8 +16,7 @@
 #include <map>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 class Loader;
 class Context;
@@ -36,63 +35,61 @@ typedef details::hash_map<std::string, HttpMethod, details::StringHash> MethodMa
 #endif
 
 // TODO: Why it is not virtual inherited?
-class HttpBlock : public ThreadedTaggedBlock
-{
+class HttpBlock : public ThreadedTaggedBlock {
 public:
-	HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
-	virtual ~HttpBlock();
+    HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    virtual ~HttpBlock();
 
 protected:
-	virtual void postParse();
-	virtual void property(const char *name, const char *value);
-	virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception);
-	
-	XmlDocHelper getHttp(Context *ctx, boost::any &a);
+    virtual void postParse();
+    virtual void property(const char *name, const char *value);
+    virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception);
+
+    XmlDocHelper getHttp(Context *ctx, boost::any &a);
 
     // Proxy for getHttp with emiting notice about obsoleted call.
-	XmlDocHelper getHttpObsolete(Context *ctx, boost::any &a);
+    XmlDocHelper getHttpObsolete(Context *ctx, boost::any &a);
 
-	XmlDocHelper postHttp(Context *ctx, boost::any &a);
-	XmlDocHelper getByState(Context *ctx, boost::any &a);
-	XmlDocHelper getByRequest(Context *ctx, boost::any &a);
-	
-	XmlDocHelper response(const HttpHelper &h) const;
-	void createTagInfo(const HttpHelper &h, boost::any &a) const;
-	
-	static void registerMethod(const char *name, HttpMethod method);
-	
+    XmlDocHelper postHttp(Context *ctx, boost::any &a);
+    XmlDocHelper getByState(Context *ctx, boost::any &a);
+    XmlDocHelper getByRequest(Context *ctx, boost::any &a);
+
+    XmlDocHelper response(const HttpHelper &h) const;
+    void createTagInfo(const HttpHelper &h, boost::any &a) const;
+
+    static void registerMethod(const char *name, HttpMethod method);
+
 private:
-	HttpBlock(const HttpBlock &);
-	HttpBlock& operator = (const HttpBlock &);
-	
-	friend class HttpMethodRegistrator;
-	
+    HttpBlock(const HttpBlock &);
+    HttpBlock& operator = (const HttpBlock &);
+
+    friend class HttpMethodRegistrator;
+
 private:
-	bool proxy_;
-	HttpMethod method_;
-	std::string charset_;
-	static MethodMap methods_;
+    bool proxy_;
+    HttpMethod method_;
+    std::string charset_;
+    static MethodMap methods_;
 };
 
-class HttpExtension : public Extension
-{
+class HttpExtension : public Extension {
 public:
-	HttpExtension();
-	virtual ~HttpExtension();
-	
-	virtual const char* name() const;
-	virtual const char* nsref() const;
-	
-	virtual void initContext(Context *ctx);
-	virtual void stopContext(Context *ctx);
-	virtual void destroyContext(Context *ctx);
-	
-	virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);	
-	virtual void init(const Config *config);
-	
+    HttpExtension();
+    virtual ~HttpExtension();
+
+    virtual const char* name() const;
+    virtual const char* nsref() const;
+
+    virtual void initContext(Context *ctx);
+    virtual void stopContext(Context *ctx);
+    virtual void destroyContext(Context *ctx);
+
+    virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);
+    virtual void init(const Config *config);
+
 private:
-	HttpExtension(const HttpExtension &);
-	HttpExtension& operator = (const HttpExtension &);
+    HttpExtension(const HttpExtension &);
+    HttpExtension& operator = (const HttpExtension &);
 };
 
 } // namespace xscript

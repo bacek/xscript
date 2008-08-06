@@ -1,8 +1,7 @@
 #include "xscript/profiler.h"
 #include "xscript/logger.h"
 
-namespace xscript
-{
+namespace xscript {
 
 Profiler::~Profiler() {
     timeval endTime;

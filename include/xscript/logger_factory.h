@@ -9,28 +9,27 @@
 #include <xscript/logger.h>
 #include <xscript/block.h>
 
-namespace xscript
-{
+namespace xscript {
 
-class LoggerFactory : public Component<LoggerFactory>
-{
+class LoggerFactory : public Component<LoggerFactory> {
 public:
     LoggerFactory();
+    virtual ~LoggerFactory();
 
     friend class ComponentRegisterer<LoggerFactory>;
-    ~LoggerFactory();
+    
 
-	virtual void init(const Config *config);
+    virtual void init(const Config *config);
 
     /**
      * Get logger by id. If logger not found returns default one.
      */
-    Logger * getLogger(const std::string &id) const;
+    Logger* getLogger(const std::string &id) const;
 
     /**
      * Get default logger
      */
-    Logger * getDefaultLogger() const;
+    Logger* getDefaultLogger() const;
 
     /**
      */
@@ -45,13 +44,13 @@ private:
     // Get level from string. Fallback to LEVEL_CRIT if passed something wrong.
     Logger::LogLevel stringToLevel(const std::string& level);
 
-    Logger * defaultLogger_;
+    Logger *defaultLogger_;
 
-    typedef std::map<std::string, boost::shared_ptr<Logger> > loggerMap_t;
-    loggerMap_t loggers_;
+    typedef std::map<std::string, boost::shared_ptr<Logger> > LoggerMap;
+    LoggerMap loggers_;
 
 };
 
-}
+} // namespace xscript
 
-#endif
+#endif // _XSCRIPT_LOGGER_FACTORY_H_

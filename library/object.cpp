@@ -16,15 +16,13 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
-Object::Object() 
-{
+Object::Object() {
 }
 
 Object::~Object() {
-	std::for_each(params_.begin(), params_.end(), boost::checked_deleter<Param>());
+    std::for_each(params_.begin(), params_.end(), boost::checked_deleter<Param>());
 }
 
 void
@@ -33,75 +31,75 @@ Object::postParse() {
 
 void
 Object::xsltName(const std::string &value) {
-	if (value.empty()) {
-		xslt_name_.erase();
-	}
-	else {
-		xslt_name_ = fullName(value);
-	}
+    if (value.empty()) {
+        xslt_name_.erase();
+    }
+    else {
+        xslt_name_ = fullName(value);
+    }
 }
 
 void
 Object::checkParam(const Param *param) const {
-	const std::string& id = param->id();
-	if (id.empty()) {
-		throw std::runtime_error("xsl param without id");
-	}
+    const std::string& id = param->id();
+    if (id.empty()) {
+        throw std::runtime_error("xsl param without id");
+    }
 
-	int size = id.size();
-	if (size > 128) {
-		throw UnboundRuntimeError(std::string("xsl param with too big size id: ") + id);
-	}
+    int size = id.size();
+    if (size > 128) {
+        throw UnboundRuntimeError(std::string("xsl param with too big size id: ") + id);
+    }
 
-	if (!isalpha(id[0]) && id[0] != '_') {
-		throw std::runtime_error(std::string("xsl param with incorrect 1 character in id: ") + id);
-	}
+    if (!isalpha(id[0]) && id[0] != '_') {
+        throw std::runtime_error(std::string("xsl param with incorrect 1 character in id: ") + id);
+    }
 
-	for(int i = 1; i < size; ++i) {
-		char character = id[i];
-		if (isalnum(character) || character == '-' || character == '_') {
-			continue;
-		}
+    for (int i = 1; i < size; ++i) {
+        char character = id[i];
+        if (isalnum(character) || character == '-' || character == '_') {
+            continue;
+        }
 
-		throw std::runtime_error(
-			std::string("xsl param with incorrect ") + 
-			boost::lexical_cast<std::string>(i + 1) + 
-			std::string(" character in id: ") + id);
-	}
+        throw std::runtime_error(
+            std::string("xsl param with incorrect ") +
+            boost::lexical_cast<std::string>(i + 1) +
+            std::string(" character in id: ") + id);
+    }
 }
 
 bool
 Object::xsltParamNode(const xmlNodePtr node) const {
-	return node->name && xmlStrncasecmp(node->name, (const xmlChar*) "xslt-param", sizeof("xslt-param")) == 0;
+    return node->name && xmlStrncasecmp(node->name, (const xmlChar*) "xslt-param", sizeof("xslt-param")) == 0;
 }
 
 void
 Object::parseXsltParamNode(const xmlNodePtr node, ParamFactory *pf) {
-	std::auto_ptr<Param> p = pf->param(this, node);
-	log()->debug("%s, creating param %s", BOOST_CURRENT_FUNCTION, p->id().c_str());
-	checkParam(p.get());
-	params_.push_back(p.get());
-	p.release();
+    std::auto_ptr<Param> p = pf->param(this, node);
+    log()->debug("%s, creating param %s", BOOST_CURRENT_FUNCTION, p->id().c_str());
+    checkParam(p.get());
+    params_.push_back(p.get());
+    p.release();
 }
 
 void
 Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh, Context *ctx, XmlDocHelper &doc, bool need_copy) {
-	
-	assert(NULL != doc.get());
-	try {
-		if (need_copy) {
-			XmlDocHelper newdoc = sh->apply(this, ctx, doc);
-			doc = XmlDocHelper(xmlCopyDoc(newdoc.get(), 1));
-		}
-		else {
-			doc = sh->apply(this, ctx, doc);
-		}
-		XmlUtils::throwUnless(NULL != doc.get());
-	}
-	catch (const std::exception &e) {
-		log()->crit("caught exception while applying xslt [%s]: %s", sh->name().c_str(), e.what());
-		throw;
-	}
+
+    assert(NULL != doc.get());
+    try {
+        if (need_copy) {
+            XmlDocHelper newdoc = sh->apply(this, ctx, doc);
+            doc = XmlDocHelper(xmlCopyDoc(newdoc.get(), 1));
+        }
+        else {
+            doc = sh->apply(this, ctx, doc);
+        }
+        XmlUtils::throwUnless(NULL != doc.get());
+    }
+    catch (const std::exception &e) {
+        log()->crit("caught exception while applying xslt [%s]: %s", sh->name().c_str(), e.what());
+        throw;
+    }
 }
 
 } // namespace xscript

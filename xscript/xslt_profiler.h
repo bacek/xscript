@@ -6,24 +6,22 @@
 
 #include "xscript/xslt_profiler.h"
 
-namespace xscript
-{
+namespace xscript {
 
-class OfflineXsltProfiler : public XsltProfiler
-{
+class OfflineXsltProfiler : public XsltProfiler {
 public:
-	OfflineXsltProfiler();
-	OfflineXsltProfiler(const std::string& xslt_path);
-	virtual ~OfflineXsltProfiler();
+    OfflineXsltProfiler();
+    OfflineXsltProfiler(const std::string& xslt_path);
+    virtual ~OfflineXsltProfiler();
 
-	virtual void init(const Config *config);
-	virtual void insertProfileDoc(const std::string& name, xmlDocPtr doc);
-	virtual void dumpProfileInfo(Context* ctx);
+    virtual void init(const Config *config);
+    virtual void insertProfileDoc(const std::string& name, xmlDocPtr doc);
+    virtual void dumpProfileInfo(Context* ctx);
 
 private:
-	boost::mutex mutex_;
-	std::string xslt_path_;
-	std::multimap<std::string, xmlDocPtr> docs_;
+    boost::mutex mutex_;
+    std::string xslt_path_;
+    std::multimap<std::string, xmlDocPtr> docs_;
 };
 
 }

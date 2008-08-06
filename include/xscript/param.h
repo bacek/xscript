@@ -6,82 +6,77 @@
 #include <boost/utility.hpp>
 #include <libxml/tree.h>
 
-namespace xscript
-{
+namespace xscript {
 
 class Object;
 class Context;
 class ArgList;
 
-class Param : private boost::noncopyable
-{
+class Param : private boost::noncopyable {
 public:
-	Param(Object *owner, xmlNodePtr node);
-	virtual ~Param();
-	
-	virtual void parse();
+    Param(Object *owner, xmlNodePtr node);
+    virtual ~Param();
 
-	inline const std::string& id() const {
-		return id_;
-	}
-	
-	virtual const std::string& value() const;
+    virtual void parse();
 
-	virtual std::string asString(const Context *ctx) const = 0;
-	virtual void add(const Context *ctx, ArgList &al) const = 0;
+    inline const std::string& id() const {
+        return id_;
+    }
+
+    virtual const std::string& value() const;
+
+    virtual std::string asString(const Context *ctx) const = 0;
+    virtual void add(const Context *ctx, ArgList &al) const = 0;
 
 protected:
-	virtual void property(const char *name, const char *value);
+    virtual void property(const char *name, const char *value);
 
 private:
-	xmlNodePtr node_;
-	std::string id_, value_;
+    xmlNodePtr node_;
+    std::string id_, value_;
 };
 
-class ConvertedParam : public Param
-{
+class ConvertedParam : public Param {
 public:
-	ConvertedParam(Object *owner, xmlNodePtr node);
-	virtual ~ConvertedParam();
+    ConvertedParam(Object *owner, xmlNodePtr node);
+    virtual ~ConvertedParam();
 
-	inline const std::string& as() const {
-		return as_;
-	}
+    inline const std::string& as() const {
+        return as_;
+    }
 
-	virtual void add(const Context *ctx, ArgList &al) const;
+    virtual void add(const Context *ctx, ArgList &al) const;
 
 protected:
-	virtual void property(const char *name, const char *value);
+    virtual void property(const char *name, const char *value);
 
 private:
-	std::string as_;
+    std::string as_;
 };
 
-class TypedParam : public ConvertedParam
-{
+class TypedParam : public ConvertedParam {
 public:
-	TypedParam(Object *owner, xmlNodePtr node);
-	virtual ~TypedParam();
+    TypedParam(Object *owner, xmlNodePtr node);
+    virtual ~TypedParam();
 
-	inline const std::string& defaultValue() const {
-		return default_value_;
-	}
+    inline const std::string& defaultValue() const {
+        return default_value_;
+    }
 
-	virtual const std::string& value() const;
+    virtual const std::string& value() const;
 
 protected:
-	virtual void property(const char *name, const char *value);
+    virtual void property(const char *name, const char *value);
 
 private:
-	std::string default_value_;
+    std::string default_value_;
 };
 
 typedef std::auto_ptr<Param> (*ParamCreator)(Object *owner, xmlNodePtr node);
 
-class CreatorRegisterer : private boost::noncopyable
-{
+class CreatorRegisterer : private boost::noncopyable {
 public:
-	CreatorRegisterer(const char *name, ParamCreator c);
+    CreatorRegisterer(const char *name, ParamCreator c);
 };
 
 } // namespace xscript

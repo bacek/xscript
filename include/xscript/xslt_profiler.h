@@ -6,21 +6,20 @@
 
 #include <libxml/tree.h>
 
-namespace xscript
-{
+namespace xscript {
+
 class Context;
 
-class XsltProfiler : public Component<XsltProfiler>
-{
+class XsltProfiler : public Component<XsltProfiler> {
 public:
-	XsltProfiler();
-	virtual ~XsltProfiler();
+    XsltProfiler();
+    virtual ~XsltProfiler();
 
-	virtual void insertProfileDoc(const std::string& name, xmlDocPtr doc);
-	virtual void dumpProfileInfo(Context* ctx);
+    virtual void insertProfileDoc(const std::string& name, xmlDocPtr doc);
+    virtual void dumpProfileInfo(Context* ctx);
 };
 
-}
+} // namespace xscript
 
 #endif //_XSCRIPT_XSLT_PROFILER_H_
 

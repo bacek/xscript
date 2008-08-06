@@ -5,26 +5,24 @@
 #include <xscript/tagged_block.h>
 #include <xscript/xml.h>
 
-namespace xscript
-{
+namespace xscript {
 
-class ThreadedTaggedBlock : public ThreadedBlock, public TaggedBlock
-{
+class ThreadedTaggedBlock : public ThreadedBlock, public TaggedBlock {
 public:
-	ThreadedTaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
-	virtual ~ThreadedTaggedBlock();
-	
-	int remoteTimeout() const;
-	void remoteTimeout(int timeout);
-	bool isDefaultRemoteTimeout() const;
-	void setDefaultRemoteTimeout();
+    ThreadedTaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    virtual ~ThreadedTaggedBlock();
+
+    int remoteTimeout() const;
+    void remoteTimeout(int timeout);
+    bool isDefaultRemoteTimeout() const;
+    void setDefaultRemoteTimeout();
 
 protected:
-	virtual void property(const char *name, const char *value);
-	virtual void postParse();
+    virtual void property(const char *name, const char *value);
+    virtual void postParse();
 
 private:
-	int remote_timeout_;
+    int remote_timeout_;
 };
 
 } // namespace xscript

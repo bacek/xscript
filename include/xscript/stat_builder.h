@@ -8,59 +8,58 @@
 #include <xscript/xml_helpers.h>
 #include <xscript/block.h>
 
-namespace xscript
-{
-	class CounterBase;
+namespace xscript {
 
-	/**
-	 * Statistic builder. Holds pointers to CountersBase and build 
-	 * aggregate xmlNodePtr by calling CounterBase::createReport for each
-	 * counter and wrap them into single node.
-	 *
-	 * NB: counters are not owned by StatBuilder
-	 */
-	class StatBuilder
-	{
-	public:
-		StatBuilder(const std::string& name);
-		~StatBuilder();
+class CounterBase;
 
-		/**
-		 * Create aggregate report. Caller must free result.
-		 */
-		XmlDocHelper createReport() const;
+/**
+ * Statistic builder. Holds pointers to CountersBase and build
+ * aggregate xmlNodePtr by calling CounterBase::createReport for each
+ * counter and wrap them into single node.
+ *
+ * NB: counters are not owned by StatBuilder
+ */
+class StatBuilder {
+public:
+    StatBuilder(const std::string& name);
+    virtual ~StatBuilder();
 
-		/**
-		 * Add counter to report.
-		 */
-		void addCounter(const CounterBase* counter);
+    /**
+     * Create aggregate report. Caller must free result.
+     */
+    XmlDocHelper createReport() const;
 
-		/**
-		 * Create block to output statistic in xscript page.
-		 */
-		std::auto_ptr<Block> createBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    /**
+     * Add counter to report.
+     */
+    void addCounter(const CounterBase* counter);
 
-		const std::string& getName() const;
-		void setName(const std::string& name);
-	private:
-		std::string					name_;
-		std::vector<const CounterBase*>	counters_;
-	};
+    /**
+     * Create block to output statistic in xscript page.
+     */
+    std::auto_ptr<Block> createBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
 
-	class StatBuilderBlock : public Block
-	{
-	public:
-		StatBuilderBlock(const Extension *ext, Xml *owner, xmlNodePtr node, const StatBuilder& builder)
-			: Block(ext, owner, node), builder_(builder)
-		{
-		}
+    const std::string& getName() const;
+    void setName(const std::string& name);
 
-		XmlDocHelper call(Context *, boost::any &) throw (std::exception) {
-			return builder_.createReport();
-		}
-	private:
-		const StatBuilder &builder_;
-	};
-}
+private:
+    std::string name_;
+    std::vector<const CounterBase*>	counters_;
+};
 
-#endif
+class StatBuilderBlock : public Block {
+public:
+    StatBuilderBlock(const Extension *ext, Xml *owner, xmlNodePtr node, const StatBuilder& builder)
+            : Block(ext, owner, node), builder_(builder) {
+    }
+
+    XmlDocHelper call(Context *, boost::any &) throw (std::exception) {
+        return builder_.createReport();
+    }
+private:
+    const StatBuilder &builder_;
+};
+
+} // namespace xscript
+
+#endif // _XSCRIPT_STAT_BUILDER_H_

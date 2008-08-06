@@ -5,28 +5,26 @@
 #include <vector>
 #include <libxml/tree.h>
 
-namespace xscript
-{
+namespace xscript {
 
-class StateParamNode
-{
+class StateParamNode {
 public:
-	StateParamNode(xmlNodePtr parent, const char* name);
-	virtual ~StateParamNode();
+    StateParamNode(xmlNodePtr parent, const char* name);
+    virtual ~StateParamNode();
 
-	void createSubNode(const char* val) const;
-	void createSubNodes(const std::vector<std::string>& v) const;
+    void createSubNode(const char* val) const;
+    void createSubNodes(const std::vector<std::string>& v) const;
 
-	static bool checkName(const char* name);
-
-private:
-	StateParamNode(const StateParamNode &);
-	StateParamNode& operator = (const StateParamNode &);
+    static bool checkName(const char* name);
 
 private:
-	xmlNodePtr parent_;
-	const char* name_;
-	bool is_valid_name_;
+    StateParamNode(const StateParamNode &);
+    StateParamNode& operator = (const StateParamNode &);
+
+private:
+    xmlNodePtr parent_;
+    const char* name_;
+    bool is_valid_name_;
 };
 
 

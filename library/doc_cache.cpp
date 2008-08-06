@@ -1,21 +1,25 @@
+#include "settings.h"
+
 #include <boost/current_function.hpp>
 #include <boost/bind.hpp>
+
 #include "xscript/logger.h"
 #include "xscript/doc_cache.h"
 #include "xscript/doc_cache_strategy.h"
 #include "xscript/util.h"
 #include "xscript/control_extension.h"
 
-namespace xscript
-{
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
+namespace xscript {
 
 
-class DocCacheBlock : public Block
-{
+class DocCacheBlock : public Block {
 public:
     DocCacheBlock(const Extension *ext, Xml *owner, xmlNodePtr node, const DocCache& doc_cache)
-        : Block(ext, owner, node), doc_cache_(doc_cache)
-    {
+            : Block(ext, owner, node), doc_cache_(doc_cache) {
     }
 
     XmlDocHelper call(Context *, boost::any &) throw (std::exception) {
@@ -32,16 +36,16 @@ DocCache::DocCache() {
 DocCache::~DocCache() {
 }
 
-void DocCache::init(const Config *config) {
+void
+DocCache::init(const Config *config) {
     // FIXME Read order of strategies
     config_ = config;
-
-	ControlExtensionRegistry::constructor_t f = boost::bind(boost::mem_fn(&DocCache::createBlock), this, _1, _2, _3);
-
+    ControlExtensionRegistry::Constructor f = boost::bind(boost::mem_fn(&DocCache::createBlock), this, _1, _2, _3);
     ControlExtensionRegistry::registerConstructor("tagged-cache-stat", f);
 }
 
-void DocCache::addStrategy(DocCacheStrategy* strategy, const std::string& name) {
+void
+DocCache::addStrategy(DocCacheStrategy* strategy, const std::string& name) {
     // FIXME Add into proper position
     (void)name;
     log()->debug("%s %s", BOOST_CURRENT_FUNCTION, name.c_str());
@@ -49,18 +53,20 @@ void DocCache::addStrategy(DocCacheStrategy* strategy, const std::string& name) 
     strategy->init(config_);
 }
 
-time_t DocCache::minimalCacheTime() const {
+time_t
+DocCache::minimalCacheTime() const {
     // FIXME.Do we actually need this in public part? Better to embed logick
     // of minimalCacheTime into saveDoc.
-	return 0;
+    return 0;
 }
 
-bool DocCache::loadDoc(const Context *ctx, const TaggedBlock *block, Tag &tag, XmlDocHelper &doc) {
+bool
+DocCache::loadDoc(const Context *ctx, const TaggedBlock *block, Tag &tag, XmlDocHelper &doc) {
     // FIXME Add saving of loaded doc into higher-order caches.
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     bool loaded = false;
     std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
-    while( !loaded && i != strategies_.end()) {
+    while ( !loaded && i != strategies_.end()) {
         std::auto_ptr<TagKey> key = (*i)->createKey(ctx, block);
         loaded = (*i)->loadDoc(key.get(), tag, doc);
         ++i;
@@ -74,48 +80,50 @@ bool DocCache::loadDoc(const Context *ctx, const TaggedBlock *block, Tag &tag, X
         }
     }
 
-	return loaded;
+    return loaded;
 }
 
-bool DocCache::saveDoc(const Context *ctx, const TaggedBlock *block, const Tag& tag, const XmlDocHelper &doc) {
+bool
+DocCache::saveDoc(const Context *ctx, const TaggedBlock *block, const Tag& tag, const XmlDocHelper &doc) {
     bool saved = false;
-    for(std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
-        i != strategies_.end();
-        ++i) {
+    for (std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
+            i != strategies_.end();
+            ++i) {
         std::auto_ptr<TagKey> key = (*i)->createKey(ctx, block);
         saved |= (*i)->saveDoc(key.get(), tag, doc);
     }
-	return saved;
+    return saved;
 }
 
 
-std::auto_ptr<Block> DocCache::createBlock(const Extension *ext, Xml *owner, xmlNodePtr node) {
+std::auto_ptr<Block>
+DocCache::createBlock(const Extension *ext, Xml *owner, xmlNodePtr node) {
     return std::auto_ptr<Block>(new DocCacheBlock(ext, owner, node, *this));
 }
 
-XmlDocHelper DocCache::createReport() const {
+XmlDocHelper
+DocCache::createReport() const {
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
-	XmlUtils::throwUnless(NULL != doc.get());
+    XmlUtils::throwUnless(NULL != doc.get());
 
-	xmlNodePtr root = xmlNewDocNode(doc.get(), NULL, BAD_CAST "doc_cache", 0);
-	XmlUtils::throwUnless(NULL != root);
+    xmlNodePtr root = xmlNewDocNode(doc.get(), NULL, BAD_CAST "doc_cache", 0);
+    XmlUtils::throwUnless(NULL != root);
 
-	xmlDocSetRootElement(doc.get(), root);
+    xmlDocSetRootElement(doc.get(), root);
 
-        // Sorted list of strategies
+    // Sorted list of strategies
     for (std::vector<DocCacheStrategy*>::const_iterator s = strategies_.begin();
-        s != strategies_.end();
-        ++s)
-    {
-		XmlDocHelper report = (*s)->createReport();
+            s != strategies_.end();
+            ++s) {
+        XmlDocHelper report = (*s)->createReport();
         XmlNodeHelper node(xmlCopyNode(xmlDocGetRootElement(report.get()), 1));
-		xmlAddChild(root, node.get());
-		node.release();
-	}
+        xmlAddChild(root, node.get());
+        node.release();
+    }
 
-	return doc;
+    return doc;
 }
 
 REGISTER_COMPONENT(DocCache);
 
-}
+} // namespace xscript

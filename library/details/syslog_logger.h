@@ -3,32 +3,30 @@
 
 #include "xscript/logger.h"
 
-namespace xscript
-{
+namespace xscript {
 
 /**
  * Logger implementation to output using syslog facility
  */
-class SyslogLogger : public Logger
-{
+class SyslogLogger : public Logger {
 public:
     /**
-     * Create logger. 
+     * Create logger.
      * \param key Config key optained via subKeys
      */
-	SyslogLogger(Logger::LogLevel level, const Config * config, const std::string &key);
-	virtual ~SyslogLogger();
-	
+    SyslogLogger(Logger::LogLevel level, const Config * config, const std::string &key);
+    virtual ~SyslogLogger();
+
     virtual void logRotate();
 protected:
-	virtual void critInternal(const char *format, va_list args);
-	virtual void errorInternal(const char *format, va_list args);
-	virtual void warnInternal(const char *format, va_list args);
-	virtual void infoInternal(const char *format, va_list args);
-	virtual void debugInternal(const char *format, va_list args);
+    virtual void critInternal(const char *format, va_list args);
+    virtual void errorInternal(const char *format, va_list args);
+    virtual void warnInternal(const char *format, va_list args);
+    virtual void infoInternal(const char *format, va_list args);
+    virtual void debugInternal(const char *format, va_list args);
 
 private:
-	std::string ident_;
+    std::string ident_;
 };
 
 } // namespace xscript

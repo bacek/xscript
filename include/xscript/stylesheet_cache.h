@@ -5,19 +5,17 @@
 #include <boost/shared_ptr.hpp>
 #include <xscript/component.h>
 
-namespace xscript
-{
+namespace xscript {
 
 class Stylesheet;
 
-class StylesheetCache : public Component<StylesheetCache>
-{
+class StylesheetCache : public Component<StylesheetCache> {
 public:
-	virtual void clear() = 0;
-	virtual void erase(const std::string &name) = 0;
+    virtual void clear() = 0;
+    virtual void erase(const std::string &name) = 0;
 
-	virtual boost::shared_ptr<Stylesheet> fetch(const std::string &name) = 0;
-	virtual void store(const std::string &name, const boost::shared_ptr<Stylesheet> &stylesheet) = 0;
+    virtual boost::shared_ptr<Stylesheet> fetch(const std::string &name) = 0;
+    virtual void store(const std::string &name, const boost::shared_ptr<Stylesheet> &stylesheet) = 0;
 };
 
 } // namespace xscript

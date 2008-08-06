@@ -8,8 +8,7 @@
 #include "xscript/component.h"
 #include <libxml/tree.h>
 
-namespace xscript
-{
+namespace xscript {
 
 class Xml;
 class Block;
@@ -17,28 +16,27 @@ class Config;
 class Context;
 class Logger;
 
-class Extension : public virtual Component<Extension>
-{
+class Extension : public virtual Component<Extension> {
 public:
-	Extension();
-	virtual ~Extension();
-	
-	virtual const char* name() const = 0;
-	virtual const char* nsref() const = 0;
+    Extension();
+    virtual ~Extension();
 
-	virtual void initContext(Context *ctx) = 0;
-	virtual void stopContext(Context *ctx) = 0;
-	virtual void destroyContext(Context *ctx) = 0;
-	
-	virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node) = 0;
+    virtual const char* name() const = 0;
+    virtual const char* nsref() const = 0;
+
+    virtual void initContext(Context *ctx) = 0;
+    virtual void stopContext(Context *ctx) = 0;
+    virtual void destroyContext(Context *ctx) = 0;
+
+    virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node) = 0;
 
     void setLogger(Logger* logger) {
         logger_ = logger;
     }
 
     Logger *getLogger() const {
-		return logger_;
-	}
+        return logger_;
+    }
 
 private:
     Logger * logger_;
@@ -46,10 +44,9 @@ private:
 
 typedef ResourceHolder<Extension*, Component<Extension>::ResourceTraits > ExtensionHolder;
 
-class ExtensionRegisterer : private boost::noncopyable
-{
+class ExtensionRegisterer : private boost::noncopyable {
 public:
-	ExtensionRegisterer(ExtensionHolder holder) throw ();
+    ExtensionRegisterer(ExtensionHolder holder) throw ();
 };
 
 
@@ -59,14 +56,13 @@ public:
 /**
  * Extension info. Only name for now.
  */
-struct ExtensionInfo
-{
+struct ExtensionInfo {
     const char *name;
     const char *nsref;
 };
 
 /**
- * Get extension info. 
+ * Get extension info.
  */
 extern "C" ExtensionInfo * get_extension_info();
 

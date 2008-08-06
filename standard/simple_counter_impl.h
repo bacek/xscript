@@ -6,22 +6,20 @@
 #include <xscript/simple_counter.h>
 #include "counter_impl.h"
 
-namespace xscript
-{
-	class SimpleCounterImpl : public SimpleCounter, private CounterImpl
-	{
-	public:
-		SimpleCounterImpl(const std::string& name);
+namespace xscript {
+class SimpleCounterImpl : public SimpleCounter, private CounterImpl {
+public:
+    SimpleCounterImpl(const std::string& name);
 
-		virtual XmlNodeHelper createReport() const;
+    virtual XmlNodeHelper createReport() const;
 
-		void inc();
-		void dec();
+    void inc();
+    void dec();
 
-	private:
-		uint64_t count_;
-		uint64_t peak_;
-	};
+private:
+    uint64_t count_;
+    uint64_t peak_;
+};
 
 }
 

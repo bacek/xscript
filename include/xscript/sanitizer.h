@@ -5,16 +5,14 @@
 #include <xscript/range.h>
 #include <xscript/component.h>
 
-namespace xscript
-{
+namespace xscript {
 
-class Sanitizer : public Component<Sanitizer>
-{
+class Sanitizer : public Component<Sanitizer> {
 public:
-	Sanitizer();
-	virtual ~Sanitizer();
-	
-	virtual std::string sanitize(const Range &range);
+    Sanitizer();
+    virtual ~Sanitizer();
+
+    virtual std::string sanitize(const Range &range);
 };
 
 } // namespace xscript

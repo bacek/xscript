@@ -9,15 +9,14 @@
 #include <dmalloc.h>
 #endif
 
-class FactoriesTest : public CppUnit::TestFixture
-{
+class FactoriesTest : public CppUnit::TestFixture {
 public:
-	void testParamFactory();
-	
+    void testParamFactory();
+
 private:
-	CPPUNIT_TEST_SUITE(FactoriesTest);
-	CPPUNIT_TEST(testParamFactory);
-	CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE(FactoriesTest);
+    CPPUNIT_TEST(testParamFactory);
+    CPPUNIT_TEST_SUITE_END();
 };
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(FactoriesTest, "factories");
@@ -26,11 +25,11 @@ CPPUNIT_REGISTRY_ADD("factories", "xscript");
 void
 FactoriesTest::testParamFactory() {
 
-	using namespace xscript;
+    using namespace xscript;
 
-	ParamFactory *f1 = ParamFactory::instance();
-	ParamFactory *f2 = ParamFactory::instance();
-	
-	CPPUNIT_ASSERT(f1 == f2);
+    ParamFactory *f1 = ParamFactory::instance();
+    ParamFactory *f2 = ParamFactory::instance();
+
+    CPPUNIT_ASSERT(f1 == f2);
 }
 

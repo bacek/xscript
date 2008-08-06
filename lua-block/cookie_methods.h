@@ -3,8 +3,7 @@
 
 #include <lua.hpp>
 
-namespace xscript
-{
+namespace xscript {
 
 // Cookie is different from other objects. We are _really_ creates new
 // cookies in lua. So method:

@@ -25,191 +25,189 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 Context::Context(const boost::shared_ptr<Script> &script, const RequestData &data) :
-	stopped_(false), force_no_threaded_(false), request_(data.request()), response_(data.response()),
-	parent_context_(NULL), xslt_name_(script->xsltName()), state_(data.state()), script_(script),
-	writer_()
-{
-	assert(script_.get());
-	ExtensionList::instance()->initContext(this);
+        stopped_(false), force_no_threaded_(false), request_(data.request()), response_(data.response()),
+        parent_context_(NULL), xslt_name_(script->xsltName()), state_(data.state()), script_(script),
+        writer_() {
+    assert(script_.get());
+    ExtensionList::instance()->initContext(this);
 }
 
 Context::~Context() {
-	XmlUtils::printXMLError();
-	ExtensionList::instance()->destroyContext(this);
-	std::for_each(results_.begin(), results_.end(), boost::bind(&xmlFreeDoc, _1));
-	std::for_each(clear_node_list_.begin(), clear_node_list_.end(), boost::bind(&xmlFreeNode, _1));
+    XmlUtils::printXMLError();
+    ExtensionList::instance()->destroyContext(this);
+    std::for_each(results_.begin(), results_.end(), boost::bind(&xmlFreeDoc, _1));
+    std::for_each(clear_node_list_.begin(), clear_node_list_.end(), boost::bind(&xmlFreeNode, _1));
 }
 
 void
 Context::wait(int millis) {
-	
-	log()->debug("%s, setting timeout: %d", BOOST_CURRENT_FUNCTION, millis);
-	
-	boost::xtime xt = delay(millis);
-	boost::mutex::scoped_lock sl(results_mutex_);
-	bool timedout = !condition_.timed_wait(sl, xt, boost::bind(&Context::resultsReady, this));
-	
-	if (timedout) {
-		for (std::vector<xmlDocPtr>::size_type i = 0; i < results_.size(); ++i) {
-			if (NULL == results_[i]) {
-				results_[i] = script_->block(i)->errorResult("timed out").release();
-			}
-		}
-	}
+
+    log()->debug("%s, setting timeout: %d", BOOST_CURRENT_FUNCTION, millis);
+
+    boost::xtime xt = delay(millis);
+    boost::mutex::scoped_lock sl(results_mutex_);
+    bool timedout = !condition_.timed_wait(sl, xt, boost::bind(&Context::resultsReady, this));
+
+    if (timedout) {
+        for (std::vector<xmlDocPtr>::size_type i = 0; i < results_.size(); ++i) {
+            if (NULL == results_[i]) {
+                results_[i] = script_->block(i)->errorResult("timed out").release();
+            }
+        }
+    }
 }
 
 void
 Context::expect(unsigned int count) {
-	
-	boost::mutex::scoped_lock sl(results_mutex_);
-	if (stopped_) {
-		throw std::logic_error("already stopped");
-	}
-	if (results_.size() == 0) {
-		results_.resize(count);
-	}
-	else {
-		throw std::logic_error("already started");
-	}
+
+    boost::mutex::scoped_lock sl(results_mutex_);
+    if (stopped_) {
+        throw std::logic_error("already stopped");
+    }
+    if (results_.size() == 0) {
+        results_.resize(count);
+    }
+    else {
+        throw std::logic_error("already started");
+    }
 }
 
 void
 Context::result(unsigned int n, xmlDocPtr doc) {
-	
-	log()->debug("%s: %d, result of %u block: %p", BOOST_CURRENT_FUNCTION, 
-		static_cast<int>(stopped_), n, doc);
 
-	XmlDocHelper doc_ptr(doc);
-	boost::mutex::scoped_lock sl(results_mutex_);
-	if (!stopped_ && results_.size() != 0) {
-		if (NULL == results_[n]) {
-			results_[n] = doc_ptr.release();
-			condition_.notify_all();
-		}
-	}
-	else {
-		log()->debug("%s, error in block %u: context not started or timed out", BOOST_CURRENT_FUNCTION, n);
-	}
+    log()->debug("%s: %d, result of %u block: %p", BOOST_CURRENT_FUNCTION,
+                 static_cast<int>(stopped_), n, doc);
+
+    XmlDocHelper doc_ptr(doc);
+    boost::mutex::scoped_lock sl(results_mutex_);
+    if (!stopped_ && results_.size() != 0) {
+        if (NULL == results_[n]) {
+            results_[n] = doc_ptr.release();
+            condition_.notify_all();
+        }
+    }
+    else {
+        log()->debug("%s, error in block %u: context not started or timed out", BOOST_CURRENT_FUNCTION, n);
+    }
 }
 
 bool
 Context::resultsReady() const {
-	log()->debug("%s", BOOST_CURRENT_FUNCTION);
-	for (std::vector<xmlDocPtr>::const_iterator i = results_.begin(), end = results_.end(); i != end; ++i) {
-		if (NULL == (*i)) {
-			return false;
-		}
-	}
-	return true;
+    log()->debug("%s", BOOST_CURRENT_FUNCTION);
+    for (std::vector<xmlDocPtr>::const_iterator i = results_.begin(), end = results_.end(); i != end; ++i) {
+        if (NULL == (*i)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void
 Context::addNode(xmlNodePtr node) {
 
-	boost::mutex::scoped_lock sl(node_list_mutex_);
-	clear_node_list_.push_back(node);
+    boost::mutex::scoped_lock sl(node_list_mutex_);
+    clear_node_list_.push_back(node);
 }
 
 boost::xtime
 Context::delay(int millis) const {
-	
-	boost::xtime xt;
-	boost::xtime_get(&xt, boost::TIME_UTC);
-	boost::uint64_t usec = (xt.sec * 1000000) + (xt.nsec / 1000) + (millis * 1000);
-	
-	xt.sec = usec / 1000000;
-	xt.nsec = (usec % 1000000) * 1000;
-	
-	return xt;
+
+    boost::xtime xt;
+    boost::xtime_get(&xt, boost::TIME_UTC);
+    boost::uint64_t usec = (xt.sec * 1000000) + (xt.nsec / 1000) + (millis * 1000);
+
+    xt.sec = usec / 1000000;
+    xt.nsec = (usec % 1000000) * 1000;
+
+    return xt;
 }
 
 xmlDocPtr
 Context::result(unsigned int n) const {
-	
-	boost::mutex::scoped_lock sl(results_mutex_);
-	if (results_.size() > 0) {
-		return results_[n];
-	}
-	else {
-		throw std::logic_error("not started");
-	}
+
+    boost::mutex::scoped_lock sl(results_mutex_);
+    if (results_.size() > 0) {
+        return results_[n];
+    }
+    else {
+        throw std::logic_error("not started");
+    }
 }
 
 std::string
 Context::xsltName() const {
-	boost::mutex::scoped_lock sl(params_mutex_);
-	return xslt_name_;
+    boost::mutex::scoped_lock sl(params_mutex_);
+    return xslt_name_;
 }
 
 void
 Context::xsltName(const std::string &value) {
-	boost::mutex::scoped_lock sl(params_mutex_);
+    boost::mutex::scoped_lock sl(params_mutex_);
     if (value.empty()) {
-		xslt_name_.erase();
-	}
-	else {
-		xslt_name_ = script_->fullName(value);
-	}
+        xslt_name_.erase();
+    }
+    else {
+        xslt_name_ = script_->fullName(value);
+    }
 }
 
 void
 Context::authContext(const boost::shared_ptr<AuthContext> &auth) {
-	auth_ = auth;
+    auth_ = auth;
 }
 
 DocumentWriter*
 Context::documentWriter() {
-	if (NULL == writer_.get()) {
-		writer_ = std::auto_ptr<DocumentWriter>(
-			new XmlWriter(VirtualHostData::instance()->getOutputEncoding(request_)));
-	}
+    if (NULL == writer_.get()) {
+        writer_ = std::auto_ptr<DocumentWriter>(
+                      new XmlWriter(VirtualHostData::instance()->getOutputEncoding(request_)));
+    }
 
-	return writer_.get();
+    return writer_.get();
 }
 
 void
 Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
 
-	if (sh->outputMethod() == "xml" && !sh->haveOutputInfo()) {
-		writer_ = std::auto_ptr<DocumentWriter>(new XmlWriter(sh->outputEncoding()));
-		log()->debug("xml writer created");
-	}
-	else {
-		writer_ = std::auto_ptr<DocumentWriter>(new HtmlWriter(sh));
-		log()->debug("html writer created");
-	}
+    if (sh->outputMethod() == "xml" && !sh->haveOutputInfo()) {
+        writer_ = std::auto_ptr<DocumentWriter>(new XmlWriter(sh->outputEncoding()));
+        log()->debug("xml writer created");
+    }
+    else {
+        writer_ = std::auto_ptr<DocumentWriter>(new HtmlWriter(sh));
+        log()->debug("html writer created");
+    }
 }
 
 void
 Context::forceNoThreaded(bool flag) {
-	force_no_threaded_ = flag;
+    force_no_threaded_ = flag;
 }
 
 bool
 Context::forceNoThreaded() const {
-	return force_no_threaded_;
+    return force_no_threaded_;
 }
 
 void
 Context::parentContext(Context* context) {
-	parent_context_ = context;
+    parent_context_ = context;
 }
 
 Context*
 Context::parentContext() const {
-	return parent_context_;
+    return parent_context_;
 }
 
 ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {
 }
 
 ContextStopper::~ContextStopper() {
-	ExtensionList::instance()->stopContext(ctx_.get());
-	ctx_->stopped_ = true;
+    ExtensionList::instance()->stopContext(ctx_.get());
+    ctx_->stopped_ = true;
 }
 
 } // namespace xscript

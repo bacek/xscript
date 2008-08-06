@@ -6,11 +6,9 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
-ScriptFactory::ScriptFactory()
-{
+ScriptFactory::ScriptFactory() {
 }
 
 ScriptFactory::~ScriptFactory() {
@@ -19,7 +17,7 @@ ScriptFactory::~ScriptFactory() {
 
 boost::shared_ptr<Script>
 ScriptFactory::create(const std::string &name) {
-	return boost::shared_ptr<Script>(new Script(name));
+    return boost::shared_ptr<Script>(new Script(name));
 }
 
 REGISTER_COMPONENT(ScriptFactory);

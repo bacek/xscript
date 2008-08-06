@@ -7,12 +7,10 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
-ComponentBase::ComponentBase() 
-	: loader_(Loader::instance())
-{
+ComponentBase::ComponentBase()
+        : loader_(Loader::instance()) {
 }
 
 ComponentBase::~ComponentBase() {

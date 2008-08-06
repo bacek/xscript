@@ -5,8 +5,7 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 XsltProfiler::XsltProfiler() {
 }
@@ -16,13 +15,13 @@ XsltProfiler::~XsltProfiler() {
 
 void
 XsltProfiler::insertProfileDoc(const std::string& name, xmlDocPtr doc) {
-	(void)name;
-	(void)doc;
+    (void)name;
+    (void)doc;
 }
 
 void
 XsltProfiler::dumpProfileInfo(Context* ctx) {
-	(void)ctx;
+    (void)ctx;
 }
 
 REGISTER_COMPONENT(XsltProfiler);

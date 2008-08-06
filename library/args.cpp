@@ -5,11 +5,9 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
-ArgList::ArgList() 
-{
+ArgList::ArgList() {
 }
 
 ArgList::~ArgList() {

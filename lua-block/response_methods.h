@@ -3,8 +3,7 @@
 
 #include <lua.hpp>
 
-namespace xscript
-{
+namespace xscript {
 
 const struct luaL_reg * getResponseLib();
 

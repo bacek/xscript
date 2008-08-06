@@ -7,62 +7,57 @@
 #include <boost/checked_delete.hpp>
 #include "xscript/resource_holder.h"
 
-namespace xscript
-{
+namespace xscript {
 
 class Loader;
 class Config;
 
 
 template<typename Type>
-class ComponentRegisterer
-{
+class ComponentRegisterer {
 public:
-	ComponentRegisterer(Type *var);
+    ComponentRegisterer(Type *var);
 };
 
 
-class ComponentBase : private boost::noncopyable
-{
+class ComponentBase : private boost::noncopyable {
 public:
-	ComponentBase();
-	virtual ~ComponentBase();
+    ComponentBase();
+    virtual ~ComponentBase();
 
-	inline boost::shared_ptr<Loader> loader() const {
-		return loader_;
-	}
+    inline boost::shared_ptr<Loader> loader() const {
+        return loader_;
+    }
 
-	virtual void init(const Config *config) { 
-		(void)config;
-	}
+    virtual void init(const Config *config) {
+        (void)config;
+    }
 
 private:
-	boost::shared_ptr<Loader> loader_;
+    boost::shared_ptr<Loader> loader_;
 };
 
 
-template<typename Type> 
-class Component : public ComponentBase
-{
+template<typename Type>
+class Component : public ComponentBase {
 public:
-	static Type* instance();
+    static Type* instance();
 
-    struct ResourceTraits
-    {
+    struct ResourceTraits {
         static Type* const DEFAULT_VALUE;
         static void destroy(Type * ptr);
     };
 
-	typedef ResourceHolder<Type*, ResourceTraits> Holder;
-	
-private:
-	static void attachImpl(Holder helper);
-	friend class ComponentRegisterer<Type>;
-	
-private:
-	static Holder holder_;
+    typedef ResourceHolder<Type*, ResourceTraits> Holder;
 
-	static Type* createImpl();
+private:
+    static void attachImpl(Holder helper);
+    friend class ComponentRegisterer<Type>;
+
+private:
+    static Holder holder_;
+
+    static Type* createImpl();
 
 };
 
@@ -80,25 +75,25 @@ void Component<Type>::ResourceTraits::destroy(Type *component) {
 template<typename Type>
 Type* const Component<Type>::ResourceTraits::DEFAULT_VALUE = static_cast<Type*>(NULL);
 
-template<typename Type>  
-typename Component<Type>::Holder  
-Component<Type>::holder_(Component<Type>::createImpl()); 
+template<typename Type>
+typename Component<Type>::Holder
+Component<Type>::holder_(Component<Type>::createImpl());
 
 template<typename Type> inline Type*
 Component<Type>::instance() {
-	assert(Holder::Traits::DEFAULT_VALUE != holder_.get());
-	return holder_.get();
+    assert(Holder::Traits::DEFAULT_VALUE != holder_.get());
+    return holder_.get();
 }
 
 template<typename Type> inline void
 Component<Type>::attachImpl(typename Component<Type>::Holder holder) {
-	assert(Holder::Traits::DEFAULT_VALUE != holder.get());
-	holder_ = holder;
+    assert(Holder::Traits::DEFAULT_VALUE != holder.get());
+    holder_ = holder;
 }
 
 template<typename Type>
 ComponentRegisterer<Type>::ComponentRegisterer(Type *var) {
-	Component<Type>::attachImpl(typename Component<Type>::Holder(var));
+    Component<Type>::attachImpl(typename Component<Type>::Holder(var));
 }
 
 #define REGISTER_COMPONENT(TYPE) \

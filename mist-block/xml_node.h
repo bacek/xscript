@@ -3,46 +3,42 @@
 
 #include <libxml/tree.h>
 
-namespace xscript
-{
+namespace xscript {
 
-class XmlNodeCommon
-{
+class XmlNodeCommon {
 protected:
-	XmlNodeCommon();
-	virtual ~XmlNodeCommon();
+    XmlNodeCommon();
+    virtual ~XmlNodeCommon();
 
 public:
-	xmlNodePtr getNode() const;
+    xmlNodePtr getNode() const;
 
-	void setContent(const char* val);
-	void setProperty(const char* name, const char* val);
+    void setContent(const char* val);
+    void setProperty(const char* name, const char* val);
 
-	void setType(const char* type_str);
+    void setType(const char* type_str);
 
 private:
-	XmlNodeCommon(const XmlNodeCommon &);
-	XmlNodeCommon& operator = (const XmlNodeCommon &);
+    XmlNodeCommon(const XmlNodeCommon &);
+    XmlNodeCommon& operator = (const XmlNodeCommon &);
 
 protected:
-	xmlNodePtr node_;
+    xmlNodePtr node_;
 };
 
 
-class XmlNode : public XmlNodeCommon
-{
+class XmlNode : public XmlNodeCommon {
 public:
-	explicit XmlNode(const char* name);
-	virtual ~XmlNode();
+    explicit XmlNode(const char* name);
+    virtual ~XmlNode();
 
-	xmlNodePtr releaseNode();
+    xmlNodePtr releaseNode();
 };
 
 
-class XmlChildNode : public XmlNodeCommon
-{
+class XmlChildNode : public XmlNodeCommon {
 public:
-	XmlChildNode(xmlNodePtr parent, const char* name, const char* val);
+    XmlChildNode(xmlNodePtr parent, const char* name, const char* val);
 };
 
 } // namespace xscript

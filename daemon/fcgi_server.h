@@ -9,34 +9,32 @@
 
 #include "uptime_counter.h"
 
-namespace xscript
-{
+namespace xscript {
 
 class Config;
 class Request;
 
-class FCGIServer : public Server, private boost::thread_group
-{
+class FCGIServer : public Server, private boost::thread_group {
 public:
-	FCGIServer(Config *config);
-	virtual ~FCGIServer();
-	
-	void run();
+    FCGIServer(Config *config);
+    virtual ~FCGIServer();
+
+    void run();
 
 protected:
-	void handle();
-	void pid(const std::string &file);
-	
-	bool needApplyStylesheet(Request *request) const;
-	bool fileExists(const std::string &name) const;
+    void handle();
+    void pid(const std::string &file);
+
+    bool needApplyStylesheet(Request *request) const;
+    bool fileExists(const std::string &name) const;
 
 private:
-	int socket_;
-	int inbuf_size_, outbuf_size_;
-	unsigned short alternate_port_;
+    int socket_;
+    int inbuf_size_, outbuf_size_;
+    unsigned short alternate_port_;
 
     std::auto_ptr<SimpleCounter> workerCounter_;
-	UptimeCounter uptimeCounter_;
+    UptimeCounter uptimeCounter_;
 };
 
 } // namespace xscript

@@ -8,24 +8,21 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
-class RequestDataParam : public Param
-{
+class RequestDataParam : public Param {
 public:
-	RequestDataParam(Object *owner, xmlNodePtr node);
-	virtual ~RequestDataParam();
+    RequestDataParam(Object *owner, xmlNodePtr node);
+    virtual ~RequestDataParam();
 
-	virtual std::string asString(const Context *ctx) const;
-	virtual void add(const Context *ctx, ArgList &al) const;
+    virtual std::string asString(const Context *ctx) const;
+    virtual void add(const Context *ctx, ArgList &al) const;
 
-	static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
+    static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
 };
 
 RequestDataParam::RequestDataParam(Object *owner, xmlNodePtr node) :
-Param(owner, node)
-{
+        Param(owner, node) {
 }
 
 RequestDataParam::~RequestDataParam() {
@@ -33,17 +30,17 @@ RequestDataParam::~RequestDataParam() {
 
 std::string
 RequestDataParam::asString(const Context *ctx) const {
-	return ctx->request()->getQueryString();
+    return ctx->request()->getQueryString();
 }
 
 void
 RequestDataParam::add(const Context *ctx, ArgList &al) const {
-	al.addRequestData(ctx);
+    al.addRequestData(ctx);
 }
 
 std::auto_ptr<Param>
 RequestDataParam::create(Object *owner, xmlNodePtr node) {
-	return std::auto_ptr<Param>(new RequestDataParam(owner, node));
+    return std::auto_ptr<Param>(new RequestDataParam(owner, node));
 }
 
 static CreatorRegisterer reg_("requestdata", &RequestDataParam::create);

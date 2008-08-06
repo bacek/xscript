@@ -26,8 +26,7 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 template<>
 inline void ResourceHolderTraits<lua_State*>::destroy(lua_State *state) {
@@ -50,21 +49,20 @@ typedef boost::shared_ptr<LuaState> LuaSharedContext;
 static int
 luaReportError(lua_State * lua) {
 
-    if (lua_isstring(lua, 1)) { 
-        const char *val = lua_tostring(lua, 1); 
+    if (lua_isstring(lua, 1)) {
+        const char *val = lua_tostring(lua, 1);
         log()->error("lua block failed: %s", val);
     }
     else {
-        log()->error("failed to report lua error: can not get error message"); 
-    } 
+        log()->error("failed to report lua error: can not get error message");
+    }
 
     return 0;
 }
 
 
 LuaBlock::LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-    Block(ext, owner, node), code_(NULL)
-{
+        Block(ext, owner, node), code_(NULL) {
 }
 
 LuaBlock::~LuaBlock() {
@@ -72,7 +70,7 @@ LuaBlock::~LuaBlock() {
 
 void
 LuaBlock::parse() {
-    
+
     xmlNodePtr ptr = NULL;
     for (ptr = node()->children; NULL != ptr; ptr = ptr->next) {
         if (XML_CDATA_SECTION_NODE == ptr->type) {
@@ -123,10 +121,10 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
     lua_pushstring(lua, "__index");
     lua_pushvalue(lua, -2);  /* pushes the metatable */
     lua_settable(lua, -3);  /* metatable.__index = metatable */
-    
+
     luaL_openlib(lua, 0, lib, 0);
     luaL_openlib(lua, tableName.c_str(), lib, 0);
-    
+
     // Get global xscript. We will set 'state' field later
     lua_getglobal(lua, "xscript");
 
@@ -135,10 +133,10 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
 
     luaL_getmetatable(lua, tableName.c_str());
     lua_setmetatable(lua, -2); // points to new userdata
-    
+
     // Our userdata is on top of stack.
     // Assign it to 'state'
-    lua_setfield(lua, -2, name); 
+    lua_setfield(lua, -2, name);
 
     // And remove it from stack
     lua_remove(lua, -1);
@@ -151,7 +149,7 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
 static int luaPrint (lua_State *lua) {
     int n = lua_gettop(lua);  /* number of arguments */
     int i;
-    
+
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     lua_getglobal(lua, "xscript");
     lua_getfield(lua, -1, "_buf");
@@ -175,7 +173,7 @@ static int luaPrint (lua_State *lua) {
         s = lua_tostring(lua, -1);  /* get result */
         if (s == NULL)
             return luaL_error(lua, LUA_QL("tostring") " must return a string to "
-                LUA_QL("print"));
+                              LUA_QL("print"));
         if (i>1) buf->append("\t");
         buf->append(s);
         lua_pop(lua, 1);  /* pop result */
@@ -184,7 +182,7 @@ static int luaPrint (lua_State *lua) {
     return 0;
 }
 
-static int 
+static int
 luaUrlEncode(lua_State *lua) {
     try {
         luaCheckStackSize(lua, 2);
@@ -206,7 +204,7 @@ luaUrlEncode(lua_State *lua) {
     return 0;
 }
 
-static int 
+static int
 luaUrlDecode(lua_State *lua) {
     try {
         luaCheckStackSize(lua, 2);
@@ -231,22 +229,22 @@ luaUrlDecode(lua_State *lua) {
 void
 setupXScript(lua_State *lua, std::string * buf) {
     log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-    
+
     lua_newtable(lua);
     lua_setglobal(lua, "xscript");
 
     lua_getglobal(lua, "_G");
     lua_pushcfunction(lua, &luaPrint);
     lua_setfield(lua, -2, "print");
-    
+
     lua_getglobal(lua, "xscript");
 
     pointer<std::string> *p = (pointer<std::string> *)lua_newuserdata(lua, sizeof(pointer<std::string>));
     p->ptr = buf;
-    
+
     // Our userdata is on top of stack.
     // Assign it to '_buf'
-    lua_setfield(lua, -2, "_buf"); 
+    lua_setfield(lua, -2, "_buf");
 
     // Setup urlencode and urldecode
     lua_pushcfunction(lua, &luaUrlEncode);
@@ -280,23 +278,23 @@ LuaSharedContext create_lua(Context *ctx, std::string &buffer) {
 
 XmlDocHelper
 LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
-    
+
     log()->entering(BOOST_CURRENT_FUNCTION);
 
-	PROFILER(log(), std::string("Lua block execution, ") + owner()->name()); 
+    PROFILER(log(), std::string("Lua block execution, ") + owner()->name());
 
     lua_State * lua = 0;
-    
+
     // Buffer to store output from lua
     std::string buffer;
-    
+
     // Try to fetch previously created lua interpret. If failed - create new one.
     boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx, boost::ref(buffer));
 
     LuaSharedContext lua_context = ctx->param(
-        std::string("xscript.lua"), 
-        creator
-    );
+                                       std::string("xscript.lua"),
+                                       creator
+                                   );
     lua = lua_context->lua.get();
 
     // Lock interpreter during processing.
@@ -316,7 +314,7 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
         log()->error("%s, Lua block failed: %s", BOOST_CURRENT_FUNCTION, msg.c_str());
         throw std::runtime_error(msg);
     }
-    
+
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
 
@@ -335,7 +333,7 @@ LuaExtension::LuaExtension() {
 LuaExtension::~LuaExtension() {
 }
 
-    
+
 const char*
 LuaExtension::name() const {
     return "lua";
@@ -345,7 +343,7 @@ const char*
 LuaExtension::nsref() const {
     return XmlUtils::XSCRIPT_NAMESPACE;
 }
-    
+
 void
 LuaExtension::initContext(Context *ctx) {
     (void)ctx;
@@ -360,7 +358,7 @@ void
 LuaExtension::destroyContext(Context *ctx) {
     (void)ctx;
 }
-    
+
 std::auto_ptr<Block>
 LuaExtension::createBlock(Xml *owner, xmlNodePtr node) {
     return std::auto_ptr<Block>(new LuaBlock(this, owner, node));

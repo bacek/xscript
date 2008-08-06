@@ -5,20 +5,18 @@
 #include <boost/shared_ptr.hpp>
 #include <xscript/component.h>
 
-namespace xscript
-{
+namespace xscript {
 
 class Script;
 
-class ScriptCache : public Component<ScriptCache>
-{
+class ScriptCache : public Component<ScriptCache> {
 public:
 
-	virtual void clear() = 0;
-	virtual void erase(const std::string &name) = 0;
+    virtual void clear() = 0;
+    virtual void erase(const std::string &name) = 0;
 
-	virtual boost::shared_ptr<Script> fetch(const std::string &name) = 0;
-	virtual void store(const std::string &name, const boost::shared_ptr<Script> &xml) = 0;
+    virtual boost::shared_ptr<Script> fetch(const std::string &name) = 0;
+    virtual void store(const std::string &name, const boost::shared_ptr<Script> &xml) = 0;
 };
 
 } // namespace xscript

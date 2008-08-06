@@ -11,31 +11,26 @@
 
 //using __gnu_cxx::select2nd;
 
-namespace xscript
-{
+namespace xscript {
 
 REGISTER_COMPONENT(LoggerFactory);
 
-LoggerFactory::LoggerFactory() 
-    : defaultLogger_(0)
+LoggerFactory::LoggerFactory() : defaultLogger_(0)
 {
-	ControlExtensionRegistry::constructor_t f = boost::bind(boost::mem_fn(&LoggerFactory::createBlock), this, _1, _2, _3);
-
+    ControlExtensionRegistry::Constructor f = boost::bind(boost::mem_fn(&LoggerFactory::createBlock), this, _1, _2, _3);
     ControlExtensionRegistry::registerConstructor("logrotate", f);
 }
 
 LoggerFactory::~LoggerFactory() {
 }
 
-class LoggerFactoryBlock : public Block
-{
+class LoggerFactoryBlock : public Block {
 public:
-	LoggerFactoryBlock(const Extension *ext, Xml *owner, xmlNodePtr node)
-        : Block(ext, owner, node)
-    {
+    LoggerFactoryBlock(const Extension *ext, Xml *owner, xmlNodePtr node)
+            : Block(ext, owner, node) {
     }
 
-	XmlDocHelper call(Context *, boost::any &) throw (std::exception) {
+    XmlDocHelper call(Context *, boost::any &) throw (std::exception) {
         LoggerFactory::instance()->logRotate();
         XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
         XmlUtils::throwUnless(NULL != doc.get());
@@ -49,87 +44,89 @@ public:
     }
 };
 
-std::auto_ptr<Block> LoggerFactory::createBlock(const Extension *ext, Xml *owner, xmlNodePtr node) {
+std::auto_ptr<Block>
+LoggerFactory::createBlock(const Extension *ext, Xml *owner, xmlNodePtr node) {
     return std::auto_ptr<Block>(new LoggerFactoryBlock(ext, owner, node));
 }
 
 
-void LoggerFactory::init(const Config * config) {
-	std::vector<std::string> v;
-	std::string key("/xscript/logger-factory/logger");
-	
-	config->subKeys(key, v);
-    for(std::vector<std::string>::iterator i = v.begin(), end = v.end(); i != end; ++i) {
-		std::string id = config->as<std::string>((*i) + "/id");
+void
+LoggerFactory::init(const Config * config) {
+    std::vector<std::string> v;
+    std::string key("/xscript/logger-factory/logger");
+
+    config->subKeys(key, v);
+    for (std::vector<std::string>::iterator i = v.begin(), end = v.end(); i != end; ++i) {
+        std::string id = config->as<std::string>((*i) + "/id");
         std::string type = config->as<std::string>((*i) + "/type");
         Logger::LogLevel level = stringToLevel(config->as<std::string>((*i) + "/level"));
 
         boost::shared_ptr<Logger> logger;
-        if(type == "file") {
+        if (type == "file") {
             logger.reset(new FileLogger(level, config, *i));
         }
         else {
-            // fallback to syslog 
+            // fallback to syslog
             logger.reset(new SyslogLogger(level, config, *i));
         }
 
         std::string pti = config->as<std::string>((*i) + "/print-thread-id", "");
-		logger->printThreadId(pti == "yes");
+        logger->printThreadId(pti == "yes");
 
         loggers_[id] = logger;
-        if((defaultLogger_ == 0) || (id == "default")) {
+        if ((defaultLogger_ == 0) || (id == "default")) {
             defaultLogger_ = logger.get();
         }
     }
 
-	//Legacy config processing
-	if(!defaultLogger_){
+    //Legacy config processing
+    if (!defaultLogger_) {
         Logger::LogLevel level = stringToLevel(config->as<std::string>("/xscript/logger/level"));
         boost::shared_ptr<Logger> logger(new SyslogLogger(level, config, "/xscript/logger"));
-		loggers_["default"] = logger;
+        loggers_["default"] = logger;
         defaultLogger_ = logger.get();
-	}
+    }
 
 
     assert(defaultLogger_);
 }
 
-Logger * LoggerFactory::getLogger(const std::string &id) const {
-    loggerMap_t::const_iterator l = loggers_.find(id);
-    return l == loggers_.end()
-        ? defaultLogger_
-        : l->second.get();
+Logger*
+LoggerFactory::getLogger(const std::string &id) const {
+    LoggerMap::const_iterator l = loggers_.find(id);
+    return l == loggers_.end() ? defaultLogger_ : l->second.get();
 }
 
-Logger::LogLevel LoggerFactory::stringToLevel(const std::string& level)
-{
-	if (strncasecmp(level.c_str(), "crit", sizeof("crit")) == 0) {
-		return Logger::LEVEL_CRIT;
-	}
-	else if (strncasecmp(level.c_str(), "error", sizeof("error")) == 0) {
-		return Logger::LEVEL_ERROR;
-	}
-	else if (strncasecmp(level.c_str(), "warn", sizeof("warn")) == 0) {
-		return Logger::LEVEL_WARN;
-	}
-	else if (strncasecmp(level.c_str(), "debug", sizeof("debug")) == 0) {
-		return Logger::LEVEL_DEBUG;
-	}
-	else {
-		return Logger::LEVEL_INFO;
-	}
+Logger::LogLevel
+LoggerFactory::stringToLevel(const std::string& level) {
+    if (strncasecmp(level.c_str(), "crit", sizeof("crit")) == 0) {
+        return Logger::LEVEL_CRIT;
+    }
+    else if (strncasecmp(level.c_str(), "error", sizeof("error")) == 0) {
+        return Logger::LEVEL_ERROR;
+    }
+    else if (strncasecmp(level.c_str(), "warn", sizeof("warn")) == 0) {
+        return Logger::LEVEL_WARN;
+    }
+    else if (strncasecmp(level.c_str(), "debug", sizeof("debug")) == 0) {
+        return Logger::LEVEL_DEBUG;
+    }
+    else {
+        return Logger::LEVEL_INFO;
+    }
 }
 
-Logger* LoggerFactory::getDefaultLogger() const
-{
+Logger*
+LoggerFactory::getDefaultLogger() const {
     return defaultLogger_;
 }
 
-void LoggerFactory::logRotate() const {
-    for(loggerMap_t::const_iterator l = loggers_.begin(); l != loggers_.end(); ++l) {
+void
+LoggerFactory::logRotate() const {
+    for (LoggerMap::const_iterator l = loggers_.begin(); l != loggers_.end(); ++l) {
         l->second->logRotate();
     }
     getDefaultLogger()->info("Log rotated");
 }
 
-}
+} // namespace xscript

@@ -17,47 +17,45 @@
 
 #include <iostream>
 
-namespace xscript
-{
+namespace xscript {
 
 
 SyslogLogger::SyslogLogger(Logger::LogLevel level, const Config * config, const std::string &key)
-    : Logger(level)
-{
-	ident_ = config->as<std::string>(key + "/ident");
-	closelog();
-	openlog(ident_.c_str(), LOG_ODELAY, LOG_DAEMON);
+        : Logger(level) {
+    ident_ = config->as<std::string>(key + "/ident");
+    closelog();
+    openlog(ident_.c_str(), LOG_ODELAY, LOG_DAEMON);
 }
 
 SyslogLogger::~SyslogLogger() {
-	closelog();
+    closelog();
 }
 
 void
 SyslogLogger::critInternal(const char *format, va_list args) {
-	vsyslog(LOG_NOTICE, format, args);
+    vsyslog(LOG_NOTICE, format, args);
 }
 
 void
 SyslogLogger::errorInternal(const char *format, va_list args) {
-	vsyslog(LOG_ERR, format, args);
+    vsyslog(LOG_ERR, format, args);
 }
 
 
 void
 SyslogLogger::warnInternal(const char *format, va_list args) {
-	vsyslog(LOG_WARNING, format, args);
+    vsyslog(LOG_WARNING, format, args);
 }
 
 
 void
 SyslogLogger::infoInternal(const char *format, va_list args) {
-	vsyslog(LOG_INFO, format, args);
+    vsyslog(LOG_INFO, format, args);
 }
 
 void
 SyslogLogger::debugInternal(const char *format, va_list args) {
-	vsyslog(LOG_DEBUG, format, args);
+    vsyslog(LOG_DEBUG, format, args);
 }
 
 void SyslogLogger::logRotate() {

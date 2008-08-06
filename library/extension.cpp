@@ -6,13 +6,11 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 Extension::Extension()
-	: logger_(LoggerFactory::instance()->getDefaultLogger())
-{
-	assert(logger_);
+        : logger_(LoggerFactory::instance()->getDefaultLogger()) {
+    assert(logger_);
 }
 
 Extension::~Extension() {

@@ -3,23 +3,21 @@
 
 #include <ctime>
 
-namespace xscript
-{
+namespace xscript {
 
-class Tag
-{
+class Tag {
 public:
-	Tag();
-	Tag(bool mod, time_t last_mod, time_t exp_time);
-	
-	bool expired() const;
-	static const time_t UNDEFINED_TIME;
+    Tag();
+    Tag(bool mod, time_t last_mod, time_t exp_time);
 
-	bool needPrefetch(time_t stored_time) const;
+    bool expired() const;
+    static const time_t UNDEFINED_TIME;
+
+    bool needPrefetch(time_t stored_time) const;
 
 public:
-	bool modified;
-	time_t last_modified, expire_time;
+    bool modified;
+    time_t last_modified, expire_time;
 };
 
 } // namespace xscript

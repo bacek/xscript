@@ -4,73 +4,71 @@
 #include <ctime>
 #include <string>
 
-namespace xscript
-{
+namespace xscript {
 
-class Cookie
-{
+class Cookie {
 public:
-	Cookie();
-	Cookie(const std::string &name, const std::string &value);
-	virtual ~Cookie();
-	
-	inline const std::string& name() const {
-		return name_;
-	}
-	
-	inline const std::string& value() const {
-		return value_;
-	}
-	
-	inline bool secure() const {
-		return secure_;
-	}
-	
-	inline void secure(bool value) {
-		secure_ = value;
-	}
-	
-	inline time_t expires() const {
-		return expires_;
-	}
-	
-	inline void expires(time_t value) {
-		expires_ = value;
-	}
+    Cookie();
+    Cookie(const std::string &name, const std::string &value);
+    virtual ~Cookie();
 
-	inline const std::string& path() const {
-		return path_;
-	}
-	
-	inline void path(const std::string &value) {
-		path_ = value;
-	}
-	
-	inline const std::string& domain() const {
-		return domain_;
-	}
-	
-	inline void domain(const std::string &value) {
-		domain_ = value;
-	}
+    inline const std::string& name() const {
+        return name_;
+    }
 
-	inline time_t permanent() const {
-		return expires_ == MAX_LIVE_TIME;
-	}
-	
-	inline void permanent(bool value) {
-		expires_ = value ? MAX_LIVE_TIME : 0;
-	}
+    inline const std::string& value() const {
+        return value_;
+    }
+
+    inline bool secure() const {
+        return secure_;
+    }
+
+    inline void secure(bool value) {
+        secure_ = value;
+    }
+
+    inline time_t expires() const {
+        return expires_;
+    }
+
+    inline void expires(time_t value) {
+        expires_ = value;
+    }
+
+    inline const std::string& path() const {
+        return path_;
+    }
+
+    inline void path(const std::string &value) {
+        path_ = value;
+    }
+
+    inline const std::string& domain() const {
+        return domain_;
+    }
+
+    inline void domain(const std::string &value) {
+        domain_ = value;
+    }
+
+    inline time_t permanent() const {
+        return expires_ == MAX_LIVE_TIME;
+    }
+
+    inline void permanent(bool value) {
+        expires_ = value ? MAX_LIVE_TIME : 0;
+    }
 
 
-	std::string toString() const;
+    std::string toString() const;
 
-	static const time_t MAX_LIVE_TIME;
+    static const time_t MAX_LIVE_TIME;
 
 private:
-	bool secure_;
-	time_t expires_;
-	std::string name_, value_, path_, domain_;
+    bool secure_;
+    time_t expires_;
+    std::string name_, value_, path_, domain_;
 };
 
 } // namespace xscript

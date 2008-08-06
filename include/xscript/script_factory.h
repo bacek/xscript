@@ -5,18 +5,16 @@
 #include <boost/shared_ptr.hpp>
 #include <xscript/component.h>
 
-namespace xscript
-{
+namespace xscript {
 
 class Script;
 
-class ScriptFactory : public Component<ScriptFactory>
-{
+class ScriptFactory : public Component<ScriptFactory> {
 public:
-	ScriptFactory();
-	virtual ~ScriptFactory();
+    ScriptFactory();
+    virtual ~ScriptFactory();
 
-	virtual boost::shared_ptr<Script> create(const std::string &name);
+    virtual boost::shared_ptr<Script> create(const std::string &name);
 };
 
 } // namespace xscript

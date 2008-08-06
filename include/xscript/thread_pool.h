@@ -6,14 +6,12 @@
 
 #include <xscript/component.h>
 
-namespace xscript
-{
+namespace xscript {
 
-class ThreadPool : public Component<ThreadPool>
-{
+class ThreadPool : public Component<ThreadPool> {
 public:
-	virtual void invoke(boost::function<void()> f) = 0;
-	virtual void stop() = 0;
+    virtual void invoke(boost::function<void()> f) = 0;
+    virtual void stop() = 0;
 };
 
 } // namespace xscript

@@ -3,26 +3,24 @@
 
 #include <xscript/block.h>
 
-namespace xscript
-{
+namespace xscript {
 
-class ThreadedBlock : public virtual Block
-{
+class ThreadedBlock : public virtual Block {
 public:
-	ThreadedBlock(const Extension *ext, Xml* owner, xmlNodePtr node);
-	virtual ~ThreadedBlock();
+    ThreadedBlock(const Extension *ext, Xml* owner, xmlNodePtr node);
+    virtual ~ThreadedBlock();
 
-	int timeout() const;
-	
-	virtual bool threaded() const;
-	virtual void threaded(bool value);
+    int timeout() const;
+
+    virtual bool threaded() const;
+    virtual void threaded(bool value);
 
 protected:
-	virtual void property(const char *name, const char *value);
+    virtual void property(const char *name, const char *value);
 
 private:
-	bool threaded_;
-	int timeout_;
+    bool threaded_;
+    int timeout_;
 };
 
 } // namespace xscript

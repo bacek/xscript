@@ -7,66 +7,59 @@
 #include "state_node.h"
 #include "xscript/state.h"
 
-namespace xscript
-{
+namespace xscript {
 class Request;
 
-class StatePrefixNode : public StateNode
-{
+class StatePrefixNode : public StateNode {
 public:
-	StatePrefixNode(const std::string& prefix, const char* type_str, State* state);
+    StatePrefixNode(const std::string& prefix, const char* type_str, State* state);
 
-	void setParameter(const char* name, const std::string& val);
-	void setParameters(const char* name, const std::vector<std::string>& v);
+    void setParameter(const char* name, const std::string& val);
+    void setParameters(const char* name, const std::vector<std::string>& v);
 
 private:
-	const std::string& prefix_;
-	State* state_;
+    const std::string& prefix_;
+    State* state_;
 };
 
 
-class StateQueryNode : public StatePrefixNode
-{
+class StateQueryNode : public StatePrefixNode {
 public:
-	StateQueryNode(const std::string& prefix, State* state);
+    StateQueryNode(const std::string& prefix, State* state);
 
-	void build(const std::string& query);
+    void build(const std::string& query);
 };
 
 
-class StateRequestNode : public StatePrefixNode
-{
+class StateRequestNode : public StatePrefixNode {
 public:
-	StateRequestNode(const std::string& prefix, State* state);
+    StateRequestNode(const std::string& prefix, State* state);
 
-	void build(const Request* req);
+    void build(const Request* req);
 };
 
 
-class StateHeadersNode : public StatePrefixNode
-{
+class StateHeadersNode : public StatePrefixNode {
 public:
-	StateHeadersNode(const std::string& prefix, State* state);
+    StateHeadersNode(const std::string& prefix, State* state);
 
-	void build(const Request* req);
+    void build(const Request* req);
 };
 
 
-class StateCookiesNode : public StatePrefixNode
-{
+class StateCookiesNode : public StatePrefixNode {
 public:
-	StateCookiesNode(const std::string& prefix, State* state);
+    StateCookiesNode(const std::string& prefix, State* state);
 
-	void build(const Request* req);
+    void build(const Request* req);
 };
 
 
-class StateProtocolNode : public StatePrefixNode
-{
+class StateProtocolNode : public StatePrefixNode {
 public:
-	StateProtocolNode(const std::string& prefix, State* state);
+    StateProtocolNode(const std::string& prefix, State* state);
 
-	void build(const Request* req);
+    void build(const Request* req);
 };
 
 

@@ -1,7 +1,6 @@
 #include "details/dummy_average_counter.h"
 
-namespace xscript
-{
+namespace xscript {
 
 DummyAverageCounter::DummyAverageCounter() {
 }
@@ -18,7 +17,7 @@ void DummyAverageCounter::remove(uint64_t value) {
 }
 
 XmlNodeHelper DummyAverageCounter::createReport() const {
-	return XmlNodeHelper(xmlNewNode(0, BAD_CAST "dummy"));
+    return XmlNodeHelper(xmlNewNode(0, BAD_CAST "dummy"));
 }
 
 DummyAverageCounterFactory::DummyAverageCounterFactory() {

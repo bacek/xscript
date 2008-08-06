@@ -4,12 +4,11 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 void
 DummyThreadPool::invoke(boost::function<void()> f) {
-	f();
+    f();
 }
 
 void

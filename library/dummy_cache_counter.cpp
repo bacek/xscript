@@ -1,8 +1,7 @@
 #include <boost/lexical_cast.hpp>
 #include "details/dummy_cache_counter.h"
 
-namespace xscript
-{
+namespace xscript {
 
 void DummyCacheCounter::incUsedMemory(size_t amount) {
     (void)amount;
@@ -13,13 +12,13 @@ void DummyCacheCounter::decUsedMemory(size_t amount) {
 }
 
 
-void DummyCacheCounter::incLoaded() { } 
+void DummyCacheCounter::incLoaded() { }
 void DummyCacheCounter::incStored() { }
 void DummyCacheCounter::incRemoved() { }
 
 
 XmlNodeHelper DummyCacheCounter::createReport() const {
-	return XmlNodeHelper(xmlNewNode(0, BAD_CAST "dummy"));
+    return XmlNodeHelper(xmlNewNode(0, BAD_CAST "dummy"));
 }
 
 

@@ -1,24 +1,29 @@
+#include "settings.h"
+
 #include <boost/bind.hpp>
+
 #include "xscript/status_info.h"
 #include "xscript/control_extension.h"
 
-namespace xscript
-{
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
 
-StatusInfo::StatusInfo() 
-	: statBuilder_("status-info")
+namespace xscript {
+
+StatusInfo::StatusInfo() : 
+  statBuilder_("status-info")
 {
 }
 
 
-void StatusInfo::init(const Config *config) {
-	(void)config;
-	
-	ControlExtensionRegistry::constructor_t f = boost::bind(boost::mem_fn(&StatBuilder::createBlock), &statBuilder_, _1, _2, _3);
-
+void
+StatusInfo::init(const Config *config) {
+    (void)config;
+    ControlExtensionRegistry::Constructor f = boost::bind(boost::mem_fn(&StatBuilder::createBlock), &statBuilder_, _1, _2, _3);
     ControlExtensionRegistry::registerConstructor("status-info", f);
 }
 
 REGISTER_COMPONENT(StatusInfo);
 
-}
+} // namespace xscript

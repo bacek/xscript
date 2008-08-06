@@ -3,20 +3,18 @@
 
 #include "xml_node.h"
 
-namespace xscript
-{
+namespace xscript {
 
-class StateNode : public XmlNode
-{
+class StateNode : public XmlNode {
 public:
-	StateNode();
-	StateNode(const char* type_str, const char* name, const char* content);
+    StateNode();
+    StateNode(const char* type_str, const char* name, const char* content);
 
-	void setName(const char* name);
+    void setName(const char* name);
 
 private:
-	StateNode(const StateNode &);
-	StateNode& operator = (const StateNode &);
+    StateNode(const StateNode &);
+    StateNode& operator = (const StateNode &);
 };
 
 

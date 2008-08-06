@@ -3,17 +3,15 @@
 
 #include "xscript/script_cache.h"
 
-namespace xscript
-{
+namespace xscript {
 
-class DummyScriptCache : public ScriptCache
-{
+class DummyScriptCache : public ScriptCache {
 public:
-	virtual void clear();
-	virtual void erase(const std::string &name);
+    virtual void clear();
+    virtual void erase(const std::string &name);
 
-	virtual boost::shared_ptr<Script> fetch(const std::string &name);
-	virtual void store(const std::string &name, const boost::shared_ptr<Script> &xml);
+    virtual boost::shared_ptr<Script> fetch(const std::string &name);
+    virtual void store(const std::string &name, const boost::shared_ptr<Script> &xml);
 };
 
 }

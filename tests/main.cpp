@@ -17,33 +17,32 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 extern "C" void*
-xmlCustomMalloc(size_t size) {
-	void *ptr = malloc(size);
-	log()->debug("malloc'd %llu bytes at %p", static_cast<unsigned long long>(size), ptr);
-	return ptr;
+    xmlCustomMalloc(size_t size) {
+    void *ptr = malloc(size);
+    log()->debug("malloc'd %llu bytes at %p", static_cast<unsigned long long>(size), ptr);
+    return ptr;
 }
 
 extern "C" void*
-xmlCustomRealloc(void *ptr, size_t size) {
-	void *newptr = realloc(ptr, size);
-	log()->debug("realloc'd %llu bytes at %p", static_cast<unsigned long long>(size), newptr);
-	return newptr;
+    xmlCustomRealloc(void *ptr, size_t size) {
+    void *newptr = realloc(ptr, size);
+    log()->debug("realloc'd %llu bytes at %p", static_cast<unsigned long long>(size), newptr);
+    return newptr;
 }
 
 extern "C" void
-xmlCustomFree(void *ptr) {
-	free(ptr);
+    xmlCustomFree(void *ptr) {
+    free(ptr);
 }
 
 extern "C" char*
-xmlCustomStrdup(const char *str) {
-	char *ptr = strdup(str);
-	log()->debug("strdup'd at %p", ptr);
-	return ptr;
+    xmlCustomStrdup(const char *str) {
+    char *ptr = strdup(str);
+    log()->debug("strdup'd at %p", ptr);
+    return ptr;
 }
 
 } // namespace xscript
@@ -51,20 +50,20 @@ xmlCustomStrdup(const char *str) {
 int
 main(int argc, char *argv[]) {
 
-	using namespace xscript;
+    using namespace xscript;
 
-	try {
-		std::auto_ptr<Config> config =  Config::create("test.conf");
-		config->startup();
+    try {
+        std::auto_ptr<Config> config =  Config::create("test.conf");
+        config->startup();
 
-		CppUnit::TextUi::TestRunner r;
-		r.addTest(CppUnit::TestFactoryRegistry::getRegistry("load").makeTest());
-		r.addTest(CppUnit::TestFactoryRegistry::getRegistry("xscript").makeTest());
-		return r.run((argc > 1) ? argv[1] : "", false) ? EXIT_SUCCESS : EXIT_FAILURE;
-		
-	}
-	catch (const std::exception &e) {
-		std::cerr << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
+        CppUnit::TextUi::TestRunner r;
+        r.addTest(CppUnit::TestFactoryRegistry::getRegistry("load").makeTest());
+        r.addTest(CppUnit::TestFactoryRegistry::getRegistry("xscript").makeTest());
+        return r.run((argc > 1) ? argv[1] : "", false) ? EXIT_SUCCESS : EXIT_FAILURE;
+
+    }
+    catch (const std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
 }

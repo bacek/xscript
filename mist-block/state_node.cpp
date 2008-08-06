@@ -5,25 +5,22 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 StateNode::StateNode() :
-	XmlNode("state")
-{
+        XmlNode("state") {
 }
 
 StateNode::StateNode(const char* type_str, const char* name, const char* content) :
-	XmlNode("state")
-{
-	setType(type_str);
-	setName(name);
-	setContent(content);
+        XmlNode("state") {
+    setType(type_str);
+    setName(name);
+    setContent(content);
 }
 
 void
 StateNode::setName(const char* name) {
-	setProperty("name", name);
+    setProperty("name", name);
 }
 
 } // namespace xscript

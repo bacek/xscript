@@ -2,8 +2,7 @@
 #include "file_extension.h"
 #include "file_block.h"
 
-namespace xscript
-{
+namespace xscript {
 
 unsigned int FileExtension::max_invoke_depth_;
 
@@ -14,32 +13,32 @@ FileExtension::~FileExtension() {
 }
 
 const char* FileExtension::name() const {
-	return "file";
+    return "file";
 }
 
 const char* FileExtension::nsref() const {
-	return XmlUtils::XSCRIPT_NAMESPACE;
+    return XmlUtils::XSCRIPT_NAMESPACE;
 }
 
 void FileExtension::initContext(Context *ctx) {
-	(void)ctx;
+    (void)ctx;
 }
 
 
 void FileExtension::stopContext(Context *ctx) {
-	(void)ctx;
+    (void)ctx;
 }
 
 void FileExtension::destroyContext(Context *ctx) {
-	(void)ctx;
+    (void)ctx;
 }
 
 std::auto_ptr<Block> FileExtension::createBlock(Xml *owner, xmlNodePtr node) {
-	return std::auto_ptr<Block>(new FileBlock(this, owner, node));
+    return std::auto_ptr<Block>(new FileBlock(this, owner, node));
 }
 
 void FileExtension::init(const Config *config) {
-	max_invoke_depth_ = config->as<unsigned int>("/xscript/file-block/max-invoke-depth", 10);
+    max_invoke_depth_ = config->as<unsigned int>("/xscript/file-block/max-invoke-depth", 10);
 }
 
 

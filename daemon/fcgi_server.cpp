@@ -43,19 +43,17 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
-FCGIServer::FCGIServer(Config *config) : 
-	Server(config), socket_(-1), inbuf_size_(0), outbuf_size_(0), alternate_port_(0),
-	workerCounter_(SimpleCounterFactory::instance()->createCounter("fcgi-workers")), 
-    uptimeCounter_()
-{
-	if (0 != FCGX_Init()) {
-		throw std::runtime_error("can not init fastcgi library");
-	}
-	StatusInfo::instance()->getStatBuilder().addCounter(workerCounter_.get());
-	StatusInfo::instance()->getStatBuilder().addCounter(&uptimeCounter_);
+FCGIServer::FCGIServer(Config *config) :
+        Server(config), socket_(-1), inbuf_size_(0), outbuf_size_(0), alternate_port_(0),
+        workerCounter_(SimpleCounterFactory::instance()->createCounter("fcgi-workers")),
+        uptimeCounter_() {
+    if (0 != FCGX_Init()) {
+        throw std::runtime_error("can not init fastcgi library");
+    }
+    StatusInfo::instance()->getStatBuilder().addCounter(workerCounter_.get());
+    StatusInfo::instance()->getStatBuilder().addCounter(&uptimeCounter_);
 }
 
 FCGIServer::~FCGIServer() {
@@ -63,111 +61,111 @@ FCGIServer::~FCGIServer() {
 
 void
 FCGIServer::run() {
-	
-	std::string socket = config_->as<std::string>("/xscript/endpoint/socket");
-	unsigned short backlog = config_->as<unsigned short>("/xscript/endpoint/backlog");
-	
-	pid(config_->as<std::string>("/xscript/pidfile"));
-	
-	inbuf_size_ = config_->as<unsigned int>("/xscript/input-buffer", 4096);
-	outbuf_size_ = config_->as<unsigned int>("/xscript/output-buffer", 4096);
-	
-	alternate_port_ = config_->as<unsigned short>("/xscript/alternate-port", 8080);
-	
-	if (!socket.empty()) {
-		socket_ = FCGX_OpenSocket(socket.c_str(), backlog);
-		chmod(socket.c_str(), 0666);
-	}
-	else {
-		std::stringstream stream;
-		stream << ':' << config_->as<unsigned short>("/xscript/endpoint/port");
-		socket_ = FCGX_OpenSocket(stream.str().c_str(), backlog);
-	}
-	
-	if (-1 == socket_) {
-		throw std::runtime_error("can not open fastcgi socket");
-	}
-	
-	boost::function<void()> f = boost::bind(&FCGIServer::handle, this);
-	unsigned short pool_size = config_->as<unsigned short>("/xscript/fastcgi-workers");
-	for (unsigned short i = 0; i < pool_size; ++i) {
-		create_thread(f);
-	}
-	join_all();
+
+    std::string socket = config_->as<std::string>("/xscript/endpoint/socket");
+    unsigned short backlog = config_->as<unsigned short>("/xscript/endpoint/backlog");
+
+    pid(config_->as<std::string>("/xscript/pidfile"));
+
+    inbuf_size_ = config_->as<unsigned int>("/xscript/input-buffer", 4096);
+    outbuf_size_ = config_->as<unsigned int>("/xscript/output-buffer", 4096);
+
+    alternate_port_ = config_->as<unsigned short>("/xscript/alternate-port", 8080);
+
+    if (!socket.empty()) {
+        socket_ = FCGX_OpenSocket(socket.c_str(), backlog);
+        chmod(socket.c_str(), 0666);
+    }
+    else {
+        std::stringstream stream;
+        stream << ':' << config_->as<unsigned short>("/xscript/endpoint/port");
+        socket_ = FCGX_OpenSocket(stream.str().c_str(), backlog);
+    }
+
+    if (-1 == socket_) {
+        throw std::runtime_error("can not open fastcgi socket");
+    }
+
+    boost::function<void()> f = boost::bind(&FCGIServer::handle, this);
+    unsigned short pool_size = config_->as<unsigned short>("/xscript/fastcgi-workers");
+    for (unsigned short i = 0; i < pool_size; ++i) {
+        create_thread(f);
+    }
+    join_all();
 }
 
 void
 FCGIServer::handle() {
-	
-	FCGX_Request req;
-	std::vector<char> inv(inbuf_size_), outv(outbuf_size_);
-	
-	if (0 != FCGX_InitRequest(&req, socket_, 0)) {
-		log()->error("can not init fastcgi request");
-		return;
-	}
 
-	XmlUtils::registerReporters();
+    FCGX_Request req;
+    std::vector<char> inv(inbuf_size_), outv(outbuf_size_);
 
-	ServerRequest request;
-		
-	while (true) {
-		if (-1 != FCGX_Accept_r(&req)) {
-			try {
-				SimpleCounter::ScopedCount c(workerCounter_.get());
+    if (0 != FCGX_InitRequest(&req, socket_, 0)) {
+        log()->error("can not init fastcgi request");
+        return;
+    }
 
-				fcgi_streambuf inbuf(req.in, &inv[0], inv.size());
-				fcgi_streambuf outbuf(req.out, &outv[0], outv.size());
-			
-				std::istream is(&inbuf);
-				std::ostream os(&outbuf);
-			
-				request.attach(&is, &os, req.envp);
-				RequestData data(&request, &request, boost::shared_ptr<State>(new State()));
-				handleRequest(&data);
-				
-				os << std::flush;
-				
-				request.reset();
-				FCGX_Finish_r(&req);
-			}
-			catch (const std::exception &e) {
-				request.reset();
-				FCGX_Finish_r(&req);
-				log()->error("caught exception while handling request: %s", e.what());
-			}
-		}
-		else {
-			log()->error("failed to accept fastcgi request");
-		}
-	}
-	FCGX_Free(&req, 1);
+    XmlUtils::registerReporters();
+
+    ServerRequest request;
+
+    while (true) {
+        if (-1 != FCGX_Accept_r(&req)) {
+            try {
+                SimpleCounter::ScopedCount c(workerCounter_.get());
+
+                fcgi_streambuf inbuf(req.in, &inv[0], inv.size());
+                fcgi_streambuf outbuf(req.out, &outv[0], outv.size());
+
+                std::istream is(&inbuf);
+                std::ostream os(&outbuf);
+
+                request.attach(&is, &os, req.envp);
+                RequestData data(&request, &request, boost::shared_ptr<State>(new State()));
+                handleRequest(&data);
+
+                os << std::flush;
+
+                request.reset();
+                FCGX_Finish_r(&req);
+            }
+            catch (const std::exception &e) {
+                request.reset();
+                FCGX_Finish_r(&req);
+                log()->error("caught exception while handling request: %s", e.what());
+            }
+        }
+        else {
+            log()->error("failed to accept fastcgi request");
+        }
+    }
+    FCGX_Free(&req, 1);
 }
 
 void
 FCGIServer::pid(const std::string &file) {
-	try {
-		std::ofstream f(file.c_str());
-		f.exceptions(std::ios::badbit);
-		f << static_cast<int>(getpid());
-	}
-	catch (std::ios::failure &e) {
-		std::cerr << "can not open file " << file << std::endl;
-		throw;
-	}
+    try {
+        std::ofstream f(file.c_str());
+        f.exceptions(std::ios::badbit);
+        f << static_cast<int>(getpid());
+    }
+    catch (std::ios::failure &e) {
+        std::cerr << "can not open file " << file << std::endl;
+        throw;
+    }
 }
 
 bool
 FCGIServer::needApplyStylesheet(Request *request) const {
-	return (request->getServerPort() != alternate_port_);
+    return (request->getServerPort() != alternate_port_);
 }
 
 bool
 FCGIServer::fileExists(const std::string &name) const {
 
-	namespace fs = boost::filesystem;
-	fs::path path(name);
-	return fs::exists(path) && !fs::is_directory(path);
+    namespace fs = boost::filesystem;
+    fs::path path(name);
+    return fs::exists(path) && !fs::is_directory(path);
 }
 
 } // namespace xscript

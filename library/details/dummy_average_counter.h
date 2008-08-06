@@ -5,41 +5,39 @@
 #include "settings.h"
 #include "xscript/average_counter.h"
 
-namespace xscript
-{
+namespace xscript {
 
+
+/**
+ * Do nothing counter
+ */
+class DummyAverageCounter : public AverageCounter {
+public:
+    DummyAverageCounter();
+    ~DummyAverageCounter();
 
     /**
-     * Do nothing counter
+     * Add single measure.
      */
-	class DummyAverageCounter : public AverageCounter
-	{
-	public:
-		DummyAverageCounter();
-		~DummyAverageCounter();
+    virtual void add(uint64_t value);
 
-		/**
-		 * Add single measure.
-		 */
-		virtual void add(uint64_t value);
+    /**
+     * Remove single measure.
+     */
+    virtual void remove(uint64_t value);
 
-		/**
-		 * Remove single measure.
-		 */
-		virtual void remove(uint64_t value);
+    virtual XmlNodeHelper createReport() const;
+};
 
-		virtual XmlNodeHelper createReport() const;
-	};
+class DummyAverageCounterFactory : public AverageCounterFactory {
+public:
+    DummyAverageCounterFactory();
+    ~DummyAverageCounterFactory();
 
-    class DummyAverageCounterFactory : public AverageCounterFactory {
-    public:
-        DummyAverageCounterFactory();
-        ~DummyAverageCounterFactory();
+    virtual void init(const Config *config);
 
-        virtual void init(const Config *config);
-
-        std::auto_ptr<AverageCounter> createCounter(const std::string& name);
-    };
+    std::auto_ptr<AverageCounter> createCounter(const std::string& name);
+};
 
 }
 

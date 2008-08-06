@@ -3,27 +3,24 @@
 
 #include <xscript/component.h>
 
-namespace xscript
-{
+namespace xscript {
 
 class Context;
 
-class AuthContext
-{
+class AuthContext {
 public:
-	AuthContext();
-	virtual ~AuthContext();
-	virtual bool authorized() const;
+    AuthContext();
+    virtual ~AuthContext();
+    virtual bool authorized() const;
 };
 
-class Authorizer : public virtual Component<Authorizer>
-{
+class Authorizer : public virtual Component<Authorizer> {
 public:
-	Authorizer();
-	virtual ~Authorizer();
+    Authorizer();
+    virtual ~Authorizer();
 
-	virtual boost::shared_ptr<AuthContext> checkAuth(const boost::shared_ptr<Context> &ctx) const;
-	virtual void redirectToAuth(const boost::shared_ptr<Context> &ctx, const AuthContext *auth) const;
+    virtual boost::shared_ptr<AuthContext> checkAuth(const boost::shared_ptr<Context> &ctx) const;
+    virtual void redirectToAuth(const boost::shared_ptr<Context> &ctx, const AuthContext *auth) const;
 };
 
 } // namespace xscript

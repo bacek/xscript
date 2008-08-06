@@ -8,26 +8,24 @@
 #include <boost/shared_ptr.hpp>
 
 
-namespace xscript
-{
+namespace xscript {
 
 class Config;
 
-class Loader : private boost::noncopyable
-{
+class Loader : private boost::noncopyable {
 public:
-	
-	virtual ExtensionInfo * load(const char *name) = 0;
-	virtual void init(const Config *config) = 0;
-	
-	static boost::shared_ptr<Loader> instance();
+
+    virtual ExtensionInfo * load(const char *name) = 0;
+    virtual void init(const Config *config) = 0;
+
+    static boost::shared_ptr<Loader> instance();
 
 protected:
-	Loader();
-	virtual ~Loader();
+    Loader();
+    virtual ~Loader();
 
 private:
-	friend class boost::shared_ptr<Loader>;
+    friend class boost::shared_ptr<Loader>;
 };
 
 } // namespace xscript

@@ -11,8 +11,7 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 AuthContext::AuthContext() {
 }
@@ -22,11 +21,10 @@ AuthContext::~AuthContext() {
 
 bool
 AuthContext::authorized() const {
-	return true;
+    return true;
 }
 
-Authorizer::Authorizer()
-{
+Authorizer::Authorizer() {
 }
 
 Authorizer::~Authorizer() {
@@ -34,15 +32,15 @@ Authorizer::~Authorizer() {
 
 boost::shared_ptr<AuthContext>
 Authorizer::checkAuth(const boost::shared_ptr<Context> &ctx) const {
-	(void)ctx;
-	return boost::shared_ptr<AuthContext>(new AuthContext());
+    (void)ctx;
+    return boost::shared_ptr<AuthContext>(new AuthContext());
 }
 
 void
 Authorizer::redirectToAuth(const boost::shared_ptr<Context> &ctx, const AuthContext *auth) const {
-	(void)ctx;
-	(void)auth;
-	ctx->response()->redirectToPath("/");
+    (void)ctx;
+    (void)auth;
+    ctx->response()->redirectToPath("/");
 }
 
 REGISTER_COMPONENT(Authorizer);

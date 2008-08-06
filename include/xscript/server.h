@@ -4,30 +4,28 @@
 #include <boost/utility.hpp>
 #include <string>
 
-namespace xscript
-{
+namespace xscript {
 
 class Config;
 class RequestData;
 class Request;
 class Context;
 
-class Server : private boost::noncopyable
-{
+class Server : private boost::noncopyable {
 public:
-	Server(Config *config);
-	virtual ~Server();
+    Server(Config *config);
+    virtual ~Server();
 
-	virtual void run() = 0;
-
-protected:
-	virtual void handleRequest(RequestData *request_data);
-	virtual bool needApplyStylesheet(Request *request) const;
-	static std::pair<std::string, bool> findScript(const std::string &name);
-	void sendHeaders(Context *ctx);
+    virtual void run() = 0;
 
 protected:
-	Config *config_;
+    virtual void handleRequest(RequestData *request_data);
+    virtual bool needApplyStylesheet(Request *request) const;
+    static std::pair<std::string, bool> findScript(const std::string &name);
+    void sendHeaders(Context *ctx);
+
+protected:
+    Config *config_;
 };
 
 } // namespace xscript

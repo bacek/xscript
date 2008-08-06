@@ -15,8 +15,7 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 const std::string CheckingPolicyStarter::PRODUCTION_ID = "production";
 const std::string CheckingPolicyStarter::DEVELOPMENT_ID = "development";
@@ -29,23 +28,23 @@ CheckingPolicy::~CheckingPolicy() {
 
 void
 CheckingPolicy::processError(const std::string& message) {
-	log()->debug("%s", message.c_str());
+    log()->debug("%s", message.c_str());
 }
 
 void
 CheckingPolicy::sendError(Response* response, unsigned short status, const std::string& message) {
-	(void)message;
-	response->sendError(status, StringUtils::EMPTY_STRING);
+    (void)message;
+    response->sendError(status, StringUtils::EMPTY_STRING);
 }
 
 bool
 CheckingPolicy::isProduction() const {
-	return true;
+    return true;
 }
 
 bool
 CheckingPolicy::isOffline() const {
-	return false;
+    return false;
 }
 
 DevelopmentCheckingPolicy::DevelopmentCheckingPolicy() {
@@ -56,27 +55,26 @@ DevelopmentCheckingPolicy::~DevelopmentCheckingPolicy() {
 
 void
 DevelopmentCheckingPolicy::processError(const std::string& message) {
-	log()->error("%s", message.c_str());
-	throw UnboundRuntimeError(message);
+    log()->error("%s", message.c_str());
+    throw UnboundRuntimeError(message);
 }
 
 void
 DevelopmentCheckingPolicy::sendError(Response* response, unsigned short status, const std::string& message) {
-	response->sendError(status, message);
+    response->sendError(status, message);
 }
 
 bool
 DevelopmentCheckingPolicy::isProduction() const {
-	return false;
+    return false;
 }
 
 bool
 DevelopmentCheckingPolicy::isOffline() const {
-	return false;
+    return false;
 }
 
-CheckingPolicyStarter::CheckingPolicyStarter() 
-{
+CheckingPolicyStarter::CheckingPolicyStarter() {
 }
 
 CheckingPolicyStarter::~CheckingPolicyStarter() {
@@ -84,15 +82,15 @@ CheckingPolicyStarter::~CheckingPolicyStarter() {
 
 void
 CheckingPolicyStarter::init(const Config *config) {
-	std::string check_mode = config->as<std::string>("/xscript/check-mode", PRODUCTION_ID);
-	if (DEVELOPMENT_ID == check_mode){
-		ComponentRegisterer<CheckingPolicy> reg(new DevelopmentCheckingPolicy());
-		(void)reg;
-	}
-	else {
-		ComponentRegisterer<CheckingPolicy> reg(new CheckingPolicy());
-		(void)reg;
-	}
+    std::string check_mode = config->as<std::string>("/xscript/check-mode", PRODUCTION_ID);
+    if (DEVELOPMENT_ID == check_mode) {
+        ComponentRegisterer<CheckingPolicy> reg(new DevelopmentCheckingPolicy());
+        (void)reg;
+    }
+    else {
+        ComponentRegisterer<CheckingPolicy> reg(new CheckingPolicy());
+        (void)reg;
+    }
 }
 
 REGISTER_COMPONENT(CheckingPolicy);

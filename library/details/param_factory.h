@@ -18,8 +18,7 @@
 #include <map>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 class Param;
 class Object;
@@ -30,23 +29,22 @@ typedef std::map<std::string, ParamCreator> CreatorMap;
 typedef details::hash_map<std::string, ParamCreator, details::StringHash> CreatorMap;
 #endif
 
-class ParamFactory : 
-	private boost::noncopyable,
-	public PhoenixSingleton<ParamFactory>
-{
+class ParamFactory :
+            private boost::noncopyable,
+            public PhoenixSingleton<ParamFactory> {
 public:
-	ParamFactory();
-	virtual ~ParamFactory();
-	
-	void registerCreator(const char *name, ParamCreator c);
-	std::auto_ptr<Param> param(Object *owner, xmlNodePtr node);
+    ParamFactory();
+    virtual ~ParamFactory();
+
+    void registerCreator(const char *name, ParamCreator c);
+    std::auto_ptr<Param> param(Object *owner, xmlNodePtr node);
 
 private:
-	friend class std::auto_ptr<ParamFactory>;
-	ParamCreator findCreator(const std::string &name) const;
-	
+    friend class std::auto_ptr<ParamFactory>;
+    ParamCreator findCreator(const std::string &name) const;
+
 private:
-	CreatorMap creators_;
+    CreatorMap creators_;
 };
 
 } // namespace xscript

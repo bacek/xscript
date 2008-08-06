@@ -4,22 +4,23 @@
 #include <xscript/component.h>
 #include <xscript/stat_builder.h>
 
-namespace xscript
-{
+namespace xscript {
 
-	class StatusInfo : public Component<StatusInfo>
-	{
-	public:
-		StatusInfo();
+class Config;
 
-		virtual void init(const Config *config);
+class StatusInfo : public Component<StatusInfo> {
+public:
+    StatusInfo();
 
-		StatBuilder& getStatBuilder() {
-			return statBuilder_;
-		}
-	private:
-		StatBuilder statBuilder_;
-	};
-}
+    virtual void init(const Config *config);
 
-#endif
+    StatBuilder& getStatBuilder() {
+        return statBuilder_;
+    }
+private:
+    StatBuilder statBuilder_;
+};
+
+} // namespace xscript
+
+#endif // _XSCRIPT_STATUS_INFO_H_

@@ -16,8 +16,7 @@
 #include <map>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 #ifndef HAVE_HASHMAP
 typedef std::map<std::string, std::string> VarMap;
@@ -25,24 +24,23 @@ typedef std::map<std::string, std::string> VarMap;
 typedef details::hash_map<std::string, std::string, details::StringHash> VarMap;
 #endif
 
-class XmlConfig : public Config
-{
+class XmlConfig : public Config {
 public:
-	XmlConfig(const char *file);
-	virtual ~XmlConfig();
+    XmlConfig(const char *file);
+    virtual ~XmlConfig();
 
-	virtual std::string value(const std::string &value) const;
-	virtual void subKeys(const std::string &value, std::vector<std::string> &v) const;
+    virtual std::string value(const std::string &value) const;
+    virtual void subKeys(const std::string &value, std::vector<std::string> &v) const;
 
 private:
-	void findVariables(const XmlDocHelper &doc);
-	void resolveVariables(std::string &val) const;
-	const std::string& findVariable(const std::string &key) const;
-	
+    void findVariables(const XmlDocHelper &doc);
+    void resolveVariables(std::string &val) const;
+    const std::string& findVariable(const std::string &key) const;
+
 private:
-	VarMap vars_;
-	XmlDocHelper doc_;
-	boost::regex regex_;
+    VarMap vars_;
+    XmlDocHelper doc_;
+    boost::regex regex_;
 };
 
 } // namespace xscript

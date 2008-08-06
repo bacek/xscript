@@ -4,28 +4,26 @@
 
 #include <xscript/extension.h>
 
-namespace xscript
-{
-class FileExtension : public Extension
-{
+namespace xscript {
+class FileExtension : public Extension {
 public:
 
-	FileExtension();
-	~FileExtension();
+    FileExtension();
+    ~FileExtension();
 
-	virtual const char* name() const;
-	virtual const char* nsref() const;
-	
-	virtual void initContext(Context *ctx);
-	virtual void stopContext(Context *ctx);
-	virtual void destroyContext(Context *ctx);
-	
-	virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);	
-	virtual void init(const Config *config);
+    virtual const char* name() const;
+    virtual const char* nsref() const;
+
+    virtual void initContext(Context *ctx);
+    virtual void stopContext(Context *ctx);
+    virtual void destroyContext(Context *ctx);
+
+    virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);
+    virtual void init(const Config *config);
 
 private:
-	friend class FileBlock;
-	static unsigned int max_invoke_depth_;
+    friend class FileBlock;
+    static unsigned int max_invoke_depth_;
 };
 
 }

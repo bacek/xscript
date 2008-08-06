@@ -5,14 +5,12 @@
 #include "settings.h"
 #include "xscript/thread_pool.h"
 
-namespace xscript
-{
+namespace xscript {
 
-class DummyThreadPool : public ThreadPool
-{
+class DummyThreadPool : public ThreadPool {
 public:
-	virtual void invoke(boost::function<void()> f);
-	virtual void stop();
+    virtual void invoke(boost::function<void()> f);
+    virtual void stop();
 };
 
 

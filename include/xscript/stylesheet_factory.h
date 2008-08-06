@@ -5,18 +5,16 @@
 #include <boost/shared_ptr.hpp>
 #include <xscript/component.h>
 
-namespace xscript
-{
+namespace xscript {
 
 class Stylesheet;
 
-class StylesheetFactory : public Component<StylesheetFactory>
-{
+class StylesheetFactory : public Component<StylesheetFactory> {
 public:
-	StylesheetFactory();
-	virtual ~StylesheetFactory();
-	
-	virtual boost::shared_ptr<Stylesheet> create(const std::string &name);
+    StylesheetFactory();
+    virtual ~StylesheetFactory();
+
+    virtual boost::shared_ptr<Stylesheet> create(const std::string &name);
 };
 
 } // namespace xscript

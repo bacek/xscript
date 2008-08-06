@@ -6,55 +6,55 @@
 #include <xscript/component.h>
 #include <xscript/xml_helpers.h>
 
-namespace xscript
-{
-	class Context;
-	class TaggedBlock;
-	class Tag;
-    class DocCacheStrategy;
+namespace xscript {
 
-    class Block;
-    class Extension;
-    class Xml;
+class Context;
+class TaggedBlock;
+class Tag;
+class DocCacheStrategy;
 
-	/**
-	 * Cache result of block invokations using sequence of different strategies.
-	 */
-	class DocCache : public Component<DocCache>
-	{
-	public:
-		DocCache();
-		~DocCache();
+class Block;
+class Extension;
+class Xml;
 
-		time_t minimalCacheTime() const;
+/**
+ * Cache result of block invokations using sequence of different strategies.
+ */
+class DocCache : public Component<DocCache> {
+public:
+    DocCache();
+    virtual ~DocCache();
 
-		bool loadDoc(const Context *ctx, const TaggedBlock *block, Tag &tag, XmlDocHelper &doc);
-		bool saveDoc(const Context *ctx, const TaggedBlock *block, const Tag& tag, const XmlDocHelper &doc);
+    time_t minimalCacheTime() const;
 
-	    void init(const Config *config);
-        void addStrategy(DocCacheStrategy* strategy, const std::string& name);
+    bool loadDoc(const Context *ctx, const TaggedBlock *block, Tag &tag, XmlDocHelper &doc);
+    bool saveDoc(const Context *ctx, const TaggedBlock *block, const Tag& tag, const XmlDocHelper &doc);
 
-		/**
-		 * Create block to output statistic in xscript page.
-		 */
-		std::auto_ptr<Block> createBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    void init(const Config *config);
+    void addStrategy(DocCacheStrategy* strategy, const std::string& name);
 
-		/**
-		 * Create aggregate report. Caller must free result.
-		 */
-		XmlDocHelper createReport() const;
+    /**
+     * Create block to output statistic in xscript page.
+     */
+    std::auto_ptr<Block> createBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
 
-	private:
-        // Used for init added strategies
-        const Config                    *config_;
+    /**
+     * Create aggregate report. Caller must free result.
+     */
+    XmlDocHelper createReport() const;
 
-        // Name of strategies in order of invokation
-        std::vector<std::string>        strategiesOrder_;
-        
-        // Sorted list of strategies
-        std::vector<DocCacheStrategy*>  strategies_;
-        
-	};
-}
+private:
+    // Used for init added strategies
+    const Config *config_;
+
+    // Name of strategies in order of invokation
+    std::vector<std::string> strategiesOrder_;
+
+    // Sorted list of strategies
+    std::vector<DocCacheStrategy*> strategies_;
+
+};
+
+} // namespace xscript
 
 #endif // _XSCRIPT_DOC_CACHE_H_

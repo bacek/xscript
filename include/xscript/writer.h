@@ -5,21 +5,19 @@
 #include <boost/noncopyable.hpp>
 #include <xscript/xml_helpers.h>
 
-namespace xscript
-{
+namespace xscript {
 
 class Response;
 
-class DocumentWriter : private boost::noncopyable
-{
+class DocumentWriter : private boost::noncopyable {
 public:
-	DocumentWriter();
-	virtual ~DocumentWriter();
-	
-	virtual const std::string& outputEncoding() const = 0;
-	
-	virtual void addHeaders(Response *response) = 0;
-	virtual void write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf) = 0;
+    DocumentWriter();
+    virtual ~DocumentWriter();
+
+    virtual const std::string& outputEncoding() const = 0;
+
+    virtual void addHeaders(Response *response) = 0;
+    virtual void write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf) = 0;
 };
 
 } // namespace xscript

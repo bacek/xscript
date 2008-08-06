@@ -9,43 +9,40 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
-class HttpUserParam : public Param
-{
+class HttpUserParam : public Param {
 public:
-	HttpUserParam(Object *owner, xmlNodePtr node);
-	virtual ~HttpUserParam();
-	
-	virtual std::string asString(const Context *ctx) const;
-	virtual void add(const Context *ctx, ArgList &al) const;
+    HttpUserParam(Object *owner, xmlNodePtr node);
+    virtual ~HttpUserParam();
 
-	static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
-	
+    virtual std::string asString(const Context *ctx) const;
+    virtual void add(const Context *ctx, ArgList &al) const;
+
+    static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
+
 };
 
 HttpUserParam::HttpUserParam(Object *owner, xmlNodePtr node) :
-	Param(owner, node)
-{
+        Param(owner, node) {
 }
 
 HttpUserParam::~HttpUserParam() {
 }
-	
+
 std::string
 HttpUserParam::asString(const Context *ctx) const {
-	return ctx->request()->getRemoteUser();
+    return ctx->request()->getRemoteUser();
 }
 
 void
 HttpUserParam::add(const Context *ctx, ArgList &al) const {
-	al.add(asString(ctx));
+    al.add(asString(ctx));
 }
 
 std::auto_ptr<Param>
 HttpUserParam::create(Object *owner, xmlNodePtr node) {
-	return std::auto_ptr<Param>(new HttpUserParam(owner, node));
+    return std::auto_ptr<Param>(new HttpUserParam(owner, node));
 }
 
 static CreatorRegisterer reg_("httpuser", &HttpUserParam::create);

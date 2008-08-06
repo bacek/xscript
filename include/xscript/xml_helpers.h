@@ -8,35 +8,34 @@
 
 #include "xscript/resource_holder.h"
 
-namespace xscript
-{
+namespace xscript {
 
-template<> 
+template<>
 inline void ResourceHolderTraits<xmlDocPtr>::destroy(xmlDocPtr doc) {
     xmlFreeDoc(doc);
 }
 
-template<> 
+template<>
 inline void ResourceHolderTraits<xmlChar*>::destroy(xmlChar *value) {
     xmlFree(value);
 };
 
-template<> 
+template<>
 inline void ResourceHolderTraits<xmlNodePtr>::destroy(xmlNodePtr node) {
     xmlFreeNode(node);
 };
 
-template<> 
+template<>
 inline void ResourceHolderTraits<xmlNodeSetPtr>::destroy(xmlNodeSetPtr node_set) {
-	xmlXPathFreeNodeSet(node_set);
+    xmlXPathFreeNodeSet(node_set);
 };
 
-template<> 
+template<>
 inline void ResourceHolderTraits<xmlXPathObjectPtr>::destroy(xmlXPathObjectPtr obj) {
     xmlXPathFreeObject(obj);
 };
 
-template<> 
+template<>
 inline void ResourceHolderTraits<xmlXPathContextPtr>::destroy(xmlXPathContextPtr ctx) {
     xmlXPathFreeContext(ctx);
 };

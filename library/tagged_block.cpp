@@ -11,15 +11,13 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
 static const time_t CACHE_TIME_MINIMUM = 5;
 static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
 
 TaggedBlock::TaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-	Block(ext, owner, node), canonical_method_(), tagged_(false), cache_time_(CACHE_TIME_UNDEFINED)
-{
+        Block(ext, owner, node), canonical_method_(), tagged_(false), cache_time_(CACHE_TIME_UNDEFINED) {
 }
 
 TaggedBlock::~TaggedBlock() {
@@ -27,132 +25,132 @@ TaggedBlock::~TaggedBlock() {
 
 std::string
 TaggedBlock::canonicalMethod(const Context *ctx) const {
-	(void)ctx;
-	return canonical_method_;
+    (void)ctx;
+    return canonical_method_;
 }
 
 bool
 TaggedBlock::tagged() const {
-	return tagged_;
+    return tagged_;
 }
 
 void
 TaggedBlock::tagged(bool tagged) {
-	tagged_ = tagged;
+    tagged_ = tagged;
 }
 
 time_t
 TaggedBlock::cacheTime() const {
-	return cache_time_;
+    return cache_time_;
 }
 
 void
 TaggedBlock::cacheTime(time_t cache_time) {
-	log()->debug("%s, cache_time: %lu", BOOST_CURRENT_FUNCTION, static_cast<unsigned long>(cache_time));
-	cache_time_ = cache_time;
+    log()->debug("%s, cache_time: %lu", BOOST_CURRENT_FUNCTION, static_cast<unsigned long>(cache_time));
+    cache_time_ = cache_time;
 }
 
 XmlDocHelper
 TaggedBlock::invokeInternal(Context *ctx) {
-	
-	log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
-	if (!tagged()) {
-		return Block::invokeInternal(ctx);
-	}
+    log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
-	try {
-		DocCache *cache = DocCache::instance();
-		if ((CACHE_TIME_UNDEFINED != cache_time_) && (cache_time_ < cache->minimalCacheTime())) {
-			return Block::invokeInternal(ctx);
-		}
+    if (!tagged()) {
+        return Block::invokeInternal(ctx);
+    }
 
-		bool have_cached_doc = false;
-		Tag tag;
-		XmlDocHelper doc(NULL);
-		try {
-			have_cached_doc = cache->loadDoc(ctx, this, tag, doc);
+    try {
+        DocCache *cache = DocCache::instance();
+        if ((CACHE_TIME_UNDEFINED != cache_time_) && (cache_time_ < cache->minimalCacheTime())) {
+            return Block::invokeInternal(ctx);
+        }
 
-			if (have_cached_doc && Tag::UNDEFINED_TIME == tag.expire_time) {
-				
-				tag.modified = true;
-				
-				boost::any a(tag);
-				XmlDocHelper newdoc = call(ctx, a);
-				tag = boost::any_cast<Tag>(a);
-				
-				if (NULL != newdoc.get()) {
-					return processResponse(ctx, newdoc, a);
-				}
+        bool have_cached_doc = false;
+        Tag tag;
+        XmlDocHelper doc(NULL);
+        try {
+            have_cached_doc = cache->loadDoc(ctx, this, tag, doc);
 
-				if (tag.modified) {
-					log()->error("Got empty document in tagged block. Cached copy used");
-				}
-				else {
-					log()->debug("Got empty document and tag not modified. Cached copy used");
-				}
-			}
-		}
-		catch (const std::exception &e) {
-			log()->error("caught exception while invoking tagged block: %s", e.what());		
-		}
+            if (have_cached_doc && Tag::UNDEFINED_TIME == tag.expire_time) {
 
-		if (have_cached_doc) {
-			evalXPath(ctx, doc);
-			return doc;
-		}
+                tag.modified = true;
 
-		return Block::invokeInternal(ctx);
-	}
-	catch (const std::exception &e) {
-		log()->error("caught exception while invoking tagged block: %s", e.what());
-		return errorResult(e.what());
-	}
+                boost::any a(tag);
+                XmlDocHelper newdoc = call(ctx, a);
+                tag = boost::any_cast<Tag>(a);
+
+                if (NULL != newdoc.get()) {
+                    return processResponse(ctx, newdoc, a);
+                }
+
+                if (tag.modified) {
+                    log()->error("Got empty document in tagged block. Cached copy used");
+                }
+                else {
+                    log()->debug("Got empty document and tag not modified. Cached copy used");
+                }
+            }
+        }
+        catch (const std::exception &e) {
+            log()->error("caught exception while invoking tagged block: %s", e.what());
+        }
+
+        if (have_cached_doc) {
+            evalXPath(ctx, doc);
+            return doc;
+        }
+
+        return Block::invokeInternal(ctx);
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception while invoking tagged block: %s", e.what());
+        return errorResult(e.what());
+    }
 }
 
 void
 TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a) {
 
-	log()->debug("%s, tagged: %d", BOOST_CURRENT_FUNCTION, static_cast<int>(tagged()));
-	if (!tagged()) {
-		return;
-	}
-	
-	time_t now = time(NULL);
-	Tag tag = boost::any_cast<Tag>(a);
-	DocCache *cache = DocCache::instance();
-	
-	bool can_store = false;
-	if (CACHE_TIME_UNDEFINED != cache_time_) {
-		if (cache_time_ >= cache->minimalCacheTime()) {
-			tag.expire_time = now + cache_time_;
-			can_store = true;
-		}
-	}
-	else if (Tag::UNDEFINED_TIME == tag.expire_time) {
-		can_store = Tag::UNDEFINED_TIME != tag.last_modified;
-	}
-	else {
-		can_store = tag.expire_time >= now + cache->minimalCacheTime();
-	}
+    log()->debug("%s, tagged: %d", BOOST_CURRENT_FUNCTION, static_cast<int>(tagged()));
+    if (!tagged()) {
+        return;
+    }
 
-	if (can_store) {
-		cache->saveDoc(ctx, this, tag, doc);
-	}
+    time_t now = time(NULL);
+    Tag tag = boost::any_cast<Tag>(a);
+    DocCache *cache = DocCache::instance();
+
+    bool can_store = false;
+    if (CACHE_TIME_UNDEFINED != cache_time_) {
+        if (cache_time_ >= cache->minimalCacheTime()) {
+            tag.expire_time = now + cache_time_;
+            can_store = true;
+        }
+    }
+    else if (Tag::UNDEFINED_TIME == tag.expire_time) {
+        can_store = Tag::UNDEFINED_TIME != tag.last_modified;
+    }
+    else {
+        can_store = tag.expire_time >= now + cache->minimalCacheTime();
+    }
+
+    if (can_store) {
+        cache->saveDoc(ctx, this, tag, doc);
+    }
 }
 
 void
 TaggedBlock::createCanonicalMethod(const char *prefix) {
-	canonical_method_.clear();
-	if (tagged()) {
-		canonical_method_.append(prefix);
-		const std::string &m = method();
-		for (const char *str = m.c_str(); *str; ++str) {
-			if (*str != '_' && *str != '-') {
-				canonical_method_.append(1, tolower(*str));
-			}
-		}
-	}
+    canonical_method_.clear();
+    if (tagged()) {
+        canonical_method_.append(prefix);
+        const std::string &m = method();
+        for (const char *str = m.c_str(); *str; ++str) {
+            if (*str != '_' && *str != '-') {
+                canonical_method_.append(1, tolower(*str));
+            }
+        }
+    }
 }
 
 } // namespace xscript

@@ -5,41 +5,37 @@
 #include <exception>
 #include <lua.hpp>
 
-namespace xscript
-{
+namespace xscript {
 
-class LuaError : public std::exception
-{
+class LuaError : public std::exception {
 public:
-	LuaError();
-	virtual ~LuaError() throw ();
-	virtual int translate(lua_State *lua) const throw () = 0;
+    LuaError();
+    virtual ~LuaError() throw ();
+    virtual int translate(lua_State *lua) const throw () = 0;
 };
 
-class BadType : public LuaError 
-{
+class BadType : public LuaError {
 public:
-	BadType(const char *name, int index);
-	virtual ~BadType() throw ();
-	virtual const char* what() const throw ();
-	virtual int translate(lua_State *lua) const throw ();
-	
+    BadType(const char *name, int index);
+    virtual ~BadType() throw ();
+    virtual const char* what() const throw ();
+    virtual int translate(lua_State *lua) const throw ();
+
 private:
-	int index_;
-	std::string name_;
-	std::string what_;
+    int index_;
+    std::string name_;
+    std::string what_;
 };
 
-class BadArgCount : public LuaError 
-{
+class BadArgCount : public LuaError {
 public:
-	BadArgCount(int count);
-	virtual ~BadArgCount() throw ();
-	virtual const char* what() const throw ();
-	virtual int translate(lua_State *lua) const throw ();
-	
+    BadArgCount(int count);
+    virtual ~BadArgCount() throw ();
+    virtual const char* what() const throw ();
+    virtual int translate(lua_State *lua) const throw ();
+
 private:
-	int count_;
+    int count_;
 };
 
 } // namespace xscript

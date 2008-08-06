@@ -6,11 +6,9 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
-StylesheetFactory::StylesheetFactory()
-{
+StylesheetFactory::StylesheetFactory() {
 }
 
 StylesheetFactory::~StylesheetFactory() {
@@ -18,7 +16,7 @@ StylesheetFactory::~StylesheetFactory() {
 
 boost::shared_ptr<Stylesheet>
 StylesheetFactory::create(const std::string &name) {
-	return boost::shared_ptr<Stylesheet>(new Stylesheet(name));
+    return boost::shared_ptr<Stylesheet>(new Stylesheet(name));
 }
 
 REGISTER_COMPONENT(StylesheetFactory);

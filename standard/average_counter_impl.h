@@ -3,37 +3,36 @@
 
 #include <boost/cstdint.hpp>
 #include <xscript/average_counter.h>
+
 #include "counter_impl.h"
 
-namespace xscript
-{
-	/**
-	 * Time statistic gatherer. min/max/avg time for call.
-	 */
-	class AverageCounterImpl : public AverageCounter, private CounterImpl
-	{
-	public:
-		AverageCounterImpl(const std::string& name);
-		~AverageCounterImpl();
+namespace xscript {
+/**
+ * Time statistic gatherer. min/max/avg time for call.
+ */
+class AverageCounterImpl : public AverageCounter, private CounterImpl {
+public:
+    AverageCounterImpl(const std::string& name);
+    ~AverageCounterImpl();
 
-		/**
-		 * Add single measure.
-		 */
-		virtual void add(uint64_t value);
+    /**
+     * Add single measure.
+     */
+    virtual void add(boost::uint64_t value);
 
-		/**
-		 * Remove single measure.
-		 */
-		virtual void remove(uint64_t value);
+    /**
+     * Remove single measure.
+     */
+    virtual void remove(boost::uint64_t value);
 
-		virtual XmlNodeHelper createReport() const;
+    virtual XmlNodeHelper createReport() const;
 
-	protected:
-		uint64_t        count_;
-		uint64_t        total_;
-		uint64_t        max_;
-		uint64_t        min_;
-	};
+protected:
+    boost::uint64_t count_;
+    boost::uint64_t total_;
+    boost::uint64_t max_;
+    boost::uint64_t min_;
+};
 }
 
 #endif

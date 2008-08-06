@@ -3,12 +3,10 @@
 
 #include <cstdarg>
 
-namespace xscript
-{
+namespace xscript {
 
 
-class Logger
-{
+class Logger {
 public:
     enum LogLevel {
         LEVEL_CRIT  = 1,
@@ -18,73 +16,73 @@ public:
         LEVEL_DEBUG = 5,
     };
 
-	Logger(LogLevel level, bool printThreadId = false);
-	virtual ~Logger();
-	
-	void exiting(const char *function);
-	void entering(const char *function);
+    Logger(LogLevel level, bool printThreadId = false);
+    virtual ~Logger();
 
-	void crit(const char *format, ...)
+    void exiting(const char *function);
+    void entering(const char *function);
+
+    void crit(const char *format, ...)
 #ifdef __GNUC__
-		 __attribute__ ((format (printf, 2, 3)))
+    __attribute__ ((format (printf, 2, 3)))
 #endif
-		;
+    ;
 
-	void error(const char *format, ...)
+    void error(const char *format, ...)
 #ifdef __GNUC__
-		 __attribute__ ((format (printf, 2, 3)))
+    __attribute__ ((format (printf, 2, 3)))
 #endif
-		;
+    ;
 
-	void warn(const char *format, ...)
+    void warn(const char *format, ...)
 #ifdef __GNUC__
-		 __attribute__ ((format (printf, 2, 3)))
+    __attribute__ ((format (printf, 2, 3)))
 #endif
-		;
+    ;
 
-	void info(const char *format, ...)
+    void info(const char *format, ...)
 #ifdef __GNUC__
-		 __attribute__ ((format (printf, 2, 3)))
+    __attribute__ ((format (printf, 2, 3)))
 #endif
-		;
+    ;
 
-	void debug(const char *format, ...)
+    void debug(const char *format, ...)
 #ifdef __GNUC__
-		 __attribute__ ((format (printf, 2, 3)))
+    __attribute__ ((format (printf, 2, 3)))
 #endif
-		;
-	
-	static void xmllog(const char *format, va_list args);
-	static void xmllog(void *ctx, const char *format, ...);
+    ;
+
+    static void xmllog(const char *format, va_list args);
+    static void xmllog(void *ctx, const char *format, ...);
 
 
-	LogLevel level() const {
+    LogLevel level() const {
         return level_;
     }
 
-	void level(LogLevel value) {
+    void level(LogLevel value) {
         level_ = value;
     }
 
-	bool printThreadId() const {
-		return printThreadId_;
-	}
+    bool printThreadId() const {
+        return printThreadId_;
+    }
 
-	void printThreadId(bool p) {
-		printThreadId_ = p;
-	}
-	
+    void printThreadId(bool p) {
+        printThreadId_ = p;
+    }
+
     virtual void logRotate() = 0;
 
 protected:
     LogLevel level_;
-	bool	 printThreadId_;
+    bool printThreadId_;
 
-	virtual void critInternal(const char *format, va_list args) = 0;
-	virtual void errorInternal(const char *format, va_list args) = 0;
-	virtual void warnInternal(const char *format, va_list args) = 0;
-	virtual void infoInternal(const char *format, va_list args) = 0;
-	virtual void debugInternal(const char *format, va_list args) = 0;
+    virtual void critInternal(const char *format, va_list args) = 0;
+    virtual void errorInternal(const char *format, va_list args) = 0;
+    virtual void warnInternal(const char *format, va_list args) = 0;
+    virtual void infoInternal(const char *format, va_list args) = 0;
+    virtual void debugInternal(const char *format, va_list args) = 0;
 };
 
 Logger* log();

@@ -5,8 +5,7 @@
 #include <xscript/extension.h>
 #include <xscript/threaded_tagged_block.h>
 
-namespace xscript
-{
+namespace xscript {
 class FileBlock;
 
 typedef XmlDocHelper (FileBlock::*Method)(const std::string&, Context*);
@@ -21,30 +20,29 @@ typedef XmlDocHelper (FileBlock::*Method)(const std::string&, Context*);
  *
  * Both methods support tagging based on file modification time.
  */
-class FileBlock : public ThreadedTaggedBlock
-{
+class FileBlock : public ThreadedTaggedBlock {
 public:
-	FileBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
-	virtual ~FileBlock();
+    FileBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    virtual ~FileBlock();
 
 protected:
-	virtual void postParse();
-	virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception);
-	
-	/**
-	 * Loading file with optional xinclude processing.
-	 */
-	XmlDocHelper loadFile(const std::string& file_name, Context *ctx);
+    virtual void postParse();
+    virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception);
 
-	/**
-	 * Create full filename based on relative name in first arg.
-	 */
+    /**
+     * Loading file with optional xinclude processing.
+     */
+    XmlDocHelper loadFile(const std::string& file_name, Context *ctx);
 
-	XmlDocHelper invokeFile(const std::string& file_name, Context *ctx);
+    /**
+     * Create full filename based on relative name in first arg.
+     */
+
+    XmlDocHelper invokeFile(const std::string& file_name, Context *ctx);
 
 private:
-	Method method_;
-	bool processXInclude_;
+    Method method_;
+    bool processXInclude_;
 };
 
 
