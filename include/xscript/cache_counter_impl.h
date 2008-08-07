@@ -3,7 +3,7 @@
 
 #include <string>
 #include <xscript/cache_counter.h>
-#include "counter_impl.h"
+#include <xscript/counter_impl.h>
 
 namespace xscript {
 

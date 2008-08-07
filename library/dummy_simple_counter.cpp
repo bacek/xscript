@@ -12,6 +12,7 @@ XmlNodeHelper DummySimpleCounter::createReport() const {
     return XmlNodeHelper(xmlNewNode(0, BAD_CAST "dummy"));
 }
 
+<<<<<<< HEAD:library/dummy_simple_counter.cpp
 DummySimpleCounterFactory::DummySimpleCounterFactory() { }
 DummySimpleCounterFactory::~DummySimpleCounterFactory() { }
 
@@ -27,4 +28,6 @@ std::auto_ptr<SimpleCounter> DummySimpleCounterFactory::createCounter(const std:
 REGISTER_COMPONENT2(SimpleCounterFactory, DummySimpleCounterFactory);
 static ComponentRegisterer<SimpleCounterFactory> reg_(new DummySimpleCounterFactory());
 
+=======
+>>>>>>> Move counters implementations into library.:library/dummy_simple_counter.cpp
 }

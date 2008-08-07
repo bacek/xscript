@@ -28,9 +28,14 @@ class CacheCounterFactory : public Component<CacheCounterFactory> {
 public:
     friend class ComponentRegisterer<CacheCounterFactory>;
 
-    virtual std::auto_ptr<CacheCounter> createCounter(const std::string& name) = 0;
+    /**
+     * By default factory produces DummyCounters. But if some block really need counter
+     * he can ask.
+     */
+    virtual std::auto_ptr<CacheCounter> createCounter(const std::string& name, bool want_real = false) = 0;
 };
 
 } // namespace xscript
 
 #endif // _XSCRIPT_CACHE_COUNTER_H_
+    

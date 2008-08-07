@@ -22,20 +22,4 @@ XmlNodeHelper DummyCacheCounter::createReport() const {
 }
 
 
-DummyCacheCounterFactory::DummyCacheCounterFactory() { }
-DummyCacheCounterFactory::~DummyCacheCounterFactory() { }
-
-void DummyCacheCounterFactory::init(const Config *config) {
-    (void)config;
-}
-
-std::auto_ptr<CacheCounter>
-DummyCacheCounterFactory::createCounter(const std::string& name) {
-    (void)name;
-    return std::auto_ptr<CacheCounter>(new DummyCacheCounter());
-}
-
-REGISTER_COMPONENT2(CacheCounterFactory, DummyCacheCounterFactory);
-static ComponentRegisterer<CacheCounterFactory> reg_(new DummyCacheCounterFactory());
-
 }

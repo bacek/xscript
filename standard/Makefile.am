@@ -26,9 +26,9 @@ xscript_xmlcache_la_LIBADD = ../library/libxscript.la
 xscript_xmlcache_la_LDFLAGS = -module
 
 xscript_statistics_la_SOURCES = \
-		average_counter_impl.cpp \
-		simple_counter_impl.cpp \
-		cache_counter_impl.cpp
+		average_counter_factory.cpp \
+		simple_counter_factory.cpp \
+		cache_counter_factory.cpp
 xscript_statistics_la_LDFLAGS = -module
 
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@

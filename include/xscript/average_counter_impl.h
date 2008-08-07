@@ -1,10 +1,9 @@
-#ifndef _XSCRIPT_STANDART_AVERAGE_COUNTER_IMPL_H
-#define _XSCRIPT_STANDART_AVERAGE_COUNTER_IMPL_H
+#ifndef _XSCRIPT_AVERAGE_COUNTER_IMPL_H
+#define _XSCRIPT_AVERAGE_COUNTER_IMPL_H
 
 #include <boost/cstdint.hpp>
 #include <xscript/average_counter.h>
-
-#include "counter_impl.h"
+#include <xscript/counter_impl.h>
 
 namespace xscript {
 /**

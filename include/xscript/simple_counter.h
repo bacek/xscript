@@ -24,6 +24,7 @@ public:
         }
     private:
         SimpleCounter * counter_;
+
     };
 
 };
@@ -32,7 +33,11 @@ class SimpleCounterFactory : public Component<SimpleCounterFactory> {
 public:
     friend class ComponentRegisterer<SimpleCounterFactory>;
 
-    virtual std::auto_ptr<SimpleCounter> createCounter(const std::string& name) = 0;
+    /**
+     * By default factory produces DummyCounters. But if some block really need counter
+     * he can ask.
+     */
+    virtual std::auto_ptr<SimpleCounter> createCounter(const std::string& name, bool want_real = false) = 0;
 };
 
 } // namespace xscript

@@ -4,7 +4,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/cstdint.hpp>
 #include <xscript/simple_counter.h>
-#include "counter_impl.h"
+#include <xscript/counter_impl.h>
 
 namespace xscript {
 class SimpleCounterImpl : public SimpleCounter, private CounterImpl {

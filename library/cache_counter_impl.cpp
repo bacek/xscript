@@ -1,5 +1,5 @@
 #include <boost/lexical_cast.hpp>
-#include "cache_counter_impl.h"
+#include "xscript/cache_counter_impl.h"
 
 namespace xscript {
 
@@ -45,18 +45,5 @@ XmlNodeHelper CacheCounterImpl::createReport() const {
     return line;
 }
 
-
-
-class CacheCounterFactoryImpl : public CacheCounterFactory {
-public:
-    virtual std::auto_ptr<CacheCounter> createCounter(const std::string& name);
-};
-
-std::auto_ptr<CacheCounter>
-CacheCounterFactoryImpl::createCounter(const std::string &name) {
-    return std::auto_ptr<CacheCounter>(new CacheCounterImpl(name));
-}
-
-static ComponentRegisterer<CacheCounterFactory> reg_(new CacheCounterFactoryImpl());
 
 }

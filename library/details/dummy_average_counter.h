@@ -29,15 +29,6 @@ public:
     virtual XmlNodeHelper createReport() const;
 };
 
-class DummyAverageCounterFactory : public AverageCounterFactory {
-public:
-    DummyAverageCounterFactory();
-    ~DummyAverageCounterFactory();
-
-    virtual void init(const Config *config);
-
-    std::auto_ptr<AverageCounter> createCounter(const std::string& name);
-};
 
 }
 

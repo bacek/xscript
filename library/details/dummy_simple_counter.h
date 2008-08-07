@@ -15,15 +15,6 @@ public:
     virtual XmlNodeHelper createReport() const;
 };
 
-class DummySimpleCounterFactory : public SimpleCounterFactory {
-public:
-    DummySimpleCounterFactory();
-    ~DummySimpleCounterFactory();
-
-    virtual void init(const Config *config);
-
-    std::auto_ptr<SimpleCounter> createCounter(const std::string& name);
-};
 }
 
 #endif

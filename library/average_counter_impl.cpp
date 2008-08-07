@@ -1,6 +1,6 @@
 #include <limits>
 #include <boost/lexical_cast.hpp>
-#include "average_counter_impl.h"
+#include "xscript/average_counter_impl.h"
 
 namespace xscript {
 
@@ -51,18 +51,5 @@ XmlNodeHelper AverageCounterImpl::createReport() const {
     return line;
 }
 
-
-
-class AverageCounterFactoryImpl : public AverageCounterFactory {
-public:
-    virtual std::auto_ptr<AverageCounter> createCounter(const std::string& name);
-};
-
-std::auto_ptr<AverageCounter>
-AverageCounterFactoryImpl::createCounter(const std::string &name) {
-    return std::auto_ptr<AverageCounter>(new AverageCounterImpl(name));
-}
-
-static ComponentRegisterer<AverageCounterFactory> reg_(new AverageCounterFactoryImpl());
 
 }

@@ -21,15 +21,6 @@ public:
     virtual XmlNodeHelper createReport() const;
 };
 
-class DummyCacheCounterFactory : public CacheCounterFactory {
-public:
-    DummyCacheCounterFactory();
-    ~DummyCacheCounterFactory();
-
-    virtual void init(const Config *config);
-
-    std::auto_ptr<CacheCounter> createCounter(const std::string& name);
-};
 
 }
 

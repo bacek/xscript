@@ -21,6 +21,12 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	memory_statistic.cpp \
 	doc_cache.cpp doc_cache_strategy.cpp \
 	profiler.cpp xslt_profiler.cpp \
+	default_average_counter_factory.cpp \
+	default_simple_counter_factory.cpp \
+	default_cache_counter_factory.cpp \
+	average_counter_impl.cpp \
+	simple_counter_impl.cpp \
+	cache_counter_impl.cpp \
 	dummy_average_counter.cpp \
 	dummy_simple_counter.cpp \
 	dummy_cache_counter.cpp 
