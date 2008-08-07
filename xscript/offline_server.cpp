@@ -31,7 +31,7 @@ public:
 };
 
 OfflineServer::OfflineServer(Config *config, const std::string& url, const std::multimap<std::string, std::string>& args) :
-        Server(config), url_(url), apply_stylesheet_(true), use_remote_call_(true) {
+    Server(config), url_(url), apply_stylesheet_(true), use_remote_call_(true) {
 
     ComponentRegisterer<CheckingPolicy> reg(new OfflineCheckingPolicy());
     (void)reg;
@@ -54,8 +54,11 @@ OfflineServer::OfflineServer(Config *config, const std::string& url, const std::
         else if (it->first == "dont-use-remote-call") {
             use_remote_call_ = false;
         }
-        else if (it->first == "profile") {
+        else if (it->first == "profile" || it->first == "norman") {
             profile_it = it;
+        }
+        else if (it->first == "root-dir") {
+            root_ = it->second;
         }
     }
 
