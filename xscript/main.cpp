@@ -5,6 +5,7 @@
 #include <sstream>
 #include <iostream>
 #include <stdexcept>
+#include <cstring>
 
 #include "xscript/config.h"
 #include "offline_server.h"
