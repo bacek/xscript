@@ -54,7 +54,7 @@ private:
 
 StandardThreadPool::StandardThreadPool() :
         running_(true),
-        counter_(SimpleCounterFactory::instance()->createCounter("working-threads")) {
+        counter_(SimpleCounterFactory::instance()->createCounter("working-threads", true)) {
 }
 
 StandardThreadPool::~StandardThreadPool() {
