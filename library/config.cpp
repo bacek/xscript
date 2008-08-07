@@ -99,7 +99,7 @@ Config::create(const char *file) {
 }
 
 std::auto_ptr<Config>
-Config::create(int &argc, char *argv[], HelpFunc func) {
+Config::create(int &argc, char *argv[], bool dont_check, HelpFunc func) {
     for (int i = 1; i < argc; ++i) {
         if (strncmp(argv[i], "--config", sizeof("--config") - 1) == 0) {
             const char *pos = strchr(argv[i], '=');
@@ -111,6 +111,11 @@ Config::create(int &argc, char *argv[], HelpFunc func) {
             }
         }
     }
+
+    if (dont_check) {
+        return std::auto_ptr<Config>();
+    }
+
     std::stringstream stream;
     if (NULL != func) {
         func(stream);
@@ -124,7 +129,7 @@ Config::create(int &argc, char *argv[], HelpFunc func) {
 XmlConfig::XmlConfig(const char *file) :
         doc_(NULL), regex_("\\$\\{([A-Za-z][A-Za-z0-9\\-]*)\\}") {
     namespace fs = boost::filesystem;
-    boost::filesystem::path path(file, fs::no_check);
+    fs::path path(file, fs::no_check);
     if (!fs::exists(path)) {
         std::stringstream stream;
         stream << "can not read " << path.native_file_string();

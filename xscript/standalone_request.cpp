@@ -304,6 +304,7 @@ StandaloneRequest::setHeader(const std::string &name, const std::string &value) 
 
 std::streamsize
 StandaloneRequest::write(const char *buf, std::streamsize size) {
+    std::cout << std::endl;
     std::cout.write(buf, size);
     return size;
 }

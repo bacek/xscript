@@ -26,7 +26,7 @@ public:
     virtual void subKeys(const std::string &value, std::vector<std::string> &v) const = 0;
 
     static std::auto_ptr<Config> create(const char *file);
-    static std::auto_ptr<Config> create(int &argc, char *argv[], HelpFunc func = NULL);
+    static std::auto_ptr<Config> create(int &argc, char *argv[], bool dont_check = false, HelpFunc func = NULL);
 };
 
 template<typename T> inline T

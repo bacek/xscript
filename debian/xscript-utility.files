@@ -1,1 +1,3 @@
 usr/bin/xscript-proc
+etc/xscript/offline.conf
+usr/share/xscript-proc/profile.xsl

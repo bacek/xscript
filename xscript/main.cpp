@@ -7,10 +7,6 @@
 #include <stdexcept>
 
 #include "xscript/config.h"
-#include "xscript/logger.h"
-#include "xscript/object.h"
-#include "xscript/context.h"
-#include "standalone_request.h"
 #include "offline_server.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -24,7 +20,7 @@ parse(const char *argv, std::multimap<std::string, std::string> &m) {
         m.insert(std::pair<std::string, std::string>(std::string(argv, pos), std::string(pos + 1)));
     }
     else {
-        m.insert(std::pair<std::string, std::string>(argv, "YES"));
+        m.insert(std::pair<std::string, std::string>(argv, ""));
     }
 }
 
@@ -39,7 +35,11 @@ main(int argc, char *argv[]) {
 
     using namespace xscript;
     try {
-        std::auto_ptr<Config> config = Config::create(argc, argv, processUsage);
+        std::auto_ptr<Config> config = Config::create(argc, argv, true);
+        if (NULL == config.get()) {
+            config = Config::create("/etc/xscript/offline.conf");
+            argc--;
+        }
 
         std::string url;
         std::multimap<std::string, std::string> args;

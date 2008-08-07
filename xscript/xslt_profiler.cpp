@@ -3,6 +3,9 @@
 #include <iostream>
 #include <map>
 
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
+
 #include <libxslt/xsltutils.h>
 
 #include "xscript/config.h"
@@ -24,11 +27,11 @@ namespace xscript {
 extern "C" int closeProfileFunc(void *ctx);
 extern "C" int writeProfileFunc(void *ctx, const char *data, int len);
 
-OfflineXsltProfiler::OfflineXsltProfiler() {
-}
+OfflineXsltProfiler::OfflineXsltProfiler() :
+    text_mode_(false) {}
 
-OfflineXsltProfiler::OfflineXsltProfiler(const std::string& xslt_path) :
-        xslt_path_(xslt_path) {}
+OfflineXsltProfiler::OfflineXsltProfiler(const std::string& xslt_path, bool text_mode) :
+    xslt_path_(xslt_path), text_mode_(text_mode) {}
 
 OfflineXsltProfiler::~OfflineXsltProfiler() {
     for (std::multimap<std::string, xmlDocPtr>::const_iterator it = docs_.begin();
@@ -36,12 +39,6 @@ OfflineXsltProfiler::~OfflineXsltProfiler() {
             ++it) {
         xmlFreeDoc(it->second);
     }
-}
-
-void
-OfflineXsltProfiler::init(const Config *config) {
-    xslt_path_ = config->as<std::string>("/xscript/offline/xslt-profile-path",
-                                         "/etc/share/xscript/profile.xsl");
 }
 
 void
@@ -54,23 +51,39 @@ void
 OfflineXsltProfiler::dumpProfileInfo(Context* ctx) {
     boost::mutex::scoped_lock lock(mutex_);
 
-    xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(&writeProfileFunc, &closeProfileFunc, ctx, NULL);
-    XmlUtils::throwUnless(NULL != buf);
-
     std::cout << std::endl << "XSLT PROFILE INFO" << std::endl;
 
     boost::shared_ptr<Stylesheet> stylesheet(static_cast<Stylesheet*>(NULL));
-    stylesheet = Stylesheet::create(xslt_path_);
+
+    if (text_mode_) {
+        namespace fs = boost::filesystem;
+        fs::path path(xslt_path_);
+        if (fs::exists(path) && !fs::is_directory(path)) {
+            stylesheet = Stylesheet::create(xslt_path_);
+        }
+        else {
+            std::cout << "Cannot find profile stylesheet " << xslt_path_ << ". Use default xml output." << std::endl;
+            log()->info("Cannot find profile stylesheet %s. Use default xml output.", xslt_path_.c_str());
+        }
+    }
 
     for (std::multimap<std::string, xmlDocPtr>::const_iterator it = docs_.begin();
             it != docs_.end();
             ++it) {
+        xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(&writeProfileFunc, &closeProfileFunc, ctx, NULL);
+        XmlUtils::throwUnless(NULL != buf);
+
+        std::cout << std::endl << it->first << std::endl;
+
         XmlDocHelper doc(xmlCopyDoc(it->second, 1));
         if (NULL != stylesheet.get()) {
             doc = stylesheet->apply(NULL, ctx, doc);
+            xsltSaveResultTo(buf, doc.get(), stylesheet->stylesheet());
+            xmlOutputBufferClose(buf);
         }
-        std::cout << std::endl << it->first << std::endl;
-        xsltSaveResultTo(buf, doc.get(), stylesheet->stylesheet());
+        else {
+            xmlSaveFormatFileTo(buf, doc.get(), NULL, 1);
+        }
     }
 }
 

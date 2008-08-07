@@ -32,17 +32,13 @@ public:
 
 OfflineServer::OfflineServer(Config *config, const std::string& url, const std::multimap<std::string, std::string>& args) :
         Server(config), url_(url), apply_stylesheet_(true), use_remote_call_(true) {
+
     ComponentRegisterer<CheckingPolicy> reg(new OfflineCheckingPolicy());
     (void)reg;
 
-    std::string xslt_path = config->as<std::string>("/xscript/offline/xslt-profile-path",
-                            "/etc/share/xscript/profile.xsl");
-
-    ComponentRegisterer<XsltProfiler> reg2(new OfflineXsltProfiler(xslt_path));
-    (void)reg2;
-
     root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");
 
+    std::multimap<std::string, std::string>::const_iterator profile_it = args.end();
     for (std::multimap<std::string, std::string>::const_iterator it = args.begin(); it != args.end(); ++it) {
         if (it->first == "header") {
             std::string::size_type pos = it->second.find(':');
@@ -58,6 +54,27 @@ OfflineServer::OfflineServer(Config *config, const std::string& url, const std::
         else if (it->first == "dont-use-remote-call") {
             use_remote_call_ = false;
         }
+        else if (it->first == "profile") {
+            profile_it = it;
+        }
+    }
+
+    if (profile_it != args.end()) {
+        bool text_mode = true;
+        if (profile_it->second.empty() || profile_it->second == "text") {
+        }
+        else if (profile_it->second == "xml") {
+            text_mode = false;
+        }
+        else {
+            throw std::runtime_error(std::string("Unknown value of profile argument: ") + profile_it->second);
+        }
+
+        std::string xslt_path = config->as<std::string>("/xscript/offline/xslt-profile-path",
+            "/usr/share/xscript-proc/profile.xsl");
+
+        ComponentRegisterer<XsltProfiler> reg2(new OfflineXsltProfiler(xslt_path, text_mode));
+        (void)reg2;
     }
 }
 

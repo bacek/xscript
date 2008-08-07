@@ -12,7 +12,7 @@ namespace xscript {
 /**
  * Init statistic
  */
-void initAllocationStatictic();
+void initAllocationStatistic();
 
 
 /**

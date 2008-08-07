@@ -18,7 +18,7 @@ int
 main(int argc, char *argv[]) {
 
     using namespace xscript;
-    initAllocationStatictic();
+    initAllocationStatistic();
 
     try {
         std::auto_ptr<Config> c = Config::create(argc, argv);
