@@ -35,7 +35,7 @@
 namespace xscript {
 
 Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        extension_(ext), owner_(owner), node_(node), strip_root_element_(false)
+        extension_(ext), owner_(owner), node_(node), is_guard_not_(false), strip_root_element_(false)
 {
     assert(node_);
     assert(owner_);
@@ -232,7 +232,7 @@ bool
 Block::checkGuard(Context *ctx) const {
     boost::shared_ptr<State> state = ctx->state();
     if (!guard_.empty()) {
-        return state->has(guard_) && state->asBool(guard_);
+        return is_guard_not_ ^ (state->has(guard_) && state->asBool(guard_));
     }
     return true;
 }
@@ -307,12 +307,28 @@ Block::property(const char *name, const char *value) {
     log()->debug("setting %s=%s", name, value);
 
     if (strncasecmp(name, "id", sizeof("id")) == 0) {
+        if (!id_.empty()) {
+            throw std::runtime_error("second id in block");
+        }
         id_.assign(value);
     }
     else if (strncasecmp(name, "guard", sizeof("guard")) == 0) {
+        if (!guard_.empty()) {
+            throw std::runtime_error("second guard in block");
+        }
         guard_.assign(value);
     }
+    else if (strncasecmp(name, "guard-not", sizeof("guard-not")) == 0) {
+        if (!guard_.empty()) {
+            throw std::runtime_error("second guard in block");
+        }
+        guard_.assign(value);
+        is_guard_not_ = true;
+    }
     else if (strncasecmp(name, "method", sizeof("method")) == 0) {
+        if (!method_.empty()) {
+            throw std::runtime_error("second method in block");
+        }
         method_.assign(value);
     }
     else if (strncasecmp(name, "xslt", sizeof("xslt")) == 0) {

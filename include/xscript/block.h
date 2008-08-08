@@ -115,6 +115,7 @@ private:
     std::vector<Param*> params_;
     std::vector<XPathExpr> xpath_;
     std::string id_, guard_, method_;
+    bool is_guard_not_;
     bool strip_root_element_;
 
 protected:

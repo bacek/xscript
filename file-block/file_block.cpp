@@ -22,8 +22,8 @@ namespace xscript {
 namespace fs = boost::filesystem;
 
 FileBlock::FileBlock(const Extension *ext, Xml *owner, xmlNodePtr node)
-        : Block(ext, owner, node), ThreadedTaggedBlock(ext, owner, node),
-        method_(NULL), processXInclude_(false) {
+    : Block(ext, owner, node), ThreadedTaggedBlock(ext, owner, node),
+    method_(NULL), processXInclude_(false) {
 }
 
 FileBlock::~FileBlock() {
