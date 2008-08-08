@@ -308,26 +308,32 @@ Block::property(const char *name, const char *value) {
 
     if (strncasecmp(name, "id", sizeof("id")) == 0) {
         if (!id_.empty()) {
-            throw std::runtime_error("second id in block");
+            throw std::runtime_error("duplicated id in block");
         }
         id_.assign(value);
     }
     else if (strncasecmp(name, "guard", sizeof("guard")) == 0) {
         if (!guard_.empty()) {
-            throw std::runtime_error("second guard in block");
+            throw std::runtime_error("duplicated guard in block");
+        }
+        if (*value == '\0') {
+            throw std::runtime_error("empty guard");
         }
         guard_.assign(value);
     }
     else if (strncasecmp(name, "guard-not", sizeof("guard-not")) == 0) {
         if (!guard_.empty()) {
-            throw std::runtime_error("second guard in block");
+            throw std::runtime_error("duplicated guard in block");
+        }
+        if (*value == '\0') {
+            throw std::runtime_error("empty guard-not");
         }
         guard_.assign(value);
         is_guard_not_ = true;
     }
     else if (strncasecmp(name, "method", sizeof("method")) == 0) {
         if (!method_.empty()) {
-            throw std::runtime_error("second method in block");
+            throw std::runtime_error("duplicated method in block");
         }
         method_.assign(value);
     }
