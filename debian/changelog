@@ -1,3 +1,9 @@
+xscript (5.29-1) unstable; urgency=low
+
+  * setStateByRequestUrlencoded added to Mist block
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 11 Aug 2008 15:49:10 +0400
+
 xscript (5.29-0) unstable; urgency=low
 
   * xslt profiler added

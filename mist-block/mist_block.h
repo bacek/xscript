@@ -52,6 +52,8 @@ protected:
 
     xmlNodePtr setStateByQuery(Context *ctx);
     xmlNodePtr setStateByRequest(Context *ctx);
+    xmlNodePtr setStateByRequestUrlencoded(Context *ctx);
+
     xmlNodePtr setStateByHeaders(Context *ctx);
     xmlNodePtr setStateByCookies(Context *ctx);
     xmlNodePtr setStateByProtocol(Context *ctx);

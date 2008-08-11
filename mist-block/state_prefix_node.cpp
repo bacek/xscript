@@ -87,17 +87,24 @@ StateRequestNode::StateRequestNode(const std::string& prefix, State* state) :
 }
 
 void
-StateRequestNode::build(const Request* req) {
+StateRequestNode::build(const Request* req, bool urlencode) {
     if (NULL != req && req->countArgs() > 0) {
         std::vector<std::string> names;
         req->argNames(names);
         for (std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
-            const std::string& name = *i;
+            std::string name = *i;
 
             std::vector<std::string> values;
             req->getArg(name, values);
-
             assert(values.size() > 0);
+
+            if (urlencode) {
+                for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) {
+                    *it = StringUtils::urlencode(*it);
+                }
+                name = StringUtils::urlencode(name);
+            }
+
             if (values.size() == 1) {
                 setParameter(name.c_str(), values[0]);
             }

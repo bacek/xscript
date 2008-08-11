@@ -455,7 +455,26 @@ MistBlock::setStateByRequest(Context *ctx) {
     boost::shared_ptr<State> state = ctx->state();
 
     StateRequestNode node(prefix, state.get());
-    node.build(ctx->request());
+    node.build(ctx->request(), false);
+    return node.releaseNode();
+}
+
+xmlNodePtr
+MistBlock::setStateByRequestUrlencoded(Context *ctx) {
+
+    PROLOGUE;
+
+    const std::vector<Param*> &p = params();
+    if (1 != p.size()) {
+        throw std::logic_error("setStateByRequestUrlencoded: arity error");
+    }
+
+    std::string prefix = p[0]->asString(ctx);
+
+    boost::shared_ptr<State> state = ctx->state();
+
+    StateRequestNode node(prefix, state.get());
+    node.build(ctx->request(), true);
     return node.releaseNode();
 }
 
@@ -472,7 +491,7 @@ MistBlock::echoRequest(Context *ctx) {
     std::string prefix = p[0]->asString(ctx);
 
     StateRequestNode node(prefix, NULL);
-    node.build(ctx->request());
+    node.build(ctx->request(), false);
     return node.releaseNode();
 }
 
@@ -904,6 +923,9 @@ MistMethodRegistrator::MistMethodRegistrator() {
 
     MistBlock::registerMethod("setStateByRequest", &MistBlock::setStateByRequest);
     MistBlock::registerMethod("set_state_by_request", &MistBlock::setStateByRequest);
+
+    MistBlock::registerMethod("setStateByRequestUrlencoded", &MistBlock::setStateByRequestUrlencoded);
+    MistBlock::registerMethod("set_state_by_request_urlencoded", &MistBlock::setStateByRequestUrlencoded);
 
     MistBlock::registerMethod("setStateByHeaders", &MistBlock::setStateByHeaders);
     MistBlock::registerMethod("set_state_by_headers", &MistBlock::setStateByHeaders);

@@ -35,7 +35,7 @@ class StateRequestNode : public StatePrefixNode {
 public:
     StateRequestNode(const std::string& prefix, State* state);
 
-    void build(const Request* req);
+    void build(const Request* req, bool urlencode);
 };
 
 
