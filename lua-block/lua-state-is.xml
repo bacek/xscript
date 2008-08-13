@@ -1,0 +1,14 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xscript xslt-dont-apply="yes" force-auth="yes" allow-methods="get"/>
+  <x:lua>
+	  <![CDATA[
+	xscript.state:setBool('guard1', false);
+    xscript.state:setBool('guard2', true);
+
+    xscript.state:setBool("guard1_passed", not xscript.state:is('guard1'));
+    xscript.state:setBool("guard2_passed", xscript.state:is('guard2'));
+  ]]>
+  </x:lua>
+</page>

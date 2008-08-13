@@ -28,6 +28,7 @@ public:
 
     void testState();
     void testStateHas();
+    void testStateIs();
     void testRequest();
     void testResponse();
     void testResponseRedirect();
@@ -45,6 +46,7 @@ private:
     CPPUNIT_TEST(testPrint);
     CPPUNIT_TEST(testState);
     CPPUNIT_TEST(testStateHas);
+    CPPUNIT_TEST(testStateIs);
     CPPUNIT_TEST(testRequest);
     CPPUNIT_TEST(testResponse);
     CPPUNIT_TEST(testResponseRedirect);
@@ -145,6 +147,24 @@ LuaTest::testStateHas() {
     CPPUNIT_ASSERT_EQUAL(std::string("0"), state->asString("xxx_art"));
 }
 
+void
+LuaTest::testStateIs() {
+
+    using namespace xscript;
+
+    RequestData data;
+    boost::shared_ptr<Script> script = Script::create("lua-state-is.xml");
+    boost::shared_ptr<Context> ctx(new Context(script, data));
+    ContextStopper ctx_stopper(ctx);
+
+    XmlDocHelper doc(script->invoke(ctx));
+    CPPUNIT_ASSERT(NULL != doc.get());
+
+    boost::shared_ptr<State> state = data.state();
+
+    CPPUNIT_ASSERT(state->asBool("guard1_passed"));
+    CPPUNIT_ASSERT(state->asBool("guard2_passed"));
+}
 class FakeResponse : public xscript::Response {
 public:
     void setCookie(const xscript::Cookie &cookie) {
