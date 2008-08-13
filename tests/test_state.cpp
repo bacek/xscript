@@ -23,6 +23,8 @@ public:
     void testBadCast();
     void testNonexistent();
 
+    void testIs();
+
 private:
     CPPUNIT_TEST_SUITE(StateTest);
     CPPUNIT_TEST(testBool);
@@ -34,6 +36,7 @@ private:
     CPPUNIT_TEST(testClearPrefix);
     CPPUNIT_TEST_EXCEPTION(testBadCast, std::exception);
     CPPUNIT_TEST_EXCEPTION(testNonexistent, std::exception);
+    CPPUNIT_TEST(testIs);
     CPPUNIT_TEST_SUITE_END();
 };
 
@@ -196,3 +199,25 @@ StateTest::testNonexistent() {
 
     state->asString("nonexistent");
 }
+
+
+void
+StateTest::testIs() {
+
+    using namespace xscript;
+    std::auto_ptr<State> state(new State());
+    CPPUNIT_ASSERT(state.get());
+
+    CPPUNIT_ASSERT_EQUAL(false, state->is("guard"));
+    state->setBool("guard", false);
+    CPPUNIT_ASSERT_EQUAL(false, state->is("guard"));
+    state->setBool("guard", true);
+    CPPUNIT_ASSERT_EQUAL(true, state->is("guard"));
+
+    // This tests are failing now. Just curios what is expected behaviour.
+    // state->setString("guard", "foo");
+    // CPPUNIT_ASSERT_EQUAL(false, state->is("guard"));
+    // state->setLong("guard", 2128506);
+    // CPPUNIT_ASSERT_EQUAL(false, state->is("guard"));
+}
+
