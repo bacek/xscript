@@ -24,8 +24,12 @@ extern "C" int luaResponseRedirectToPath(lua_State *lua) throw ();
 extern "C" int luaResponseSetContentType(lua_State *lua) throw ();
 
 static const struct luaL_reg responselib [] = {
-    {"setStatus",		luaResponseSetStatus
-    }, {"setHeader",		luaResponseSetHeader}, {"setCookie",		luaResponseSetCookie}, {"redirectToPath",	luaResponseRedirectToPath}, {"setContentType",	luaResponseSetContentType}, {NULL, NULL}
+    {"setStatus",       luaResponseSetStatus},
+    {"setHeader",       luaResponseSetHeader},
+    {"setCookie",       luaResponseSetCookie},
+    {"redirectToPath",  luaResponseRedirectToPath},
+    {"setContentType",  luaResponseSetContentType},
+    {NULL, NULL}
 };
 
 const struct luaL_reg * getResponseLib() {
@@ -33,7 +37,7 @@ const struct luaL_reg * getResponseLib() {
 }
 
 extern "C" int
-    luaResponseSetStatus(lua_State *lua) throw () {
+luaResponseSetStatus(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
@@ -51,7 +55,7 @@ extern "C" int
 }
 
 extern "C" int
-    luaResponseSetHeader(lua_State *lua) throw () {
+luaResponseSetHeader(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 3);
@@ -68,7 +72,7 @@ extern "C" int
 }
 
 extern "C" int
-    luaResponseRedirectToPath(lua_State *lua) throw () {
+luaResponseRedirectToPath(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
@@ -86,7 +90,7 @@ extern "C" int
 }
 
 extern "C" int
-    luaResponseSetContentType(lua_State *lua) throw () {
+luaResponseSetContentType(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
@@ -104,7 +108,7 @@ extern "C" int
 }
 
 extern "C" int
-    luaResponseSetCookie(lua_State *lua) throw () {
+luaResponseSetCookie(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);

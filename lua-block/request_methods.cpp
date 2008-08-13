@@ -26,8 +26,13 @@ extern "C" int luaRequestHasHeader(lua_State *state) throw ();
 extern "C" int luaRequestHasCookie(lua_State *state) throw ();
 
 static const struct luaL_reg requestlib [] = {
-    {"getArg",        luaRequestGetArg
-    }, {"getHeader",     luaRequestGetHeader}, {"getCookie",     luaRequestGetCookie}, {"hasArg",        luaRequestHasArg}, {"hasHeader",     luaRequestHasHeader}, {"hasCookie",     luaRequestHasCookie}, {NULL, NULL}
+    {"getArg",        luaRequestGetArg},
+    {"getHeader",     luaRequestGetHeader},
+    {"getCookie",     luaRequestGetCookie},
+    {"hasArg",        luaRequestHasArg},
+    {"hasHeader",     luaRequestHasHeader},
+    {"hasCookie",     luaRequestHasCookie},
+    {NULL, NULL}
 };
 
 const struct luaL_reg * getRequestLib() {
@@ -57,19 +62,19 @@ luaRequestGet(lua_State *lua, Func func) {
 }
 
 extern "C" int
-    luaRequestGetArg(lua_State *lua) throw () {
+luaRequestGetArg(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     return luaRequestGet(lua, boost::bind(&Request::getArg, _1, _2));
 }
 
 extern "C" int
-    luaRequestGetHeader(lua_State *lua) throw () {
+luaRequestGetHeader(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     return luaRequestGet(lua, boost::bind(&Request::getHeader, _1, _2));
 }
 
 extern "C" int
-    luaRequestGetCookie(lua_State *lua) throw () {
+luaRequestGetCookie(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     return luaRequestGet(lua, boost::bind(&Request::getCookie, _1, _2));
 }
@@ -96,19 +101,19 @@ luaRequestHas(lua_State *lua, Func func) {
 }
 
 extern "C" int
-    luaRequestHasArg(lua_State *lua) throw () {
+luaRequestHasArg(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     return luaRequestHas(lua, boost::bind(&Request::hasArg, _1, _2));
 }
 
 extern "C" int
-    luaRequestHasHeader(lua_State *lua) throw () {
+luaRequestHasHeader(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     return luaRequestHas(lua, boost::bind(&Request::hasHeader, _1, _2));
 }
 
 extern "C" int
-    luaRequestHasCookie(lua_State *lua) throw () {
+luaRequestHasCookie(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     return luaRequestHas(lua, boost::bind(&Request::hasCookie, _1, _2));
 }

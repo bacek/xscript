@@ -18,18 +18,20 @@
 
 namespace xscript {
 
-extern "C" int luaStateHas(lua_State *lua);
-extern "C" int luaStateGet(lua_State *lua);
+extern "C" {
+    int luaStateHas(lua_State *lua);
+    int luaStateGet(lua_State *lua);
 
-extern "C" int luaStateSetBool(lua_State *lua);
-extern "C" int luaStateSetLong(lua_State *lua);
-extern "C" int luaStateSetLongLong(lua_State *lua);
-extern "C" int luaStateSetULong(lua_State *lua);
-extern "C" int luaStateSetULongLong(lua_State *lua);
-extern "C" int luaStateSetDouble(lua_State *lua);
-extern "C" int luaStateSetString(lua_State *lua);
+    int luaStateSetBool(lua_State *lua);
+    int luaStateSetLong(lua_State *lua);
+    int luaStateSetLongLong(lua_State *lua);
+    int luaStateSetULong(lua_State *lua);
+    int luaStateSetULongLong(lua_State *lua);
+    int luaStateSetDouble(lua_State *lua);
+    int luaStateSetString(lua_State *lua);
 
-extern "C" int luaStateIs(lua_State *lua);
+    int luaStateIs(lua_State *lua);
+}
 
 static const struct luaL_reg statelib [] = {
     {"has",             luaStateHas },
@@ -49,8 +51,10 @@ const struct luaL_reg * getStateLib() {
     return statelib;
 }
 
-extern "C" int
-    luaStateHas(lua_State *lua) {
+extern "C" {
+
+int
+luaStateHas(lua_State *lua) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
@@ -70,8 +74,8 @@ extern "C" int
     }
 }
 
-extern "C" int
-    luaStateGet(lua_State *lua) {
+int
+luaStateGet(lua_State *lua) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
@@ -97,6 +101,7 @@ extern "C" int
     }
 }
 
+} // extern "C"
 
 
 template<typename Type> int
@@ -120,42 +125,44 @@ luaStateSet(lua_State *lua) {
     }
 }
 
-extern "C" int
-    luaStateSetBool(lua_State *lua) {
+extern "C" {
+
+int
+luaStateSetBool(lua_State *lua) {
     return luaStateSet<bool>(lua);
 }
 
-extern "C" int
-    luaStateSetLong(lua_State *lua) {
+int
+luaStateSetLong(lua_State *lua) {
     return luaStateSet<boost::int32_t>(lua);
 }
 
-extern "C" int
-    luaStateSetLongLong(lua_State *lua) {
+int
+luaStateSetLongLong(lua_State *lua) {
     return luaStateSet<boost::int64_t>(lua);
 }
 
-extern "C" int
-    luaStateSetULong(lua_State *lua) {
+int
+luaStateSetULong(lua_State *lua) {
     return luaStateSet<boost::uint32_t>(lua);
 }
 
-extern "C" int
-    luaStateSetULongLong(lua_State *lua) {
+int
+luaStateSetULongLong(lua_State *lua) {
     return luaStateSet<boost::uint64_t>(lua);
 }
 
-extern "C" int
-    luaStateSetString(lua_State *lua) {
+int
+luaStateSetString(lua_State *lua) {
     return luaStateSet<std::string>(lua);
 }
 
-extern "C" int
-    luaStateSetDouble(lua_State *lua) {
+int
+luaStateSetDouble(lua_State *lua) {
     return luaStateSet<double>(lua);
 }
 
-extern "C" int
+int
 luaStateIs(lua_State *lua) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
@@ -175,6 +182,8 @@ luaStateIs(lua_State *lua) {
         return 0;
     }
 }
+
+} // extern "C"
 
 } // namespace xscript
 
