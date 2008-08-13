@@ -232,7 +232,7 @@ bool
 Block::checkGuard(Context *ctx) const {
     boost::shared_ptr<State> state = ctx->state();
     if (!guard_.empty()) {
-        return is_guard_not_ ^ (state->has(guard_) && state->asBool(guard_));
+        return is_guard_not_ ^ state->is(guard_);
     }
     return true;
 }
