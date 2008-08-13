@@ -166,6 +166,8 @@ LuaTest::testStateIs() {
     CPPUNIT_ASSERT(state->asBool("guard1_passed"));
     CPPUNIT_ASSERT(state->asBool("guard2_passed"));
 }
+
+
 class FakeResponse : public xscript::Response {
 public:
     void setCookie(const xscript::Cookie &cookie) {
