@@ -162,6 +162,7 @@ LuaTest::testStateIs() {
 
     boost::shared_ptr<State> state = data.state();
 
+    CPPUNIT_ASSERT(state->asBool("guard0_passed"));
     CPPUNIT_ASSERT(state->asBool("guard1_passed"));
     CPPUNIT_ASSERT(state->asBool("guard2_passed"));
 }
