@@ -30,8 +30,16 @@ extern "C" int luaStateSetDouble(lua_State *lua);
 extern "C" int luaStateSetString(lua_State *lua);
 
 static const struct luaL_reg statelib [] = {
-    {"has",			luaStateHas
-    }, {"get",			luaStateGet}, {"setBool",		luaStateSetBool}, {"setLong",		luaStateSetLong}, {"setLongLong",	luaStateSetLongLong}, {"setULong",		luaStateSetULong}, {"setULongLong",	luaStateSetULongLong}, {"setString",		luaStateSetString}, {"setDouble",		luaStateSetDouble}, {NULL, NULL}
+    {"has",             luaStateHas },
+    {"get",             luaStateGet},
+    {"setBool",         luaStateSetBool},
+    {"setLong",         luaStateSetLong},
+    {"setLongLong",     luaStateSetLongLong},
+    {"setULong",        luaStateSetULong},
+    {"setULongLong",    luaStateSetULongLong},
+    {"setString",       luaStateSetString},
+    {"setDouble",       luaStateSetDouble},
+    {NULL, NULL}
 };
 
 const struct luaL_reg * getStateLib() {
