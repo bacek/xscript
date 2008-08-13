@@ -15,6 +15,12 @@ class Block;
 class Context;
 class ScriptFactory;
 
+/**
+ * Parsed script.
+ *
+ * Stores parse blocks, assosiated stylesheet and various processing flags.
+ * Created by ScriptFactory (for caching purposes).
+ */
 class Script : public virtual Object, public Xml {
 public:
     virtual ~Script();
