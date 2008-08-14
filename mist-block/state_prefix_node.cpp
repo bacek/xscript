@@ -2,6 +2,7 @@
 
 #include <cassert>
 
+#include "xscript/encoder.h"
 #include "xscript/util.h"
 #include "xscript/request.h"
 #include "state_param_node.h"
@@ -87,7 +88,7 @@ StateRequestNode::StateRequestNode(const std::string& prefix, State* state) :
 }
 
 void
-StateRequestNode::build(const Request* req, bool urlencode) {
+StateRequestNode::build(const Request* req, bool urlencode, Encoder* encoder) {
     if (NULL != req && req->countArgs() > 0) {
         std::vector<std::string> names;
         req->argNames(names);
@@ -97,6 +98,13 @@ StateRequestNode::build(const Request* req, bool urlencode) {
             std::vector<std::string> values;
             req->getArg(name, values);
             assert(values.size() > 0);
+
+            if (encoder) {
+                for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) {
+                    *it = encoder->encode(*it);
+                }
+                name = encoder->encode(name);
+            }
 
             if (urlencode) {
                 for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) {

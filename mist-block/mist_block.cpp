@@ -455,7 +455,7 @@ MistBlock::setStateByRequest(Context *ctx) {
     boost::shared_ptr<State> state = ctx->state();
 
     StateRequestNode node(prefix, state.get());
-    node.build(ctx->request(), false);
+    node.build(ctx->request(), false, NULL);
     return node.releaseNode();
 }
 
@@ -465,16 +465,24 @@ MistBlock::setStateByRequestUrlencoded(Context *ctx) {
     PROLOGUE;
 
     const std::vector<Param*> &p = params();
-    if (1 != p.size()) {
+    if (p.size() < 1 || p.size() > 2) {
         throw std::logic_error("setStateByRequestUrlencoded: arity error");
     }
 
     std::string prefix = p[0]->asString(ctx);
 
+    std::auto_ptr<Encoder> encoder(NULL);
+    if (2 == p.size()) {
+        std::string encoding = p[1]->asString(ctx);
+        if (strncasecmp(encoding.c_str(), "utf-8", sizeof("utf-8") - 1) != 0) {
+            encoder = std::auto_ptr<Encoder>(Encoder::createEscaping("utf-8", encoding.c_str()));
+        }
+    }
+
     boost::shared_ptr<State> state = ctx->state();
 
     StateRequestNode node(prefix, state.get());
-    node.build(ctx->request(), true);
+    node.build(ctx->request(), true, encoder.get());
     return node.releaseNode();
 }
 
@@ -491,7 +499,7 @@ MistBlock::echoRequest(Context *ctx) {
     std::string prefix = p[0]->asString(ctx);
 
     StateRequestNode node(prefix, NULL);
-    node.build(ctx->request(), false);
+    node.build(ctx->request(), false, NULL);
     return node.releaseNode();
 }
 

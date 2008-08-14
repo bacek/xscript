@@ -9,6 +9,7 @@
 
 namespace xscript {
 class Request;
+class Encoder;
 
 class StatePrefixNode : public StateNode {
 public:
@@ -35,7 +36,7 @@ class StateRequestNode : public StatePrefixNode {
 public:
     StateRequestNode(const std::string& prefix, State* state);
 
-    void build(const Request* req, bool urlencode);
+    void build(const Request* req, bool urlencode, Encoder* encoder);
 };
 
 

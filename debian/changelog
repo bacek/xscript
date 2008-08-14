@@ -1,12 +1,7 @@
-xscript (5.30-0) unstable; urgency=low
-
-  * State::is added (Bacek work)
-
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 14 Aug 2008 12:25:32 +0400
-
 xscript (5.29-1) unstable; urgency=low
 
   * setStateByRequestUrlencoded added to Mist block
+  * State::is added (Bacek work)
 
  -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 14 Aug 2008 12:23:55 +0400
 
