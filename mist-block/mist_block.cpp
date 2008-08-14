@@ -970,7 +970,9 @@ MistMethodRegistrator::MistMethodRegistrator() {
     MistBlock::registerMethod("attach_stylesheet", &MistBlock::attachStylesheet);
 
     MistBlock::registerMethod("location", &MistBlock::location);
+
     MistBlock::registerMethod("setStatus", &MistBlock::setStatus);
+    MistBlock::registerMethod("set_status", &MistBlock::setStatus);
 }
 
 static MistMethodRegistrator reg_;

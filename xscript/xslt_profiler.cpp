@@ -88,13 +88,13 @@ OfflineXsltProfiler::dumpProfileInfo(Context* ctx) {
 }
 
 extern "C" int
-    closeProfileFunc(void *ctx) {
+closeProfileFunc(void *ctx) {
     (void)ctx;
     return 0;
 }
 
 extern "C" int
-    writeProfileFunc(void *ctx, const char *data, int len) {
+writeProfileFunc(void *ctx, const char *data, int len) {
     if (0 == len) {
         return 0;
     }
