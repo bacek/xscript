@@ -1,4 +1,4 @@
-#include "xscript/average_counter_impl.h"
+#include "internal/average_counter_impl.h"
 
 namespace xscript
 {

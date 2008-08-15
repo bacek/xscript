@@ -1,5 +1,5 @@
 #include "details/default_cache_counter_factory.h"
-#include "xscript/cache_counter_impl.h"
+#include "internal/cache_counter_impl.h"
 #include "details/dummy_cache_counter.h"
 
 namespace xscript

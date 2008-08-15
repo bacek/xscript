@@ -1,5 +1,5 @@
-#ifndef _XSCRIPT_REQUEST_IMPL_H_
-#define _XSCRIPT_REQUEST_IMPL_H_
+#ifndef _XSCRIPT_INTERNAL_REQUEST_IMPL_H_
+#define _XSCRIPT_INTERNAL_REQUEST_IMPL_H_
 
 #include <set>
 #include <map>

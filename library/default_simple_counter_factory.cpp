@@ -1,5 +1,5 @@
 #include "details/default_simple_counter_factory.h"
-#include "xscript/simple_counter_impl.h"
+#include "internal/simple_counter_impl.h"
 #include "details/dummy_simple_counter.h"
 
 namespace xscript

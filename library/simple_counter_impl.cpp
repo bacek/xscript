@@ -1,5 +1,5 @@
 #include <boost/lexical_cast.hpp>
-#include "xscript/simple_counter_impl.h"
+#include "internal/simple_counter_impl.h"
 
 namespace xscript
 {

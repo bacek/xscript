@@ -1,9 +1,9 @@
-#ifndef _XSCRIPT_CACHE_COUNTER_IMPL_H
-#define _XSCRIPT_CACHE_COUNTER_IMPL_H
+#ifndef _XSCRIPT_INTERNAL_CACHE_COUNTER_IMPL_H
+#define _XSCRIPT_INTERNAL_CACHE_COUNTER_IMPL_H
 
 #include <string>
-#include <xscript/cache_counter.h>
-#include <xscript/counter_impl.h>
+#include "xscript/cache_counter.h"
+#include "internal/counter_impl.h"
 
 namespace xscript {
 

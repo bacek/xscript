@@ -10,7 +10,7 @@
 
 #include "settings.h"
 
-#include "xscript/request_impl.h"
+#include "internal/request_impl.h"
 #include "xscript/functors.h"
 #include "xscript/util.h"
 #include "xscript/range.h"

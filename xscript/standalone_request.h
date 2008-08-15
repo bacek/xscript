@@ -7,7 +7,7 @@
 #include <libxml/xpath.h>
 #include <boost/thread/mutex.hpp>
 
-#include "xscript/request_impl.h"
+#include "internal/request_impl.h"
 
 #include "xscript/util.h"
 #include "xscript/request.h"

@@ -1,5 +1,5 @@
 #include "details/default_average_counter_factory.h"
-#include "xscript/average_counter_impl.h"
+#include "internal/average_counter_impl.h"
 #include "details/dummy_average_counter.h"
 
 namespace xscript

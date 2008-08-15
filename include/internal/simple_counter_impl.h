@@ -1,12 +1,13 @@
-#ifndef _XSCRIPT_SIMPLE_COUNTER_IMPL_H_
-#define _XSCRIPT_SIMPLE_COUNTER_IMPL_H_
+#ifndef _XSCRIPT_INTERNAL_SIMPLE_COUNTER_IMPL_H_
+#define _XSCRIPT_INTERNAL_SIMPLE_COUNTER_IMPL_H_
 
 #include <boost/thread/mutex.hpp>
 #include <boost/cstdint.hpp>
-#include <xscript/simple_counter.h>
-#include <xscript/counter_impl.h>
+#include "xscript/simple_counter.h"
+#include "internal/counter_impl.h"
 
 namespace xscript {
+
 class SimpleCounterImpl : public SimpleCounter, private CounterImpl {
 public:
     SimpleCounterImpl(const std::string& name);
