@@ -47,6 +47,6 @@ libtest_la_LDFLAGS = -static
 test_SOURCES = test_main.cpp doc_pool_test.cpp 
 
 test_LDADD = ../library/libxscript.la libtest.la
-test_LDFLAGS = -ldl -lcppunit -export-dynamic
+test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic
 
 endif

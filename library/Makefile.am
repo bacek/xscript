@@ -42,5 +42,5 @@ noinst_HEADERS = details/expect.h details/extension_list.h details/loader.h \
 
 libxscript_la_LDFLAGS = -lpthread -ldl
 
-AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread -I@top_srcdir@/include -I@builddir@ -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE @yandex_platform_CFLAGS@
+AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread -I@top_srcdir@/include -I@builddir@ @yandex_platform_CFLAGS@
 AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem -lcrypto -I@top_srcdir@/include @yandex_platform_LIBS@

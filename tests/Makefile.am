@@ -12,7 +12,7 @@ test_SOURCES = main.cpp test_config.cpp test_date.cpp test_encoder.cpp \
 	test_doc_cache.cpp
 
 test_LDADD = ../library/libxscript.la
-test_LDFLAGS = -ldl -lcppunit -export-dynamic
+test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic
 
 endif
 

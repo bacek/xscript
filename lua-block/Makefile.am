@@ -21,6 +21,6 @@ check_PROGRAMS = test
 test_SOURCES = test_main.cpp test_lua.cpp
 
 test_LDADD = ../library/libxscript.la 
-test_LDFLAGS = -ldl -lcppunit -export-dynamic
+test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic
 
 endif
