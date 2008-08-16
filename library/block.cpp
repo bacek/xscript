@@ -73,6 +73,18 @@ Block::threaded() const {
 
 void
 Block::threaded(bool) {
+    assert(!"Block::threaded(bool) invoked");
+}
+
+
+bool 
+Block::tagged() const {
+    return false;
+}
+
+void
+Block::tagged(bool) {
+    assert(!"Block::tagged(bool) invoked");
 }
 
 void

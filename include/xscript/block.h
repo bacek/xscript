@@ -46,6 +46,9 @@ public:
 
     virtual bool threaded() const;
     virtual void threaded(bool value);
+    
+    virtual bool tagged() const;
+    virtual void tagged(bool value);
 
     inline bool stripRootElement() const {
         return strip_root_element_;
