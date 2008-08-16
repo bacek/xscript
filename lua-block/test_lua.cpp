@@ -13,7 +13,7 @@
 #include "xscript/context.h"
 #include "xscript/response.h"
 #include "xscript/request_data.h"
-#include "xscript/request_impl.h"
+#include "internal/request_impl.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
