@@ -2,16 +2,14 @@
 <?xml-stylesheet type="text/xsl" href="script.xsl"?>
 <page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
     <!-- Mixed blocks. -->
-    <xscript allow-methods="get">
-        <x:http>
-            <method>getHttp</method>
-            <param type="string">file://include.xml</param>
-        </x:http>
-        <x:http>
-            <method>getHttp</method>
-            <param type="string">file://include.xml</param>
-            <param type="tag">5</param>
-        </x:http>
-	</xscript>
+    <x:http>
+        <method>getHttp</method>
+        <param type="string">file://include.xml</param>
+    </x:http>
+    <x:http>
+        <method>getHttp</method>
+        <param type="string">file://include.xml</param>
+        <param type="tag">5</param>
+    </x:http>
 </page>
 
