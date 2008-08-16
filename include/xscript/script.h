@@ -45,6 +45,10 @@ public:
         return flags_ & FLAG_BINARY_PAGE;
     }
 
+    inline bool cacheWholePage() const {
+        return flags_ & FLAG_CACHE_WHOLE_PAGE;
+    }
+
     inline unsigned int expireTimeDelta() const {
         return expire_time_delta_;
     }
@@ -149,6 +153,8 @@ protected:
     static const unsigned int FLAG_FORCE_AUTH = 1 << 3;
     static const unsigned int FLAG_BINARY_PAGE = 1 << 4;
 
+    // Cache whole page html.
+    static const unsigned int FLAG_CACHE_WHOLE_PAGE = 1 << 5;
 private:
     friend class ScriptFactory;
 

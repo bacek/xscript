@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="koi8-r" ?>
+<?xml-stylesheet type="text/xsl" href="script.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+    <!-- Single block. -->
+    <xscript allow-methods="get">
+        <!-- block without tag. So whole page is not cacheable -->
+        <x:http>
+            <method>getHttp</method>
+            <param type="string">file://include.xml</param>
+        </x:http>
+	</xscript>
+</page>
+
