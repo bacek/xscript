@@ -73,7 +73,6 @@ Block::threaded() const {
 
 void
 Block::threaded(bool) {
-    assert(!"Block::threaded(bool) invoked");
 }
 
 
