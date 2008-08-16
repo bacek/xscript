@@ -69,7 +69,7 @@ HttpBlock::postParse() {
     }
 }
 
-XmlDocHelper
+InvokeResult
 HttpBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     return (this->*method_)(ctx, a);
 }
@@ -88,7 +88,7 @@ HttpBlock::property(const char *name, const char *value) {
     }
 }
 
-XmlDocHelper
+InvokeResult
 HttpBlock::getHttp(Context *ctx, boost::any &a) {
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
@@ -114,16 +114,16 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
             throw std::runtime_error(std::string("Got empty document. URL: ") + url);
         }
 
+        bool modified = true;
         if (tagged()) {
 
             struct stat st;
             int res = stat(native_path.c_str(), &st);
             if (res != 0) {
-                return XmlDocHelper();
+                return InvokeResult();
             }
 
             const Tag* tag = boost::any_cast<Tag>(&a);
-            bool modified = true;
 
             if (tag && tag->last_modified != Tag::UNDEFINED_TIME && st.st_mtime <= tag->last_modified) {
                 modified = false;
@@ -133,7 +133,7 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
             a = boost::any(local_tag);
         }
 
-        return doc;
+        return InvokeResult(doc, !modified);
     }
 
     PROFILER(log(), std::string("getHttp: ") + url);
@@ -149,19 +149,20 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
     const Tag* result_tag = boost::any_cast<Tag>(&a);
 
     if (result_tag && !result_tag->modified) {
-        return XmlDocHelper();
+        XmlDocHelper d;
+        return InvokeResult(d, true);
     }
 
     return response(helper);
 }
 
-XmlDocHelper
+InvokeResult
 HttpBlock::getHttpObsolete(Context *ctx, boost::any &a) {
     log()->warn("Obsoleted call");
     return getHttp(ctx, a);
 }
 
-XmlDocHelper
+InvokeResult
 HttpBlock::postHttp(Context *ctx, boost::any &a) {
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
@@ -186,13 +187,14 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
     const Tag* result_tag = boost::any_cast<Tag>(&a);
 
     if (result_tag && !result_tag->modified) {
-        return XmlDocHelper();
+        XmlDocHelper d;
+        return InvokeResult(d, true);
     }
 
     return response(helper);
 }
 
-XmlDocHelper
+InvokeResult
 HttpBlock::getByState(Context *ctx, boost::any &a) {
     (void)a;
 
@@ -230,7 +232,7 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
     return response(helper);
 }
 
-XmlDocHelper
+InvokeResult
 HttpBlock::getByRequest(Context *ctx, boost::any &a) {
     (void)a;
 
@@ -259,23 +261,26 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
     return response(helper);
 }
 
-XmlDocHelper
+InvokeResult
 HttpBlock::response(const HttpHelper &helper) const {
 
     const std::string& str = helper.content();
     if (helper.isXml()) {
-        return XmlDocHelper(xmlReadMemory(str.c_str(), str.size(), "",
+        XmlDocHelper d(xmlReadMemory(str.c_str(), str.size(), "",
                                           charset_.empty() ? NULL : charset_.c_str(), XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT));
+        return InvokeResult(d, false);
     }
     else if (helper.contentType() == "text/plain") {
         std::string res;
         res.append("<text>").append(XmlUtils::escape(str)).append("</text>");
-        return XmlDocHelper(xmlParseMemory(res.c_str(), res.size()));
+        XmlDocHelper d(xmlParseMemory(res.c_str(), res.size()));
+        return InvokeResult(d, false);
     }
     else if (helper.contentType() == "text/html") {
         std::string data = XmlUtils::sanitize(str);
-        return XmlDocHelper(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
+        XmlDocHelper d(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
                                           helper.charset().c_str(), XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT));
+        return InvokeResult(d, false);
     }
     throw std::runtime_error("format is not recognized");
 }

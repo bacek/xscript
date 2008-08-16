@@ -21,7 +21,7 @@ public:
 protected:
 
     void reportError(const char *message, lua_State *lua);
-    virtual XmlDocHelper call(Context *ctx, boost::any &) throw (std::exception);
+    virtual InvokeResult call(Context *ctx, boost::any &) throw (std::exception);
 
 private:
     const char *code_;

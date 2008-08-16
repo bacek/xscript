@@ -124,7 +124,7 @@ Block::fullName(const std::string &name) const {
 }
 
 
-XmlDocHelper
+InvokeResult
 Block::invoke(Context *ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     if (!checkGuard(ctx)) {
@@ -134,21 +134,21 @@ Block::invoke(Context *ctx) {
     return invokeInternal(ctx);
 }
 
-XmlDocHelper
+InvokeResult
 Block::invokeInternal(Context *ctx) {
 
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
     try {
         boost::any a;
-        XmlDocHelper doc(call(ctx, a));
+        InvokeResult res(call(ctx, a));
 
-        if (NULL == doc.get()) {
+        if (NULL == res.doc.get()) {
             log()->error("%s, got empty document", BOOST_CURRENT_FUNCTION);
             return errorResult("got empty document");
         }
 
-        return processResponse(ctx, doc, a);
+        return processResponse(ctx, res, a);
     }
     catch (const XmlNodeRuntimeError &e) {
         log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
@@ -172,8 +172,9 @@ Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
     }
 }
 
-XmlDocHelper
-Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
+InvokeResult
+Block::processResponse(Context *ctx, InvokeResult res, boost::any &a) {
+    XmlDocHelper & doc = *res.doc.get();
     if (NULL == doc.get()) {
         throw std::runtime_error("Null response document");
     }
@@ -189,7 +190,7 @@ Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
     postCall(ctx, doc, a);
     evalXPath(ctx, doc);
 
-    return doc;
+    return res;
 }
 
 void
@@ -206,7 +207,7 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
     }
 }
 
-XmlDocHelper
+InvokeResult
 Block::errorResult(const char *error, xmlNodePtr error_node) const {
 
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
@@ -226,15 +227,15 @@ Block::errorResult(const char *error, xmlNodePtr error_node) const {
         }
     }
 
-    return doc;
+    return InvokeResult(doc, false);
 }
 
-XmlDocHelper
+InvokeResult
 Block::errorResult(xmlNodePtr error_node) const {
     return errorResult(NULL, error_node);
 }
 
-XmlDocHelper
+InvokeResult
 Block::errorResult(const char *error) const {
     return errorResult(error, NULL);
 }
@@ -299,13 +300,13 @@ Block::appendNodeValue(xmlNodePtr node, std::string &val) const {
     }
 }
 
-XmlDocHelper
+InvokeResult
 Block::fakeResult() const {
 
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
-    return doc;
+    return InvokeResult(doc, false);
 }
 
 void
@@ -367,7 +368,8 @@ Block::postCall(Context *, const XmlDocHelper &, const boost::any &) {
 
 void
 Block::callInternal(boost::shared_ptr<Context> ctx, unsigned int slot) {
-    ctx->result(slot, invoke(ctx.get()).release());
+    InvokeResult res = invoke(ctx.get());
+    ctx->result(slot, res);
 }
 
 void

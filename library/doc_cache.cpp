@@ -22,8 +22,9 @@ public:
             : Block(ext, owner, node), doc_cache_(doc_cache) {
     }
 
-    XmlDocHelper call(Context *, boost::any &) throw (std::exception) {
-        return doc_cache_.createReport();
+    InvokeResult call(Context *, boost::any &) throw (std::exception) {
+        XmlDocHelper doc = doc_cache_.createReport();
+        return InvokeResult(doc, false);
     }
 private:
     const DocCache &doc_cache_;

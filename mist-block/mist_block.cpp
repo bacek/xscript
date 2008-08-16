@@ -70,14 +70,15 @@ MistBlock::postParse() {
     }
 }
 
-XmlDocHelper
+InvokeResult
 MistBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
 
     xmlDocSetRootElement(doc.get(), (this->*method_)(ctx));
-    return doc;
+    // TODO Spearate mist methods so we can properly set "cached" flag.
+    return InvokeResult(doc, true);
 }
 
 xmlNodePtr

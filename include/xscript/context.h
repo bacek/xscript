@@ -12,6 +12,8 @@
 #include <boost/function.hpp>
 #include <libxml/tree.h>
 
+#include <xscript/invoke_result.h>
+
 namespace xscript {
 
 class State;
@@ -36,12 +38,12 @@ public:
 
     void wait(int millis);
     void expect(unsigned int count);
-    void result(unsigned int n, xmlDocPtr doc);
+    void result(unsigned int n, InvokeResult res);
     void addNode(xmlNodePtr node);
 
     bool resultsReady() const;
     boost::xtime delay(int millis) const;
-    xmlDocPtr result(unsigned int n) const;
+    InvokeResult result(unsigned int n) const;
 
     inline Request* request() const {
         return request_;
@@ -92,7 +94,7 @@ private:
     Response *response_;
     Context* parent_context_;
     std::string xslt_name_;
-    std::vector<xmlDocPtr> results_;
+    std::vector<InvokeResult> results_;
     std::list<xmlNodePtr> clear_node_list_;
 
     boost::condition condition_;

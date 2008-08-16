@@ -53,8 +53,9 @@ public:
             : Block(ext, owner, node), builder_(builder) {
     }
 
-    XmlDocHelper call(Context *, boost::any &) throw (std::exception) {
-        return builder_.createReport();
+    InvokeResult call(Context *, boost::any &) throw (std::exception) {
+        XmlDocHelper doc = builder_.createReport();
+        return InvokeResult(doc, false);
     }
 private:
     const StatBuilder &builder_;

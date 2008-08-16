@@ -680,7 +680,7 @@ extern "C" void
         return;
     }
     try {
-        XmlDocHelper doc = block->invoke(ctx);
+        InvokeResult doc = block->invoke(ctx);
         if (NULL != doc.get()) {
             xmlAddChild(tctx->insert, xmlCopyNode(xmlDocGetRootElement(doc.get()), 1));
             return;
@@ -689,7 +689,7 @@ extern "C" void
     }
     catch (const std::exception &e) {
         log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
-        XmlDocHelper doc = block->errorResult(e.what());
+        InvokeResult doc = block->errorResult(e.what());
         if (NULL != doc.get()) {
             xmlAddChild(tctx->insert, xmlCopyNode(xmlDocGetRootElement(doc.get()), 1));
         }

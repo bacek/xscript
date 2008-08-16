@@ -26,7 +26,7 @@ class HttpHelper;
 
 class HttpMethodRegistrator;
 
-typedef XmlDocHelper (HttpBlock::*HttpMethod)(Context *ctx, boost::any &);
+typedef InvokeResult (HttpBlock::*HttpMethod)(Context *ctx, boost::any &);
 
 #ifndef HAVE_HASHMAP
 typedef std::map<std::string, HttpMethod> MethodMap;
@@ -43,18 +43,18 @@ public:
 protected:
     virtual void postParse();
     virtual void property(const char *name, const char *value);
-    virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception);
+    virtual InvokeResult call(Context *ctx, boost::any &a) throw (std::exception);
 
-    XmlDocHelper getHttp(Context *ctx, boost::any &a);
+    InvokeResult getHttp(Context *ctx, boost::any &a);
 
     // Proxy for getHttp with emiting notice about obsoleted call.
-    XmlDocHelper getHttpObsolete(Context *ctx, boost::any &a);
+    InvokeResult getHttpObsolete(Context *ctx, boost::any &a);
 
-    XmlDocHelper postHttp(Context *ctx, boost::any &a);
-    XmlDocHelper getByState(Context *ctx, boost::any &a);
-    XmlDocHelper getByRequest(Context *ctx, boost::any &a);
+    InvokeResult postHttp(Context *ctx, boost::any &a);
+    InvokeResult getByState(Context *ctx, boost::any &a);
+    InvokeResult getByRequest(Context *ctx, boost::any &a);
 
-    XmlDocHelper response(const HttpHelper &h) const;
+    InvokeResult response(const HttpHelper &h) const;
     void createTagInfo(const HttpHelper &h, boost::any &a) const;
 
     static void registerMethod(const char *name, HttpMethod method);

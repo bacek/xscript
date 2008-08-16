@@ -50,7 +50,7 @@ TaggedBlock::cacheTime(time_t cache_time) {
     cache_time_ = cache_time;
 }
 
-XmlDocHelper
+InvokeResult
 TaggedBlock::invokeInternal(Context *ctx) {
 
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
@@ -76,10 +76,10 @@ TaggedBlock::invokeInternal(Context *ctx) {
                 tag.modified = true;
 
                 boost::any a(tag);
-                XmlDocHelper newdoc = call(ctx, a);
+                InvokeResult newdoc = call(ctx, a);
                 tag = boost::any_cast<Tag>(a);
 
-                if (NULL != newdoc.get()) {
+                if (NULL != newdoc.doc.get()) {
                     return processResponse(ctx, newdoc, a);
                 }
 
@@ -97,7 +97,7 @@ TaggedBlock::invokeInternal(Context *ctx) {
 
         if (have_cached_doc) {
             evalXPath(ctx, doc);
-            return doc;
+            return InvokeResult(doc, true);
         }
 
         return Block::invokeInternal(ctx);

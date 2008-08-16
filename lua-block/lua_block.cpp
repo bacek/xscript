@@ -276,7 +276,7 @@ LuaSharedContext create_lua(Context *ctx, std::string &buffer) {
     return lua_context;
 }
 
-XmlDocHelper
+InvokeResult
 LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 
     log()->entering(BOOST_CURRENT_FUNCTION);
@@ -324,7 +324,8 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     xmlDocSetRootElement(doc.get(), node.get());
     node.release();
 
-    return doc;
+    // Cheating-cheating!
+    return InvokeResult(doc, true);
 }
 
 LuaExtension::LuaExtension() {

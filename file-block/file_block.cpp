@@ -62,7 +62,7 @@ FileBlock::postParse() {
     }
 }
 
-XmlDocHelper
+InvokeResult
 FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
@@ -79,14 +79,15 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     std::string file = fullName(filename);
 
     if (!tagged()) {
-        return (this->*method_)(file, ctx);
+        XmlDocHelper d((this->*method_)(file, ctx));
+        return InvokeResult(d, false);
     }
 
     struct stat st;
     int res = stat(file.c_str(), &st);
     if (res != 0) {
         // Return empty document if we can't stat file. It's not available anyway.
-        return XmlDocHelper();
+        return InvokeResult();
     }
 
     const Tag* tag = boost::any_cast<Tag>(&a);
@@ -107,7 +108,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     Tag local_tag(modified, st.st_mtime, Tag::UNDEFINED_TIME);
     a = boost::any(local_tag);
 
-    return doc;
+    return InvokeResult(doc, !modified);
 }
 
 XmlDocHelper

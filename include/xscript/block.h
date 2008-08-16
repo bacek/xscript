@@ -1,14 +1,15 @@
 #ifndef _XSCRIPT_BLOCK_H_
 #define _XSCRIPT_BLOCK_H_
 
+#include <utility>
 #include <map>
 #include <list>
 #include <vector>
 #include <exception>
 #include <boost/any.hpp>
 #include <xscript/object.h>
-#include <xscript/xml_helpers.h>
 #include <xscript/extension.h>
+#include <xscript/invoke_result.h>
 
 namespace xscript {
 
@@ -71,12 +72,13 @@ public:
     virtual void parse();
     virtual std::string fullName(const std::string &name) const;
 
-    virtual XmlDocHelper invoke(Context *ctx);
+    virtual InvokeResult invoke(Context *ctx);
+
     virtual void invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc);
 
-    XmlDocHelper errorResult(const char *error) const;
-    XmlDocHelper errorResult(xmlNodePtr error_node) const;
+    InvokeResult errorResult(const char *error) const;
+    InvokeResult errorResult(xmlNodePtr error_node) const;
 
     Logger * log() const {
         return extension_->getLogger();
@@ -84,10 +86,10 @@ public:
 protected:
     class XPathExpr;
 
-    virtual XmlDocHelper invokeInternal(Context *ctx);
+    virtual InvokeResult invokeInternal(Context *ctx);
     virtual void postParse();
-    virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception) = 0;
-    virtual XmlDocHelper processResponse(Context *ctx, XmlDocHelper doc, boost::any &a);
+    virtual InvokeResult call(Context *ctx, boost::any &a) throw (std::exception) = 0;
+    virtual InvokeResult processResponse(Context *ctx, InvokeResult doc, boost::any &a);
     virtual void property(const char *name, const char *value);
     virtual void postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a);
     virtual void callInternal(boost::shared_ptr<Context> ctx, unsigned int slot);
@@ -97,7 +99,7 @@ protected:
     void evalXPath(Context *ctx, const XmlDocHelper &doc) const;
     void appendNodeValue(xmlNodePtr node, std::string &val) const;
 
-    XmlDocHelper fakeResult() const;
+    InvokeResult fakeResult() const;
 
     bool xpathNode(const xmlNodePtr node) const;
     bool paramNode(const xmlNodePtr node) const;
@@ -109,7 +111,7 @@ protected:
         return xpath_;
     }
 
-    XmlDocHelper errorResult(const char *error, xmlNodePtr error_node) const;
+    InvokeResult errorResult(const char *error, xmlNodePtr error_node) const;
 
 private:
     const Extension *extension_;
