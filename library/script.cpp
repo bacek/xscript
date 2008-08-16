@@ -47,7 +47,9 @@ namespace xscript {
 
 Script::Script(const std::string &name) :
         modified_(std::numeric_limits<time_t>::min()), doc_(NULL),
-        name_(name), flags_(FLAG_FORCE_STYLESHEET), expire_time_delta_(300),
+        name_(name), 
+        flags_(FLAG_FORCE_STYLESHEET),
+        expire_time_delta_(300),
         stylesheet_node_(NULL) {
 }
 
@@ -315,12 +317,18 @@ Script::parseBlocks() {
     log()->debug("parsing blocks");
 
     bool is_threaded = threaded();
+    bool cache_whole_page = true;
     for (std::vector<Block*>::iterator i = blocks_.begin(), end = blocks_.end(); i != end; ++i) {
         Block *block = *i;
         assert(block);
         block->threaded(is_threaded);
         block->parse();
+
+        cache_whole_page &= block->tagged();
     }
+
+    if(cache_whole_page)
+        flags_ |= FLAG_CACHE_WHOLE_PAGE;
 }
 
 void
