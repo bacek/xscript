@@ -56,7 +56,7 @@ MistTest::testDrop() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     std::vector<std::string> v;
@@ -74,7 +74,7 @@ MistTest::testTypes() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     boost::shared_ptr<State> state = ctx->state();
@@ -97,7 +97,7 @@ MistTest::testDate() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     boost::shared_ptr<State> state = ctx->state();
@@ -122,7 +122,7 @@ MistTest::testSplit() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     boost::shared_ptr<State> state = ctx->state();
@@ -145,7 +145,7 @@ MistTest::testEscape() {
     boost::shared_ptr<State> state = ctx->state();
     state->setString("data", "<stress>&data;</stress>");
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 }
 
@@ -164,7 +164,7 @@ MistTest::testStylesheet() {
 
     CPPUNIT_ASSERT_EQUAL(std::string("object.xsl"), ctx->xsltName());
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("stylesheet.xsl"), ctx->xsltName());
@@ -180,7 +180,7 @@ MistTest::testDefined() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     boost::shared_ptr<State> state = ctx->state();
@@ -197,7 +197,7 @@ MistTest::testKeys() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     boost::shared_ptr<State> state = ctx->state();

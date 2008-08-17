@@ -81,11 +81,11 @@ XsltTest::testFile(const std::string &name) {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(true, script->forceStylesheet());
-    script->applyStylesheet(ctx.get(), doc);
+    script->applyStylesheet(ctx.get(), *doc.doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("success"),
                          XmlUtils::xpathValue(doc.get(), "/result/status"));
@@ -104,13 +104,13 @@ XsltTest::testMist() {
 
     boost::shared_ptr<State> state = ctx->state();
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("2"), state->asString("c"));
 
     CPPUNIT_ASSERT_EQUAL(true, script->forceStylesheet());
-    script->applyStylesheet(ctx.get(), doc);
+    script->applyStylesheet(ctx.get(), *doc.doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("1"), state->asString("a"));
     CPPUNIT_ASSERT_EQUAL(std::string("1"), state->asString("b"));

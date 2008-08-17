@@ -89,8 +89,10 @@ Server::handleRequest(RequestData *request_data) {
         }
         ctx->authContext(auth);
 
-        XmlDocHelper doc = script->invoke(ctx);
-        XmlUtils::throwUnless(NULL != doc.get());
+        InvokeResult res = script->invoke(ctx);
+        XmlUtils::throwUnless(NULL != res.get());
+
+        XmlDocHelper * doc = res.doc.get();
 
         if (script->binaryPage()) {
             sendHeaders(ctx.get());
@@ -98,10 +100,10 @@ Server::handleRequest(RequestData *request_data) {
         }
 
         if (script->forceStylesheet() && needApplyStylesheet(ctx->request())) {
-            script->applyStylesheet(ctx.get(), doc);
+            script->applyStylesheet(ctx.get(), *doc);
         }
         else {
-            script->removeUnusedNodes(doc);
+            script->removeUnusedNodes(*res.doc.get());
         }
 
         sendHeaders(ctx.get());
@@ -114,7 +116,7 @@ Server::handleRequest(RequestData *request_data) {
             }
             buf = xmlOutputBufferCreateIO(&writeFunc, &closeFunc, ctx.get(), encoder);
             XmlUtils::throwUnless(NULL != buf);
-            ctx->documentWriter()->write(ctx->response(), doc, buf);
+            ctx->documentWriter()->write(ctx->response(), *doc, buf);
         }
 
         XsltProfiler::instance()->dumpProfileInfo(ctx.get());

@@ -167,9 +167,11 @@ FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
     ContextStopper ctx_stopper(local_ctx);
     local_ctx->authContext(ctx->authContext());
 
-    XmlDocHelper doc = script->invoke(local_ctx);
-    XmlUtils::throwUnless(NULL != doc.get());
+    InvokeResult res = script->invoke(local_ctx);
+    XmlUtils::throwUnless(NULL != res.get());
 
+    // Steal xmlDoc from old res
+    XmlDocHelper doc = *res.doc.get();
     return doc;
 }
 

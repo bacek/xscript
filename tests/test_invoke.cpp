@@ -55,7 +55,7 @@ InvokeTest::testInvoke() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 }
 
@@ -67,11 +67,11 @@ InvokeTest::testParams() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("params.xsl"), script->xsltName());
-    script->applyStylesheet(ctx.get(), doc);
+    script->applyStylesheet(ctx.get(), *doc.doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("success"),
                          XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
@@ -85,7 +85,7 @@ InvokeTest::testHttpBlockParams() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("success"),
@@ -100,7 +100,7 @@ InvokeTest::testNoBlocks() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 }
 
@@ -112,7 +112,7 @@ InvokeTest::testEmptyCDATA() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 }
 
@@ -127,7 +127,7 @@ InvokeTest::testEvalXPath() {
 
     boost::shared_ptr<State> state = ctx->state();
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT(state->has("delim_expr"));
@@ -148,7 +148,7 @@ InvokeTest::testCheckGuard() {
     boost::shared_ptr<State> state = ctx->state();
     state->setString("guardkey", "some value");
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT(!state->has("val-2"));
@@ -164,7 +164,7 @@ InvokeTest::testStylesheet() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("long"),
@@ -180,8 +180,8 @@ InvokeTest::testRemoveStylesheet() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
-    script->removeUnusedNodes(doc);
+    script->removeUnusedNodes(*doc.doc.get());
 }

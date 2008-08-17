@@ -70,8 +70,9 @@ DocCacheTest::testStoreLoad() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
+    InvokeResult res(script->invoke(ctx));
+    CPPUNIT_ASSERT(NULL != res.get());
+    XmlDocHelper doc = *res.doc.get();
 
     const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(script->block(0));
     CPPUNIT_ASSERT(NULL != block);
@@ -137,8 +138,8 @@ DocCacheTest::testGetLocalTagged() {
         nanosleep(&ts, NULL);
     }
 
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
+    InvokeResult res(script->invoke(ctx));
+    CPPUNIT_ASSERT(NULL != res.get());
 
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
@@ -182,7 +183,7 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
         nanosleep(&ts, NULL);
     }
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));

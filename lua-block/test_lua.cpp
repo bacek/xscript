@@ -78,7 +78,7 @@ LuaTest::testPrint() {
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
     CPPUNIT_ASSERT_EQUAL(
@@ -98,7 +98,7 @@ LuaTest::testState() {
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     boost::shared_ptr<State> state = data.state();
@@ -132,7 +132,7 @@ LuaTest::testStateHas() {
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     boost::shared_ptr<State> state = data.state();
@@ -157,7 +157,7 @@ LuaTest::testStateIs() {
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     boost::shared_ptr<State> state = data.state();
@@ -213,7 +213,7 @@ LuaTest::testRequest() {
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
 
     CPPUNIT_ASSERT("QUERY" == state->asString("test args"));
     CPPUNIT_ASSERT("fireball.yandex.ru" == state->asString("test headers"));
@@ -237,7 +237,7 @@ LuaTest::testResponse() {
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
 
     CPPUNIT_ASSERT_EQUAL((unsigned short)404, response.status);
     CPPUNIT_ASSERT_EQUAL(std::string("Foo Bar"), response.headers["X-Header"]);
@@ -260,7 +260,7 @@ LuaTest::testResponseRedirect() {
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
 
     CPPUNIT_ASSERT_EQUAL((unsigned short)302, response.status);
     CPPUNIT_ASSERT_EQUAL(std::string("http://example.com/"), response.headers["Location"]);
@@ -277,7 +277,7 @@ LuaTest::testEncode() {
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
     CPPUNIT_ASSERT_EQUAL(
@@ -298,7 +298,7 @@ LuaTest::testCookie() {
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
 
     CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT(response.cookies.end() != response.cookies.find("foo"));
@@ -327,7 +327,7 @@ LuaTest::testBadType() {
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/error"));
 }
@@ -342,7 +342,7 @@ LuaTest::testBadArgCount() {
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/error"));
 }
@@ -364,7 +364,7 @@ LuaTest::testMultiBlock() {
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     boost::shared_ptr<State> state = data.state();

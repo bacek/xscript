@@ -8,6 +8,7 @@
 #include <xscript/xml.h>
 #include <xscript/object.h>
 #include <xscript/xml_helpers.h>
+#include <xscript/invoke_result.h>
 
 namespace xscript {
 
@@ -81,7 +82,9 @@ public:
     virtual std::string fullName(const std::string &name) const;
 
     virtual void removeUnusedNodes(const XmlDocHelper &helper);
-    virtual XmlDocHelper invoke(boost::shared_ptr<Context> ctx);
+    // Invoke script.
+    // TODO Do not construct result tree until required.
+    virtual InvokeResult invoke(boost::shared_ptr<Context> ctx);
     virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc);
 
     // TODO: remove this method. It should be in ScriptFactory.
@@ -134,8 +137,13 @@ protected:
         return blocks_;
     }
 
-    XmlDocHelper fetchResults(Context *ctx) const;
-    void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsigned int &count, unsigned int &xscript_count) const;
+    // Construct result tree.
+    // TODO Move to public API to allow constructing tree on demand.
+    InvokeResult fetchResults(Context *ctx) const;
+
+    // Fetch all result nodes from block and place them into result tree.
+    // Returns "true" if all blocks responded with cached result
+    bool fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsigned int &count, unsigned int &xscript_count) const;
 
     virtual void parse();
     virtual void postParse();

@@ -52,7 +52,7 @@ FileTest::testLoad() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "//include-data"));
 }
@@ -63,7 +63,7 @@ FileTest::testInclude() {
     boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "//include-data"));
 }

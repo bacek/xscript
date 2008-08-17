@@ -147,7 +147,7 @@ Script::removeUnusedNodes(const XmlDocHelper &doc) {
     removeUnusedNode(doc, stylesheet_node_);
 }
 
-XmlDocHelper
+InvokeResult
 Script::invoke(boost::shared_ptr<Context> ctx) {
 
     log()->info("%s, invoking %s", BOOST_CURRENT_FUNCTION, name().c_str());
@@ -407,7 +407,7 @@ Script::addHeaders(Context *ctx) const {
 
 }
 
-XmlDocHelper
+InvokeResult
 Script::fetchResults(Context *ctx) const {
 
     XmlDocHelper newdoc(xmlCopyDoc(doc_.get(), 1));
@@ -421,14 +421,15 @@ Script::fetchResults(Context *ctx) const {
     xmlNodePtr newnode = xmlDocGetRootElement(newdoc.get());
     assert(newnode);
 
-    fetchRecursive(ctx, node, newnode, count, xscript_count);
-    return newdoc;
+    bool cached = fetchRecursive(ctx, node, newnode, count, xscript_count);
+    return InvokeResult(newdoc, cached);
 }
 
-void
+bool
 Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
                        unsigned int &count, unsigned int &xscript_count) const {
 
+    bool full_cached = true;
     while (node && count + xscript_count != blocks_.size() + xscript_node_set_.size()) {
 
         if (newnode == NULL) {
@@ -439,9 +440,10 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
         log()->debug("%s, blocks found: %d, %d", BOOST_CURRENT_FUNCTION, blocks_.size(), count);
         if (count < blocks_.size() && blocks_[count]->node() == node) {
             InvokeResult doc = ctx->result(count);
-            assert(doc.doc.get()->get());
+            assert(doc.get());
+            full_cached &= doc.cached;
 
-            xmlNodePtr result = xmlDocGetRootElement(doc.doc.get()->get());
+            xmlNodePtr result = xmlDocGetRootElement(doc.get());
             if (result) {
                 if (blocks_[count]->stripRootElement()) {
                     xmlNodePtr result_node = result->children;
@@ -475,12 +477,13 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
             xscript_count++;
         }
         else if (node->children) {
-            fetchRecursive(ctx, node->children, newnode->children, count, xscript_count);
+            full_cached &= fetchRecursive(ctx, node->children, newnode->children, count, xscript_count);
         }
 
         node = node->next;
         newnode = next;
     }
+    return full_cached;
 }
 
 void
