@@ -97,7 +97,7 @@ TaggedBlock::invokeInternal(Context *ctx) {
 
         if (have_cached_doc) {
             evalXPath(ctx, doc);
-            return InvokeResult(doc, true);
+            return InvokeResult(doc, true, tag.tagKey);
         }
 
         return Block::invokeInternal(ctx);

@@ -24,7 +24,7 @@ public:
 
     InvokeResult call(Context *, boost::any &) throw (std::exception) {
         XmlDocHelper doc = doc_cache_.createReport();
-        return InvokeResult(doc, false);
+        return InvokeResult(doc);
     }
 private:
     const DocCache &doc_cache_;

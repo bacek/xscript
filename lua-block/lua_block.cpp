@@ -324,8 +324,8 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     xmlDocSetRootElement(doc.get(), node.get());
     node.release();
 
-    // Cheating-cheating!
-    return InvokeResult(doc, true);
+    // Cheating-cheating! Temporary to check caching.
+    return InvokeResult(doc, true, "lua");
 }
 
 LuaExtension::LuaExtension() {

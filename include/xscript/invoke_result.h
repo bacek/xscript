@@ -17,8 +17,17 @@ namespace xscript
 struct InvokeResult
 {
     InvokeResult() : cached(false) {}
-    InvokeResult(XmlDocHelper & d, bool c) 
-        : cached(c) 
+    /// Construct non-cached result
+    explicit InvokeResult(XmlDocHelper & d) 
+        : cached(false)
+    {
+        // We takes ownership of xmlDoc.
+        doc = boost::shared_ptr<XmlDocHelper>(new XmlDocHelper(d));
+        d.release();
+    }
+
+    InvokeResult(XmlDocHelper & d, bool c, const std::string &key) 
+        : cached(c), tagKey(key)
     {
         // We takes ownership of xmlDoc.
         doc = boost::shared_ptr<XmlDocHelper>(new XmlDocHelper(d));
@@ -32,7 +41,8 @@ struct InvokeResult
     }
 
     boost::shared_ptr<XmlDocHelper> doc;
-    bool         cached;
+    bool            cached;
+    std::string     tagKey;
 };
 
 }

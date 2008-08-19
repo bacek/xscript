@@ -115,6 +115,7 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
         }
 
         bool modified = true;
+        std::string tagKey;
         if (tagged()) {
 
             struct stat st;
@@ -127,13 +128,14 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
 
             if (tag && tag->last_modified != Tag::UNDEFINED_TIME && st.st_mtime <= tag->last_modified) {
                 modified = false;
+                tagKey = tag->tagKey;
             }
 
             Tag local_tag(modified, st.st_mtime, Tag::UNDEFINED_TIME);
             a = boost::any(local_tag);
         }
 
-        return InvokeResult(doc, !modified);
+        return InvokeResult(doc, !modified, tagKey);
     }
 
     PROFILER(log(), std::string("getHttp: ") + url);
@@ -150,7 +152,7 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
 
     if (result_tag && !result_tag->modified) {
         XmlDocHelper d;
-        return InvokeResult(d, true);
+        return InvokeResult(d, true, result_tag->tagKey);
     }
 
     return response(helper);
@@ -188,7 +190,7 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
 
     if (result_tag && !result_tag->modified) {
         XmlDocHelper d;
-        return InvokeResult(d, true);
+        return InvokeResult(d, true, result_tag->tagKey);
     }
 
     return response(helper);
@@ -268,19 +270,19 @@ HttpBlock::response(const HttpHelper &helper) const {
     if (helper.isXml()) {
         XmlDocHelper d(xmlReadMemory(str.c_str(), str.size(), "",
                                           charset_.empty() ? NULL : charset_.c_str(), XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT));
-        return InvokeResult(d, false);
+        return InvokeResult(d);
     }
     else if (helper.contentType() == "text/plain") {
         std::string res;
         res.append("<text>").append(XmlUtils::escape(str)).append("</text>");
         XmlDocHelper d(xmlParseMemory(res.c_str(), res.size()));
-        return InvokeResult(d, false);
+        return InvokeResult(d);
     }
     else if (helper.contentType() == "text/html") {
         std::string data = XmlUtils::sanitize(str);
         XmlDocHelper d(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
                                           helper.charset().c_str(), XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT));
-        return InvokeResult(d, false);
+        return InvokeResult(d);
     }
     throw std::runtime_error("format is not recognized");
 }

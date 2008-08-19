@@ -77,8 +77,9 @@ MistBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     XmlUtils::throwUnless(NULL != doc.get());
 
     xmlDocSetRootElement(doc.get(), (this->*method_)(ctx));
+    // Cheating-cheating!
     // TODO Spearate mist methods so we can properly set "cached" flag.
-    return InvokeResult(doc, true);
+    return InvokeResult(doc, true, "mist");
 }
 
 xmlNodePtr

@@ -40,7 +40,7 @@ public:
 
         xmlDocSetRootElement(doc.get(), node);
 
-        return InvokeResult(doc, false);
+        return InvokeResult(doc);
     }
 };
 

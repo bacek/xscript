@@ -1,10 +1,16 @@
 #ifndef _XSCRIPT_TAG_H_
 #define _XSCRIPT_TAG_H_
 
+#include <string>
 #include <ctime>
 
 namespace xscript {
 
+/**
+ * Description of status of document for interaction with caches.
+ *
+ * TODO: Add detailed description and usage patterns.
+ */
 class Tag {
 public:
     Tag();
@@ -18,6 +24,9 @@ public:
 public:
     bool modified;
     time_t last_modified, expire_time;
+
+    // If doc was successfully loaded tagKey will hold stringified tagKey
+    std::string tagKey;
 };
 
 } // namespace xscript

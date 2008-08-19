@@ -80,7 +80,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
 
     if (!tagged()) {
         XmlDocHelper d((this->*method_)(file, ctx));
-        return InvokeResult(d, false);
+        return InvokeResult(d);
     }
 
     struct stat st;
@@ -108,7 +108,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     Tag local_tag(modified, st.st_mtime, Tag::UNDEFINED_TIME);
     a = boost::any(local_tag);
 
-    return InvokeResult(doc, !modified);
+    return InvokeResult(doc, !modified, tag->tagKey);
 }
 
 XmlDocHelper

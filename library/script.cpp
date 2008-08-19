@@ -421,8 +421,9 @@ Script::fetchResults(Context *ctx) const {
     xmlNodePtr newnode = xmlDocGetRootElement(newdoc.get());
     assert(newnode);
 
+    // FIXME
     bool cached = fetchRecursive(ctx, node, newnode, count, xscript_count);
-    return InvokeResult(newdoc, cached);
+    return InvokeResult(newdoc, cached, "");
 }
 
 bool

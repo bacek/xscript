@@ -55,7 +55,7 @@ public:
 
     InvokeResult call(Context *, boost::any &) throw (std::exception) {
         XmlDocHelper doc = builder_.createReport();
-        return InvokeResult(doc, false);
+        return InvokeResult(doc, false, "");
     }
 private:
     const StatBuilder &builder_;

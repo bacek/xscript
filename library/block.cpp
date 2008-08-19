@@ -227,7 +227,7 @@ Block::errorResult(const char *error, xmlNodePtr error_node) const {
         }
     }
 
-    return InvokeResult(doc, false);
+    return InvokeResult(doc, false, "");
 }
 
 InvokeResult
@@ -306,7 +306,7 @@ Block::fakeResult() const {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
-    return InvokeResult(doc, false);
+    return InvokeResult(doc);
 }
 
 void
