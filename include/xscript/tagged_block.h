@@ -5,11 +5,10 @@
 #include <xscript/tag.h>
 #include <xscript/block.h>
 #include <xscript/xml_helpers.h>
-#include <xscript/taggable.h>
 
 namespace xscript {
 
-class TaggedBlock : public virtual Block, public Taggable {
+class TaggedBlock : public virtual Block{
 public:
     TaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~TaggedBlock();
@@ -22,11 +21,6 @@ public:
     virtual void tagged(bool tagged);
     virtual time_t cacheTime() const;
     virtual void cacheTime(time_t cache_time);
-
-    /**
-     * Taggable implementation.
-     */
-    std::string createTagKey(const Context *ctx) const;
 
 protected:
     virtual InvokeResult invokeInternal(Context *ctx);

@@ -562,4 +562,18 @@ Script::removeUnusedNode(xmlNodePtr node, xmlNodePtr newnode, xmlNodePtr orig) {
     }
 }
 
+std::string
+Script::createTagKey(const Context* ctx) const {
+    std::string key;
+
+    // I really want more smart language...
+    // $key = join ':', map { $_->createTagKey($ctx) } @blocks_;
+    for(std::vector<Block*>::const_iterator i = blocks_.begin(); i != blocks_.end(); ++i) {
+        key.append(":").append((*i)->createTagKey(ctx));
+    }
+
+
+    return key;
+}
+
 } // namespace xscript

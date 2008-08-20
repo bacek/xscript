@@ -10,13 +10,14 @@
 #include <xscript/object.h>
 #include <xscript/extension.h>
 #include <xscript/invoke_result.h>
+#include <xscript/taggable.h>
 
 namespace xscript {
 
 class Xml;
 class ParamFactory;
 
-class Block : public Object {
+class Block : public Object, public Taggable {
 public:
     Block(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~Block();
@@ -83,6 +84,12 @@ public:
     Logger * log() const {
         return extension_->getLogger();
     }
+    
+    /**
+     * Taggable implementation.
+     */
+    std::string createTagKey(const Context *ctx) const;
+
 protected:
     class XPathExpr;
 

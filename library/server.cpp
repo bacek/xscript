@@ -92,6 +92,8 @@ Server::handleRequest(RequestData *request_data) {
         InvokeResult res = script->invoke(ctx);
         XmlUtils::throwUnless(NULL != res.get());
 
+        // TODO We probably have to move all this logick into Script
+
         XmlDocHelper * doc = res.doc.get();
 
         if (script->binaryPage()) {

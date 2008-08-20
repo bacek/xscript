@@ -9,6 +9,7 @@
 #include <xscript/object.h>
 #include <xscript/xml_helpers.h>
 #include <xscript/invoke_result.h>
+#include <xscript/taggable.h>
 
 namespace xscript {
 
@@ -22,7 +23,7 @@ class ScriptFactory;
  * Stores parse blocks, assosiated stylesheet and various processing flags.
  * Created by ScriptFactory (for caching purposes).
  */
-class Script : public virtual Object, public Xml {
+class Script : public virtual Object, public Xml, public Taggable {
 public:
     virtual ~Script();
 
@@ -90,6 +91,8 @@ public:
     // TODO: remove this method. It should be in ScriptFactory.
     static boost::shared_ptr<Script> create(const std::string &name);
 
+    // Taggable implementation
+    virtual std::string createTagKey(const Context *ctx) const;
 protected:
     Script(const std::string &name);
 
