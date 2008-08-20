@@ -27,7 +27,7 @@ namespace xscript {
 
 class TaggedKeyDisk : public TagKey {
 public:
-    TaggedKeyDisk(const Context *ctx, const TaggedBlock *block);
+    TaggedKeyDisk(const Context *ctx, const Taggable *block);
 
     boost::uint32_t number() const;
     virtual const std::string& asString() const;
@@ -50,7 +50,7 @@ public:
 
     virtual time_t minimalCacheTime() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const TaggedBlock *block) const;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Taggable *block) const;
 
 protected:
     virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc);
@@ -93,10 +93,11 @@ const boost::uint32_t DocCacheDisk::VERSION_SIGNATURE_MARKED = 0xdfc00202;
 const boost::uint32_t DocCacheDisk::DOC_SIGNATURE_START = 0x0a0b0d0a;
 const boost::uint32_t DocCacheDisk::DOC_SIGNATURE_END = 0x0a0e0d0a;
 
-TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const TaggedBlock *block) {
+TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const Taggable *block) {
     assert(NULL != ctx);
     assert(NULL != block);
 
+#if 0
     boost::crc_32_type method_hash, params_hash;
 
     if (!block->xsltName().empty()) {
@@ -125,6 +126,19 @@ TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const TaggedBlock *block) {
 
     filename_.assign(buf);
     value_.append(param_str);
+#endif
+    // I'm not quite sure about logick in commented-out code. Just simple
+    // replacement for it.
+    value_ = block->createTagKey(ctx);
+    boost::crc_32_type value_hash;
+    value_hash.process_bytes(value_.data(), value_.size());
+    
+    char buf[255];
+    boost::uint32_t sum = value_hash.checksum();
+
+    number_ = sum & 0xFF;
+    snprintf(buf, sizeof(buf), "%02x/%16x", number_, sum);
+    filename_.assign(buf);
 }
 
 boost::uint32_t
@@ -271,7 +285,7 @@ DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper 
 }
 
 std::auto_ptr<TagKey>
-DocCacheDisk::createKey(const Context *ctx, const TaggedBlock *block) const {
+DocCacheDisk::createKey(const Context *ctx, const Taggable *block) const {
     return std::auto_ptr<TagKey>(new TaggedKeyDisk(ctx, block));
 }
 

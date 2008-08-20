@@ -6,6 +6,7 @@
 #include "xscript/logger.h"
 #include "xscript/doc_cache.h"
 #include "xscript/tagged_block.h"
+#include "xscript/param.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -151,6 +152,24 @@ TaggedBlock::createCanonicalMethod(const char *prefix) {
             }
         }
     }
+}
+
+
+std::string 
+TaggedBlock::createTagKey(const Context *ctx) const {
+    std::string key;
+
+    if (!xsltName().empty()) {
+        key.assign(xsltName());
+        key.push_back('|');
+    }
+    key.append(canonicalMethod(ctx));
+
+    const std::vector<Param*> &v = params();
+    for (std::vector<Param*>::const_iterator i = v.begin(), end = v.end(); i != end; ++i) {
+        key.append(":").append((*i)->asString(ctx));
+    }
+    return key;
 }
 
 } // namespace xscript

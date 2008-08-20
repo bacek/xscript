@@ -35,7 +35,7 @@ namespace xscript {
 
 class TagKeyMemory : public TagKey {
 public:
-    TagKeyMemory(const Context *ctx, const TaggedBlock *block);
+    TagKeyMemory(const Context *ctx, const Taggable *block);
     virtual const std::string& asString() const;
 
 private:
@@ -53,7 +53,7 @@ public:
 
     virtual time_t minimalCacheTime() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const TaggedBlock *block) const;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Taggable *block) const;
 
     unsigned int maxSize() const;
 
@@ -78,20 +78,11 @@ const int DocCacheMemory::DEFAULT_POOL_COUNT = 16;
 const int DocCacheMemory::DEFAULT_POOL_SIZE = 128;
 const time_t DocCacheMemory::DEFAULT_CACHE_TIME = 5; // sec
 
-TagKeyMemory::TagKeyMemory(const Context *ctx, const TaggedBlock *block) : value_() {
+TagKeyMemory::TagKeyMemory(const Context *ctx, const Taggable *block) : value_() {
     assert(NULL != ctx);
     assert(NULL != block);
 
-    if (!block->xsltName().empty()) {
-        value_.assign(block->xsltName());
-        value_.push_back('|');
-    }
-    value_.append(block->canonicalMethod(ctx));
-
-    const std::vector<Param*> &v = block->params();
-    for (std::vector<Param*>::const_iterator i = v.begin(), end = v.end(); i != end; ++i) {
-        value_.append(":").append((*i)->asString(ctx));
-    }
+    value_ = block->createTagKey(ctx);
 }
 
 const std::string&
@@ -110,7 +101,7 @@ DocCacheMemory::~DocCacheMemory() {
 }
 
 std::auto_ptr<TagKey>
-DocCacheMemory::createKey(const Context *ctx, const TaggedBlock *block) const {
+DocCacheMemory::createKey(const Context *ctx, const Taggable *block) const {
     return std::auto_ptr<TagKey>(new TagKeyMemory(ctx, block));
 }
 

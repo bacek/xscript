@@ -8,6 +8,8 @@
 #include "xscript/doc_cache_strategy.h"
 #include "xscript/util.h"
 #include "xscript/control_extension.h"
+#include "xscript/tag.h"
+#include "xscript/tagged_block.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -63,16 +65,20 @@ DocCache::minimalCacheTime() const {
 
 bool
 DocCache::loadDoc(const Context *ctx, const TaggedBlock *block, Tag &tag, XmlDocHelper &doc) {
-    // FIXME Add saving of loaded doc into higher-order caches.
+    
+    // Try to load block starting from "highest" cache.
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     bool loaded = false;
     std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
     while ( !loaded && i != strategies_.end()) {
         std::auto_ptr<TagKey> key = (*i)->createKey(ctx, block);
         loaded = (*i)->loadDoc(key.get(), tag, doc);
+        if(loaded)
+            tag.tagKey = key->asString();
         ++i;
     }
 
+    // On successful load store doc in "higher" caches
     if (loaded) {
         --i; // Do not store in cache from doc was loaded.
         for (std::vector<DocCacheStrategy*>::iterator j = strategies_.begin(); j != i; ++j) {

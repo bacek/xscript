@@ -14,7 +14,7 @@ namespace xscript {
 
 class Tag;
 class Context;
-class TaggedBlock;
+class Taggable;
 
 class TagKey : private boost::noncopyable {
 public:
@@ -32,7 +32,7 @@ public:
     virtual void init(const Config *config);
 
     virtual time_t minimalCacheTime() const = 0;
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const TaggedBlock *block) const = 0;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Taggable *block) const = 0;
 
     virtual bool loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc);
     virtual bool saveDoc(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);
