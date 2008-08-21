@@ -93,6 +93,8 @@ public:
 
     // Taggable implementation
     virtual std::string createTagKey(const Context *ctx) const;
+    virtual bool tagged() const;
+    virtual void tagged(bool value);
 protected:
     Script(const std::string &name);
 

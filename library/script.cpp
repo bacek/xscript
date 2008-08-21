@@ -576,4 +576,15 @@ Script::createTagKey(const Context* ctx) const {
     return key;
 }
 
+bool 
+Script::tagged() const {
+    return cacheWholePage();
+}
+
+void 
+Script::tagged(bool value) {
+    assert(!"Try to force set taggable to Script"); // Not implemented yet
+    (void)value;
+}
+
 } // namespace xscript

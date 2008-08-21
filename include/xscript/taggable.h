@@ -18,6 +18,16 @@ public:
      * Create tag key for caching.
      */
     virtual std::string createTagKey(const Context *ctx) const = 0;
+    
+    /**
+     * Check that object actually tagged
+     */
+    virtual bool tagged() const = 0;
+
+    /**
+     * Set tagged state to object
+     */
+    virtual void tagged(bool value) = 0;
 };
 
 }

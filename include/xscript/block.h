@@ -49,8 +49,15 @@ public:
     virtual bool threaded() const;
     virtual void threaded(bool value);
     
+
+    /**
+     * Taggable implementation.
+     */
+    std::string createTagKey(const Context *ctx) const;
+    // Part of Taggable 
     virtual bool tagged() const;
     virtual void tagged(bool value);
+
 
     inline bool stripRootElement() const {
         return strip_root_element_;
@@ -85,11 +92,6 @@ public:
         return extension_->getLogger();
     }
     
-    /**
-     * Taggable implementation.
-     */
-    std::string createTagKey(const Context *ctx) const;
-
 protected:
     class XPathExpr;
 
