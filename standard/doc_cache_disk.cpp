@@ -70,10 +70,10 @@ private:
     static const boost::uint32_t DOC_SIGNATURE_START;
     static const boost::uint32_t DOC_SIGNATURE_END;
 
-    class WriteFile {
+    class FileWriter {
     public:
-        WriteFile(FILE *f);
-        ~WriteFile();
+        FileWriter(FILE *f);
+        ~FileWriter();
 
         void write(const void *ptr, size_t size) const;
 
@@ -157,16 +157,16 @@ TaggedKeyDisk::filename() const {
 }
 
 
-DocCacheDisk::WriteFile::WriteFile(FILE *f) : f_(f) {
+DocCacheDisk::FileWriter::FileWriter(FILE *f) : f_(f) {
 }
 
-DocCacheDisk::WriteFile::~WriteFile() {
+DocCacheDisk::FileWriter::~FileWriter() {
     if (f_) {
         fclose(f_);
     }
 }
 
-void DocCacheDisk::WriteFile::write(const void *ptr, size_t size) const {
+void DocCacheDisk::FileWriter::write(const void *ptr, size_t size) const {
     size_t sz = ::fwrite(ptr, 1, size, f_);
     if (sz != size) {
         char buf[60];
@@ -400,7 +400,7 @@ DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &t
         if (NULL == f) {
             return false;
         }
-        WriteFile wf(f);
+        FileWriter wf(f);
         wf.write(&VERSION_SIGNATURE_UNMARKED, sizeof(boost::uint32_t));
         wf.write(&tag.expire_time, sizeof(time_t));
         wf.write(&tag.last_modified, sizeof(time_t));
