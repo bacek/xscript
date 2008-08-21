@@ -116,6 +116,7 @@ Server::handleRequest(RequestData *request_data) {
             if (!encoding.empty()) {
                 encoder = xmlFindCharEncodingHandler(encoding.c_str());
             }
+            // If there is no errors libxml will close buffer.
             buf = xmlOutputBufferCreateIO(&writeFunc, &closeFunc, ctx.get(), encoder);
             XmlUtils::throwUnless(NULL != buf);
             ctx->documentWriter()->write(ctx->response(), *doc, buf);
