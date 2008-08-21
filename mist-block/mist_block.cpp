@@ -89,7 +89,7 @@ MistBlock::setStateLong(Context *ctx) {
     if (2 != p.size()) {
         throw std::logic_error("setStateLong: bad arity");
     }
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
     boost::int32_t value = 0;
     try {
@@ -116,7 +116,7 @@ MistBlock::setStateString(Context *ctx) {
         throw std::logic_error("setStateString: bad arity");
     }
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
 
     state->checkName(n);
@@ -135,7 +135,7 @@ MistBlock::setStateDouble(Context *ctx) {
     if (2 != p.size()) {
         throw std::logic_error("setStateDouble: bad arity");
     }
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
     double value = 0.0;
     try {
@@ -161,7 +161,7 @@ MistBlock::setStateLongLong(Context *ctx) {
     if (2 != p.size()) {
         throw std::logic_error("setStateLongLong: bad arity");
     }
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
     boost::int64_t value = 0;
     try {
@@ -189,7 +189,7 @@ MistBlock::setStateRandom(Context *ctx) {
     }
     std::string n = p[0]->asString(ctx);
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     state->checkName(n);
 
     boost::int32_t lo = 0;
@@ -231,7 +231,7 @@ MistBlock::setStateDefined(Context *ctx) {
 
     std::string n = p[0]->asString(ctx);
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     state->checkName(n);
 
     typedef boost::char_separator<char> Separator;
@@ -261,7 +261,7 @@ MistBlock::setStateUrlencode(Context *ctx) {
         throw std::logic_error("setStateUrlencode: bad arity");
     }
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
     state->checkName(n);
 
@@ -288,7 +288,7 @@ MistBlock::setStateUrldecode(Context *ctx) {
         throw std::logic_error("setStateUrldecode: bad arity");
     }
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
     state->checkName(n);
 
@@ -315,7 +315,7 @@ MistBlock::setStateByKeys(Context *ctx) {
         throw std::logic_error("setStateByKey: arity error");
     }
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     std::string n = p[0]->asString(ctx);
     state->checkName(n);
 
@@ -362,7 +362,7 @@ MistBlock::setStateByDate(Context *ctx) {
         throw std::logic_error("setStateByDate: arity error");
     }
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     std::string name = p[0]->asString(ctx);
     state->checkName(name);
     std::string name_timestamp = name + std::string("_timestamp");
@@ -415,9 +415,9 @@ MistBlock::setStateByQuery(Context *ctx) {
     std::string prefix = p[0]->asString(ctx);
     std::string query = p[1]->asString(ctx);
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
 
-    StateQueryNode node(prefix, state.get());
+    StateQueryNode node(prefix, state);
     node.build(query);
     return node.releaseNode();
 }
@@ -452,9 +452,9 @@ MistBlock::setStateByRequest(Context *ctx) {
 
     std::string prefix = p[0]->asString(ctx);
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
 
-    StateRequestNode node(prefix, state.get());
+    StateRequestNode node(prefix, state);
     node.build(ctx->request(), false, NULL);
     return node.releaseNode();
 }
@@ -479,9 +479,9 @@ MistBlock::setStateByRequestUrlencoded(Context *ctx) {
         }
     }
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
 
-    StateRequestNode node(prefix, state.get());
+    StateRequestNode node(prefix, state);
     node.build(ctx->request(), true, encoder.get());
     return node.releaseNode();
 }
@@ -515,9 +515,9 @@ MistBlock::setStateByHeaders(Context *ctx) {
 
     std::string prefix = p[0]->asString(ctx);
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
 
-    StateHeadersNode node(prefix, state.get());
+    StateHeadersNode node(prefix, state);
     node.build(ctx->request());
     return node.releaseNode();
 }
@@ -551,9 +551,9 @@ MistBlock::setStateByCookies(Context *ctx) {
 
     std::string prefix = p[0]->asString(ctx);
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
 
-    StateCookiesNode node(prefix, state.get());
+    StateCookiesNode node(prefix, state);
     node.build(ctx->request());
     return node.releaseNode();
 }
@@ -587,9 +587,9 @@ MistBlock::setStateByProtocol(Context *ctx) {
 
     std::string prefix = p[0]->asString(ctx);
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
 
-    StateProtocolNode node(prefix, state.get());
+    StateProtocolNode node(prefix, state);
     node.build(ctx->request());
     return node.releaseNode();
 }
@@ -622,7 +622,7 @@ MistBlock::setStateJoinString(Context *ctx) {
     }
 
     std::string n = p[0]->asString(ctx);
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     state->checkName(n);
 
     std::vector<std::string> keys;
@@ -666,12 +666,12 @@ MistBlock::setStateSplitString(Context *ctx) {
     }
 
     std::string prefix = p[0]->asString(ctx);
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     state->checkName(prefix);
 
     std::string val = p[1]->asString(ctx), delim = p[2]->asString(ctx);
 
-    StatePrefixNode node(prefix, "split_string", state.get());
+    StatePrefixNode node(prefix, "split_string", state);
 
     bool searching = true;
     unsigned int count = 0;
@@ -704,7 +704,7 @@ MistBlock::setStateConcatString(Context *ctx) {
     }
 
     std::string n = p[0]->asString(ctx), val;
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     state->checkName(n);
 
     for (std::vector<std::string>::size_type i = 1; i < p.size(); ++i) {
@@ -731,7 +731,7 @@ MistBlock::dropState(Context *ctx) {
         prefix = p[0]->asString(ctx);
     }
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     if (prefix.empty()) {
         state->clear();
     }
@@ -747,7 +747,7 @@ xmlNodePtr
 MistBlock::dumpState(Context *ctx) {
     PROLOGUE;
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
 
     XmlNode node("state_dump");
 

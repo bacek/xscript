@@ -89,11 +89,13 @@ OfflineServer::run() {
 
     XmlUtils::registerReporters();
 
-    StandaloneRequest request;
-    request.attach(url_, root_);
+    boost::shared_ptr<RequestResponse> request(new StandaloneRequest());
+    StandaloneRequest* offline_request = dynamic_cast<StandaloneRequest*>(request.get());
+
+    offline_request->attach(url_, root_);
 
     if (!use_remote_call_) {
-        request.setVariable("DONT_USE_REMOTE_CALL", "YES");
+        offline_request->setVariable("DONT_USE_REMOTE_CALL", "YES");
     }
 
     for (std::map<std::string, std::string>::iterator it_head = headers_.begin(); it_head != headers_.end(); ++it_head) {
@@ -106,17 +108,19 @@ OfflineServer::run() {
             for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
                 std::string::size_type pos = it->find('=');
                 if (std::string::npos != pos && pos < it->size() - 1) {
-                    request.addInputCookie(it->substr(0, pos), it->substr(pos + 1));
+                    offline_request->addInputCookie(it->substr(0, pos), it->substr(pos + 1));
                 }
             }
         }
         else {
-            request.addInputHeader(it_head->first, it_head->second);
+            offline_request->addInputHeader(it_head->first, it_head->second);
         }
     }
 
-    RequestData data(&request, &request, boost::shared_ptr<State>(new State()));
-    handleRequest(&data);
+    boost::shared_ptr<RequestData> data(
+        new RequestData(request, boost::shared_ptr<State>(new State())));
+
+    handleRequest(data);
 }
 
 bool

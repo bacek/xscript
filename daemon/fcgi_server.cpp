@@ -107,8 +107,6 @@ FCGIServer::handle() {
 
     XmlUtils::registerReporters();
 
-    ServerRequest request;
-
     while (true) {
         if (-1 != FCGX_Accept_r(&req)) {
             try {
@@ -120,17 +118,28 @@ FCGIServer::handle() {
                 std::istream is(&inbuf);
                 std::ostream os(&outbuf);
 
-                request.attach(&is, &os, req.envp);
-                RequestData data(&request, &request, boost::shared_ptr<State>(new State()));
-                handleRequest(&data);
+                boost::shared_ptr<RequestResponse> request(new ServerRequest());
+                ServerRequest* server_request = dynamic_cast<ServerRequest*>(request.get());
 
-                os << std::flush;
+                try {
+                    server_request->attach(&is, &os, req.envp);    
 
-                request.reset();
-                FCGX_Finish_r(&req);
+                    boost::shared_ptr<RequestData> data(
+                        new RequestData(request, boost::shared_ptr<State>(new State())));
+
+                    handleRequest(data);
+
+                    os << std::flush;
+
+                    server_request->detach();
+                    FCGX_Finish_r(&req);
+                }
+                catch (const std::exception &e) {
+                    server_request->detach();
+                    throw;
+                }
             }
             catch (const std::exception &e) {
-                request.reset();
                 FCGX_Finish_r(&req);
                 log()->error("caught exception while handling request: %s", e.what());
             }

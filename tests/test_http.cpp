@@ -45,8 +45,9 @@ HttpTest::testGet() {
 
     using namespace xscript;
 
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("http-get.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -58,8 +59,9 @@ HttpTest::testGetLocal() {
 
     using namespace xscript;
 
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("http-local.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -73,8 +75,9 @@ HttpTest::testSanitized() {
 
     using namespace xscript;
 
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("http-sanitized.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -86,8 +89,9 @@ HttpTest::testZeroTimeout() {
 
     using namespace xscript;
 
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("http-timeout.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));

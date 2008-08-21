@@ -1,66 +1,25 @@
-#ifndef _XSCRIPT_INTERNAL_REQUEST_IMPL_H_
-#define _XSCRIPT_INTERNAL_REQUEST_IMPL_H_
+#ifndef _XSCRIPT_DETAILS_DEFAULT_REQUEST_RESPONSE_H
+#define _XSCRIPT_DETAILS_DEFAULT_REQUEST_RESPONSE_H
 
-#include <set>
+#include "settings.h"
+
 #include <map>
-#include <iosfwd>
-#include <functional>
-#include <boost/cstdint.hpp>
+#include <vector>
+#include <libxml/tree.h>
+#include <libxml/xpath.h>
+#include <boost/thread/mutex.hpp>
 
-#if defined(HAVE_STLPORT_HASHMAP)
-#include <hash_set>
-#include <hash_map>
-#elif defined(HAVE_EXT_HASH_MAP) || defined(HAVE_GNUCXX_HASHMAP)
-#include <ext/hash_set>
-#include <ext/hash_map>
-#endif
-
-#include "xscript/component.h"
 #include "xscript/functors.h"
+#include "internal/request_impl.h"
+#include "xscript/request_response.h"
 #include "xscript/util.h"
-#include "xscript/range.h"
-#include "xscript/cookie.h"
-#include "xscript/request.h"
 
 namespace xscript {
 
-class File {
+class DefaultRequestResponse : public RequestResponse {
 public:
-    File(const std::map<Range, Range, RangeCILess> &m, const Range &content);
-
-    const std::string& type() const;
-    const std::string& remoteName() const;
-
-    std::pair<const char*, std::streamsize> data() const;
-
-private:
-    std::string name_, type_;
-    std::pair<const char*, std::streamsize> data_;
-};
-
-#if defined(HAVE_GNUCXX_HASHMAP)
-
-typedef __gnu_cxx::hash_map<std::string, std::string, StringCIHash> VarMap;
-typedef __gnu_cxx::hash_map<std::string, std::string, StringCIHash, StringCIEqual> HeaderMap;
-
-#elif defined(HAVE_EXT_HASH_MAP) || defined(HAVE_STLPORT_HASHMAP)
-
-typedef std::hash_map<std::string, std::string, StringCIHash> VarMap;
-typedef std::hash_map<std::string, std::string, StringCIHash, StringCIEqual> HeaderMap;
-
-#else
-
-typedef std::map<std::string, std::string> VarMap;
-typedef std::map<std::string, std::string, StringCILess> HeaderMap;
-
-#endif
-
-class Parser;
-
-class RequestImpl : public Request {
-public:
-    RequestImpl();
-    virtual ~RequestImpl();
+    DefaultRequestResponse();
+    virtual ~DefaultRequestResponse();
 
     virtual unsigned short getServerPort() const;
     virtual const std::string& getServerAddr() const;
@@ -70,7 +29,6 @@ public:
 
     virtual const std::string& getScriptName() const;
     virtual const std::string& getScriptFilename() const;
-
     virtual const std::string& getDocumentRoot() const;
 
     virtual const std::string& getRemoteUser() const;
@@ -82,7 +40,6 @@ public:
     virtual std::string getOriginalURI() const;
     virtual std::string getHost() const;
     virtual std::string getOriginalHost() const;
-
     virtual std::string getOriginalUrl() const;
 
     virtual std::streamsize getContentLength() const;
@@ -121,32 +78,31 @@ public:
 
     virtual bool isSecure() const;
     virtual std::pair<const char*, std::streamsize> requestBody() const;
+
+    virtual void setCookie(const Cookie &cookie);
+    virtual void setStatus(unsigned short status);
+
+    virtual void setHeader(const std::string &name, const std::string &value);
+    virtual std::streamsize write(const char *buf, std::streamsize size);
+    virtual std::string outputHeader(const std::string &name) const;
+
+    virtual void sendError(unsigned short status, const std::string& message);
+    virtual void sendHeaders();
     virtual bool suppressBody() const;
 
     void attach(std::istream *is, char *env[]);
 
 private:
-    RequestImpl(const RequestImpl &);
-    RequestImpl& operator = (const RequestImpl &);
-    friend class Parser;
+    DefaultRequestResponse(const DefaultRequestResponse &);
+    DefaultRequestResponse& operator = (const DefaultRequestResponse &);
 
 private:
-    VarMap vars_, cookies_;
-    std::vector<char> body_;
-    HeaderMap headers_;
-
-    std::map<std::string, File> files_;
-    std::vector<StringUtils::NamedValue> args_;
-};
-
-class RequestFactory : public Component<RequestFactory> {
-public:
-    RequestFactory();
-    virtual ~RequestFactory();
-
-    virtual std::auto_ptr<RequestImpl> create();
+    std::auto_ptr<RequestImpl> impl_;
+    mutable boost::mutex mutex_;
 };
 
 } // namespace xscript
 
-#endif // _XSCRIPT_INTERNAL_REQUEST_IMPL_H_
+#endif // _XSCRIPT_DETAILS_DEFAULT_REQUEST_RESPONSE_H
+
+

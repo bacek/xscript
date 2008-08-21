@@ -45,8 +45,9 @@ DocCacheTest::testMissed() {
 
     using namespace xscript;
 
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("http-local.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(script->block(0));
@@ -66,8 +67,9 @@ DocCacheTest::testStoreLoad() {
 
     using namespace xscript;
 
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("http-local.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -114,8 +116,9 @@ DocCacheTest::testGetLocalTagged() {
 
     using namespace xscript;
 
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("http-local-tagged.xml"); //cache_time==5
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(script->block(0));
@@ -159,8 +162,9 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
 
     using namespace xscript;
 
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("http-local-tagged.xml"); //cache_time==5
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(script->block(0));

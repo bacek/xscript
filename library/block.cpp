@@ -116,6 +116,11 @@ Block::fullName(const std::string &name) const {
 XmlDocHelper
 Block::invoke(Context *ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
+    if (ctx->stopped()) {
+        log()->error("Context already stopped. Cannot invoke block. Method: %s", method_.c_str());
+        return fakeResult();
+    }
+
     if (!checkGuard(ctx)) {
         return fakeResult();
     }
@@ -170,6 +175,11 @@ Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
     if (NULL == xmlDocGetRootElement(doc.get())) {
         log()->error("%s, got document with no root", BOOST_CURRENT_FUNCTION);
         return errorResult("got document with no root");
+    }
+
+    if (ctx->stopped()) {
+        throw std::runtime_error(
+            std::string("Context already stopped. Cannot process response. Method: ") + method_);
     }
 
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
@@ -230,9 +240,8 @@ Block::errorResult(const char *error) const {
 
 bool
 Block::checkGuard(Context *ctx) const {
-    boost::shared_ptr<State> state = ctx->state();
     if (!guard_.empty()) {
-        return is_guard_not_ ^ state->is(guard_);
+        return is_guard_not_ ^ ctx->state()->is(guard_);
     }
     return true;
 }
@@ -262,7 +271,7 @@ Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
             }
 
             if (!val.empty()) {
-                boost::shared_ptr<State> state = ctx->state();
+                State* state = ctx->state();
                 state->checkName(iter->result());
                 state->setString(iter->result(), val);
             }

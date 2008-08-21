@@ -268,7 +268,7 @@ LuaSharedContext create_lua(Context *ctx, std::string &buffer) {
     Request *request = ctx->request();
 
     setupUserdata(lua, request, "request", getRequestLib());
-    setupUserdata(lua, ctx->state().get(), "state", getStateLib());
+    setupUserdata(lua, ctx->state(), "state", getStateLib());
     setupUserdata(lua, ctx->response(), "response", getResponseLib());
 
     registerCookieMethods(lua);

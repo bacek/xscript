@@ -27,10 +27,9 @@
 
 namespace xscript {
 
-Context::Context(const boost::shared_ptr<Script> &script, const RequestData &data) :
-        stopped_(false), force_no_threaded_(false), request_(data.request()), response_(data.response()),
-        parent_context_(NULL), xslt_name_(script->xsltName()), state_(data.state()), script_(script),
-        writer_() {
+Context::Context(const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData>& data) :
+        stopped_(false), force_no_threaded_(false), request_data_(data),
+        parent_context_(NULL), xslt_name_(script->xsltName()), script_(script), writer_() {
     assert(script_.get());
     ExtensionList::instance()->initContext(this);
 }
@@ -64,14 +63,14 @@ void
 Context::expect(unsigned int count) {
 
     boost::mutex::scoped_lock sl(results_mutex_);
-    if (stopped_) {
-        throw std::logic_error("already stopped");
+    if (stopped()) {
+        throw std::logic_error("context already stopped");
     }
     if (results_.size() == 0) {
         results_.resize(count);
     }
     else {
-        throw std::logic_error("already started");
+        throw std::logic_error("context already started");
     }
 }
 
@@ -79,11 +78,11 @@ void
 Context::result(unsigned int n, xmlDocPtr doc) {
 
     log()->debug("%s: %d, result of %u block: %p", BOOST_CURRENT_FUNCTION,
-                 static_cast<int>(stopped_), n, doc);
+                 static_cast<int>(stopped()), n, doc);
 
     XmlDocHelper doc_ptr(doc);
     boost::mutex::scoped_lock sl(results_mutex_);
-    if (!stopped_ && results_.size() != 0) {
+    if (!stopped() && results_.size() != 0) {
         if (NULL == results_[n]) {
             results_[n] = doc_ptr.release();
             condition_.notify_all();
@@ -163,7 +162,7 @@ DocumentWriter*
 Context::documentWriter() {
     if (NULL == writer_.get()) {
         writer_ = std::auto_ptr<DocumentWriter>(
-                      new XmlWriter(VirtualHostData::instance()->getOutputEncoding(request_)));
+                      new XmlWriter(VirtualHostData::instance()->getOutputEncoding(request())));
     }
 
     return writer_.get();
@@ -202,12 +201,26 @@ Context::parentContext() const {
     return parent_context_;
 }
 
+bool
+Context::stopped() const {
+    if (parent_context_) {
+        return stopped_ || parent_context_->stopped();
+    }
+
+    return stopped_;
+}
+
+void
+Context::stopped(bool flag) {
+    stopped_ = flag;
+}
+
 ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {
 }
 
 ContextStopper::~ContextStopper() {
     ExtensionList::instance()->stopContext(ctx_.get());
-    ctx_->stopped_ = true;
+    ctx_->stopped(true);
 }
 
 } // namespace xscript

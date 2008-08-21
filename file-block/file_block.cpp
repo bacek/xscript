@@ -154,9 +154,7 @@ FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
     }
 
     boost::shared_ptr<Script> script = Script::create(file_name);
-
-    RequestData request_data(ctx->request(), ctx->response(), ctx->state());
-    boost::shared_ptr<Context> local_ctx(new Context(script, request_data));
+    boost::shared_ptr<Context> local_ctx(new Context(script, ctx->requestData()));
     local_ctx->parentContext(ctx);
 
     if (threaded() || ctx->forceNoThreaded()) {

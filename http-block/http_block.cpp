@@ -207,7 +207,7 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
     std::string url = p[0]->asString(ctx);
     bool has_query = url.find('?') != std::string::npos;
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     std::vector<std::string> names;
     state->keys(names);
 

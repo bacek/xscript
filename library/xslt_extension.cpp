@@ -188,7 +188,7 @@ extern "C" void
 
     try {
         Context *ctx = Stylesheet::getContext(tctx);
-        boost::shared_ptr<State> state = ctx->state();
+        State* state = ctx->state();
         valuePush(ctxt, xmlXPathNewCString(state->asString(str).c_str()));
     }
     catch (const std::exception &e) {

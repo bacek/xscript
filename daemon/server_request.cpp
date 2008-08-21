@@ -20,242 +20,15 @@
 namespace xscript {
 
 ServerRequest::ServerRequest() :
-        impl_(RequestFactory::instance()->create()) {
-    reset();
+    headers_sent_(false), detached_(false), status_(200), stream_(NULL) {
 }
 
 ServerRequest::~ServerRequest() {
 }
 
-unsigned short
-ServerRequest::getServerPort() const {
-    return impl_->getServerPort();
-}
-
-const std::string&
-ServerRequest::getServerAddr() const {
-    return impl_->getServerAddr();
-}
-
-const std::string&
-ServerRequest::getPathInfo() const {
-    return impl_->getPathInfo();
-}
-
-const std::string&
-ServerRequest::getPathTranslated() const {
-    return impl_->getPathTranslated();
-}
-
-const std::string&
-ServerRequest::getScriptName() const {
-    return impl_->getScriptName();
-}
-
-const std::string&
-ServerRequest::getScriptFilename() const {
-    return impl_->getScriptFilename();
-}
-
-const std::string&
-ServerRequest::getDocumentRoot() const {
-    return impl_->getDocumentRoot();
-}
-
-const std::string&
-ServerRequest::getRemoteUser() const {
-    return impl_->getRemoteUser();
-}
-
-const std::string&
-ServerRequest::getRemoteAddr() const {
-    return impl_->getRemoteAddr();
-}
-
-const std::string&
-ServerRequest::getRealIP() const {
-    return impl_->getRealIP();
-}
-
-const std::string&
-ServerRequest::getQueryString() const {
-    return impl_->getQueryString();
-}
-
-const std::string&
-ServerRequest::getRequestMethod() const {
-    return impl_->getRequestMethod();
-}
-
-std::string
-ServerRequest::getURI() const {
-    return impl_->getURI();
-}
-
-std::string
-ServerRequest::getOriginalURI() const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->getOriginalURI();
-}
-
-std::string
-ServerRequest::getHost() const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->getHost();
-}
-
-std::string
-ServerRequest::getOriginalHost() const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->getOriginalHost();
-}
-
-std::string
-ServerRequest::getOriginalUrl() const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->getOriginalUrl();
-}
-
-std::streamsize
-ServerRequest::getContentLength() const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->getContentLength();
-}
-
-const std::string&
-ServerRequest::getContentType() const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->getContentType();
-}
-
-const std::string&
-ServerRequest::getContentEncoding() const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->getContentEncoding();
-}
-
-unsigned int
-ServerRequest::countArgs() const {
-    return impl_->countArgs();
-}
-
-bool
-ServerRequest::hasArg(const std::string &name) const {
-    return impl_->hasArg(name);
-}
-
-const std::string&
-ServerRequest::getArg(const std::string &name) const {
-    return impl_->getArg(name);
-}
-
-void
-ServerRequest::getArg(const std::string &name, std::vector<std::string> &v) const {
-    impl_->getArg(name, v);
-}
-
-void
-ServerRequest::argNames(std::vector<std::string> &v) const {
-    impl_->argNames(v);
-}
-
-unsigned int
-ServerRequest::countHeaders() const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->countHeaders();
-}
-
-bool
-ServerRequest::hasHeader(const std::string &name) const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->hasHeader(name);
-}
-
-const std::string&
-ServerRequest::getHeader(const std::string &name) const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->getHeader(name);
-}
-
-void
-ServerRequest::headerNames(std::vector<std::string> &v) const {
-    boost::mutex::scoped_lock sl(mutex_);
-    impl_->headerNames(v);
-}
-
-unsigned int
-ServerRequest::countCookies() const {
-    return impl_->countCookies();
-}
-
-bool
-ServerRequest::hasCookie(const std::string &name) const {
-    return impl_->hasCookie(name);
-}
-
-const std::string&
-ServerRequest::getCookie(const std::string &name) const {
-    return impl_->getCookie(name);
-}
-
-void
-ServerRequest::cookieNames(std::vector<std::string> &v) const {
-    impl_->cookieNames(v);
-}
-
-unsigned int
-ServerRequest::countVariables() const {
-    return impl_->countVariables();
-}
-
-bool
-ServerRequest::hasVariable(const std::string &name) const {
-    return impl_->hasVariable(name);
-}
-
-const std::string&
-ServerRequest::getVariable(const std::string &name) const {
-    return impl_->getVariable(name);
-}
-
-void
-ServerRequest::variableNames(std::vector<std::string> &v) const {
-    impl_->variableNames(v);
-}
-
-bool
-ServerRequest::hasFile(const std::string &name) const {
-    return impl_->hasFile(name);
-}
-
-const std::string&
-ServerRequest::remoteFileName(const std::string &name) const {
-    return impl_->remoteFileName(name);
-}
-
-const std::string&
-ServerRequest::remoteFileType(const std::string &name) const {
-    return impl_->remoteFileType(name);
-}
-
-std::pair<const char*, std::streamsize>
-ServerRequest::remoteFile(const std::string &name) const {
-    return impl_->remoteFile(name);
-}
-
-bool
-ServerRequest::isSecure() const {
-    return impl_->isSecure();
-}
-
-std::pair<const char*, std::streamsize>
-ServerRequest::requestBody() const {
-    return impl_->requestBody();
-}
-
 void
 ServerRequest::setCookie(const Cookie &cookie) {
-    boost::mutex::scoped_lock sl(mutex_);
+    boost::mutex::scoped_lock sl(resp_mutex_);
     if (!headers_sent_) {
         out_cookies_.insert(cookie);
     }
@@ -266,7 +39,7 @@ ServerRequest::setCookie(const Cookie &cookie) {
 
 void
 ServerRequest::setStatus(unsigned short status) {
-    boost::mutex::scoped_lock sl(mutex_);
+    boost::mutex::scoped_lock sl(resp_mutex_);
     if (!headers_sent_) {
         status_ = status;
     }
@@ -275,11 +48,10 @@ ServerRequest::setStatus(unsigned short status) {
     }
 }
 
-
 void
 ServerRequest::sendError(unsigned short status, const std::string& message) {
     log()->debug("%s, clearing request output", BOOST_CURRENT_FUNCTION);
-    boost::mutex::scoped_lock sl(mutex_);
+    boost::mutex::scoped_lock sl(resp_mutex_);
     if (!headers_sent_) {
         out_cookies_.clear();
         out_headers_.clear();
@@ -289,16 +61,20 @@ ServerRequest::sendError(unsigned short status, const std::string& message) {
     }
     status_ = status;
     out_headers_.insert(std::pair<std::string, std::string>("Content-type", "text/html"));
+
+    boost::mutex::scoped_lock wl(write_mutex_);
+    if (detached_) {
+        return;
+    }
     sendHeadersInternal();
 
     (*stream_) << "<html><body><h1>" << status << " " << Parser::statusToString(status) << "<br><br>"
     << XmlUtils::escape(createRange(message)) << "</h1></body></html>";
 }
 
-
 void
 ServerRequest::setHeader(const std::string &name, const std::string &value) {
-    boost::mutex::scoped_lock sl(mutex_);
+    boost::mutex::scoped_lock sl(resp_mutex_);
     if (headers_sent_) {
         throw std::runtime_error("headers already sent");
     }
@@ -316,6 +92,10 @@ std::streamsize
 ServerRequest::write(const char *buf, std::streamsize size) {
     sendHeaders();
     if (!suppressBody()) {
+        boost::mutex::scoped_lock wl(write_mutex_);
+        if (detached_) {
+            return 0;
+        }
         stream_->write(buf, size);
     }
     return size;
@@ -323,45 +103,36 @@ ServerRequest::write(const char *buf, std::streamsize size) {
 
 std::string
 ServerRequest::outputHeader(const std::string &name) const {
-    boost::mutex::scoped_lock sl(mutex_);
+    boost::mutex::scoped_lock sl(resp_mutex_);
     return Parser::get(out_headers_, name);
 }
 
 bool
 ServerRequest::suppressBody() const {
-    return impl_->suppressBody() || 204 == status_ || 304 == status_;
-}
-
-void
-ServerRequest::reset() {
-
-    impl_->reset();
-
-    status_ = 200;
-    stream_ = NULL;
-    headers_sent_ = false;
-    out_cookies_.clear();
-    out_headers_.clear();
+    return DefaultRequestResponse::suppressBody() || 204 == status_ || 304 == status_;
 }
 
 void
 ServerRequest::sendHeaders() {
-    boost::mutex::scoped_lock sl(mutex_);
+    boost::mutex::scoped_lock sl(resp_mutex_);
     sendHeadersInternal();
-
 }
 
 void
 ServerRequest::attach(std::istream *is, std::ostream *os, char *env[]) {
-
     stream_ = os;
-    impl_->attach(is, env);
+    DefaultRequestResponse::attach(is, env);
     stream_->exceptions(std::ios::badbit);
 }
 
 void
-ServerRequest::sendHeadersInternal() {
+ServerRequest::detach() {
+    boost::mutex::scoped_lock wl(write_mutex_);
+    detached_ = true;
+}
 
+void
+ServerRequest::sendHeadersInternal() {
     std::stringstream stream;
     if (!headers_sent_) {
         log()->debug("%s, sending headers", BOOST_CURRENT_FUNCTION);
@@ -376,12 +147,6 @@ ServerRequest::sendHeadersInternal() {
         (*stream_) << "\r\n";
         headers_sent_ = true;
     }
-}
-
-void
-ServerRequest::addInputHeader(const std::string &name, const std::string &value) {
-    boost::mutex::scoped_lock sl(mutex_);
-    impl_->addInputHeader(name, value);
 }
 
 } // namespace xscript

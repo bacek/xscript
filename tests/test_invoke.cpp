@@ -51,8 +51,10 @@ void
 InvokeTest::testInvoke() {
 
     using namespace xscript;
+
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("invoke.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -63,8 +65,10 @@ void
 InvokeTest::testParams() {
 
     using namespace xscript;
+
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("params.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -81,8 +85,10 @@ void
 InvokeTest::testHttpBlockParams() {
 
     using namespace xscript;
+
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("http-block-params.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -96,8 +102,10 @@ void
 InvokeTest::testNoBlocks() {
 
     using namespace xscript;
+
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("noblocks.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -108,8 +116,10 @@ void
 InvokeTest::testEmptyCDATA() {
 
     using namespace xscript;
+
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("empty-cdata.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -121,11 +131,12 @@ InvokeTest::testEvalXPath() {
 
     using namespace xscript;
 
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("invoke.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
@@ -141,11 +152,12 @@ InvokeTest::testCheckGuard() {
 
     using namespace xscript;
 
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("invoke.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     state->setString("guardkey", "some value");
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -160,8 +172,9 @@ InvokeTest::testStylesheet() {
 
     using namespace xscript;
 
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("xslt.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -176,8 +189,9 @@ InvokeTest::testRemoveStylesheet() {
 
     using namespace xscript;
 
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("invoke.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));

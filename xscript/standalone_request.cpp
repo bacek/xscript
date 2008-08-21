@@ -17,8 +17,7 @@
 namespace xscript {
 
 StandaloneRequest::StandaloneRequest() :
-        impl_(RequestFactory::instance()->create()),
-        isSecure_(false), port_(80), path_("/"), method_("GET") {
+    isSecure_(false), port_(80), path_("/"), method_("GET") {
 }
 
 StandaloneRequest::~StandaloneRequest() {
@@ -60,21 +59,6 @@ StandaloneRequest::getDocumentRoot() const {
 }
 
 const std::string&
-StandaloneRequest::getRemoteUser() const {
-    return StringUtils::EMPTY_STRING;
-}
-
-const std::string&
-StandaloneRequest::getRemoteAddr() const {
-    return StringUtils::EMPTY_STRING;
-}
-
-const std::string&
-StandaloneRequest::getRealIP() const {
-    return getRemoteAddr();
-}
-
-const std::string&
 StandaloneRequest::getQueryString() const {
     return query_;
 }
@@ -84,222 +68,9 @@ StandaloneRequest::getRequestMethod() const {
     return method_;
 }
 
-std::string
-StandaloneRequest::getURI() const {
-    return impl_->getURI();
-}
-
-std::string
-StandaloneRequest::getOriginalURI() const {
-    return impl_->getOriginalURI();
-}
-
-std::string
-StandaloneRequest::getHost() const {
-    return impl_->getHost();
-}
-
-std::string
-StandaloneRequest::getOriginalHost() const {
-    return impl_->getOriginalHost();
-}
-
-std::string
-StandaloneRequest::getOriginalUrl() const {
-    return impl_->getOriginalUrl();
-}
-
-std::streamsize
-StandaloneRequest::getContentLength() const {
-    return 0;
-}
-
-const std::string&
-StandaloneRequest::getContentType() const {
-    return StringUtils::EMPTY_STRING;
-}
-
-const std::string&
-StandaloneRequest::getContentEncoding() const {
-    return StringUtils::EMPTY_STRING;
-}
-
-unsigned int
-StandaloneRequest::countArgs() const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->countArgs();
-}
-
-bool
-StandaloneRequest::hasArg(const std::string &name) const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->hasArg(name);
-}
-
-const std::string&
-StandaloneRequest::getArg(const std::string &name) const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->getArg(name);
-}
-
-void
-StandaloneRequest::getArg(const std::string &name, std::vector<std::string> &v) const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return impl_->getArg(name, v);
-}
-
-void
-StandaloneRequest::argNames(std::vector<std::string> &v) const {
-    boost::mutex::scoped_lock sl(mutex_);
-    impl_->argNames(v);
-}
-
-void
-StandaloneRequest::setArg(const std::string &name, const std::string &value) {
-    boost::mutex::scoped_lock sl(mutex_);
-    impl_->setArg(name, value);
-}
-
-unsigned int
-StandaloneRequest::countHeaders() const {
-    boost::mutex::scoped_lock lock(mutex_);
-    return impl_->countHeaders();
-}
-
-bool
-StandaloneRequest::hasHeader(const std::string &name) const {
-    boost::mutex::scoped_lock lock(mutex_);
-    return impl_->hasHeader(name);
-}
-
-const std::string&
-StandaloneRequest::getHeader(const std::string &name) const {
-    boost::mutex::scoped_lock lock(mutex_);
-    return impl_->getHeader(name);
-}
-
-void
-StandaloneRequest::headerNames(std::vector<std::string> &v) const {
-    boost::mutex::scoped_lock lock(mutex_);
-    impl_->headerNames(v);
-}
-
-
-void
-StandaloneRequest::addInputHeader(const std::string &name, const std::string &value) {
-    boost::mutex::scoped_lock lock(mutex_);
-    impl_->addInputHeader(name, value);
-}
-
-unsigned int
-StandaloneRequest::countCookies() const {
-    boost::mutex::scoped_lock lock(mutex_);
-    return impl_->countCookies();
-}
-
-bool
-StandaloneRequest::hasCookie(const std::string &name) const {
-    boost::mutex::scoped_lock lock(mutex_);
-    return impl_->hasCookie(name);
-}
-
-const std::string&
-StandaloneRequest::getCookie(const std::string &name) const {
-    boost::mutex::scoped_lock lock(mutex_);
-    return impl_->getCookie(name);
-}
-
-void
-StandaloneRequest::cookieNames(std::vector<std::string> &v) const {
-    boost::mutex::scoped_lock lock(mutex_);
-    impl_->cookieNames(v);
-}
-
-void
-StandaloneRequest::addInputCookie(const std::string &name, const std::string &value) {
-    boost::mutex::scoped_lock lock(mutex_);
-    impl_->addInputCookie(name, value);
-}
-
-unsigned int
-StandaloneRequest::countVariables() const {
-    boost::mutex::scoped_lock lock(mutex_);
-    return impl_->countVariables();
-}
-
-bool
-StandaloneRequest::hasVariable(const std::string &name) const {
-    boost::mutex::scoped_lock lock(mutex_);
-    return impl_->hasVariable(name);
-}
-
-const std::string&
-StandaloneRequest::getVariable(const std::string &name) const {
-    boost::mutex::scoped_lock lock(mutex_);
-    return impl_->getVariable(name);
-}
-
-void
-StandaloneRequest::variableNames(std::vector<std::string> &v) const {
-    boost::mutex::scoped_lock lock(mutex_);
-    impl_->variableNames(v);
-}
-
-void
-StandaloneRequest::setVariable(const std::string &name, const std::string &value) {
-    boost::mutex::scoped_lock lock(mutex_);
-    impl_->setVariable(name, value);
-}
-
-bool
-StandaloneRequest::hasFile(const std::string &name) const {
-    return impl_->hasFile(name);
-}
-
-const std::string&
-StandaloneRequest::remoteFileName(const std::string &name) const {
-    return impl_->remoteFileName(name);
-}
-
-const std::string&
-StandaloneRequest::remoteFileType(const std::string &name) const {
-    return impl_->remoteFileType(name);
-}
-
-std::pair<const char*, std::streamsize>
-StandaloneRequest::remoteFile(const std::string &name) const {
-    return impl_->remoteFile(name);
-}
-
 bool
 StandaloneRequest::isSecure() const {
     return isSecure_;
-}
-
-std::pair<const char*, std::streamsize>
-StandaloneRequest::requestBody() const {
-    return std::pair<const char*, std::streamsize>(NULL, 0);
-}
-
-void
-StandaloneRequest::reset() {
-    impl_->reset();
-}
-
-void
-StandaloneRequest::setCookie(const Cookie &cookie) {
-    (void)cookie;
-}
-
-void
-StandaloneRequest::setStatus(unsigned short status) {
-    (void)status;
-}
-
-void
-StandaloneRequest::setHeader(const std::string &name, const std::string &value) {
-    (void)name;
-    (void)value;
 }
 
 std::streamsize
@@ -309,24 +80,9 @@ StandaloneRequest::write(const char *buf, std::streamsize size) {
     return size;
 }
 
-std::string
-StandaloneRequest::outputHeader(const std::string &name) const {
-    (void)name;
-    return StringUtils::EMPTY_STRING;
-}
-
 void
 StandaloneRequest::sendError(unsigned short status, const std::string& message) {
     std::cerr << status << std::endl << message << std::endl;
-}
-
-void
-StandaloneRequest::sendHeaders() {
-}
-
-bool
-StandaloneRequest::suppressBody() const {
-    return false;
 }
 
 void

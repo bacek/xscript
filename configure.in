@@ -1,6 +1,6 @@
 AC_PREREC(2.5.3)
 AC_INIT([xscript],[5.1.0],[highpower@yandex-team.ru])
-AM_INIT_AUTOMAKE(1.9)
+AM_INIT_AUTOMAKE
 
 AC_GNU_SOURCE
 AC_CONFIG_HEADERS(config/settings.h)

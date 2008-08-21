@@ -12,6 +12,8 @@
 #include <boost/function.hpp>
 #include <libxml/tree.h>
 
+#include "xscript/request_data.h"
+
 namespace xscript {
 
 class State;
@@ -20,7 +22,6 @@ class Request;
 class Response;
 class Stylesheet;
 class AuthContext;
-class RequestData;
 class DocumentWriter;
 
 /**
@@ -31,7 +32,7 @@ class DocumentWriter;
  */
 class Context : private boost::noncopyable {
 public:
-    Context(const boost::shared_ptr<Script> &script, const RequestData &data);
+    Context(const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData>& data);
     virtual ~Context();
 
     void wait(int millis);
@@ -43,16 +44,20 @@ public:
     boost::xtime delay(int millis) const;
     xmlDocPtr result(unsigned int n) const;
 
+    inline const boost::shared_ptr<RequestData>& requestData() const {
+        return request_data_;
+    }
+
     inline Request* request() const {
-        return request_;
+        return request_data_->request();
     }
 
     inline Response* response() const {
-        return response_;
+        return request_data_->response();
     }
 
-    inline const boost::shared_ptr<State>& state() const {
-        return state_;
+    inline State* state() const {
+        return request_data_->state();
     }
 
     inline const boost::shared_ptr<Script>& script() const {
@@ -84,19 +89,23 @@ public:
     // Get or create param
     template<typename T> T param(const std::string &name, const boost::function<T ()>& creator);
 
+    bool stopped() const;
+
     friend class ContextStopper;
+
+private:
+    void stopped(bool flag);
+
 private:
     volatile bool stopped_;
     bool force_no_threaded_;
-    Request *request_;
-    Response *response_;
+    boost::shared_ptr<RequestData> request_data_;
     Context* parent_context_;
     std::string xslt_name_;
     std::vector<xmlDocPtr> results_;
     std::list<xmlNodePtr> clear_node_list_;
 
     boost::condition condition_;
-    boost::shared_ptr<State> state_;
     boost::shared_ptr<Script> script_;
 
     boost::shared_ptr<AuthContext> auth_;

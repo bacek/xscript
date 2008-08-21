@@ -48,8 +48,10 @@ FileTest::testUnknowMethod() {
 
 void
 FileTest::testLoad() {
+
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("./file-load.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -59,8 +61,10 @@ FileTest::testLoad() {
 
 void
 FileTest::testInclude() {
+
+    boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("./file-include.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, RequestData()));
+    boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));

@@ -191,7 +191,7 @@ RequestImpl::getOriginalHost() const {
 
 std::streamsize
 RequestImpl::getContentLength() const {
-    const std::string& length = Parser::get(headers_, CONTENT_LENGTH_KEY);
+    const std::string& length = getHeader(CONTENT_LENGTH_KEY);
     if (length.empty()) {
         return 0;
     }
@@ -205,12 +205,12 @@ RequestImpl::getContentLength() const {
 
 const std::string&
 RequestImpl::getContentType() const {
-    return Parser::get(headers_, CONTENT_TYPE_KEY);
+    return getHeader(CONTENT_TYPE_KEY);
 }
 
 const std::string&
 RequestImpl::getContentEncoding() const {
-    return Parser::get(headers_, CONTENT_ENCODING_KEY);
+    return getHeader(CONTENT_ENCODING_KEY);
 }
 
 unsigned int
@@ -240,7 +240,6 @@ RequestImpl::getArg(const std::string &name) const {
 
 void
 RequestImpl::getArg(const std::string &name, std::vector<std::string> &v) const {
-
     std::vector<std::string> tmp;
     tmp.reserve(args_.size());
     for (std::vector<StringUtils::NamedValue>::const_iterator i = args_.begin(), end = args_.end(); i != end; ++i) {
@@ -388,23 +387,10 @@ RequestImpl::suppressBody() const {
 
 void
 RequestImpl::addInputHeader(const std::string &name, const std::string &value) {
-
     Range key_range = createRange(name);
     Range value_range = createRange(value);
     std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
     Parser::addHeader(this, key_range, value_range, enc.get());
-}
-
-void
-RequestImpl::reset() {
-
-    body_.clear();
-    args_.clear();
-    vars_.clear();
-
-    files_.clear();
-    cookies_.clear();
-    headers_.clear();
 }
 
 void

@@ -5,7 +5,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	extension.cpp extension_list.cpp header_param.cpp http_user_param.cpp \
 	loader.cpp logger.cpp object.cpp param.cpp param_factory.cpp \
 	query_arg_param.cpp request.cpp request_param.cpp request_data.cpp \
-	request_data_param.cpp response.cpp request_impl.cpp parser.cpp \
+	request_data_param.cpp response.cpp request_impl.cpp parser.cpp request_response.cpp \
 	sanitizer.cpp script.cpp script_factory.cpp state.cpp \
 	state_arg_param.cpp state_impl.cpp state_param.cpp state_value.cpp \
 	stylesheet.cpp stylesheet_factory.cpp tag.cpp \
@@ -29,7 +29,8 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	cache_counter_impl.cpp \
 	dummy_average_counter.cpp \
 	dummy_simple_counter.cpp \
-	dummy_cache_counter.cpp 
+	dummy_cache_counter.cpp \
+	default_request_response.cpp
 
 noinst_HEADERS = details/expect.h details/extension_list.h details/loader.h \
 	details/param_factory.h details/phoenix_singleton.h \
@@ -38,7 +39,8 @@ noinst_HEADERS = details/expect.h details/extension_list.h details/loader.h \
 	details/dummy_thread_pool.h details/dummy_script_cache.h \
 	details/dummy_stylesheet_cache.h details/parser.h \
 	details/dummy_average_counter.h \
-	details/dummy_simple_counter.h
+	details/dummy_simple_counter.h \
+	details/default_request_response.h
 
 libxscript_la_LDFLAGS = -lpthread -ldl
 

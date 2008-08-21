@@ -30,7 +30,7 @@ StateArgParam::~StateArgParam() {
 
 std::string
 StateArgParam::asString(const Context *ctx) const {
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     if (state->has(value())) {
         return state->asString(value());
     }

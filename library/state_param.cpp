@@ -38,7 +38,7 @@ StateParam::asString(const Context *ctx) const {
     std::stringstream stream;
     std::map<std::string, StateValue> vals;
 
-    boost::shared_ptr<State> state = ctx->state();
+    State* state = ctx->state();
     state->values(vals);
 
     for (std::map<std::string, StateValue>::iterator i = vals.begin(), end = vals.end(); i != end; ++i) {
