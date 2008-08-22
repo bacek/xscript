@@ -64,7 +64,7 @@ DocCache::minimalCacheTime() const {
 }
 
 bool
-DocCache::loadDoc(const Context *ctx, const TaggedBlock *block, Tag &tag, XmlDocHelper &doc) {
+DocCache::loadDoc(const Context *ctx, const Taggable *block, Tag &tag, XmlDocHelper &doc) {
     
     // Try to load block starting from "highest" cache.
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
@@ -91,7 +91,7 @@ DocCache::loadDoc(const Context *ctx, const TaggedBlock *block, Tag &tag, XmlDoc
 }
 
 bool
-DocCache::saveDoc(const Context *ctx, const TaggedBlock *block, const Tag& tag, const XmlDocHelper &doc) {
+DocCache::saveDoc(const Context *ctx, const Taggable *block, const Tag& tag, const XmlDocHelper &doc) {
     bool saved = false;
     for (std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
             i != strategies_.end();
