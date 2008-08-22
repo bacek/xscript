@@ -128,9 +128,6 @@ protected:
 
     template<typename T> T as(const std::string &name) const;
 
-    bool hasInternal(const std::string &name) const;
-    bool asBoolInternal(const std::string &name) const;
-
 private:
     StateValueMap values_;
     mutable boost::mutex mutex_;

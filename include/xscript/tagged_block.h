@@ -25,6 +25,7 @@ public:
 protected:
     virtual XmlDocHelper invokeInternal(Context *ctx);
     virtual void postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a);
+    virtual void postParse();
 
 private:
     std::string canonical_method_;

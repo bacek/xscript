@@ -44,30 +44,7 @@ StateImpl::erasePrefix(const std::string &prefix) {
 bool
 StateImpl::asBool(const std::string &name) const {
     boost::mutex::scoped_lock sl(mutex_);
-    return asBoolInternal(name);
-}
-
-bool
-StateImpl::asBoolInternal(const std::string &name) const {
-    const StateValue &val = find(name);
-
-    if (trim(createRange(val.value())).empty()) {
-        return false;
-    }
-    else if (val.type() == StateValue::TYPE_STRING) {
-        return true;
-    }
-    else if (val.type() == StateValue::TYPE_DOUBLE) {
-        double value = boost::lexical_cast<double>(val.value());
-        if (value > std::numeric_limits<double>::epsilon() ||
-            value < -std::numeric_limits<double>::epsilon()) {
-                return true;
-        }
-        return false;
-    }
-    else {
-        return val.value() != "0";
-    }
+    return find(name).asBool();
 }
 
 void
@@ -80,11 +57,6 @@ StateImpl::setBool(const std::string &name, bool value) {
 bool
 StateImpl::has(const std::string &name) const {
     boost::mutex::scoped_lock sl(mutex_);
-    return hasInternal(name);
-}
-
-bool
-StateImpl::hasInternal(const std::string &name) const {
     StateValueMap::const_iterator i = values_.find(name);
     return (values_.end() != i);
 }
@@ -131,7 +103,11 @@ StateImpl::find(const std::string &name) const {
 bool
 StateImpl::is(const std::string &name) const {
     boost::mutex::scoped_lock sl(mutex_);
-    return hasInternal(name) && asBoolInternal(name);
+    StateValueMap::const_iterator i = values_.find(name);
+    if (values_.end() != i) {
+        return i->second.asBool();
+    }
+    return false;
 }
 
 } // namespace xscript

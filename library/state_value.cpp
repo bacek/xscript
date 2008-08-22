@@ -1,5 +1,9 @@
 #include "settings.h"
+#include "internal/algorithm.h"
+#include "xscript/range.h"
 #include "xscript/state_value.h"
+
+#include <boost/lexical_cast.hpp>
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -46,6 +50,28 @@ StateValue::stringType() const {
     }
 
     return TYPE_STRING_STRING;
+}
+
+bool
+StateValue::asBool() const {
+
+    if (trim(createRange(value())).empty()) {
+        return false;
+    }
+    else if (type() == StateValue::TYPE_STRING) {
+        return true;
+    }
+    else if (type() == StateValue::TYPE_DOUBLE) {
+        double val = boost::lexical_cast<double>(value());
+        if (val > std::numeric_limits<double>::epsilon() ||
+            val < -std::numeric_limits<double>::epsilon()) {
+                return true;
+        }
+        return false;
+    }
+    else {
+        return value() != "0";
+    }
 }
 
 } // namespace xscript

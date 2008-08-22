@@ -60,16 +60,11 @@ TaggedBlock::invokeInternal(Context *ctx) {
     }
 
     try {
-        DocCache *cache = DocCache::instance();
-        if ((CACHE_TIME_UNDEFINED != cache_time_) && (cache_time_ < cache->minimalCacheTime())) {
-            return Block::invokeInternal(ctx);
-        }
-
         bool have_cached_doc = false;
-        Tag tag;
         XmlDocHelper doc(NULL);
         try {
-            have_cached_doc = cache->loadDoc(ctx, this, tag, doc);
+            Tag tag;
+            have_cached_doc = DocCache::instance()->loadDoc(ctx, this, tag, doc);
 
             if (have_cached_doc && Tag::UNDEFINED_TIME == tag.expire_time) {
 
@@ -136,6 +131,15 @@ TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a
 
     if (can_store) {
         cache->saveDoc(ctx, this, tag, doc);
+    }
+}
+
+void
+TaggedBlock::postParse() {
+    if (tagged()) {
+        if ((CACHE_TIME_UNDEFINED != cache_time_) && (cache_time_ < DocCache::instance()->minimalCacheTime())) {
+            tagged(false);
+        }
     }
 }
 

@@ -38,7 +38,7 @@ public:
 static XsltExtensions xsltExtensions;
 
 extern "C" void
-    xscriptXsltHttpHeaderOut(xmlXPathParserContextPtr ctxt, int nargs) {
+xscriptXsltHttpHeaderOut(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:http-header-out");
     if (NULL == ctxt) {
@@ -79,7 +79,7 @@ extern "C" void
 }
 
 extern "C" void
-    xscriptXsltHttpRedirect(xmlXPathParserContextPtr ctxt, int nargs) {
+xscriptXsltHttpRedirect(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:http-redirect");
     if (ctxt == NULL) {
@@ -119,7 +119,7 @@ extern "C" void
 }
 
 extern "C" void
-    xscriptXsltSetHttpStatus(xmlXPathParserContextPtr ctxt, int nargs) {
+xscriptXsltSetHttpStatus(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:set-http-status");
     if (ctxt == NULL) {
@@ -160,7 +160,7 @@ extern "C" void
 }
 
 extern "C" void
-    xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
+xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:get-state-arg");
     if (ctxt == NULL) {
@@ -199,7 +199,7 @@ extern "C" void
 }
 
 extern "C" void
-    xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
+xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:sanitize");
     if (ctxt == NULL) {
@@ -249,7 +249,7 @@ extern "C" void
 }
 
 extern "C" void
-    xscriptXsltUrlencode(xmlXPathParserContextPtr ctxt, int nargs) {
+xscriptXsltUrlencode(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:urlencode");
     if (ctxt == NULL) {
@@ -284,7 +284,7 @@ extern "C" void
 }
 
 extern "C" void
-    xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
+xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:urldecode");
     if (ctxt == NULL) {
@@ -367,7 +367,7 @@ xscriptXsltJSQuoteStr(const char *str, std::string &result) {
 }
 
 extern "C" void
-    xscriptXsltEsc(xmlXPathParserContextPtr ctxt, int nargs) {
+xscriptXsltEsc(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:esc");
     if (ctxt == NULL) {
@@ -400,7 +400,7 @@ extern "C" void
 }
 
 extern "C" void
-    xscriptXsltJsQuote(xmlXPathParserContextPtr ctxt, int nargs) {
+xscriptXsltJsQuote(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:js-quote");
     if (ctxt == NULL) {
@@ -435,7 +435,7 @@ extern "C" void
 }
 
 extern "C" void
-    xscriptXsltMD5(xmlXPathParserContextPtr ctxt, int nargs) {
+xscriptXsltMD5(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:md5");
     if (ctxt == NULL) {
@@ -467,7 +467,7 @@ extern "C" void
 }
 
 extern "C" void
-    xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
+xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:wbr");
     if (ctxt == NULL) {
@@ -571,7 +571,7 @@ extern "C" void
 }
 
 extern "C" void
-    xscriptXsltNl2br(xmlXPathParserContextPtr ctxt, int nargs) {
+xscriptXsltNl2br(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:nl2br");
     if (ctxt == NULL) {
@@ -650,7 +650,7 @@ extern "C" void
 }
 
 extern "C" void
-    xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
+xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
     (void)comp;
     if (tctx == NULL) {
         log()->error("%s: no transformation context", BOOST_CURRENT_FUNCTION);
