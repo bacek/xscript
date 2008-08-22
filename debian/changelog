@@ -1,3 +1,11 @@
+xscript (5.31-0) unstable; urgency=low
+
+  * noxslt port added
+  * State::is fixed
+  * checking of stopping context updated for tagged blocks
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 22 Aug 2008 15:13:24 +0400
+
 xscript (5.30-0) unstable; urgency=low
 
   * Move ServerRequest object to heap

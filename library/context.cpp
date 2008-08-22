@@ -211,8 +211,8 @@ Context::stopped() const {
 }
 
 void
-Context::stopped(bool flag) {
-    stopped_ = flag;
+Context::stop() {
+    stopped_ = true;
 }
 
 ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {
@@ -220,7 +220,7 @@ ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {
 
 ContextStopper::~ContextStopper() {
     ExtensionList::instance()->stopContext(ctx_.get());
-    ctx_->stopped(true);
+    ctx_->stop();
 }
 
 } // namespace xscript

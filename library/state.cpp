@@ -143,8 +143,8 @@ State::checkName(const std::string &name) const {
 }
 
 bool
-State::is(const std::string &guard_name) const {
-    return has(guard_name) && asBool(guard_name);
+State::is(const std::string &name) const {
+    return impl_->is(name);
 }
 
 } // namespace xscript

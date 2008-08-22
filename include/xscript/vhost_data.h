@@ -9,6 +9,7 @@
 
 #include <xscript/component.h>
 #include <xscript/request.h>
+#include <xscript/server.h>
 
 namespace xscript {
 
@@ -18,6 +19,7 @@ public:
     virtual ~VirtualHostData();
 
     void set(const Request* request);
+    const Server* getServer() const;
 
     virtual bool hasVariable(const Request* request, const std::string& var) const;
     virtual std::string getVariable(const Request* request, const std::string& var) const;
@@ -25,7 +27,9 @@ public:
     virtual std::string getKey(const Request* request, const std::string& name) const;
     virtual std::string getOutputEncoding(const Request* request) const;
 
+    friend class Server;
 protected:
+    void setServer(const Server* server);
     const Request* get() const;
 
 private:
@@ -40,6 +44,7 @@ private:
     };
 
     boost::thread_specific_ptr<RequestProvider> request_provider_;
+    const Server* server_;
 };
 
 } // namespace xscript

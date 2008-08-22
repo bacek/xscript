@@ -12,15 +12,14 @@ public:
     OfflineServer(Config *config, const std::string& url, const std::multimap<std::string, std::string>& args);
     virtual ~OfflineServer();
 
+    bool needApplyMainStylesheet(Request *request) const;
+    bool needApplyPerblockStylesheet(Request *request) const;
     void run();
-
-protected:
-    bool needApplyStylesheet(Request *request) const;
 
 private:
     std::string root_;
     std::string url_;
-    bool apply_stylesheet_, use_remote_call_;
+    bool apply_main_stylesheet_, apply_perblock_stylesheet_, use_remote_call_;
     std::map<std::string, std::string> headers_;
 };
 

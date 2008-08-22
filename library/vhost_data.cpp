@@ -14,7 +14,7 @@ namespace xscript {
 
 REGISTER_COMPONENT(VirtualHostData);
 
-VirtualHostData::VirtualHostData() {
+VirtualHostData::VirtualHostData() : server_(NULL) {
 }
 
 VirtualHostData::~VirtualHostData() {
@@ -33,6 +33,16 @@ VirtualHostData::get() const {
     }
 
     return provider->get();
+}
+
+void
+VirtualHostData::setServer(const Server* server) {
+    server_ = server;
+}
+
+const Server*
+VirtualHostData::getServer() const {
+    return server_;
 }
 
 bool

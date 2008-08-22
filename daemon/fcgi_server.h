@@ -19,19 +19,19 @@ public:
     FCGIServer(Config *config);
     virtual ~FCGIServer();
 
+    bool needApplyMainStylesheet(Request *request) const;
+    bool needApplyPerblockStylesheet(Request *request) const;
     void run();
 
 protected:
     void handle();
     void pid(const std::string &file);
-
-    bool needApplyStylesheet(Request *request) const;
     bool fileExists(const std::string &name) const;
 
 private:
     int socket_;
     int inbuf_size_, outbuf_size_;
-    unsigned short alternate_port_;
+    unsigned short alternate_port_, noxslt_port_;
 
     std::auto_ptr<SimpleCounter> workerCounter_;
     UptimeCounter uptimeCounter_;

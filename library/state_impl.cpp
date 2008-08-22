@@ -44,6 +44,11 @@ StateImpl::erasePrefix(const std::string &prefix) {
 bool
 StateImpl::asBool(const std::string &name) const {
     boost::mutex::scoped_lock sl(mutex_);
+    return asBoolInternal(name);
+}
+
+bool
+StateImpl::asBoolInternal(const std::string &name) const {
     const StateValue &val = find(name);
 
     if (trim(createRange(val.value())).empty()) {
@@ -55,8 +60,8 @@ StateImpl::asBool(const std::string &name) const {
     else if (val.type() == StateValue::TYPE_DOUBLE) {
         double value = boost::lexical_cast<double>(val.value());
         if (value > std::numeric_limits<double>::epsilon() ||
-                value < -std::numeric_limits<double>::epsilon()) {
-            return true;
+            value < -std::numeric_limits<double>::epsilon()) {
+                return true;
         }
         return false;
     }
@@ -75,6 +80,11 @@ StateImpl::setBool(const std::string &name, bool value) {
 bool
 StateImpl::has(const std::string &name) const {
     boost::mutex::scoped_lock sl(mutex_);
+    return hasInternal(name);
+}
+
+bool
+StateImpl::hasInternal(const std::string &name) const {
     StateValueMap::const_iterator i = values_.find(name);
     return (values_.end() != i);
 }
@@ -116,6 +126,12 @@ StateImpl::find(const std::string &name) const {
         stream << "nonexistent state param " << name;
         throw std::invalid_argument(stream.str());
     }
+}
+
+bool
+StateImpl::is(const std::string &name) const {
+    boost::mutex::scoped_lock sl(mutex_);
+    return hasInternal(name) && asBoolInternal(name);
 }
 
 } // namespace xscript

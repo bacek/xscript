@@ -48,6 +48,7 @@ extern "C" int writeFunc(void *ctx, const char *data, int len);
 Server::Server(Config *config) :
         config_(config) {
     config_->startup();
+    VirtualHostData::instance()->setServer(this);
 }
 
 Server::~Server() {
@@ -97,7 +98,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
             return;
         }
 
-        if (script->forceStylesheet() && needApplyStylesheet(ctx->request())) {
+        if (script->forceStylesheet() && needApplyMainStylesheet(ctx->request())) {
             script->applyStylesheet(ctx.get(), doc);
         }
         else {
@@ -127,7 +128,13 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
 }
 
 bool
-Server::needApplyStylesheet(Request *request) const {
+Server::needApplyMainStylesheet(Request *request) const {
+    (void)request;
+    return true;
+}
+
+bool
+Server::needApplyPerblockStylesheet(Request *request) const {
     (void)request;
     return true;
 }

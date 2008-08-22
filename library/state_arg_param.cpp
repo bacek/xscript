@@ -1,8 +1,8 @@
 #include "settings.h"
 
+#include "xscript/context.h"
 #include "xscript/param.h"
 #include "xscript/state.h"
-#include "xscript/context.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -16,7 +16,6 @@ public:
     virtual ~StateArgParam();
 
     virtual std::string asString(const Context *ctx) const;
-
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
 
 };

@@ -60,9 +60,9 @@ public:
     void checkName(const std::string &name) const;
 
     /**
-     * Check that state with guard_name set to true
+     * Check that state with name set to true
      */
-    bool is(const std::string &guard_name) const;
+    bool is(const std::string &name) const;
 private:
     std::auto_ptr<StateImpl> impl_;
 };

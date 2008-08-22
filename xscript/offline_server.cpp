@@ -31,7 +31,7 @@ public:
 };
 
 OfflineServer::OfflineServer(Config *config, const std::string& url, const std::multimap<std::string, std::string>& args) :
-    Server(config), url_(url), apply_stylesheet_(true), use_remote_call_(true) {
+    Server(config), url_(url), apply_main_stylesheet_(true), apply_perblock_stylesheet_(true), use_remote_call_(true) {
 
     ComponentRegisterer<CheckingPolicy> reg(new OfflineCheckingPolicy());
     (void)reg;
@@ -49,7 +49,10 @@ OfflineServer::OfflineServer(Config *config, const std::string& url, const std::
             }
         }
         else if (it->first == "dont-apply-stylesheet") {
-            apply_stylesheet_ = false;
+            apply_main_stylesheet_ = false;
+            if (it->second == "all") {
+                apply_perblock_stylesheet_ = false;
+            }
         }
         else if (it->first == "dont-use-remote-call") {
             use_remote_call_ = false;
@@ -124,9 +127,15 @@ OfflineServer::run() {
 }
 
 bool
-OfflineServer::needApplyStylesheet(Request *request) const {
+OfflineServer::needApplyMainStylesheet(Request *request) const {
     (void)request;
-    return apply_stylesheet_;
+    return apply_main_stylesheet_;
+}
+
+bool
+OfflineServer::needApplyPerblockStylesheet(Request *request) const {
+    (void)request;
+    return apply_perblock_stylesheet_;
 }
 
 }

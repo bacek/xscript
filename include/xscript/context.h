@@ -94,7 +94,7 @@ public:
     friend class ContextStopper;
 
 private:
-    void stopped(bool flag);
+    void stop();
 
 private:
     volatile bool stopped_;

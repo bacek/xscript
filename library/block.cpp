@@ -75,6 +75,11 @@ void
 Block::threaded(bool) {
 }
 
+bool
+Block::tagged() const {
+    return false;
+}
+
 void
 Block::parse() {
 
@@ -177,13 +182,16 @@ Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
         return errorResult("got document with no root");
     }
 
-    if (ctx->stopped()) {
+    if (!tagged() && ctx->stopped()) {
         throw std::runtime_error(
             std::string("Context already stopped. Cannot process response. Method: ") + method_);
     }
 
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
-    applyStylesheet(ctx, doc);
+    const Server* server = VirtualHostData::instance()->getServer();
+    if (!server || server->needApplyPerblockStylesheet(ctx->request())) {
+        applyStylesheet(ctx, doc);
+    }
 
     postCall(ctx, doc, a);
     evalXPath(ctx, doc);

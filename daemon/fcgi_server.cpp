@@ -71,6 +71,7 @@ FCGIServer::run() {
     outbuf_size_ = config_->as<unsigned int>("/xscript/output-buffer", 4096);
 
     alternate_port_ = config_->as<unsigned short>("/xscript/alternate-port", 8080);
+    noxslt_port_ = config_->as<unsigned short>("/xscript/noxslt-port", 8079);
 
     if (!socket.empty()) {
         socket_ = FCGX_OpenSocket(socket.c_str(), backlog);
@@ -165,8 +166,14 @@ FCGIServer::pid(const std::string &file) {
 }
 
 bool
-FCGIServer::needApplyStylesheet(Request *request) const {
-    return (request->getServerPort() != alternate_port_);
+FCGIServer::needApplyMainStylesheet(Request *request) const {
+    unsigned short port = request->getServerPort();
+    return (port != alternate_port_) && (port != noxslt_port_);
+}
+
+bool
+FCGIServer::needApplyPerblockStylesheet(Request *request) const {
+    return (request->getServerPort() != noxslt_port_);
 }
 
 bool
