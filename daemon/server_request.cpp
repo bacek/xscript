@@ -359,6 +359,25 @@ ServerRequest::attach(std::istream *is, std::ostream *os, char *env[]) {
     stream_->exceptions(std::ios::badbit);
 }
 
+
+std::vector<std::pair<std::string, std::string> > 
+ServerRequest::getHeaders() const {
+    std::vector<std::pair<std::string, std::string> > res;
+
+    boost::mutex::scoped_lock sl(mutex_);
+    log()->debug("%s, getting headers", BOOST_CURRENT_FUNCTION);
+    std::stringstream stream;
+    stream << status_ << " " << Parser::statusToString(status_);
+    res.push_back(std::make_pair(std::string("Status"), stream.str()));
+    for (HeaderMap::const_iterator i = out_headers_.begin(), end = out_headers_.end(); i != end; ++i) {
+        res.push_back(*i);
+    }
+    for (std::set<Cookie, CookieLess>::const_iterator i = out_cookies_.begin(), end = out_cookies_.end(); i != end; ++i) {
+        res.push_back(std::make_pair(std::string("Set-Cookie"), i->toString()));
+    }
+    return res;
+}
+
 void
 ServerRequest::sendHeadersInternal() {
 

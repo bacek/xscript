@@ -324,6 +324,12 @@ void
 StandaloneRequest::sendHeaders() {
 }
 
+std::vector<std::pair<std::string, std::string> > 
+StandaloneRequest::getHeaders() const {
+    std::vector<std::pair<std::string, std::string> > res;
+    return res;
+}
+
 bool
 StandaloneRequest::suppressBody() const {
     return false;
