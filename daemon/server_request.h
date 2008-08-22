@@ -96,7 +96,7 @@ public:
     void sendHeaders();
     void attach(std::istream *is, std::ostream *os, char *env[]);
 
-    virtual std::vector<std::pair<std::string, std::string> > getHeaders() const;
+    virtual Headers getHeaders() const;
 private:
     ServerRequest(const ServerRequest &);
     ServerRequest& operator = (const ServerRequest &);

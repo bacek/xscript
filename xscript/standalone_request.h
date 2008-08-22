@@ -93,7 +93,7 @@ public:
     virtual bool suppressBody() const;
     virtual void attach(const std::string& url, const std::string& doc_root);
 
-    virtual std::vector<std::pair<std::string, std::string> > getHeaders() const;
+    virtual Headers getHeaders() const;
 private:
     StandaloneRequest(const StandaloneRequest &);
     StandaloneRequest& operator = (const StandaloneRequest &);

@@ -324,9 +324,9 @@ void
 StandaloneRequest::sendHeaders() {
 }
 
-std::vector<std::pair<std::string, std::string> > 
+Response::Headers
 StandaloneRequest::getHeaders() const {
-    std::vector<std::pair<std::string, std::string> > res;
+    Headers res;
     return res;
 }
 

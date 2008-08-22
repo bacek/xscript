@@ -28,7 +28,8 @@ public:
 
     // Get all headers from response.
     // Return vector of pairs (name, value) for response headers.
-    virtual std::vector<std::pair<std::string, std::string> > getHeaders() const = 0;
+    typedef std::vector<std::pair<std::string, std::string> > Headers;
+    virtual Headers getHeaders() const = 0;
 
     void redirectBack(const Request *req);
     void redirectToPath(const std::string &path);

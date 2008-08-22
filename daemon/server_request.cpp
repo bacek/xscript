@@ -360,9 +360,9 @@ ServerRequest::attach(std::istream *is, std::ostream *os, char *env[]) {
 }
 
 
-std::vector<std::pair<std::string, std::string> > 
+Response::Headers
 ServerRequest::getHeaders() const {
-    std::vector<std::pair<std::string, std::string> > res;
+    Headers res;
 
     boost::mutex::scoped_lock sl(mutex_);
     log()->debug("%s, getting headers", BOOST_CURRENT_FUNCTION);
