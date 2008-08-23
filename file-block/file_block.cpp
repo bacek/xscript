@@ -91,6 +91,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     }
 
     const Tag* tag = boost::any_cast<Tag>(&a);
+    std::string tagKey;
 
     XmlDocHelper doc;
     bool modified;
@@ -99,6 +100,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
         // We got tag and file modification time not greater than last_modified in tag
         // Set "modified" to false and omit loading doc.
         modified = false;
+        tagKey = tag->tagKey;
     }
     else {
         modified = true;
@@ -108,7 +110,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     Tag local_tag(modified, st.st_mtime, Tag::UNDEFINED_TIME);
     a = boost::any(local_tag);
 
-    return InvokeResult(doc, !modified, tag->tagKey);
+    return InvokeResult(doc, !modified, tagKey);
 }
 
 XmlDocHelper
