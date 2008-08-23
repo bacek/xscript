@@ -564,7 +564,7 @@ Script::removeUnusedNode(xmlNodePtr node, xmlNodePtr newnode, xmlNodePtr orig) {
 
 std::string
 Script::createTagKey(const Context* ctx) const {
-    std::string key = "script";
+    std::string key = name_;
 
     // I really want more smart language...
     // $key = join ':', map { $_->createTagKey($ctx) } @blocks_;
