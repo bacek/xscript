@@ -92,6 +92,7 @@ DocCache::loadDoc(const Context *ctx, const Taggable *block, Tag &tag, XmlDocHel
 
 bool
 DocCache::saveDoc(const Context *ctx, const Taggable *block, const Tag& tag, const XmlDocHelper &doc) {
+    log()->debug("Saving doc");
     bool saved = false;
     for (std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
             i != strategies_.end();

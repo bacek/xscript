@@ -37,6 +37,7 @@
 #include "xscript/xslt_profiler.h"
 #include "xscript/tag.h"
 #include "xscript/doc_cache.h"
+#include "xscript/profiler.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -56,8 +57,64 @@ Server::Server(Config *config) :
 Server::~Server() {
 }
 
+
+void 
+Server::cacheFullPage(Context *ctx, Script *script, XmlDocHelper *doc) {
+    log()->entering(__PRETTY_FUNCTION__);
+    // Apply stylesheet first. It can add more headers.
+    script->applyStylesheet(ctx, *doc);
+
+    // Store output headers and body for future use
+    XmlDocHelper new_doc(xmlNewDoc((const xmlChar*) "1.0"));
+    xmlNodePtr root = xmlNewDocNode(new_doc.get(), NULL, BAD_CAST "result", 0);
+    XmlUtils::throwUnless(NULL != root);
+
+    xmlDocSetRootElement(new_doc.get(), root);
+
+    // Create output. Unforunately it has some side effects for headers.
+    std::string out;
+
+    xmlCharEncodingHandlerPtr encoder = NULL;
+    const std::string &encoding = ctx->documentWriter()->outputEncoding();
+    if (!encoding.empty()) {
+        encoder = xmlFindCharEncodingHandler(encoding.c_str());
+    }
+
+    // If there is no errors libxml will close buffer.
+    xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(&writeBufFunc, &closeFunc, &out, encoder);
+    XmlUtils::throwUnless(NULL != buf);
+    ctx->documentWriter()->write(ctx->response(), *doc, buf);
+    // Store headers
+    Response::Headers headers = ctx->response()->getHeaders();
+    for(Response::Headers::iterator h = headers.begin(); h != headers.end(); ++h) {
+        XmlNodeHelper header(xmlNewNode(0, BAD_CAST "header"));
+        xmlSetProp(header.get(), BAD_CAST "name", BAD_CAST h->first.c_str());
+        xmlSetProp(header.get(), BAD_CAST "value", BAD_CAST h->second.c_str());
+        xmlAddChild(root, header.get());
+        header.release();
+    }
+
+
+    // Create single text node for response
+    XmlNodeHelper content(xmlNewNode(0, BAD_CAST "content"));
+    xmlAddChild(content.get(), xmlNewTextLen(BAD_CAST out.c_str(), out.length()));
+    xmlAddChild(root, content.get());
+    content.release();
+
+    // And finally store doc in cache
+    Tag tag;
+    DocCache::instance()->saveDoc(ctx, script, tag, new_doc);
+
+    // Now. Send all data to user. He waited enought.
+    sendHeaders(ctx);
+    ctx->response()->write(out.c_str(), out.length());
+
+    log()->exiting(__PRETTY_FUNCTION__);
+}
+
 void
 Server::handleRequest(RequestData *request_data) {
+    PROFILER(log(), "Total process time");
 
     VirtualHostData::instance()->set(request_data->request());
     XmlUtils::resetReporter();
@@ -112,28 +169,38 @@ Server::handleRequest(RequestData *request_data) {
             // TODO It's ugly hack to prove concept. Create big response document
             // and store it in cache
             if (script->tagged()) {
+                log()->debug("Ho! We've got tagged Script.");
                 if (res.cached) {
+                    log()->debug("Yay! Result is fully cached!");
                     XmlDocHelper loaded_doc;
                     Tag tag;
                     bool l = DocCache::instance()->loadDoc(ctx.get(), script.get(), tag, loaded_doc);
-                    assert(l);
+                    if(!l) {
+                        log()->debug("Fail to fetch old doc from cache");
+                        return cacheFullPage(ctx.get(), script.get(), doc);
+                    }
+
+                    log()->debug("Old doc loaded. Create response");
 
                     // Iterate over children of root node. It should be (header*, content);
                     xmlNodePtr root = xmlDocGetRootElement(loaded_doc.get());
 
                     xmlNodePtr node = root->children;
                     while (node) {
-                        if (strcmp((const char*) node->name, "header") == 0) {
-                            ctx->response()->setHeader((const char*)node->name, XmlUtils::value(node));
+                        const char * name = (const char*)(node->name);
+                        if (strcmp(name, "header") == 0) {
+                            log()->debug("Got header: '%s' '%s'", XmlUtils::attrValue(node, "name"), XmlUtils::attrValue(node, "value"));
+                            ctx->response()->setHeader(XmlUtils::attrValue(node, "name"), XmlUtils::attrValue(node, "value"));
                         }
-                        else if (strcmp((const char*) node->name, "content") == 0) {
+                        else if (strcmp(name, "content") == 0) {
+                            log()->debug("Got content");
                             sendHeaders(ctx.get());
+                            std::string out = XmlUtils::value(node);
+                            ctx->response()->write(out.c_str(), out.length());
                         }
                         else {
                             // Sounds like broken doc
                             assert(!node->name);
-                            std::string out = XmlUtils::value(node);
-                            ctx->response()->write(out.c_str(), out.length());
                             return;
                         }
 
@@ -142,51 +209,7 @@ Server::handleRequest(RequestData *request_data) {
 
                 }
                 else {
-                    // Apply stylesheet first. It can add more headers.
-                    script->applyStylesheet(ctx.get(), *doc);
-
-                    // Store output headers and body for future use
-                    XmlDocHelper new_doc(xmlNewDoc((const xmlChar*) "1.0"));
-                    xmlNodePtr root = xmlNewDocNode(new_doc.get(), NULL, BAD_CAST "result", 0);
-                    XmlUtils::throwUnless(NULL != root);
-
-                    xmlDocSetRootElement(new_doc.get(), root);
-
-                    // Store headers
-                    Response::Headers headers = ctx->response()->getHeaders();
-                    for(Response::Headers::iterator h = headers.begin(); h != headers.end(); ++h) {
-                        XmlNodeHelper header(xmlNewNode(0, BAD_CAST "header"));
-                        xmlSetProp(header.get(), BAD_CAST "name", BAD_CAST h->first.c_str());
-                        xmlSetProp(header.get(), BAD_CAST "value", BAD_CAST h->second.c_str());
-                        xmlAddChild(root, header.get());
-                        header.release();
-                    }
-
-                    std::string out;
-                    
-                    xmlCharEncodingHandlerPtr encoder = NULL;
-                    const std::string &encoding = ctx->documentWriter()->outputEncoding();
-                    if (!encoding.empty()) {
-                        encoder = xmlFindCharEncodingHandler(encoding.c_str());
-                    }
-                    // If there is no errors libxml will close buffer.
-                    buf = xmlOutputBufferCreateIO(&writeBufFunc, &closeFunc, &out, encoder);
-                    XmlUtils::throwUnless(NULL != buf);
-                    ctx->documentWriter()->write(ctx->response(), *doc, buf);
-
-                    // Create single text node for response
-                    XmlNodeHelper content(xmlNewNode(0, BAD_CAST "content"));
-                    xmlAddChild(content.get(), xmlNewTextLen(BAD_CAST out.c_str(), out.length()));
-                    xmlAddChild(root, content.get());
-                    content.release();
-
-                    // And finally store doc in cache
-                    Tag tag;
-                    DocCache::instance()->saveDoc(ctx.get(), script.get(), tag, new_doc);
-
-                    // Now. Send all data to user. He waited enought.
-                    sendHeaders(ctx.get());
-                    ctx->response()->write(out.c_str(), out.length());
+                    return cacheFullPage(ctx.get(), script.get(), doc);
                 }
 
                 return;
