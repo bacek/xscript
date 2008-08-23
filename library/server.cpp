@@ -142,6 +142,9 @@ Server::handleRequest(RequestData *request_data) {
 
                 }
                 else {
+                    // Apply stylesheet first. It can add more headers.
+                    script->applyStylesheet(ctx.get(), *doc);
+
                     // Store output headers and body for future use
                     XmlDocHelper new_doc(xmlNewDoc((const xmlChar*) "1.0"));
                     xmlNodePtr root = xmlNewDocNode(new_doc.get(), NULL, BAD_CAST "result", 0);
