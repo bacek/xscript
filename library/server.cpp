@@ -99,8 +99,10 @@ Server::returnFullPage(Context *ctx, Script *script, XmlDocHelper *doc) {
 
 }
 
-// TODO It's ugly hack to prove concept. Create big response document
-// and store it in cache.
+// Handle full page cache.
+// We have to store headers and body.
+// So, at the moment, create new trivial doc with full
+// serialized response.
 // <res>
 //   <header name="name" value="value"/>
 //   <header name="name" value="value"/>
@@ -210,11 +212,8 @@ Server::handleRequest(RequestData *request_data) {
         }
 
         if (script->forceStylesheet() && needApplyStylesheet(ctx->request())) {
-            // Handle full page cache.
-            // We have to store headers and body.
-            // So, at the moment, create new trivial doc with full
-            // serialized response.
             if (script->tagged()) {
+                // We've got Script with all taggable blocks. Try fully cache it
                 log()->debug("Ho! We've got tagged Script.");
                 if (res.cached) {
                     return returnFullPage(ctx.get(), script.get(), doc);
