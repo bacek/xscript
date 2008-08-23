@@ -27,6 +27,7 @@ protected:
     static std::pair<std::string, bool> findScript(const std::string &name);
     void sendHeaders(Context *ctx);
 
+    void returnFullPage(Context *ctx, Script *script, XmlDocHelper *doc);
     void cacheFullPage(Context *ctx, Script *script, XmlDocHelper *doc);
 
 protected:

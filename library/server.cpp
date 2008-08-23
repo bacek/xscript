@@ -57,7 +57,55 @@ Server::Server(Config *config) :
 Server::~Server() {
 }
 
+void 
+Server::returnFullPage(Context *ctx, Script *script, XmlDocHelper *doc) {
 
+    log()->debug("Yay! Result is fully cached!");
+    XmlDocHelper loaded_doc;
+    Tag tag;
+    bool l = DocCache::instance()->loadDoc(ctx, script, tag, loaded_doc);
+    if(!l) {
+        log()->debug("Fail to fetch old doc from cache... So pity... Try to cache new result");
+        return cacheFullPage(ctx, script, doc);
+    }
+
+    log()->debug("Old doc loaded. Create response");
+
+    // Iterate over children of root node. It should be (header*, content);
+    xmlNodePtr root = xmlDocGetRootElement(loaded_doc.get());
+
+    xmlNodePtr node = root->children;
+    while (node) {
+        const char * name = (const char*)(node->name);
+        if (strcmp(name, "header") == 0) {
+            log()->debug("Got header: '%s' '%s'", XmlUtils::attrValue(node, "name"), XmlUtils::attrValue(node, "value"));
+            ctx->response()->setHeader(XmlUtils::attrValue(node, "name"), XmlUtils::attrValue(node, "value"));
+        }
+        else if (strcmp(name, "content") == 0) {
+            log()->debug("Got content");
+            sendHeaders(ctx);
+            std::string out = XmlUtils::value(node);
+            ctx->response()->write(out.c_str(), out.length());
+        }
+        else {
+            // Sounds like broken doc
+            log()->error("Unexpected tag in cached document: '%s'", name);
+            assert(!node->name);
+            return;
+        }
+
+        node = node->next;
+    }
+
+}
+
+// TODO It's ugly hack to prove concept. Create big response document
+// and store it in cache.
+// <res>
+//   <header name="name" value="value"/>
+//   <header name="name" value="value"/>
+//   <content>CDATA</content>
+// </res>
 void 
 Server::cacheFullPage(Context *ctx, Script *script, XmlDocHelper *doc) {
     log()->entering(__PRETTY_FUNCTION__);
@@ -166,47 +214,10 @@ Server::handleRequest(RequestData *request_data) {
             // We have to store headers and body.
             // So, at the moment, create new trivial doc with full
             // serialized response.
-            // TODO It's ugly hack to prove concept. Create big response document
-            // and store it in cache
             if (script->tagged()) {
                 log()->debug("Ho! We've got tagged Script.");
                 if (res.cached) {
-                    log()->debug("Yay! Result is fully cached!");
-                    XmlDocHelper loaded_doc;
-                    Tag tag;
-                    bool l = DocCache::instance()->loadDoc(ctx.get(), script.get(), tag, loaded_doc);
-                    if(!l) {
-                        log()->debug("Fail to fetch old doc from cache");
-                        return cacheFullPage(ctx.get(), script.get(), doc);
-                    }
-
-                    log()->debug("Old doc loaded. Create response");
-
-                    // Iterate over children of root node. It should be (header*, content);
-                    xmlNodePtr root = xmlDocGetRootElement(loaded_doc.get());
-
-                    xmlNodePtr node = root->children;
-                    while (node) {
-                        const char * name = (const char*)(node->name);
-                        if (strcmp(name, "header") == 0) {
-                            log()->debug("Got header: '%s' '%s'", XmlUtils::attrValue(node, "name"), XmlUtils::attrValue(node, "value"));
-                            ctx->response()->setHeader(XmlUtils::attrValue(node, "name"), XmlUtils::attrValue(node, "value"));
-                        }
-                        else if (strcmp(name, "content") == 0) {
-                            log()->debug("Got content");
-                            sendHeaders(ctx.get());
-                            std::string out = XmlUtils::value(node);
-                            ctx->response()->write(out.c_str(), out.length());
-                        }
-                        else {
-                            // Sounds like broken doc
-                            assert(!node->name);
-                            return;
-                        }
-
-                        node = node->next;
-                    }
-
+                    return returnFullPage(ctx.get(), script.get(), doc);
                 }
                 else {
                     return cacheFullPage(ctx.get(), script.get(), doc);
