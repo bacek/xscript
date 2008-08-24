@@ -33,15 +33,6 @@
 namespace xscript {
 
 
-class TagKeyMemory : public TagKey {
-public:
-    TagKeyMemory(const Context *ctx, const Taggable *block);
-    virtual const std::string& asString() const;
-
-private:
-    std::string value_;
-};
-
 class DocCacheMemory :
             public Component<DocCacheMemory>,
             public DocCacheStrategy {
@@ -53,16 +44,14 @@ public:
 
     virtual time_t minimalCacheTime() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Taggable *block) const;
-
     unsigned int maxSize() const;
 
 protected:
-    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc);
-    virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);
+    virtual bool loadDocImpl(const std::string &tagKey, Tag &tag, XmlDocHelper &doc);
+    virtual bool saveDocImpl(const std::string &tagKey, const Tag& tag, const XmlDocHelper &doc);
 
 private:
-    DocPool* pool(const TagKey *key) const;
+    DocPool* pool(const std::string &tagKey) const;
 
     static const int DEFAULT_POOL_COUNT;
     static const int DEFAULT_POOL_SIZE;
@@ -78,18 +67,6 @@ const int DocCacheMemory::DEFAULT_POOL_COUNT = 16;
 const int DocCacheMemory::DEFAULT_POOL_SIZE = 128;
 const time_t DocCacheMemory::DEFAULT_CACHE_TIME = 5; // sec
 
-TagKeyMemory::TagKeyMemory(const Context *ctx, const Taggable *block) : value_() {
-    assert(NULL != ctx);
-    assert(NULL != block);
-
-    value_ = block->createTagKey(ctx);
-}
-
-const std::string&
-TagKeyMemory::asString() const {
-    return value_;
-}
-
 DocCacheMemory::DocCacheMemory() :
         min_time_(Tag::UNDEFINED_TIME), max_size_(0) {
     statBuilder_.setName("tagged-cache-memory");
@@ -98,11 +75,6 @@ DocCacheMemory::DocCacheMemory() :
 
 DocCacheMemory::~DocCacheMemory() {
     std::for_each(pools_.begin(), pools_.end(), boost::checked_deleter<DocPool>());
-}
-
-std::auto_ptr<TagKey>
-DocCacheMemory::createKey(const Context *ctx, const Taggable *block) const {
-    return std::auto_ptr<TagKey>(new TagKeyMemory(ctx, block));
 }
 
 void
@@ -134,17 +106,17 @@ DocCacheMemory::minimalCacheTime() const {
 }
 
 bool
-DocCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
-    DocPool *mpool = pool(key);
+DocCacheMemory::loadDocImpl(const std::string &tagKey, Tag &tag, XmlDocHelper &doc) {
+    DocPool *mpool = pool(tagKey);
     assert(NULL != mpool);
-    return mpool->loadDoc(*key, tag, doc);
+    return mpool->loadDoc(tagKey, tag, doc);
 }
 
 bool
-DocCacheMemory::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper &doc) {
-    DocPool *mpool = pool(key);
+DocCacheMemory::saveDocImpl(const std::string &tagKey, const Tag &tag, const XmlDocHelper &doc) {
+    DocPool *mpool = pool(tagKey);
     assert(NULL != mpool);
-    return mpool->saveDoc(*key, tag, doc);
+    return mpool->saveDoc(tagKey, tag, doc);
 }
 
 unsigned int
@@ -153,16 +125,12 @@ DocCacheMemory::maxSize() const {
 }
 
 DocPool*
-DocCacheMemory::pool(const TagKey *key) const {
-    assert(NULL != key);
-
+DocCacheMemory::pool(const std::string &tagKey) const {
     const unsigned int sz = pools_.size();
     assert(sz);
 
-    const std::string &str = key->asString();
-
     boost::crc_32_type result;
-    result.process_bytes(str.data(), str.size());
+    result.process_bytes(tagKey.data(), tagKey.size());
     unsigned int index = result.checksum() % sz;
     return pools_[index];
 }

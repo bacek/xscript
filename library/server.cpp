@@ -63,7 +63,8 @@ Server::returnFullPage(Context *ctx, Script *script, XmlDocHelper *doc) {
     log()->debug("Yay! Result is fully cached!");
     XmlDocHelper loaded_doc;
     Tag tag;
-    bool l = DocCache::instance()->loadDoc(ctx, script, tag, loaded_doc);
+    std::string tagKey = script->createTagKey(ctx);
+    bool l = DocCache::instance()->loadDoc(tagKey, tag, loaded_doc);
     if(!l) {
         log()->debug("Fail to fetch old doc from cache... So pity... Try to cache new result");
         return cacheFullPage(ctx, script, doc);
@@ -153,7 +154,8 @@ Server::cacheFullPage(Context *ctx, Script *script, XmlDocHelper *doc) {
 
     // And finally store doc in cache
     Tag tag;
-    DocCache::instance()->saveDoc(ctx, script, tag, new_doc);
+    std::string tagKey = script->createTagKey(ctx);
+    DocCache::instance()->saveDoc(tagKey, tag, new_doc);
 
     // Now. Send all data to user. He waited enought.
     sendHeaders(ctx);

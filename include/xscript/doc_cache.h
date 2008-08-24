@@ -27,8 +27,8 @@ public:
 
     time_t minimalCacheTime() const;
 
-    bool loadDoc(const Context *ctx, const Taggable *block, Tag &tag, XmlDocHelper &doc);
-    bool saveDoc(const Context *ctx, const Taggable *block, const Tag& tag, const XmlDocHelper &doc);
+    bool loadDoc(const std::string &tagKey, Tag &tag, XmlDocHelper &doc);
+    bool saveDoc(const std::string &tagKey, const Tag& tag, const XmlDocHelper &doc);
 
     void init(const Config *config);
     void addStrategy(DocCacheStrategy* strategy, const std::string& name);

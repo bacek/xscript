@@ -62,7 +62,7 @@ FCGIServer::~FCGIServer() {
 void
 FCGIServer::run() {
 
-    std::string socket = config_->as<std::string>("/xscript/endpoint/socket");
+    std::string socket = config_->as<std::string>("/xscript/endpoint/socket", "");
     unsigned short backlog = config_->as<unsigned short>("/xscript/endpoint/backlog");
 
     pid(config_->as<std::string>("/xscript/pidfile"));

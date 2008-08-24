@@ -64,17 +64,16 @@ DocCache::minimalCacheTime() const {
 }
 
 bool
-DocCache::loadDoc(const Context *ctx, const Taggable *block, Tag &tag, XmlDocHelper &doc) {
+DocCache::loadDoc(const std::string &tagKey, Tag &tag, XmlDocHelper &doc) {
     
     // Try to load block starting from "highest" cache.
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     bool loaded = false;
     std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
     while ( !loaded && i != strategies_.end()) {
-        std::auto_ptr<TagKey> key = (*i)->createKey(ctx, block);
-        loaded = (*i)->loadDoc(key.get(), tag, doc);
+        loaded = (*i)->loadDoc(tagKey, tag, doc);
         if(loaded)
-            tag.tagKey = key->asString();
+            tag.tagKey = tagKey;
         ++i;
     }
 
@@ -82,8 +81,7 @@ DocCache::loadDoc(const Context *ctx, const Taggable *block, Tag &tag, XmlDocHel
     if (loaded) {
         --i; // Do not store in cache from doc was loaded.
         for (std::vector<DocCacheStrategy*>::iterator j = strategies_.begin(); j != i; ++j) {
-            std::auto_ptr<TagKey> key = (*j)->createKey(ctx, block);
-            (*j)->saveDoc(key.get(), tag, doc);
+            (*j)->saveDoc(tagKey, tag, doc);
         }
     }
 
@@ -91,14 +89,13 @@ DocCache::loadDoc(const Context *ctx, const Taggable *block, Tag &tag, XmlDocHel
 }
 
 bool
-DocCache::saveDoc(const Context *ctx, const Taggable *block, const Tag& tag, const XmlDocHelper &doc) {
+DocCache::saveDoc(const std::string &tagKey, const Tag& tag, const XmlDocHelper &doc) {
     log()->debug("Saving doc");
     bool saved = false;
     for (std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
             i != strategies_.end();
             ++i) {
-        std::auto_ptr<TagKey> key = (*i)->createKey(ctx, block);
-        saved |= (*i)->saveDoc(key.get(), tag, doc);
+        saved |= (*i)->saveDoc(tagKey, tag, doc);
     }
     return saved;
 }

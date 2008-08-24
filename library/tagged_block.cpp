@@ -70,7 +70,8 @@ TaggedBlock::invokeInternal(Context *ctx) {
         Tag tag;
         XmlDocHelper doc(NULL);
         try {
-            have_cached_doc = cache->loadDoc(ctx, this, tag, doc);
+            std::string tagKey = createTagKey(ctx);
+            have_cached_doc = cache->loadDoc(tagKey, tag, doc);
 
             if (have_cached_doc && Tag::UNDEFINED_TIME == tag.expire_time) {
 
@@ -136,7 +137,8 @@ TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a
     }
 
     if (can_store) {
-        cache->saveDoc(ctx, this, tag, doc);
+        std::string tagKey = createTagKey(ctx);
+        cache->saveDoc(tagKey, tag, doc);
     }
 }
 

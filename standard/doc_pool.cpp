@@ -33,19 +33,18 @@ DocPool::getMemoryCounter() const {
 }
 
 bool
-DocPool::loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc) {
-    std::string keyStr = key.asString();
-    DocPool::LoadResult res = loadDocImpl(keyStr, tag, doc);
+DocPool::loadDoc(const std::string &tagKey, Tag &tag, XmlDocHelper &doc) {
+    DocPool::LoadResult res = loadDocImpl(tagKey, tag, doc);
 
     switch (res) {
     case DocPool::LOAD_NOT_FOUND:
-        log()->info("%s: key: %s, not found", BOOST_CURRENT_FUNCTION, keyStr.c_str());
+        log()->info("%s: key: %s, not found", BOOST_CURRENT_FUNCTION, tagKey.c_str());
         break;
     case DocPool::LOAD_EXPIRED:
-        log()->info("%s: key: %s, expired", BOOST_CURRENT_FUNCTION, keyStr.c_str());
+        log()->info("%s: key: %s, expired", BOOST_CURRENT_FUNCTION, tagKey.c_str());
         break;
     case DocPool::LOAD_NEED_PREFETCH:
-        log()->info("%s: key: %s, need prefetch", BOOST_CURRENT_FUNCTION, keyStr.c_str());
+        log()->info("%s: key: %s, need prefetch", BOOST_CURRENT_FUNCTION, tagKey.c_str());
         break;
     default:
         break;
@@ -55,8 +54,8 @@ DocPool::loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc) {
 }
 
 DocPool::LoadResult
-DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocHelper &doc) {
-    log()->debug("%s, key: %s", BOOST_CURRENT_FUNCTION, keyStr.c_str());
+DocPool::loadDocImpl(const std::string &tagKey, Tag &tag, XmlDocHelper &doc) {
+    log()->debug("%s, key: %s", BOOST_CURRENT_FUNCTION, tagKey.c_str());
 
     boost::mutex::scoped_lock lock(mutex_);
 
@@ -64,7 +63,7 @@ DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocHelper &doc) {
         return LOAD_NOT_FOUND;
     }
 
-    Key2Data::iterator i = key2data_.find(keyStr);
+    Key2Data::iterator i = key2data_.find(tagKey);
     if (i == key2data_.end()) {
         return LOAD_NOT_FOUND;
     }
@@ -98,15 +97,14 @@ DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocHelper &doc) {
 }
 
 bool
-DocPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocHelper &doc) {
-    std::string keyStr = key.asString();
-    DocPool::SaveResult res = saveDocImpl(keyStr, tag, doc);
+DocPool::saveDoc(const std::string &tagKey, const Tag& tag, const XmlDocHelper &doc) {
+    DocPool::SaveResult res = saveDocImpl(tagKey, tag, doc);
     switch (res) {
     case DocPool::SAVE_STORED:
-        log()->info("%s: key: %s, stored", BOOST_CURRENT_FUNCTION, keyStr.c_str());
+        log()->info("%s: key: %s, stored", BOOST_CURRENT_FUNCTION, tagKey.c_str());
         break;
     case DocPool::SAVE_UPDATED:
-        log()->info("%s: key: %s, updated", BOOST_CURRENT_FUNCTION, keyStr.c_str());
+        log()->info("%s: key: %s, updated", BOOST_CURRENT_FUNCTION, tagKey.c_str());
         break;
     }
 

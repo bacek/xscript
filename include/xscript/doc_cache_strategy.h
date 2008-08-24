@@ -16,14 +16,6 @@ class Tag;
 class Context;
 class Taggable;
 
-class TagKey : private boost::noncopyable {
-public:
-    TagKey();
-    virtual ~TagKey();
-    virtual const std::string& asString() const = 0;
-};
-
-
 class DocCacheStrategy {
 public:
     DocCacheStrategy();
@@ -32,10 +24,9 @@ public:
     virtual void init(const Config *config);
 
     virtual time_t minimalCacheTime() const = 0;
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Taggable *block) const = 0;
 
-    virtual bool loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc);
-    virtual bool saveDoc(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);
+    virtual bool loadDoc(const std::string &tagKey, Tag &tag, XmlDocHelper &doc);
+    virtual bool saveDoc(const std::string &tagKey, const Tag& tag, const XmlDocHelper &doc);
 
     /**
      * Create aggregate report. Caller must free result.
@@ -45,8 +36,8 @@ public:
     }
 
 protected:
-    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) = 0;
-    virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHelper &doc) = 0;
+    virtual bool loadDocImpl(const std::string &tagKey, Tag &tag, XmlDocHelper &doc) = 0;
+    virtual bool saveDocImpl(const std::string &tagKey, const Tag& tag, const XmlDocHelper &doc) = 0;
 
     StatBuilder statBuilder_;
     std::auto_ptr<AverageCounter> hitCounter_;

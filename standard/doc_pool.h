@@ -41,8 +41,8 @@ public:
         LOAD_NEED_PREFETCH,
     };
 
-    bool loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc);
-    LoadResult loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocHelper &doc);
+    bool loadDoc(const std::string &tagKey, Tag &tag, XmlDocHelper &doc);
+    LoadResult loadDocImpl(const std::string &tagKey, Tag &tag, XmlDocHelper &doc);
 
     /**
      * Result of saving doc.
@@ -52,7 +52,7 @@ public:
         SAVE_UPDATED,
     };
 
-    bool saveDoc(const TagKey &key, const Tag& tag, const XmlDocHelper &doc);
+    bool saveDoc(const std::string &key, const Tag& tag, const XmlDocHelper &doc);
     SaveResult saveDocImpl(const std::string &keyStr, const Tag& tag, const XmlDocHelper &doc);
 
     void clear();

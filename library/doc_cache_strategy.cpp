@@ -11,12 +11,6 @@
 
 namespace xscript {
 
-TagKey::TagKey() {
-}
-
-TagKey::~TagKey() {
-}
-
 DocCacheStrategy::DocCacheStrategy()
         : statBuilder_("tagged-cache"),
         hitCounter_(AverageCounterFactory::instance()->createCounter("hits")),
@@ -36,13 +30,13 @@ void DocCacheStrategy::init(const Config *config) {
 
 
 
-bool DocCacheStrategy::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
+bool DocCacheStrategy::loadDoc(const std::string &tagKey, Tag &tag, XmlDocHelper &doc) {
 
     //return loadDocImpl(key, tag, doc);
 
     boost::function<bool ()> f = boost::bind(
                                      &DocCacheStrategy::loadDocImpl,
-                                     this, boost::cref(key), boost::ref(tag), boost::ref(doc)
+                                     this, boost::cref(tagKey), boost::ref(tag), boost::ref(doc)
                                  );
     std::pair<bool, uint64_t> res = profile(f);
 
@@ -53,10 +47,10 @@ bool DocCacheStrategy::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
     return res.first;
 }
 
-bool DocCacheStrategy::saveDoc(const TagKey *key, const Tag& tag, const XmlDocHelper &doc) {
+bool DocCacheStrategy::saveDoc(const std::string &tagKey, const Tag& tag, const XmlDocHelper &doc) {
     boost::function<bool ()> f = boost::bind(
                                      &DocCacheStrategy::saveDocImpl,
-                                     this, boost::cref(key), boost::ref(tag), boost::ref(doc)
+                                     this, boost::cref(tagKey), boost::ref(tag), boost::ref(doc)
                                  );
     std::pair<bool, uint64_t> res = profile(f);
     saveCounter_->add(res.second);

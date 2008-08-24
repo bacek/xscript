@@ -189,6 +189,7 @@ public:
     };
 
     void sendHeaders() {};
+    virtual Headers getHeaders() const { return Headers(); }
 
     unsigned short status;
     std::string content_type;
