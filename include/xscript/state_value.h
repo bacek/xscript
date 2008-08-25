@@ -19,7 +19,7 @@ public:
     }
 
     const std::string& stringType() const;
-    bool StateValue::asBool() const;
+    bool asBool() const;
 
     static const int TYPE_BOOL = 1;
     static const int TYPE_LONG = 1 << 1;
