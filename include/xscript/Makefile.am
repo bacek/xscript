@@ -8,6 +8,6 @@ pkginclude_HEADERS = algorithm.h args.h authorizer.h block.h \
 	writer.h xml.h xml_helpers.h xslt_extension.h checking_policy.h server.h \
 	control_extension.h \
 	stat_builder.h counter_base.h average_counter.h simple_counter.h \
-	status_info.h xslt_profiler.h \
+	status_info.h profiler.h xslt_profiler.h \
 	memory_statistic.h cache_counter.h \
 	doc_cache.h doc_cache_strategy.h
