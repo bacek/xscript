@@ -83,17 +83,19 @@ DocCacheTest::testStoreLoad() {
 
     DocCache* tcache = DocCache::instance();
 
+    std::string tagKey = block->createTagKey(ctx.get());
+
     // check first save
-    CPPUNIT_ASSERT(tcache->saveDoc(block->createTagKey(ctx.get()), tag, doc));
+    CPPUNIT_ASSERT(tcache->saveDoc(tagKey, tag, doc));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     // check save again
-    CPPUNIT_ASSERT(tcache->saveDoc(block->createTagKey(ctx.get()), tag, doc));
+    CPPUNIT_ASSERT(tcache->saveDoc(tagKey, tag, doc));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     // check first load
     XmlDocHelper doc_load;
-    CPPUNIT_ASSERT(tcache->loadDoc(block->createTagKey(ctx.get()), tag_load, doc_load));
+    CPPUNIT_ASSERT(tcache->loadDoc(tagKey, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
 
     CPPUNIT_ASSERT_EQUAL(tag.modified, tag_load.modified);
@@ -102,12 +104,12 @@ DocCacheTest::testStoreLoad() {
 
     // check load again
     doc_load.reset(NULL);
-    CPPUNIT_ASSERT(tcache->loadDoc(block->createTagKey(ctx.get()), tag_load, doc_load));
+    CPPUNIT_ASSERT(tcache->loadDoc(tagKey, tag_load, doc_load));
 
     sleep(tag.expire_time - tag.last_modified);
 
     // check skip expired
-    CPPUNIT_ASSERT(!tcache->loadDoc(block->createTagKey(ctx.get()), tag_load, doc_load));
+    CPPUNIT_ASSERT(!tcache->loadDoc(tagKey, tag_load, doc_load));
 }
 
 void
@@ -126,8 +128,9 @@ DocCacheTest::testGetLocalTagged() {
     DocCache* tcache = DocCache::instance();
 
     Tag tag_load;
+    std::string tagKey = block->createTagKey(ctx.get());
     XmlDocHelper doc_load;
-    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(!tcache->loadDoc(tagKey, tag_load, doc_load));
 
     struct timeb t;
     ftime(&t);
@@ -141,18 +144,18 @@ DocCacheTest::testGetLocalTagged() {
     InvokeResult res(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != res.get());
 
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(tcache->loadDoc(tagKey, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
 
     sleep(3);
 
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(tcache->loadDoc(tagKey, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
 
     sleep(2);
 
     // check skip expired
-    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(!tcache->loadDoc(tagKey, tag_load, doc_load));
 }
 
 void
@@ -171,8 +174,9 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
     DocCache* tcache = DocCache::instance();
 
     Tag tag_load;
+    std::string tagKey = block->createTagKey(ctx.get());
     XmlDocHelper doc_load;
-    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(!tcache->loadDoc(tagKey, tag_load, doc_load));
 
     struct timeb t;
     ftime(&t);
@@ -186,26 +190,26 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
     InvokeResult doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(tcache->loadDoc(tagKey, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
 
     sleep(3);
 
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(tcache->loadDoc(tagKey, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
 
     sleep(1);
 
     // check mark cache file for prefetch
-    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(!tcache->loadDoc(tagKey, tag_load, doc_load));
 
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(tcache->loadDoc(tagKey, tag_load, doc_load));
+    CPPUNIT_ASSERT(tcache->loadDoc(tagKey, tag_load, doc_load));
+    CPPUNIT_ASSERT(tcache->loadDoc(tagKey, tag_load, doc_load));
 
     sleep(1);
 
     // check skip expired
-    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(!tcache->loadDoc(tagKey, tag_load, doc_load));
 }
 
