@@ -93,6 +93,8 @@ public:
         return extension_->getLogger();
     }
     
+    static void appendNodeValue(xmlNodePtr node, std::string &val);
+
 protected:
 
     virtual InvokeResult invokeInternal(Context *ctx);
@@ -106,11 +108,6 @@ protected:
 
     bool checkGuard(Context *ctx) const;
     void evalXPath(Context *ctx, const XmlDocHelper &doc) const;
-    /**
-     * Eval single XPathExpr and invoke callback for calculated value.
-     */
-    void evalSingleXPath(Context *ctx, xmlXPathContextPtr xctx, const XPathExpr &expr, void (*func)(Context* ctx, const XPathExpr &expr, const std::string &value)) const;
-    void appendNodeValue(xmlNodePtr node, std::string &val) const;
 
     InvokeResult fakeResult() const;
 

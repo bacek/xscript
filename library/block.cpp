@@ -252,7 +252,8 @@ Block::checkGuard(Context *ctx) const {
 /**
  * Eval single XPathExpr and invoke callback for calculated value.
  */
-void Block::evalSingleXPath(Context *ctx, xmlXPathContextPtr xctx, const XPathExpr &expr, void (*func)(Context*, const XPathExpr &, const std::string &value)) const {
+template<typename Callback>
+void evalSingleXPath(xmlXPathContextPtr xctx, const XPathExpr &expr, Callback callback) {
 
     const XPathExpr::NamespaceListType& ns_list = expr.namespaces();
     for (XPathExpr::NamespaceListType::const_iterator it_ns = ns_list.begin(); it_ns != ns_list.end(); ++it_ns) {
@@ -265,14 +266,13 @@ void Block::evalSingleXPath(Context *ctx, xmlXPathContextPtr xctx, const XPathEx
         std::string val;
         for (int i = 0; i < object->nodesetval->nodeNr; ++i) {
             xmlNodePtr node = object->nodesetval->nodeTab[i];
-            appendNodeValue(node, val);
+            Block::appendNodeValue(node, val);
             if (object->nodesetval->nodeNr - 1 != i) {
                 val.append(expr.delimeter());
             }
         }
 
-        func(ctx, expr, val);
-
+        callback(expr, val);
     }
 }
 
@@ -292,12 +292,12 @@ Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
     XmlUtils::throwUnless(NULL != xctx.get());
 
     for (std::vector<XPathExpr>::const_iterator iter = xpath_.begin(), end = xpath_.end(); iter != end; ++iter) {
-        evalSingleXPath(ctx, xctx.get(), *iter, &setStateFromXPath);
+        evalSingleXPath(xctx.get(), *iter, boost::bind(&setStateFromXPath, ctx, _1, _2));
     }
 }
 
 void
-Block::appendNodeValue(xmlNodePtr node, std::string &val) const {
+Block::appendNodeValue(xmlNodePtr node, std::string &val) {
 
     const char *nodeval = "";
     if (XML_ELEMENT_NODE == node->type) {
