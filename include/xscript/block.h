@@ -92,8 +92,8 @@ public:
         return extension_->getLogger();
     }
     
-protected:
     class XPathExpr;
+protected:
 
     virtual InvokeResult invokeInternal(Context *ctx);
     virtual void postParse();
