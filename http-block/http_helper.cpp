@@ -34,8 +34,10 @@ private:
     };
 
     static const StrSize skipped_headers[];
+    static const Range SKIP_HEADER_RANGE;
 };
 
+const Range ProxyHeadersHelper::SKIP_HEADER_RANGE = createRange("X-");
 
 const ProxyHeadersHelper::StrSize ProxyHeadersHelper::skipped_headers[] = {
     { "host", sizeof("host") },
@@ -53,6 +55,11 @@ ProxyHeadersHelper::skipped(const char* name) {
             return true;
         }
     }
+
+    if (startsWith(createRange(name), SKIP_HEADER_RANGE)) {
+        return (strncasecmp(name, "x-real-ip", sizeof("x-real-ip")) != 0);
+    }
+
     return false;
 }
 

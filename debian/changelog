@@ -1,3 +1,9 @@
+xscript (5.31-1) unstable; urgency=low
+
+  * skipping X- headers in http-block
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 26 Aug 2008 16:22:14 +0400
+
 xscript (5.31-0) unstable; urgency=low
 
   * noxslt port added
