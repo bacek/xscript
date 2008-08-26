@@ -252,10 +252,10 @@ Block::checkGuard(Context *ctx) const {
 /**
  * Eval single XPathExpr and invoke callback for calculated value.
  */
-void Block::evalSingleXPath(Context *ctx, xmlXPathContextPtr xctx, const Block::XPathExpr &expr, void (*func)(Context*, const Block::XPathExpr &, const std::string &value)) const {
+void Block::evalSingleXPath(Context *ctx, xmlXPathContextPtr xctx, const XPathExpr &expr, void (*func)(Context*, const XPathExpr &, const std::string &value)) const {
 
-    const Block::XPathExpr::NamespaceListType& ns_list = expr.namespaces();
-    for (Block::XPathExpr::NamespaceListType::const_iterator it_ns = ns_list.begin(); it_ns != ns_list.end(); ++it_ns) {
+    const XPathExpr::NamespaceListType& ns_list = expr.namespaces();
+    for (XPathExpr::NamespaceListType::const_iterator it_ns = ns_list.begin(); it_ns != ns_list.end(); ++it_ns) {
         xmlXPathRegisterNs(xctx, (const xmlChar *)it_ns->first.c_str(), (const xmlChar *)it_ns->second.c_str());
     }
     XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*)expr.expression().c_str(), xctx));
@@ -277,7 +277,7 @@ void Block::evalSingleXPath(Context *ctx, xmlXPathContextPtr xctx, const Block::
 }
 
 
-void setStateFromXPath(Context* ctx, const Block::XPathExpr &expr, const std::string &value) {
+void setStateFromXPath(Context* ctx, const XPathExpr &expr, const std::string &value) {
     if (!value.empty()) {
         boost::shared_ptr<State> state = ctx->state();
         state->checkName(expr.result());

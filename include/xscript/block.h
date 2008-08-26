@@ -11,6 +11,7 @@
 #include <xscript/extension.h>
 #include <xscript/invoke_result.h>
 #include <xscript/taggable.h>
+#include <xscript/xpath_expr.h>
 
 namespace xscript {
 
@@ -92,7 +93,6 @@ public:
         return extension_->getLogger();
     }
     
-    class XPathExpr;
 protected:
 
     virtual InvokeResult invokeInternal(Context *ctx);
@@ -109,7 +109,7 @@ protected:
     /**
      * Eval single XPathExpr and invoke callback for calculated value.
      */
-    void evalSingleXPath(Context *ctx, xmlXPathContextPtr xctx, const Block::XPathExpr &expr, void (*func)(Context* ctx, const Block::XPathExpr &expr, const std::string &value)) const;
+    void evalSingleXPath(Context *ctx, xmlXPathContextPtr xctx, const XPathExpr &expr, void (*func)(Context* ctx, const XPathExpr &expr, const std::string &value)) const;
     void appendNodeValue(xmlNodePtr node, std::string &val) const;
 
     InvokeResult fakeResult() const;
@@ -135,46 +135,6 @@ private:
     std::string id_, guard_, method_;
     bool is_guard_not_;
     bool strip_root_element_;
-
-protected:
-    class XPathExpr {
-    public:
-        XPathExpr(const char* expression, const char* result, const char* delimeter) :
-                expression_(expression ? expression : ""),
-                result_(result ? result : ""),
-                delimeter_(delimeter ? delimeter : "") {}
-        ~XPathExpr() {}
-
-        typedef std::list<std::pair<std::string, std::string> > NamespaceListType;
-
-        const std::string& expression() const {
-            return expression_;
-        }
-
-        const std::string& result() const {
-            return result_;
-        }
-
-        const std::string& delimeter() const {
-            return delimeter_;
-        }
-
-        const NamespaceListType& namespaces() const {
-            return namespaces_;
-        }
-
-        void addNamespace(const char* prefix, const char* uri) {
-            if (prefix && uri) {
-                namespaces_.push_back(std::make_pair(std::string(prefix), std::string(uri)));
-            }
-        }
-
-    private:
-        std::string expression_;
-        std::string result_;
-        std::string delimeter_;
-        NamespaceListType namespaces_;
-    };
 };
 
 } // namespace xscript
