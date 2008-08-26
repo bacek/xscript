@@ -249,6 +249,42 @@ Block::checkGuard(Context *ctx) const {
     return true;
 }
 
+/**
+ * Eval single XPathExpr and invoke callback for calculated value.
+ */
+void Block::evalSingleXPath(Context *ctx, xmlXPathContextPtr xctx, const Block::XPathExpr &expr, void (*func)(Context*, const Block::XPathExpr &, const std::string &value)) const {
+
+    const Block::XPathExpr::NamespaceListType& ns_list = expr.namespaces();
+    for (Block::XPathExpr::NamespaceListType::const_iterator it_ns = ns_list.begin(); it_ns != ns_list.end(); ++it_ns) {
+        xmlXPathRegisterNs(xctx, (const xmlChar *)it_ns->first.c_str(), (const xmlChar *)it_ns->second.c_str());
+    }
+    XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*)expr.expression().c_str(), xctx));
+    XmlUtils::throwUnless(NULL != object.get());
+
+    if (NULL != object->nodesetval && 0 != object->nodesetval->nodeNr) {
+        std::string val;
+        for (int i = 0; i < object->nodesetval->nodeNr; ++i) {
+            xmlNodePtr node = object->nodesetval->nodeTab[i];
+            appendNodeValue(node, val);
+            if (object->nodesetval->nodeNr - 1 != i) {
+                val.append(expr.delimeter());
+            }
+        }
+
+        func(ctx, expr, val);
+
+    }
+}
+
+
+void setStateFromXPath(Context* ctx, const Block::XPathExpr &expr, const std::string &value) {
+    if (!value.empty()) {
+        boost::shared_ptr<State> state = ctx->state();
+        state->checkName(expr.result());
+        state->setString(expr.result(), value);
+    }
+}
+
 void
 Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
 
@@ -256,29 +292,7 @@ Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
     XmlUtils::throwUnless(NULL != xctx.get());
 
     for (std::vector<XPathExpr>::const_iterator iter = xpath_.begin(), end = xpath_.end(); iter != end; ++iter) {
-        const XPathExpr::NamespaceListType& ns_list = iter->namespaces();
-        for (XPathExpr::NamespaceListType::const_iterator it_ns = ns_list.begin(); it_ns != ns_list.end(); ++it_ns) {
-            xmlXPathRegisterNs(xctx.get(), (const xmlChar *)it_ns->first.c_str(), (const xmlChar *)it_ns->second.c_str());
-        }
-        XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*)iter->expression().c_str(), xctx.get()));
-        XmlUtils::throwUnless(NULL != object.get());
-
-        if (NULL != object->nodesetval && 0 != object->nodesetval->nodeNr) {
-            std::string val;
-            for (int i = 0; i < object->nodesetval->nodeNr; ++i) {
-                xmlNodePtr node = object->nodesetval->nodeTab[i];
-                appendNodeValue(node, val);
-                if (object->nodesetval->nodeNr - 1 != i) {
-                    val.append(iter->delimeter());
-                }
-            }
-
-            if (!val.empty()) {
-                boost::shared_ptr<State> state = ctx->state();
-                state->checkName(iter->result());
-                state->setString(iter->result(), val);
-            }
-        }
+        evalSingleXPath(ctx, xctx.get(), *iter, &setStateFromXPath);
     }
 }
 

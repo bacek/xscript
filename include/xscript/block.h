@@ -106,6 +106,10 @@ protected:
 
     bool checkGuard(Context *ctx) const;
     void evalXPath(Context *ctx, const XmlDocHelper &doc) const;
+    /**
+     * Eval single XPathExpr and invoke callback for calculated value.
+     */
+    void evalSingleXPath(Context *ctx, xmlXPathContextPtr xctx, const Block::XPathExpr &expr, void (*func)(Context* ctx, const Block::XPathExpr &expr, const std::string &value)) const;
     void appendNodeValue(xmlNodePtr node, std::string &val) const;
 
     InvokeResult fakeResult() const;
