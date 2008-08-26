@@ -3,7 +3,7 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/script.h"
 #include "xscript/context.h"
 #include "xscript/request_data.h"

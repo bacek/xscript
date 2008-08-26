@@ -10,7 +10,7 @@
 #include <libxml/parser.h>
 #include <libxml/xinclude.h>
 
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/config.h"
 #include "details/loader.h"
 #include "xscript/logger_factory.h"

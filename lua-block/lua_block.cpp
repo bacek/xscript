@@ -7,6 +7,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/bind.hpp>
 
+#include "xscript/xml_util.h"
 #include "xscript/util.h"
 #include "xscript/resource_holder.h"
 #include "xscript/logger.h"

@@ -22,7 +22,7 @@
 #include <libxslt/xsltutils.h>
 
 #include "xscript/server.h"
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/state.h"
 #include "xscript/config.h"
 #include "xscript/logger.h"

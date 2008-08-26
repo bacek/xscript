@@ -9,7 +9,7 @@
 #include <boost/current_function.hpp>
 
 #include "xscript/args.h"
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/param.h"
 #include "xscript/logger.h"
 

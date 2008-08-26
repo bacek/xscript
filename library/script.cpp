@@ -23,7 +23,7 @@
 #include <libxml/xinclude.h>
 #include <libxml/uri.h>
 
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/block.h"
 #include "xscript/logger.h"
 #include "xscript/script.h"

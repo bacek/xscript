@@ -12,7 +12,7 @@
 #include <xscript/xml.h>
 #include <xscript/param.h>
 #include <xscript/profiler.h>
-#include <xscript/util.h>
+#include <xscript/xml_util.h>
 #include <libxml/xinclude.h>
 #include "file_block.h"
 #include "file_extension.h"

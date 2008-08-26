@@ -6,7 +6,7 @@
 #include "xscript/logger.h"
 #include "xscript/doc_cache.h"
 #include "xscript/doc_cache_strategy.h"
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/control_extension.h"
 
 #ifdef HAVE_DMALLOC_H

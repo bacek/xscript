@@ -10,7 +10,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	state_arg_param.cpp state_impl.cpp state_param.cpp state_value.cpp \
 	stylesheet.cpp stylesheet_factory.cpp tag.cpp \
 	tag_param.cpp tagged_block.cpp threaded_tagged_block.cpp \
-	threaded_block.cpp util.cpp writer.cpp xml.cpp xslt_extension.cpp \
+	threaded_block.cpp util.cpp xml_util.cpp writer.cpp xml.cpp xslt_extension.cpp \
 	vhost_data.cpp protocol_arg_param.cpp checking_policy.cpp \
 	logger_factory.cpp syslog_logger.cpp file_logger.cpp server.cpp \
 	control_extension.cpp \

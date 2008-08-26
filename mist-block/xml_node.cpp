@@ -3,7 +3,7 @@
 #include <libxml/xmlstring.h>
 
 #include "xml_node.h"
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

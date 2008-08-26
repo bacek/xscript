@@ -21,7 +21,7 @@
 #include <libxml/uri.h>
 #include <libxslt/xsltutils.h>
 
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/block.h"
 #include "xscript/param.h"
 #include "xscript/logger.h"

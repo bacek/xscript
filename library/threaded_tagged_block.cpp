@@ -57,7 +57,10 @@ ThreadedTaggedBlock::setDefaultRemoteTimeout() {
 
 void
 ThreadedTaggedBlock::postParse() {
-    if ((!tagged() || cacheTime() == 0) && !isDefaultRemoteTimeout()) {
+    ThreadedBlock::postParse();
+    TaggedBlock::postParse();
+
+    if (!tagged() && !isDefaultRemoteTimeout()) {
         if (CheckingPolicy::instance()->isProduction()) {
             setDefaultRemoteTimeout();
             log()->warn("%s, remote timeout setup is prohibited for non-tagged blocks or when tag cache time is nil: %s",
@@ -67,9 +70,6 @@ ThreadedTaggedBlock::postParse() {
             throw std::runtime_error("remote timeout setup is prohibited for non-tagged blocks or when tag cache time is nil");
         }
     }
-
-    ThreadedBlock::postParse();
-    TaggedBlock::postParse();
 }
 
 } // namespace xscript

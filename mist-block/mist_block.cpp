@@ -17,8 +17,9 @@
 #include "state_node.h"
 #include "state_prefix_node.h"
 
-#include "xscript/xml.h"
 #include "xscript/util.h"
+#include "xscript/xml.h"
+#include "xscript/xml_util.h"
 #include "xscript/state.h"
 #include "xscript/param.h"
 #include "xscript/logger.h"

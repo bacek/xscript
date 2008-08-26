@@ -17,6 +17,7 @@
 #include "xscript/stylesheet.h"
 #include "xscript/request_data.h"
 #include "xscript/vhost_data.h"
+#include "xscript/xml_util.h"
 
 #include "details/writer_impl.h"
 #include "details/extension_list.h"

@@ -12,7 +12,6 @@
 #include <xscript/config.h>
 #include <xscript/range.h>
 #include <xscript/xml_helpers.h>
-#include <libxml/tree.h>
 
 namespace xscript {
 
@@ -42,39 +41,6 @@ private:
 };
 
 class Encoder;
-
-class XmlUtils : private boost::noncopyable {
-public:
-    XmlUtils();
-    virtual ~XmlUtils();
-
-    static void init(const Config *config);
-
-    static void registerReporters();
-    static void resetReporter();
-    static void throwUnless(bool value);
-    static void printXMLError();
-
-    static std::string escape(const Range &value);
-    template<typename Cont> static std::string escape(const Cont &value);
-
-    static std::string sanitize(const Range &value);
-    template<typename Cont> static std::string sanitize(const Cont &value);
-
-    template<typename NodePtr> static const char* value(NodePtr node);
-
-    template<typename Visitor> static void visitAttributes(xmlAttrPtr attr, Visitor visitor);
-
-    static inline const char* attrValue(xmlNodePtr node, const char *name) {
-        xmlAttrPtr attr = xmlHasProp(node, (const xmlChar*) name);
-        return attr ? value(attr) : NULL;
-    }
-
-    static bool xpathExists(xmlDocPtr doc, const std::string &path);
-    static std::string xpathValue(xmlDocPtr doc, const std::string &path, const std::string &defval = "");
-
-    static const char * const XSCRIPT_NAMESPACE;
-};
 
 class StringUtils : private boost::noncopyable {
 public:
@@ -119,40 +85,6 @@ private:
     HashUtils();
     virtual ~HashUtils();
 };
-
-template<typename Cont> inline std::string
-XmlUtils::escape(const Cont &value) {
-    return escape(createRange(value));
-}
-
-template<typename Cont> inline std::string
-XmlUtils::sanitize(const Cont &value) {
-    return sanitize(createRange(value));
-}
-
-template <typename NodePtr> inline const char*
-XmlUtils::value(NodePtr node) {
-    xmlNodePtr child = node->children;
-    if (child && xmlNodeIsText(child) && child->content) {
-        return (const char*) child->content;
-    }
-    return NULL;
-}
-
-template<typename Visitor> inline void
-XmlUtils::visitAttributes(xmlAttrPtr attr, Visitor visitor) {
-    std::size_t len = strlen(XSCRIPT_NAMESPACE) + 1;
-    while (attr) {
-        xmlNsPtr ns = attr->ns;
-        if (NULL == ns || xmlStrncmp(ns->href, (const xmlChar*) XSCRIPT_NAMESPACE, len) == 0) {
-            const char *name = (const char*) attr->name, *val = value(attr);
-            if (name && val) {
-                visitor(name, val);
-            }
-        }
-        attr = attr->next;
-    }
-}
 
 template<typename Cont> inline std::string
 StringUtils::urlencode(const Cont &cont) {

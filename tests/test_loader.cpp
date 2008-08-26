@@ -8,7 +8,7 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/config.h"
 #include "details/loader.h"
 #include "xscript/extension.h"

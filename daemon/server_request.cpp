@@ -12,6 +12,7 @@
 #include "xscript/range.h"
 #include "xscript/logger.h"
 #include "xscript/encoder.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

@@ -10,7 +10,7 @@
 #include <boost/current_function.hpp>
 
 #include "xscript/block.h"
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/range.h"
 #include "xscript/logger.h"
 #include "details/param_factory.h"

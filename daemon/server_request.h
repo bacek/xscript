@@ -11,7 +11,6 @@
 #include "settings.h"
 
 #include "xscript/functors.h"
-#include "xscript/util.h"
 #include "xscript/range.h"
 #include "xscript/cookie.h"
 #include "details/default_request_response.h"

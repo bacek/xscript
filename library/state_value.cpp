@@ -55,14 +55,14 @@ StateValue::stringType() const {
 bool
 StateValue::asBool() const {
 
-    if (trim(createRange(value())).empty()) {
+    if (trim(createRange(value_)).empty()) {
         return false;
     }
-    else if (type() == StateValue::TYPE_STRING) {
+    else if (type_ == StateValue::TYPE_STRING) {
         return true;
     }
-    else if (type() == StateValue::TYPE_DOUBLE) {
-        double val = boost::lexical_cast<double>(value());
+    else if (type_ == StateValue::TYPE_DOUBLE) {
+        double val = boost::lexical_cast<double>(value_);
         if (val > std::numeric_limits<double>::epsilon() ||
             val < -std::numeric_limits<double>::epsilon()) {
                 return true;
@@ -70,7 +70,7 @@ StateValue::asBool() const {
         return false;
     }
     else {
-        return value() != "0";
+        return value_ != "0";
     }
 }
 

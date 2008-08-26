@@ -1,7 +1,7 @@
 #include "settings.h"
 
 #include "xscript/block.h"
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/control_extension.h"
 
 #ifdef HAVE_DMALLOC_H

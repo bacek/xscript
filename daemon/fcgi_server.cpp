@@ -26,7 +26,7 @@
 
 #include "fcgi_server.h"
 #include "server_request.h"
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/state.h"
 #include "xscript/config.h"
 #include "xscript/logger.h"

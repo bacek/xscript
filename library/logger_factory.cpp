@@ -5,7 +5,7 @@
 #include "xscript/logger_factory.h"
 #include "xscript/config.h"
 #include "xscript/control_extension.h"
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "details/syslog_logger.h"
 #include "details/file_logger.h"
 

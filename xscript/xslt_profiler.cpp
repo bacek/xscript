@@ -13,7 +13,7 @@
 #include "xscript/logger.h"
 #include "xscript/request.h"
 #include "xscript/stylesheet.h"
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/writer.h"
 
 #include "xslt_profiler.h"

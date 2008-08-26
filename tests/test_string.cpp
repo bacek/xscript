@@ -3,6 +3,7 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
+#include "xscript/xml_util.h"
 #include "xscript/util.h"
 
 #ifdef HAVE_DMALLOC_H

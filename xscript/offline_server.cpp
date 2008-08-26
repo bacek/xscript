@@ -8,7 +8,7 @@
 #include "xscript/config.h"
 #include "xscript/request_data.h"
 #include "xscript/state.h"
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 
 #include <boost/shared_ptr.hpp>
 #include <boost/tokenizer.hpp>

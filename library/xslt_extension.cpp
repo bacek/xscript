@@ -13,6 +13,7 @@
 #include <libxml/xpathInternals.h>
 
 #include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/state.h"
 #include "xscript/range.h"
 #include "xscript/block.h"

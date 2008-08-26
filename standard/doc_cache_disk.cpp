@@ -11,6 +11,7 @@
 
 #include "xscript/tag.h"
 #include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/param.h"
 #include "xscript/tagged_block.h"
 #include "xscript/logger.h"

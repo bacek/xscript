@@ -15,7 +15,7 @@
 #include <libxml/xpathInternals.h>
 
 #include "xscript/xml.h"
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/state.h"
 #include "xscript/param.h"
 #include "xscript/block.h"

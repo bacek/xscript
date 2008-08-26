@@ -1,6 +1,6 @@
 #include "xscript/stat_builder.h"
 #include "xscript/counter_base.h"
-#include "xscript/util.h"
+#include "xscript/xml_util.h"
 
 namespace xscript {
 
