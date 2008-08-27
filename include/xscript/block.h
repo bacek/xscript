@@ -114,7 +114,10 @@ protected:
     bool xpathNode(const xmlNodePtr node) const;
     bool paramNode(const xmlNodePtr node) const;
 
-    void parseXPathNode(const xmlNodePtr node);
+    /**
+     * Parse <xpath> node and put it container
+     */
+    void parseXPathNode(std::vector<XPathExpr> &container, const xmlNodePtr node);
     void parseParamNode(const xmlNodePtr node, ParamFactory *pf);
 
     inline const std::vector<XPathExpr>& xpath() const {
@@ -132,6 +135,8 @@ private:
     std::string id_, guard_, method_;
     bool is_guard_not_;
     bool strip_root_element_;
+    /// Array of XPathExpr used to override default tag calculation.
+    std::vector<XPathExpr> tag_override_;
 };
 
 } // namespace xscript

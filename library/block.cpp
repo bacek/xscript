@@ -99,7 +99,7 @@ Block::parse() {
             continue;
         }
         else if (xpathNode(node)) {
-            parseXPathNode(node);
+            parseXPathNode(xpath_, node);
         }
         else if (paramNode(node)) {
             parseParamNode(node, pf);
@@ -404,7 +404,7 @@ Block::paramNode(const xmlNodePtr node) const {
 }
 
 void
-Block::parseXPathNode(const xmlNodePtr node) {
+Block::parseXPathNode(std::vector<XPathExpr> &container, const xmlNodePtr node) {
     const char *expr = XmlUtils::attrValue(node, "expr");
     const char *result = XmlUtils::attrValue(node, "result");
     if (expr && *expr && result && *result) {
@@ -412,10 +412,10 @@ Block::parseXPathNode(const xmlNodePtr node) {
         if (!delim || !*delim) {
             delim = " ";
         }
-        xpath_.push_back(XPathExpr(expr, result, delim));
+        container.push_back(XPathExpr(expr, result, delim));
         xmlNs* ns = node->nsDef;
         while (ns) {
-            xpath_.back().addNamespace((const char*)ns->prefix, (const char*)ns->href);
+            container.back().addNamespace((const char*)ns->prefix, (const char*)ns->href);
             ns = ns->next;
         }
     }
