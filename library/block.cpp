@@ -99,10 +99,10 @@ Block::parse() {
             continue;
         }
         else if (xpathNode(node)) {
-            parseXPathNode(xpath_, node);
+            parseXPathNode(xpath_, node, false);
         }
         else if (tagOverrideNode(node)) {
-            parseXPathNode(tag_override_, node);
+            parseXPathNode(tag_override_, node, true);
         }
         else if (paramNode(node)) {
             parseParamNode(node, pf);
@@ -435,10 +435,10 @@ Block::tagOverrideNode(const xmlNodePtr node) const {
 
 
 void
-Block::parseXPathNode(std::vector<XPathExpr> &container, const xmlNodePtr node) {
+Block::parseXPathNode(std::vector<XPathExpr> &container, const xmlNodePtr node, bool ignoreResult) {
     const char *expr = XmlUtils::attrValue(node, "expr");
     const char *result = XmlUtils::attrValue(node, "result");
-    if (expr && *expr && result && *result) {
+    if (expr && *expr && (ignoreResult || (result && *result))) {
         const char *delim = XmlUtils::attrValue(node, "delim");
         if (!delim || !*delim) {
             delim = " ";

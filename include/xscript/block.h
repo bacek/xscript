@@ -126,7 +126,7 @@ protected:
     /**
      * Parse <xpath> node and put it container
      */
-    void parseXPathNode(std::vector<XPathExpr> &container, const xmlNodePtr node);
+    void parseXPathNode(std::vector<XPathExpr> &container, const xmlNodePtr node, bool ignoreResult);
     void parseParamNode(const xmlNodePtr node, ParamFactory *pf);
 
     inline const std::vector<XPathExpr>& xpath() const {
