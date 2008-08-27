@@ -101,6 +101,9 @@ Block::parse() {
         else if (xpathNode(node)) {
             parseXPathNode(xpath_, node);
         }
+        else if (tagOverrideNode(node)) {
+            parseXPathNode(tag_override_, node);
+        }
         else if (paramNode(node)) {
             parseParamNode(node, pf);
         }
@@ -402,6 +405,12 @@ bool
 Block::paramNode(const xmlNodePtr node) const {
     return (xmlStrncasecmp(node->name, (const xmlChar*) "param", sizeof("param")) == 0);
 }
+
+bool
+Block::tagOverrideNode(const xmlNodePtr node) const {
+    return (xmlStrncasecmp(node->name, (const xmlChar*) "tag-override", sizeof("tag-override")) == 0);
+}
+
 
 void
 Block::parseXPathNode(std::vector<XPathExpr> &container, const xmlNodePtr node) {

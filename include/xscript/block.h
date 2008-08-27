@@ -59,6 +59,9 @@ public:
     virtual bool tagged() const;
     virtual void tagged(bool value);
 
+    bool hasTagOverride() const {
+        return !tag_override_.empty();
+    }
 
     inline bool stripRootElement() const {
         return strip_root_element_;
@@ -113,6 +116,7 @@ protected:
 
     bool xpathNode(const xmlNodePtr node) const;
     bool paramNode(const xmlNodePtr node) const;
+    bool tagOverrideNode(const xmlNodePtr node) const;
 
     /**
      * Parse <xpath> node and put it container
