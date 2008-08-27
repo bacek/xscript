@@ -190,6 +190,7 @@ Block::processResponse(Context *ctx, InvokeResult res, boost::any &a) {
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
     applyStylesheet(ctx, doc);
 
+    evalTagOverride(res);
     postCall(ctx, doc, a);
     evalXPath(ctx, doc);
 
@@ -297,6 +298,27 @@ Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
     for (std::vector<XPathExpr>::const_iterator iter = xpath_.begin(), end = xpath_.end(); iter != end; ++iter) {
         evalSingleXPath(xctx.get(), *iter, boost::bind(&setStateFromXPath, ctx, _1, _2));
     }
+}
+
+void appendString(std::string &str, const std::string &part) {
+    str.append(part);
+}
+
+void 
+Block::evalTagOverride(InvokeResult &res) const {
+    if(tag_override_.empty())
+        return;
+
+    XmlXPathContextHelper xctx(xmlXPathNewContext(res.get()));
+    XmlUtils::throwUnless(NULL != xctx.get());
+
+    res.tagKey.clear();
+    for (std::vector<XPathExpr>::const_iterator iter = tag_override_.begin(), end = tag_override_.end(); iter != end; ++iter) {
+        evalSingleXPath(xctx.get(), *iter, boost::bind(&appendString, boost::ref(res.tagKey), _2));
+    }
+
+    if(!res.tagKey.empty())
+        res.cached = true;
 }
 
 void

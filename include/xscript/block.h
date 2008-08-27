@@ -119,6 +119,11 @@ protected:
     bool tagOverrideNode(const xmlNodePtr node) const;
 
     /**
+     * Override tagKey and cached flag in result if tag-override specified
+     */
+    void evalTagOverride(InvokeResult &res) const;
+
+    /**
      * Parse <xpath> node and put it container
      */
     void parseXPathNode(std::vector<XPathExpr> &container, const xmlNodePtr node);
