@@ -5,7 +5,7 @@
 #include <boost/filesystem/path.hpp>
 
 #include <xscript/context.h>
-#include <xscript/checking_policy.h>
+#include <xscript/operation_mode.h>
 #include <xscript/logger.h>
 #include <xscript/request_data.h>
 #include <xscript/script.h>
@@ -32,7 +32,7 @@ FileBlock::~FileBlock() {
 void
 FileBlock::postParse() {
     if (!isDefaultRemoteTimeout()) {
-        if (CheckingPolicy::instance()->isProduction()) {
+        if (OperationMode::instance()->isProduction()) {
             setDefaultRemoteTimeout();
             log()->warn("%s, remote-timeout setup is not allowed in FileBlock: %s",
                         BOOST_CURRENT_FUNCTION, owner()->name().c_str());

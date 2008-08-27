@@ -33,7 +33,7 @@
 #include "xscript/stylesheet_factory.h"
 #include "xscript/extension.h"
 #include "xscript/vhost_data.h"
-#include "xscript/checking_policy.h"
+#include "xscript/operation_mode.h"
 #include "xscript/profiler.h"
 #include "xscript/xslt_profiler.h"
 
@@ -102,7 +102,13 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 
     attachContextData(tctx.get(), ctx, this);
 
-    tctx->profile = CheckingPolicy::instance()->isOffline();
+    bool use_profile = false;
+    const Server* server = VirtualHostData::instance()->getServer();
+    if (server) {
+        use_profile = server->isOffline();
+    }
+
+    tctx->profile = use_profile;
     if (NULL == tctx->globalVars) {
         tctx->globalVars = xmlHashCreate(20);
     }
@@ -117,7 +123,7 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
     XmlDocHelper newdoc(xsltApplyStylesheetUser(stylesheet_.get(), doc.get(), NULL, NULL, NULL, tctx.get()));
 
     // Looks like we have to do something with this.
-    if (CheckingPolicy::instance()->isOffline() && obj) {
+    if (use_profile && obj) {
         XmlDocHelper prof_doc(xsltGetProfileInformation(tctx.get()));
         xmlNewTextChild(xmlDocGetRootElement(prof_doc.get()), 0, BAD_CAST "total-time", BAD_CAST profiler.getInfo().c_str());
         XsltProfiler::instance()->insertProfileDoc(name_, prof_doc.release());
@@ -145,7 +151,7 @@ Stylesheet::appendXsltParams(const std::vector<Param*>& params, const Context *c
         const std::string &id = param->id();
         std::pair<ParamSetType::iterator, bool> result = unique_params.insert(id);
         if (result.second == false) {
-            CheckingPolicy::instance()->processError(std::string("duplicated xslt-param: ") + id);
+            OperationMode::instance()->processError(std::string("duplicated xslt-param: ") + id);
         }
         else {
             std::string value = param->asString(ctx);

@@ -3,7 +3,8 @@ pkglib_LTLIBRARIES = \
 	xscript-xmlcache.la \
 	xscript-memcache.la \
 	xscript-diskcache.la \
-	xscript-statistics.la
+	xscript-statistics.la \
+	xscript-development.la
 
 xscript_thrpool_la_SOURCES = thread_pool.cpp
 
@@ -30,6 +31,11 @@ xscript_statistics_la_SOURCES = \
 		simple_counter_factory.cpp \
 		cache_counter_factory.cpp
 xscript_statistics_la_LDFLAGS = -module
+
+xscript_development_la_SOURCES = development_mode.cpp
+
+xscript_development_la_LIBADD = ../library/libxscript.la
+xscript_development_la_LDFLAGS = -module
 
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread

@@ -6,7 +6,7 @@ pkginclude_HEADERS = algorithm.h args.h authorizer.h block.h \
 	stylesheet_cache.h stylesheet_factory.h tag.h tagged_block.h \
 	thread_pool.h threaded_block.h threaded_tagged_block.h util.h xml_util.h vhost_data.h \
 	writer.h xml.h xml_helpers.h xslt_extension.h checking_policy.h server.h \
-	control_extension.h \
+	control_extension.h operation_mode.h \
 	stat_builder.h counter_base.h average_counter.h simple_counter.h \
 	status_info.h profiler.h xslt_profiler.h \
 	memory_statistic.h cache_counter.h \

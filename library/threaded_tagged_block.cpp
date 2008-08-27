@@ -6,7 +6,7 @@
 #include <boost/current_function.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include "xscript/checking_policy.h"
+#include "xscript/operation_mode.h"
 #include "xscript/logger.h"
 #include "xscript/threaded_tagged_block.h"
 
@@ -61,7 +61,7 @@ ThreadedTaggedBlock::postParse() {
     TaggedBlock::postParse();
 
     if (!tagged() && !isDefaultRemoteTimeout()) {
-        if (CheckingPolicy::instance()->isProduction()) {
+        if (OperationMode::instance()->isProduction()) {
             setDefaultRemoteTimeout();
             log()->warn("%s, remote timeout setup is prohibited for non-tagged blocks or when tag cache time is nil: %s",
                         BOOST_CURRENT_FUNCTION, owner()->name().c_str());

@@ -33,7 +33,7 @@
 #include "xscript/request_data.h"
 #include "xscript/response.h"
 #include "xscript/vhost_data.h"
-#include "xscript/checking_policy.h"
+#include "xscript/operation_mode.h"
 #include "xscript/xslt_profiler.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -54,6 +54,11 @@ Server::Server(Config *config) :
 Server::~Server() {
 }
 
+bool
+Server::isOffline() const {
+    return false;
+}
+
 void
 Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
 
@@ -65,14 +70,14 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
         std::pair<std::string, bool> name = findScript(request_data->request()->getScriptFilename());
 
         if (!name.second) {
-            CheckingPolicy::instance()->sendError(request_data->response(), 404,
+            OperationMode::instance()->sendError(request_data->response(), 404,
                                                   request_data->request()->getScriptFilename() + " not found");
             return;
         }
 
         boost::shared_ptr<Script> script = Script::create(name.first);
         if (!script->allowMethod(request_data->request()->getRequestMethod())) {
-            CheckingPolicy::instance()->sendError(request_data->response(), 405,
+            OperationMode::instance()->sendError(request_data->response(), 405,
                                                   request_data->request()->getRequestMethod() + " not allowed");
             return;
         }
@@ -123,7 +128,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
     catch (const std::exception &e) {
         log()->error("%s: exception caught: %s", BOOST_CURRENT_FUNCTION, e.what());
         xmlOutputBufferClose(buf);
-        CheckingPolicy::instance()->sendError(request_data->response(), 500, e.what());
+        OperationMode::instance()->sendError(request_data->response(), 500, e.what());
     }
 }
 

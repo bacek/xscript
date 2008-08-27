@@ -72,9 +72,6 @@ Config::startup() {
     VirtualHostData::instance()->init(this);
     log()->debug("virtual host data started");
 
-    CheckingPolicyStarter::instance()->init(this);
-    log()->debug("checking policy started");
-
     ScriptCache::instance()->init(this);
     log()->debug("script cache started");
 

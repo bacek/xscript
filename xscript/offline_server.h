@@ -15,6 +15,7 @@ public:
     bool needApplyMainStylesheet(Request *request) const;
     bool needApplyPerblockStylesheet(Request *request) const;
     void run();
+    bool isOffline() const;
 
 private:
     std::string root_;

@@ -4,7 +4,6 @@
 #include "offline_server.h"
 #include "xslt_profiler.h"
 
-#include "xscript/checking_policy.h"
 #include "xscript/config.h"
 #include "xscript/request_data.h"
 #include "xscript/state.h"
@@ -21,20 +20,8 @@
 
 namespace xscript {
 
-class OfflineCheckingPolicy : public DevelopmentCheckingPolicy {
-public:
-    OfflineCheckingPolicy() {}
-    virtual ~OfflineCheckingPolicy() {}
-    bool isOffline() const {
-        return true;
-    }
-};
-
 OfflineServer::OfflineServer(Config *config, const std::string& url, const std::multimap<std::string, std::string>& args) :
     Server(config), url_(url), apply_main_stylesheet_(true), apply_perblock_stylesheet_(true), use_remote_call_(true) {
-
-    ComponentRegisterer<CheckingPolicy> reg(new OfflineCheckingPolicy());
-    (void)reg;
 
     root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");
 
@@ -85,6 +72,11 @@ OfflineServer::OfflineServer(Config *config, const std::string& url, const std::
 }
 
 OfflineServer::~OfflineServer() {
+}
+
+bool
+OfflineServer::isOffline() const {
+    return true;
 }
 
 void
