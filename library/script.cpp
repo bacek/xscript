@@ -324,7 +324,7 @@ Script::parseBlocks() {
         block->threaded(is_threaded);
         block->parse();
 
-        cache_whole_page &= block->tagged();
+        cache_whole_page &= block->tagged() || block->hasTagOverride();
     }
 
     if(cache_whole_page)

@@ -50,6 +50,10 @@ ScriptPageTest::testCalcCacheable() {
     // Two tagged block
     script = Script::create("script/t4.xml");
     CPPUNIT_ASSERT(script->cacheWholePage());
+    
+    // Block with tag-override
+    script = Script::create("script/t5.xml");
+    CPPUNIT_ASSERT(script->cacheWholePage());
 }
 
 #endif
