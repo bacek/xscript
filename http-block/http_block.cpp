@@ -40,7 +40,7 @@ public:
 MethodMap HttpBlock::methods_;
 
 HttpBlock::HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        Block(ext, owner, node), ThreadedTaggedBlock(ext, owner, node), proxy_(false), method_(NULL) {
+        Block(ext, owner, node), RemoteTaggedBlock(ext, owner, node), proxy_(false), method_(NULL) {
 }
 
 HttpBlock::~HttpBlock() {
@@ -54,7 +54,7 @@ HttpBlock::postParse() {
         tagged(false);
     }
 
-    ThreadedTaggedBlock::postParse();
+    RemoteTaggedBlock::postParse();
 
     createCanonicalMethod("http.");
 
@@ -84,7 +84,7 @@ HttpBlock::property(const char *name, const char *value) {
         charset_ = value;
     }
     else {
-        ThreadedTaggedBlock::property(name, value);
+        RemoteTaggedBlock::property(name, value);
     }
 }
 

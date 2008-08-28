@@ -8,7 +8,7 @@
 
 #include "xscript/operation_mode.h"
 #include "xscript/logger.h"
-#include "xscript/threaded_tagged_block.h"
+#include "xscript/remote_tagged_block.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -16,16 +16,16 @@
 
 namespace xscript {
 
-ThreadedTaggedBlock::ThreadedTaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
+RemoteTaggedBlock::RemoteTaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node) {
     setDefaultRemoteTimeout();
 }
 
-ThreadedTaggedBlock::~ThreadedTaggedBlock() {
+RemoteTaggedBlock::~RemoteTaggedBlock() {
 }
 
 void
-ThreadedTaggedBlock::property(const char *name, const char *value) {
+RemoteTaggedBlock::property(const char *name, const char *value) {
     if (strncasecmp(name, "remote-timeout", sizeof("remote-timeout")) == 0) {
         remote_timeout_ = boost::lexical_cast<int>(value);
     }
@@ -36,27 +36,27 @@ ThreadedTaggedBlock::property(const char *name, const char *value) {
 
 
 int
-ThreadedTaggedBlock::remoteTimeout() const {
+RemoteTaggedBlock::remoteTimeout() const {
     return remote_timeout_ > 0 ? remote_timeout_ : timeout();
 }
 
 void
-ThreadedTaggedBlock::remoteTimeout(int timeout) {
+RemoteTaggedBlock::remoteTimeout(int timeout) {
     remote_timeout_ = timeout;
 }
 
 bool
-ThreadedTaggedBlock::isDefaultRemoteTimeout() const {
+RemoteTaggedBlock::isDefaultRemoteTimeout() const {
     return remote_timeout_ == 0;
 }
 
 void
-ThreadedTaggedBlock::setDefaultRemoteTimeout() {
+RemoteTaggedBlock::setDefaultRemoteTimeout() {
     remote_timeout_ = 0;
 }
 
 void
-ThreadedTaggedBlock::postParse() {
+RemoteTaggedBlock::postParse() {
     ThreadedBlock::postParse();
     TaggedBlock::postParse();
 

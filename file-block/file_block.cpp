@@ -22,7 +22,7 @@ namespace xscript {
 namespace fs = boost::filesystem;
 
 FileBlock::FileBlock(const Extension *ext, Xml *owner, xmlNodePtr node)
-    : Block(ext, owner, node), ThreadedTaggedBlock(ext, owner, node),
+    : Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node),
     method_(NULL), processXInclude_(false) {
 }
 
@@ -31,18 +31,9 @@ FileBlock::~FileBlock() {
 
 void
 FileBlock::postParse() {
-    if (!isDefaultRemoteTimeout()) {
-        if (OperationMode::instance()->isProduction()) {
-            setDefaultRemoteTimeout();
-            log()->warn("%s, remote-timeout setup is not allowed in FileBlock: %s",
-                        BOOST_CURRENT_FUNCTION, owner()->name().c_str());
-        }
-        else {
-            throw std::runtime_error("remote-timeout setup is not allowed in FileBlock");
-        }
-    }
 
-    ThreadedTaggedBlock::postParse();
+    ThreadedBlock::postParse();
+    TaggedBlock::postParse();
 
     createCanonicalMethod("file.");
 

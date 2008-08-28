@@ -2,8 +2,9 @@ xscript (5.32-0) unstable; urgency=low
 
   * skipping X- headers in http-block
   * xscript-development module added
+  * remame ThreadedTaggedBlock to RemoteTaggedBlock
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 27 Aug 2008 19:30:32 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 28 Aug 2008 15:59:50 +0400
 
 xscript (5.31-0) unstable; urgency=low
 

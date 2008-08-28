@@ -1,5 +1,5 @@
-#ifndef _XSCRIPT_THREADED_TAGGED_BLOCK_H_
-#define _XSCRIPT_THREADED_TAGGED_BLOCK_H_
+#ifndef _XSCRIPT_REMOTE_TAGGED_BLOCK_H_
+#define _XSCRIPT_REMOTE_TAGGED_BLOCK_H_
 
 #include <xscript/threaded_block.h>
 #include <xscript/tagged_block.h>
@@ -7,10 +7,10 @@
 
 namespace xscript {
 
-class ThreadedTaggedBlock : public ThreadedBlock, public TaggedBlock {
+class RemoteTaggedBlock : public ThreadedBlock, public TaggedBlock {
 public:
-    ThreadedTaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
-    virtual ~ThreadedTaggedBlock();
+    RemoteTaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    virtual ~RemoteTaggedBlock();
 
     int remoteTimeout() const;
     void remoteTimeout(int timeout);
@@ -27,4 +27,4 @@ private:
 
 } // namespace xscript
 
-#endif // _XSCRIPT_THREADED_TAGGED_BLOCK_H_
+#endif // _XSCRIPT_REMOTE_TAGGED_BLOCK_H_

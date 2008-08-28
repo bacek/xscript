@@ -7,7 +7,7 @@
 
 #include "xscript/block.h"
 #include "xscript/extension.h"
-#include "xscript/threaded_tagged_block.h"
+#include "xscript/remote_tagged_block.h"
 
 #include "internal/hash.h"
 #include "internal/hashmap.h"
@@ -35,7 +35,7 @@ typedef details::hash_map<std::string, HttpMethod, details::StringHash> MethodMa
 #endif
 
 // TODO: Why it is not virtual inherited?
-class HttpBlock : public ThreadedTaggedBlock {
+class HttpBlock : public RemoteTaggedBlock {
 public:
     HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~HttpBlock();
