@@ -308,7 +308,7 @@ Stylesheet::detectOutputEncoding(const XsltStylesheetHelper &sh) {
 void
 Stylesheet::detectOutputInfo(const XsltStylesheetHelper &sh) {
     (void)sh;
-    if (stylesheet_->omitXmlDeclaration || stylesheet_->indent) {
+    if (stylesheet_->omitXmlDeclaration > 0 || stylesheet_->indent > 0) {
         have_output_info_ = true;
     }
     else {
