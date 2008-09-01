@@ -406,20 +406,14 @@ HttpDateUtils::parse(const char *value) {
     return static_cast<time_t>(0);
 }
 
-HashUtils::HashUtils() {
-}
-
-HashUtils::~HashUtils() {
-}
-
 std::string
-HashUtils::hexMD5(const char *key) {
+HashUtils::hexMD5(const char *key, size_t len) {
 
     MD5_CTX md5handler;
     unsigned char md5buffer[16];
 
     MD5_Init(&md5handler);
-    MD5_Update(&md5handler, (unsigned char *)key, (unsigned int)strlen(key));
+    MD5_Update(&md5handler, (unsigned char *)key, len);
     MD5_Final(md5buffer, &md5handler);
 
     char alpha[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
@@ -436,6 +430,7 @@ HashUtils::hexMD5(const char *key) {
 
     return md5digest;
 }
+
 
 XmlErrorReporter::XmlErrorReporter() :
         error_(false) {}

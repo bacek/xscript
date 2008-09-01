@@ -111,13 +111,14 @@ private:
     virtual ~HttpDateUtils();
 };
 
-class HashUtils : private boost::noncopyable {
-public:
-    static std::string hexMD5(const char *key);
-
-private:
-    HashUtils();
-    virtual ~HashUtils();
+namespace HashUtils {
+    std::string hexMD5(const char *key, size_t len);
+    inline std::string hexMD5(const char *key) {
+        return hexMD5(key, strlen(key));
+    }
+    inline std::string hexMD5(const std::string &key) {
+        return hexMD5(key.c_str(), key.length());
+    }
 };
 
 template<typename Cont> inline std::string
