@@ -3,7 +3,6 @@
 #include <cerrno>
 #include <fstream>
 #include <sstream>
-#include <boost/crc.hpp>
 #include <boost/cstdint.hpp>
 
 #include <sys/stat.h>
@@ -81,15 +80,8 @@ private:
 
 
     std::string createFileName(const std::string &tagKey) const {
-        boost::crc_32_type value_hash;
-        value_hash.process_bytes(tagKey.data(), tagKey.size());
-
-        char buf[255];
-        boost::uint32_t sum = value_hash.checksum();
-
-        uint8_t num = sum & 0xFF;
-        snprintf(buf, sizeof(buf), "%02x/%16x", num, sum);
-        return buf;
+        std::string hash = HashUtils::hexMD5(tagKey.c_str());
+        return hash.substr(0,2) + "/" + hash;
     }
 
 private:
