@@ -179,6 +179,7 @@ Script::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
         stylesheet = Stylesheet::create(xsltName());
     }
     if (NULL != stylesheet.get()) {
+        PROFILER(log(), std::string("apply stylesheet ") + name().c_str());
         log()->info("applying stylesheet to %s", name().c_str());
         ctx->createDocumentWriter(stylesheet);
         Object::applyStylesheet(stylesheet, ctx, doc, false);

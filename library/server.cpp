@@ -30,6 +30,7 @@
 #include "xscript/writer.h"
 #include "xscript/context.h"
 #include "xscript/authorizer.h"
+#include "xscript/profiler.h"
 #include "xscript/request_data.h"
 #include "xscript/response.h"
 #include "xscript/vhost_data.h"
@@ -66,7 +67,9 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
     XmlUtils::resetReporter();
     xmlOutputBufferPtr buf = NULL;
     try {
+        PROFILER(log(), std::string("overall time for ") + request_data->request()->getScriptFilename().c_str());
         log()->info("requested file: %s", request_data->request()->getScriptFilename().c_str());
+
         std::pair<std::string, bool> name = findScript(request_data->request()->getScriptFilename());
 
         if (!name.second) {

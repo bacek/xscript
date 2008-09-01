@@ -117,7 +117,6 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
         appendXsltParams(obj->xsltParams(), ctx, tctx.get());
     }
 
-    PROFILER(log(), "apply stylesheet " + name_);
     internal::Profiler profiler("Total apply time");
 
     XmlDocHelper newdoc(xsltApplyStylesheetUser(stylesheet_.get(), doc.get(), NULL, NULL, NULL, tctx.get()));
