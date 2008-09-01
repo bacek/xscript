@@ -277,7 +277,7 @@ HttpBlock::response(const HttpHelper &helper) const {
         return XmlDocHelper(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
                                           helper.charset().c_str(), XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT));
     }
-    throw std::runtime_error("format is not recognized");
+    throw std::runtime_error(std::string("format is not recognized: ") + helper.contentType());
 }
 
 void
