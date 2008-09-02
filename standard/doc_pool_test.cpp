@@ -3,6 +3,7 @@
 
 #include "xscript/config.h"
 #include "xscript/logger_factory.h"
+#include "xscript/util.h"
 
 #include "doc_pool.h"
 
@@ -34,11 +35,11 @@ public:
         DocPool::LoadResult res = pool.loadDocImpl(key, tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("First load successful", DocPool::LOAD_SUCCESSFUL, res);
 
-        sleep(5);
+        realtimeSleep(5);
         res = pool.loadDocImpl(key, tag, loaded);
-        CPPUNIT_ASSERT_EQUAL_MESSAGE("Avaiting prefetch successful", DocPool::LOAD_NEED_PREFETCH, res);
+        CPPUNIT_ASSERT_EQUAL_MESSAGE("Awaiting prefetch successful", DocPool::LOAD_NEED_PREFETCH, res);
 
-        sleep(2);
+        realtimeSleep(2);
         res = pool.loadDocImpl(key, tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Expired checked", DocPool::LOAD_EXPIRED, res);
 

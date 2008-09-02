@@ -1,3 +1,9 @@
+xscript (5.32-1) unstable; urgency=low
+
+  * logging updated
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon,  1 Sep 2008 18:21:08 +0400
+
 xscript (5.32-0) unstable; urgency=low
 
   * skipping X- headers in http-block

@@ -150,7 +150,7 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
 
     log()->info("%s, invoking %s", BOOST_CURRENT_FUNCTION, name().c_str());
     try {
-        PROFILER(log(), std::string("invoke script ") + name().c_str());
+        PROFILER(log(), "invoke script " + name());
 
         unsigned int count = 0;
         int to = countTimeout();
@@ -179,7 +179,7 @@ Script::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
         stylesheet = Stylesheet::create(xsltName());
     }
     if (NULL != stylesheet.get()) {
-        PROFILER(log(), std::string("apply stylesheet ") + name().c_str());
+        PROFILER(log(), "apply stylesheet " + name());
         log()->info("applying stylesheet to %s", name().c_str());
         ctx->createDocumentWriter(stylesheet);
         Object::applyStylesheet(stylesheet, ctx, doc, false);

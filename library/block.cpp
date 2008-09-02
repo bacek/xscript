@@ -150,11 +150,11 @@ Block::invokeInternal(Context *ctx) {
         return processResponse(ctx, doc, a);
     }
     catch (const XmlNodeRuntimeError &e) {
-        log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
+        log()->error("%s, caught exception: %s. Owner: %s", BOOST_CURRENT_FUNCTION, e.what(), owner()->name().c_str());
         return errorResult(e.what_node());
     }
     catch (const std::exception &e) {
-        log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
+        log()->error("%s, caught exception: %s. Owner: %s", BOOST_CURRENT_FUNCTION, e.what(), owner()->name().c_str());
         return errorResult(e.what());
     }
 }

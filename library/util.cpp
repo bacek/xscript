@@ -300,6 +300,18 @@ TimeoutCounter::expired() const {
     return remained() <= 0;
 }
 
+void
+realtimeSleep(unsigned int seconds) {
+    TimeoutCounter counter(seconds*1000);
+
+    while(!counter.expired()) {
+        struct timespec ts;
+        ts.tv_sec = 0;
+        ts.tv_nsec = 100000;
+        ::nanosleep(&ts, NULL);
+    }
+}
+
 void terminate(int status, const char* message, bool write_log) {
     std::cerr << "Xscript is terminating: " << message << std::endl;
     if (write_log) {

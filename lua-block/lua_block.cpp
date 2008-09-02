@@ -282,7 +282,7 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 
     log()->entering(BOOST_CURRENT_FUNCTION);
 
-    PROFILER(log(), std::string("Lua block execution, ") + owner()->name());
+    PROFILER(log(), "Lua block execution, " + owner()->name());
 
     lua_State * lua = 0;
 

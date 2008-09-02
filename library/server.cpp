@@ -66,22 +66,23 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
     VirtualHostData::instance()->set(request_data->request());
     XmlUtils::resetReporter();
     xmlOutputBufferPtr buf = NULL;
+    const std::string &script_name = request_data->request()->getScriptFilename();
     try {
-        PROFILER(log(), std::string("overall time for ") + request_data->request()->getScriptFilename().c_str());
-        log()->info("requested file: %s", request_data->request()->getScriptFilename().c_str());
+        PROFILER(log(), "overall time for " + script_name);
+        log()->info("requested file: %s", script_name.c_str());
 
-        std::pair<std::string, bool> name = findScript(request_data->request()->getScriptFilename());
+        std::pair<std::string, bool> name = findScript(script_name);
 
         if (!name.second) {
             OperationMode::instance()->sendError(request_data->response(), 404,
-                                                  request_data->request()->getScriptFilename() + " not found");
+                                                 script_name + " not found");
             return;
         }
 
         boost::shared_ptr<Script> script = Script::create(name.first);
         if (!script->allowMethod(request_data->request()->getRequestMethod())) {
             OperationMode::instance()->sendError(request_data->response(), 405,
-                                                  request_data->request()->getRequestMethod() + " not allowed");
+                                                 request_data->request()->getRequestMethod() + " not allowed");
             return;
         }
 
@@ -129,7 +130,8 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
         XsltProfiler::instance()->dumpProfileInfo(ctx.get());
     }
     catch (const std::exception &e) {
-        log()->error("%s: exception caught: %s", BOOST_CURRENT_FUNCTION, e.what());
+        log()->error("%s: exception caught: %s. Owner: %s",
+            BOOST_CURRENT_FUNCTION, e.what(), script_name.c_str());
         xmlOutputBufferClose(buf);
         OperationMode::instance()->sendError(request_data->response(), 500, e.what());
     }

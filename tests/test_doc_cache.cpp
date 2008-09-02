@@ -10,6 +10,7 @@
 #include "xscript/doc_cache.h"
 #include "xscript/tagged_block.h"
 #include "xscript/request_data.h"
+#include "xscript/util.h"
 
 #include <time.h>
 #include <sys/timeb.h>
@@ -105,7 +106,7 @@ DocCacheTest::testStoreLoad() {
     doc_load.reset(NULL);
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
 
-    sleep(tag.expire_time - tag.last_modified);
+    realtimeSleep(tag.expire_time - tag.last_modified);
 
     // check skip expired
     CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
@@ -142,16 +143,15 @@ DocCacheTest::testGetLocalTagged() {
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(NULL != doc_load.get());
+
+    realtimeSleep(3);
 
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
 
-    sleep(3);
-
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
-    CPPUNIT_ASSERT(NULL != doc_load.get());
-
-    sleep(2);
+    realtimeSleep(2);
 
     // check skip expired
     CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
@@ -192,12 +192,12 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
 
-    sleep(3);
+    realtimeSleep(3);
 
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
 
-    sleep(1);
+    realtimeSleep(1);
 
     // check mark cache file for prefetch
     CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
@@ -206,7 +206,7 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
 
-    sleep(1);
+    realtimeSleep(1);
 
     // check skip expired
     CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));

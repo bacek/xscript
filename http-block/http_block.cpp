@@ -100,7 +100,7 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
     }
 
     std::string url = p[0]->asString(ctx);
-    PROFILER(log(), std::string("getHttp: ") + url);
+    PROFILER(log(), "getHttp: " + url);
 
     if (strncasecmp(url.c_str(), "file://", sizeof("file://") - 1) == 0) {
         namespace fs = boost::filesystem;
