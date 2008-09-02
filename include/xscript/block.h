@@ -49,10 +49,7 @@ public:
 
     virtual bool tagged() const;
 
-    inline bool stripRootElement() const {
-        return strip_root_element_;
-    }
-
+    inline bool stripRootElement(Context* ctx) const;
     inline void stripRootElement(bool value) {
         strip_root_element_ = value;
     }

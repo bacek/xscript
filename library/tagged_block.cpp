@@ -3,9 +3,11 @@
 #include <boost/current_function.hpp>
 #include <limits>
 
+#include "xscript/context.h"
 #include "xscript/logger.h"
 #include "xscript/doc_cache.h"
 #include "xscript/tagged_block.h"
+#include "xscript/vhost_data.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -59,6 +61,11 @@ TaggedBlock::invokeInternal(Context *ctx) {
         return Block::invokeInternal(ctx);
     }
 
+    const Server* server = VirtualHostData::instance()->getServer();
+    if (tagged() && !xsltName().empty() && server && !server->needApplyPerblockStylesheet(ctx->request())) {
+        return Block::invokeInternal(ctx);
+    }
+
     try {
         bool have_cached_doc = false;
         XmlDocHelper doc(NULL);
@@ -108,6 +115,11 @@ TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a
 
     log()->debug("%s, tagged: %d", BOOST_CURRENT_FUNCTION, static_cast<int>(tagged()));
     if (!tagged()) {
+        return;
+    }
+
+    const Server* server = VirtualHostData::instance()->getServer();
+    if (tagged() && !xsltName().empty() && server && !server->needApplyPerblockStylesheet(ctx->request())) {
         return;
     }
 

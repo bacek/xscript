@@ -308,10 +308,10 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
         throw std::bad_alloc();
     }
 
-
     int res = lua_pcall(lua, 0, LUA_MULTRET, 1);
     if (res != 0) {
-        std::string msg = luaReadStack<std::string>(lua, 1);
+        std::string msg(lua_tostring(lua, -1));
+        lua_pop(lua, 1);
         log()->error("%s, Lua block failed: %s", BOOST_CURRENT_FUNCTION, msg.c_str());
         throw std::runtime_error(msg);
     }

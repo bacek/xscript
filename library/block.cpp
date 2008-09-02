@@ -80,6 +80,17 @@ Block::tagged() const {
     return false;
 }
 
+bool
+Block::stripRootElement(Context* ctx) const {
+    if (strip_root_element_) {
+        const Server* server = VirtualHostData::instance()->getServer();
+        if (!xsltName().empty() && server && !server->needApplyPerblockStylesheet(ctx->request())) {
+            return false;
+        }
+    }
+    return strip_root_element_;
+}
+
 void
 Block::parse() {
 
@@ -189,12 +200,16 @@ Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
 
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
     const Server* server = VirtualHostData::instance()->getServer();
-    if (!server || server->needApplyPerblockStylesheet(ctx->request())) {
+    bool need_perblock = (!server || server->needApplyPerblockStylesheet(ctx->request()));
+    if (need_perblock) {
         applyStylesheet(ctx, doc);
     }
 
     postCall(ctx, doc, a);
-    evalXPath(ctx, doc);
+
+    if (need_perblock || xsltName().empty()) {
+        evalXPath(ctx, doc);
+    }
 
     return doc;
 }
