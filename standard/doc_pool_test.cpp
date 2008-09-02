@@ -35,11 +35,11 @@ public:
         DocPool::LoadResult res = pool.loadDocImpl(key, tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("First load successful", DocPool::LOAD_SUCCESSFUL, res);
 
-        realtimeSleep(5);
+        sleep(5);
         res = pool.loadDocImpl(key, tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Awaiting prefetch successful", DocPool::LOAD_NEED_PREFETCH, res);
 
-        realtimeSleep(2);
+        sleep(2);
         res = pool.loadDocImpl(key, tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Expired checked", DocPool::LOAD_EXPIRED, res);
 

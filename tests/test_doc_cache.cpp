@@ -106,7 +106,7 @@ DocCacheTest::testStoreLoad() {
     doc_load.reset(NULL);
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
 
-    realtimeSleep(tag.expire_time - tag.last_modified);
+    sleep(tag.expire_time - tag.last_modified);
 
     // check skip expired
     CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
@@ -146,12 +146,12 @@ DocCacheTest::testGetLocalTagged() {
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
 
-    realtimeSleep(3);
+    sleep(3);
 
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
 
-    realtimeSleep(2);
+    sleep(2);
 
     // check skip expired
     CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
@@ -192,12 +192,12 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
 
-    realtimeSleep(3);
+    sleep(3);
 
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
     CPPUNIT_ASSERT(NULL != doc_load.get());
 
-    realtimeSleep(1);
+    sleep(1);
 
     // check mark cache file for prefetch
     CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
@@ -206,7 +206,7 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
     CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
 
-    realtimeSleep(1);
+    sleep(1);
 
     // check skip expired
     CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));

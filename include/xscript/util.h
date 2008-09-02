@@ -118,7 +118,6 @@ private:
     int timeout_;
 };
 
-void realtimeSleep(unsigned int seconds);
 void terminate(int status, const char* message, bool write_log);
 
 } // namespace xscript
