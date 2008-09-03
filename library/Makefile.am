@@ -32,17 +32,9 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	dummy_cache_counter.cpp \
 	default_request_response.cpp
 
-noinst_HEADERS = details/expect.h details/extension_list.h details/loader.h \
-	details/param_factory.h details/phoenix_singleton.h \
-	details/state_impl.h details/writer_impl.h details/xml_config.h \
-	details/syslog_logger.h details/file_logger.h \
-	details/dummy_thread_pool.h details/dummy_script_cache.h \
-	details/dummy_stylesheet_cache.h details/parser.h \
-	details/dummy_average_counter.h \
-	details/dummy_simple_counter.h \
-	details/default_request_response.h
-
 libxscript_la_LDFLAGS = -lpthread -ldl
 
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread -I@top_srcdir@/include -I@builddir@ @yandex_platform_CFLAGS@
 AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem -lcrypto -I@top_srcdir@/include @yandex_platform_LIBS@
+
+SUBDIRS = details

@@ -5,7 +5,7 @@ xscript_proc_SOURCES = standalone_request.cpp offline_server.cpp main.cpp xslt_p
 xscript_proc_LDADD = ../library/libxscript.la
 xscript_proc_LDFLAGS = -ldl -export-dynamic
 
-noinst_HEADERS = standalone_request.h offline_server.h xslt_profiler.h
+noinst_HEADERS = offline_server.h standalone_request.h xslt_profiler.h
 
 xsldir = $(datadir)/xscript-proc
 xsl_DATA = profile.xsl
