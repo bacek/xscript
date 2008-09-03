@@ -22,7 +22,7 @@ const iconv_t IconvTraits::DEFAULT_VALUE = reinterpret_cast<iconv_t>(-1);
 
 struct EncoderContext {
     size_t len;
-    char *data, *begin;
+    ICONV_CONST char *data, *begin;
 };
 
 class DefaultEncoder : public Encoder {
@@ -94,7 +94,9 @@ Encoder::encode(const Range &range, std::string &dst) const {
 
     std::vector<char> v(range.size());
     size_t rsize = range.size(), dsize = v.size();
-    char *sch = const_cast<char*>(range.begin()), *dch = &v[0];
+    
+    char *dch = &v[0];
+    ICONV_CONST char *sch = const_cast<ICONV_CONST char*>(range.begin());
 
     while (rsize != 0) {
         size_t res = iconv(iconv_.get(), &sch, &rsize, &dch, &dsize);
@@ -109,7 +111,8 @@ Encoder::encode(const Range &range, std::string &dst) const {
 
                 EncoderContext ctx = { 0, sch, &v[0] };
 
-                char *n = next(ctx), buf[16];
+                char buf[16];
+                ICONV_CONST char *n = const_cast<ICONV_CONST char*>(next(ctx));
                 size_t tmp = n - sch;
                 size_t cur = v.size() - dsize;
 
@@ -140,12 +143,12 @@ Encoder::check(const IconvHolder &conv) const {
     }
 }
 
-char*
+const char*
 Encoder::next(const EncoderContext &ctx) const {
 
-    char *data = ctx.data;
+    ICONV_CONST char *data = ctx.data;
     if (strncasecmp(from_.c_str(), "utf-8", sizeof("utf-8")) == 0) {
-        return const_cast<char*>(StringUtils::nextUTF8(data));
+        return StringUtils::nextUTF8(data);
     }
     else if (strncasecmp(from_.c_str(), "utf-16", sizeof("utf-16") - 1) == 0) {
         return data + 2;
@@ -198,7 +201,7 @@ EscapingEncoder::rep(char *buf, size_t size, const EncoderContext &ctx) const {
         return 0;
     }
 
-    char *ch = ctx.data;
+    ICONV_CONST char *ch = ctx.data;
     size_t len = ctx.len;
     boost::uint32_t value;
     size_t vlen = sizeof(value);

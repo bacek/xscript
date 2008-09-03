@@ -42,7 +42,7 @@ protected:
     virtual ~Encoder();
 
     void check(const IconvHolder &conv) const;
-    char* next(const EncoderContext &ctx) const;
+    const char* next(const EncoderContext &ctx) const;
 
     virtual size_t rep(char *buf, size_t size, const EncoderContext &ctx) const = 0;
 
