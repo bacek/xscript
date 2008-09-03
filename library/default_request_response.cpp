@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "details/default_request_response.h"
+#include "internal/default_request_response.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

@@ -14,7 +14,7 @@
 
 #include "xscript/util.h"
 #include "xscript/resource_holder.h"
-#include "details/expect.h"
+#include "internal/expect.h"
 
 namespace xscript {
 

@@ -10,8 +10,8 @@
 #include <stdexcept>
 #include <boost/bind.hpp>
 
-#include "details/parser.h"
-#include "internal/request_impl.h"
+#include "internal/parser.h"
+#include "xscript/request_impl.h"
 #include "xscript/range.h"
 #include "xscript/encoder.h"
 #include "internal/algorithm.h"

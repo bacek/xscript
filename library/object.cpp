@@ -10,7 +10,7 @@
 #include "xscript/logger.h"
 #include "xscript/object.h"
 #include "xscript/stylesheet.h"
-#include "details/param_factory.h"
+#include "internal/param_factory.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

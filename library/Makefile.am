@@ -32,7 +32,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	dummy_cache_counter.cpp \
 	default_request_response.cpp
 
-libxscript_la_LDFLAGS = -lpthread -ldl
+libxscript_la_LDFLAGS = -lpthread
 
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread -I@top_srcdir@/include -I@builddir@ @yandex_platform_CFLAGS@
 AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem -lcrypto -I@top_srcdir@/include @yandex_platform_LIBS@

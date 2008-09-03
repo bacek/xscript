@@ -14,7 +14,7 @@
 #include <libxml/tree.h>
 
 #include "xscript/extension.h"
-#include "details/phoenix_singleton.h"
+#include "internal/phoenix_singleton.h"
 
 namespace xscript {
 

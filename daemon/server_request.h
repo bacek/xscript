@@ -13,7 +13,7 @@
 #include "xscript/functors.h"
 #include "xscript/range.h"
 #include "xscript/cookie.h"
-#include "details/default_request_response.h"
+#include "internal/default_request_response.h"
 
 namespace xscript {
 

@@ -2,6 +2,7 @@
 #define _XSCRIPT_REQUEST_DATA_H_
 
 #include <boost/shared_ptr.hpp>
+
 #include "xscript/request_response.h"
 
 namespace xscript {

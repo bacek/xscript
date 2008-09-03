@@ -323,7 +323,8 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 
     XmlNodeHelper node;
     if (buffer.empty()) {
-        node = XmlNodeHelper(xmlNewNode(doc.get(), NULL, (const xmlChar*) "lua");
+        node = XmlNodeHelper(xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "lua", 
+          (const xmlChar*) ""));
     }
     else {
         log()->debug("Lua output: %s", buffer.c_str());

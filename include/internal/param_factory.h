@@ -9,10 +9,10 @@
 #include <libxml/tree.h>
 
 #include "xscript/param.h"
-#include "details/phoenix_singleton.h"
 
 #include "internal/hash.h"
 #include "internal/hashmap.h"
+#include "internal/phoenix_singleton.h"
 
 #ifndef HAVE_HASHMAP
 #include <map>

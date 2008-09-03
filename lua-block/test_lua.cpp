@@ -12,8 +12,8 @@
 #include "xscript/request.h"
 #include "xscript/context.h"
 #include "xscript/request_data.h"
-#include "internal/request_impl.h"
-#include "details/default_request_response.h"
+#include "xscript/request_impl.h"
+#include "internal/default_request_response.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

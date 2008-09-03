@@ -37,7 +37,7 @@
 #include "xscript/profiler.h"
 #include "xscript/xslt_profiler.h"
 
-#include "details/extension_list.h"
+#include "internal/extension_list.h"
 #include "internal/profiler.h"
 
 #ifdef HAVE_DMALLOC_H

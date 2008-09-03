@@ -16,7 +16,7 @@ test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic
 
 endif
 
-AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -I@top_srcdir@/library -D_REENTRANT @yandex_platform_CFLAGS@
+AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem @yandex_platform_LIBS@
 

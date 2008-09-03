@@ -9,9 +9,9 @@
 #include "xscript/logger.h"
 #include "xscript/xslt_extension.h"
 
-#include "details/expect.h"
-#include "details/loader.h"
-#include "details/extension_list.h"
+#include "internal/expect.h"
+#include "internal/loader.h"
+#include "internal/extension_list.h"
 #include "xscript/thread_pool.h"
 
 #ifdef HAVE_DMALLOC_H

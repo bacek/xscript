@@ -8,8 +8,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/current_function.hpp>
 
-#include "internal/request_impl.h"
-#include "details/parser.h"
+#include "xscript/request_impl.h"
+#include "internal/parser.h"
 #include "xscript/range.h"
 #include "xscript/logger.h"
 #include "xscript/encoder.h"

@@ -13,7 +13,7 @@
 #include "xscript/xml_util.h"
 #include "xscript/range.h"
 #include "xscript/logger.h"
-#include "details/param_factory.h"
+#include "internal/param_factory.h"
 #include "internal/algorithm.h"
 
 #ifdef HAVE_DMALLOC_H

@@ -26,7 +26,7 @@
 #include "xscript/stylesheet.h"
 #include "xscript/thread_pool.h"
 #include "xscript/profiler.h"
-#include "details/param_factory.h"
+#include "internal/param_factory.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

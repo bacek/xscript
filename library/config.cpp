@@ -12,7 +12,6 @@
 
 #include "xscript/xml_util.h"
 #include "xscript/config.h"
-#include "details/loader.h"
 #include "xscript/logger_factory.h"
 #include "xscript/logger.h"
 #include "xscript/sanitizer.h"
@@ -29,7 +28,9 @@
 #include "xscript/status_info.h"
 
 #include "details/xml_config.h"
-#include "details/extension_list.h"
+
+#include "internal/loader.h"
+#include "internal/extension_list.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

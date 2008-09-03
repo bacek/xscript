@@ -11,11 +11,11 @@
 
 #include <dlfcn.h>
 
-#include "details/loader.h"
+#include "internal/loader.h"
 #include "xscript/config.h"
 #include "xscript/resource_holder.h"
 #include "xscript/logger_factory.h"
-#include "details/extension_list.h"
+#include "internal/extension_list.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

@@ -1,5 +1,5 @@
 #include "settings.h"
-#include "details/loader.h"
+#include "internal/loader.h"
 #include "xscript/component.h"
 #include "xscript/logger_factory.h"
 

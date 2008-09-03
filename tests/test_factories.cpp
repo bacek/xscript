@@ -3,7 +3,7 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "details/param_factory.h"
+#include "internal/param_factory.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

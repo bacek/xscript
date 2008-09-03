@@ -20,7 +20,7 @@
 #include "xscript/xml_util.h"
 
 #include "details/writer_impl.h"
-#include "details/extension_list.h"
+#include "internal/extension_list.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

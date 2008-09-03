@@ -10,9 +10,9 @@
 
 #include "xscript/xml_util.h"
 #include "xscript/config.h"
-#include "details/loader.h"
+#include "internal/loader.h"
 #include "xscript/extension.h"
-#include "details/extension_list.h"
+#include "internal/extension_list.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

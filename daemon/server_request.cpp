@@ -7,7 +7,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/current_function.hpp>
 
-#include "details/parser.h"
+#include "internal/parser.h"
 #include "server_request.h"
 #include "xscript/range.h"
 #include "xscript/logger.h"
