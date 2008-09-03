@@ -98,27 +98,24 @@ Block::parse() {
                               boost::bind(&Block::property, this, _1, _2));
 
     ParamFactory *pf = ParamFactory::instance();
-    xmlNodePtr node = node_->children;
-    while (node) {
-        if (!node->name) {
-            continue;
-        }
-        else if (xpathNode(node)) {
-            parseXPathNode(node);
-        }
-        else if (paramNode(node)) {
-            parseParamNode(node, pf);
-        }
-        else if (xsltParamNode(node)) {
-            parseXsltParamNode(node, pf);
-        }
-        else if (XML_ELEMENT_NODE == node->type) {
-            const char *value = XmlUtils::value(node);
-            if (value) {
-                property((const char*) node->name, value);
+    for (xmlNodePtr node = node_->children; NULL != node; node = node->next) {
+        if (node->name) {
+            if (xpathNode(node)) {
+                parseXPathNode(node);
+            }
+            else if (paramNode(node)) {
+                parseParamNode(node, pf);
+            }
+            else if (xsltParamNode(node)) {
+                parseXsltParamNode(node, pf);
+            }
+            else if (XML_ELEMENT_NODE == node->type) {
+                const char *value = XmlUtils::value(node);
+                if (value) {
+                    property((const char*) node->name, value);
+                }
             }
         }
-        node = node->next;
     }
     postParse();
 }
