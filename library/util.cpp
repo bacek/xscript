@@ -13,7 +13,9 @@
 #include "xscript/util.h"
 #include "xscript/logger.h"
 #include "xscript/encoder.h"
+
 #include "internal/algorithm.h"
+#include "details/error_reporter.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -137,9 +139,7 @@ StringUtils::parse(const Range &range, std::vector<NamedValue> &v, Encoder *enco
 
 void
 StringUtils::report(const char *what, int error, std::ostream &stream) {
-    char buf[256];
-    char *msg = strerror_r(error, buf, sizeof(buf));
-    stream << what << msg;
+    makeErrorReporter(&strerror_r).report(what, error, stream);
 }
 
 std::string
