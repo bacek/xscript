@@ -37,15 +37,15 @@ void AverageCounterImpl::remove(uint64_t value) {
 }
 
 XmlNodeHelper AverageCounterImpl::createReport() const {
-    XmlNodeHelper line(xmlNewNode(0, BAD_CAST name_.c_str()));
+    XmlNodeHelper line(xmlNewNode(0, (const xmlChar*) name_.c_str()));
 
     boost::mutex::scoped_lock lock(mtx_);
-    xmlSetProp(line.get(), BAD_CAST "count", BAD_CAST boost::lexical_cast<std::string>(count_).c_str());
+    xmlSetProp(line.get(), (const xmlChar*) "count", (const xmlChar*) boost::lexical_cast<std::string>(count_).c_str());
     if (count_ != 0) {
-        xmlSetProp(line.get(), BAD_CAST "total", BAD_CAST boost::lexical_cast<std::string>(total_).c_str());
-        xmlSetProp(line.get(), BAD_CAST "min", BAD_CAST boost::lexical_cast<std::string>(min_).c_str());
-        xmlSetProp(line.get(), BAD_CAST "max", BAD_CAST boost::lexical_cast<std::string>(max_).c_str());
-        xmlSetProp(line.get(), BAD_CAST "avg", BAD_CAST boost::lexical_cast<std::string>(total_ / count_).c_str());
+        xmlSetProp(line.get(), (const xmlChar*) "total", (const xmlChar*) boost::lexical_cast<std::string>(total_).c_str());
+        xmlSetProp(line.get(), (const xmlChar*) "min", (const xmlChar*) boost::lexical_cast<std::string>(min_).c_str());
+        xmlSetProp(line.get(), (const xmlChar*) "max", (const xmlChar*) boost::lexical_cast<std::string>(max_).c_str());
+        xmlSetProp(line.get(), (const xmlChar*) "avg", (const xmlChar*) boost::lexical_cast<std::string>(total_ / count_).c_str());
     }
 
     return line;

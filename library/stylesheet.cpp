@@ -124,7 +124,7 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
     // Looks like we have to do something with this.
     if (use_profile && obj) {
         XmlDocHelper prof_doc(xsltGetProfileInformation(tctx.get()));
-        xmlNewTextChild(xmlDocGetRootElement(prof_doc.get()), 0, BAD_CAST "total-time", BAD_CAST profiler.getInfo().c_str());
+        xmlNewTextChild(xmlDocGetRootElement(prof_doc.get()), 0, (const xmlChar*) "total-time", (const xmlChar*) profiler.getInfo().c_str());
         XsltProfiler::instance()->insertProfileDoc(name_, prof_doc.release());
     }
 

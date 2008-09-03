@@ -106,7 +106,7 @@ DocCache::createReport() const {
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
 
-    xmlNodePtr root = xmlNewDocNode(doc.get(), NULL, BAD_CAST "doc_cache", NULL);
+    xmlNodePtr root = xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "doc_cache", NULL);
     XmlUtils::throwUnless(NULL != root);
 
     xmlDocSetRootElement(doc.get(), root);

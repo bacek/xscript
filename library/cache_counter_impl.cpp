@@ -34,13 +34,13 @@ void CacheCounterImpl::incRemoved() {
 
 XmlNodeHelper CacheCounterImpl::createReport() const {
 
-    XmlNodeHelper line(xmlNewNode(0, BAD_CAST name_.c_str()));
+    XmlNodeHelper line(xmlNewNode(0, (const xmlChar*) name_.c_str()));
 
     boost::mutex::scoped_lock lock(mtx_);
-    xmlSetProp(line.get(), BAD_CAST "used-memory", BAD_CAST boost::lexical_cast<std::string>(usedMemory_).c_str());
-    xmlSetProp(line.get(), BAD_CAST "stored", BAD_CAST boost::lexical_cast<std::string>(stored_).c_str());
-    xmlSetProp(line.get(), BAD_CAST "loaded", BAD_CAST boost::lexical_cast<std::string>(loaded_).c_str());
-    xmlSetProp(line.get(), BAD_CAST "removed", BAD_CAST boost::lexical_cast<std::string>(removed_).c_str());
+    xmlSetProp(line.get(), (const xmlChar*) "used-memory", (const xmlChar*) boost::lexical_cast<std::string>(usedMemory_).c_str());
+    xmlSetProp(line.get(), (const xmlChar*) "stored", (const xmlChar*) boost::lexical_cast<std::string>(stored_).c_str());
+    xmlSetProp(line.get(), (const xmlChar*) "loaded", (const xmlChar*) boost::lexical_cast<std::string>(loaded_).c_str());
+    xmlSetProp(line.get(), (const xmlChar*) "removed", (const xmlChar*) boost::lexical_cast<std::string>(removed_).c_str());
 
     return line;
 }

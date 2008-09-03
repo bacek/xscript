@@ -10,7 +10,7 @@
 #include <boost/thread/mutex.hpp>
 
 #include "xscript/functors.h"
-#include "internal/request_impl.h"
+#include "xscript/request_impl.h"
 #include "xscript/request_response.h"
 #include "xscript/util.h"
 

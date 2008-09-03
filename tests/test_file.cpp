@@ -77,12 +77,12 @@ FileTest::testTag() {
     /*
      * There is no way to check tag from outside...
      *
-    XmlNodeHelper blockNode(xmlNewNode(0, BAD_CAST "file"));
-    xmlNewTextChild(blockNode.get(), 0, BAD_CAST "method", BAD_CAST "load");
-    xmlNewTextChild(blockNode.get(), 0, BAD_CAST "param", BAD_CAST "include.xml");
+    XmlNodeHelper blockNode(xmlNewNode(0, (const xmlChar*) "file"));
+    xmlNewTextChild(blockNode.get(), 0, (const xmlChar*) "method", (const xmlChar*) "load");
+    xmlNewTextChild(blockNode.get(), 0, (const xmlChar*) "param", (const xmlChar*) "include.xml");
 
-    xmlNodePtr tagNode = xmlNewChild(blockNode.get(), 0, BAD_CAST "param", 0);
-    xmlNewProp(tagNode, BAD_CAST "type", BAD_CAST "Tag");
+    xmlNodePtr tagNode = xmlNewChild(blockNode.get(), 0, (const xmlChar*) "param", 0);
+    xmlNewProp(tagNode, (const xmlChar*) "type", (const xmlChar*) "Tag");
 
     boost::shared_ptr<Script> script = Script::create("./file-load.xml");
 

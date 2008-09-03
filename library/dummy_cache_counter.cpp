@@ -18,7 +18,7 @@ void DummyCacheCounter::incRemoved() { }
 
 
 XmlNodeHelper DummyCacheCounter::createReport() const {
-    return XmlNodeHelper(xmlNewNode(0, BAD_CAST "dummy"));
+    return XmlNodeHelper(xmlNewNode(0, (const xmlChar*) "dummy"));
 }
 
 
