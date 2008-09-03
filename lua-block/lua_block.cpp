@@ -321,14 +321,17 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
 
-    if (!buffer.empty()) {
-        log()->debug("Lua output: %s", buffer.c_str());
-        XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "lua",
-            (const xmlChar*) XmlUtils::escape(buffer).c_str()));
-
-        xmlDocSetRootElement(doc.get(), node.get());
-        node.release();
+    XmlNodeHelper node;
+    if (buffer.empty()) {
+        node = XmlNodeHelper(xmlNewNode(doc.get(), NULL, (const xmlChar*) "lua");
     }
+    else {
+        log()->debug("Lua output: %s", buffer.c_str());
+        node = XmlNodeHelper(xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "lua",
+            (const xmlChar*) XmlUtils::escape(buffer).c_str()));
+    }
+    xmlDocSetRootElement(doc.get(), node.get());
+    node.release();
 
     return doc;
 }
