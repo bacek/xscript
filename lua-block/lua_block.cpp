@@ -72,6 +72,8 @@ LuaBlock::~LuaBlock() {
 void
 LuaBlock::parse() {
 
+    Block::parse();
+
     xmlNodePtr ptr = NULL;
     for (ptr = node()->children; NULL != ptr; ptr = ptr->next) {
         if (XML_CDATA_SECTION_NODE == ptr->type) {
@@ -319,11 +321,14 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
 
-    log()->debug("Lua output: %s", buffer.c_str());
-    XmlNodeHelper node(xmlNewDocNode( doc.get(), 0, BAD_CAST "lua", BAD_CAST buffer.c_str()));
+    if (!buffer.empty()) {
+        log()->debug("Lua output: %s", buffer.c_str());
+        XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "lua",
+            (const xmlChar*) XmlUtils::escape(buffer).c_str()));
 
-    xmlDocSetRootElement(doc.get(), node.get());
-    node.release();
+        xmlDocSetRootElement(doc.get(), node.get());
+        node.release();
+    }
 
     return doc;
 }

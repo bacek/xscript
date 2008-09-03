@@ -85,7 +85,7 @@ LuaTest::testPrint() {
     CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
     CPPUNIT_ASSERT_EQUAL(
-        std::string("Hello\nWorld!\n"),
+        std::string("Hello\n&nbsp;\nWorld!\n"),
         XmlUtils::xpathValue(doc.get(), "/page/lua", "Bye")
     );
 }

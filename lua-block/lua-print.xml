@@ -4,6 +4,7 @@
   <x:lua>
 	  <![CDATA[
 	  print("Hello");
+	  print("&nbsp;");
 	  print("World!");
   ]]>
   </x:lua>
