@@ -3,8 +3,9 @@ xscript (5.32-2) unstable; urgency=low
   * stripRootElement and tagged properties ignored in the case of noxslt port
     and perblock stylesheet
   * lua error processing fixed
+  * fixed lua print and parsing attributes(ponomarev's work)
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue,  2 Sep 2008 19:33:54 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed,  3 Sep 2008 11:15:34 +0400
 
 xscript (5.32-1) unstable; urgency=low
 

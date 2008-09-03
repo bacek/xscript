@@ -436,7 +436,8 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
 
             xmlNodePtr result = xmlDocGetRootElement(doc);
             if (result) {
-                if (blocks_[count]->stripRootElement(ctx)) {
+                const Block *block = blocks_[count];
+                if (block->stripRootElement(ctx)) {
                     xmlNodePtr result_node = result->children;
                     if (result_node) {
                         xmlNodePtr last_insert_node = xmlCopyNode(result_node, 1);
