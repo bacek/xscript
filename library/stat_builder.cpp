@@ -16,7 +16,7 @@ XmlDocHelper StatBuilder::createReport() const {
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
 
-    xmlNodePtr root = xmlNewDocNode(doc.get(), NULL, BAD_CAST name_.c_str(), 0);
+    xmlNodePtr root = xmlNewDocNode(doc.get(), NULL, BAD_CAST name_.c_str(), NULL);
     XmlUtils::throwUnless(NULL != root);
 
     xmlDocSetRootElement(doc.get(), root);

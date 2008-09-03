@@ -62,7 +62,7 @@ TaggedBlock::invokeInternal(Context *ctx) {
     }
 
     const Server* server = VirtualHostData::instance()->getServer();
-    if (tagged() && !xsltName().empty() && server && !server->needApplyPerblockStylesheet(ctx->request())) {
+    if (!xsltName().empty() && server && !server->needApplyPerblockStylesheet(ctx->request())) {
         return Block::invokeInternal(ctx);
     }
 
@@ -119,7 +119,7 @@ TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a
     }
 
     const Server* server = VirtualHostData::instance()->getServer();
-    if (tagged() && !xsltName().empty() && server && !server->needApplyPerblockStylesheet(ctx->request())) {
+    if (!xsltName().empty() && server && !server->needApplyPerblockStylesheet(ctx->request())) {
         return;
     }
 
