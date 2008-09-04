@@ -1,3 +1,9 @@
+xscript (5.33-0) unstable; urgency=low
+
+  * file locations changed (highpower work)
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed,  3 Sep 2008 19:13:04 +0400
+
 xscript (5.32-2) unstable; urgency=low
 
   * stripRootElement and tagged properties ignored in the case of noxslt port
