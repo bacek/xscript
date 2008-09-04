@@ -132,6 +132,7 @@ DocCacheTest::testGetLocalTagged() {
     XmlDocHelper doc_load;
     CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
 
+    /*
     struct timeb t;
     ftime(&t);
     if (t.millitm > 300) {
@@ -140,6 +141,7 @@ DocCacheTest::testGetLocalTagged() {
         ts.tv_nsec = 1000000 - t.millitm * 1000;
         nanosleep(&ts, NULL);
     }
+    */
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
@@ -177,6 +179,7 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
     XmlDocHelper doc_load;
     CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
 
+    /*
     struct timeb t;
     ftime(&t);
     if (t.millitm > 300) {
@@ -185,6 +188,7 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
         ts.tv_nsec = 1000000 - t.millitm * 1000;
         nanosleep(&ts, NULL);
     }
+    */
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());

@@ -8,7 +8,7 @@ xscript_proc_LDFLAGS = -export-dynamic
 noinst_HEADERS = offline_server.h standalone_request.h xslt_profiler.h
 
 xsldir = $(datadir)/xscript-proc
-xsl_DATA = profile.xsl
+dist_xsl_DATA = profile.xsl
 
 dist_sysconf_DATA = offline.conf
 

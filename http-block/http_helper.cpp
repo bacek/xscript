@@ -264,12 +264,14 @@ HttpHelper::createTag() const {
 
         if (im != headers_.end()) {
             tag.last_modified = HttpDateUtils::parse(im->second.c_str());
-            log()->debug("%s, last_modified: %lu", BOOST_CURRENT_FUNCTION, tag.last_modified);
+            log()->debug("%s, last_modified: %llu", BOOST_CURRENT_FUNCTION, 
+                static_cast<unsigned long long>(tag.last_modified));
         }
         std::multimap<std::string, std::string>::const_iterator ie = headers_.find("expires");
         if (ie != headers_.end()) {
             tag.expire_time = HttpDateUtils::parse(ie->second.c_str());
-            log()->debug("%s, expire_time: %lu", BOOST_CURRENT_FUNCTION, tag.expire_time);
+            log()->debug("%s, expire_time: %llu", BOOST_CURRENT_FUNCTION, 
+                static_cast<unsigned long long>(tag.expire_time));
         }
     }
 

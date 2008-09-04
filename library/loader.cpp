@@ -43,7 +43,7 @@ public:
 
 protected:
     LoaderImpl();
-    void checkLoad(const char *err);
+    void checkLoad(bool success) const;
 
 private:
     std::vector<void*> handles_;
@@ -101,27 +101,21 @@ LoaderImpl::init(const Config *config) {
 
 ExtensionInfo *
 LoaderImpl::load(const char *name) {
+
+    typedef ExtensionInfo* (*ExtensionFunc)();
+    
     Handle handle(dlopen(name, RTLD_NOW | RTLD_GLOBAL));
-
-    checkLoad(dlerror());
-
-    // Try to fetch extension info from loaded module.
-    ExtensionInfo * info = 0;
-
-    void * p = dlsym(handle.get(), "get_extension_info");
-    ExtensionInfo* (*func)() = (ExtensionInfo *(*)())p;
-    if (func != 0)
-        info = func();
-
+    checkLoad(NULL != handle.get());
     handles_.push_back(handle.release());
-
-    return info;
+    
+    ExtensionFunc func = (ExtensionFunc) dlsym(handles_.back(), "get_extension_info");
+    return (NULL != func) ? func() : NULL;
 }
 
 void
-LoaderImpl::checkLoad(const char *err) {
-    if (NULL != err) {
-        throw std::runtime_error(err);
+LoaderImpl::checkLoad(bool success) const {
+    if (!success) {
+        throw std::runtime_error(dlerror());
     }
 }
 

@@ -40,7 +40,7 @@ void out(F func, Logger *l, const char* format, va_list args) {
     if (l->printThreadId()) {
         size_t bufLen = strlen(format) + 30;
         char buf[bufLen];
-        snprintf(buf, bufLen, "[thread: %lu] %s", pthread_self(), format);
+        snprintf(buf, bufLen, "[thread: %lu] %s", (unsigned long) pthread_self(), format);
         (l->*func)(buf, args);
     }
     else {

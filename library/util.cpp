@@ -210,7 +210,7 @@ HttpDateUtils::parse(const char *value) {
     const char *formats[] = { "%a, %d %b %Y %T GMT", "%A, %d-%b-%y %T GMT", "%a %b %d %T %Y" };
     for (unsigned int i = 0; i < sizeof(formats)/sizeof(const char*); ++i) {
         if (NULL != strptime(value, formats[i], &ts)) {
-            return mktime(&ts) - timezone;
+            return timegm(&ts); // mktime(&ts) - timezone;
         }
     }
     return static_cast<time_t>(0);
