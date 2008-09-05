@@ -16,9 +16,9 @@ class LuaBlock : public Block {
 public:
     LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~LuaBlock();
-    virtual void parse();
 
 protected:
+    virtual void postParse();
 
     void reportError(const char *message, lua_State *lua);
     virtual XmlDocHelper call(Context *ctx, boost::any &) throw (std::exception);

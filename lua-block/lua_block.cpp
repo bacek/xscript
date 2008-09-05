@@ -42,7 +42,7 @@ struct LuaState {
     boost::mutex    mutex;
 
     LuaState(lua_State * l) : lua(l) {
-    };
+    }
 };
 
 typedef boost::shared_ptr<LuaState> LuaSharedContext;
@@ -70,9 +70,7 @@ LuaBlock::~LuaBlock() {
 }
 
 void
-LuaBlock::parse() {
-
-    Block::parse();
+LuaBlock::postParse() {
 
     xmlNodePtr ptr = NULL;
     for (ptr = node()->children; NULL != ptr; ptr = ptr->next) {
@@ -100,7 +98,7 @@ LuaBlock::parse() {
 extern "C" void luaHook(lua_State * lua, lua_Debug *ar) {
     (void)lua;
     (void)ar;
-};
+}
 
 
 /**
@@ -146,7 +144,7 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
     lua_pop(lua, 2); // pop xscript, __metatable
 
     log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-};
+}
 
 
 static int luaPrint (lua_State *lua) {
