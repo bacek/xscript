@@ -51,8 +51,9 @@ case "$1" in
 
 	for C in `seq 10 -1 1`; do
 	    ps `cat $PID_DIR/xscript.pid` >>/dev/null 2>&1 || break
-	    echo -n " $C"
 	    sleep 1
+	    ps `cat $PID_DIR/xscript.pid` >>/dev/null 2>&1 || break
+	    echo -n " $C"
 	    /sbin/start-stop-daemon --quiet --signal 9 --stop --pidfile $PID_DIR/xscript.pid 2>&1 >/dev/null
 	    if [ $C -eq 1 ]; then
 		echo " Cannot stop xscript"
