@@ -39,15 +39,28 @@ case "$1" in
 	    echo Warning:$PID_DIR/xscript.pid not found
 	continue
 	fi
+	
 	#Kill fastcgistart
-
 	/sbin/start-stop-daemon --quiet --stop --signal 0 --pidfile $PID_DIR/xscriptstart.pid 2>&1 >/dev/null
 	/sbin/start-stop-daemon --quiet --signal 15 --stop --pidfile $PID_DIR/xscriptstart.pid 2>&1 >/dev/null
 	/sbin/start-stop-daemon --quiet --signal 9 --stop --pidfile $PID_DIR/xscriptstart.pid 2>&1 >/dev/null
 	#Kill daemon
 	/sbin/start-stop-daemon --quiet --stop --signal 0 --pidfile $PID_DIR/xscript.pid 2>&1 >/dev/null
 	/sbin/start-stop-daemon --quiet --signal 15 --stop --pidfile $PID_DIR/xscript.pid 2>&1 >/dev/null
-	/sbin/start-stop-daemon --quiet --signal 9 --stop --pidfile $PID_DIR/xscript.pid 2>&1 >/dev/null
+	/sbin/start-stop-daemon --quiet --signal 2 --stop --pidfile $PID_DIR/xscript.pid 2>&1 >/dev/null
+
+	for C in `seq 10 -1 1`; do
+	    ps `cat $PID_DIR/xscript.pid` >>/dev/null 2>&1 || break
+	    echo -n " $C"
+	    sleep 1
+	    /sbin/start-stop-daemon --quiet --signal 9 --stop --pidfile $PID_DIR/xscript.pid 2>&1 >/dev/null
+	    if [ $C -eq 1 ]; then
+		echo " Cannot stop xscript"
+		rm $PID_DIR/xscript.pid  >/dev/null
+		exit
+	    fi
+	done
+	
 	#Rm pid files
 	rm $PID_DIR/xscript.pid  >/dev/null
         ;;
