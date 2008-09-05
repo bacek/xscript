@@ -7,8 +7,8 @@ CPPFLAGS = -D_GNU_SOURCE
 #CXXFLAGS = -I/usr/include/stlport
 LDFLAGS = -lm
 
-ACLOCAL = aclocal-1.9
-AUTOMAKE = automake-1.9
+ACLOCAL = /usr/bin/aclocal-1.9
+AUTOMAKE = /usr/bin/automake-1.9
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CXXFLAGS += -g -O0
@@ -18,11 +18,7 @@ endif
 
 autogen:
 	dh_testdir
-	$(ACLOCAL) -I config 
-	libtoolize --force 
-	autoheader 
-	$(AUTOMAKE) --add-missing
-	autoconf
+	AUTOMAKE=$(AUTOMAKE) ACLOCAL=$(ACLOCAL) ./autogen.sh
 	
 configure: configure-stamp
 
@@ -35,7 +31,7 @@ configure-stamp:
 
 build: build-stamp
 
-build-stamp: configure-stamp 
+build-stamp: autogen configure-stamp 
 	dh_testdir
 	$(MAKE) release=1
 	touch build-stamp
