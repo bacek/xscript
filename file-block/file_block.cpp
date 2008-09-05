@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include <sys/stat.h>
 
 #include <boost/bind.hpp>

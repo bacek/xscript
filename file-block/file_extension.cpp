@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include <xscript/xml_util.h>
 #include "file_extension.h"
 #include "file_block.h"
