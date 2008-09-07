@@ -54,6 +54,7 @@ void registerCookieMethods(lua_State *lua) {
     luaL_openlib(lua, NULL, cookielib_m, 0);
     luaL_openlib(lua, tableName, cookielib_f, 0);
 
+    lua_pop(lua, 2); // pop 
 
     log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     return;
