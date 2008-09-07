@@ -47,25 +47,6 @@ struct LuaState {
 
 typedef boost::shared_ptr<LuaState> LuaSharedContext;
 
-/**
- * Error func. Just push message back to stack.
- * TODO: Looks like this function is redundant
- */
-static int
-luaReportError(lua_State * lua) {
-
-    if (lua_isstring(lua, 1)) {
-        const char *val = lua_tostring(lua, 1);
-        lua_pushstring(lua, val);
-    }
-    else {
-        lua_pushstring(lua, "failed to report lua error: can not get error message");
-    }
-
-    return 1;
-}
-
-
 LuaBlock::LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), code_(NULL) {
 }
@@ -305,15 +286,11 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     // Lock interpreter during processing.
     boost::mutex::scoped_lock lock(lua_context->mutex);
 
-    // Top function of stack is error reporting function.
-    log()->debug("%s, Install error handler. stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-    lua_pushcfunction(lua, &luaReportError);
-
     if (LUA_ERRMEM == luaL_loadstring(lua, code_)) {
         throw std::bad_alloc();
     }
 
-    int res = lua_pcall(lua, 0, LUA_MULTRET, 1);
+    int res = lua_pcall(lua, 0, LUA_MULTRET, 0);
     if (res != 0) {
         std::string msg(lua_tostring(lua, -1));
         lua_pop(lua, 1);
