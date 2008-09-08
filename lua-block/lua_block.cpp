@@ -294,7 +294,7 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     if (res != 0) {
         std::string msg(lua_tostring(lua, -1));
         lua_pop(lua, 1);
-        log()->error("%s, Lua block failed: %s", BOOST_CURRENT_FUNCTION, msg.c_str());
+        // Just throw exception. It will be logger by Block.
         throw std::runtime_error(msg);
     }
 
