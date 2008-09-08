@@ -93,31 +93,36 @@ Block::stripRootElement(Context* ctx) const {
 
 void
 Block::parse() {
+    try {
+        XmlUtils::visitAttributes(node_->properties,
+            boost::bind(&Block::property, this, _1, _2));
 
-    XmlUtils::visitAttributes(node_->properties,
-                              boost::bind(&Block::property, this, _1, _2));
-
-    ParamFactory *pf = ParamFactory::instance();
-    for (xmlNodePtr node = node_->children; NULL != node; node = node->next) {
-        if (node->name) {
-            if (xpathNode(node)) {
-                parseXPathNode(node);
-            }
-            else if (paramNode(node)) {
-                parseParamNode(node, pf);
-            }
-            else if (xsltParamNode(node)) {
-                parseXsltParamNode(node, pf);
-            }
-            else if (XML_ELEMENT_NODE == node->type) {
-                const char *value = XmlUtils::value(node);
-                if (value) {
-                    property((const char*) node->name, value);
+        ParamFactory *pf = ParamFactory::instance();
+        for (xmlNodePtr node = node_->children; NULL != node; node = node->next) {
+            if (node->name) {
+                if (xpathNode(node)) {
+                    parseXPathNode(node);
+                }
+                else if (paramNode(node)) {
+                    parseParamNode(node, pf);
+                }
+                else if (xsltParamNode(node)) {
+                    parseXsltParamNode(node, pf);
+                }
+                else if (XML_ELEMENT_NODE == node->type) {
+                    const char *value = XmlUtils::value(node);
+                    if (value) {
+                        property((const char*) node->name, value);
+                    }
                 }
             }
         }
+        postParse();
     }
-    postParse();
+    catch(const std::exception &e) {
+        log()->error("%s, parse failed for '%s': %s", name(), owner()->name().c_str(), e.what());;
+        throw;
+    }
 }
 
 std::string
@@ -162,7 +167,7 @@ Block::invokeInternal(Context *ctx) {
         return errorResult(e.what_node());
     }
     catch (const std::exception &e) {
-        log()->error("%s, caught exception: %s. Owner: %s", BOOST_CURRENT_FUNCTION, e.what(), owner()->name().c_str());
+        log()->error("%s, caught exception in '%s': %s. Owner: %s", BOOST_CURRENT_FUNCTION, name(), e.what(), owner()->name().c_str());
         return errorResult(e.what());
     }
 }
