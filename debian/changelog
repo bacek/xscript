@@ -1,3 +1,16 @@
+xscript (5.33-3) unstable; urgency=low
+
+  * content-length added to proxy skipped headers
+  * Pass XML_PARSE_NOCDATA to parsing stylesheet (bacek work)
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 10 Sep 2008 11:01:43 +0400
+
+xscript (5.33-2) unstable; urgency=low
+
+  * debug info added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue,  9 Sep 2008 11:13:23 +0400
+
 xscript (5.33-1) unstable; urgency=low
 
   * lua-block error reporting fixed

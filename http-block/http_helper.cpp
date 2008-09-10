@@ -42,6 +42,7 @@ const ProxyHeadersHelper::StrSize ProxyHeadersHelper::skipped_headers[] = {
     { "accept-encoding", sizeof("accept-encoding") },
     { "keep-alive", sizeof("keep-alive") },
     { "connection", sizeof("connection") },
+    { "content-length", sizeof("content-length") },
 };
 
 bool
