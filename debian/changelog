@@ -1,3 +1,9 @@
+xscript (5.33-4) unstable; urgency=low
+
+  * substring xslt extension added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 10 Sep 2008 16:04:50 +0400
+
 xscript (5.33-3) unstable; urgency=low
 
   * content-length added to proxy skipped headers

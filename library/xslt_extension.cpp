@@ -651,6 +651,111 @@ xscriptXsltNl2br(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltSubstring(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:substring");
+    if (ctxt == NULL) {
+        return;
+    }
+    if (nargs < 2 || nargs > 3) {
+        log()->error("xscript:substring: bad param count");
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    const char* str = params.str(0);
+    if (NULL == str) {
+        log()->error("xscript:substring: bad first parameter");
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    if (*str == '\0') {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    const char* str2 = params.str(1);
+    if (NULL == str2) {
+        log()->error("xscript:substring: bad second parameter");
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    long int pos_begin, pos_end;
+    try {
+        pos_begin = boost::lexical_cast<long int>(str2);
+    }
+    catch (const boost::bad_lexical_cast&) {
+        log()->error("xscript:substring: incorrect pos format");
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    if (nargs == 3) {
+        str2 = params.str(2);
+        if (NULL == str2) {
+            log()->error("xscript:substring: bad third parameter");
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
+        long int length;
+        try {
+            length = boost::lexical_cast<long int>(str2);
+        }
+        catch (const boost::bad_lexical_cast&) {
+            log()->error("xscript:substring: incorrect length format");
+            length = 0;
+        }
+
+        if (length <= 0) {
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
+        pos_end = pos_begin + length;
+    }
+    else {
+        pos_end = std::numeric_limits<long int>::max();
+    }
+
+    if (pos_begin < 1) {
+        pos_begin = 1;
+    }
+
+    try {
+        const char* end = str + strlen(str);
+        const char* str_begin = end;
+        const char* str_end = end;
+        long int char_passed = 1;
+        while (str < end) {
+            if (char_passed == pos_begin) {
+                str_begin = str;
+            }
+            else if (char_passed == pos_end) {
+                str_end = str;
+                break;
+            }
+
+            ++char_passed;
+            str = StringUtils::nextUTF8(str);
+        }
+
+        if (str > end) {
+            throw std::runtime_error("incorrect UTF8 data");
+        }
+
+        std::string result(str_begin, str_end);
+        valuePush(ctxt, xmlXPathNewCString(result.c_str()));
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript::substring]: %s", e.what());
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
 xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
     (void)comp;
     if (tctx == NULL) {
@@ -752,6 +857,7 @@ XsltExtensions::XsltExtensions() {
     XsltFunctionRegisterer("md5", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltMD5);
     XsltFunctionRegisterer("wbr", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltWbr);
     XsltFunctionRegisterer("nl2br", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltNl2br);
+    XsltFunctionRegisterer("substring", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSubstring);
 
     XsltFunctionRegisterer("sanitize", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSanitize);
 
