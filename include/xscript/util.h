@@ -3,6 +3,7 @@
 
 #include <sys/time.h>
 #include <ctime>
+#include <map>
 #include <string>
 #include <vector>
 #include <iosfwd>
@@ -38,6 +39,29 @@ public:
 
 private:
     XmlNodeHelper node_;
+};
+
+class InvokeError : public UnboundRuntimeError {
+public:
+    InvokeError(const std::string &error) : UnboundRuntimeError(error) {}
+
+    InvokeError(const std::string &error, const std::string &name, const std::string &value) :
+        UnboundRuntimeError(error) {
+        info_.insert(std::make_pair(name, value));
+    }
+
+    InvokeError(const std::string &error,
+                const std::map<std::string, std::string> &info) :
+      UnboundRuntimeError(error), info_(info) {}
+
+    virtual ~InvokeError() throw () {}
+
+    virtual const std::map<std::string, std::string>& what_info() const throw() {
+        return info_;
+    }
+
+private:
+    std::map<std::string, std::string> info_;
 };
 
 class Encoder;

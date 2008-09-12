@@ -295,7 +295,7 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
         std::string msg(lua_tostring(lua, -1));
         lua_pop(lua, 1);
         // Just throw exception. It will be logger by Block.
-        throw std::runtime_error(msg);
+        throw InvokeError(msg);
     }
 
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));

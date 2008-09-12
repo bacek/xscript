@@ -72,7 +72,7 @@ public:
     virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc);
 
     XmlDocHelper errorResult(const char *error) const;
-    XmlDocHelper errorResult(xmlNodePtr error_node) const;
+    XmlDocHelper errorResult(const char *error, const std::map<std::string, std::string> &attr) const;
 
     Logger * log() const {
         return extension_->getLogger();
@@ -104,8 +104,6 @@ protected:
     inline const std::vector<XPathExpr>& xpath() const {
         return xpath_;
     }
-
-    XmlDocHelper errorResult(const char *error, xmlNodePtr error_node) const;
 
 private:
     const Extension *extension_;

@@ -11,6 +11,7 @@
 #include <xscript/logger.h>
 #include <xscript/request_data.h>
 #include <xscript/script.h>
+#include <xscript/util.h>
 #include <xscript/xml.h>
 #include <xscript/param.h>
 #include <xscript/profiler.h>
@@ -62,12 +63,12 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     const std::vector<Param*> &p = params();
 
     if (p.size() < 1 || p.size() > 2) {
-        throw std::logic_error("file-block: bad arity");
+        throw std::logic_error("bad arity");
     }
 
     std::string filename = p[0]->asString(ctx);
     if (filename.empty()) {
-        throw std::runtime_error("Empty path in file block");
+        throw InvokeError("empty path", "file", filename);
     }
     std::string file = fullName(filename);
 
@@ -119,7 +120,7 @@ FileBlock::loadFile(const std::string& file_name, Context *ctx) {
     XmlUtils::throwUnless(NULL != doc.get());
 
     if (processXInclude_) {
-        XmlUtils::throwUnless( xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT) >= 0);
+        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT) >= 0);
     }
     return doc;
 }
@@ -134,13 +135,12 @@ FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
     unsigned int depth = 0;
     while (tmp_ctx) {
         if (file_name == tmp_ctx->script()->name()) {
-            throw std::runtime_error(std::string("Self-recursive invocation: ") + file_name);
+            throw InvokeError("self-recursive invocation", "file", file_name);
         }
 
         ++depth;
         if (depth > FileExtension::max_invoke_depth_) {
-            throw std::runtime_error(std::string("Too much recursive invocation depth. Max is ") +
-                                     boost::lexical_cast<std::string>(FileExtension::max_invoke_depth_));
+            throw InvokeError("too much recursive invocation depth", "file", file_name);
         }
 
         tmp_ctx = tmp_ctx->parentContext();

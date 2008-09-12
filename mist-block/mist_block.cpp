@@ -88,7 +88,7 @@ MistBlock::setStateLong(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (2 != p.size()) {
-        throw std::logic_error("setStateLong: bad arity");
+        throw InvokeError("bad arity");
     }
     State* state = ctx->state();
     std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
@@ -114,7 +114,7 @@ MistBlock::setStateString(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (2 != p.size()) {
-        throw std::logic_error("setStateString: bad arity");
+        throw InvokeError("bad arity");
     }
 
     State* state = ctx->state();
@@ -134,7 +134,7 @@ MistBlock::setStateDouble(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (2 != p.size()) {
-        throw std::logic_error("setStateDouble: bad arity");
+        throw InvokeError("bad arity");
     }
     State* state = ctx->state();
     std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
@@ -160,7 +160,7 @@ MistBlock::setStateLongLong(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (2 != p.size()) {
-        throw std::logic_error("setStateLongLong: bad arity");
+        throw InvokeError("bad arity");
     }
     State* state = ctx->state();
     std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
@@ -186,7 +186,7 @@ MistBlock::setStateRandom(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (3 != p.size()) {
-        throw std::logic_error("setStateRandom: bad arity");
+        throw InvokeError("bad arity");
     }
     std::string n = p[0]->asString(ctx);
 
@@ -227,7 +227,7 @@ MistBlock::setStateDefined(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (2 != p.size()) {
-        throw std::logic_error("setStateDefined: bad arity");
+        throw InvokeError("bad arity");
     }
 
     std::string n = p[0]->asString(ctx);
@@ -259,7 +259,7 @@ MistBlock::setStateUrlencode(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (2 != p.size() && 3 != p.size()) {
-        throw std::logic_error("setStateUrlencode: bad arity");
+        throw InvokeError("bad arity");
     }
 
     State* state = ctx->state();
@@ -286,7 +286,7 @@ MistBlock::setStateUrldecode(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (2 != p.size() && 3 != p.size()) {
-        throw std::logic_error("setStateUrldecode: bad arity");
+        throw InvokeError("bad arity");
     }
 
     State* state = ctx->state();
@@ -313,7 +313,7 @@ MistBlock::setStateByKeys(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (4 != p.size()) {
-        throw std::logic_error("setStateByKey: arity error");
+        throw InvokeError("bad arity");
     }
 
     State* state = ctx->state();
@@ -360,7 +360,7 @@ MistBlock::setStateByDate(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (1 != p.size()) {
-        throw std::logic_error("setStateByDate: arity error");
+        throw InvokeError("bad arity");
     }
 
     State* state = ctx->state();
@@ -410,7 +410,7 @@ MistBlock::setStateByQuery(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (2 != p.size()) {
-        throw std::logic_error("setStateByQuery: arity error");
+        throw InvokeError("bad arity");
     }
 
     std::string prefix = p[0]->asString(ctx);
@@ -430,7 +430,7 @@ MistBlock::echoQuery(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (2 != p.size()) {
-        throw std::logic_error("echoQuery: arity error");
+        throw InvokeError("bad arity");
     }
 
     std::string prefix = p[0]->asString(ctx);
@@ -448,7 +448,7 @@ MistBlock::setStateByRequest(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (1 != p.size()) {
-        throw std::logic_error("setStateByRequest: arity error");
+        throw InvokeError("bad arity");
     }
 
     std::string prefix = p[0]->asString(ctx);
@@ -467,7 +467,7 @@ MistBlock::setStateByRequestUrlencoded(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (p.size() < 1 || p.size() > 2) {
-        throw std::logic_error("setStateByRequestUrlencoded: arity error");
+        throw InvokeError("bad arity");
     }
 
     std::string prefix = p[0]->asString(ctx);
@@ -494,7 +494,7 @@ MistBlock::echoRequest(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (1 != p.size()) {
-        throw std::logic_error("echoRequest: arity error");
+        throw InvokeError("bad arity");;
     }
 
     std::string prefix = p[0]->asString(ctx);
@@ -511,7 +511,7 @@ MistBlock::setStateByHeaders(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (1 != p.size()) {
-        throw std::logic_error("setStateByHeaders: arity error");
+        throw InvokeError("bad arity");
     }
 
     std::string prefix = p[0]->asString(ctx);
@@ -530,7 +530,7 @@ MistBlock::echoHeaders(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (1 != p.size()) {
-        throw std::logic_error("echoHeaders: arity error");
+        throw InvokeError("bad arity");
     }
 
     std::string prefix = p[0]->asString(ctx);
@@ -547,7 +547,7 @@ MistBlock::setStateByCookies(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (1 != p.size()) {
-        throw std::logic_error("setStateByCookies: arity error");
+        throw InvokeError("bad arity");
     }
 
     std::string prefix = p[0]->asString(ctx);
@@ -566,7 +566,7 @@ MistBlock::echoCookies(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (1 != p.size()) {
-        throw std::logic_error("echoCookies: arity error");
+        throw InvokeError("bad arity");
     }
 
     std::string prefix = p[0]->asString(ctx);
@@ -583,7 +583,7 @@ MistBlock::setStateByProtocol(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (1 != p.size()) {
-        throw std::logic_error("setStateByProtocol: arity error");
+        throw InvokeError("bad arity");
     }
 
     std::string prefix = p[0]->asString(ctx);
@@ -602,7 +602,7 @@ MistBlock::echoProtocol(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (1 != p.size()) {
-        throw std::logic_error("echoProtocol: arity error");
+        throw InvokeError("bad arity");
     }
 
     std::string prefix = p[0]->asString(ctx);
@@ -619,7 +619,7 @@ MistBlock::setStateJoinString(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (3 != p.size()) {
-        throw std::logic_error("setStateJoinString: bad arity");
+        throw InvokeError("bad arity");
     }
 
     std::string n = p[0]->asString(ctx);
@@ -663,7 +663,7 @@ MistBlock::setStateSplitString(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (3 != p.size()) {
-        throw std::logic_error("setStateSplitString: bad arity");
+        throw InvokeError("bad arity");
     }
 
     std::string prefix = p[0]->asString(ctx);
@@ -701,7 +701,7 @@ MistBlock::setStateConcatString(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (p.size() < 3) {
-        throw std::logic_error("setStateConcatString: bad arity");
+        throw InvokeError("bad arity");
     }
 
     std::string n = p[0]->asString(ctx), val;
@@ -726,7 +726,7 @@ MistBlock::dropState(Context *ctx) {
     std::string prefix;
     const std::vector<Param*> &p = params();
     if (p.size() > 1) {
-        throw std::logic_error("dropState: bad arity");
+        throw InvokeError("bad arity");
     }
     if (1 == p.size()) {
         prefix = p[0]->asString(ctx);
@@ -771,7 +771,7 @@ MistBlock::attachStylesheet(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (1 != p.size()) {
-        throw std::logic_error("attachStylesheet: bad arity");
+        throw InvokeError("bad arity");
     }
     std::string name = p[0]->asString(ctx);
     ctx->xsltName(name);
@@ -789,7 +789,7 @@ MistBlock::location(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (1 != p.size()) {
-        throw std::logic_error("location: bad arity");
+        throw InvokeError("bad arity");
     }
     std::string location = p[0]->asString(ctx);
     ctx->response()->setStatus(302);
@@ -807,7 +807,7 @@ MistBlock::setStatus(Context *ctx) {
 
     const std::vector<Param*> &p = params();
     if (1 != p.size()) {
-        throw std::logic_error("setStatus: bad arity");
+        throw InvokeError("bad arity");
     }
 
     std::string val = p[0]->asString(ctx);
@@ -816,7 +816,7 @@ MistBlock::setStatus(Context *ctx) {
         status = boost::lexical_cast<boost::int32_t>(val);
     }
     catch (const boost::bad_lexical_cast &e) {
-        throw std::runtime_error("setStatus: unknown status");
+        throw std::runtime_error("unknown status");
     }
 
     ctx->response()->setStatus(status);

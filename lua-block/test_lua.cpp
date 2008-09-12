@@ -325,7 +325,7 @@ LuaTest::testBadType() {
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/error"));
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/xscript_invoke_failed"));
 }
 
 void
@@ -340,7 +340,7 @@ LuaTest::testBadArgCount() {
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/error"));
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/xscript_invoke_failed"));
 }
 
 void

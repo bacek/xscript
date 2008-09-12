@@ -25,6 +25,7 @@
 #include "xscript/request.h"
 #include "xscript/state.h"
 #include "xscript/profiler.h"
+#include "xscript/util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -96,7 +97,7 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
     const std::vector<Param*> &p = params();
 
     if (p.size() < 1 || p.size() > 2) {
-        throw std::logic_error("getHttp: bad arity");
+        throw InvokeError("bad arity");
     }
 
     std::string url = p[0]->asString(ctx);
@@ -107,13 +108,13 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
         url = url.substr(sizeof("file://") - 1);
         fs::path file_path(url);
         if (!fs::exists(file_path)) {
-            throw std::runtime_error(url + " is not exist");
+            throw InvokeError("url is not exist", "url", url);
         }
 
         std::string native_path = file_path.native_file_string();
         XmlDocHelper doc = XmlDocHelper(xmlParseFile(native_path.c_str()));
         if (doc.get() == NULL) {
-            throw std::runtime_error(std::string("Got empty document. URL: ") + url);
+            throw InvokeError("got empty document", "url", url);
         }
 
         if (tagged()) {
@@ -170,7 +171,7 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
     const std::vector<Param*> &p = params();
 
     if (p.size() < 2 || p.size() > 3) {
-        throw std::logic_error("postHttp: bad arity");
+        throw InvokeError("bad arity");
     }
 
     const Tag* tag = boost::any_cast<Tag>(&a);
@@ -202,7 +203,7 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
     const std::vector<Param*> &p = params();
 
     if (p.size() != 1 || tagged()) {
-        throw std::logic_error("getByState: bad arity");
+        throw InvokeError("bad arity");
     }
 
     std::string url = p[0]->asString(ctx);
@@ -240,7 +241,7 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
     const std::vector<Param*> &p = params();
 
     if (p.size() != 1 || tagged()) {
-        throw std::logic_error("getByRequest: bad arity");
+        throw InvokeError("bad arity");
     }
 
     std::string url = p[0]->asString(ctx);
@@ -266,7 +267,8 @@ HttpBlock::response(const HttpHelper &helper) const {
     const std::string& str = helper.content();
     if (helper.isXml()) {
         return XmlDocHelper(xmlReadMemory(str.c_str(), str.size(), "",
-                                          charset_.empty() ? NULL : charset_.c_str(), XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT));
+                                          charset_.empty() ? NULL : charset_.c_str(),
+                                          XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT));
     }
     else if (helper.contentType() == "text/plain") {
         std::string res;
@@ -276,9 +278,10 @@ HttpBlock::response(const HttpHelper &helper) const {
     else if (helper.contentType() == "text/html") {
         std::string data = XmlUtils::sanitize(str);
         return XmlDocHelper(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
-                                          helper.charset().c_str(), XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT));
+                                          helper.charset().c_str(),
+                                          XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT));
     }
-    throw std::runtime_error(std::string("format is not recognized: ") + helper.contentType());
+    throw InvokeError("format is not recognized: " + helper.contentType(), "url", helper.url());
 }
 
 void

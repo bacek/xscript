@@ -1,3 +1,9 @@
+xscript (5.34-0) unstable; urgency=low
+
+  * error handling changed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 11 Sep 2008 18:29:12 +0400
+
 xscript (5.33-4) unstable; urgency=low
 
   * substring xslt extension added

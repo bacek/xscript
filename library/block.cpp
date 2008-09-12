@@ -130,7 +130,6 @@ Block::fullName(const std::string &name) const {
     return owner()->fullName(name);
 }
 
-
 XmlDocHelper
 Block::invoke(Context *ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
@@ -148,9 +147,7 @@ Block::invoke(Context *ctx) {
 
 XmlDocHelper
 Block::invokeInternal(Context *ctx) {
-
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
-
     try {
         boost::any a;
         XmlDocHelper doc(call(ctx, a));
@@ -162,12 +159,14 @@ Block::invokeInternal(Context *ctx) {
 
         return processResponse(ctx, doc, a);
     }
-    catch (const XmlNodeRuntimeError &e) {
-        log()->error("%s, caught exception: %s. Owner: %s", BOOST_CURRENT_FUNCTION, e.what(), owner()->name().c_str());
-        return errorResult(e.what_node());
+    catch (const InvokeError &e) {
+        log()->error("%s, caught exception in '%s': %s. Owner: %s",
+            BOOST_CURRENT_FUNCTION, name(), e.what(), owner()->name().c_str());
+        return errorResult(e.what(), e.what_info());
     }
     catch (const std::exception &e) {
-        log()->error("%s, caught exception in '%s': %s. Owner: %s", BOOST_CURRENT_FUNCTION, name(), e.what(), owner()->name().c_str());
+        log()->error("%s, caught exception in '%s': %s. Owner: %s",
+            BOOST_CURRENT_FUNCTION, name(), e.what(), owner()->name().c_str());
         return errorResult(e.what());
     }
 }
@@ -231,36 +230,36 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
 }
 
 XmlDocHelper
-Block::errorResult(const char *error, xmlNodePtr error_node) const {
+Block::errorResult(const char *error, const std::map<std::string, std::string> &attr) const {
 
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
 
-    xmlNodePtr node = xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "error", (const xmlChar*)error);
+    xmlNodePtr node = xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"xscript_invoke_failed", NULL);
     XmlUtils::throwUnless(NULL != node);
 
-    xmlNewProp(node, (const xmlChar*) "method", (const xmlChar*) method_.c_str());
-    xmlDocSetRootElement(doc.get(), node);
+    xmlNewProp(node, (const xmlChar*)"name", (const xmlChar*)name());
+    xmlNewProp(node, (const xmlChar*)"id", (const xmlChar*)id().c_str());
+    xmlNewProp(node, (const xmlChar*)"method", (const xmlChar*)method().c_str());
 
-    if (error_node != NULL) {
-        xmlNodePtr result_node = error_node->children;
-        while (result_node) {
-            xmlAddChild(node, xmlCopyNode(result_node, 1));
-            result_node = result_node->next;
-        }
+    for(std::map<std::string, std::string>::const_iterator it = attr.begin();
+        it != attr.end();
+        ++it) {
+        xmlNewProp(node, (const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str());
     }
+
+    if (error != NULL) {
+        xmlNewProp(node, (const xmlChar*)"error", (const xmlChar*)error);
+    }
+
+    xmlDocSetRootElement(doc.get(), node);
 
     return doc;
 }
 
 XmlDocHelper
-Block::errorResult(xmlNodePtr error_node) const {
-    return errorResult(NULL, error_node);
-}
-
-XmlDocHelper
 Block::errorResult(const char *error) const {
-    return errorResult(error, NULL);
+    return errorResult(error, std::map<std::string, std::string>());
 }
 
 bool

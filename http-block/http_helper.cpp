@@ -244,13 +244,11 @@ HttpHelper::checkStatus() const {
 
 void
 HttpHelper::processStatusError(const std::string& error_msg) const {
-
-    XmlNodeHelper error_node(xmlNewNode(NULL, (const xmlChar*)"http-check-status-error"));
     std::string status = boost::lexical_cast<std::string>(status_);
-    xmlNewChild(error_node.get(), NULL, (const xmlChar*)"message", (const xmlChar*)error_msg.c_str());
-    xmlNewChild(error_node.get(), NULL, (const xmlChar*)"status", (const xmlChar*)status.c_str());
-    xmlNewChild(error_node.get(), NULL, (const xmlChar*)"url", (const xmlChar*)url().c_str());
-    throw XmlNodeRuntimeError(error_msg + ". URL: " + url(), error_node);
+    std::map<std::string, std::string> error_info;
+    error_info.insert(std::make_pair("status", status));
+    error_info.insert(std::make_pair("url", url()));
+    throw InvokeError(error_msg, error_info);
 }
 
 Tag
@@ -310,10 +308,7 @@ void
 HttpHelper::check(CURLcode code) const {
     if (CURLE_OK != code) {
         std::string error_msg(curl_easy_strerror(code));
-        XmlNodeHelper error_node(xmlNewNode(NULL, (const xmlChar*)"http-error"));
-        xmlNewChild(error_node.get(), NULL, (const xmlChar*)"message", (const xmlChar*)error_msg.c_str());
-        xmlNewChild(error_node.get(), NULL, (const xmlChar*)"url", (const xmlChar*)url().c_str());
-        throw XmlNodeRuntimeError(error_msg + ". URL: " + url(), error_node);
+        throw InvokeError(error_msg, "url", url());
     }
 }
 
