@@ -16,7 +16,6 @@
 #include "xscript/encoder.h"
 
 #include "internal/algorithm.h"
-#include "details/error_reporter.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -138,9 +137,20 @@ StringUtils::parse(const Range &range, std::vector<NamedValue> &v, Encoder *enco
     }
 }
 
+const char*
+wrapStrerror(int, const char *value) {
+    return value;
+}
+
+const char*
+wrapStrerror(const char *value, const char *) {
+    return value;
+}
+
 void
 StringUtils::report(const char *what, int error, std::ostream &stream) {
-    makeErrorReporter(&strerror_r).report(what, error, stream);
+    char buffer[256];
+    stream << what << wrapStrerror(strerror_r(error, buffer, sizeof(buffer)), buffer);
 }
 
 std::string
