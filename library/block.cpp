@@ -242,7 +242,7 @@ Block::errorResult(const char *error, const InvokeError::InfoMapType &error_info
         xmlNewProp(node, (const xmlChar*)"error", (const xmlChar*)error);
     }
 
-    xmlNewProp(node, (const xmlChar*)"name", (const xmlChar*)name());
+    xmlNewProp(node, (const xmlChar*)"block", (const xmlChar*)name());
     if (!method().empty()) {
         xmlNewProp(node, (const xmlChar*)"method", (const xmlChar*)method().c_str());
     }
