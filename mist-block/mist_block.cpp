@@ -193,28 +193,40 @@ MistBlock::setStateRandom(Context *ctx) {
     State* state = ctx->state();
     state->checkName(n);
 
-    boost::int32_t lo = 0;
+    boost::int64_t lo;
     try {
-        lo = boost::lexical_cast<boost::int32_t>(p[1]->asString(ctx));
+        lo = boost::lexical_cast<boost::int64_t>(p[1]->asString(ctx));
     }
     catch (const boost::bad_lexical_cast &e) {
-        lo = 0;
+        throw std::invalid_argument("bad param: lo");
     }
 
-    boost::int32_t hi = 0;
+    boost::int64_t hi;
     try {
-        hi = boost::lexical_cast<boost::int32_t>(p[2]->asString(ctx));
+        hi = boost::lexical_cast<boost::int64_t>(p[2]->asString(ctx));
     }
     catch (const boost::bad_lexical_cast &e) {
-        hi = 0;
+        throw std::invalid_argument("bad param: hi");
     }
 
-    if (0 == hi) {
-        hi = std::numeric_limits<boost::int32_t>::max();
+    if (hi <= lo) {
+        throw std::invalid_argument("bad range");
     }
-    boost::int32_t val = static_cast<boost::int32_t>(random() % (hi - lo) + lo);
 
-    state->setLong(n, val);
+    boost::int64_t val = lo;
+    if (RAND_MAX < hi - lo) {
+        log()->warn("too wide range in mist:set_state_random");
+        hi = lo + RAND_MAX;
+        val += random();
+    }
+    else if (RAND_MAX == hi - lo) {
+        val += random();
+    }
+    else {
+        val += random() % (hi - lo);
+    }
+
+    state->setLongLong(n, val);
 
     StateNode node("random", n.c_str(), boost::lexical_cast<std::string>(val).c_str());
     return node.releaseNode();
