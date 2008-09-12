@@ -48,22 +48,15 @@ public:
     typedef std::vector<std::pair<std::string, std::string> > InfoMapType;
 
     InvokeError(const std::string &error) : UnboundRuntimeError(error) {}
+    InvokeError(const std::string &error, const std::string &name, const std::string &value);
 
-    InvokeError(const std::string &error, const std::string &name, const std::string &value) :
-        UnboundRuntimeError(error) {
-        add(name, value);
-    }
-
-    void add(const std::string &name, const std::string &value) {
-        info_.push_back(std::make_pair(name, value));
-    }
+    void add(const std::string &name, const std::string &value);
+    void addEscaped(const std::string &name, const std::string &value);
 
     virtual ~InvokeError() throw () {}
-
     virtual const InfoMapType& what_info() const throw() {
         return info_;
     }
-    
 private:
     InfoMapType info_;
 };

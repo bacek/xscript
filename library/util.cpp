@@ -11,6 +11,7 @@
 #include <openssl/md5.h>
 
 #include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/logger.h"
 #include "xscript/encoder.h"
 
@@ -307,5 +308,21 @@ void terminate(int status, const char* message, bool write_log) {
     }
     exit(status);
 }
+
+InvokeError::InvokeError(const std::string &error, const std::string &name, const std::string &value) :
+    UnboundRuntimeError(error) {
+    addEscaped(name, value);
+}
+
+void
+InvokeError::add(const std::string &name, const std::string &value) {
+    info_.push_back(std::make_pair(name, value));
+}
+
+void
+InvokeError::addEscaped(const std::string &name, const std::string &value) {
+    info_.push_back(std::make_pair(name, XmlUtils::escape(value)));
+}
+
 
 } // namespace xscript

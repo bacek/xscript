@@ -247,7 +247,7 @@ HttpHelper::processStatusError(const std::string& error_msg) const {
     std::string status = boost::lexical_cast<std::string>(status_);
     InvokeError error(error_msg);
     error.add("status", status);
-    error.add("url", url());
+    error.addEscaped("url", url());
     throw error;
 }
 
