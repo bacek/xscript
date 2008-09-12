@@ -14,6 +14,8 @@
 #include <xscript/range.h>
 #include <xscript/xml_helpers.h>
 
+#include <xscript/logger.h>
+
 namespace xscript {
 
 class UnboundRuntimeError : public std::exception {
@@ -43,25 +45,27 @@ private:
 
 class InvokeError : public UnboundRuntimeError {
 public:
+    typedef std::vector<std::pair<std::string, std::string> > InfoMapType;
+
     InvokeError(const std::string &error) : UnboundRuntimeError(error) {}
 
     InvokeError(const std::string &error, const std::string &name, const std::string &value) :
         UnboundRuntimeError(error) {
-        info_.insert(std::make_pair(name, value));
+        add(name, value);
     }
 
-    InvokeError(const std::string &error,
-                const std::map<std::string, std::string> &info) :
-      UnboundRuntimeError(error), info_(info) {}
+    void add(const std::string &name, const std::string &value) {
+        info_.push_back(std::make_pair(name, value));
+    }
 
     virtual ~InvokeError() throw () {}
 
-    virtual const std::map<std::string, std::string>& what_info() const throw() {
+    virtual const InfoMapType& what_info() const throw() {
         return info_;
     }
-
+    
 private:
-    std::map<std::string, std::string> info_;
+    InfoMapType info_;
 };
 
 class Encoder;

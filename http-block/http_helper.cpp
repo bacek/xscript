@@ -245,10 +245,10 @@ HttpHelper::checkStatus() const {
 void
 HttpHelper::processStatusError(const std::string& error_msg) const {
     std::string status = boost::lexical_cast<std::string>(status_);
-    std::map<std::string, std::string> error_info;
-    error_info.insert(std::make_pair("status", status));
-    error_info.insert(std::make_pair("url", url()));
-    throw InvokeError(error_msg, error_info);
+    InvokeError error(error_msg);
+    error.add("status", status);
+    error.add("url", url());
+    throw error;
 }
 
 Tag

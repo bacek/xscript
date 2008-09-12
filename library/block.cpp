@@ -230,13 +230,17 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
 }
 
 XmlDocHelper
-Block::errorResult(const char *error, const std::map<std::string, std::string> &error_info) const {
+Block::errorResult(const char *error, const InvokeError::InfoMapType &error_info) const {
 
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
 
     xmlNodePtr node = xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"xscript_invoke_failed", NULL);
     XmlUtils::throwUnless(NULL != node);
+
+    if (error != NULL) {
+        xmlNewProp(node, (const xmlChar*)"error", (const xmlChar*)error);
+    }
 
     xmlNewProp(node, (const xmlChar*)"name", (const xmlChar*)name());
     if (!method().empty()) {
@@ -247,16 +251,12 @@ Block::errorResult(const char *error, const std::map<std::string, std::string> &
         xmlNewProp(node, (const xmlChar*)"id", (const xmlChar*)id().c_str());
     }
 
-    for(std::map<std::string, std::string>::const_iterator it = error_info.begin();
+    for(InvokeError::InfoMapType::const_iterator it = error_info.begin();
         it != error_info.end();
         ++it) {
         if (!it->second.empty()) {
             xmlNewProp(node, (const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str());
         }
-    }
-
-    if (error != NULL) {
-        xmlNewProp(node, (const xmlChar*)"error", (const xmlChar*)error);
     }
 
     xmlDocSetRootElement(doc.get(), node);
@@ -266,7 +266,7 @@ Block::errorResult(const char *error, const std::map<std::string, std::string> &
 
 XmlDocHelper
 Block::errorResult(const char *error) const {
-    return errorResult(error, std::map<std::string, std::string>());
+    return errorResult(error, InvokeError::InfoMapType());
 }
 
 bool

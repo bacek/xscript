@@ -9,6 +9,7 @@
 #include <xscript/object.h>
 #include <xscript/xml_helpers.h>
 #include <xscript/extension.h>
+#include <xscript/util.h>
 
 namespace xscript {
 
@@ -72,7 +73,7 @@ public:
     virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc);
 
     XmlDocHelper errorResult(const char *error) const;
-    XmlDocHelper errorResult(const char *error, const std::map<std::string, std::string> &error_info) const;
+    XmlDocHelper errorResult(const char *error, const InvokeError::InfoMapType &error_info) const;
 
     Logger * log() const {
         return extension_->getLogger();
