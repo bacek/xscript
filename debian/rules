@@ -16,9 +16,12 @@ else
 	CXXFLAGS += -O2
 endif
 
-autogen:
+autogen: autogen-stamp
+
+autogen-stamp:
 	dh_testdir
 	AUTOMAKE=$(AUTOMAKE) ACLOCAL=$(ACLOCAL) ./autogen.sh
+	touch autogen-stamp
 	
 configure: configure-stamp
 
@@ -31,7 +34,7 @@ configure-stamp:
 
 build: build-stamp
 
-build-stamp: autogen configure-stamp 
+build-stamp: autogen-stamp configure-stamp 
 	dh_testdir
 	$(MAKE) release=1
 	touch build-stamp
