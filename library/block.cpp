@@ -239,7 +239,6 @@ Block::errorResult(const char *error, const std::map<std::string, std::string> &
     XmlUtils::throwUnless(NULL != node);
 
     xmlNewProp(node, (const xmlChar*)"name", (const xmlChar*)name());
-    xmlNewProp(node, (const xmlChar*)"id", (const xmlChar*)id().c_str());
     xmlNewProp(node, (const xmlChar*)"method", (const xmlChar*)method().c_str());
 
     for(std::map<std::string, std::string>::const_iterator it = attr.begin();
