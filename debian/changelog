@@ -1,8 +1,9 @@
 xscript (5.34-0) unstable; urgency=low
 
   * error handling changed
+  * set_state_random fixed (lmovsesjan work)
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 11 Sep 2008 18:29:12 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 12 Sep 2008 17:41:44 +0400
 
 xscript (5.33-4) unstable; urgency=low
 
