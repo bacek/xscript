@@ -230,7 +230,7 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
 }
 
 XmlDocHelper
-Block::errorResult(const char *error, const std::map<std::string, std::string> &attr) const {
+Block::errorResult(const char *error, const std::map<std::string, std::string> &error_info) const {
 
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
@@ -239,12 +239,20 @@ Block::errorResult(const char *error, const std::map<std::string, std::string> &
     XmlUtils::throwUnless(NULL != node);
 
     xmlNewProp(node, (const xmlChar*)"name", (const xmlChar*)name());
-    xmlNewProp(node, (const xmlChar*)"method", (const xmlChar*)method().c_str());
+    if (!method().empty()) {
+        xmlNewProp(node, (const xmlChar*)"method", (const xmlChar*)method().c_str());
+    }
 
-    for(std::map<std::string, std::string>::const_iterator it = attr.begin();
-        it != attr.end();
+    if (!id().empty()) {
+        xmlNewProp(node, (const xmlChar*)"id", (const xmlChar*)id().c_str());
+    }
+
+    for(std::map<std::string, std::string>::const_iterator it = error_info.begin();
+        it != error_info.end();
         ++it) {
-        xmlNewProp(node, (const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str());
+        if (!it->second.empty()) {
+            xmlNewProp(node, (const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str());
+        }
     }
 
     if (error != NULL) {

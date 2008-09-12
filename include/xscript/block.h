@@ -72,7 +72,7 @@ public:
     virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc);
 
     XmlDocHelper errorResult(const char *error) const;
-    XmlDocHelper errorResult(const char *error, const std::map<std::string, std::string> &attr) const;
+    XmlDocHelper errorResult(const char *error, const std::map<std::string, std::string> &error_info) const;
 
     Logger * log() const {
         return extension_->getLogger();
