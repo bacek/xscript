@@ -208,16 +208,31 @@ StateTest::testIs() {
     std::auto_ptr<State> state(new State());
     CPPUNIT_ASSERT(state.get());
 
+    // Non existed State evaluated to false
     CPPUNIT_ASSERT_EQUAL(false, state->is("guard"));
+
+    // Boolean state evaluated to self.
     state->setBool("guard", false);
     CPPUNIT_ASSERT_EQUAL(false, state->is("guard"));
     state->setBool("guard", true);
     CPPUNIT_ASSERT_EQUAL(true, state->is("guard"));
 
-    // This tests are failing now. Just curios what is expected behaviour.
-    // state->setString("guard", "foo");
-    // CPPUNIT_ASSERT_EQUAL(false, state->is("guard"));
-    // state->setLong("guard", 2128506);
-    // CPPUNIT_ASSERT_EQUAL(false, state->is("guard"));
+    // Empty string evaluated to false.
+    state->setString("guard", "");
+    CPPUNIT_ASSERT_EQUAL(false, state->is("guard"));
+    // Non empty string evaluated to true.
+    state->setString("guard", "foo");
+    CPPUNIT_ASSERT_EQUAL(true, state->is("guard"));
+
+    // Sanity check. "0" is true. A bit confusing, heh...
+    state->setString("guard", "0");
+    CPPUNIT_ASSERT_EQUAL(true, state->is("guard"));
+   
+    // Zero numeric evaluated to false
+    state->setLong("guard", 0);
+    CPPUNIT_ASSERT_EQUAL(false, state->is("guard"));
+    // Non zero to true
+    state->setLong("guard", 42);
+    CPPUNIT_ASSERT_EQUAL(true, state->is("guard"));
 }
 
