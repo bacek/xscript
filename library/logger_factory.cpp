@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include <iostream>
 #include <boost/bind.hpp>
 #include <vector>

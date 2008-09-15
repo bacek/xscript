@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_DETAILS_DEFAULT_AVERAGE_COUNTER_FACTORY_H
 #define _XSCRIPT_DETAILS_DEFAULT_AVERAGE_COUNTER_FACTORY_H
 
-
-#include "settings.h"
 #include "xscript/average_counter.h"
 
 namespace xscript

@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_INTERNAL_LRUCACHE_H_
 #define _XSCRIPT_INTERNAL_LRUCACHE_H_
 
-#include "settings.h"
-
 #include <stdexcept>
 
 namespace xscript {

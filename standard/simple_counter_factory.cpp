@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include "internal/simple_counter_impl.h"
 
 namespace xscript

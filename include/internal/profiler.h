@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_INTERNAL_PROFILER_H_
 #define _XSCRIPT_INTERNAL_PROFILER_H_
 
-#include "settings.h"
-
 #include <stdexcept>
 
 #include <iomanip>

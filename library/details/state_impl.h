@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_STATE_IMPL_H_
 #define _XSCRIPT_STATE_IMPL_H_
 
-#include "settings.h"
-
 #include <map>
 #include <string>
 #include <vector>

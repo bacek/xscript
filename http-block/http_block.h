@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_HTTP_BLOCK_H_
 #define _XSCRIPT_HTTP_BLOCK_H_
 
-#include "settings.h"
-
 #include <iosfwd>
 
 #include "xscript/block.h"

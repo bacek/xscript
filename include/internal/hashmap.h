@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_INTERNAL_HASH_MAP_H_
 #define _XSCRIPT_INTERNAL_HASH_MAP_H_
 
-#include "settings.h"
-
 #if defined(HAVE_STLPORT_HASHMAP)
 #define HAVE_HASHMAP 1
 #include <hash_map>

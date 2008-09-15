@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_INTERNAL_HASH_H_
 #define _XSCRIPT_INTERNAL_HASH_H_
 
-#include "settings.h"
-
 #if defined(HAVE_GNUCXX_HASHMAP) || defined(HAVE_EXT_HASH_MAP)|| defined(HAVE_STLPORT_HASHMAP)
 
 #include <string>

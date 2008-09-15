@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_LUA_METHOD_MAP_H_
 #define _XSCRIPT_LUA_METHOD_MAP_H_
 
-#include "settings.h"
-
 #include <string>
 #include <sstream>
 #include <typeinfo>

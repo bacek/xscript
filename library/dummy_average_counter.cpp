@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include "details/dummy_average_counter.h"
 
 namespace xscript {

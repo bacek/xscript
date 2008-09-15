@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_MIST_BLOCK_H_
 #define _XSCRIPT_MIST_BLOCK_H_
 
-#include "settings.h"
-
 #include "xscript/block.h"
 #include "xscript/extension.h"
 

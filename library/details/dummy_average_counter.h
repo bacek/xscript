@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_DETAILS_DUMMY_AVERAGE_COUNTER_H
 #define _XSCRIPT_DETAILS_DUMMY_AVERAGE_COUNTER_H
 
-
-#include "settings.h"
 #include "xscript/average_counter.h"
 
 namespace xscript {

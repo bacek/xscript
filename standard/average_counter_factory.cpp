@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include "internal/average_counter_impl.h"
 
 namespace xscript

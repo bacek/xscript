@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include "details/default_average_counter_factory.h"
 #include "internal/average_counter_impl.h"
 #include "details/dummy_average_counter.h"

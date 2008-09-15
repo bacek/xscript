@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include <boost/lexical_cast.hpp>
 #include "details/dummy_cache_counter.h"
 

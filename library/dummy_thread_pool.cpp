@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include "details/dummy_thread_pool.h"
 
 #ifdef HAVE_DMALLOC_H

@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 

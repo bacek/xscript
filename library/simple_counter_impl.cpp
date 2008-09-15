@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include <boost/lexical_cast.hpp>
 #include "internal/simple_counter_impl.h"
 

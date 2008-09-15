@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_DETAILS_EXTENSION_LIST_H_
 #define _XSCRIPT_DETAILS_EXTENSION_LIST_H_
 
-#include "settings.h"
-
 #include <memory>
 #include <vector>
 #include <algorithm>

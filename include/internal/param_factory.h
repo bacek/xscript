@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_DETAILS_PARAM_FACTORY_H_
 #define _XSCRIPT_DETAILS_PARAM_FACTORY_H_
 
-#include "settings.h"
-
 #include <string>
 #include <memory>
 #include <boost/utility.hpp>

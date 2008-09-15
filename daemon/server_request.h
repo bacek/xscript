@@ -8,8 +8,6 @@
 #include <boost/cstdint.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include "settings.h"
-
 #include "xscript/functors.h"
 #include "xscript/range.h"
 #include "xscript/cookie.h"

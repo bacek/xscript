@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include <limits>
 #include <boost/lexical_cast.hpp>
 #include "internal/average_counter_impl.h"

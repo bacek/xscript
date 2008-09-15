@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_DETAILS_DEFAULT_REQUEST_RESPONSE_H
 #define _XSCRIPT_DETAILS_DEFAULT_REQUEST_RESPONSE_H
 
-#include "settings.h"
-
 #include <map>
 #include <vector>
 #include <libxml/tree.h>

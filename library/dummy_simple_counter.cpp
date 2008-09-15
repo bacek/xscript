@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include "details/dummy_simple_counter.h"
 
 namespace xscript {

@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include <boost/current_function.hpp>
 #include "xscript/logger.h"
 #include "xscript/cookie.h"

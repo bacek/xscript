@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include "xscript/stat_builder.h"
 #include "xscript/counter_base.h"
 #include "xscript/xml_util.h"

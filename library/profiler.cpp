@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include "xscript/profiler.h"
 #include "xscript/logger.h"
 

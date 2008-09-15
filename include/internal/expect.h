@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_EXPECT_H_
 #define _XSCRIPT_EXPECT_H_
 
-#include "settings.h"
-
 #ifdef HAVE_BUILTIN_EXPECT
 
 #define XSCRIPT_LIKELY(expr) __builtin_expect(expr, 1)

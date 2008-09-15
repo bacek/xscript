@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_DETAILS_PHOENIX_SINGLETON_H_
 #define _XSCRIPT_DETAILS_PHOENIX_SINGLETON_H_
 
-#include "settings.h"
-
 #include <memory>
 #include <cerrno>
 #include <cassert>

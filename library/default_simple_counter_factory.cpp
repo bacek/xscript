@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include "details/default_simple_counter_factory.h"
 #include "internal/simple_counter_impl.h"
 #include "details/dummy_simple_counter.h"

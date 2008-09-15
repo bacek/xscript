@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include <iostream>
 
 #include "internal/default_request_response.h"

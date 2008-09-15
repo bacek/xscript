@@ -2,7 +2,6 @@
 #define _XSCRIPT_LOADER_H_
 
 #include "xscript/extension.h"
-#include "settings.h"
 
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>

@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_DETAILS_WRITER_IMPL_H_
 #define _XSCRIPT_DETAILS_WRITER_IMPL_H_
 
-#include "settings.h"
-
 #include <boost/shared_ptr.hpp>
 
 #include "xscript/writer.h"

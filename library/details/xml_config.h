@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_DETAILS_XML_CONFIG_H_
 #define _XSCRIPT_DETAILS_XML_CONFIG_H_
 
-#include "settings.h"
-
 #include <string>
 #include <boost/regex.hpp>
 

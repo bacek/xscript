@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_INTERNAL_ALGORITHM_H_
 #define _XSCRIPT_INTERNAL_ALGORITHM_H_
 
-#include "settings.h"
-
 #include <cstring>
 
 #include "xscript/range.h"
