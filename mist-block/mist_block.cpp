@@ -214,12 +214,12 @@ MistBlock::setStateRandom(Context *ctx) {
     }
 
     boost::int64_t val = lo;
-    if (RAND_MAX < hi - lo) {
+    if (static_cast<boost::int64_t>(RAND_MAX) + 1 < hi - lo) {
         log()->warn("too wide range in mist:set_state_random");
         hi = lo + RAND_MAX;
         val += random();
     }
-    else if (RAND_MAX == hi - lo) {
+    else if (static_cast<boost::int64_t>(RAND_MAX) + 1 == hi - lo) {
         val += random();
     }
     else {
