@@ -54,7 +54,8 @@ public:
     void addEscaped(const std::string &name, const std::string &value);
 
     virtual ~InvokeError() throw () {}
-    virtual const InfoMapType& what_info() const throw() {
+    virtual std::string what_info() const throw();
+    virtual const InfoMapType& info() const throw() {
         return info_;
     }
 private:

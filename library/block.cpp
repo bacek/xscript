@@ -160,9 +160,11 @@ Block::invokeInternal(Context *ctx) {
         return processResponse(ctx, doc, a);
     }
     catch (const InvokeError &e) {
-        log()->error("%s, caught exception in '%s': %s. Owner: %s",
-            BOOST_CURRENT_FUNCTION, name(), e.what(), owner()->name().c_str());
-        return errorResult(e.what(), e.what_info());
+        std::stringstream stream;
+        stream << BOOST_CURRENT_FUNCTION << ", caught exception in " << name() << ": " << e.what_info();
+        stream << "Owner: " << owner()->name();
+        log()->error("%s", stream.str().c_str());
+        return errorResult(e.what(), e.info());
     }
     catch (const std::exception &e) {
         log()->error("%s, caught exception in '%s': %s. Owner: %s",

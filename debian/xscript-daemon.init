@@ -37,6 +37,11 @@ case "$1" in
 	if ! [ -s $PID_DIR/xscript.pid ]
 	then
 	    echo Warning:$PID_DIR/xscript.pid not found
+	    start_pid=`ps ax |egrep '/usr/bin/xscriptstart.sh '$THIS'$' |grep -v grep |awk '{ print  $1 }'`
+	    if [ "$start_pid" != "" ]; then
+		kill -9 $start_pid
+	    fi
+	    exit
 	continue
 	fi
 	

@@ -334,5 +334,19 @@ InvokeError::addEscaped(const std::string &name, const std::string &value) {
     info_.push_back(std::make_pair(name, XmlUtils::escape(value)));
 }
 
+std::string
+InvokeError::what_info() const throw() {
+
+    std::stringstream stream;
+    stream << what() << ". ";
+
+    for(InvokeError::InfoMapType::const_iterator it = info_.begin();
+        it != info_.end();
+        ++it) {
+        stream << it->first << ": " << it->second << ". ";
+    }
+
+    return stream.str();
+}
 
 } // namespace xscript

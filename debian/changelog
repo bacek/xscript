@@ -1,3 +1,9 @@
+xscript (5.35-0) unstable; urgency=low
+
+  * error handling updated
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 15 Sep 2008 17:08:42 +0400
+
 xscript (5.34-0) unstable; urgency=low
 
   * error handling changed
