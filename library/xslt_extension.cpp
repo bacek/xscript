@@ -689,7 +689,6 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
         log()->error("%s: empty result", BOOST_CURRENT_FUNCTION);
     }
     catch (const std::exception &e) {
-        log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
         XmlDocHelper doc = block->errorResult(e.what());
         if (NULL != doc.get()) {
             xmlAddChild(tctx->insert, xmlCopyNode(xmlDocGetRootElement(doc.get()), 1));

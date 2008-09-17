@@ -105,7 +105,6 @@ TaggedBlock::invokeInternal(Context *ctx) {
         return Block::invokeInternal(ctx);
     }
     catch (const std::exception &e) {
-        log()->error("caught exception while invoking tagged block: %s", e.what());
         return errorResult(e.what());
     }
 }
