@@ -1,3 +1,9 @@
+xscript (5.35-3) unstable; urgency=low
+
+  * xslt error reporting fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 18 Sep 2008 14:44:17 +0400
+
 xscript (5.35-2) unstable; urgency=low
 
   * another one update of error logging

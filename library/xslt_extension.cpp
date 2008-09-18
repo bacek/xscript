@@ -36,6 +36,9 @@ public:
     XsltExtensions();
 };
 
+void reportXsltError(const std::string &error, xmlXPathParserContextPtr ctxt);
+void reportXsltError(const std::string &error, const Context *ctx);
+
 static XsltExtensions xsltExtensions;
 
 extern "C" void
@@ -46,7 +49,7 @@ xscriptXsltHttpHeaderOut(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
     if (2 != nargs) {
-        log()->error("bad param count in xscript:http-header-out");
+        reportXsltError("xscript:http-header-out: bad param count", ctxt);
         return;
     }
 
@@ -56,7 +59,7 @@ xscriptXsltHttpHeaderOut(xmlXPathParserContextPtr ctxt, int nargs) {
     const char* value = params.str(1);
 
     if (NULL == name || NULL == value) {
-        log()->error("bad parameter in xscript:http-header-out");
+        reportXsltError("xscript:http-header-out: bad parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -67,13 +70,14 @@ xscriptXsltHttpHeaderOut(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
+    Context *ctx = NULL;
     try {
-        Context *ctx = Stylesheet::getContext(tctx);
+        ctx = Stylesheet::getContext(tctx);
         Response *response = ctx->response();
         response->setHeader(name, value);
     }
     catch (const std::exception &e) {
-        log()->error("caught exception in [xscript:http-header-out]: %s", e.what());
+        reportXsltError("xscript:http-header-out: caught exception: " + std::string(e.what()), ctx);
         ctxt->error = XPATH_EXPR_ERROR;
     }
     xmlXPathReturnEmptyNodeSet(ctxt);
@@ -87,7 +91,7 @@ xscriptXsltHttpRedirect(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
     if (1 != nargs) {
-        log()->error("xscript:http-redirect: bad param count");
+        reportXsltError("xscript:http-redirect: bad param count", ctxt);
         return;
     }
 
@@ -95,25 +99,25 @@ xscriptXsltHttpRedirect(xmlXPathParserContextPtr ctxt, int nargs) {
 
     const char* str = params.str(0);
     if (NULL == str) {
-        log()->error("xscript:http-redirect: bad parameter");
+        reportXsltError("xscript:http-redirect: bad parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
 
     xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
     if (NULL == tctx) {
-
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
 
+    Context *ctx = NULL;
     try {
-        Context* ctx = Stylesheet::getContext(tctx);
+        ctx = Stylesheet::getContext(tctx);
         Response* response = ctx->response();
         response->redirectToPath(str);
     }
     catch (const std::exception &e) {
-        log()->error("caught exception in [xscript:http-redirect]: %s", e.what());
+        reportXsltError("xscript:http-redirect: caught exception: " + std::string(e.what()), ctx);
         ctxt->error = XPATH_EXPR_ERROR;
     }
     xmlXPathReturnEmptyNodeSet(ctxt);
@@ -127,7 +131,7 @@ xscriptXsltSetHttpStatus(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
     if (1 != nargs) {
-        log()->error("xscript:set-http-status: bad param count");
+        reportXsltError("xscript:set-http-status: bad param count", ctxt);
         return;
     }
 
@@ -135,7 +139,7 @@ xscriptXsltSetHttpStatus(xmlXPathParserContextPtr ctxt, int nargs) {
 
     const char* str = params.str(0);
     if (NULL == str) {
-        log()->error("xscript:set-http-status: bad parameter");
+        reportXsltError("xscript:set-http-status: bad parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -146,15 +150,16 @@ xscriptXsltSetHttpStatus(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
+    Context* ctx = NULL;
     try {
         unsigned short status = boost::lexical_cast<unsigned short>(str);
-        Context* ctx = Stylesheet::getContext(tctx);
+        ctx = Stylesheet::getContext(tctx);
         Response *response = ctx->response();
         response->setStatus(status);
         xmlXPathReturnNumber(ctxt, status);
     }
     catch (const std::exception &e) {
-        log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
+        reportXsltError("xscript:set-http-status: caught exception: " + std::string(e.what()), ctx);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -168,7 +173,7 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
     if (1 != nargs) {
-        log()->error("xscript:get-state-arg: bad param count");
+        reportXsltError("xscript:get-state-arg: bad param count", ctxt);
         return;
     }
 
@@ -176,7 +181,7 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
 
     const char* str = params.str(0);
     if (NULL == str) {
-        log()->error("xscript:get-state-arg: bad parameter");
+        reportXsltError("xscript:get-state-arg: bad parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -187,13 +192,14 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
+    Context *ctx = NULL;
     try {
-        Context *ctx = Stylesheet::getContext(tctx);
+        ctx = Stylesheet::getContext(tctx);
         State* state = ctx->state();
         valuePush(ctxt, xmlXPathNewCString(state->asString(str).c_str()));
     }
     catch (const std::exception &e) {
-        log()->error("caught exception in [xscript:get-state-arg]: %s", e.what());
+        reportXsltError("xscript:get-state-arg: caught exception: " + std::string(e.what()), ctx);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -207,7 +213,7 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
     if (1 != nargs) {
-        log()->error("xscript:sanitize: bad param count");
+        reportXsltError("xscript:sanitize: bad param count", ctxt);
         return;
     }
 
@@ -215,7 +221,7 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
 
     const char* str = params.str(0);
     if (NULL == str) {
-        log()->error("xscript:sanitize: bad parameter");
+        reportXsltError("xscript:sanitize: bad parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -226,6 +232,7 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
+    Context* ctx = NULL;
     try {
         std::stringstream stream;
         stream << "<sanitized>" << XmlUtils::sanitize(str) << "</sanitized>" << std::endl;
@@ -236,14 +243,14 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
 
         xmlNodePtr node = xmlCopyNode(xmlDocGetRootElement(doc.get()), 1);
 
-        Context* ctx = Stylesheet::getContext(tctx);
+        ctx = Stylesheet::getContext(tctx);
         ctx->addNode(node);
 
         xmlNodeSetPtr ret = xmlXPathNodeSetCreate(node);
         xmlXPathReturnNodeSet(ctxt, ret);
     }
     catch (const std::exception &e) {
-        log()->error("caught exception in [xscript::sanitize]: %s", e.what());
+        reportXsltError("xscript:sanitize: caught exception: " + std::string(e.what()), ctx);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -257,7 +264,7 @@ xscriptXsltUrlencode(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
     if (2 != nargs) {
-        log()->error("xscript:urlencode: bad param count");
+        reportXsltError("xscript:urlencode: bad param count", ctxt);
         return;
     }
 
@@ -266,7 +273,7 @@ xscriptXsltUrlencode(xmlXPathParserContextPtr ctxt, int nargs) {
     const char* value = params.str(1);
     const char* encoding = params.str(0);
     if (NULL == value || NULL == encoding) {
-        log()->error("xscript:urlencode: bad parameter");
+        reportXsltError("xscript:urlencode: bad parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -278,7 +285,7 @@ xscriptXsltUrlencode(xmlXPathParserContextPtr ctxt, int nargs) {
         valuePush(ctxt, xmlXPathNewCString(StringUtils::urlencode(encoded).c_str()));
     }
     catch (const std::exception &e) {
-        log()->error("caught exception in [xscript:urlencode]: %s", e.what());
+        reportXsltError("xscript:urlencode: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -292,7 +299,7 @@ xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
     if (2 != nargs) {
-        log()->error("xscript:urldecode: bad param count");
+        reportXsltError("xscript:urldecode: bad param count", ctxt);
         return;
     }
 
@@ -302,7 +309,7 @@ xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
     const char* encoding = params.str(0);
 
     if (NULL == value || NULL == encoding) {
-        log()->error("xscript:urldecode: bad parameter");
+        reportXsltError("xscript:urldecode: bad parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -315,7 +322,7 @@ xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
         valuePush(ctxt, xmlXPathNewCString(decoded.c_str()));
     }
     catch (const std::exception &e) {
-        log()->error("caught exception in [xscript:urldecode]: %s", e.what());
+        reportXsltError("xscript:urldecode: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -375,7 +382,7 @@ xscriptXsltEsc(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
     if (1 != nargs) {
-        log()->error("xscript:esc: bad param count");
+        reportXsltError("xscript:esc: bad param count", ctxt);
         return;
     }
 
@@ -383,7 +390,7 @@ xscriptXsltEsc(xmlXPathParserContextPtr ctxt, int nargs) {
 
     const char* str = params.str(0);
     if (NULL == str) {
-        log()->error("xscript:esc: bad parameter");
+        reportXsltError("xscript:esc: bad parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -394,7 +401,7 @@ xscriptXsltEsc(xmlXPathParserContextPtr ctxt, int nargs) {
         valuePush(ctxt, xmlXPathNewCString(result.c_str()));
     }
     catch (const std::exception &e) {
-        log()->error("caught exception in [xscript:esc]: %s", e.what());
+        reportXsltError("xscript:esc: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -408,7 +415,7 @@ xscriptXsltJsQuote(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
     if (1 != nargs) {
-        log()->error("xscript:js-quote: bad param count");
+        reportXsltError("xscript:js-quote: bad param count", ctxt);
         return;
     }
 
@@ -416,7 +423,7 @@ xscriptXsltJsQuote(xmlXPathParserContextPtr ctxt, int nargs) {
     const char* str = params.str(0);
 
     if (NULL == str) {
-        log()->error("xscript:js-quote: bad parameter");
+        reportXsltError("xscript:js-quote: bad parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -429,7 +436,7 @@ xscriptXsltJsQuote(xmlXPathParserContextPtr ctxt, int nargs) {
         valuePush(ctxt, xmlXPathNewCString(result.c_str()));
     }
     catch (const std::exception &e) {
-        log()->error("caught exception in [xscript:js-quote]: %s", e.what());
+        reportXsltError("xscript:js-quote: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -443,7 +450,7 @@ xscriptXsltMD5(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
     if (1 != nargs) {
-        log()->error("xscript:md5: bad param count");
+        reportXsltError("xscript:md5: bad param count", ctxt);
         return;
     }
 
@@ -451,7 +458,7 @@ xscriptXsltMD5(xmlXPathParserContextPtr ctxt, int nargs) {
 
     const char* str = params.str(0);
     if (NULL == str) {
-        log()->error("xscript:md5: bad parameter");
+        reportXsltError("xscript:md5: bad parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -461,7 +468,7 @@ xscriptXsltMD5(xmlXPathParserContextPtr ctxt, int nargs) {
         valuePush(ctxt, xmlXPathNewCString(result.c_str()));
     }
     catch (const std::exception &e) {
-        log()->error("caught exception in [xscript:md5]: %s", e.what());
+        reportXsltError("xscript:md5: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -476,7 +483,7 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
     }
 
     if (2 != nargs) {
-        log()->error("xscript:wbr: bad param count");
+        reportXsltError("xscript:wbr: bad param count", ctxt);
         return;
     }
 
@@ -484,7 +491,7 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
 
     const char* str = params.str(0);
     if (NULL == str) {
-        log()->error("xscript:wbr: bad first parameter");
+        reportXsltError("xscript:wbr: bad first parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -496,7 +503,7 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
 
     const char* str2 = params.str(1);
     if (NULL == str2) {
-        log()->error("xscript:wbr: bad second parameter");
+        reportXsltError("xscript:wbr: bad second parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -506,13 +513,13 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
         length = boost::lexical_cast<long int>(str2);
     }
     catch (const boost::bad_lexical_cast&) {
-        log()->error("xscript:wbr: incorrect length format");
+        reportXsltError("xscript:wbr: incorrect length format", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
 
     if (length <= 0) {
-        log()->error("xscript:wbr: incorrect length value");
+        reportXsltError("xscript:wbr: incorrect length value", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -523,8 +530,9 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
+    Context* ctx = NULL;
     try {
-        Context* ctx = Stylesheet::getContext(tctx);
+        ctx = Stylesheet::getContext(tctx);
         XmlNodeSetHelper ret(xmlXPathNodeSetCreate(NULL));
 
         const char* end = str + strlen(str);
@@ -565,7 +573,7 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
         xmlXPathReturnNodeSet(ctxt, ret.release());
     }
     catch (const std::exception &e) {
-        log()->error("caught exception in [xscript::wbr]: %s", e.what());
+        reportXsltError("xscript:wbr: caught exception: " + std::string(e.what()), ctx);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -580,7 +588,7 @@ xscriptXsltNl2br(xmlXPathParserContextPtr ctxt, int nargs) {
     }
 
     if (1 != nargs) {
-        log()->error("xscript:nl2br: bad param count");
+        reportXsltError("xscript:nl2br: bad param count", ctxt);
         return;
     }
 
@@ -588,7 +596,7 @@ xscriptXsltNl2br(xmlXPathParserContextPtr ctxt, int nargs) {
 
     const char* str = params.str(0);
     if (NULL == str) {
-        log()->error("xscript:nl2br: bad first parameter");
+        reportXsltError("xscript:nl2br: bad first parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
@@ -604,8 +612,9 @@ xscriptXsltNl2br(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
+    Context* ctx = NULL;
     try {
-        Context* ctx = Stylesheet::getContext(tctx);
+        ctx = Stylesheet::getContext(tctx);
         XmlNodeSetHelper ret(xmlXPathNodeSetCreate(NULL));
 
         const char* end = str + strlen(str);
@@ -644,7 +653,7 @@ xscriptXsltNl2br(xmlXPathParserContextPtr ctxt, int nargs) {
         xmlXPathReturnNodeSet(ctxt, ret.release());
     }
     catch (const std::exception &e) {
-        log()->error("caught exception in [xscript::nl2br]: %s", e.what());
+        reportXsltError("xscript:nl2br: caught exception: " + std::string(e.what()), ctx);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -657,42 +666,55 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
         log()->error("%s: no transformation context", BOOST_CURRENT_FUNCTION);
         return;
     }
-    if (node == NULL) {
-        log()->error("%s: no current node", BOOST_CURRENT_FUNCTION);
-        return;
-    }
-    if (inst == NULL) {
-        log()->error("%s: no instruction", BOOST_CURRENT_FUNCTION);
-        return;
-    }
-    if (tctx->insert == NULL) {
-        log()->error("%s: no insertion point", BOOST_CURRENT_FUNCTION);
-        return;
-    }
-    Context *ctx = Stylesheet::getContext(tctx);
-    Stylesheet *stylesheet = Stylesheet::getStylesheet(tctx);
-    if (NULL == ctx || NULL == stylesheet) {
-        log()->error("%s: no context or stylesheet", BOOST_CURRENT_FUNCTION);
-        return;
-    }
-    Block *block = stylesheet->block(inst);
-    if (NULL == block) {
-        log()->error("%s: no block found (inst %p)", BOOST_CURRENT_FUNCTION, inst);
-        return;
-    }
+
+    Context *ctx = NULL;
     try {
-        XmlDocHelper doc = block->invoke(ctx);
-        if (NULL != doc.get()) {
-            xmlAddChild(tctx->insert, xmlCopyNode(xmlDocGetRootElement(doc.get()), 1));
+        ctx = Stylesheet::getContext(tctx);
+
+        if (node == NULL) {
+            reportXsltError("xscript:ExtElementBlock: no current node", ctx);
             return;
         }
-        log()->error("%s: empty result", BOOST_CURRENT_FUNCTION);
-    }
-    catch (const std::exception &e) {
-        XmlDocHelper doc = block->errorResult(e.what());
+        if (inst == NULL) {
+            reportXsltError("xscript:ExtElementBlock: no instruction", ctx);
+            return;
+        }
+        if (tctx->insert == NULL) {
+            reportXsltError("xscript:ExtElementBlock: no insertion point", ctx);
+            return;
+        }
+        
+        Stylesheet *stylesheet = Stylesheet::getStylesheet(tctx);
+        if (NULL == ctx || NULL == stylesheet) {
+            reportXsltError("xscript:ExtElementBlock: no context or stylesheet", ctx);
+            return;
+        }
+        Block *block = stylesheet->block(inst);
+        if (NULL == block) {
+            reportXsltError("xscript:ExtElementBlock: no block found", ctx);
+            return;
+        }
+
+        XmlDocHelper doc;
+        try {
+            doc = block->invoke(ctx);
+            if (NULL == doc.get()) {
+                reportXsltError("xscript:ExtElementBlock: empty result", ctx);
+            }
+        }
+        catch (const InvokeError &e) {
+            doc = block->errorResult(e.what(), e.info());
+        }
+        catch (const std::exception &e) {
+            doc = block->errorResult(e.what());
+        }
+
         if (NULL != doc.get()) {
             xmlAddChild(tctx->insert, xmlCopyNode(xmlDocGetRootElement(doc.get()), 1));
         }
+    }
+    catch (const std::exception &e) {
+        reportXsltError("xscript:ExtElementBlock: caught exception: " + std::string(e.what()), ctx);
     }
 }
 
@@ -743,6 +765,36 @@ XsltParamFetcher::clear() {
         xmlFree(*i);
     }
 }
+
+void
+reportXsltError(const std::string &error, xmlXPathParserContextPtr ctxt) {
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+
+    const Context *ctx = NULL;
+    if (NULL != tctx) {
+        try {
+            ctx = Stylesheet::getContext(tctx);
+        }
+        catch(const std::exception &e) {
+            log()->error("caught exception during handling of error: %s. Exception: %s", error.c_str(), e.what());
+            return;
+        }
+    }
+
+    reportXsltError(error, ctx);
+
+}
+
+void
+reportXsltError(const std::string &error, const Context *ctx) {
+    if (NULL == ctx) {
+        log()->error("%s", error.c_str());
+    }
+    else {
+        log()->error("%s. Owner: %s", error.c_str(), ctx->xsltName().c_str());
+    }
+}
+
 
 XsltExtensions::XsltExtensions() {
 
