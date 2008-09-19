@@ -31,7 +31,7 @@ Authorizer::~Authorizer() {
 }
 
 boost::shared_ptr<AuthContext>
-Authorizer::checkAuth(const boost::shared_ptr<Context> &ctx) const {
+Authorizer::checkAuth(const boost::shared_ptr<Context> &ctx) {
     (void)ctx;
     return boost::shared_ptr<AuthContext>(new AuthContext());
 }
@@ -41,6 +41,12 @@ Authorizer::redirectToAuth(const boost::shared_ptr<Context> &ctx, const AuthCont
     (void)ctx;
     (void)auth;
     ctx->response()->redirectToPath("/");
+}
+
+bool
+Authorizer::checkBot(Context *ctx) {
+    (void)ctx;
+    return false;
 }
 
 REGISTER_COMPONENT(Authorizer);

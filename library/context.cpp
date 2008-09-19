@@ -29,8 +29,8 @@
 namespace xscript {
 
 Context::Context(const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData>& data) :
-        stopped_(false), force_no_threaded_(false), request_data_(data),
-        parent_context_(NULL), xslt_name_(script->xsltName()), script_(script), writer_() {
+        stopped_(false), request_data_(data), parent_context_(NULL), xslt_name_(script->xsltName()),
+        script_(script), writer_(), flags_(0) {
     assert(script_.get());
     ExtensionList::instance()->initContext(this);
 }
@@ -181,14 +181,28 @@ Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
     }
 }
 
+bool
+Context::bot() const {
+    boost::mutex::scoped_lock lock(params_mutex_);
+    return flags_ & FLAG_IS_BOT;
+}
+
 void
-Context::forceNoThreaded(bool flag) {
-    force_no_threaded_ = flag;
+Context::bot(bool value) {
+    boost::mutex::scoped_lock lock(params_mutex_);
+    flag(FLAG_IS_BOT, value);
 }
 
 bool
 Context::forceNoThreaded() const {
-    return force_no_threaded_;
+    boost::mutex::scoped_lock lock(params_mutex_);
+    return flags_ & FLAG_FORCE_NO_THREADED;
+}
+
+void
+Context::forceNoThreaded(bool value) {
+    boost::mutex::scoped_lock lock(params_mutex_);
+    flag(FLAG_FORCE_NO_THREADED, value);
 }
 
 void

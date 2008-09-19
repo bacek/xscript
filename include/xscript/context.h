@@ -64,9 +64,6 @@ public:
         return script_;
     }
 
-    void forceNoThreaded(bool flag);
-    bool forceNoThreaded() const;
-
     void parentContext(Context* context);
     Context* parentContext() const;
 
@@ -91,14 +88,22 @@ public:
 
     bool stopped() const;
 
+    bool bot() const;
+    void bot(bool value);
+    bool forceNoThreaded() const;
+    void forceNoThreaded(bool value);
+
     friend class ContextStopper;
 
 private:
     void stop();
 
+    inline void flag(unsigned int type, bool value) {
+        flags_ = value ? (flags_ | type) : (flags_ &= ~type);
+    }
+
 private:
     volatile bool stopped_;
-    bool force_no_threaded_;
     boost::shared_ptr<RequestData> request_data_;
     Context* parent_context_;
     std::string xslt_name_;
@@ -111,8 +116,13 @@ private:
     boost::shared_ptr<AuthContext> auth_;
     std::auto_ptr<DocumentWriter> writer_;
 
+    unsigned int flags_;
+
     std::map<std::string, boost::any> params_;
     mutable boost::mutex params_mutex_, results_mutex_, node_list_mutex_;
+
+    static const unsigned int FLAG_IS_BOT = 1;
+    static const unsigned int FLAG_FORCE_NO_THREADED = 1 << 1;
 };
 
 class ContextStopper {

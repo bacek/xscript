@@ -1,10 +1,11 @@
 #include "settings.h"
 
+#include "xscript/authorizer.h"
+#include "xscript/context.h"
+#include "xscript/logger.h"
 #include "xscript/param.h"
 #include "xscript/request.h"
-#include "xscript/context.h"
 #include "xscript/util.h"
-#include "xscript/logger.h"
 
 #include <boost/lexical_cast.hpp>
 
@@ -33,7 +34,7 @@ ProtocolArgParam::~ProtocolArgParam() {
 
 std::string
 ProtocolArgParam::asString(const Context *ctx) const {
-    Request *req = ctx->request();
+    const Request *req = ctx->request();
     std::string val = StringUtils::tolower(value());
     if (val == "path") {
         return req->getScriptName();
@@ -82,6 +83,9 @@ ProtocolArgParam::asString(const Context *ctx) const {
     }
     else if (val == "content-type") {
         return req->getContentType();
+    }
+    else if (val == "bot") {
+        return Authorizer::instance()->checkBot(const_cast<Context*>(ctx)) ? "yes" : "no";
     }
 
     return defaultValue();

@@ -2,6 +2,8 @@
 
 #include <cassert>
 
+#include "xscript/authorizer.h"
+#include "xscript/context.h"
 #include "xscript/encoder.h"
 #include "xscript/util.h"
 #include "xscript/request.h"
@@ -167,8 +169,9 @@ StateProtocolNode::StateProtocolNode(const std::string& prefix, State* state) :
 }
 
 void
-StateProtocolNode::build(const Request* req) {
+StateProtocolNode::build(Context* ctx) {
 
+    Request* req = ctx->request();
     if (NULL != req) {
         const std::string& script_name = req->getScriptName();
         if (!script_name.empty()) {
@@ -246,6 +249,7 @@ StateProtocolNode::build(const Request* req) {
             setParameter("content-type", type);
         }
     }
+    setParameter("bot", Authorizer::instance()->checkBot(ctx) ? "yes" : "no");
 }
 
 

@@ -602,7 +602,7 @@ MistBlock::setStateByProtocol(Context *ctx) {
     State* state = ctx->state();
 
     StateProtocolNode node(prefix, state);
-    node.build(ctx->request());
+    node.build(ctx);
     return node.releaseNode();
 }
 
@@ -619,7 +619,7 @@ MistBlock::echoProtocol(Context *ctx) {
     std::string prefix = p[0]->asString(ctx);
 
     StateProtocolNode node(prefix, NULL);
-    node.build(ctx->request());
+    node.build(ctx);
     return node.releaseNode();
 }
 

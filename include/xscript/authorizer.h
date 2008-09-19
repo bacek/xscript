@@ -19,8 +19,9 @@ public:
     Authorizer();
     virtual ~Authorizer();
 
-    virtual boost::shared_ptr<AuthContext> checkAuth(const boost::shared_ptr<Context> &ctx) const;
+    virtual boost::shared_ptr<AuthContext> checkAuth(const boost::shared_ptr<Context> &ctx);
     virtual void redirectToAuth(const boost::shared_ptr<Context> &ctx, const AuthContext *auth) const;
+    virtual bool checkBot(Context *ctx);
 };
 
 } // namespace xscript

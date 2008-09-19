@@ -1,3 +1,10 @@
+xscript (5.36-0) unstable; urgency=low
+
+  * bot added to protocol arg
+  * flag bitset added to context
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 19 Sep 2008 16:07:13 +0400
+
 xscript (5.35-3) unstable; urgency=low
 
   * xslt error reporting fixed
