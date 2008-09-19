@@ -90,6 +90,8 @@ public:
 
     bool bot() const;
     void bot(bool value);
+    bool botFetched() const;
+    void botFetched(bool value);
     bool forceNoThreaded() const;
     void forceNoThreaded(bool value);
 
@@ -122,7 +124,8 @@ private:
     mutable boost::mutex params_mutex_, results_mutex_, node_list_mutex_;
 
     static const unsigned int FLAG_IS_BOT = 1;
-    static const unsigned int FLAG_FORCE_NO_THREADED = 1 << 1;
+    static const unsigned int FLAG_BOT_FETCHED = 1 << 1;
+    static const unsigned int FLAG_FORCE_NO_THREADED = 1 << 2;
 };
 
 class ContextStopper {

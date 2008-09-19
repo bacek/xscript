@@ -194,6 +194,18 @@ Context::bot(bool value) {
 }
 
 bool
+Context::botFetched() const {
+    boost::mutex::scoped_lock lock(params_mutex_);
+    return flags_ & FLAG_BOT_FETCHED;
+}
+
+void
+Context::botFetched(bool value) {
+    boost::mutex::scoped_lock lock(params_mutex_);
+    flag(FLAG_BOT_FETCHED, value);
+}
+
+bool
 Context::forceNoThreaded() const {
     boost::mutex::scoped_lock lock(params_mutex_);
     return flags_ & FLAG_FORCE_NO_THREADED;
