@@ -24,7 +24,8 @@ namespace xscript
 
     class ValidatorFactory : public Component<ValidatorFactory> {
     public:
-        friend class ComponentRegisterer<ValidatorFactory>;
+        virtual ~ValidatorFactory();
+        friend class Component<ValidatorFactory>;
 
         /**
          * Create (optional) validator for <param>.
@@ -35,7 +36,6 @@ namespace xscript
 
     private:
         ValidatorFactory();
-        virtual ~ValidatorFactory();
 
         /// Map for storing Validator creators.
         std::map<std::string, ValidatorConstructor*> validator_creators_;
