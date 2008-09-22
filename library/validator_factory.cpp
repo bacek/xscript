@@ -11,5 +11,9 @@ ValidatorFactory::ValidatorFactory() {
 ValidatorFactory::~ValidatorFactory() {
 }
 
+std::auto_ptr<ValidatorBase>
+ValidatorFactory::createValidator(xmlNodePtr node) {
+    return std::auto_ptr<ValidatorBase>();
+}
 
 }
