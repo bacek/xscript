@@ -139,9 +139,6 @@ protected:
 
     virtual void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const;
 
-    void removeUnusedNode(const XmlDocHelper &doc, xmlNodePtr orig);
-    bool removeUnusedNode(xmlNodePtr node, xmlNodePtr newnode, xmlNodePtr orig);
-
     static const unsigned int FLAG_THREADED = 1;
     static const unsigned int FLAG_FORCE_STYLESHEET = 1 << 1;
 
@@ -158,7 +155,7 @@ private:
     std::vector<Block*> blocks_;
     std::string name_;
     unsigned int flags_, expire_time_delta_;
-    xmlNodePtr stylesheet_node_;
+    xmlNodePtr stylesheet_node_; //deprecated
     std::set<xmlNodePtr> xscript_node_set_;
     std::map<std::string, std::string> headers_;
     std::vector<std::string> allow_methods_;

@@ -110,9 +110,6 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
         if (script->forceStylesheet() && needApplyMainStylesheet(ctx->request())) {
             script->applyStylesheet(ctx.get(), doc);
         }
-        else {
-            script->removeUnusedNodes(doc);
-        }
 
         sendHeaders(ctx.get());
 

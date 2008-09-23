@@ -142,7 +142,7 @@ Script::fullName(const std::string &name) const {
 
 void
 Script::removeUnusedNodes(const XmlDocHelper &doc) {
-    removeUnusedNode(doc, stylesheet_node_);
+    (void)doc;
 }
 
 XmlDocHelper
@@ -232,22 +232,27 @@ Script::allowMethods(const char *value) {
 void
 Script::parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes) {
     ExtensionList* elist = ExtensionList::instance();
-    for ( ; node ; node = node->next) {
+    while (NULL != node) {
         if (XML_PI_NODE == node->type) {
             if (xmlStrncasecmp(node->name, (const xmlChar*) "xml-stylesheet", sizeof("xml-stylesheet")) == 0) {
-                if (NULL == stylesheet_node_) {
+                if (xsltName().empty()) {
                     log()->debug("%s, parse stylesheet", name().c_str());
                     parseStylesheetNode(node);
                 }
                 else {
                     log()->debug("%s, skip stylesheet", name().c_str());
                 }
+		xmlNodePtr snode = node;
+		node = node->next;
+                xmlUnlinkNode(snode);
+                xmlFreeNode(snode);
+                continue;
             }
-            continue;
         }
-        if (XML_ELEMENT_NODE == node->type) {
+        else if (XML_ELEMENT_NODE == node->type) {
             if (xmlStrncasecmp(node->name, (const xmlChar*) "xscript", sizeof("xscript")) == 0) {
                 xscript_nodes.push_back(node);
+                node = node->next;
                 continue;
             }
             Extension *ext = elist->extension(node);
@@ -259,12 +264,14 @@ Script::parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes) {
 
                 blocks_.push_back(b.get());
                 b.release();
+                node = node->next;
                 continue;
             }
         }
         if (node->children) {
             parseNode(node->children, xscript_nodes);
         }
+        node = node->next;
     }
 }
 
@@ -364,7 +371,6 @@ Script::parseStylesheetNode(const xmlNodePtr node) {
                         throw std::runtime_error("empty href in stylesheet node");
                     }
                     xsltName(std::string((const char*) begin, (const char*) end));
-                    stylesheet_node_ = node;
                     return;
                 }
             }
@@ -518,38 +524,6 @@ Script::replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) co
     (void)node;
     xmlUnlinkNode(newnode);
     xmlFreeNode(newnode);
-}
-
-void
-Script::removeUnusedNode(const XmlDocHelper &doc, xmlNodePtr orig) {
-    if (NULL == orig) {
-        return;
-    }
-    xmlNodePtr node = doc_->children, newnode = doc->children;
-    while (NULL != node) {
-        if (removeUnusedNode(node, newnode, orig)) {
-            return;
-        }
-        else {
-            newnode = newnode->next;
-            node = node->next;
-        }
-    }
-}
-
-bool
-Script::removeUnusedNode(xmlNodePtr node, xmlNodePtr newnode, xmlNodePtr orig) {
-    if (NULL == node) {
-        return false;
-    }
-    else if (orig == node) {
-        xmlUnlinkNode(newnode);
-        xmlFreeNode(newnode);
-        return true;
-    }
-    else {
-        return removeUnusedNode(node->children, newnode->children, orig);
-    }
 }
 
 } // namespace xscript
