@@ -33,7 +33,15 @@ ValidatorFactory::createValidator(xmlNodePtr node) const {
     if (i == validator_creators_.end())
         throw std::runtime_error("Unknown validator type: " + type);
 
-    return std::auto_ptr<ValidatorBase>((*i->second)(node));
+    return std::auto_ptr<ValidatorBase>(i->second(node));
+}
+
+void 
+ValidatorFactory::registerConstructor(const std::string &type, const ValidatorConstructor &ctor) {
+    ValidatorMap::iterator i = validator_creators_.find(type);
+    if (i != validator_creators_.end()) 
+        throw std::runtime_error("Duplicate validator type: " + type);
+    validator_creators_.insert(i, std::make_pair(type, ctor));
 }
 
 }

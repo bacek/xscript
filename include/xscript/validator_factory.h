@@ -34,11 +34,21 @@ namespace xscript
          */
         std::auto_ptr<ValidatorBase> createValidator(xmlNodePtr node) const;
 
+        /**
+         * Registring validator creator.
+         * \param type Type of validator
+         * \param ctor Validator constructor.
+         * \return void. Throw std::runtime_error in case of type duplicate.
+         */
+        void registerConstructor(
+            const std::string           &type, 
+            const ValidatorConstructor  &ctor);
+
     private:
         ValidatorFactory();
 
         /// Map for storing Validator creators.
-        typedef std::map<std::string, ValidatorConstructor*> ValidatorMap;
+        typedef std::map<std::string, ValidatorConstructor> ValidatorMap;
         ValidatorMap validator_creators_;
     };
 }
