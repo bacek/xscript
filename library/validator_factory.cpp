@@ -13,7 +13,7 @@ ValidatorFactory::~ValidatorFactory() {
 }
 
 std::auto_ptr<ValidatorBase>
-ValidatorFactory::createValidator(xmlNodePtr node) {
+ValidatorFactory::createValidator(xmlNodePtr node) const {
     std::string type;
     xmlAttrPtr attr = node->properties;
     while (attr) {

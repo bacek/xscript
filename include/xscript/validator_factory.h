@@ -32,13 +32,14 @@ namespace xscript
          * \param node <param> xmlNode
          * \return Validator for param. NULL if validator wasn't requested.
          */
-        std::auto_ptr<ValidatorBase> createValidator(xmlNodePtr node);
+        std::auto_ptr<ValidatorBase> createValidator(xmlNodePtr node) const;
 
     private:
         ValidatorFactory();
 
         /// Map for storing Validator creators.
-        std::map<std::string, ValidatorConstructor*> validator_creators_;
+        typedef std::map<std::string, ValidatorConstructor*> ValidatorMap;
+        ValidatorMap validator_creators_;
     };
 }
 
