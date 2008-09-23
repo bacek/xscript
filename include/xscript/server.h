@@ -11,6 +11,7 @@ class Config;
 class RequestData;
 class Request;
 class Context;
+class Script;
 
 class Server : private boost::noncopyable {
 public:
@@ -26,6 +27,9 @@ protected:
     virtual void handleRequest(const boost::shared_ptr<RequestData>& request_data);
     static std::pair<std::string, bool> findScript(const std::string &name);
     void sendHeaders(Context *ctx);
+
+    virtual Context* createContext(
+        const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData> &request_data);
 
 protected:
     Config *config_;

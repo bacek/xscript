@@ -27,7 +27,15 @@ parse(const char *argv, std::multimap<std::string, std::string> &m) {
 
 std::ostream&
 processUsage(std::ostream &os) {
-    os << "usage: xscript-proc --config=file file | url --header=<value> [--header=<value>] --dont-apply-stylesheet --dont-use-remote-call";
+    os << "Usage:\n"
+    " xscript-proc --config=file file | url [options]\n"
+    " options:\n"
+    "  --docroot=<value> | --root-dir=<value>\n"
+    "  --header=<value> [ .. --header=<value> ]\n"
+    "  --profile | --norman\n"
+    "  --stylesheet=<value>\n"
+    "  --dont-apply-stylesheet | --dont-apply-stylesheet=all\n"
+    "  --dont-use-remote-call";
     return os;
 }
 

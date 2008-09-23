@@ -87,7 +87,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
         }
 
         Authorizer *authorizer = Authorizer::instance();
-        boost::shared_ptr<Context> ctx(new Context(script, request_data));
+        boost::shared_ptr<Context> ctx(createContext(script, request_data));
         ContextStopper ctx_stopper(ctx);
         boost::shared_ptr<AuthContext> auth = authorizer->checkAuth(ctx);
         assert(NULL != auth.get());
@@ -144,6 +144,12 @@ bool
 Server::needApplyPerblockStylesheet(Request *request) const {
     (void)request;
     return true;
+}
+
+Context*
+Server::createContext(
+    const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData> &request_data) {
+    return new Context(script, request_data);
 }
 
 std::pair<std::string, bool>
