@@ -242,14 +242,17 @@ Script::parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes) {
                 else {
                     log()->debug("%s, skip stylesheet", name().c_str());
                 }
-		xmlNodePtr snode = node;
-		node = node->next;
+                xmlNodePtr snode = node;
+                node = node->next;
                 xmlUnlinkNode(snode);
                 xmlFreeNode(snode);
-                continue;
             }
+            else {
+                node = node->next;
+            }
+            continue;
         }
-        else if (XML_ELEMENT_NODE == node->type) {
+        if (XML_ELEMENT_NODE == node->type) {
             if (xmlStrncasecmp(node->name, (const xmlChar*) "xscript", sizeof("xscript")) == 0) {
                 xscript_nodes.push_back(node);
                 node = node->next;
