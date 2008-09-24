@@ -16,7 +16,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	control_extension.cpp operation_mode.cpp \
 	dummy_thread_pool.cpp dummy_script_cache.cpp \
 	dummy_stylesheet_cache.cpp \
-	stat_builder.cpp \
+	stat_builder.cpp hostname_param.cpp \
 	status_info.cpp \
 	memory_statistic.cpp \
 	doc_cache.cpp doc_cache_strategy.cpp \

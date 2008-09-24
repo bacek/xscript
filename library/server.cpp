@@ -50,6 +50,12 @@ Server::Server(Config *config) :
         config_(config) {
     config_->startup();
     VirtualHostData::instance()->setServer(this);
+
+    char buf[256];
+    int res = ::gethostname(buf, sizeof(buf));
+    if (0 == res) {
+        hostname_ = std::string(buf);
+    }
 }
 
 Server::~Server() {
@@ -181,6 +187,11 @@ Server::sendHeaders(Context *ctx) {
 
     writer->addHeaders(ctx->response());
     ctx->response()->sendHeaders();
+}
+
+const std::string&
+Server::hostname() const {
+    return hostname_;
 }
 
 extern "C" int

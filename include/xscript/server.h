@@ -22,6 +22,7 @@ public:
     virtual bool needApplyPerblockStylesheet(Request *request) const;
     virtual void run() = 0;
     virtual bool isOffline() const;
+    const std::string& hostname() const;
 
 protected:
     virtual void handleRequest(const boost::shared_ptr<RequestData>& request_data);
@@ -33,6 +34,9 @@ protected:
 
 protected:
     Config *config_;
+
+private:
+    std::string hostname_;
 };
 
 } // namespace xscript
