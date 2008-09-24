@@ -11,6 +11,7 @@ public:
 
     virtual void inc();
     virtual void dec();
+    virtual void max(uint64_t val);
 
     virtual XmlNodeHelper createReport() const;
 };

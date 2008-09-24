@@ -8,6 +8,7 @@ DummySimpleCounter::DummySimpleCounter() { }
 DummySimpleCounter::~DummySimpleCounter() { }
 void DummySimpleCounter::inc() { }
 void DummySimpleCounter::dec() { }
+void DummySimpleCounter::max(uint64_t val) { (void)val; }
 
 
 XmlNodeHelper DummySimpleCounter::createReport() const {

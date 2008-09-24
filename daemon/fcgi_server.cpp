@@ -89,6 +89,7 @@ FCGIServer::run() {
 
     boost::function<void()> f = boost::bind(&FCGIServer::handle, this);
     unsigned short pool_size = config_->as<unsigned short>("/xscript/fastcgi-workers");
+    workerCounter_->max(pool_size);
     for (unsigned short i = 0; i < pool_size; ++i) {
         create_thread(f);
     }

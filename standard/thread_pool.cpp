@@ -66,6 +66,7 @@ StandardThreadPool::init(const Config *config) {
 
     try {
         int nthreads = config->as<unsigned short>("/xscript/pool-workers");
+        counter_->max(nthreads);
         boost::function<void()> f = boost::bind(&StandardThreadPool::handle, this);
         for (int i = 0; i < nthreads; ++i) {
             create_thread(f);

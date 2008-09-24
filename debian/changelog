@@ -1,3 +1,9 @@
+xscript (5.36-3) unstable; urgency=low
+
+  * added max in SimpleCounter and output information about it in status-info
+
+ -- Leonid A. Movsesjan <lmovsesjan@yandex-team.ru>  Wed, 24 Sep 2008 17:56:10 +0400
+
 xscript (5.36-2) unstable; urgency=low
 
   * Hostname param added.

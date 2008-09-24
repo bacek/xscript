@@ -14,12 +14,14 @@ public:
 
     virtual XmlNodeHelper createReport() const;
 
-    void inc();
-    void dec();
+    virtual void inc();
+    virtual void dec();
+    virtual void max(uint64_t val);
 
 private:
     uint64_t count_;
     uint64_t peak_;
+    uint64_t max_;
 };
 
 }

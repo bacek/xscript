@@ -7,7 +7,7 @@ namespace xscript
 {
 
 SimpleCounterImpl::SimpleCounterImpl(const std::string& name)
-	: CounterImpl(name), count_(0), peak_(0)
+	: CounterImpl(name), count_(0), peak_(0), max_(0)
 {
 }
 
@@ -22,12 +22,23 @@ void SimpleCounterImpl::dec() {
 	--count_;
 }
 
+void SimpleCounterImpl::max(uint64_t val) {
+    max_ = val;
+}
+
 XmlNodeHelper SimpleCounterImpl::createReport() const {
-	XmlNodeHelper line(xmlNewNode(0, (const xmlChar*) name_.c_str()));
+    XmlNodeHelper line(xmlNewNode(NULL, (const xmlChar*) name_.c_str()));
 
     boost::mutex::scoped_lock lock(mtx_);
-	xmlSetProp(line.get(), (const xmlChar*) "count", (const xmlChar*) boost::lexical_cast<std::string>(count_).c_str());
-	xmlSetProp(line.get(), (const xmlChar*) "peak", (const xmlChar*) boost::lexical_cast<std::string>(peak_).c_str());
+    uint64_t count = count_;
+    uint64_t peak = peak_;
+    uint64_t max = max_;
+    lock.unlock();
+    xmlSetProp(line.get(), (const xmlChar*) "count", (const xmlChar*) boost::lexical_cast<std::string>(count).c_str());
+    xmlSetProp(line.get(), (const xmlChar*) "peak", (const xmlChar*) boost::lexical_cast<std::string>(peak).c_str());
+    if (max) {
+        xmlSetProp(line.get(), (const xmlChar*) "max", (const xmlChar*) boost::lexical_cast<std::string>(max).c_str());
+    }
 
 	return line;
 }

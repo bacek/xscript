@@ -3,6 +3,7 @@
 
 #include <string>
 #include <memory>
+#include <boost/cstdint.hpp>
 #include <xscript/component.h>
 #include <xscript/counter_base.h>
 
@@ -12,6 +13,7 @@ class SimpleCounter : public CounterBase {
 public:
     virtual void inc() = 0;
     virtual void dec() = 0;
+    virtual void max(boost::uint64_t val) = 0;
 
     class ScopedCount {
     public:
