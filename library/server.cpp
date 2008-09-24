@@ -54,7 +54,7 @@ Server::Server(Config *config) :
     char buf[256];
     int res = ::gethostname(buf, sizeof(buf));
     if (0 == res) {
-        hostname_ = std::string(buf);
+        hostname_.assign(buf);
     }
 }
 
