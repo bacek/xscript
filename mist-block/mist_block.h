@@ -45,6 +45,8 @@ protected:
     xmlNodePtr setStateUrlencode(Context *ctx);
     xmlNodePtr setStateUrldecode(Context *ctx);
 
+    xmlNodePtr setStateDomain(Context *ctx);
+
     xmlNodePtr setStateByKeys(Context *ctx);
     xmlNodePtr setStateByDate(Context *ctx);
 

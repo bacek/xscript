@@ -23,6 +23,7 @@ public:
     void testBadMethod();
     void testStylesheet();
     void testDefined();
+    void testDomain();
     void testKeys();
 
 private:
@@ -35,6 +36,7 @@ private:
     CPPUNIT_TEST(testEncode);
     CPPUNIT_TEST(testStylesheet);
     CPPUNIT_TEST(testDefined);
+    CPPUNIT_TEST(testDomain);
     CPPUNIT_TEST(testKeys);
     CPPUNIT_TEST_EXCEPTION(testBadMethod, std::exception);
     CPPUNIT_TEST_SUITE_END();
@@ -193,6 +195,30 @@ MistTest::testDefined() {
     State* state = ctx->state();
 
     CPPUNIT_ASSERT_EQUAL(std::string("15"), state->asString("replace_var"));
+}
+
+void
+MistTest::testDomain() {
+
+    using namespace xscript;
+
+    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Script> script = Script::create("mist-domain.xml");
+    boost::shared_ptr<Context> ctx(new Context(script, data));
+    ContextStopper ctx_stopper(ctx);
+
+    XmlDocHelper doc(script->invoke(ctx));
+    CPPUNIT_ASSERT(NULL != doc.get());
+
+    State* state = ctx->state();
+
+    CPPUNIT_ASSERT_EQUAL(std::string("net"), state->asString("tld"));
+    CPPUNIT_ASSERT_EQUAL(std::string("yandex.ru"), state->asString("yandex.ru"));
+    CPPUNIT_ASSERT_EQUAL(std::string("yandex.ru"), state->asString("no_scheme"));
+    CPPUNIT_ASSERT_EQUAL(std::string("localhost"), state->asString("localhost"));
+    CPPUNIT_ASSERT(!state->has("invalid"));
+    CPPUNIT_ASSERT(!state->has("localfile"));
+    CPPUNIT_ASSERT(!state->has("empty"));
 }
 
 void

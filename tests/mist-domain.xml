@@ -1,0 +1,46 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <x:mist>
+    <method>set_state_domain</method>
+    <param type="String">tld</param>
+    <param type="String">http://hghltd.yandex.net:1234/yandbtm?url=http%3A%2F%2Fwww.yandex.ru%2F&amp;text=%FF%ED%E4%E5%EA%F1</param>
+    <param type="Long">1</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_domain</method>
+    <param type="String">yandex.ru</param>
+    <param type="String">http://www.yandex.ru/</param>
+    <param type="Long">2</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_domain</method>
+    <param type="String">no_scheme</param>
+    <param type="String">www.yandex.ru:8090</param>
+    <param type="Long">2</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_domain</method>
+    <param type="String">empty</param>
+    <param type="String"/>
+    <param type="Long">0</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_domain</method>
+    <param type="String">localfile</param>
+    <param type="String">file:///test.xml</param>
+    <param type="Long">1</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_domain</method>
+    <param type="String">invalid</param>
+    <param type="String">http://.www.yandex.ru/</param>
+    <param type="Long">1</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_domain</method>
+    <param type="String">localhost</param>
+    <param type="String">http://localhost:8080/test.xml</param>
+    <param type="Long">1</param>
+  </x:mist>
+</page>

@@ -1,3 +1,9 @@
+xscript (5.36-4) unstable; urgency=low
+
+  * set_state_domain method added in mist-block
+
+ -- Leonid A. Movsesjan <lmovsesjan@yandex-team.ru>  Fri, 26 Sep 2008 14:15:30 +0400
+
 xscript (5.36-3) unstable; urgency=low
 
   * added max in SimpleCounter and output information about it in status-info
