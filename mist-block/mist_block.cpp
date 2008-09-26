@@ -864,6 +864,9 @@ MistBlock::attachStylesheet(Context *ctx) {
     if (1 != p.size()) {
         throw InvokeError("bad arity");
     }
+    while (NULL != ctx->parentContext()) {
+        ctx = ctx->parentContext();
+    }
     std::string name = p[0]->asString(ctx);
     ctx->xsltName(name);
 
