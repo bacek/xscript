@@ -12,6 +12,7 @@
 #include "xscript/xml_util.h"
 #include "xscript/param.h"
 #include "xscript/logger.h"
+#include "xscript/validator_base.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -68,6 +69,13 @@ Param::property(const char *name, const char *value) {
         throw std::invalid_argument(stream.str());
     }
 }
+
+void
+Param::checkValidator(const Context *ctx) const {
+    if (validator_.get()) {
+        validator_->check(asString(ctx));
+    }
+};
 
 template<typename T>
 SimpleParam<T>::SimpleParam(Object *owner, xmlNodePtr node) :
