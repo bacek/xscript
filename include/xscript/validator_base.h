@@ -14,6 +14,10 @@ namespace xscript
     public:
         virtual ~ValidatorBase();
 
+        /**
+         * Check. Throw ValidatorException in case of failure.
+         */
+        virtual void check(const std::string &value) const = 0;
     protected:
     };
 

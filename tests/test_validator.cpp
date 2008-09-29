@@ -9,6 +9,7 @@ using namespace xscript;
 class ValidatorMockup : public xscript::ValidatorBase {
 public:
     ValidatorMockup(xmlNodePtr node) {}
+    void check(const std::string & /* value */) const {}
 };
 
 ValidatorBase * createMockup(xmlNodePtr node) {
