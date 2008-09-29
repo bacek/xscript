@@ -34,7 +34,7 @@ class ValidatorTest : public CppUnit::TestFixture {
     void testCreateNoop() {
         ValidatorFactory * factory = ValidatorFactory::instance();
 
-        XmlNodeHelper node(xmlNewNode(NULL, BAD_CAST "param"));
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const unsigned char*>("param")));
         std::auto_ptr<ValidatorBase> val = factory->createValidator(node.get());
         CPPUNIT_ASSERT(!val.get());
     }
@@ -42,8 +42,8 @@ class ValidatorTest : public CppUnit::TestFixture {
     void testCreateNonexisted() {
         ValidatorFactory * factory = ValidatorFactory::instance();
 
-        XmlNodeHelper node(xmlNewNode(NULL, BAD_CAST "param"));
-        xmlNewProp(node.get(), BAD_CAST "validator", BAD_CAST "foo");
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const unsigned char*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const unsigned char*>("validator"), reinterpret_cast<const unsigned char*>("foo"));
         std::auto_ptr<ValidatorBase> val = factory->createValidator(node.get());
     }
 
@@ -58,8 +58,8 @@ class ValidatorTest : public CppUnit::TestFixture {
         // We don't have to register constructor. It's already register by
         // previous test
 
-        XmlNodeHelper node(xmlNewNode(NULL, BAD_CAST "param"));
-        xmlNewProp(node.get(), BAD_CAST "validator", BAD_CAST "foo");
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const unsigned char*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const unsigned char*>("validator"), reinterpret_cast<const unsigned char*>("foo"));
         std::auto_ptr<ValidatorBase> val = factory->createValidator(node.get());
         CPPUNIT_ASSERT(val.get());
 
