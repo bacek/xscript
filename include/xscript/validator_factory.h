@@ -9,17 +9,18 @@
 namespace xscript
 {
     /**
-     * 
-     * Sorry, guys. I'll translate this later.
+     * Factory for creating Validators for Params.
      *
-     * 1. Валидируем по параметру.
-     * 2. Если валидация профейлилась выдаём <xscript_invoke_failed validate="failed" reason="Invalid something"/>.
-     * 3. Валидация параметров указывается так: <param ... validate="type" ...
-     * validate-error-guard="guard_name">. validate-error-guard - опциональный.
-     * 4. Делаем комбо ValidatorFactory/ValidatorBase/ValidateException.
-     * 5. В фабрике регистрируем конструкторы по имени (использующихся в validate="type")
-     * 6. При пасинге параметра, если встретили аттрибут validate, идём в фабрику и скармливаем ей текущую ноду. Тогда разные валидаторы могут подтянуть дополнительные аттрибуты.
-     * 7. При вызове валидатор может бростить ValidateException. Если мы его ловим, то выставляем validate-error-guard в true, ex.what() записываем в xscript_invoke_failed/@reason.
+     * Mail validation things:
+     * 1. We validate each Param independently.
+     * 2. In case of validation failure we emit &lt;xscript_invoke_failed
+     * validate="failed" reason="Invalid something"/&gt; node. # FIXME We don't
+     * actually ATM.
+     * 3. Specification of validator for param looks like
+          &lt;param ... validator="type" ... validate-error-guard="guard_name"&gt;. 
+          validate-error-guard - optional State guard which set in case of validation failure.
+     * 4. All validators registered in this factory.
+     * 5. We can add Validators in run-time for additional checks.
      */
 
     class ValidatorFactory : public Component<ValidatorFactory> {
