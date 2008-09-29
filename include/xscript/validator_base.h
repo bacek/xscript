@@ -4,21 +4,32 @@
 #include <libxml/tree.h>
 #include <boost/function.hpp>
 
-
 namespace xscript
 {
+    class Context;
+
     /**
      * Base class for validating parameters.
      */
     class ValidatorBase {
     public:
+        ValidatorBase(xmlNodePtr node);
         virtual ~ValidatorBase();
 
-        /**
-         * Check. Throw ValidatorException in case of failure.
-         */
-        virtual void check(const std::string &value) const = 0;
+        /// Check validator. Factory method around isFailed and will set guard
+        /// and throw ValidatorException if case of errors.
+        void check(const Context *ctx, const std::string &value) const;
+
+        /// Get guard name.
+        const std::string& guardName() const {
+            return guard_name_;
+        }
     protected:
+        /// Check. Return true if validator failed.
+        virtual bool isFailed(const std::string &value) const = 0;
+
+        /// State param to set to in case of errors.
+        std::string guard_name_;
     };
 
 
