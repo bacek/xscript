@@ -12,26 +12,26 @@
 
 using namespace xscript;
 
-class ValidatorMockup : public xscript::ValidatorBase {
+class ValidatorMockup : public xscript::Validator {
 public:
-    ValidatorMockup(xmlNodePtr node) : ValidatorBase(node) {}
+    ValidatorMockup(xmlNodePtr node) : Validator(node) {}
     bool isFailed(const std::string & /* value */) const {
         return false;
     }
 };
 
-ValidatorBase * createMockup(xmlNodePtr node) {
+Validator * createMockup(xmlNodePtr node) {
     return new ValidatorMockup(node);
 }
 
-class AlwaysFailValidator : public xscript::ValidatorBase {
+class AlwaysFailValidator : public xscript::Validator {
 public:
-    AlwaysFailValidator(xmlNodePtr node) : ValidatorBase(node) {}
+    AlwaysFailValidator(xmlNodePtr node) : Validator(node) {}
     bool isFailed(const std::string & /* value */) const {
         return true;
     }
 };
-ValidatorBase * createFailed(xmlNodePtr node) {
+Validator * createFailed(xmlNodePtr node) {
     return new AlwaysFailValidator(node);
 }
 
@@ -56,17 +56,17 @@ class ValidatorTest : public CppUnit::TestFixture {
     void testCreateNoop() {
         ValidatorFactory * factory = ValidatorFactory::instance();
 
-        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const unsigned char*>("param")));
-        std::auto_ptr<ValidatorBase> val = factory->createValidator(node.get());
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        std::auto_ptr<Validator> val = factory->createValidator(node.get());
         CPPUNIT_ASSERT(!val.get());
     }
     
     void testCreateNonexisted() {
         ValidatorFactory * factory = ValidatorFactory::instance();
 
-        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const unsigned char*>("param")));
-        xmlNewProp(node.get(), reinterpret_cast<const unsigned char*>("validator"), reinterpret_cast<const unsigned char*>("foo"));
-        std::auto_ptr<ValidatorBase> val = factory->createValidator(node.get());
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("validator"), reinterpret_cast<const xmlChar*>("foo"));
+        std::auto_ptr<Validator> val = factory->createValidator(node.get());
     }
 
     // We use this function twice. On second call it should throw runtime_error
@@ -81,10 +81,10 @@ class ValidatorTest : public CppUnit::TestFixture {
         // We don't have to register constructor. It's already register by
         // previous test
 
-        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const unsigned char*>("param")));
-        xmlNewProp(node.get(), reinterpret_cast<const unsigned char*>("validator"), reinterpret_cast<const unsigned char*>("foo"));
-        xmlNewProp(node.get(), reinterpret_cast<const unsigned char*>("validate-error-guard"), reinterpret_cast<const unsigned char*>("guard"));
-        std::auto_ptr<ValidatorBase> val = factory->createValidator(node.get());
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("validator"), reinterpret_cast<const xmlChar*>("foo"));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("validate-error-guard"), reinterpret_cast<const xmlChar*>("guard"));
+        std::auto_ptr<Validator> val = factory->createValidator(node.get());
         CPPUNIT_ASSERT(val.get());
 
         // Check that we've got our mockup.

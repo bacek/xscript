@@ -11,10 +11,10 @@ namespace xscript
     /**
      * Base class for validating parameters.
      */
-    class ValidatorBase {
+    class Validator {
     public:
-        ValidatorBase(xmlNodePtr node);
-        virtual ~ValidatorBase();
+        Validator(xmlNodePtr node);
+        virtual ~Validator();
 
         /// Check validator. Factory method around isFailed and will set guard
         /// and throw ValidatorException if case of errors.
@@ -37,7 +37,7 @@ namespace xscript
      * Virtual constructor for Validators. 
      * boost::function<ValidatorBase* (xmlNodePtr)>.
      */
-    typedef boost::function<ValidatorBase* (xmlNodePtr node)> ValidatorConstructor;
+    typedef boost::function<Validator* (xmlNodePtr node)> ValidatorConstructor;
 }
 
 #endif

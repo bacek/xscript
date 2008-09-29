@@ -12,13 +12,13 @@ ValidatorFactory::ValidatorFactory() {
 ValidatorFactory::~ValidatorFactory() {
 }
 
-std::auto_ptr<ValidatorBase>
+std::auto_ptr<Validator>
 ValidatorFactory::createValidator(xmlNodePtr node) const {
     xmlAttrPtr attr = xmlHasProp(node, (const xmlChar*)"validator");
 
     // If validator absent for param return null.
     if (!attr)
-        return std::auto_ptr<ValidatorBase>();
+        return std::auto_ptr<Validator>();
 
     std::string type = XmlUtils::value(attr);
 
@@ -30,7 +30,7 @@ ValidatorFactory::createValidator(xmlNodePtr node) const {
     if (i == validator_creators_.end())
         throw std::runtime_error("Unknown validator type: " + type);
 
-    return std::auto_ptr<ValidatorBase>(i->second(node));
+    return std::auto_ptr<Validator>(i->second(node));
 }
 
 void 

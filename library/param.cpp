@@ -12,7 +12,6 @@
 #include "xscript/xml_util.h"
 #include "xscript/param.h"
 #include "xscript/logger.h"
-#include "xscript/validator_base.h"
 #include "xscript/validator_factory.h"
 
 #ifdef HAVE_DMALLOC_H

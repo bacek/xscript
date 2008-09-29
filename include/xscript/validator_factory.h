@@ -4,7 +4,7 @@
 #include <map>
 #include <utility>
 #include <xscript/component.h>
-#include <xscript/validator_base.h>
+#include <xscript/validator.h>
 
 namespace xscript
 {
@@ -32,7 +32,7 @@ namespace xscript
          * \param node <param> xmlNode
          * \return Validator for param. NULL if validator wasn't requested.
          */
-        std::auto_ptr<ValidatorBase> createValidator(xmlNodePtr node) const;
+        std::auto_ptr<Validator> createValidator(xmlNodePtr node) const;
 
         /**
          * Registring validator creator.

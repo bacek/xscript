@@ -31,7 +31,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	dummy_simple_counter.cpp \
 	dummy_cache_counter.cpp \
 	default_request_response.cpp \
-	validator_factory.cpp validator_base.cpp validator_exception.cpp
+	validator_factory.cpp validator.cpp validator_exception.cpp
 
 libxscript_la_LDFLAGS = -lpthread @LTLIBICONV@ -lboost_thread -lboost_regex -lboost_filesystem
 

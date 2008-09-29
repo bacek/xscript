@@ -11,7 +11,7 @@ namespace xscript {
 class Object;
 class Context;
 class ArgList;
-class ValidatorBase;
+class Validator;
 
 /**
  * Base class for block's params. Examples of concrete params are constants,
@@ -42,7 +42,7 @@ protected:
 private:
     xmlNodePtr node_;
     std::string id_, value_;
-    std::auto_ptr<ValidatorBase> validator_;
+    std::auto_ptr<Validator> validator_;
 };
 
 class ConvertedParam : public Param {
