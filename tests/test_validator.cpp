@@ -12,6 +12,14 @@ public:
     void check(const std::string & /* value */) const {}
 };
 
+class AlwaysFailValidator : public xscript::ValidatorBase {
+public:
+    ValidatorMockup(xmlNodePtr /* node */) {}
+    void check(const std::string & /* value */) const {
+        throw xscript::ValidatorException();
+    }
+};
+
 ValidatorBase * createMockup(xmlNodePtr node) {
     return new ValidatorMockup(node);
 }
