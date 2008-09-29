@@ -14,20 +14,17 @@ ValidatorFactory::~ValidatorFactory() {
 
 std::auto_ptr<ValidatorBase>
 ValidatorFactory::createValidator(xmlNodePtr node) const {
-    std::string type;
-    xmlAttrPtr attr = node->properties;
-    while (attr) {
-        const char *name = (const char*) attr->name;
-        if (strcmp("validator", name) == 0) {
-            type = XmlUtils::value(attr);
-            break;
-        }
-        attr = attr->next;
-    }
+    xmlAttrPtr attr = xmlHasProp(node, (const xmlChar*)"validator");
 
     // If validator absent for param return null.
-    if (type.empty())
+    if (!attr)
         return std::auto_ptr<ValidatorBase>();
+
+    std::string type = XmlUtils::value(attr);
+
+    // Remove used prop, otherwise Param::parse will throw exception.
+    // libxml will free memory
+    xmlRemoveProp(attr);
 
     ValidatorMap::const_iterator i = validator_creators_.find(type);
     if (i == validator_creators_.end())
