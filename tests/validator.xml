@@ -1,0 +1,7 @@
+<?xml version="1.0" ?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <x:file>
+    <method>include</method>
+    <param type="string" validator="bar" validate-error-guard="epic-failure">xinclude.xml</param>
+  </x:file>
+</page>

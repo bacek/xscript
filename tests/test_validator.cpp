@@ -2,27 +2,39 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "xscript/validator_factory.h"
+#include "xscript/validator_exception.h"
 #include "xscript/xml_helpers.h"
+#include "xscript/script.h"
+#include "xscript/context.h"
+#include "xscript/state.h"
+#include "xscript/request_data.h"
+#include "xscript/xml_util.h"
 
 using namespace xscript;
 
 class ValidatorMockup : public xscript::ValidatorBase {
 public:
-    ValidatorMockup(xmlNodePtr node) {}
-    void check(const std::string & /* value */) const {}
-};
-
-class AlwaysFailValidator : public xscript::ValidatorBase {
-public:
-    ValidatorMockup(xmlNodePtr /* node */) {}
-    void check(const std::string & /* value */) const {
-        throw xscript::ValidatorException();
+    ValidatorMockup(xmlNodePtr node) : ValidatorBase(node) {}
+    bool isFailed(const std::string & /* value */) const {
+        return false;
     }
 };
 
 ValidatorBase * createMockup(xmlNodePtr node) {
     return new ValidatorMockup(node);
 }
+
+class AlwaysFailValidator : public xscript::ValidatorBase {
+public:
+    AlwaysFailValidator(xmlNodePtr node) : ValidatorBase(node) {}
+    bool isFailed(const std::string & /* value */) const {
+        return true;
+    }
+};
+ValidatorBase * createFailed(xmlNodePtr node) {
+    return new AlwaysFailValidator(node);
+}
+
 
 class ValidatorTest : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(ValidatorTest);
@@ -32,6 +44,8 @@ class ValidatorTest : public CppUnit::TestFixture {
     CPPUNIT_TEST(testRegisterContructor);
     CPPUNIT_TEST_EXCEPTION(testRegisterContructor, std::runtime_error);
     CPPUNIT_TEST(testConstruct);
+    CPPUNIT_TEST(testBlockPass);
+    CPPUNIT_TEST(testBlockFail);
     CPPUNIT_TEST_SUITE_END();
 
     void testCreateFactory() {
@@ -59,6 +73,7 @@ class ValidatorTest : public CppUnit::TestFixture {
     void testRegisterContructor() {
         ValidatorFactory * factory = ValidatorFactory::instance();
         factory->registerConstructor("foo", &createMockup);
+        factory->registerConstructor("bar", &createFailed);
     }
 
     void testConstruct() {
@@ -68,14 +83,46 @@ class ValidatorTest : public CppUnit::TestFixture {
 
         XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const unsigned char*>("param")));
         xmlNewProp(node.get(), reinterpret_cast<const unsigned char*>("validator"), reinterpret_cast<const unsigned char*>("foo"));
+        xmlNewProp(node.get(), reinterpret_cast<const unsigned char*>("validate-error-guard"), reinterpret_cast<const unsigned char*>("guard"));
         std::auto_ptr<ValidatorBase> val = factory->createValidator(node.get());
         CPPUNIT_ASSERT(val.get());
 
         // Check that we've got our mockup.
         ValidatorMockup * real = dynamic_cast<ValidatorMockup*>(val.get());
         CPPUNIT_ASSERT(real);
+
+        CPPUNIT_ASSERT("guard" == val->guardName());
     }
-    
+
+    // Check that validator created and failed.
+    void testBlockFail() {
+        boost::shared_ptr<RequestData> data(new RequestData());
+        boost::shared_ptr<Script> script = Script::create("./validator.xml");
+        boost::shared_ptr<Context> ctx(new Context(script, data));
+        ContextStopper ctx_stopper(ctx);
+
+        XmlDocHelper doc(script->invoke(ctx));
+        CPPUNIT_ASSERT(NULL != doc.get());
+        CPPUNIT_ASSERT(xscript::XmlUtils::xpathExists(doc.get(), "//xscript_invoke_failed"));
+
+        // Guard was set
+        CPPUNIT_ASSERT(ctx->state()->is("epic-failure"));
+    }
+
+    // Check that validator created and passed.
+    void testBlockPass() {
+        boost::shared_ptr<RequestData> data(new RequestData());
+        boost::shared_ptr<Script> script = Script::create("./validator2.xml");
+        boost::shared_ptr<Context> ctx(new Context(script, data));
+        ContextStopper ctx_stopper(ctx);
+
+        XmlDocHelper doc(script->invoke(ctx));
+        CPPUNIT_ASSERT(NULL != doc.get());
+        CPPUNIT_ASSERT(xscript::XmlUtils::xpathExists(doc.get(), "//include-data"));
+        
+        // Guard wasn't set
+        CPPUNIT_ASSERT(!ctx->state()->is("epic-failure"));
+    }
 };
 
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(ValidatorTest, "validator");
