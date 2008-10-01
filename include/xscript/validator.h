@@ -7,6 +7,7 @@
 namespace xscript
 {
     class Context;
+    class Param;
 
     /**
      * Base class for validating parameters.
@@ -18,7 +19,7 @@ namespace xscript
 
         /// Check validator. Factory method around isFailed and will set guard
         /// and throw ValidatorException if case of errors.
-        void check(const Context *ctx, const std::string &value) const;
+        void check(const Context *ctx, const Param &param) const;
 
         /// Get guard name.
         const std::string& guardName() const {
@@ -26,7 +27,7 @@ namespace xscript
         }
     protected:
         /// Check. Return true if validator failed.
-        virtual bool isFailed(const std::string &value) const = 0;
+        virtual bool isFailed(const Param &value) const = 0;
 
         /// State param to set to in case of errors.
         std::string guard_name_;

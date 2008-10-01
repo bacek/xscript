@@ -75,7 +75,7 @@ Param::property(const char *name, const char *value) {
 void
 Param::checkValidator(const Context *ctx) const {
     if (validator_.get()) {
-        validator_->check(ctx, asString(ctx));
+        validator_->check(ctx, *this);
     }
 };
 

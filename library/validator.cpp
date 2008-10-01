@@ -19,8 +19,8 @@ Validator::~Validator() {
 }
 
 void 
-Validator::check(const Context *ctx, const std::string &value) const {
-    if (isFailed(value)) {
+Validator::check(const Context *ctx, const Param &param) const {
+    if (isFailed(param)) {
         if (!guard_name_.empty()) {
             ctx->state()->setBool(guard_name_, true);
         }
