@@ -20,7 +20,7 @@ Validator::~Validator() {
 
 void 
 Validator::check(const Context *ctx, const Param &param) const {
-    if (isFailed(param)) {
+    if (!isPassed(param)) {
         if (!guard_name_.empty()) {
             ctx->state()->setBool(guard_name_, true);
         }
