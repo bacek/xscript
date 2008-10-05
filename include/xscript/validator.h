@@ -3,6 +3,7 @@
 
 #include <libxml/tree.h>
 #include <boost/function.hpp>
+#include <boost/noncopyable.hpp>
 
 namespace xscript
 {
@@ -39,6 +40,12 @@ namespace xscript
      * boost::function<ValidatorBase* (xmlNodePtr)>.
      */
     typedef boost::function<Validator* (xmlNodePtr node)> ValidatorConstructor;
+
+    class ValidatorRegisterer : private boost::noncopyable {
+    public:
+        ValidatorRegisterer(const char *name, const ValidatorConstructor &cons);
+    };
+
 }
 
 #endif

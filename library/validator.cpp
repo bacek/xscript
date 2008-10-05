@@ -1,5 +1,6 @@
 #include "xscript/validator.h"
 #include "xscript/validator_exception.h"
+#include "xscript/validator_factory.h"
 #include "xscript/xml_util.h"
 #include "xscript/context.h"
 #include "xscript/state.h"
@@ -26,6 +27,10 @@ Validator::check(const Context *ctx, const Param &param) const {
         }
         throw ValidatorException();
     }
+}
+
+ValidatorRegisterer::ValidatorRegisterer(const char *name, const ValidatorConstructor &cons) {
+    ValidatorFactory::instance()->registerConstructor(name, cons);
 }
 
 }
