@@ -27,7 +27,7 @@ namespace xscript
         }
     protected:
         /// Check. Return true if validator passed.
-        virtual bool isPassed(const Param &value) const = 0;
+        virtual bool isPassed(const Context *ctx, const Param &value) const = 0;
 
         /// State param to set to in case of errors.
         std::string guard_name_;
