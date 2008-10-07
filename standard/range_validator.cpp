@@ -44,7 +44,7 @@ protected:
     virtual bool isPassed(const Context *ctx, const Param &value) const {
         try {
             T val = boost::lexical_cast<T>(value.asString(ctx));
-            return (min_ <= val) && (val <= max_);
+            return (!has_min_ || (min_ <= val)) && (!has_max || (val <= max_));
         }
         catch(...) {
             return false;
