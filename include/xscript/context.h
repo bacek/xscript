@@ -66,6 +66,7 @@ public:
 
     void parentContext(Context* context);
     Context* parentContext() const;
+    Context* rootContext() const;
 
     std::string xsltName() const;
     void xsltName(const std::string &value);

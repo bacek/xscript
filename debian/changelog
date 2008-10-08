@@ -1,3 +1,9 @@
+xscript (5.37-0) unstable; urgency=low
+
+  * rootContext method added to Context
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed,  8 Oct 2008 11:57:58 +0400
+
 xscript (5.36-4) unstable; urgency=low
 
   * set_state_domain method added in mist-block

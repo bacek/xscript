@@ -227,6 +227,15 @@ Context::parentContext() const {
     return parent_context_;
 }
 
+Context*
+Context::rootContext() const {
+    const Context* ctx = this;
+    while (NULL != ctx->parentContext()) {
+        ctx = ctx->parentContext();
+    }
+    return const_cast<Context*>(ctx);
+}
+
 bool
 Context::stopped() const {
     if (parent_context_) {
