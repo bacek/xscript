@@ -44,7 +44,6 @@ ScriptTest::testScript() {
     CPPUNIT_ASSERT_EQUAL(std::string("script.xml"), script->name());
     CPPUNIT_ASSERT_EQUAL(std::string("script.xsl"), script->xsltName());
 
-    CPPUNIT_ASSERT_EQUAL(true, script->forceAuth());
     CPPUNIT_ASSERT_EQUAL(false, script->forceStylesheet());
     CPPUNIT_ASSERT(script->allowMethod("GET"));
 

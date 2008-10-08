@@ -29,14 +29,6 @@ public:
         return flags_ & FLAG_THREADED;
     }
 
-    inline bool needAuth() const {
-        return flags_ & FLAG_NEED_AUTH;
-    }
-
-    inline bool forceAuth() const {
-        return flags_ & FLAG_FORCE_AUTH;
-    }
-
     inline bool forceStylesheet() const {
         return flags_ & FLAG_FORCE_STYLESHEET;
     }
@@ -50,10 +42,6 @@ public:
     }
 
     bool allowMethod(const std::string& value) const;
-
-    inline void needAuth(bool value) {
-        flag(FLAG_NEED_AUTH, value);
-    }
 
     inline const Block* block(unsigned int n) const {
         return blocks_.at(n);
@@ -88,13 +76,6 @@ protected:
 
     inline void threaded(bool value) {
         flag(FLAG_THREADED, value);
-    }
-
-    inline void forceAuth(bool value) {
-        if (value) {
-            needAuth(true);
-        }
-        flag(FLAG_FORCE_AUTH, value);
     }
 
     inline void forceStylesheet(bool value) {
@@ -142,9 +123,7 @@ protected:
     static const unsigned int FLAG_THREADED = 1;
     static const unsigned int FLAG_FORCE_STYLESHEET = 1 << 1;
 
-    static const unsigned int FLAG_NEED_AUTH = 1 << 2;
-    static const unsigned int FLAG_FORCE_AUTH = 1 << 3;
-    static const unsigned int FLAG_BINARY_PAGE = 1 << 4;
+    static const unsigned int FLAG_BINARY_PAGE = 1 << 2;
 
 private:
     friend class ScriptFactory;

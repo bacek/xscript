@@ -498,12 +498,6 @@ Script::property(const char *prop, const char *value) {
     if (strncasecmp(prop, "all-threaded", sizeof("all-threaded")) == 0) {
         threaded(strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
-    else if (strncasecmp(prop, "need-auth", sizeof("need-auth")) == 0) {
-        needAuth(strncasecmp(value, "yes", sizeof("yes")) == 0);
-    }
-    else if (strncasecmp(prop, "force-auth", sizeof("force-auth")) == 0) {
-        forceAuth(strncasecmp(value, "yes", sizeof("yes")) == 0);
-    }
     else if (strncasecmp(prop, "allow-methods", sizeof("allow-methods")) == 0) {
         allowMethods(value);
     }

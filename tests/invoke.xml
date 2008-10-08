@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <?xml-stylesheet type="text/xsl" href="object.xsl"?>
 <page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
-  <xscript xslt-dont-apply="no" force-auth="yes" allow-methods="get">
+  <xscript xslt-dont-apply="no" allow-methods="get">
     <xi:include href="include/headers-include.xml"/>
     <xslt-param id="test-xslt" type="string">1</xslt-param>
     <xslt-param id="strparam" type="string">1</xslt-param>

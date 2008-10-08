@@ -1,7 +1,7 @@
 <?xml version="1.0" ?>
 <?xml-stylesheet type="text/xsl" href="object.xsl"?>
 <page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
-	<xscript xslt-dont-apply="yes" force-auth="yes" force-get="yes">
+	<xscript xslt-dont-apply="yes" force-get="yes">
 	</xscript>
 	<xi:include href="nonexistent.xml"/>
 </page>
