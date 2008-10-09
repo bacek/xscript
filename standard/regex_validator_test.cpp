@@ -2,7 +2,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "xscript/config.h"
-#include "xscript/logger_factory.h"
+#include "xscript/validator_factory.h"
 #include "xscript/util.h"
 
 #include "regex_validator.h"
@@ -13,11 +13,11 @@ class RegexValidatorTest : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(RegexValidatorTest);
 
     // If pattern not provided we should throw exception
-    CPPUNIT_TEST_EXCEPTION(testAbsentPattern);
+    CPPUNIT_TEST_EXCEPTION(testAbsentPattern, std::exception);
 
     CPPUNIT_TEST(testTrivialPatternCompile);
     // If pattern is not correct RE we should throw exception
-    CPPUNIT_TEST_EXCEPTION(testWrongPattern);
+    CPPUNIT_TEST_EXCEPTION(testWrongPattern, std::exception);
 
     CPPUNIT_TEST_SUITE_END();
 
