@@ -7,6 +7,9 @@ namespace xscript
 RegexValidator::RegexValidator(xmlNodePtr node)
     : Validator(node), re_(NULL)
 {
+    xmlAttrPtr pattern = xmlHasProp(node, (const xmlChar*)"pattern");
+    if (!pattern)
+        throw std::runtime_error("Pattern not provided");
 }
 
 RegexValidator::~RegexValidator()
