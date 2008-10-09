@@ -7,7 +7,7 @@ namespace xscript
 {
 
 RegexValidator::RegexValidator(xmlNodePtr node)
-    : Validator(node), re_(NULL)
+    : Validator(node), re_(NULL), pcre_options_(PCRE_UTF8)
 {
     xmlAttrPtr pattern_attr = xmlHasProp(node, (const xmlChar*)"pattern");
     if (!pattern_attr)
@@ -17,10 +17,9 @@ RegexValidator::RegexValidator(xmlNodePtr node)
     std::string pattern = XmlUtils::value(pattern_attr);
     xmlRemoveProp(pattern_attr); // libxml will free memory
 
-    int pcre_options = 0;
     const char* compile_error;
     int error_offset;
-    re_ = pcre_compile(pattern.c_str(), pcre_options,
+    re_ = pcre_compile(pattern.c_str(), pcre_options_,
                       &compile_error, &error_offset, NULL);
   
     if (re_ == NULL)

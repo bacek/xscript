@@ -7,6 +7,7 @@
 namespace xscript
 {
 
+
 /**
  * Regex validator. Validate param using regexes.
  * Example of usage:
@@ -19,10 +20,22 @@ public:
     
     /// Static constructor
     static Validator* create(xmlNodePtr node);
+
+    // Real check re. For unit-tests simplification
+    bool checkString(const std::string &value) const;
+
 protected:
     virtual bool isPassed(const Context *ctx, const Param &value) const;
+
 private:
-    pcre* re_;    ///<! Compiled RE
+    /// Compiled RE
+    pcre* re_;
+
+    /// Extra flags for pcre
+    pcre_extra re_extra_;
+   
+    /// PCRE options. At least UTF8 will be set.  
+    int pcre_options_;
 };
 
 
