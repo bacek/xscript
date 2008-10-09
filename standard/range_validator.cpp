@@ -44,7 +44,7 @@ protected:
     virtual bool isPassed(const Context *ctx, const Param &value) const {
         try {
             T val = boost::lexical_cast<T>(value.asString(ctx));
-            return (!has_min_ || (min_ <= val)) && (!has_max || (val <= max_));
+            return (!has_min_ || (min_ <= val)) && (!has_max_ || (val <= max_));
         }
         catch(...) {
             return false;
@@ -58,7 +58,7 @@ private:
 
 
 static ValidatorRegisterer r1("int_range", &RangeValidator<int>::create);
-static ValidatorRegisterer r1("long_range", &RangeValidator<long>::create);
-static ValidatorRegisterer r1("double_range", &RangeValidator<double>::create);
+static ValidatorRegisterer r2("long_range", &RangeValidator<long>::create);
+static ValidatorRegisterer r3("double_range", &RangeValidator<double>::create);
 
 };
