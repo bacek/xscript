@@ -23,12 +23,20 @@ class RegexValidatorTest : public CppUnit::TestFixture {
 
 public:
     void testAbsentPattern() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        RegexValidator::create(node.get());
     };
 
     void testTrivialPatternCompile() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("pattern"), reinterpret_cast<const xmlChar*>("foo"));
+        RegexValidator::create(node.get());
     };
 
     void testWrongPattern() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("pattern"), reinterpret_cast<const xmlChar*>("("));
+        RegexValidator::create(node.get());
     };
 };
 
