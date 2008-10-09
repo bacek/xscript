@@ -1,6 +1,7 @@
 #include <boost/lexical_cast.hpp>
 #include "xscript/validator.h"
 #include "xscript/param.h"
+#include "xscript/xml_util.h"
 
 namespace xscript
 {
@@ -20,13 +21,13 @@ public:
         xmlAttrPtr min = xmlHasProp(node, (const xmlChar*)"min");
         if (min) {
             has_min_ = true;
-            min_ = boost::lexical_cast<T>(min_);
+            min_ = boost::lexical_cast<T>(XmlUtils::value(min));
         }
 
         xmlAttrPtr max = xmlHasProp(node, (const xmlChar*)"max");
         if (max) {
             has_max_ = true;
-            max_ = boost::lexical_cast<T>(max_);
+            max_ = boost::lexical_cast<T>(XmlUtils::value(max));
         }
 
         if (!(has_min_ || has_max_)) {
