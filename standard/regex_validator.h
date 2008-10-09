@@ -11,7 +11,11 @@ namespace xscript
 /**
  * Regex validator. Validate param using regexes.
  * Example of usage:
- *   param type="QueryArg" id="foo" validator="regex" pattern="^\S+$"
+ *   param type="QueryArg" id="foo" validator="regex" pattern="^\S+$" options="i"
+ *
+ * Params:
+ *   pattern - mandatory regex pattern
+ *   options - optional options. Such as "i" for case-insensetive match.
  */
 class RegexValidator : public Validator {
 public:

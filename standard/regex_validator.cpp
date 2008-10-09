@@ -9,6 +9,27 @@ namespace xscript
 RegexValidator::RegexValidator(xmlNodePtr node)
     : Validator(node), re_(NULL), pcre_options_(PCRE_UTF8)
 {
+    // Fetch options first. They will require for re compilation
+    xmlAttrPtr options_attr = xmlHasProp(node, (const xmlChar*)"options");
+    if (options_attr) {
+        std::string options = XmlUtils::value(options_attr);
+        xmlRemoveProp(options_attr);
+
+        const char* c = options.c_str();
+        while (*c) {
+            switch (*c) {
+                case 'i':
+                    pcre_options_ |= PCRE_CASELESS;
+                    break;
+
+                default:
+                    throw std::runtime_error(std::string("Unknown regex option: ") + *c);
+            }
+
+            ++c;
+        }
+    }
+
     xmlAttrPtr pattern_attr = xmlHasProp(node, (const xmlChar*)"pattern");
     if (!pattern_attr)
         throw std::runtime_error("Pattern not provided");
@@ -26,6 +47,7 @@ RegexValidator::RegexValidator(xmlNodePtr node)
         throw std::runtime_error(std::string("Regex compilation failed: ") + compile_error);
     
     bzero((void*)&re_extra_, sizeof(re_extra_));
+
 }
 
 RegexValidator::~RegexValidator()
@@ -44,7 +66,7 @@ bool
 RegexValidator::checkString(const std::string &value) const
 {
     int rc = pcre_exec(re_, &re_extra_, value.c_str(), value.length(), 0, 0, NULL, 0);
-//    std::cerr << "rc: " << rc << std::endl;
+    //std::cerr << "rc: " << rc << " options: " << pcre_options_ << std::endl;
     return rc != -1;
 }
 

@@ -23,6 +23,9 @@ class RegexValidatorTest : public CppUnit::TestFixture {
     CPPUNIT_TEST(testIsPassed);
     CPPUNIT_TEST(testUTF8);
 
+    CPPUNIT_TEST_EXCEPTION(testWrongOptions, std::exception);
+    CPPUNIT_TEST(testOptionsCaseless);
+
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -61,6 +64,21 @@ public:
         CPPUNIT_ASSERT(v->checkString("Превед"));
     };
 
+    void testWrongOptions() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("pattern"), reinterpret_cast<const xmlChar*>("foo"));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("options"), reinterpret_cast<const xmlChar*>("Z"));
+        RegexValidator::create(node.get());
+    }
+    
+    void testOptionsCaseless() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("pattern"), reinterpret_cast<const xmlChar*>("foo"));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("options"), reinterpret_cast<const xmlChar*>("i"));
+        std::auto_ptr<Validator> val(RegexValidator::create(node.get()));
+        RegexValidator * v = dynamic_cast<RegexValidator*>(val.get());
+        CPPUNIT_ASSERT(v->checkString("FOO"));
+    }
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( RegexValidatorTest );
