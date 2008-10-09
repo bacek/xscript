@@ -41,7 +41,7 @@ xscript_development_la_LDFLAGS = -module
 
 xscript_validators_la_SOURCES = \
 	range_validator.cpp
-if HAVE_PCRECPP
+if HAVE_PCRE
 xscript_validators_la_SOURCES += regex_validator.cpp
 endif
 
@@ -61,11 +61,18 @@ check_PROGRAMS = test
 
 noinst_LTLIBRARIES = libtest.la
 libtest_la_SOURCES = doc_pool.cpp
+if HAVE_PCRE
+libtest_la_SOURCES += regex_validator.cpp
+endif
 libtest_la_LDFLAGS = -static
 
 noinst_HEADERS = doc_pool.h
 
-test_SOURCES = test_main.cpp doc_pool_test.cpp 
+test_SOURCES = test_main.cpp \
+			   doc_pool_test.cpp 
+if HAVE_PCRE
+test_SOURCES += regex_validator_test.cpp
+endif
 
 test_LDADD = ../library/libxscript.la libtest.la
 test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic
