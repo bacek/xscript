@@ -18,7 +18,7 @@ public:
     ~RegexValidator();
     
     static Validator* create(xmlNodePtr node) {
-        return (Validator*)new RangeValidator(node);
+        return (Validator*)new RegexValidator(node);
     }
 protected:
     virtual bool isPassed(const Context *ctx, const Param &value) const;
