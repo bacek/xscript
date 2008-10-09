@@ -22,11 +22,6 @@ class RegexValidatorTest : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE_END();
 
 public:
-    RegexValidatorTest() {
-        ValidatorFactory * factory = ValidatorFactory::instance();
-        factory->registerConstructor("regex", &RegexValidator::create);
-    }
-
     void testAbsentPattern() {
     };
 

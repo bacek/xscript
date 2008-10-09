@@ -25,5 +25,9 @@ Validator* RegexValidator::create(xmlNodePtr node) {
     return (Validator*)new RegexValidator(node);
 }
 
+namespace {
+static ValidatorRegisterer reg("regex", &RegexValidator::create);
+}
+
 }
 
