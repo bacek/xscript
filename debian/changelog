@@ -1,3 +1,9 @@
+xscript (5.38-0) unstable; urgency=low
+
+  * deprecated stylesheet_node removed from Script
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu,  9 Oct 2008 10:53:00 +0400
+
 xscript (5.37-0) unstable; urgency=low
 
   * rootContext method added to Context

@@ -47,8 +47,7 @@ namespace xscript {
 
 Script::Script(const std::string &name) :
         modified_(std::numeric_limits<time_t>::min()), doc_(NULL),
-        name_(name), flags_(FLAG_FORCE_STYLESHEET), expire_time_delta_(300),
-        stylesheet_node_(NULL) {
+        name_(name), flags_(FLAG_FORCE_STYLESHEET), expire_time_delta_(300) {
 }
 
 Script::~Script() {

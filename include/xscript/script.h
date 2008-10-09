@@ -134,7 +134,6 @@ private:
     std::vector<Block*> blocks_;
     std::string name_;
     unsigned int flags_, expire_time_delta_;
-    xmlNodePtr stylesheet_node_; //deprecated
     std::set<xmlNodePtr> xscript_node_set_;
     std::map<std::string, std::string> headers_;
     std::vector<std::string> allow_methods_;
