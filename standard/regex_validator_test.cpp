@@ -19,6 +19,10 @@ class RegexValidatorTest : public CppUnit::TestFixture {
     // If pattern is not correct RE we should throw exception
     CPPUNIT_TEST_EXCEPTION(testWrongPattern, std::exception);
 
+    // Now, real testing
+    CPPUNIT_TEST(testIsPassed);
+    CPPUNIT_TEST(testUTF8);
+
     CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -30,7 +34,7 @@ public:
     void testTrivialPatternCompile() {
         XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
         xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("pattern"), reinterpret_cast<const xmlChar*>("foo"));
-        RegexValidator::create(node.get());
+        std::auto_ptr<Validator> val(RegexValidator::create(node.get()));
     };
 
     void testWrongPattern() {
@@ -38,6 +42,25 @@ public:
         xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("pattern"), reinterpret_cast<const xmlChar*>("("));
         RegexValidator::create(node.get());
     };
+    
+    void testIsPassed() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("pattern"), reinterpret_cast<const xmlChar*>("foo"));
+        std::auto_ptr<Validator> val(RegexValidator::create(node.get()));
+        RegexValidator * v = dynamic_cast<RegexValidator*>(val.get());
+        CPPUNIT_ASSERT(!v->checkString("bar"));
+        CPPUNIT_ASSERT(v->checkString("foo"));
+    };
+
+    void testUTF8() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("pattern"), reinterpret_cast<const xmlChar*>("Превед"));
+        std::auto_ptr<Validator> val(RegexValidator::create(node.get()));
+        RegexValidator * v = dynamic_cast<RegexValidator*>(val.get());
+        CPPUNIT_ASSERT(!v->checkString("медвед"));
+        CPPUNIT_ASSERT(v->checkString("Превед"));
+    };
+
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( RegexValidatorTest );
