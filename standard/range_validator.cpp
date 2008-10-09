@@ -12,6 +12,8 @@ namespace xscript
  *   param type="QueryArg" id="foo" validator="int_range" min="1" max="42"
  *
  * At least min or max should be specified.
+ *
+ * TODO: We really need unit tests...
  */
 template<typename T>
 class RangeValidator : public Validator {
@@ -22,12 +24,14 @@ public:
         if (min) {
             has_min_ = true;
             min_ = boost::lexical_cast<T>(XmlUtils::value(min));
+            xmlRemoveProp(min); // libxml will free memory
         }
 
         xmlAttrPtr max = xmlHasProp(node, (const xmlChar*)"max");
         if (max) {
             has_max_ = true;
             max_ = boost::lexical_cast<T>(XmlUtils::value(max));
+            xmlRemoveProp(max); // libxml will free memory
         }
 
         if (!(has_min_ || has_max_)) {
