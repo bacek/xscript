@@ -3,8 +3,8 @@
 namespace xscript
 {
 
-static ValidatorRegisterer r1("int_range", &RangeValidator<int>::create);
-static ValidatorRegisterer r2("long_range", &RangeValidator<long>::create);
-static ValidatorRegisterer r3("double_range", &RangeValidator<double>::create);
+static ValidatorRegisterer r1("int_range", &RangeValidatorBase<int>::create);
+static ValidatorRegisterer r2("long_range", &RangeValidatorBase<long>::create);
+static ValidatorRegisterer r3("double_range", &RangeValidatorBase<double>::create);
 
 };

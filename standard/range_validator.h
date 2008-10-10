@@ -19,9 +19,9 @@ namespace xscript
  * TODO: We really need unit tests...
  */
 template<typename T>
-class RangeValidator : public Validator {
+class RangeValidatorBase : public Validator {
 public:
-    RangeValidator(xmlNodePtr node)
+    RangeValidatorBase(xmlNodePtr node)
 	: Validator(node), has_min_(false), has_max_(false) {
         xmlAttrPtr min = xmlHasProp(node, (const xmlChar*)"min");
         if (min) {
@@ -41,10 +41,10 @@ public:
             throw std::runtime_error("Insufficient args for range validator");
         }
     }
-    ~RangeValidator() {}
+    ~RangeValidatorBase() {}
 
     static Validator* create(xmlNodePtr node) {
-        return (Validator*)new RangeValidator(node);
+        return (Validator*)new RangeValidatorBase(node);
     }
 
 protected:
