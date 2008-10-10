@@ -13,6 +13,7 @@ class RangeValidatorTest : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(RangeValidatorTest);
 
     CPPUNIT_TEST_EXCEPTION(testNoRange, std::exception);
+    CPPUNIT_TEST_EXCEPTION(testWrongRange, std::exception);
     CPPUNIT_TEST(testMinOnly);
     CPPUNIT_TEST(testMaxOnly);
     CPPUNIT_TEST(testBothSide);
@@ -23,6 +24,13 @@ private:
     void testNoRange() {
         XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
         RangeValidatorBase<int>::create(node.get());
+    }
+    
+    void testWrongRange() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("min"), reinterpret_cast<const xmlChar*>("300"));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("max"), reinterpret_cast<const xmlChar*>("200"));
+        std::auto_ptr<Validator> val(RangeValidatorBase<int>::create(node.get()));
     }
 
     void testMinOnly() {
