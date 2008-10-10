@@ -52,7 +52,7 @@ public:
     bool checkString(const std::string &value) const {
         try {
             T val = boost::lexical_cast<T>(value);
-            return (!has_min_ || (min_ <= val)) && (!has_max_ || (val <= max_));
+            return (!has_min_ || (min_ <= val)) && (!has_max_ || (val < max_));
         }
         catch(...) {
             return false;
