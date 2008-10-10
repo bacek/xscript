@@ -47,16 +47,22 @@ public:
         return (Validator*)new RangeValidatorBase(node);
     }
 
-protected:
-    /// Check. Return true if validator passed.
-    virtual bool isPassed(const Context *ctx, const Param &value) const {
+    /// Check "string" for range. Try to cast to proper type and check.
+    /// Made public for testing purpose only...
+    bool checkString(const std::string &value) const {
         try {
-            T val = boost::lexical_cast<T>(value.asString(ctx));
+            T val = boost::lexical_cast<T>(value);
             return (!has_min_ || (min_ <= val)) && (!has_max_ || (val <= max_));
         }
         catch(...) {
             return false;
         }
+    }
+
+protected:
+    /// Check. Return true if validator passed.
+    virtual bool isPassed(const Context *ctx, const Param &value) const {
+        return checkString(value.asString(ctx));
     }
 
 private:
