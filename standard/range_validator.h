@@ -6,17 +6,21 @@
 #include "xscript/xml_util.h"
 #include "xscript/validator.h"
 
+#include <iostream>
+
 namespace xscript
 {
 
 /**
  * Range validator. Validate that numeric value of param within given range.
+ * Range is tested to include "mix", but not "max" similar to classic C++ style
+ * [min, max) checks.
+ *
  * Example of usage:
  *   param type="QueryArg" id="foo" validator="int_range" min="1" max="42"
  *
  * At least min or max should be specified.
  *
- * TODO: We really need unit tests...
  */
 template<typename T>
 class RangeValidatorBase : public Validator {
@@ -39,6 +43,10 @@ public:
 
         if (!(has_min_ || has_max_)) {
             throw std::runtime_error("Insufficient args for range validator");
+        }
+
+        if (has_min_ && has_max_ && (min_ > max_)) {
+            throw std::runtime_error("Invalid range");
         }
     }
     ~RangeValidatorBase() {}
