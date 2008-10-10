@@ -12,9 +12,56 @@ using namespace xscript;
 class RangeValidatorTest : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(RangeValidatorTest);
 
+    CPPUNIT_TEST_EXCEPTION(testNoRange, std::exception);
+    CPPUNIT_TEST(testMinOnly);
+    CPPUNIT_TEST(testMaxOnly);
+    CPPUNIT_TEST(testBothSide);
 
     CPPUNIT_TEST_SUITE_END();
 private:
+
+    void testNoRange() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        RangeValidatorBase<int>::create(node.get());
+    }
+
+    void testMinOnly() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("min"), reinterpret_cast<const xmlChar*>("100"));
+        std::auto_ptr<Validator> val(RangeValidatorBase<int>::create(node.get()));
+        RangeValidatorBase<int> * v = dynamic_cast<RangeValidatorBase<int>*>(val.get());
+
+        CPPUNIT_ASSERT(v);
+        CPPUNIT_ASSERT(!v->checkString("10"));
+        CPPUNIT_ASSERT(v->checkString("100"));
+    }
+
+    void testMaxOnly() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("max"), reinterpret_cast<const xmlChar*>("100"));
+        std::auto_ptr<Validator> val(RangeValidatorBase<int>::create(node.get()));
+        RangeValidatorBase<int> * v = dynamic_cast<RangeValidatorBase<int>*>(val.get());
+
+        CPPUNIT_ASSERT(v);
+        CPPUNIT_ASSERT(v->checkString("10"));
+        CPPUNIT_ASSERT(!v->checkString("100"));
+    }
+
+    void testBothSide() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("min"), reinterpret_cast<const xmlChar*>("100"));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("max"), reinterpret_cast<const xmlChar*>("200"));
+        std::auto_ptr<Validator> val(RangeValidatorBase<int>::create(node.get()));
+        RangeValidatorBase<int> * v = dynamic_cast<RangeValidatorBase<int>*>(val.get());
+
+        CPPUNIT_ASSERT(v);
+        CPPUNIT_ASSERT(!v->checkString("10"));
+        CPPUNIT_ASSERT(v->checkString("100"));
+        CPPUNIT_ASSERT(v->checkString("150"));
+        CPPUNIT_ASSERT(!v->checkString("200"));
+        CPPUNIT_ASSERT(!v->checkString("1200"));
+    }
+
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( RangeValidatorTest );
