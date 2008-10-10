@@ -60,7 +60,7 @@ TESTS = test
 check_PROGRAMS = test
 
 noinst_LTLIBRARIES = libtest.la
-libtest_la_SOURCES = doc_pool.cpp
+libtest_la_SOURCES = doc_pool.cpp range_validator.cpp
 if HAVE_PCRE
 libtest_la_SOURCES += regex_validator.cpp
 endif
@@ -69,7 +69,8 @@ libtest_la_LDFLAGS = -static
 noinst_HEADERS = doc_pool.h
 
 test_SOURCES = test_main.cpp \
-			   doc_pool_test.cpp 
+			   doc_pool_test.cpp \
+			   range_validator_test.cpp
 if HAVE_PCRE
 test_SOURCES += regex_validator_test.cpp
 endif
