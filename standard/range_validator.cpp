@@ -1,7 +1,16 @@
+#include <map>
 #include "range_validator.h"
 
 namespace xscript
 {
+
+
+// Map string->range_constructor
+typedef std::map<std::string, ValidatorConstructor> Constructors;
+
+Constructors createConstructors();
+
+static const Constructors constructors = createConstructors();
 
 Validator * 
 createRangeValidator(xmlNodePtr node) {
@@ -11,15 +20,26 @@ createRangeValidator(xmlNodePtr node) {
 
     std::string as = XmlUtils::value(as_prop);
 
-    if (as == "int") {
-        return RangeValidatorBase<int>::create(node);
-    }
-    else if (as == "double") {
-        return RangeValidatorBase<double>::create(node);
-    }
-    else {
+    Constructors::const_iterator c = constructors.find(as);
+    if (c == constructors.end()) {
         throw std::runtime_error("Can't create range for unknown type: " + as);
     }
+    else {
+        return c->second(node);
+    }
+}
+
+Constructors
+createConstructors() {
+    Constructors res;
+    res["int"] = &RangeValidatorBase<int>::create;
+    res["Int"] = &RangeValidatorBase<int>::create;
+    res["long"] = &RangeValidatorBase<long>::create;
+    res["Long"] = &RangeValidatorBase<long>::create;
+    res["double"] = &RangeValidatorBase<double>::create;
+    res["Double"] = &RangeValidatorBase<double>::create;
+
+    return res;
 }
 
 static ValidatorRegisterer r0("range", &createRangeValidator);
