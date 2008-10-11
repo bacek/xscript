@@ -17,6 +17,10 @@ class RangeValidatorTest : public CppUnit::TestFixture {
     CPPUNIT_TEST(testMinOnly);
     CPPUNIT_TEST(testMaxOnly);
     CPPUNIT_TEST(testBothSide);
+    
+    CPPUNIT_TEST_EXCEPTION(testAutoTypeMissingAs, std::exception);
+    CPPUNIT_TEST_EXCEPTION(testAutoTypeUnknownAs, std::exception);
+    CPPUNIT_TEST(testAutoType);
 
     CPPUNIT_TEST_SUITE_END();
 private:
@@ -70,6 +74,31 @@ private:
         CPPUNIT_ASSERT(!v->checkString("1200"));
     }
 
+    void testAutoTypeMissingAs() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("min"), reinterpret_cast<const xmlChar*>("100"));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("max"), reinterpret_cast<const xmlChar*>("200"));
+        std::auto_ptr<Validator> val(createRangeValidator(node.get()));
+    }
+
+    void testAutoTypeUnknownAs() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("as"), reinterpret_cast<const xmlChar*>("FOO"));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("min"), reinterpret_cast<const xmlChar*>("100"));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("max"), reinterpret_cast<const xmlChar*>("200"));
+        std::auto_ptr<Validator> val(createRangeValidator(node.get()));
+    }
+
+    void testAutoType() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("as"), reinterpret_cast<const xmlChar*>("int"));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("min"), reinterpret_cast<const xmlChar*>("100"));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("max"), reinterpret_cast<const xmlChar*>("200"));
+        std::auto_ptr<Validator> val(createRangeValidator(node.get()));
+        RangeValidatorBase<int> * v = dynamic_cast<RangeValidatorBase<int>*>(val.get());
+
+        CPPUNIT_ASSERT(v);
+    }
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION( RangeValidatorTest );

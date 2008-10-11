@@ -78,6 +78,8 @@ private:
     T min_, max_;
 };
 
+// Create range validator for ConvertedParam
+Validator * createRangeValidator(xmlNodePtr node);
 
 } // namespace xscript
 
