@@ -196,7 +196,13 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
     try {
         ctx = Stylesheet::getContext(tctx);
         State* state = ctx->state();
-        valuePush(ctxt, xmlXPathNewCString(state->asString(str).c_str()));
+        const std::string name(str);
+        if (!name.empty() && state->has(name)) {
+            valuePush(ctxt, xmlXPathNewCString(state->asString(name).c_str()));
+        }
+        else {
+            xmlXPathReturnEmptyNodeSet(ctxt);
+        }
     }
     catch (const std::exception &e) {
         reportXsltError("xscript:get-state-arg: caught exception: " + std::string(e.what()), ctx);

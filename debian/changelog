@@ -1,3 +1,9 @@
+xscript (5.38-2) unstable; urgency=low
+
+  * fixed x:get-state-arg with non-existent key in state 
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 13 Oct 2008 20:45:26 +0400
+
 xscript (5.38-1) unstable; urgency=low
 
   * cache usage statistic added
