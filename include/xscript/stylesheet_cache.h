@@ -4,13 +4,17 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <xscript/component.h>
+#include <xscript/stat_builder.h>
 
 namespace xscript {
 
 class Stylesheet;
 
-class StylesheetCache : public Component<StylesheetCache> {
+class StylesheetCache : public Component<StylesheetCache>, public StatBuilderHolder {
 public:
+    StylesheetCache() : StatBuilderHolder("stylesheet-cache") {
+    }
+
     virtual void clear() = 0;
     virtual void erase(const std::string &name) = 0;
 

@@ -5,8 +5,12 @@
 #include <string>
 #include <libxml/tree.h>
 
+#include <boost/bind.hpp>
+
 #include <xscript/xml_helpers.h>
 #include <xscript/block.h>
+#include <xscript/control_extension.h>
+
 
 namespace xscript {
 
@@ -58,6 +62,25 @@ public:
     }
 private:
     const StatBuilder &builder_;
+};
+
+class StatBuilderHolder {
+public:
+    StatBuilderHolder(const std::string& name) : statBuilder_(name) {
+        ControlExtensionRegistry::Constructor f =
+            boost::bind(boost::mem_fn(&StatBuilder::createBlock), &statBuilder_, _1, _2, _3);
+        ControlExtensionRegistry::registerConstructor(statBuilder_.getName() + "-stat", f);
+    }
+
+    virtual ~StatBuilderHolder() {};
+
+protected:
+    StatBuilder& getStatBuilder() {
+        return statBuilder_;
+    }
+
+private:
+    StatBuilder statBuilder_;
 };
 
 } // namespace xscript

@@ -4,13 +4,16 @@
 #include <string>
 #include <boost/shared_ptr.hpp>
 #include <xscript/component.h>
+#include <xscript/stat_builder.h>
 
 namespace xscript {
 
 class Script;
 
-class ScriptCache : public Component<ScriptCache> {
+class ScriptCache : public Component<ScriptCache>, public StatBuilderHolder {
 public:
+    ScriptCache() : StatBuilderHolder("script-cache") {
+    }
 
     virtual void clear() = 0;
     virtual void erase(const std::string &name) = 0;

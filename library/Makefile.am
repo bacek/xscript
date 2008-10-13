@@ -24,12 +24,15 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	default_average_counter_factory.cpp \
 	default_simple_counter_factory.cpp \
 	default_cache_counter_factory.cpp \
+	default_cache_usage_counter_factory.cpp \
 	average_counter_impl.cpp \
 	simple_counter_impl.cpp \
 	cache_counter_impl.cpp \
+	cache_usage_counter_impl.cpp \
 	dummy_average_counter.cpp \
 	dummy_simple_counter.cpp \
 	dummy_cache_counter.cpp \
+	dummy_cache_usage_counter.cpp \
 	default_request_response.cpp
 
 libxscript_la_LDFLAGS = -lpthread @LTLIBICONV@

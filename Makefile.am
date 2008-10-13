@@ -9,6 +9,7 @@ EXTRA_DIST = ChangeLog Doxyfile AUTHORS COPYING INSTALL NEWS README \
 	debian/xscript-daemon.preinst debian/xscript-standard.files \
 	debian/libxscript.files examples/control-logrotate.xml \
 	examples/control-status-info.xml examples/control-tagged-cache-stat.xml \
+	examples/control-script-cache-stat.xml examples/control-stylesheet-cache-stat.xml \
 	examples/data/1.xml examples/data/2.xml examples/file-include.xml \
 	examples/file-load.xml examples/file-tag.xml examples/http_1.xml \
 	examples/http_2.xml examples/http2.xsl examples/http_3.xml \

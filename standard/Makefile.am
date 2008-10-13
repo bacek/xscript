@@ -29,7 +29,8 @@ xscript_xmlcache_la_LDFLAGS = -module
 xscript_statistics_la_SOURCES = \
 		average_counter_factory.cpp \
 		simple_counter_factory.cpp \
-		cache_counter_factory.cpp
+		cache_counter_factory.cpp \
+		cache_usage_counter_factory.cpp
 xscript_statistics_la_LDFLAGS = -module
 
 xscript_development_la_SOURCES = development_mode.cpp

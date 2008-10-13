@@ -14,14 +14,15 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include "xscript/xml.h"
-#include "xscript/logger.h"
+#include "xscript/cache_usage_counter.h"
 #include "xscript/config.h"
-#include "xscript/vhost_data.h"
+#include "xscript/logger.h"
 #include "xscript/script.h"
 #include "xscript/stylesheet.h"
 #include "xscript/script_cache.h"
 #include "xscript/stylesheet_cache.h"
+#include "xscript/vhost_data.h"
+#include "xscript/xml.h"
 
 #include "internal/hash.h"
 #include "internal/hashmap.h"
@@ -70,6 +71,8 @@ public:
     boost::shared_ptr<Xml> fetch(const std::string &key);
     void store(const std::string &key, const boost::shared_ptr<Xml> &xml);
 
+    const CacheUsageCounter* getCounter() const;
+
 private:
     bool expired(const boost::shared_ptr<Xml> &xml) const;
 
@@ -79,6 +82,8 @@ private:
 
     typedef LRUCache<std::string, boost::shared_ptr<Xml> > CacheType;
     CacheType cache_;
+
+    std::auto_ptr<CacheUsageCounter> counter_;
 };
 
 class XmlCache {
@@ -96,10 +101,14 @@ public:
 
 protected:
     XmlStorage* findStorage(const std::string &name) const;
+    void setStatBuilder(StatBuilder* statBuilder) {
+        statBuilder_ = statBuilder;
+    }
 
 private:
     StringSet denied_;
     std::vector<XmlStorage*> storages_;
+    StatBuilder* statBuilder_;
 
     class StorageContainerHolder {
     public:
@@ -141,7 +150,9 @@ public:
 };
 
 XmlStorage::XmlStorage(unsigned int max_size) :
-        enabled_(true), cache_(max_size) {
+        enabled_(true), cache_(max_size),
+        counter_(CacheUsageCounterFactory::instance()->createCounter("xml-storage")) {
+    counter_->max(max_size);
 }
 
 XmlStorage::~XmlStorage() {
@@ -158,6 +169,8 @@ XmlStorage::clear() {
     }
     cache_.clear();
     enabled_ = false;
+
+    counter_->reset();
 }
 
 void
@@ -179,6 +192,7 @@ XmlStorage::erase(const std::string &key) {
     }
 
     cache_.erase(key);
+    counter_->removed(key);
 }
 
 boost::shared_ptr<Xml>
@@ -203,6 +217,8 @@ XmlStorage::fetch(const std::string &key) {
     }
 
     log()->debug("%s found in storage", key.c_str());
+    counter_->fetched(key);
+
     return cache_.data(it);
 }
 
@@ -218,6 +234,7 @@ XmlStorage::store(const std::string &key, const boost::shared_ptr<Xml> &xml) {
     }
 
     cache_.insert(key, xml);
+    counter_->stored(key);
     log()->debug("storing of %s succeeded", key.c_str());
 }
 
@@ -235,7 +252,12 @@ XmlStorage::expired(const boost::shared_ptr<Xml> &xml) const {
     return modified > xml->modified();
 }
 
-XmlCache::XmlCache() {
+const CacheUsageCounter*
+XmlStorage::getCounter() const {
+    return counter_.get();
+}
+
+XmlCache::XmlCache() : statBuilder_(NULL) {
 }
 
 XmlCache::~XmlCache() {
@@ -274,6 +296,12 @@ XmlCache::init(const char *name, const Config *config) {
         denied_.insert(config->as<std::string>(*i));
     }
     holder.release();
+
+    for (std::vector<XmlStorage*>::iterator it = storages_.begin();
+        it != storages_.end();
+        ++it) {
+        statBuilder_->addCounter((*it)->getCounter());
+    }
 }
 
 boost::shared_ptr<Xml>
@@ -332,6 +360,7 @@ StandardScriptCache::~StandardScriptCache() {
 
 void
 StandardScriptCache::init(const Config *config) {
+    XmlCache::setStatBuilder(&getStatBuilder());
     XmlCache::init("script-cache", config);
 }
 
@@ -364,6 +393,7 @@ StandardStylesheetCache::~StandardStylesheetCache() {
 
 void
 StandardStylesheetCache::init(const Config *config) {
+    XmlCache::setStatBuilder(&getStatBuilder());
     XmlCache::init("stylesheet-cache", config);
 }
 
