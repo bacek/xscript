@@ -14,6 +14,7 @@ class RegexValidatorTest : public CppUnit::TestFixture {
 
     // If pattern not provided we should throw exception
     CPPUNIT_TEST_EXCEPTION(testAbsentPattern, std::exception);
+    CPPUNIT_TEST_EXCEPTION(testEmptyPattern, std::exception);
 
     CPPUNIT_TEST(testTrivialPatternCompile);
     // If pattern is not correct RE we should throw exception
@@ -32,6 +33,12 @@ public:
     void testAbsentPattern() {
         XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
         RegexValidator::create(node.get());
+    };
+    
+    void testEmptyPattern() {
+        XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("pattern"), reinterpret_cast<const xmlChar*>(""));
+        std::auto_ptr<Validator> val(RegexValidator::create(node.get()));
     };
 
     void testTrivialPatternCompile() {
