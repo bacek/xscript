@@ -1,4 +1,5 @@
 #include <map>
+#include "xscript/util.h"
 #include "range_validator.h"
 
 namespace xscript
@@ -18,7 +19,7 @@ createRangeValidator(xmlNodePtr node) {
     if (!as_prop)
         throw std::runtime_error("Can't create range without type");
 
-    std::string as = XmlUtils::value(as_prop);
+    std::string as = StringUtils::tolower(XmlUtils::value(as_prop));
 
     Constructors::const_iterator c = constructors.find(as);
     if (c == constructors.end()) {
@@ -32,12 +33,10 @@ createRangeValidator(xmlNodePtr node) {
 Constructors
 createConstructors() {
     Constructors res;
+    // NB: key must be lowercase!
     res["int"] = &RangeValidatorBase<int>::create;
-    res["Int"] = &RangeValidatorBase<int>::create;
     res["long"] = &RangeValidatorBase<long>::create;
-    res["Long"] = &RangeValidatorBase<long>::create;
     res["double"] = &RangeValidatorBase<double>::create;
-    res["Double"] = &RangeValidatorBase<double>::create;
 
     return res;
 }
