@@ -65,13 +65,13 @@ CacheUsageCounterImpl::createReport() const {
     boost::mutex::scoped_lock lock(mtx_);
 
     double average_usage = average_usage_;
-    long long elements = elements_;
+    long long docs = elements_;
 
     for(std::map<std::string, int>::const_iterator it = counter_.begin();
         it != counter_.end();
         ++it) {
-        average_usage = (average_usage*elements + it->second)/(elements + 1);
-        elements++;
+        average_usage = (average_usage*docs + it->second)/(docs + 1);
+        docs++;
     }
 
     xmlSetProp(line.get(),
@@ -79,7 +79,7 @@ CacheUsageCounterImpl::createReport() const {
                (const xmlChar*) boost::lexical_cast<std::string>(average_usage).c_str());
     xmlSetProp(line.get(),
                (const xmlChar*) "elements",
-               (const xmlChar*) boost::lexical_cast<std::string>(elements).c_str());
+               (const xmlChar*) boost::lexical_cast<std::string>(counter_.size()).c_str());
     xmlSetProp(line.get(),
                (const xmlChar*) "max-elements",
                (const xmlChar*) boost::lexical_cast<std::string>(max_).c_str());

@@ -27,6 +27,7 @@ class LRUCache {
 
     Map key2data_;
     List data_;
+    unsigned int size_;
     unsigned int max_size_;
 
 public:
@@ -43,6 +44,7 @@ public:
 
     iterator fetch(const Key& key);
     void insert(const Key& key, const Data& data);
+    const_iterator nextDeleted() const;
 
     const_iterator begin() const;
     iterator begin();
@@ -60,7 +62,7 @@ private:
 
 template<typename Key, typename Data>
 LRUCache<Key, Data>::LRUCache(unsigned int size) :
-        max_size_(size) {}
+        size_(0), max_size_(size) {}
 
 template<typename Key, typename Data>
 LRUCache<Key, Data>::~LRUCache() {
@@ -70,6 +72,7 @@ template<typename Key, typename Data> void
 LRUCache<Key, Data>::clear() {
     key2data_.clear();
     data_.clear();
+    size_ = 0;
 }
 
 template<typename Key, typename Data> void
@@ -77,6 +80,7 @@ LRUCache<Key, Data>::erase(LRUCache<Key, Data>::iterator it) {
     if (it != end()) {
         data_.erase(it->second);
         key2data_.erase(it);
+        --size_;
         return;
     }
     throw std::out_of_range("invalid iterator in LRUCache");
@@ -137,17 +141,27 @@ LRUCache<Key, Data>::data(LRUCache<Key, Data>::const_iterator it) const {
     throw std::out_of_range("invalid iterator in LRUCache");
 }
 
+template<typename Key, typename Data> typename LRUCache<Key, Data>::const_iterator
+LRUCache<Key, Data>::nextDeleted() const {
+    if (size_ == max_size_) {
+        return data_.back().map_iterator_;
+    }
+    return end();
+}
+
 template<typename Key, typename Data> void
 LRUCache<Key, Data>::insert(const Key& key, const Data& data) {
     iterator it = find(key);
     if (it == end()) {
-        if (data_.size() == max_size_) {
+        if (size_ == max_size_) {
             key2data_.erase(data_.back().map_iterator_);
             data_.pop_back();
+            --size_;
         }
         data_.push_front(ListElement(data, it));
         key2data_[key] = data_.begin();
         data_.begin()->map_iterator_ = find(key);
+        ++size_;
     }
     else {
         update(it, data);

@@ -213,6 +213,7 @@ XmlStorage::fetch(const std::string &key) {
 
     if (expired(cache_.data(it))) {
         cache_.erase(it);
+        counter_->removed(key);
         return boost::shared_ptr<Xml>();
     }
 
@@ -233,6 +234,10 @@ XmlStorage::store(const std::string &key, const boost::shared_ptr<Xml> &xml) {
         return;
     }
 
+    CacheType::const_iterator it = cache_.nextDeleted();
+    if (it != cache_.end()) {
+        counter_->removed(it->first);
+    }
     cache_.insert(key, xml);
     counter_->stored(key);
     log()->debug("storing of %s succeeded", key.c_str());
