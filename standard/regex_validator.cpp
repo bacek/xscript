@@ -35,7 +35,7 @@ RegexValidator::RegexValidator(xmlNodePtr node)
                     break;
 
                 default:
-                    throw std::runtime_error(std::string("Unknown regex option: ") + *c);
+                    throw std::runtime_error(std::string("Unknown regex option: ") + *c + " for pattern " + pattern);
             }
 
             ++c;
@@ -50,7 +50,7 @@ RegexValidator::RegexValidator(xmlNodePtr node)
                       &compile_error, &error_offset, NULL);
   
     if (re_ == NULL)
-        throw std::runtime_error(std::string("Regex compilation failed: ") + compile_error + " at " + boost::lexical_cast<std::string>(error_offset));
+        throw std::runtime_error(std::string("Regex '") + pattern + "' compilation failed: " + compile_error + " at " + boost::lexical_cast<std::string>(error_offset));
     
     bzero((void*)&re_extra_, sizeof(re_extra_));
 
