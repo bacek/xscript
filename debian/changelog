@@ -1,3 +1,9 @@
+xscript (5.38-3) unstable; urgency=low
+
+  * remained-depth xslt-extension added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 14 Oct 2008 11:07:14 +0400
+
 xscript (5.38-2) unstable; urgency=low
 
   * fixed x:get-state-arg with non-existent key in state 

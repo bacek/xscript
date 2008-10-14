@@ -666,6 +666,35 @@ xscriptXsltNl2br(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltRemainedDepth(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:remained-depth");
+    if (ctxt == NULL) {
+        return;
+    }
+    if (0 != nargs) {
+        reportXsltError("xscript:remained-depth: bad param count", ctxt);
+        return;
+    }
+
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        std::string result = boost::lexical_cast<std::string>(xsltMaxDepth - tctx->templNr);
+        valuePush(ctxt, xmlXPathNewCString(result.c_str()));
+    }
+    catch (const std::exception &e) {
+        reportXsltError("xscript:remained-depth: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
 xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
     (void)comp;
     if (tctx == NULL) {
@@ -809,6 +838,7 @@ XsltExtensions::XsltExtensions() {
     XsltFunctionRegisterer("md5", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltMD5);
     XsltFunctionRegisterer("wbr", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltWbr);
     XsltFunctionRegisterer("nl2br", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltNl2br);
+    XsltFunctionRegisterer("remained-depth", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltRemainedDepth);
 
     XsltFunctionRegisterer("sanitize", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSanitize);
 
