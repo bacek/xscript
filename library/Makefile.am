@@ -33,9 +33,10 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	dummy_simple_counter.cpp \
 	dummy_cache_counter.cpp \
 	dummy_cache_usage_counter.cpp \
-	default_request_response.cpp
+	default_request_response.cpp \
+	validator_factory.cpp validator.cpp validator_exception.cpp
 
-libxscript_la_LDFLAGS = -lpthread @LTLIBICONV@
+libxscript_la_LDFLAGS = -lpthread @LTLIBICONV@ -lboost_thread -lboost_regex -lboost_filesystem
 
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread -I@top_srcdir@/include -I@builddir@ @yandex_platform_CFLAGS@
 AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem -I@top_srcdir@/include @yandex_platform_LIBS@

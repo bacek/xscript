@@ -149,6 +149,11 @@ XmlDocHelper
 Block::invokeInternal(Context *ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     try {
+        // Check validators for each param before calling it.
+        for (std::vector<Param*>::const_iterator i = params_.begin(); i != params_.end(); ++i) {
+            (*i)->checkValidator(ctx);
+        };
+
         boost::any a;
         XmlDocHelper doc(call(ctx, a));
 

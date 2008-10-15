@@ -4,7 +4,8 @@ pkglib_LTLIBRARIES = \
 	xscript-memcache.la \
 	xscript-diskcache.la \
 	xscript-statistics.la \
-	xscript-development.la
+	xscript-development.la \
+	xscript-validators.la
 
 xscript_thrpool_la_SOURCES = thread_pool.cpp
 
@@ -38,6 +39,16 @@ xscript_development_la_SOURCES = development_mode.cpp
 xscript_development_la_LIBADD = ../library/libxscript.la
 xscript_development_la_LDFLAGS = -module
 
+
+xscript_validators_la_SOURCES = \
+	range_validator.cpp
+if HAVE_PCRE
+xscript_validators_la_SOURCES += regex_validator.cpp
+endif
+
+xscript_validators_la_LIBADD = ../library/libxscript.la
+xscript_validators_la_LDFLAGS = -module
+
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem @yandex_platform_LIBS@
@@ -50,12 +61,20 @@ TESTS = test
 check_PROGRAMS = test
 
 noinst_LTLIBRARIES = libtest.la
-libtest_la_SOURCES = doc_pool.cpp
+libtest_la_SOURCES = doc_pool.cpp range_validator.cpp
+if HAVE_PCRE
+libtest_la_SOURCES += regex_validator.cpp
+endif
 libtest_la_LDFLAGS = -static
 
 noinst_HEADERS = doc_pool.h
 
-test_SOURCES = test_main.cpp doc_pool_test.cpp 
+test_SOURCES = test_main.cpp \
+			   doc_pool_test.cpp \
+			   range_validator_test.cpp
+if HAVE_PCRE
+test_SOURCES += regex_validator_test.cpp
+endif
 
 test_LDADD = ../library/libxscript.la libtest.la
 test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic

@@ -12,6 +12,7 @@
 #include "xscript/xml_util.h"
 #include "xscript/param.h"
 #include "xscript/logger.h"
+#include "xscript/validator_factory.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -42,6 +43,8 @@ Param::~Param() {
 
 void
 Param::parse() {
+    // Create validator if any. Validators will remove used attributes.
+    validator_ = ValidatorFactory::instance()->createValidator(node_);
 
     XmlUtils::visitAttributes(node_->properties,
                               boost::bind(&Param::property, this, _1, _2));
@@ -68,6 +71,13 @@ Param::property(const char *name, const char *value) {
         throw std::invalid_argument(stream.str());
     }
 }
+
+void
+Param::checkValidator(const Context *ctx) const {
+    if (validator_.get()) {
+        validator_->check(ctx, *this);
+    }
+};
 
 template<typename T>
 SimpleParam<T>::SimpleParam(Object *owner, xmlNodePtr node) :

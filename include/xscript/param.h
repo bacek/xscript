@@ -11,7 +11,12 @@ namespace xscript {
 class Object;
 class Context;
 class ArgList;
+class Validator;
 
+/**
+ * Base class for block's params. Examples of concrete params are constants,
+ * query args, state args, etc.
+ */
 class Param : private boost::noncopyable {
 public:
     Param(Object *owner, xmlNodePtr node);
@@ -28,12 +33,16 @@ public:
     virtual std::string asString(const Context *ctx) const = 0;
     virtual void add(const Context *ctx, ArgList &al) const = 0;
 
+    // Check validator (if any). Will throw exception if validation fail.
+    void checkValidator(const Context *ctx) const;
+
 protected:
     virtual void property(const char *name, const char *value);
 
 private:
     xmlNodePtr node_;
     std::string id_, value_;
+    std::auto_ptr<Validator> validator_;
 };
 
 class ConvertedParam : public Param {
