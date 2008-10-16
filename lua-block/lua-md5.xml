@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <x:lua>
+	  <![CDATA[
+      md5 = xscript.md5('some value');
+      print(md5);
+  ]]>
+  </x:lua>
+</page>
+

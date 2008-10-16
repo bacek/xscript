@@ -41,6 +41,7 @@ public:
     void testBadArgCount();
 
     void testMultiBlock();
+    void testMD5();
 private:
     CPPUNIT_TEST_SUITE(LuaTest);
 
@@ -60,6 +61,7 @@ private:
     CPPUNIT_TEST_EXCEPTION(testBadCode, std::runtime_error);
 
     CPPUNIT_TEST(testMultiBlock);
+    CPPUNIT_TEST(testMD5);
 
     CPPUNIT_TEST_SUITE_END();
 };
@@ -365,4 +367,24 @@ LuaTest::testMultiBlock() {
 
     State* state = data->state();
     CPPUNIT_ASSERT_EQUAL(state->asString("bar"), std::string("baz"));
+}
+
+void
+LuaTest::testMD5() {
+
+    using namespace xscript;
+
+    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Script> script = Script::create("lua-md5.xml");
+    boost::shared_ptr<Context> ctx(new Context(script, data));
+    ContextStopper ctx_stopper(ctx);
+
+    XmlDocHelper doc(script->invoke(ctx));
+
+    CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
+    CPPUNIT_ASSERT_EQUAL(
+        std::string("5946210c9e93ae37891dfe96c3e39614\n"),
+        XmlUtils::xpathValue(doc.get(), "/page/lua", "foo")
+    );
 }
