@@ -92,7 +92,7 @@ private:
 
     void testAutoType() {
         XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
-        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("as"), reinterpret_cast<const xmlChar*>("int"));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("as"), reinterpret_cast<const xmlChar*>("long"));
         xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("min"), reinterpret_cast<const xmlChar*>("100"));
         xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("max"), reinterpret_cast<const xmlChar*>("200"));
         std::auto_ptr<Validator> val(createRangeValidator(node.get()));
@@ -103,7 +103,7 @@ private:
 
     void testAutoTypeCaseless() {
         XmlNodeHelper node(xmlNewNode(NULL, reinterpret_cast<const xmlChar*>("param")));
-        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("as"), reinterpret_cast<const xmlChar*>("INT"));
+        xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("as"), reinterpret_cast<const xmlChar*>("LoNg"));
         xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("min"), reinterpret_cast<const xmlChar*>("100"));
         xmlNewProp(node.get(), reinterpret_cast<const xmlChar*>("max"), reinterpret_cast<const xmlChar*>("200"));
         std::auto_ptr<Validator> val(createRangeValidator(node.get()));
