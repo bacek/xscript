@@ -1,4 +1,5 @@
 #include <map>
+#include <boost/cstdint.hpp>
 #include "xscript/util.h"
 #include "range_validator.h"
 
@@ -34,9 +35,14 @@ Constructors
 createConstructors() {
     Constructors res;
     // NB: key must be lowercase!
-    res["int"] = &RangeValidatorBase<int>::create;
-    res["long"] = &RangeValidatorBase<long>::create;
+    res["float"] = &RangeValidatorBase<float>::create;
     res["double"] = &RangeValidatorBase<double>::create;
+    res["long"] = &RangeValidatorBase<boost::int32_t>::create;
+    res["ulong"] = &RangeValidatorBase<boost::uint32_t>::create;
+    res["longlong"] = &RangeValidatorBase<boost::int64_t>::create;
+    res["long long"] = &RangeValidatorBase<boost::int64_t>::create;
+    res["ulonglong"] = &RangeValidatorBase<boost::uint64_t>::create;
+    res["unsinged long long"] = &RangeValidatorBase<boost::uint64_t>::create;
 
     return res;
 }
