@@ -111,7 +111,7 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
     luaL_openlib(lua, 0, lib, 0);
     luaL_openlib(lua, tableName.c_str(), lib, 0);
 
-    // Get global xscript. We will set 'state' field later
+    // Get global xscript. We will set 'name' field later
     lua_getglobal(lua, "xscript");
 
     pointer<Type> *p = (pointer<Type> *)lua_newuserdata(lua, sizeof(pointer<Type>));
@@ -121,7 +121,7 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
     lua_setmetatable(lua, -2); // points to new userdata
 
     // Our userdata is on top of stack.
-    // Assign it to 'state'
+    // Assign it to 'name'
     lua_setfield(lua, -2, name);
 
     // And remove it from stack
