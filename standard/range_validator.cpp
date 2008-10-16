@@ -42,7 +42,7 @@ createConstructors() {
     res["longlong"] = &RangeValidatorBase<boost::int64_t>::create;
     res["long long"] = &RangeValidatorBase<boost::int64_t>::create;
     res["ulonglong"] = &RangeValidatorBase<boost::uint64_t>::create;
-    res["unsinged long long"] = &RangeValidatorBase<boost::uint64_t>::create;
+    res["unsigned long long"] = &RangeValidatorBase<boost::uint64_t>::create;
 
     return res;
 }
