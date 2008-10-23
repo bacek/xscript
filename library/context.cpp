@@ -36,7 +36,10 @@ Context::Context(const boost::shared_ptr<Script> &script, const boost::shared_pt
 }
 
 Context::~Context() {
-    XmlUtils::printXMLError();
+    if (XmlUtils::hasXMLError()) {
+        std::string postfix = "Script: " + script()->name();
+        XmlUtils::printXMLError(postfix);
+    }
     ExtensionList::instance()->destroyContext(this);
     std::for_each(results_.begin(), results_.end(), boost::bind(&xmlFreeDoc, _1));
     std::for_each(clear_node_list_.begin(), clear_node_list_.end(), boost::bind(&xmlFreeNode, _1));
@@ -248,6 +251,16 @@ Context::stopped() const {
 void
 Context::stop() {
     stopped_ = true;
+}
+
+const TimeoutCounter&
+Context::timer() const {
+    return timer_;
+}
+
+void
+Context::startTimer(int timeout) {
+    timer_.reset(timeout);
 }
 
 ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {

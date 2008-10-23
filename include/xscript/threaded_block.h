@@ -11,9 +11,13 @@ public:
     virtual ~ThreadedBlock();
 
     int timeout() const;
+    virtual int invokeTimeout() const;
 
     virtual bool threaded() const;
     virtual void threaded(bool value);
+
+    virtual void startTimer(const Context *ctx);
+    virtual const TimeoutCounter& timer() const;
 
 protected:
     virtual void property(const char *name, const char *value);
@@ -21,6 +25,7 @@ protected:
 private:
     bool threaded_;
     int timeout_;
+    TimeoutCounter timer_;
 };
 
 } // namespace xscript

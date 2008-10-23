@@ -17,6 +17,7 @@ public:
     bool isDefaultRemoteTimeout() const;
     void setDefaultRemoteTimeout();
 
+    virtual int invokeTimeout() const;
 protected:
     virtual void property(const char *name, const char *value);
     virtual void postParse();

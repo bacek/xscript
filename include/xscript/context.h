@@ -13,6 +13,7 @@
 #include <libxml/tree.h>
 
 #include "xscript/request_data.h"
+#include "xscript/util.h"
 
 namespace xscript {
 
@@ -96,6 +97,9 @@ public:
     bool forceNoThreaded() const;
     void forceNoThreaded(bool value);
 
+    const TimeoutCounter& timer() const;
+    void startTimer(int timeout);
+
     friend class ContextStopper;
 
 private:
@@ -123,6 +127,8 @@ private:
 
     std::map<std::string, boost::any> params_;
     mutable boost::mutex params_mutex_, results_mutex_, node_list_mutex_;
+
+    TimeoutCounter timer_;
 
     static const unsigned int FLAG_IS_BOT = 1;
     static const unsigned int FLAG_BOT_FETCHED = 1 << 1;

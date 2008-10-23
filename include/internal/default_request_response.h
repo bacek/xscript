@@ -5,7 +5,6 @@
 #include <vector>
 #include <libxml/tree.h>
 #include <libxml/xpath.h>
-#include <boost/thread/mutex.hpp>
 
 #include "xscript/functors.h"
 #include "xscript/request_impl.h"
@@ -96,7 +95,6 @@ private:
 
 private:
     std::auto_ptr<RequestImpl> impl_;
-    mutable boost::mutex mutex_;
 };
 
 } // namespace xscript

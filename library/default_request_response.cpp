@@ -64,7 +64,6 @@ DefaultRequestResponse::getRemoteAddr() const {
 
 const std::string&
 DefaultRequestResponse::getRealIP() const {
-    boost::mutex::scoped_lock lock(mutex_);
     return impl_->getRealIP();
 }
 
@@ -85,43 +84,36 @@ DefaultRequestResponse::getURI() const {
 
 std::string
 DefaultRequestResponse::getOriginalURI() const {
-    boost::mutex::scoped_lock lock(mutex_);
     return impl_->getOriginalURI();
 }
 
 std::string
 DefaultRequestResponse::getHost() const {
-    boost::mutex::scoped_lock lock(mutex_);
     return impl_->getHost();
 }
 
 std::string
 DefaultRequestResponse::getOriginalHost() const {
-    boost::mutex::scoped_lock lock(mutex_);
     return impl_->getOriginalHost();
 }
 
 std::string
 DefaultRequestResponse::getOriginalUrl() const {
-    boost::mutex::scoped_lock lock(mutex_);
     return impl_->getOriginalUrl();
 }
 
 std::streamsize
 DefaultRequestResponse::getContentLength() const {
-    boost::mutex::scoped_lock lock(mutex_);
     return impl_->getContentLength();
 }
 
 const std::string&
 DefaultRequestResponse::getContentType() const {
-    boost::mutex::scoped_lock lock(mutex_);
     return impl_->getContentType();
 }
 
 const std::string&
 DefaultRequestResponse::getContentEncoding() const {
-    boost::mutex::scoped_lock lock(mutex_);
     return impl_->getContentEncoding();
 }
 
@@ -157,31 +149,26 @@ DefaultRequestResponse::setArg(const std::string &name, const std::string &value
 
 unsigned int
 DefaultRequestResponse::countHeaders() const {
-    boost::mutex::scoped_lock lock(mutex_);
     return impl_->countHeaders();
 }
 
 bool
 DefaultRequestResponse::hasHeader(const std::string &name) const {
-    boost::mutex::scoped_lock lock(mutex_);
     return impl_->hasHeader(name);
 }
 
 const std::string&
 DefaultRequestResponse::getHeader(const std::string &name) const {
-    boost::mutex::scoped_lock lock(mutex_);
     return impl_->getHeader(name);
 }
 
 void
 DefaultRequestResponse::headerNames(std::vector<std::string> &v) const {
-    boost::mutex::scoped_lock lock(mutex_);
     impl_->headerNames(v);
 }
 
 void
 DefaultRequestResponse::addInputHeader(const std::string &name, const std::string &value) {
-    boost::mutex::scoped_lock lock(mutex_);
     impl_->addInputHeader(name, value);
 }
 

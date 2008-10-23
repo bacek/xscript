@@ -126,10 +126,16 @@ XmlUtils::throwUnless(bool value) {
     }
 }
 
+bool
+XmlUtils::hasXMLError() {
+    return XmlErrorReporter::reporter()->hasError();
+}
+
 void
-XmlUtils::printXMLError() {
+XmlUtils::printXMLError(const std::string& postfix) {
     if (XmlErrorReporter::reporter()->hasError()) {
-        log()->error("Got XML error: %s", XmlErrorReporter::reporter()->message().c_str());
+        log()->error("Got XML error: %s. %s", XmlErrorReporter::reporter()->message().c_str(), postfix.c_str());
+        resetReporter();
     }
 }
 
@@ -252,8 +258,6 @@ XmlErrorReporter::reporter() {
     }
     return rep;
 }
-
-
 
 extern "C" void
 xmlNullError(void *ctx, const char *format, ...) {

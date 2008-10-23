@@ -258,10 +258,10 @@ HashUtils::hexMD5(const char *key) {
     return md5digest;
 }
 
-const int TimeoutCounter::UNDEFINED_TIME = std::numeric_limits<int>::min();
+const int TimeoutCounter::UNLIMITED_TIME = std::numeric_limits<int>::max();
 
 TimeoutCounter::TimeoutCounter() {
-    reset(0);
+    reset(UNLIMITED_TIME);
 }
 
 TimeoutCounter::TimeoutCounter(int timeout) {
@@ -272,21 +272,26 @@ TimeoutCounter::~TimeoutCounter() {
 }
 
 void
+TimeoutCounter::timeout(int timeout) {
+    timeout_ = timeout;
+}
+
+void
 TimeoutCounter::reset(int timeout) {
     if (timeout <= 0) {
-        timeout_ = UNDEFINED_TIME;
+        timeout_ = 0;
     }
     else {
         timeout_ = timeout;
-        gettimeofday(&init_time_, 0);
     }
+    gettimeofday(&init_time_, 0);
 }
 
 int
 TimeoutCounter::remained() const {
 
     if (unlimited()) {
-        return UNDEFINED_TIME;
+        return UNLIMITED_TIME;
     }
 
     struct timeval current;
@@ -299,7 +304,7 @@ TimeoutCounter::remained() const {
 
 bool
 TimeoutCounter::unlimited() const {
-    return timeout_ == UNDEFINED_TIME;
+    return timeout_ == UNLIMITED_TIME;
 }
 
 bool

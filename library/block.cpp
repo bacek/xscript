@@ -34,6 +34,8 @@
 
 namespace xscript {
 
+TimeoutCounter Block::default_timer_;
+
 Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
         extension_(ext), owner_(owner), node_(node), is_guard_not_(false), strip_root_element_(false)
 {
@@ -171,9 +173,9 @@ Block::invokeInternal(Context *ctx) {
     }
 }
 
-
 void
 Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
+    startTimer(ctx.get());
     if (threaded() && !ctx->forceNoThreaded()) {
         boost::function<void()> f = boost::bind(&Block::callInternalThreaded, this, ctx, slot);
         ThreadPool::instance()->invoke(f);
@@ -186,17 +188,20 @@ Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
 XmlDocHelper
 Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
     if (NULL == doc.get()) {
-        throw std::runtime_error("Null response document");
+        throw InvokeError("null response document");
     }
 
     if (NULL == xmlDocGetRootElement(doc.get())) {
         log()->error("%s, got document with no root", BOOST_CURRENT_FUNCTION);
-        return errorResult("got document with no root");
+        throw InvokeError("got document with no root");
+    }
+
+    if (timer().expired()) {
+        throw InvokeError("block is timed out");
     }
 
     if (!tagged() && ctx->stopped()) {
-        throw std::runtime_error(
-            std::string("Context already stopped. Cannot process response. Method: ") + method_);
+        throw InvokeError("context is already stopped, cannot process response");
     }
 
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
@@ -220,12 +225,20 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
     if (!xsltName().empty()) {
         boost::shared_ptr<Stylesheet> sh = Stylesheet::create(xsltName());
         {
-            PROFILER(log(), std::string("per-block-xslt: '") + xsltName() + "' block-id: '" + id() + "' method: '" + method() + "' owner: '" + owner()->name() + "'");
+            PROFILER(log(), std::string("per-block-xslt: '") + xsltName() + "' block: '" + name() + "' block-id: '" + id() + "' method: '" + method() + "' owner: '" + owner()->name() + "'");
             Object::applyStylesheet(sh, ctx, doc, true);
         }
 
         XmlUtils::throwUnless(NULL != doc.get());
         log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
+
+        if (XmlUtils::hasXMLError()) {
+            std::string postfix =
+                "Script: " + owner()->name() +
+                ". Block: name: " + name() +  ", id: " + id() + ", method: " + method() +
+                ". Perblock stylesheet: " + xsltName();
+            XmlUtils::printXMLError(postfix);
+        }
     }
 }
 
@@ -451,6 +464,16 @@ Block::parseParamNode(const xmlNodePtr node, ParamFactory *pf) {
     std::auto_ptr<Param> p = pf->param(this, node);
     params_.push_back(p.get());
     p.release();
+}
+
+void
+Block::startTimer(const Context *ctx) {
+    (void)ctx;
+}
+
+const TimeoutCounter&
+Block::timer() const {
+    return default_timer_;
 }
 
 } // namespace xscript

@@ -72,6 +72,10 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     }
     std::string file = fullName(filename);
 
+    if (timer().expired()) {
+        throw InvokeError("block is timed out", "file", file);
+    }
+
     if (!tagged()) {
         return (this->*method_)(file, ctx);
     }
@@ -149,6 +153,7 @@ FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
     boost::shared_ptr<Script> script = Script::create(file_name);
     boost::shared_ptr<Context> local_ctx(new Context(script, ctx->requestData()));
     local_ctx->parentContext(ctx);
+    local_ctx->startTimer(std::min(ctx->timer().remained(), timer().remained()));
 
     if (threaded() || ctx->forceNoThreaded()) {
         local_ctx->forceNoThreaded(true);

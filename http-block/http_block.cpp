@@ -139,8 +139,13 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
         return doc;
     }
 
+    int timeout = timer().remained();
+    if (timeout <= 0) {
+        throw InvokeError("block is timed out", "url", url);
+    }
+
     const Tag* tag = boost::any_cast<Tag>(&a);
-    HttpHelper helper(url, remoteTimeout());
+    HttpHelper helper(url, timeout);
     helper.appendHeaders(ctx->request(), proxy_, tag);
 
     helper.perform();
@@ -174,8 +179,13 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
         throw InvokeError("bad arity");
     }
 
+    int timeout = timer().remained();
+    if (timeout <= 0) {
+        throw InvokeError("block is timed out", "url", p[0]->asString(ctx));
+    }
+
     const Tag* tag = boost::any_cast<Tag>(&a);
-    HttpHelper helper(p[0]->asString(ctx), remoteTimeout());
+    HttpHelper helper(p[0]->asString(ctx), timeout);
     std::string body = p[1]->asString(ctx);
     helper.appendHeaders(ctx->request(), proxy_, tag);
 
@@ -222,7 +232,12 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
         has_query = true;
     }
 
-    HttpHelper helper(url, remoteTimeout());
+    int timeout = timer().remained();
+    if (timeout <= 0) {
+        throw InvokeError("block is timed out", "url", url);
+    }
+
+    HttpHelper helper(url, timeout);
     helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     helper.perform();
@@ -251,7 +266,12 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
         url.append(query);
     }
 
-    HttpHelper helper(url, remoteTimeout());
+    int timeout = timer().remained();
+    if (timeout <= 0) {
+        throw InvokeError("block is timed out", "url", url);
+    }
+
+    HttpHelper helper(url, timeout);
     helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     helper.perform();

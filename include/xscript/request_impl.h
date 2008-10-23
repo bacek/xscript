@@ -6,6 +6,7 @@
 #include <iosfwd>
 #include <functional>
 #include <boost/cstdint.hpp>
+#include <boost/thread/mutex.hpp>
 
 #if defined(HAVE_STLPORT_HASHMAP)
 #include <hash_set>
@@ -131,6 +132,7 @@ private:
     friend class Parser;
 
 private:
+    mutable boost::mutex mutex_;
     VarMap vars_, cookies_;
     std::vector<char> body_;
     HeaderMap headers_;

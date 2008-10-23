@@ -1,3 +1,17 @@
+xscript (5.40-0) unstable; urgency=low
+
+  * common timout mechanism implements in block
+  * mutex moved from DefaultRequestResponse to RequestImpl
+  * xml error reporting updated
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 23 Oct 2008 11:13:24 +0400
+
+xscript (5.39-0) unstable; urgency=low
+
+  * validator added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 21 Oct 2008 10:25:38 +0400
+
 xscript (5.38-3) unstable; urgency=low
 
   * remained-depth xslt-extension added

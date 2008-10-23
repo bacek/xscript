@@ -182,6 +182,10 @@ Script::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
         log()->info("applying stylesheet to %s", name().c_str());
         ctx->createDocumentWriter(stylesheet);
         Object::applyStylesheet(stylesheet, ctx, doc, false);
+        if (XmlUtils::hasXMLError()) {
+            std::string postfix = "Script: " + name() + ". Main stylesheet: " + stylesheet->name();
+            XmlUtils::printXMLError(postfix);
+        }
     }
 }
 

@@ -133,8 +133,9 @@ public:
     bool unlimited() const;
     bool expired() const;
     int remained() const;
+    void timeout(int timeout);
 
-    static const int UNDEFINED_TIME;
+    static const int UNLIMITED_TIME;
 private:
     struct timeval init_time_;
     int timeout_;

@@ -45,6 +45,11 @@ RemoteTaggedBlock::remoteTimeout(int timeout) {
     remote_timeout_ = timeout;
 }
 
+int
+RemoteTaggedBlock::invokeTimeout() const {
+    return remoteTimeout();
+}
+
 bool
 RemoteTaggedBlock::isDefaultRemoteTimeout() const {
     return remote_timeout_ == 0;

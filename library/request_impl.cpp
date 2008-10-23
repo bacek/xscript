@@ -149,7 +149,7 @@ RequestImpl::getURI() const {
         return script_name + getPathInfo();
     }
     else {
-        return script_name + getPathInfo() + "?" + query_string;;
+        return script_name + getPathInfo() + "?" + query_string;
     }
 }
 
@@ -269,21 +269,25 @@ RequestImpl::argNames(std::vector<std::string> &v) const {
 
 unsigned int
 RequestImpl::countHeaders() const {
+    boost::mutex::scoped_lock lock(mutex_);
     return headers_.size();
 }
 
 bool
 RequestImpl::hasHeader(const std::string &name) const {
+    boost::mutex::scoped_lock lock(mutex_);
     return Parser::has(headers_, name);
 }
 
 const std::string&
 RequestImpl::getHeader(const std::string &name) const {
+    boost::mutex::scoped_lock lock(mutex_);
     return Parser::get(headers_, name);
 }
 
 void
 RequestImpl::headerNames(std::vector<std::string> &v) const {
+    boost::mutex::scoped_lock lock(mutex_);
     Parser::keys(headers_, v);
 }
 

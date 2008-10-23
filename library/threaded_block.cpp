@@ -2,6 +2,7 @@
 #include <cstring>
 #include <boost/lexical_cast.hpp>
 
+#include "xscript/context.h"
 #include "xscript/threaded_block.h"
 #include "xscript/script.h"
 
@@ -22,6 +23,11 @@ int
 ThreadedBlock::timeout() const {
 // FIXME: Change hard-coded 5000 to configurable defaults.
     return timeout_ > 0 ? timeout_ : 5000;
+}
+
+int
+ThreadedBlock::invokeTimeout() const {
+    return timeout();
 }
 
 bool
@@ -45,6 +51,16 @@ ThreadedBlock::property(const char *name, const char *value) {
     else {
         Block::property(name, value);
     }
+}
+
+void
+ThreadedBlock::startTimer(const Context *ctx) {
+    timer_.reset(std::min(ctx->timer().remained(), invokeTimeout()));
+}
+
+const TimeoutCounter&
+ThreadedBlock::timer() const {
+    return timer_;
 }
 
 } // namespace xscript

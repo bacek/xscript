@@ -732,6 +732,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
 
         XmlDocHelper doc;
         try {
+            block->startTimer(ctx);
             doc = block->invoke(ctx);
             if (NULL == doc.get()) {
                 reportXsltError("xscript:ExtElementBlock: empty result", ctx);
