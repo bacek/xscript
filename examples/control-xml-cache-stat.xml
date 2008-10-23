@@ -4,4 +4,8 @@
     <x:control>
         <method>script-cache-stat</method>
     </x:control>
+    
+    <x:control>
+        <method>stylesheet-cache-stat</method>
+    </x:control>    
 </page>

@@ -1,7 +1,0 @@
-<page xmlns:x="http://www.yandex.ru/xscript"
-    >
-
-    <x:control>
-        <method>stylesheet-cache-stat</method>
-    </x:control>
-</page>
