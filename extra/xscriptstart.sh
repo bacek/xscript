@@ -37,7 +37,7 @@ if [ -e $XSCRIPT_CONFIG  ]; then
         /usr/bin/xscript-bin --config=$XSCRIPT_CONFIG >> $LOGFILE 2>&1
         echo "on `date` ::xscriptstart.sh:: xscriptstart.sh on `hostname` restarted"  >>$LOGFILE
         NOWTIME=`date +%s`
-	if [ $SLEEP_TIMEOUT = 0 -a $EXIT_TIMEOUT -gt 0 ]; then
+	if [ $SLEEP_TIMEOUT -eq 0 -a $EXIT_TIMEOUT -gt 0 ]; then
 	   WORKTIME=$(($NOWTIME-$STARTTIME))
 	   if [ $WORKTIME -lt $EXIT_TIMEOUT ]; then
 		echo "Fast xscript crash.  Exit 1"
