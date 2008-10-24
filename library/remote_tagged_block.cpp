@@ -77,4 +77,9 @@ RemoteTaggedBlock::postParse() {
     }
 }
 
+void
+RemoteTaggedBlock::startTimer(const Context *ctx) {
+    resetTimer(std::min(ctx->timer().remained(), invokeTimeout()));
+}
+
 } // namespace xscript

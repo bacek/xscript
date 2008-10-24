@@ -75,14 +75,14 @@ CacheUsageCounterImpl::createReport() const {
     }
 
     xmlSetProp(line.get(),
-               (const xmlChar*) "usage",
-               (const xmlChar*) boost::lexical_cast<std::string>(average_usage).c_str());
-    xmlSetProp(line.get(),
                (const xmlChar*) "elements",
                (const xmlChar*) boost::lexical_cast<std::string>(counter_.size()).c_str());
     xmlSetProp(line.get(),
                (const xmlChar*) "max-elements",
                (const xmlChar*) boost::lexical_cast<std::string>(max_).c_str());
+    xmlSetProp(line.get(),
+               (const xmlChar*) "usage",
+               (const xmlChar*) boost::lexical_cast<std::string>(average_usage).c_str());
 
     return line;
 }

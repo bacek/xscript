@@ -57,6 +57,7 @@ private:
     const_iterator find(const Key& key) const;
     iterator find(const Key& key);
     void update(iterator it, const Data& data);
+    void moveFront(List::iterator it);
 };
 
 
@@ -106,8 +107,7 @@ template<typename Key, typename Data> typename LRUCache<Key, Data>::iterator
 LRUCache<Key, Data>::fetch(const Key& key) {
     iterator it = find(key);
     if (it != end()) {
-        Data data = it->second->data_;
-        update(it, data);
+        moveFront(it->second);
     }
     return it;
 }
@@ -173,6 +173,17 @@ LRUCache<Key, Data>::update(LRUCache<Key, Data>::iterator it, const Data& data) 
     data_.erase(it->second);
     data_.push_front(ListElement(data, it));
     it->second = data_.begin();
+}
+
+template<typename Key, typename Data> void
+LRUCache<Key, Data>::moveFront(List::iterator it) {
+    if (it == data_.begin() || it == data_.end()) {
+        return;
+    }
+
+    iterator map_iter = it->map_iterator_;
+    data_.splice(data_.begin(), data_, it, ++it);
+    map_iter->second = data_.begin();
 }
 
 } // namespace xscript

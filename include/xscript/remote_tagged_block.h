@@ -1,6 +1,7 @@
 #ifndef _XSCRIPT_REMOTE_TAGGED_BLOCK_H_
 #define _XSCRIPT_REMOTE_TAGGED_BLOCK_H_
 
+#include <xscript/context.h>
 #include <xscript/threaded_block.h>
 #include <xscript/tagged_block.h>
 #include <xscript/xml.h>
@@ -18,6 +19,7 @@ public:
     void setDefaultRemoteTimeout();
 
     virtual int invokeTimeout() const;
+    virtual void startTimer(const Context *ctx);
 protected:
     virtual void property(const char *name, const char *value);
     virtual void postParse();

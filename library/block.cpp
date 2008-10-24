@@ -476,4 +476,9 @@ Block::timer() const {
     return default_timer_;
 }
 
+bool
+Block::runByMainThread(const Context *ctx) const {
+    return (ctx->timer().unlimited() && (ctx->forceNoThreaded() || !threaded()));
+}
+
 } // namespace xscript

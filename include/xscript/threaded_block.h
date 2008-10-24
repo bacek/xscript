@@ -16,11 +16,12 @@ public:
     virtual bool threaded() const;
     virtual void threaded(bool value);
 
-    virtual void startTimer(const Context *ctx);
     virtual const TimeoutCounter& timer() const;
+    virtual void startTimer(const Context *ctx);
 
 protected:
     virtual void property(const char *name, const char *value);
+    virtual void resetTimer(int timeout);
 
 private:
     bool threaded_;
