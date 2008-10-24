@@ -2,6 +2,7 @@
 #define _XSCRIPT_INTERNAL_LRUCACHE_H_
 
 #include <stdexcept>
+#include "xscript/cache_usage_counter.h"
 
 namespace xscript {
 
@@ -43,8 +44,7 @@ public:
     void erase(iterator it);
 
     iterator fetch(const Key& key);
-    void insert(const Key& key, const Data& data);
-    const_iterator nextDeleted() const;
+    void insert(const Key& key, const Data& data, CacheUsageCounter* counter);
 
     const_iterator begin() const;
     iterator begin();
@@ -141,19 +141,14 @@ LRUCache<Key, Data>::data(LRUCache<Key, Data>::const_iterator it) const {
     throw std::out_of_range("invalid iterator in LRUCache");
 }
 
-template<typename Key, typename Data> typename LRUCache<Key, Data>::const_iterator
-LRUCache<Key, Data>::nextDeleted() const {
-    if (size_ == max_size_) {
-        return data_.back().map_iterator_;
-    }
-    return end();
-}
-
 template<typename Key, typename Data> void
-LRUCache<Key, Data>::insert(const Key& key, const Data& data) {
+LRUCache<Key, Data>::insert(const Key& key, const Data& data, CacheUsageCounter* counter) {
     iterator it = find(key);
     if (it == end()) {
         if (size_ == max_size_) {
+            if (NULL != counter) {
+                counter->removed(data_.back().map_iterator_->first);
+            }
             key2data_.erase(data_.back().map_iterator_);
             data_.pop_back();
             --size_;

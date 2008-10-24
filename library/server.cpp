@@ -195,13 +195,13 @@ Server::hostname() const {
 }
 
 extern "C" int
-    closeFunc(void *ctx) {
+closeFunc(void *ctx) {
     (void)ctx;
     return 0;
 }
 
 extern "C" int
-    writeFunc(void *ctx, const char *data, int len) {
+writeFunc(void *ctx, const char *data, int len) {
     if (0 == len) {
         return 0;
     }
