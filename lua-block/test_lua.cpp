@@ -279,7 +279,7 @@ LuaTest::testEncode() {
     CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
     CPPUNIT_ASSERT_EQUAL(
-        std::string("%CF%F0%E5%E2%E5%E4\nПревед\n"),
+        std::string("%CF%F0%E5%E2%E5%E4\nПревед\n%D0%9F%D1%80%D0%B5%D0%B2%D0%B5%D0%B4\nПревед\n"),
         XmlUtils::xpathValue(doc.get(), "/page/lua", "Bye")
     );
 }

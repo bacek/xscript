@@ -5,6 +5,10 @@
 		print(enc);
 		dec = xscript.urldecode(enc, "cp1251")
 		print(dec);
+        enc = xscript.urlencode("Превед");
+        print(enc);
+		dec = xscript.urldecode(enc)
+		print(dec);
 	]]>
 	</x:lua>
 </page>

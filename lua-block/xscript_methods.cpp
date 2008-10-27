@@ -59,9 +59,17 @@ static int luaPrint (lua_State *lua) {
 static int
 luaUrlEncode(lua_State *lua) {
     try {
-        luaCheckStackSize(lua, 2);
+        int stack_size = lua_gettop(lua);
+        if (stack_size < 1 || stack_size > 2) 
+            throw BadArgCount(stack_size);
+
         std::string value = luaReadStack<std::string>(lua, 1);
-        std::string encoding = luaReadStack<std::string>(lua, 2);
+        std::string encoding;
+        if (stack_size == 2) 
+            encoding = luaReadStack<std::string>(lua, 2);
+        else
+            encoding = "utf-8";
+        
 
         std::auto_ptr<Encoder> encoder = Encoder::createEscaping("utf-8", encoding.c_str());
         std::string encoded;
@@ -81,9 +89,16 @@ luaUrlEncode(lua_State *lua) {
 static int
 luaUrlDecode(lua_State *lua) {
     try {
-        luaCheckStackSize(lua, 2);
+        int stack_size = lua_gettop(lua);
+        if (stack_size < 1 || stack_size > 2) 
+            throw BadArgCount(stack_size);
+
         std::string value = luaReadStack<std::string>(lua, 1);
-        std::string encoding = luaReadStack<std::string>(lua, 2);
+        std::string encoding;
+        if (stack_size == 2) 
+            encoding = luaReadStack<std::string>(lua, 2);
+        else
+            encoding = "utf-8";
 
         std::auto_ptr<Encoder> encoder = Encoder::createEscaping(encoding.c_str(), "utf-8");
 
