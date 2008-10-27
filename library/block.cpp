@@ -136,11 +136,14 @@ XmlDocHelper
 Block::invoke(Context *ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     if (ctx->stopped()) {
-        log()->error("Context already stopped. Cannot invoke block. Method: %s", method_.c_str());
+        log()->error("Context already stopped. Cannot invoke block. Owner: %s. Block: %s. Method: %s",
+            owner()->name().c_str(), name(), method_.c_str());
         return fakeResult();
     }
 
     if (!checkGuard(ctx)) {
+        log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
+            owner()->name().c_str(), name(), method_.c_str());
         return fakeResult();
     }
 

@@ -13,20 +13,23 @@
 #include <libxml/parser.h>
 #include <libxml/xmlerror.h>
 
+#include <libxslt/extensions.h>
 #include <libxslt/xsltutils.h>
 #include <libxslt/xsltInternals.h>
 
 #include <libexslt/exslt.h>
 #include <libexslt/exsltconfig.h>
 
-#include "xscript/util.h"
-#include "xscript/xml_util.h"
-#include "xscript/range.h"
-#include "xscript/logger.h"
-#include "xscript/encoder.h"
-#include "xscript/sanitizer.h"
 #include "internal/algorithm.h"
+#include "xscript/encoder.h"
+#include "xscript/logger.h"
+#include "xscript/range.h"
+#include "xscript/sanitizer.h"
+#include "xscript/script.h"
+#include "xscript/stylesheet.h"
+#include "xscript/util.h"
 #include "xscript/xml_helpers.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -215,6 +218,36 @@ XmlUtils::xpathValue(xmlDocPtr doc, const std::string &path, const std::string &
         }
     }
     return res;
+}
+
+void
+XmlUtils::reportXsltError(const std::string &error, xmlXPathParserContextPtr ctxt) {
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+
+    const Context *ctx = NULL;
+    if (NULL != tctx) {
+        try {
+            ctx = Stylesheet::getContext(tctx);
+        }
+        catch(const std::exception &e) {
+            log()->error("caught exception during handling of error: %s. Exception: %s", error.c_str(), e.what());
+            return;
+        }
+    }
+
+    reportXsltError(error, ctx);
+
+}
+
+void
+XmlUtils::reportXsltError(const std::string &error, const Context *ctx) {
+    if (NULL == ctx) {
+        log()->error("%s", error.c_str());
+    }
+    else {
+        log()->error("%s. Script: %s. Stylesheet: %s",
+            error.c_str(), ctx->script()->name().c_str(), ctx->xsltName().c_str());
+    }
 }
 
 XmlErrorReporter::XmlErrorReporter() :

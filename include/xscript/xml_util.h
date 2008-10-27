@@ -10,6 +10,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/utility.hpp>
 #include <xscript/config.h>
+#include <xscript/context.h>
 #include <xscript/range.h>
 #include <xscript/xml_helpers.h>
 #include <libxml/tree.h>
@@ -30,6 +31,9 @@ public:
     static void throwUnless(bool value);
     static bool hasXMLError();
     static void printXMLError(const std::string& postfix);
+
+    static void reportXsltError(const std::string &error, xmlXPathParserContextPtr ctxt);
+    static void reportXsltError(const std::string &error, const Context *ctx);
 
     static std::string escape(const Range &value);
     template<typename Cont> static std::string escape(const Cont &value);
