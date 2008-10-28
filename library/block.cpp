@@ -207,9 +207,6 @@ Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
     const Server* server = VirtualHostData::instance()->getServer();
     bool need_perblock = (!server || server->needApplyPerblockStylesheet(ctx->request()));
     if (need_perblock) {
-        if (timer().expired()) {
-            throw InvokeError("block is timed out");
-        }
         applyStylesheet(ctx, doc);
     }
 
@@ -225,6 +222,9 @@ Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
 void
 Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
     if (!xsltName().empty()) {
+        if (timer().expired()) {
+            throw InvokeError("block is timed out");
+        }
         boost::shared_ptr<Stylesheet> sh = Stylesheet::create(xsltName());
         {
             PROFILER(log(), std::string("per-block-xslt: '") + xsltName() + "' block: '" + name() + "' block-id: '" + id() + "' method: '" + method() + "' owner: '" + owner()->name() + "'");
