@@ -57,7 +57,7 @@ private:
     const_iterator find(const Key& key) const;
     iterator find(const Key& key);
     void update(iterator it, const Data& data);
-    void moveFront(List::iterator it);
+    void moveFront(typename List::iterator it);
 };
 
 
@@ -171,7 +171,7 @@ LRUCache<Key, Data>::update(LRUCache<Key, Data>::iterator it, const Data& data) 
 }
 
 template<typename Key, typename Data> void
-LRUCache<Key, Data>::moveFront(List::iterator it) {
+LRUCache<Key, Data>::moveFront(typename List::iterator it) {
     if (it == data_.begin() || it == data_.end()) {
         return;
     }
