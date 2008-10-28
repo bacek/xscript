@@ -137,7 +137,7 @@ XmlUtils::hasXMLError() {
 void
 XmlUtils::printXMLError(const std::string& postfix) {
     if (XmlErrorReporter::reporter()->hasError()) {
-        log()->error("Got XML error: %s. %s", XmlErrorReporter::reporter()->message().c_str(), postfix.c_str());
+        log()->error("Got XML error: %s %s", XmlErrorReporter::reporter()->message().c_str(), postfix.c_str());
         resetReporter();
     }
 }

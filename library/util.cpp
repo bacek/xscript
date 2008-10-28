@@ -297,7 +297,7 @@ TimeoutCounter::remained() const {
     struct timeval current;
     gettimeofday(&current, 0);
 
-    return timeout_ - (current.tv_sec - init_time_.tv_sec) * 1000 +
+    return timeout_ - (current.tv_sec - init_time_.tv_sec) * 1000 -
            (current.tv_usec - init_time_.tv_usec) / 1000;
 
 }
