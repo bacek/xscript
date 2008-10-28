@@ -134,6 +134,7 @@ public:
     bool expired() const;
     int remained() const;
     void timeout(int timeout);
+    int timeout() const;
 
     static const int UNLIMITED_TIME;
 private:

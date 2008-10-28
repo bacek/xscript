@@ -223,7 +223,8 @@ void
 Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
     if (!xsltName().empty()) {
         if (timer().expired()) {
-            throw InvokeError("block is timed out");
+            throw InvokeError("block is timed out", "timeout",
+                boost::lexical_cast<std::string>(timer().timeout()));
         }
         boost::shared_ptr<Stylesheet> sh = Stylesheet::create(xsltName());
         {

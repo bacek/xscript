@@ -1,3 +1,10 @@
+xscript (5.40-3) unstable; urgency=low
+
+  * check timeout in processResponse fixed
+  * add timeout to exception info
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 28 Oct 2008 18:04:10 +0300
+
 xscript (5.40-2) unstable; urgency=low
 
   * check timeout in processResponse in case of perblock stylesheet only

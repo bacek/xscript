@@ -141,7 +141,9 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
 
     int timeout = timer().remained();
     if (timeout <= 0) {
-        throw InvokeError("block is timed out", "url", url);
+        InvokeError error("block is timed out", "url", url);
+        error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
+        throw error;
     }
 
     const Tag* tag = boost::any_cast<Tag>(&a);
@@ -181,7 +183,9 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
 
     int timeout = timer().remained();
     if (timeout <= 0) {
-        throw InvokeError("block is timed out", "url", p[0]->asString(ctx));
+        InvokeError error("block is timed out", "url", url);
+        error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
+        throw error;
     }
 
     const Tag* tag = boost::any_cast<Tag>(&a);
@@ -234,7 +238,9 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
 
     int timeout = timer().remained();
     if (timeout <= 0) {
-        throw InvokeError("block is timed out", "url", url);
+        InvokeError error("block is timed out", "url", url);
+        error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
+        throw error;
     }
 
     HttpHelper helper(url, timeout);
@@ -268,7 +274,9 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
 
     int timeout = timer().remained();
     if (timeout <= 0) {
-        throw InvokeError("block is timed out", "url", url);
+        InvokeError error("block is timed out", "url", url);
+        error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
+        throw error;
     }
 
     HttpHelper helper(url, timeout);

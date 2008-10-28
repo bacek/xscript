@@ -276,6 +276,11 @@ TimeoutCounter::timeout(int timeout) {
     timeout_ = timeout;
 }
 
+int
+TimeoutCounter::timeout() const {
+    return timeout_;
+}
+
 void
 TimeoutCounter::reset(int timeout) {
     if (timeout <= 0) {

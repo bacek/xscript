@@ -73,7 +73,9 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     std::string file = fullName(filename);
 
     if (timer().expired()) {
-        throw InvokeError("block is timed out", "file", file);
+        InvokeError error("block is timed out", "file", file);
+        error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
+        throw error;
     }
 
     if (!tagged()) {
