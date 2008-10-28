@@ -299,7 +299,6 @@ TimeoutCounter::remained() const {
 
     return timeout_ - (current.tv_sec - init_time_.tv_sec) * 1000 -
            (current.tv_usec - init_time_.tv_usec) / 1000;
-
 }
 
 bool

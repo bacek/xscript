@@ -199,10 +199,6 @@ Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
         throw InvokeError("got document with no root");
     }
 
-    if (timer().expired()) {
-        throw InvokeError("block is timed out");
-    }
-
     if (!tagged() && ctx->stopped()) {
         throw InvokeError("context is already stopped, cannot process response");
     }
@@ -211,6 +207,9 @@ Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
     const Server* server = VirtualHostData::instance()->getServer();
     bool need_perblock = (!server || server->needApplyPerblockStylesheet(ctx->request()));
     if (need_perblock) {
+        if (timer().expired()) {
+            throw InvokeError("block is timed out");
+        }
         applyStylesheet(ctx, doc);
     }
 
