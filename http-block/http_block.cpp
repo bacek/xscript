@@ -181,6 +181,8 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
         throw InvokeError("bad arity");
     }
 
+    std::string url = p[0]->asString(ctx);
+
     int timeout = timer().remained();
     if (timeout <= 0) {
         InvokeError error("block is timed out", "url", url);
@@ -189,7 +191,7 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
     }
 
     const Tag* tag = boost::any_cast<Tag>(&a);
-    HttpHelper helper(p[0]->asString(ctx), timeout);
+    HttpHelper helper(url, timeout);
     std::string body = p[1]->asString(ctx);
     helper.appendHeaders(ctx->request(), proxy_, tag);
 
