@@ -38,6 +38,7 @@ public:
      * Find constructor for method. Throws and exception in case of non-existen method.
      */
     static Constructor findConstructor(const std::string& method);
+    static void clearConstructors();
 
 private:
     typedef std::map<std::string, Constructor> ConstructorMap;

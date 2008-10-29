@@ -14,6 +14,7 @@ ControlExtension::ControlExtension() {
 }
 
 ControlExtension::~ControlExtension() {
+    ControlExtensionRegistry::clearConstructors();
 }
 
 const char*
@@ -77,6 +78,11 @@ ControlExtensionRegistry::findConstructor(const std::string& method) {
         throw std::runtime_error("method doesn't exists");
     }
     return m->second;
+}
+
+void
+ControlExtensionRegistry::clearConstructors() {
+    constructors_.clear();
 }
 
 // We should not register ControlExtension. It will be registred in Config::startup
