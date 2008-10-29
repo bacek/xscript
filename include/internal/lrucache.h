@@ -177,7 +177,8 @@ LRUCache<Key, Data>::moveFront(typename List::iterator it) {
     }
 
     iterator map_iter = it->map_iterator_;
-    data_.splice(data_.begin(), data_, it, ++it);
+    typename List::iterator it_prev = it++;
+    data_.splice(data_.begin(), data_, it_prev, it);
     map_iter->second = data_.begin();
 }
 
