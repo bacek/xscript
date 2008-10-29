@@ -250,7 +250,7 @@ XmlStorage::expired(const boost::shared_ptr<Xml> &xml) const {
 
     log()->debug("is xml expired: %llu, %llu", static_cast<unsigned long long>(modified),
                  static_cast<unsigned long long>(xml->modified()));
-    return modified > xml->modified();
+    return modified != xml->modified();
 }
 
 const CacheUsageCounter*
