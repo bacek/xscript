@@ -16,6 +16,7 @@ ControlExtension::ControlExtension() {
 }
 
 ControlExtension::~ControlExtension() {
+    constructors_.clear();
 }
 
 const char*
