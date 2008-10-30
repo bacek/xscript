@@ -4,6 +4,7 @@
 
 #include "xscript/logger.h"
 #include "xscript/policy.h"
+#include "xscript/request.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -31,7 +32,7 @@ Policy::~Policy() {
 }
 
 void
-Policy::getProxyHttpHeaders(const Request *req, std::vector<std::string> &headers) {
+Policy::getProxyHttpHeaders(const Request *req, std::vector<std::string> &headers) const {
     headers.clear();
     if (req->countHeaders() > 0) {
         std::vector<std::string> names;
@@ -51,7 +52,7 @@ Policy::getProxyHttpHeaders(const Request *req, std::vector<std::string> &header
 }
 
 bool
-Policy::isSkippedProxyHeader(const std::string &header) {
+Policy::isSkippedProxyHeader(const std::string &header) const {
     return ProxyHeadersHelper::skipped(header.c_str());
 }
 

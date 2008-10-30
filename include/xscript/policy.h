@@ -5,19 +5,20 @@
 #include <string>
 
 #include "xscript/component.h"
-#include "xscript/request.h"
 
 namespace xscript {
+
+class Request;
 
 class Policy: public virtual Component<Policy> {
 public:
     Policy();
     virtual ~Policy();
 
-    void getProxyHttpHeaders(const Request *req, std::vector<std::string> &headers);   
+    virtual void getProxyHttpHeaders(const Request *req, std::vector<std::string> &headers) const;   
 
 protected:
-    virtual bool isSkippedProxyHeader(const std::string &header);
+    virtual bool isSkippedProxyHeader(const std::string &header) const;
 };
 
 } // namespace xscript

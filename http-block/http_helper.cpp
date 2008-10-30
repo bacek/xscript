@@ -6,7 +6,6 @@
 #include <iterator>
 #include <stdexcept>
 #include <algorithm>
-#include <list>
 
 #include <boost/tokenizer.hpp>
 #include <boost/current_function.hpp>
@@ -60,7 +59,7 @@ HttpHelper::HttpHelper(const std::string &url, long timeout) :
     if (NULL != curl_) {
         if (timeout > 0) {
 #if (LIBCURL_VERSION_MAJOR > 7) || ((LIBCURL_VERSION_MAJOR == 7) && (LIBCURL_VERSION_MINOR >= 16))
-            setopt(CURLOPT_TIMEOUT, timeout);
+            setopt(CURLOPT_TIMEOUT_MS, timeout);
 #else
             setopt(CURLOPT_TIMEOUT, (timeout + 999) / 1000);
 #endif
