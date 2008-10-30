@@ -6,11 +6,13 @@
 #include <iterator>
 #include <stdexcept>
 #include <algorithm>
+#include <list>
 
 #include <boost/tokenizer.hpp>
 #include <boost/current_function.hpp>
 
 #include "http_helper.h"
+#include "xscript/policy.h"
 #include "xscript/util.h"
 #include "xscript/range.h"
 #include "xscript/logger.h"
@@ -22,45 +24,6 @@
 #endif
 
 namespace xscript {
-
-class ProxyHeadersHelper {
-public:
-    static bool skipped(const char* name);
-
-private:
-    struct StrSize {
-        const char* name;
-        int size;
-    };
-
-    static const StrSize skipped_headers[];
-};
-
-const ProxyHeadersHelper::StrSize ProxyHeadersHelper::skipped_headers[] = {
-    { "host", sizeof("host") },
-    { "if-modified-since", sizeof("if-modified-since") },
-    { "accept-encoding", sizeof("accept-encoding") },
-    { "keep-alive", sizeof("keep-alive") },
-    { "connection", sizeof("connection") },
-    { "content-length", sizeof("content-length") },
-};
-
-bool
-ProxyHeadersHelper::skipped(const char* name) {
-    for ( int i = sizeof(skipped_headers) / sizeof(skipped_headers[0]); i--; ) {
-        const StrSize& sh = skipped_headers[i];
-        if (strncasecmp(name, sh.name, sh.size) == 0) {
-            return true;
-        }
-    }
-
-    if (strncasecmp(name, "x-", sizeof("x-")) == 0) {
-        return (strncasecmp(name, "x-real-ip", sizeof("x-real-ip")) != 0);
-    }
-
-    return false;
-}
-
 
 HeadersHelper::HeadersHelper() : headers_(NULL) {
 }
@@ -96,7 +59,11 @@ HttpHelper::HttpHelper(const std::string &url, long timeout) :
     curl_ = curl_easy_init();
     if (NULL != curl_) {
         if (timeout > 0) {
+#if (LIBCURL_VERSION_MAJOR > 7) || ((LIBCURL_VERSION_MAJOR == 7) && (LIBCURL_VERSION_MINOR >= 16))
+            setopt(CURLOPT_TIMEOUT, timeout);
+#else
             setopt(CURLOPT_TIMEOUT, (timeout + 999) / 1000);
+#endif
         }
         setopt(CURLOPT_URL, url_.c_str());
 
@@ -131,30 +98,13 @@ HttpHelper::appendHeaders(const Request* req, bool proxy, const Tag* tag) {
         return;
     }
 
-    std::string header;
-    bool real_ip_added = false;
-    if (proxy && req->countHeaders() > 0) {
-        std::vector<std::string> names;
-        req->headerNames(names);
-        for (std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
-            const std::string& name = *i;
-            const std::string& value = req->getHeader(name);
-            if (ProxyHeadersHelper::skipped(name.c_str())) {
-                log()->debug("%s, skipped %s: %s", BOOST_CURRENT_FUNCTION, name.c_str(), value.c_str());
-            }
-            else {
-                header.assign(name).append(": ").append(value);
-                headers_helper_.append(header.c_str());
-                if (!real_ip_added) {
-                    real_ip_added = strncasecmp(name.c_str(), "x-real-ip", sizeof("x-real-ip")) == 0;
-                }
-            }
-        }
-    }
-    if (!real_ip_added) {
-        const std::string& remote_addr = req->getRemoteAddr();
-        header.assign("X-Real-IP: ").append(remote_addr);
-        headers_helper_.append(header.c_str());
+    std::vector<std::string> headers;
+    Policy::instance()->getProxyHttpHeaders(req, headers);
+
+    for(std::vector<std::string>::iterator it = headers.begin();
+        it != headers.end();
+        ++it) {
+        headers_helper_.append(it->c_str());
     }
 
     headers_helper_.append("Expect:");
