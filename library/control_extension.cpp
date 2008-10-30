@@ -10,11 +10,12 @@
 
 namespace xscript {
 
+ControlExtension::ConstructorMap ControlExtension::constructors_;
+
 ControlExtension::ControlExtension() {
 }
 
 ControlExtension::~ControlExtension() {
-    ControlExtensionRegistry::clearConstructors();
 }
 
 const char*
@@ -60,19 +61,16 @@ ControlExtension::createBlock(Xml *owner, xmlNodePtr orig) {
         throw std::runtime_error("method is not provided");
     }
 
-    return ControlExtensionRegistry::findConstructor(method)(this, owner, orig);
+    return findConstructor(method)(this, owner, orig);
 }
 
-
-ControlExtensionRegistry::ConstructorMap ControlExtensionRegistry::constructors_;
-
 void
-ControlExtensionRegistry::registerConstructor(const std::string & method, ControlExtensionRegistry::Constructor ctor) {
+ControlExtension::registerConstructor(const std::string & method, Constructor ctor) {
     constructors_[method] = ctor;
 }
 
-ControlExtensionRegistry::Constructor
-ControlExtensionRegistry::findConstructor(const std::string& method) {
+ControlExtension::Constructor
+ControlExtension::findConstructor(const std::string& method) {
     ConstructorMap::const_iterator m = constructors_.find(method);
     if (m == constructors_.end()) {
         throw std::runtime_error("method doesn't exists");
@@ -80,12 +78,7 @@ ControlExtensionRegistry::findConstructor(const std::string& method) {
     return m->second;
 }
 
-void
-ControlExtensionRegistry::clearConstructors() {
-    constructors_.clear();
-}
-
-// We should not register ControlExtension. It will be registred in Config::startup
+// We should not register ControlExtension. It will be registered in Config::startup
 //REGISTER_COMPONENT(ControlExtension);
 
 } // namespace xscript

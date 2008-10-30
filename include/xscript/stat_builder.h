@@ -41,7 +41,7 @@ public:
     /**
      * Create block to output statistic in xscript page.
      */
-    std::auto_ptr<Block> createBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    std::auto_ptr<Block> createBlock(const ControlExtension *ext, Xml *owner, xmlNodePtr node);
 
     const std::string& getName() const;
     void setName(const std::string& name);
@@ -53,7 +53,7 @@ private:
 
 class StatBuilderBlock : public Block {
 public:
-    StatBuilderBlock(const Extension *ext, Xml *owner, xmlNodePtr node, const StatBuilder& builder)
+    StatBuilderBlock(const ControlExtension *ext, Xml *owner, xmlNodePtr node, const StatBuilder& builder)
             : Block(ext, owner, node), builder_(builder) {
     }
 
@@ -67,9 +67,9 @@ private:
 class StatBuilderHolder {
 public:
     StatBuilderHolder(const std::string& name) : statBuilder_(name) {
-        ControlExtensionRegistry::Constructor f =
+        ControlExtension::Constructor f =
             boost::bind(boost::mem_fn(&StatBuilder::createBlock), &statBuilder_, _1, _2, _3);
-        ControlExtensionRegistry::registerConstructor(statBuilder_.getName() + "-stat", f);
+        ControlExtension::registerConstructor(statBuilder_.getName() + "-stat", f);
     }
 
     virtual ~StatBuilderHolder() {};

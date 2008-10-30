@@ -24,21 +24,15 @@ public:
     virtual void destroyContext(Context *ctx);
 
     virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);
-};
 
-
-class ControlExtensionRegistry {
-public:
-
-    typedef boost::function<std::auto_ptr<Block> (const Extension *ext, Xml*, xmlNodePtr)> Constructor;
-
+    typedef boost::function<std::auto_ptr<Block> (const ControlExtension *ext, Xml*, xmlNodePtr)> Constructor;
     static void registerConstructor(const std::string & method, Constructor ctor);
 
+protected:
     /**
-     * Find constructor for method. Throws and exception in case of non-existen method.
-     */
-    static Constructor findConstructor(const std::string& method);
-    static void clearConstructors();
+    * Find constructor for method. Throws and exception in case of non-existent method.
+    */
+    Constructor findConstructor(const std::string& method);
 
 private:
     typedef std::map<std::string, Constructor> ConstructorMap;

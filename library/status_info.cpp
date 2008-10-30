@@ -20,8 +20,8 @@ StatusInfo::StatusInfo() :
 void
 StatusInfo::init(const Config *config) {
     (void)config;
-    ControlExtensionRegistry::Constructor f = boost::bind(boost::mem_fn(&StatBuilder::createBlock), &statBuilder_, _1, _2, _3);
-    ControlExtensionRegistry::registerConstructor("status-info", f);
+    ControlExtension::Constructor f = boost::bind(boost::mem_fn(&StatBuilder::createBlock), &statBuilder_, _1, _2, _3);
+    ControlExtension::registerConstructor("status-info", f);
 }
 
 REGISTER_COMPONENT(StatusInfo);

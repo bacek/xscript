@@ -6,6 +6,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <xscript/component.h>
+#include <xscript/control_extension.h>
 #include <xscript/logger.h>
 #include <xscript/block.h>
 
@@ -33,7 +34,7 @@ public:
 
     /**
      */
-    std::auto_ptr<Block> createBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    std::auto_ptr<Block> createBlock(const ControlExtension *ext, Xml *owner, xmlNodePtr node);
 
     /**
      * Enforce log rotating.

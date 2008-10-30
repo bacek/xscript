@@ -19,8 +19,8 @@ REGISTER_COMPONENT(LoggerFactory);
 
 LoggerFactory::LoggerFactory() : defaultLogger_(0)
 {
-    ControlExtensionRegistry::Constructor f = boost::bind(boost::mem_fn(&LoggerFactory::createBlock), this, _1, _2, _3);
-    ControlExtensionRegistry::registerConstructor("logrotate", f);
+    ControlExtension::Constructor f = boost::bind(boost::mem_fn(&LoggerFactory::createBlock), this, _1, _2, _3);
+    ControlExtension::registerConstructor("logrotate", f);
 }
 
 LoggerFactory::~LoggerFactory() {
@@ -28,7 +28,7 @@ LoggerFactory::~LoggerFactory() {
 
 class LoggerFactoryBlock : public Block {
 public:
-    LoggerFactoryBlock(const Extension *ext, Xml *owner, xmlNodePtr node)
+    LoggerFactoryBlock(const ControlExtension *ext, Xml *owner, xmlNodePtr node)
             : Block(ext, owner, node) {
     }
 
@@ -47,7 +47,7 @@ public:
 };
 
 std::auto_ptr<Block>
-LoggerFactory::createBlock(const Extension *ext, Xml *owner, xmlNodePtr node) {
+LoggerFactory::createBlock(const ControlExtension *ext, Xml *owner, xmlNodePtr node) {
     return std::auto_ptr<Block>(new LoggerFactoryBlock(ext, owner, node));
 }
 

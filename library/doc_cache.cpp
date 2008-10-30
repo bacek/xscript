@@ -18,7 +18,7 @@ namespace xscript {
 
 class DocCacheBlock : public Block {
 public:
-    DocCacheBlock(const Extension *ext, Xml *owner, xmlNodePtr node, const DocCache& doc_cache)
+    DocCacheBlock(const ControlExtension *ext, Xml *owner, xmlNodePtr node, const DocCache& doc_cache)
             : Block(ext, owner, node), doc_cache_(doc_cache) {
     }
 
@@ -40,8 +40,8 @@ void
 DocCache::init(const Config *config) {
     // FIXME Read order of strategies
     config_ = config;
-    ControlExtensionRegistry::Constructor f = boost::bind(boost::mem_fn(&DocCache::createBlock), this, _1, _2, _3);
-    ControlExtensionRegistry::registerConstructor("tagged-cache-stat", f);
+    ControlExtension::Constructor f = boost::bind(boost::mem_fn(&DocCache::createBlock), this, _1, _2, _3);
+    ControlExtension::registerConstructor("tagged-cache-stat", f);
 }
 
 void
@@ -97,7 +97,7 @@ DocCache::saveDoc(const Context *ctx, const TaggedBlock *block, const Tag& tag, 
 
 
 std::auto_ptr<Block>
-DocCache::createBlock(const Extension *ext, Xml *owner, xmlNodePtr node) {
+DocCache::createBlock(const ControlExtension *ext, Xml *owner, xmlNodePtr node) {
     return std::auto_ptr<Block>(new DocCacheBlock(ext, owner, node, *this));
 }
 

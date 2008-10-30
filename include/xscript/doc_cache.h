@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <xscript/component.h>
+#include <xscript/control_extension.h>
 #include <xscript/xml_helpers.h>
 
 namespace xscript {
@@ -36,7 +37,7 @@ public:
     /**
      * Create block to output statistic in xscript page.
      */
-    std::auto_ptr<Block> createBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    std::auto_ptr<Block> createBlock(const ControlExtension *ext, Xml *owner, xmlNodePtr node);
 
     /**
      * Create aggregate report. Caller must free result.

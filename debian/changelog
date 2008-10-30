@@ -1,8 +1,9 @@
 xscript (5.41-0) unstable; urgency=low
 
   * skipping proxy headers updated
+  * ControlExtensionRegistry moved to ControlExtension
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 29 Oct 2008 17:38:56 +0300
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 30 Oct 2008 12:45:22 +0300
 
 xscript (5.40-3) unstable; urgency=low
 

@@ -38,7 +38,7 @@ void StatBuilder::addCounter(const CounterBase* counter) {
     counters_.push_back(counter);
 }
 
-std::auto_ptr<Block> StatBuilder::createBlock(const Extension *ext, Xml *owner, xmlNodePtr node) {
+std::auto_ptr<Block> StatBuilder::createBlock(const ControlExtension *ext, Xml *owner, xmlNodePtr node) {
     return std::auto_ptr<Block>(new StatBuilderBlock(ext, owner, node, *this));
 }
 
