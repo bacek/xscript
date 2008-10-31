@@ -1,4 +1,5 @@
 #include "settings.h"
+#include <cstring>
 
 #include <boost/current_function.hpp>
 
