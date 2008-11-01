@@ -21,12 +21,16 @@ Validator::~Validator() {
 
 void 
 Validator::check(const Context *ctx, const Param &param) const {
-    if (!isPassed(ctx, param)) {
+    try {
+        checkImpl(ctx, param);
+    }
+    catch(ValidatorException &ex) {
         if (!guard_name_.empty()) {
             ctx->state()->setBool(guard_name_, true);
         }
-        throw ValidatorException();
+        throw;
     }
+
 }
 
 ValidatorRegisterer::ValidatorRegisterer(const char *name, const ValidatorConstructor &cons) {

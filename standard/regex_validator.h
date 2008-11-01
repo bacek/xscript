@@ -3,6 +3,7 @@
 
 #include <pcre.h>
 #include "xscript/validator.h"
+#include "xscript/validator_exception.h"
 
 namespace xscript
 {
@@ -29,7 +30,7 @@ public:
     bool checkString(const std::string &value) const;
 
 protected:
-    virtual bool isPassed(const Context *ctx, const Param &value) const;
+    virtual void checkImpl(const Context *ctx, const Param &value) const;
 
 private:
     /// Compiled RE

@@ -5,6 +5,7 @@
 #include "xscript/param.h"
 #include "xscript/xml_util.h"
 #include "xscript/validator.h"
+#include "xscript/validator_exception.h"
 
 #include <iostream>
 
@@ -69,8 +70,10 @@ public:
 
 protected:
     /// Check. Return true if validator passed.
-    virtual bool isPassed(const Context *ctx, const Param &value) const {
-        return checkString(value.asString(ctx));
+    virtual void checkImpl(const Context *ctx, const Param &value) const {
+        if(!checkString(value.asString(ctx))) {
+            throw ValidatorException();
+        }
     }
 
 private:

@@ -18,8 +18,8 @@ namespace xscript
         Validator(xmlNodePtr node);
         virtual ~Validator();
 
-        /// Check validator. Factory method around isFailed and will set guard
-        /// and throw ValidatorException if case of errors.
+        /// Check validator. Factory method around checkImpl and will set guard
+        /// in case of errors.
         void check(const Context *ctx, const Param &param) const;
 
         /// Get guard name.
@@ -27,8 +27,8 @@ namespace xscript
             return guard_name_;
         }
     protected:
-        /// Check. Return true if validator passed.
-        virtual bool isPassed(const Context *ctx, const Param &value) const = 0;
+        /// Check. Throw ValidatorException if validator failed.
+        virtual void checkImpl(const Context *ctx, const Param &value) const = 0;
 
         /// State param to set to in case of errors.
         std::string guard_name_;

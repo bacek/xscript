@@ -62,10 +62,12 @@ RegexValidator::~RegexValidator()
     if (re_) pcre_free(re_);
 }
 
-bool 
-RegexValidator::isPassed(const Context *ctx, const Param &value) const
+void 
+RegexValidator::checkImpl(const Context *ctx, const Param &value) const
 {
-    return checkString(value.asString(ctx));
+    if(!checkString(value.asString(ctx))) {
+        throw ValidatorException();
+    }
 }
 
 bool 
