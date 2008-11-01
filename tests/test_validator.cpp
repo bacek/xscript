@@ -15,8 +15,8 @@ using namespace xscript;
 class ValidatorMockup : public xscript::Validator {
 public:
     ValidatorMockup(xmlNodePtr node) : Validator(node) {}
-    bool isPassed(const Context * /* ctx */, const xscript::Param & /* value */) const {
-        return true;
+    void checkImpl(const Context * /* ctx */, const xscript::Param & /* value */) const {
+        return;
     }
 };
 
@@ -27,8 +27,8 @@ Validator * createMockup(xmlNodePtr node) {
 class AlwaysFailValidator : public xscript::Validator {
 public:
     AlwaysFailValidator(xmlNodePtr node) : Validator(node) {}
-    bool isPassed(const Context * /* ctx */, const xscript::Param & /* value */) const {
-        return false;
+    void checkImpl(const Context * /* ctx */, const xscript::Param & /* value */) const {
+        throw ValidatorException();
     }
 };
 Validator * createFailed(xmlNodePtr node) {
