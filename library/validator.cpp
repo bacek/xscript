@@ -14,6 +14,9 @@ Validator::Validator(xmlNodePtr node) {
         guard_name_ = XmlUtils::value(attr);
         xmlRemoveProp(attr); // libxml will free memory
     }
+    attr = xmlHasProp(node, (const xmlChar*) "id");
+    if (attr)
+        param_id_ = XmlUtils::value(attr);
 }
 
 Validator::~Validator() {
@@ -25,6 +28,9 @@ Validator::check(const Context *ctx, const Param &param) const {
         checkImpl(ctx, param);
     }
     catch(ValidatorException &ex) {
+        if (!param_id_.empty())
+            ex.add("param-id", param_id_);
+
         if (!guard_name_.empty()) {
             ctx->state()->setBool(guard_name_, true);
         }
