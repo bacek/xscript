@@ -30,9 +30,6 @@ namespace xscript
         /// Check. Throw ValidatorException if validator failed.
         virtual void checkImpl(const Context *ctx, const Param &value) const = 0;
 
-        /// id of param
-        std::string param_id_;
-
         /// State param to set to in case of errors.
         std::string guard_name_;
     };
