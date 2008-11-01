@@ -52,6 +52,18 @@ Policy::getProxyHttpHeaders(const Request *req, std::vector<std::string> &header
     }
 }
 
+std::string
+Policy::getPathBySchema(const std::string &url) const {
+
+    const char schema[] = "file://";
+
+    if (!strncasecmp(url.substr(0, sizeof(schema) - 1).c_str(), schema, sizeof(schema))) {
+        return url.substr(sizeof(schema) - 1);
+    }
+
+    return url;
+}
+
 bool
 Policy::isSkippedProxyHeader(const std::string &header) const {
     return ProxyHeadersHelper::skipped(header.c_str());
