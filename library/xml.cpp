@@ -34,6 +34,9 @@ Xml::fullName(const std::string &object) const {
     }
     else {
         const std::string transformed = Policy::instance()->getPathByScheme(object);
+        if (transformed.empty()) {
+            throw std::runtime_error("Empty relative path");
+        }
         if (*transformed.begin() == '/') {
             path = fs::path(transformed);
         }
