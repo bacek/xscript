@@ -7,4 +7,8 @@ ValidatorException::ValidatorException()
     : InvokeError("validation failed") {
 }
 
+ValidatorException::ValidatorException(const std::string& reason)
+    : InvokeError("validation failed: " + reason) {
+}
+
 }

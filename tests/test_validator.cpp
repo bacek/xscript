@@ -28,7 +28,7 @@ class AlwaysFailValidator : public xscript::Validator {
 public:
     AlwaysFailValidator(xmlNodePtr node) : Validator(node) {}
     void checkImpl(const Context * /* ctx */, const xscript::Param & /* value */) const {
-        throw ValidatorException();
+        throw ValidatorException("EPIC FAILURE");
     }
 };
 Validator * createFailed(xmlNodePtr node) {

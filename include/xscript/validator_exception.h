@@ -11,6 +11,7 @@ namespace xscript
     class ValidatorException : public InvokeError {
     public:
         ValidatorException();
+        ValidatorException(const std::string& reason);
     };
 }
 
