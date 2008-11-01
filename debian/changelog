@@ -1,3 +1,13 @@
+xscript (5.41-1) unstable; urgency=low
+
+  * getPathBySchema method added to Policy
+  * Add constructor for ValidatorException with specifying reason (bacek work)
+  * Store param id in validator. Add this id into ValidatorException in case of errors. (bacek work)
+  * Change validators to throw exception directly from implementation (bacek work)
+  * [lua] Fix handling optional encoding in urlencode/urldecode (bacek work)
+
+ -- Leonid A. Movsesjan <lmovsesjan@yandex-team.ru>  Sat, 01 Nov 2008 13:08:18 +0300
+
 xscript (5.41-0) unstable; urgency=low
 
   * skipping proxy headers updated
