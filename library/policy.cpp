@@ -53,12 +53,12 @@ Policy::getProxyHttpHeaders(const Request *req, std::vector<std::string> &header
 }
 
 std::string
-Policy::getPathBySchema(const std::string &url) const {
+Policy::getPathByScheme(const std::string &url) const {
 
-    const char schema[] = "file://";
+    const char scheme[] = "file://";
 
-    if (!strncasecmp(url.substr(0, sizeof(schema) - 1).c_str(), schema, sizeof(schema))) {
-        return url.substr(sizeof(schema) - 1);
+    if (!strncasecmp(url.c_str(), scheme, sizeof(scheme) - 1)) {
+        return url.substr(sizeof(scheme) - 1);
     }
 
     return url;

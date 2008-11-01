@@ -33,7 +33,7 @@ Xml::fullName(const std::string &object) const {
         path = fs::path(object);
     }
     else {
-        const std::string transformed = Policy::instance()->getPathBySchema(object);
+        const std::string transformed = Policy::instance()->getPathByScheme(object);
         if (*transformed.begin() == '/') {
             path = fs::path(transformed);
         }

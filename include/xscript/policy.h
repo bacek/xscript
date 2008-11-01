@@ -16,7 +16,7 @@ public:
     virtual ~Policy();
 
     virtual void getProxyHttpHeaders(const Request *req, std::vector<std::string> &headers) const;   
-    virtual std::string getPathBySchema(const std::string &url) const;
+    virtual std::string getPathByScheme(const std::string &url) const;
 
 protected:
     virtual bool isSkippedProxyHeader(const std::string &header) const;
