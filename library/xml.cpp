@@ -60,10 +60,12 @@ Xml::fullName(const std::string &object) const {
         }
     }
 #if BOOST_VERSION < 103401
-    for (std::string::size_type i = 0; i < res.length() - 1; ++i) {
+    std::string::size_type length = res.length();
+    for (std::string::size_type i = 0; i < length - 1; ++i) {
         if (res[i] == '/' && res[i + 1] == '/') {
             res.erase(i, 1);
             --i;
+            --length;
         }
     }
 #endif
