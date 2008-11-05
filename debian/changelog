@@ -1,3 +1,9 @@
+xscript (5.41-2) unstable; urgency=low
+
+  * Xml::fullName fixed in compliance with early Boost versions
+
+ -- Leonid A. Movsesjan <lmovsesjan@yandex-team.ru>  Wed,  5 Nov 2008 11:57:55 +0300
+
 xscript (5.41-1) unstable; urgency=low
 
   * getPathBySchema method added to Policy

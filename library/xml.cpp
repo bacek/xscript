@@ -28,9 +28,9 @@ Xml::fullName(const std::string &object) const {
         throw std::runtime_error("Empty relative path");
     }
 
-    fs::path path;
+    std::string res;
     if (*object.begin() == '/') {
-        path = fs::path(object);
+        res.assign(object);
     }
     else {
         const std::string transformed = Policy::instance()->getPathByScheme(object);
@@ -38,28 +38,36 @@ Xml::fullName(const std::string &object) const {
             throw std::runtime_error("Empty relative path");
         }
         if (*transformed.begin() == '/') {
-            path = fs::path(transformed);
+            res.assign(transformed);
         }
         else {
             const std::string &owner_name = name();
             if (owner_name.empty()) {
-                path = fs::path(transformed);
+                res.assign(transformed);
             }
             else if (*owner_name.rbegin() == '/') {
-                path = fs::path(owner_name + transformed);
+                res.assign(owner_name + transformed);
             }
             else {
                 std::string::size_type pos = owner_name.find_last_of('/');
                 if (pos == std::string::npos) {
-                    path = fs::path(transformed);
+                    res.assign(transformed);
                 }
                 else {
-                    path = fs::path(owner_name.substr(0, pos + 1) + transformed);
+                    res.assign(owner_name.substr(0, pos + 1) + transformed);
                 }
             }
         }
     }
-
+#if BOOST_VERSION < 103401
+    for (std::string::size_type i = 0; i < res.length() - 1; ++i) {
+        if (res[i] == '/' && res[i + 1] == '/') {
+            res.erase(i, 1);
+            --i;
+        }
+    }
+#endif
+    fs::path path = fs::path(res);
     path.normalize();
     return path.string();
 }
