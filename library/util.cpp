@@ -247,7 +247,7 @@ HashUtils::hexMD5(const ByteArrayType &key) {
     unsigned char md5buffer[16];
 
     MD5_Init(&md5handler);
-    MD5_Update(&md5handler, (unsigned char *)key.begin(), (unsigned int)key.size());
+    MD5_Update(&md5handler, (unsigned char *)&*key.begin(), (unsigned int)key.size());
     MD5_Final(md5buffer, &md5handler);
 
     char alpha[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
@@ -281,7 +281,7 @@ HashUtils::blowfish(const ByteArrayType &data, const ByteArrayType &key, const c
 
     BF_KEY bfkey;
 
-    BF_set_key(&bfkey, key.size(), (unsigned char *)key.begin());
+    BF_set_key(&bfkey, key.size(), (unsigned char *)&*key.begin());
 
     size_t datasize = data.size();
     size_t padded_datasize = (datasize % 8) ? 8*(datasize/8 + 1) : datasize;
@@ -293,7 +293,7 @@ HashUtils::blowfish(const ByteArrayType &data, const ByteArrayType &key, const c
         input.reserve(padded_datasize);
         input.insert(input.end(), data.begin(), data.end());
         input.insert(input.end(), padded_datasize - datasize, '\0');
-        BF_cbc_encrypt((unsigned char *)input.begin(),
+        BF_cbc_encrypt((unsigned char *)&*input.begin(),
             (unsigned char *)buffer,
             padded_datasize,
             &bfkey,
@@ -301,7 +301,7 @@ HashUtils::blowfish(const ByteArrayType &data, const ByteArrayType &key, const c
             BF_ENCRYPT);
     }
     else {
-        BF_cbc_encrypt((unsigned char *)data.begin(),
+        BF_cbc_encrypt((unsigned char *)&*data.begin(),
             (unsigned char *)buffer,
             padded_datasize,
             &bfkey,
