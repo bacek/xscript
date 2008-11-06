@@ -8,6 +8,7 @@
 
 #include <boost/current_function.hpp>
 
+#include <openssl/blowfish.h>
 #include <openssl/md5.h>
 
 #include "xscript/util.h"
@@ -235,12 +236,18 @@ HashUtils::~HashUtils() {
 
 std::string
 HashUtils::hexMD5(const char *key) {
+    ByteArrayType byte_key(key, key + strlen(key));
+    return hexMD5(byte_key);
+}
+
+std::string
+HashUtils::hexMD5(const ByteArrayType &key) {
 
     MD5_CTX md5handler;
     unsigned char md5buffer[16];
 
     MD5_Init(&md5handler);
-    MD5_Update(&md5handler, (unsigned char *)key, (unsigned int)strlen(key));
+    MD5_Update(&md5handler, (unsigned char *)key.begin(), (unsigned int)key.size());
     MD5_Final(md5buffer, &md5handler);
 
     char alpha[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
@@ -256,6 +263,53 @@ HashUtils::hexMD5(const char *key) {
     }
 
     return md5digest;
+}
+
+std::string
+HashUtils::blowfish(const char *data, const char *key, const char *ivec) {
+    ByteArrayType byte_data(data, data + strlen(data));
+    ByteArrayType byte_key(key, key + strlen(key));
+    return blowfish(byte_data, byte_key, ivec);
+}
+
+std::string
+HashUtils::blowfish(const ByteArrayType &data, const ByteArrayType &key, const char *ivec) {
+
+    unsigned char ivec_buffer[8];
+    memset(ivec_buffer, 0, 8);
+    memcpy(ivec_buffer, ivec, std::min(strlen(ivec), 8u));
+
+    BF_KEY bfkey;
+
+    BF_set_key(&bfkey, key.size(), (unsigned char *)key.begin());
+
+    size_t datasize = data.size();
+    size_t padded_datasize = (datasize % 8) ? 8*(datasize/8 + 1) : datasize;
+
+    unsigned char buffer[padded_datasize];
+
+    if (padded_datasize > datasize) {
+        ByteArrayType input;
+        input.reserve(padded_datasize);
+        input.insert(input.end(), data.begin(), data.end());
+        input.insert(input.end(), padded_datasize - datasize, '\0');
+        BF_cbc_encrypt((unsigned char *)input.begin(),
+            (unsigned char *)buffer,
+            padded_datasize,
+            &bfkey,
+            (unsigned char *)ivec_buffer,
+            BF_ENCRYPT);
+    }
+    else {
+        BF_cbc_encrypt((unsigned char *)data.begin(),
+            (unsigned char *)buffer,
+            padded_datasize,
+            &bfkey,
+            (unsigned char *)ivec_buffer,
+            BF_ENCRYPT);
+    }
+
+    return std::string(buffer, buffer + padded_datasize);
 }
 
 const int TimeoutCounter::UNLIMITED_TIME = std::numeric_limits<int>::max();

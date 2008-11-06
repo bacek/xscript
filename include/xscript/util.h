@@ -101,7 +101,12 @@ private:
 
 class HashUtils : private boost::noncopyable {
 public:
+    typedef std::vector<char> ByteArrayType;
+
     static std::string hexMD5(const char *key);
+    static std::string hexMD5(const ByteArrayType &key);
+    static std::string blowfish(const char *data, const char *key, const char *ivec);
+    static std::string blowfish(const ByteArrayType &data, const ByteArrayType &key, const char *ivec);
 
 private:
     HashUtils();

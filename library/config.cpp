@@ -25,6 +25,7 @@
 #include "xscript/stylesheet_cache.h"
 #include "xscript/stylesheet_factory.h"
 #include "xscript/control_extension.h"
+#include "xscript/policy.h"
 #include "xscript/status_info.h"
 
 #include "details/xml_config.h"
@@ -57,6 +58,9 @@ Config::startup() {
 
     Loader::instance()->init(this);
     log()->debug("loader started");
+
+    Policy::instance()->init(this);
+    log()->debug("policy started");
 
     StatusInfo::instance()->init(this);
     log()->debug("status info started");
