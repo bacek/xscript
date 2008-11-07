@@ -42,6 +42,8 @@ public:
 
     void testMultiBlock();
     void testMD5();
+    
+    void testLogger();
 private:
     CPPUNIT_TEST_SUITE(LuaTest);
 
@@ -63,6 +65,8 @@ private:
     CPPUNIT_TEST(testMultiBlock);
     CPPUNIT_TEST(testMD5);
 
+    CPPUNIT_TEST(testLogger);
+
     CPPUNIT_TEST_SUITE_END();
 };
 
@@ -74,9 +78,6 @@ CPPUNIT_TEST_SUITE_REGISTRATION( LuaTest );
 
 void
 LuaTest::testPrint() {
-
-    using namespace xscript;
-
     boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("lua-print.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
@@ -95,9 +96,6 @@ LuaTest::testPrint() {
 
 void
 LuaTest::testState() {
-
-    using namespace xscript;
-
     boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("lua-state.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
@@ -129,9 +127,6 @@ LuaTest::testState() {
 
 void
 LuaTest::testStateHas() {
-
-    using namespace xscript;
-
     boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("lua-state-has.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
@@ -154,9 +149,6 @@ LuaTest::testStateHas() {
 
 void
 LuaTest::testStateIs() {
-
-    using namespace xscript;
-
     boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("lua-state-is.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
@@ -267,9 +259,6 @@ LuaTest::testResponseRedirect() {
 
 void
 LuaTest::testEncode() {
-
-    using namespace xscript;
-
     boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("lua-encode.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
@@ -317,9 +306,6 @@ LuaTest::testCookie() {
 
 void
 LuaTest::testBadType() {
-
-    using namespace xscript;
-
     boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("lua-badtype.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
@@ -332,9 +318,6 @@ LuaTest::testBadType() {
 
 void
 LuaTest::testBadArgCount() {
-
-    using namespace xscript;
-
     boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("lua-badargcount.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
@@ -347,16 +330,12 @@ LuaTest::testBadArgCount() {
 
 void
 LuaTest::testBadCode() {
-    using namespace xscript;
     boost::shared_ptr<Script> script = Script::create("lua-badcode.xml");
 }
 
 
 void
 LuaTest::testMultiBlock() {
-
-    using namespace xscript;
-
     boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("lua-multi.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
@@ -371,9 +350,6 @@ LuaTest::testMultiBlock() {
 
 void
 LuaTest::testMD5() {
-
-    using namespace xscript;
-
     boost::shared_ptr<RequestData> data(new RequestData());
     boost::shared_ptr<Script> script = Script::create("lua-md5.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
@@ -387,4 +363,17 @@ LuaTest::testMD5() {
         std::string("5946210c9e93ae37891dfe96c3e39614\n"),
         XmlUtils::xpathValue(doc.get(), "/page/lua", "foo")
     );
+}
+
+// Incomplete test for logger... Just check manually default.log
+void
+LuaTest::testLogger() {
+    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Script> script = Script::create("lua-logger.xml");
+    boost::shared_ptr<Context> ctx(new Context(script, data));
+    ContextStopper ctx_stopper(ctx);
+
+    XmlDocHelper doc(script->invoke(ctx));
+
+    CPPUNIT_ASSERT(NULL != doc.get());
 }

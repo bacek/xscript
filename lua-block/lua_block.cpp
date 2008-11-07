@@ -22,6 +22,7 @@
 #include "request_methods.h"
 #include "response_methods.h"
 #include "cookie_methods.h"
+#include "logger_methods.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -145,6 +146,7 @@ LuaSharedContext create_lua(Context *ctx, std::string &buffer) {
     setupUserdata(lua, ctx->response(), "response", getResponseLib());
 
     registerCookieMethods(lua);
+    registerLoggerMethods(lua);
 
     return lua_context;
 }
