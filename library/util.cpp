@@ -275,7 +275,7 @@ HashUtils::blowfish(const char *data, unsigned long data_len,
 
     unsigned char ivec_buffer[8];
     memset(ivec_buffer, 0, 8);
-    memcpy(ivec_buffer, ivec, std::min(strlen(ivec), 8u));
+    memcpy(ivec_buffer, ivec, std::min(strlen(ivec), (size_t)8));
 
     BF_KEY bfkey;
 

@@ -11,7 +11,8 @@ Profiler::~Profiler() {
 
     uint64_t delta = endTime - startTime_;
 
-    log_->info("[profile] %llu.%06llu %s", delta / 1000000, delta % 1000000, info_.c_str());
+    log_->info("[profile] %llu.%06llu %s", (unsigned long long)(delta / 1000000),
+	(unsigned long long)(delta % 1000000), info_.c_str());
 }
 
 }

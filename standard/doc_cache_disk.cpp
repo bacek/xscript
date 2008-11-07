@@ -157,7 +157,7 @@ void DocCacheDisk::WriteFile::write(const void *ptr, size_t size) const {
     size_t sz = ::fwrite(ptr, 1, size, f_);
     if (sz != size) {
         char buf[60];
-        snprintf(buf, sizeof(buf), "file write error size: %u, written: %u", size, sz);
+        snprintf(buf, sizeof(buf), "file write error size: %llu, written: %llu", (unsigned long long)size, (unsigned long long)sz);
         throw std::runtime_error(&buf[0]);
     }
 }
