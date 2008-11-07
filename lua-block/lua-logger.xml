@@ -2,11 +2,11 @@
 <page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
   <x:lua>
 	  <![CDATA[
-      xscript.logger.crit('CRIT');
+--      xscript.logger.crit('CRIT');
       xscript.logger.error('ERROR');
       xscript.logger.warn('WARN');
       xscript.logger.info('INFO');
-      xscript.logger.debug('DEBUG');
+--      xscript.logger.debug('DEBUG');
   ]]>
   </x:lua>
 </page>

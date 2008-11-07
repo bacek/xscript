@@ -26,11 +26,11 @@ extern "C" int luaLoggerInfo(lua_State *state) throw ();
 extern "C" int luaLoggerDebug(lua_State *state) throw ();
 
 static const struct luaL_reg loggerlib [] = {
-    {"crit",          luaLoggerCrit},
+//    {"crit",          luaLoggerCrit},
     {"error",         luaLoggerError},
     {"warn",          luaLoggerWarn},
     {"info",          luaLoggerInfo},
-    {"debug",         luaLoggerDebug},
+//    {"debug",         luaLoggerDebug},
     {NULL, NULL}
 };
 
