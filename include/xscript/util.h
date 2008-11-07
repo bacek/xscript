@@ -105,8 +105,11 @@ public:
 
     static std::string hexMD5(const char *key);
     static std::string hexMD5(const ByteArrayType &key);
+    static std::string hexMD5(const char *key, unsigned long len);
     static std::string blowfish(const char *data, const char *key, const char *ivec);
     static std::string blowfish(const ByteArrayType &data, const ByteArrayType &key, const char *ivec);
+    static std::string blowfish(const char *data, unsigned long data_len,
+                                const char *key, unsigned long key_len, const char *ivec);
 
 private:
     HashUtils();

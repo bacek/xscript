@@ -235,19 +235,13 @@ HashUtils::~HashUtils() {
 }
 
 std::string
-HashUtils::hexMD5(const char *key) {
-    ByteArrayType byte_key(key, key + strlen(key));
-    return hexMD5(byte_key);
-}
-
-std::string
-HashUtils::hexMD5(const ByteArrayType &key) {
+HashUtils::hexMD5(const char *key, unsigned long len) {
 
     MD5_CTX md5handler;
     unsigned char md5buffer[16];
 
     MD5_Init(&md5handler);
-    MD5_Update(&md5handler, (unsigned char *)&*key.begin(), (unsigned int)key.size());
+    MD5_Update(&md5handler, (unsigned char *)key, len);
     MD5_Final(md5buffer, &md5handler);
 
     char alpha[16] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
@@ -266,14 +260,18 @@ HashUtils::hexMD5(const ByteArrayType &key) {
 }
 
 std::string
-HashUtils::blowfish(const char *data, const char *key, const char *ivec) {
-    ByteArrayType byte_data(data, data + strlen(data));
-    ByteArrayType byte_key(key, key + strlen(key));
-    return blowfish(byte_data, byte_key, ivec);
+HashUtils::hexMD5(const char *key) {
+    return hexMD5(key, strlen(key));
 }
 
 std::string
-HashUtils::blowfish(const ByteArrayType &data, const ByteArrayType &key, const char *ivec) {
+HashUtils::hexMD5(const ByteArrayType &key) {
+    return hexMD5(&*key.begin(), key.size());
+}
+
+std::string
+HashUtils::blowfish(const char *data, unsigned long data_len,
+                    const char *key, unsigned long key_len, const char *ivec) {
 
     unsigned char ivec_buffer[8];
     memset(ivec_buffer, 0, 8);
@@ -281,18 +279,17 @@ HashUtils::blowfish(const ByteArrayType &data, const ByteArrayType &key, const c
 
     BF_KEY bfkey;
 
-    BF_set_key(&bfkey, key.size(), (unsigned char *)&*key.begin());
+    BF_set_key(&bfkey, key_len, (unsigned char *)key);
 
-    size_t datasize = data.size();
-    size_t padded_datasize = (datasize % 8) ? 8*(datasize/8 + 1) : datasize;
+    size_t padded_datasize = (data_len % 8) ? 8*(data_len/8 + 1) : data_len;
 
     unsigned char buffer[padded_datasize];
 
-    if (padded_datasize > datasize) {
+    if (padded_datasize > data_len) {
         ByteArrayType input;
         input.reserve(padded_datasize);
-        input.insert(input.end(), data.begin(), data.end());
-        input.insert(input.end(), padded_datasize - datasize, '\0');
+        input.insert(input.end(), data, data + data_len);
+        input.insert(input.end(), padded_datasize - data_len, '\0');
         BF_cbc_encrypt((unsigned char *)&*input.begin(),
             (unsigned char *)buffer,
             padded_datasize,
@@ -301,7 +298,7 @@ HashUtils::blowfish(const ByteArrayType &data, const ByteArrayType &key, const c
             BF_ENCRYPT);
     }
     else {
-        BF_cbc_encrypt((unsigned char *)&*data.begin(),
+        BF_cbc_encrypt((unsigned char *)data,
             (unsigned char *)buffer,
             padded_datasize,
             &bfkey,
@@ -310,6 +307,16 @@ HashUtils::blowfish(const ByteArrayType &data, const ByteArrayType &key, const c
     }
 
     return std::string(buffer, buffer + padded_datasize);
+}
+
+std::string
+HashUtils::blowfish(const char *data, const char *key, const char *ivec) {
+    return blowfish(data, strlen(data), key, strlen(key), ivec);
+}
+
+std::string
+HashUtils::blowfish(const ByteArrayType &data, const ByteArrayType &key, const char *ivec) {
+    return blowfish(&*data.begin(), data.size(), &*key.begin(), key.size(), ivec);
 }
 
 const int TimeoutCounter::UNLIMITED_TIME = std::numeric_limits<int>::max();
