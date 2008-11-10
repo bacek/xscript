@@ -172,12 +172,13 @@ HttpBlock::getHttpObsolete(Context *ctx, boost::any &a) {
 
 XmlDocHelper
 HttpBlock::postHttp(Context *ctx, boost::any &a) {
+    (void)a;
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
     const std::vector<Param*> &p = params();
 
-    if (p.size() < 2 || p.size() > 3) {
+    if (p.size() != 2 || tagged()) {
         throw InvokeError("bad arity");
     }
 
@@ -190,22 +191,14 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
         throw error;
     }
 
-    const Tag* tag = boost::any_cast<Tag>(&a);
     HttpHelper helper(url, timeout);
     std::string body = p[1]->asString(ctx);
-    helper.appendHeaders(ctx->request(), proxy_, tag);
+    helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     helper.postData(body.data(), body.size());
 
     helper.perform();
     helper.checkStatus();
-
-    createTagInfo(helper, a);
-    const Tag* result_tag = boost::any_cast<Tag>(&a);
-
-    if (result_tag && !result_tag->modified) {
-        return XmlDocHelper();
-    }
 
     return response(helper);
 }
