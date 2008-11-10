@@ -37,7 +37,7 @@ namespace xscript {
 TimeoutCounter Block::default_timer_;
 
 Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        extension_(ext), owner_(owner), node_(node), is_guard_not_(false), strip_root_element_(false)
+        extension_(ext), owner_(owner), node_(node), is_guard_not_(false)
 {
     assert(node_);
     assert(owner_);
@@ -83,14 +83,16 @@ Block::tagged() const {
 }
 
 bool
-Block::stripRootElement(Context* ctx) const {
-    if (strip_root_element_) {
-        const Server* server = VirtualHostData::instance()->getServer();
-        if (!xsltName().empty() && server && !server->needApplyPerblockStylesheet(ctx->request())) {
-            return false;
-        }
+Block::xpointer(Context* ctx) const {
+    if (xpointer_expr_.empty()) {
+        return false;
+    }    
+    if (xsltName().empty()) {
+        return true;
     }
-    return strip_root_element_;
+
+    const Server *server = VirtualHostData::instance()->getServer();
+    return server && server->needApplyPerblockStylesheet(ctx->request());
 }
 
 void
@@ -157,7 +159,7 @@ Block::invokeInternal(Context *ctx) {
         // Check validators for each param before calling it.
         for (std::vector<Param*>::const_iterator i = params_.begin(); i != params_.end(); ++i) {
             (*i)->checkValidator(ctx);
-        };
+        }
 
         boost::any a;
         XmlDocHelper doc(call(ctx, a));
@@ -409,7 +411,12 @@ Block::property(const char *name, const char *value) {
         xsltName(value);
     }
     else if (strncasecmp(name, "strip-root-element", sizeof("strip-root-element")) == 0) {
-        stripRootElement((strncasecmp(value, "yes", sizeof("yes")) == 0));
+        if(strncasecmp(value, "yes", sizeof("yes")) == 0) {
+            xpointer_expr_.assign("/*/node()");
+        }
+    }
+    else if (strncasecmp(name, "xpointer", sizeof("xpointer")) == 0) {
+        xpointer_expr_.assign(value);
     }
     else {
         std::stringstream stream;

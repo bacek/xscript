@@ -41,6 +41,10 @@ public:
         return method_;
     }
 
+    inline const std::string& xpointerExpr() const {
+        return xpointer_expr_;
+    }
+
     const char* name() const {
         return extension_->name();
     }
@@ -50,10 +54,7 @@ public:
 
     virtual bool tagged() const;
 
-    bool stripRootElement(Context* ctx) const;
-    inline void stripRootElement(bool value) {
-        strip_root_element_ = value;
-    }
+    bool xpointer(Context* ctx) const;
 
     inline const Param* param(unsigned int n) const {
         return params_.at(n);
@@ -119,8 +120,8 @@ private:
     std::vector<XPathExpr> xpath_;
     std::string id_, guard_, method_;
     bool is_guard_not_;
-    bool strip_root_element_;
     static TimeoutCounter default_timer_;
+    std::string xpointer_expr_;
 
 protected:
     class XPathExpr {

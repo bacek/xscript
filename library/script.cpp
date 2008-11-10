@@ -449,22 +449,8 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
             xmlNodePtr result = xmlDocGetRootElement(doc);
             if (result) {
                 const Block *block = blocks_[count];
-                if (block->stripRootElement(ctx)) {
-                    xmlNodePtr result_node = result->children;
-                    if (result_node) {
-                        xmlNodePtr last_insert_node = xmlCopyNode(result_node, 1);
-                        xmlReplaceNode(newnode, last_insert_node);
-                        result_node = result_node->next;
-                        while (result_node) {
-                            xmlNodePtr insert_node = xmlCopyNode(result_node, 1);
-                            xmlAddNextSibling(last_insert_node, insert_node);
-                            last_insert_node = insert_node;
-                            result_node = result_node->next;
-                        }
-                    }
-                    else {
-                        xmlUnlinkNode(newnode);
-                    }
+                if (block->xpointer(ctx)) {
+                    useXpointerExpr(doc, newnode, (xmlChar *)block->xpointerExpr().c_str());
                 }
                 else {
                     xmlReplaceNode(newnode, xmlCopyNode(result, 1));
@@ -486,6 +472,24 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
 
         node = node->next;
         newnode = next;
+    }
+}
+
+void
+Script::useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const {
+    XmlXPathContextHelper context(xmlXPathNewContext(doc));
+    XmlXPathObjectHelper xpathObj(xmlXPathEvalExpression(xpath, context.get()));
+    xmlNodeSetPtr nodeset = xpathObj.get()->nodesetval;
+    if (0 == nodeset->nodeNr) {
+        xmlUnlinkNode(newnode);
+        return;
+    }
+    xmlNodePtr last_input_node = xmlCopyNode(nodeset->nodeTab[0], 1);
+    xmlReplaceNode(newnode, last_input_node);
+    for (int i = 1; i < nodeset->nodeNr; ++i) {
+        xmlNodePtr insert_node = xmlCopyNode(nodeset->nodeTab[i], 1);
+        xmlAddNextSibling(last_input_node, insert_node);
+        last_input_node = insert_node;
     }
 }
 

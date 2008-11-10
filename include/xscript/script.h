@@ -103,6 +103,7 @@ protected:
     void parseBlocks();
     void buildXScriptNodeSet(std::vector<xmlNodePtr>& xscript_nodes);
     void parseStylesheetNode(const xmlNodePtr node);
+    void useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const;
 
     int countTimeout() const;
     void addHeaders(Context *ctx) const;
