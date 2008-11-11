@@ -40,8 +40,8 @@ xscript_development_la_LIBADD = ../library/libxscript.la
 xscript_development_la_LDFLAGS = -module
 
 
-xscript_validators_la_SOURCES = \
-	range_validator.cpp
+xscript_validators_la_SOURCES = range_validator.cpp
+
 if HAVE_PCRE
 xscript_validators_la_SOURCES += regex_validator.cpp
 endif
@@ -50,7 +50,7 @@ xscript_validators_la_LIBADD = ../library/libxscript.la
 xscript_validators_la_LDFLAGS = -module
 
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
-AM_CXXFLAGS = -W -Wall -Wextra -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
+AM_CXXFLAGS = -W -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem @yandex_platform_LIBS@
 
 EXTRA_DIST = test.conf
@@ -67,7 +67,7 @@ libtest_la_SOURCES += regex_validator.cpp
 endif
 libtest_la_LDFLAGS = -static
 
-noinst_HEADERS = doc_pool.h
+noinst_HEADERS = doc_pool.h range_validator.h
 
 test_SOURCES = test_main.cpp \
 			   doc_pool_test.cpp \
