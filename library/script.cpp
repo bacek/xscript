@@ -443,17 +443,18 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
         xmlNodePtr next = newnode->next;
         log()->debug("%s, blocks found: %d, %u", BOOST_CURRENT_FUNCTION, blocks_.size(), count);
         if (count < blocks_.size() && blocks_[count]->node() == node) {
-            xmlDocPtr doc = ctx->result(count);
+            InvokeResult result = ctx->result(count);
+            xmlDocPtr doc = result.doc.get();
             assert(doc);
 
-            xmlNodePtr result = xmlDocGetRootElement(doc);
-            if (result) {
+            xmlNodePtr result_doc_root_node = xmlDocGetRootElement(doc);
+            if (result_doc_root_node) {
                 const Block *block = blocks_[count];
-                if (block->xpointer(ctx)) {
+                if (block->xpointer(ctx) && result.success) {
                     useXpointerExpr(doc, newnode, (xmlChar *)block->xpointerExpr().c_str());
                 }
                 else {
-                    xmlReplaceNode(newnode, xmlCopyNode(result, 1));
+                    xmlReplaceNode(newnode, xmlCopyNode(result_doc_root_node, 1));
                 }
             }
             else {

@@ -134,25 +134,25 @@ Block::fullName(const std::string &name) const {
     return owner()->fullName(name);
 }
 
-XmlDocHelper
+InvokeResult
 Block::invoke(Context *ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     if (ctx->stopped()) {
         log()->error("Context already stopped. Cannot invoke block. Owner: %s. Block: %s. Method: %s",
             owner()->name().c_str(), name(), method_.c_str());
-        return fakeResult();
+        return InvokeResult(fakeResult(), false);
     }
 
     if (!checkGuard(ctx)) {
         log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
             owner()->name().c_str(), name(), method_.c_str());
-        return fakeResult();
+        return InvokeResult(fakeResult(), false);
     }
 
     return invokeInternal(ctx);
 }
 
-XmlDocHelper
+InvokeResult
 Block::invokeInternal(Context *ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     try {
@@ -165,16 +165,16 @@ Block::invokeInternal(Context *ctx) {
         XmlDocHelper doc(call(ctx, a));
 
         if (NULL == doc.get()) {
-            return errorResult("got empty document");
+            return InvokeResult(errorResult("got empty document"), false);
         }
 
-        return processResponse(ctx, doc, a);
+        return InvokeResult(processResponse(ctx, doc, a), true);
     }
     catch (const InvokeError &e) {
-        return errorResult(e.what(), e.info());
+        return InvokeResult(errorResult(e.what(), e.info()), false);
     }
     catch (const std::exception &e) {
-        return errorResult(e.what());
+        return InvokeResult(errorResult(e.what()), false);
     }
 }
 
@@ -431,7 +431,7 @@ Block::postCall(Context *, const XmlDocHelper &, const boost::any &) {
 
 void
 Block::callInternal(boost::shared_ptr<Context> ctx, unsigned int slot) {
-    ctx->result(slot, invoke(ctx.get()).release());
+    ctx->result(slot, invoke(ctx.get()));
 }
 
 void

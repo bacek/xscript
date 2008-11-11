@@ -14,6 +14,7 @@
 
 #include "xscript/request_data.h"
 #include "xscript/util.h"
+#include "xscript/invoke_result.h"
 
 namespace xscript {
 
@@ -38,12 +39,12 @@ public:
 
     void wait(int millis);
     void expect(unsigned int count);
-    void result(unsigned int n, xmlDocPtr doc);
+    void result(unsigned int n, InvokeResult result);
     void addNode(xmlNodePtr node);
 
     bool resultsReady() const;
     boost::xtime delay(int millis) const;
-    xmlDocPtr result(unsigned int n) const;
+    InvokeResult result(unsigned int n) const;
 
     inline const boost::shared_ptr<RequestData>& requestData() const {
         return request_data_;
@@ -114,7 +115,7 @@ private:
     boost::shared_ptr<RequestData> request_data_;
     Context* parent_context_;
     std::string xslt_name_;
-    std::vector<xmlDocPtr> results_;
+    std::vector<InvokeResult> results_;
     std::list<xmlNodePtr> clear_node_list_;
 
     boost::condition condition_;

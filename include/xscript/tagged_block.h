@@ -23,7 +23,7 @@ public:
     virtual void cacheTime(time_t cache_time);
 
 protected:
-    virtual XmlDocHelper invokeInternal(Context *ctx);
+    virtual InvokeResult invokeInternal(Context *ctx);
     virtual void postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a);
     virtual void postParse();
 

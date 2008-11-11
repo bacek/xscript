@@ -41,7 +41,6 @@ Context::~Context() {
         XmlUtils::printXMLError(postfix);
     }
     ExtensionList::instance()->destroyContext(this);
-    std::for_each(results_.begin(), results_.end(), boost::bind(&xmlFreeDoc, _1));
     std::for_each(clear_node_list_.begin(), clear_node_list_.end(), boost::bind(&xmlFreeNode, _1));
 }
 
@@ -56,8 +55,9 @@ Context::wait(int millis) {
 
     if (timedout) {
         for (std::vector<xmlDocPtr>::size_type i = 0; i < results_.size(); ++i) {
-            if (NULL == results_[i]) {
-                results_[i] = script_->block(i)->errorResult("timed out").release();
+            if (NULL == results_[i].doc.get()) {
+                results_[i].doc.reset(script_->block(i)->errorResult("timed out").release());
+                results_[i].success = false;
             }
         }
     }
@@ -79,7 +79,9 @@ Context::expect(unsigned int count) {
 }
 
 void
-Context::result(unsigned int n, xmlDocPtr doc) {
+Context::result(unsigned int n, InvokeResult result) {
+
+    xmlDocPtr doc = result.doc.release();
 
     log()->debug("%s: %d, result of %u block: %p", BOOST_CURRENT_FUNCTION,
                  static_cast<int>(stopped()), n, doc);
@@ -87,8 +89,9 @@ Context::result(unsigned int n, xmlDocPtr doc) {
     XmlDocHelper doc_ptr(doc);
     boost::mutex::scoped_lock sl(results_mutex_);
     if (!stopped() && results_.size() != 0) {
-        if (NULL == results_[n]) {
-            results_[n] = doc_ptr.release();
+        if (NULL == results_[n].doc.get()) {
+            results_[n].doc.reset(doc_ptr.release());
+            results_[n].success = result.success;
             condition_.notify_all();
         }
     }
@@ -100,8 +103,8 @@ Context::result(unsigned int n, xmlDocPtr doc) {
 bool
 Context::resultsReady() const {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
-    for (std::vector<xmlDocPtr>::const_iterator i = results_.begin(), end = results_.end(); i != end; ++i) {
-        if (NULL == (*i)) {
+    for (std::vector<InvokeResult>::const_iterator i = results_.begin(), end = results_.end(); i != end; ++i) {
+        if (NULL == i->doc.get()) {
             return false;
         }
     }
@@ -128,7 +131,7 @@ Context::delay(int millis) const {
     return xt;
 }
 
-xmlDocPtr
+InvokeResult
 Context::result(unsigned int n) const {
 
     boost::mutex::scoped_lock sl(results_mutex_);

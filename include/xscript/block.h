@@ -10,6 +10,7 @@
 #include <xscript/xml_helpers.h>
 #include <xscript/extension.h>
 #include <xscript/util.h>
+#include <xscript/invoke_result.h>
 
 namespace xscript {
 
@@ -69,7 +70,7 @@ public:
     virtual void parse();
     virtual std::string fullName(const std::string &name) const;
 
-    virtual XmlDocHelper invoke(Context *ctx);
+    virtual InvokeResult invoke(Context *ctx);
     virtual void invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc);
 
@@ -85,7 +86,7 @@ public:
 protected:
     class XPathExpr;
 
-    virtual XmlDocHelper invokeInternal(Context *ctx);
+    virtual InvokeResult invokeInternal(Context *ctx);
     virtual void postParse();
     virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception) = 0;
     virtual XmlDocHelper processResponse(Context *ctx, XmlDocHelper doc, boost::any &a);
