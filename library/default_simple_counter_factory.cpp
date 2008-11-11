@@ -4,6 +4,10 @@
 #include "internal/simple_counter_impl.h"
 #include "details/dummy_simple_counter.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 namespace xscript
 {
 
@@ -24,4 +28,4 @@ std::auto_ptr<SimpleCounter> DefaultSimpleCounterFactory::createCounter(const st
 REGISTER_COMPONENT2(SimpleCounterFactory, DefaultSimpleCounterFactory);
 static ComponentRegisterer<SimpleCounterFactory> reg_(new DefaultSimpleCounterFactory());
 
-}
+} // namespace xscript

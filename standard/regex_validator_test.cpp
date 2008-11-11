@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -6,6 +8,10 @@
 #include "xscript/util.h"
 
 #include "regex_validator.h"
+
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
 
 using namespace xscript;
 

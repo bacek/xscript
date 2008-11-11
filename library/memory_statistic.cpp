@@ -6,6 +6,9 @@
 #include <libxml/xmlmemory.h>
 #include "xscript/memory_statistic.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
 
 namespace xscript {
 

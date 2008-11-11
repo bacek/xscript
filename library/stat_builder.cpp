@@ -4,6 +4,10 @@
 #include "xscript/counter_base.h"
 #include "xscript/xml_util.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 namespace xscript {
 
 StatBuilder::StatBuilder(const std::string& name)

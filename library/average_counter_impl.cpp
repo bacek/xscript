@@ -4,6 +4,10 @@
 #include <boost/lexical_cast.hpp>
 #include "internal/average_counter_impl.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 namespace xscript {
 
 AverageCounterImpl::AverageCounterImpl(const std::string& name)
@@ -53,5 +57,4 @@ XmlNodeHelper AverageCounterImpl::createReport() const {
     return line;
 }
 
-
-}
+} // namespace xscript

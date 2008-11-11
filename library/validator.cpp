@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include "xscript/validator.h"
 #include "xscript/validator_exception.h"
 #include "xscript/validator_factory.h"
@@ -5,6 +7,10 @@
 #include "xscript/context.h"
 #include "xscript/param.h"
 #include "xscript/state.h"
+
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
 
 namespace xscript
 {
@@ -42,4 +48,5 @@ ValidatorRegisterer::ValidatorRegisterer(const char *name, const ValidatorConstr
     ValidatorFactory::instance()->registerConstructor(name, cons);
 }
 
-}
+} // namespace xscript
+

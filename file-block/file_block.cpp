@@ -20,6 +20,10 @@
 #include "file_block.h"
 #include "file_extension.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 namespace xscript {
 
 namespace fs = boost::filesystem;

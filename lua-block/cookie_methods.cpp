@@ -7,6 +7,10 @@
 #include "stack.h"
 #include "cookie_methods.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 extern "C" {
     int luaCookieNew(lua_State *);
     int luaCookieName(lua_State *);

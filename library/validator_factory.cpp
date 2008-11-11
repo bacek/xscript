@@ -1,5 +1,10 @@
+#include "settings.h"
 #include "xscript/validator_factory.h"
 #include "xscript/xml_util.h"
+
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
 
 namespace xscript
 {
@@ -41,4 +46,4 @@ ValidatorFactory::registerConstructor(const std::string &type, const ValidatorCo
     validator_creators_.insert(i, std::make_pair(type, ctor));
 }
 
-}
+} // namespace xscript

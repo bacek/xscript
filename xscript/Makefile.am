@@ -13,5 +13,5 @@ dist_xsl_DATA = profile.xsl
 dist_sysconf_DATA = offline.conf
 
 AM_CPPFLAGS = -I@top_srcdir@/include  -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
-AM_CXXFLAGS = -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
+AM_CXXFLAGS = -W -Wall -Wextra -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem @yandex_platform_LIBS@

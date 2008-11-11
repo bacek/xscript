@@ -4,6 +4,10 @@
 #include "file_extension.h"
 #include "file_block.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 namespace xscript {
 
 unsigned int FileExtension::max_invoke_depth_;

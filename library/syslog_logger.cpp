@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <cstring>
+#include <iostream>
 #include <stdexcept>
 #include <boost/static_assert.hpp>
 
@@ -15,10 +16,7 @@
 #include <dmalloc.h>
 #endif
 
-#include <iostream>
-
 namespace xscript {
-
 
 SyslogLogger::SyslogLogger(Logger::LogLevel level, const Config * config, const std::string &key)
         : Logger(level) {

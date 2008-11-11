@@ -1,3 +1,5 @@
+#include "settings.h"
+
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -9,6 +11,10 @@
 #include "xscript/state.h"
 #include "xscript/request_data.h"
 #include "xscript/xml_util.h"
+
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
 
 using namespace xscript;
 

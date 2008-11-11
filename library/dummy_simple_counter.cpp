@@ -2,6 +2,10 @@
 
 #include "details/dummy_simple_counter.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 namespace xscript {
 
 DummySimpleCounter::DummySimpleCounter() { }
@@ -15,4 +19,4 @@ XmlNodeHelper DummySimpleCounter::createReport() const {
     return XmlNodeHelper(xmlNewNode(0, (const xmlChar*) "dummy"));
 }
 
-}
+} // namespace xscript

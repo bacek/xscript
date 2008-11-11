@@ -2,6 +2,10 @@
 
 #include "details/dummy_average_counter.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 namespace xscript {
 
 DummyAverageCounter::DummyAverageCounter() {
@@ -22,5 +26,4 @@ XmlNodeHelper DummyAverageCounter::createReport() const {
     return XmlNodeHelper(xmlNewNode(0, (const xmlChar*) "dummy"));
 }
 
-
-}
+} // namespace xscript

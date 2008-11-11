@@ -3,6 +3,10 @@
 #include <boost/lexical_cast.hpp>
 #include "internal/cache_counter_impl.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 namespace xscript {
 
 CacheCounterImpl::CacheCounterImpl(const std::string& name)

@@ -3,6 +3,10 @@
 #include <boost/lexical_cast.hpp>
 #include "uptime_counter.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 namespace xscript {
 
 UptimeCounter::UptimeCounter() {

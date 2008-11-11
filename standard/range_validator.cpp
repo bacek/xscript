@@ -1,7 +1,13 @@
+#include "settings.h"
+
 #include <map>
 #include <boost/cstdint.hpp>
 #include "xscript/util.h"
 #include "range_validator.h"
+
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
 
 namespace xscript
 {

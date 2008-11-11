@@ -9,6 +9,10 @@
 
 #include "doc_pool.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 using namespace xscript;
 
 class DocPoolTest : public CppUnit::TestFixture {

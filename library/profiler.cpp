@@ -3,6 +3,10 @@
 #include "xscript/profiler.h"
 #include "xscript/logger.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 namespace xscript {
 
 Profiler::~Profiler() {
@@ -15,4 +19,4 @@ Profiler::~Profiler() {
 	(unsigned long long)(delta % 1000000), info_.c_str());
 }
 
-}
+} // namespace xscript

@@ -1,7 +1,13 @@
+#include "settings.h"
+
 #include <iostream>
 #include "regex_validator.h"
 #include "xscript/param.h"
 #include "xscript/xml_util.h"
+
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
 
 namespace xscript
 {
