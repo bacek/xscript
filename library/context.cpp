@@ -56,8 +56,7 @@ Context::wait(int millis) {
     if (timedout) {
         for (std::vector<xmlDocPtr>::size_type i = 0; i < results_.size(); ++i) {
             if (NULL == results_[i].doc.get()) {
-                results_[i].doc.reset(script_->block(i)->errorResult("timed out").release());
-                results_[i].success = false;
+                results_[i] = script_->block(i)->errorResult("timed out");
             }
         }
     }
@@ -81,17 +80,13 @@ Context::expect(unsigned int count) {
 void
 Context::result(unsigned int n, InvokeResult result) {
 
-    xmlDocPtr doc = result.doc.release();
-
     log()->debug("%s: %d, result of %u block: %p", BOOST_CURRENT_FUNCTION,
-                 static_cast<int>(stopped()), n, doc);
+                 static_cast<int>(stopped()), n, result.doc.get());
 
-    XmlDocHelper doc_ptr(doc);
     boost::mutex::scoped_lock sl(results_mutex_);
     if (!stopped() && results_.size() != 0) {
         if (NULL == results_[n].doc.get()) {
-            results_[n].doc.reset(doc_ptr.release());
-            results_[n].success = result.success;
+            results_[n] = result;
             condition_.notify_all();
         }
     }

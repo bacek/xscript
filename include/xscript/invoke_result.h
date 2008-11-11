@@ -6,7 +6,9 @@
 namespace xscript {
 
 struct InvokeResult {
-    InvokeResult() {}
+    InvokeResult() :
+        doc(), success(false) {
+    }
     InvokeResult(XmlDocHelper document, bool result) :
         doc(document), success(result) {
     }

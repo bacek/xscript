@@ -74,8 +74,8 @@ public:
     virtual void invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc);
 
-    XmlDocHelper errorResult(const char *error) const;
-    XmlDocHelper errorResult(const char *error, const InvokeError::InfoMapType &error_info) const;
+    InvokeResult errorResult(const char *error) const;
+    InvokeResult errorResult(const char *error, const InvokeError::InfoMapType &error_info) const;
 
     Logger * log() const {
         return extension_->getLogger();

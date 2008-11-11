@@ -165,16 +165,16 @@ Block::invokeInternal(Context *ctx) {
         XmlDocHelper doc(call(ctx, a));
 
         if (NULL == doc.get()) {
-            return InvokeResult(errorResult("got empty document"), false);
+            return errorResult("got empty document");
         }
 
         return InvokeResult(processResponse(ctx, doc, a), true);
     }
     catch (const InvokeError &e) {
-        return InvokeResult(errorResult(e.what(), e.info()), false);
+        return errorResult(e.what(), e.info());
     }
     catch (const std::exception &e) {
-        return InvokeResult(errorResult(e.what()), false);
+        return errorResult(e.what());
     }
 }
 
@@ -247,7 +247,7 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
     }
 }
 
-XmlDocHelper
+InvokeResult
 Block::errorResult(const char *error, const InvokeError::InfoMapType &error_info) const {
 
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
@@ -291,10 +291,10 @@ Block::errorResult(const char *error, const InvokeError::InfoMapType &error_info
 
     log()->error("%s", stream.str().c_str());
 
-    return doc;
+    return InvokeResult(doc, false);
 }
 
-XmlDocHelper
+InvokeResult
 Block::errorResult(const char *error) const {
     return errorResult(error, InvokeError::InfoMapType());
 }

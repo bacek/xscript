@@ -791,23 +791,23 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
             return;
         }
 
-        XmlDocHelper doc;
+        InvokeResult result;
         try {
             block->startTimer(ctx);
-            doc = block->invoke(ctx).doc;
-            if (NULL == doc.get()) {
+            result = block->invoke(ctx);
+            if (NULL == result.doc.get()) {
                 XmlUtils::reportXsltError("xscript:ExtElementBlock: empty result", ctx);
             }
         }
         catch (const InvokeError &e) {
-            doc = block->errorResult(e.what(), e.info());
+            result = block->errorResult(e.what(), e.info());
         }
         catch (const std::exception &e) {
-            doc = block->errorResult(e.what());
+            result = block->errorResult(e.what());
         }
 
-        if (NULL != doc.get()) {
-            xmlAddChild(tctx->insert, xmlCopyNode(xmlDocGetRootElement(doc.get()), 1));
+        if (NULL != result.doc.get()) {
+            xmlAddChild(tctx->insert, xmlCopyNode(xmlDocGetRootElement(result.doc.get()), 1));
         }
     }
     catch (const std::exception &e) {

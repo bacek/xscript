@@ -105,7 +105,7 @@ TaggedBlock::invokeInternal(Context *ctx) {
         return Block::invokeInternal(ctx);
     }
     catch (const std::exception &e) {
-        return InvokeResult(errorResult(e.what()), false);
+        return errorResult(e.what());
     }
 }
 
