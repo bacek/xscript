@@ -201,8 +201,7 @@ Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
     }
 
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
-    const Server* server = VirtualHostData::instance()->getServer();
-    bool need_perblock = (!server || server->needApplyPerblockStylesheet(ctx->request()));
+    bool need_perblock = !ctx->noXsltPort();
     if (need_perblock) {
         applyStylesheet(ctx, doc);
     }
