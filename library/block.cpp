@@ -86,13 +86,8 @@ bool
 Block::xpointer(Context* ctx) const {
     if (xpointer_expr_.empty()) {
         return false;
-    }    
-    if (xsltName().empty()) {
-        return true;
     }
-
-    const Server *server = VirtualHostData::instance()->getServer();
-    return server && server->needApplyPerblockStylesheet(ctx->request());
+    return !ctx->noXsltPort();
 }
 
 void

@@ -97,6 +97,8 @@ public:
     void botFetched(bool value);
     bool forceNoThreaded() const;
     void forceNoThreaded(bool value);
+    bool noXsltPort() const;
+    void noXsltPort(bool value);
 
     const TimeoutCounter& timer() const;
     void startTimer(int timeout);
@@ -134,6 +136,7 @@ private:
     static const unsigned int FLAG_IS_BOT = 1;
     static const unsigned int FLAG_BOT_FETCHED = 1 << 1;
     static const unsigned int FLAG_FORCE_NO_THREADED = 1 << 2;
+    static const unsigned int FLAG_NO_XSLT_PORT = 1 << 3;
 };
 
 class ContextStopper {

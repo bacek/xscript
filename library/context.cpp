@@ -33,6 +33,10 @@ Context::Context(const boost::shared_ptr<Script> &script, const boost::shared_pt
         script_(script), writer_(), flags_(0) {
     assert(script_.get());
     ExtensionList::instance()->initContext(this);
+    const Server *server = VirtualHostData::instance()->getServer();
+    if (NULL != server) {
+        noXsltPort(!server->needApplyPerblockStylesheet(request()));
+    }
 }
 
 Context::~Context() {
@@ -216,6 +220,18 @@ void
 Context::forceNoThreaded(bool value) {
     boost::mutex::scoped_lock lock(params_mutex_);
     flag(FLAG_FORCE_NO_THREADED, value);
+}
+
+bool
+Context::noXsltPort() const {
+    boost::mutex::scoped_lock lock(params_mutex_);
+    return flags_ & FLAG_NO_XSLT_PORT;
+}
+
+void
+Context::noXsltPort(bool value) {
+    boost::mutex::scoped_lock lock(params_mutex_);
+    flag(FLAG_NO_XSLT_PORT, value);
 }
 
 void
