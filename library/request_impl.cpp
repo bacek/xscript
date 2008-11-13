@@ -394,6 +394,7 @@ RequestImpl::addInputHeader(const std::string &name, const std::string &value) {
     Range key_range = createRange(name);
     Range value_range = createRange(value);
     std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
+    boost::mutex::scoped_lock lock(mutex_);
     Parser::addHeader(this, key_range, value_range, enc.get());
 }
 
