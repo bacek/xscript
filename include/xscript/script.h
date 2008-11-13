@@ -125,7 +125,6 @@ protected:
     static const unsigned int FLAG_FORCE_STYLESHEET = 1 << 1;
 
     static const unsigned int FLAG_BINARY_PAGE = 1 << 2;
-
 private:
     friend class ScriptFactory;
 

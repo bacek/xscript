@@ -1,3 +1,11 @@
+xscript (5.44-0) unstable; urgency=low
+
+  * entity resolver added
+  * xi:include modified time added to doc expire check
+  * docroot scheme added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 12 Nov 2008 14:35:38 +0300
+
 xscript (5.43-0) unstable; urgency=low
 
   * added xpointer in block properties

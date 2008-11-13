@@ -4,8 +4,10 @@
 #include <boost/filesystem/path.hpp>
 
 #include "xscript/policy.h"
+#include "xscript/util.h"
 #include "xscript/xml.h"
 #include "xscript/xml_helpers.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -73,5 +75,34 @@ Xml::fullName(const std::string &object) const {
     path.normalize();
     return path.string();
 }
+
+void
+Xml::swapModifiedInfo(TimeMapType &info) {
+    modified_info_.swap(info);
+}
+
+const Xml::TimeMapType&
+Xml::modifiedInfo() const {
+    return modified_info_;
+}
+
+
+Xml::IncludeModifiedTimeSetter::IncludeModifiedTimeSetter(Xml *xml) : xml_(xml) {
+    XmlInfoCollector::ready(true);
+}
+
+Xml::IncludeModifiedTimeSetter::~IncludeModifiedTimeSetter() {
+    TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
+    if (NULL != modified_info) {
+        xml_->swapModifiedInfo(*modified_info);
+    }
+    else {
+        TimeMapType fake;
+        xml_->swapModifiedInfo(fake);
+    }
+    XmlInfoCollector::ready(false);
+}
+
+
 
 } // namespace xscript

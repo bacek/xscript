@@ -51,10 +51,10 @@ Config::startup() {
     LoggerFactory::instance()->init(this);
     log()->debug("logger factory started");
 
+    XmlUtils::init(this);
+
     DocCache::instance()->init(this);
     log()->debug("doc cache started");
-
-    XmlUtils::init(this);
 
     Loader::instance()->init(this);
     log()->debug("loader started");

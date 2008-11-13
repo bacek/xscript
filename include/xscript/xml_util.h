@@ -7,12 +7,17 @@
 #include <vector>
 #include <iosfwd>
 #include <stdexcept>
+
 #include <boost/cstdint.hpp>
+#include <boost/thread/tss.hpp>
 #include <boost/utility.hpp>
+
 #include <xscript/config.h>
 #include <xscript/context.h>
 #include <xscript/range.h>
+#include <xscript/xml.h>
 #include <xscript/xml_helpers.h>
+
 #include <libxml/tree.h>
 
 namespace xscript {
@@ -35,6 +40,8 @@ public:
     static void reportXsltError(const std::string &error, xmlXPathParserContextPtr ctxt);
     static void reportXsltError(const std::string &error, const Context *ctx);
 
+    static xmlParserInputPtr entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt);
+
     static std::string escape(const Range &value);
     template<typename Cont> static std::string escape(const Cont &value);
 
@@ -53,7 +60,24 @@ public:
     static bool xpathExists(xmlDocPtr doc, const std::string &path);
     static std::string xpathValue(xmlDocPtr doc, const std::string &path, const std::string &defval = "");
 
+public:
     static const char * const XSCRIPT_NAMESPACE;
+
+private:
+    static xmlExternalEntityLoader default_loader_;
+};
+
+class XmlInfoCollector {
+public:
+    XmlInfoCollector();
+
+    static void ready(bool flag);
+    static bool ready();
+    static void addModifiedTime(const std::string &name, size_t modified);
+    static Xml::TimeMapType* getModifiedInfo();
+
+private:
+    static boost::thread_specific_ptr<Xml::TimeMapType> modified_info_;
 };
 
 template<typename Cont> inline std::string

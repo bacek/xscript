@@ -18,6 +18,9 @@ public:
     virtual void getProxyHttpHeaders(const Request *req, std::vector<std::string> &headers) const;   
     virtual std::string getPathByScheme(const std::string &url) const;
 
+    virtual std::string getKey(const Request* request, const std::string& name) const;
+    virtual std::string getOutputEncoding(const Request* request) const;
+
 protected:
     virtual bool isSkippedProxyHeader(const std::string &header) const;
 };

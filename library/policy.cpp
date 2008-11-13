@@ -6,6 +6,7 @@
 #include "xscript/logger.h"
 #include "xscript/policy.h"
 #include "xscript/request.h"
+#include "xscript/vhost_data.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -55,13 +56,33 @@ Policy::getProxyHttpHeaders(const Request *req, std::vector<std::string> &header
 std::string
 Policy::getPathByScheme(const std::string &url) const {
 
-    const char scheme[] = "file://";
+    const char file_scheme[] = "file://";
+    if (!strncasecmp(url.c_str(), file_scheme, sizeof(file_scheme) - 1)) {
+        return url.substr(sizeof(file_scheme) - 1);
+    }
 
-    if (!strncasecmp(url.c_str(), scheme, sizeof(scheme) - 1)) {
-        return url.substr(sizeof(scheme) - 1);
+    const char root_scheme[] = "docroot://";
+    if (!strncasecmp(url.c_str(), root_scheme, sizeof(root_scheme) - 1)) {
+        std::string::size_type pos = sizeof(root_scheme) - 1;
+        if ('/' != url[pos]) {
+            --pos;
+        }
+        return VirtualHostData::instance()->getDocumentRoot(NULL) + url.substr(pos);
     }
 
     return url;
+}
+
+std::string
+Policy::getKey(const Request* request, const std::string& name) const {
+    (void)request;
+    return name;
+}
+
+std::string
+Policy::getOutputEncoding(const Request* request) const {
+    (void)request;
+    return std::string("utf-8");
 }
 
 bool

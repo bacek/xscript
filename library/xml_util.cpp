@@ -8,6 +8,9 @@
 
 #include <boost/thread/tss.hpp>
 #include <boost/current_function.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/exception.hpp>
 
 #include <libxml/tree.h>
 #include <libxml/parser.h>
@@ -23,6 +26,7 @@
 #include "internal/algorithm.h"
 #include "xscript/encoder.h"
 #include "xscript/logger.h"
+#include "xscript/policy.h"
 #include "xscript/range.h"
 #include "xscript/sanitizer.h"
 #include "xscript/script.h"
@@ -39,6 +43,9 @@ namespace xscript {
 
 static const Range ESCAPE_PATTERN = createRange("&'\"<>");
 const char * const XmlUtils::XSCRIPT_NAMESPACE = "http://www.yandex.ru/xscript";
+xmlExternalEntityLoader XmlUtils::default_loader_ = NULL;
+
+boost::thread_specific_ptr<Xml::TimeMapType> XmlInfoCollector::modified_info_;
 
 class XmlErrorReporter {
 public:
@@ -102,6 +109,13 @@ XmlUtils::~XmlUtils() {
 void
 XmlUtils::init(const Config *config) {
     xsltMaxDepth = config->as<int>("/xscript/xslt/max-depth", 300);
+
+    xmlExternalEntityLoader xml_loader = xmlGetExternalEntityLoader();
+
+    if(xml_loader != XmlUtils::entityResolver) {
+        xmlSetExternalEntityLoader(XmlUtils::entityResolver);
+        default_loader_ = xml_loader;
+    }
 }
 
 void
@@ -250,8 +264,82 @@ XmlUtils::reportXsltError(const std::string &error, const Context *ctx) {
     }
 }
 
-XmlErrorReporter::XmlErrorReporter() :
-        error_(false) {}
+
+xmlParserInputPtr 
+XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt) {
+    xmlParserInputPtr ret = NULL;
+    log()->info("entityResolver. url: %s, id: %s", url, id);
+
+    try {
+        std::string fileName = Policy::instance()->getPathByScheme(url);
+        if (default_loader_ != NULL){
+            namespace fs = boost::filesystem;
+            try {
+                if (XmlInfoCollector::ready()) {
+                    fs::path path(fileName);
+                    if (fs::exists(path) && !fs::is_directory(path)) {
+                        time_t modified = fs::last_write_time(path);
+                        XmlInfoCollector::addModifiedTime(path.native_file_string(), modified);
+                    }
+                }
+            }
+            catch (const fs::filesystem_error &e) {
+                log()->error("entityResolver error in fetching modified: %s. URL: %s. ID: %s",
+                    e.what(), url, id);
+            }
+            ret = default_loader_(fileName.c_str(), id, ctxt);
+        }
+        else{
+            log()->error("entityResolver: defaultLoader not set. URL: %s. ID: %s", url, id);
+        }
+
+        if(ret == NULL){
+            log()->error("entityResolver: can't resolve external entity. URL: %s. ID: %s", url, id);
+        }
+    }
+    catch (const std::exception &e) {
+        log()->error("entityResolver error: %s. URL: %s. ID: %s", e.what(), url, id);
+    }
+    catch (...) {
+        log()->error("entityResolver unknown error. URL: %s. ID: %s", url, id);
+    }
+
+    return ret;
+}
+
+XmlInfoCollector::XmlInfoCollector() {
+}
+
+void
+XmlInfoCollector::ready(bool flag) {
+    if (flag) {
+        modified_info_.reset(new Xml::TimeMapType());
+    }
+    else {
+        modified_info_.reset(NULL);
+    }
+}
+
+bool
+XmlInfoCollector::ready() {
+    return modified_info_.get() != NULL;
+}
+
+void
+XmlInfoCollector::addModifiedTime(const std::string &name, size_t modified) {
+    if (!ready()) {
+        return;
+    }
+    modified_info_->insert(std::make_pair(name, modified));
+}
+
+Xml::TimeMapType*
+XmlInfoCollector::getModifiedInfo() {
+    return modified_info_.get();
+}
+
+XmlErrorReporter::XmlErrorReporter() : error_(false)
+{}
 
 void
 XmlErrorReporter::reset() {

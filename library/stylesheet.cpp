@@ -11,7 +11,6 @@
 #include <boost/current_function.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
-
 #include <boost/lexical_cast.hpp>
 
 #include <libxslt/variables.h>
@@ -21,21 +20,24 @@
 #include <libxml/uri.h>
 #include <libxslt/xsltutils.h>
 
-#include "xscript/xml_util.h"
+
 #include "xscript/block.h"
-#include "xscript/param.h"
+#include "xscript/context.h"
+#include "xscript/extension.h"
 #include "xscript/logger.h"
 #include "xscript/object.h"
-#include "xscript/context.h"
+#include "xscript/operation_mode.h"
+#include "xscript/param.h"
+#include "xscript/policy.h"
+#include "xscript/profiler.h"
+#include "xscript/server.h"
 #include "xscript/stylesheet.h"
-#include "xscript/xslt_extension.h"
 #include "xscript/stylesheet_cache.h"
 #include "xscript/stylesheet_factory.h"
-#include "xscript/extension.h"
-#include "xscript/vhost_data.h"
-#include "xscript/operation_mode.h"
-#include "xscript/profiler.h"
+#include "xscript/xml_util.h"
 #include "xscript/xslt_profiler.h"
+#include "xscript/xslt_extension.h"
+#include "xscript/vhost_data.h"
 
 #include "internal/extension_list.h"
 #include "internal/profiler.h"
@@ -70,7 +72,7 @@ private:
 static XsltInitalizer xsltInitalizer;
 
 Stylesheet::Stylesheet(const std::string &name) :
-        modified_(std::numeric_limits<time_t>::min()),
+        Xml(), modified_(std::numeric_limits<time_t>::min()),
         name_(name), stylesheet_(NULL), blocks_(), have_output_info_(false) {
 }
 
@@ -296,7 +298,7 @@ void
 Stylesheet::detectOutputEncoding(const XsltStylesheetHelper &sh) {
     (void)sh;
     if (NULL == stylesheet_->encoding) {
-        output_encoding_.assign(VirtualHostData::instance()->getOutputEncoding(NULL));
+        output_encoding_.assign(Policy::instance()->getOutputEncoding(NULL));
         stylesheet_->encoding = xmlStrdup((const xmlChar*)(output_encoding_.c_str()));
     }
     else {

@@ -23,11 +23,12 @@ public:
 
     virtual bool hasVariable(const Request* request, const std::string& var) const;
     virtual std::string getVariable(const Request* request, const std::string& var) const;
-    virtual bool checkVariable(Request* request, const std::string& var) const;
-    virtual std::string getKey(const Request* request, const std::string& name) const;
-    virtual std::string getOutputEncoding(const Request* request) const;
+    virtual bool checkVariable(const Request* request, const std::string& var) const;
+
+    virtual std::string getDocumentRoot(const Request* request) const;
 
     friend class Server;
+
 protected:
     void setServer(const Server* server);
     const Request* get() const;
@@ -43,8 +44,10 @@ private:
         const Request* request_;
     };
 
-    boost::thread_specific_ptr<RequestProvider> request_provider_;
     const Server* server_;
+    boost::thread_specific_ptr<RequestProvider> request_provider_;
+
+    static const std::string DOCUMENT_ROOT;
 };
 
 } // namespace xscript

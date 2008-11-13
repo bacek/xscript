@@ -3,6 +3,7 @@
 #include <list>
 #include <vector>
 #include <algorithm>
+
 #include <boost/crc.hpp>
 #include <boost/bind.hpp>
 #include <boost/cstdint.hpp>
@@ -10,18 +11,17 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/checked_delete.hpp>
-
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
 #include "xscript/cache_usage_counter.h"
 #include "xscript/config.h"
 #include "xscript/logger.h"
+#include "xscript/policy.h"
 #include "xscript/script.h"
 #include "xscript/stylesheet.h"
 #include "xscript/script_cache.h"
 #include "xscript/stylesheet_cache.h"
-#include "xscript/vhost_data.h"
 #include "xscript/xml.h"
 
 #include "internal/hash.h"
@@ -248,9 +248,31 @@ XmlStorage::expired(const boost::shared_ptr<Xml> &xml) const {
     fs::path path(xml->name());
     std::time_t modified = fs::last_write_time(path);
 
-    log()->debug("is xml expired: %llu, %llu", static_cast<unsigned long long>(modified),
-                 static_cast<unsigned long long>(xml->modified()));
-    return modified != xml->modified();
+    log()->debug("is xml %s expired: %llu, %llu", path.string().c_str(),
+        static_cast<unsigned long long>(modified),
+        static_cast<unsigned long long>(xml->modified()));
+
+    if (modified != xml->modified()) {
+        return true;
+    }
+
+    const Xml::TimeMapType& modified_info = xml->modifiedInfo();
+    for(Xml::TimeMapType::const_iterator it = modified_info.begin(), end = modified_info.end();
+        it != end;
+        ++it) {
+        fs::path path(it->first);
+        std::time_t modified = fs::last_write_time(path);
+
+        log()->debug("is included xml %s expired: %llu, %llu", path.string().c_str(),
+            static_cast<unsigned long long>(modified),
+            static_cast<unsigned long long>(it->second));
+
+        if (modified != it->second) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 const CacheUsageCounter*
@@ -275,7 +297,7 @@ void
 XmlCache::erase(const std::string &name) {
     StringSet::const_iterator i = denied_.find(name);
     if (denied_.end() == i) {
-        std::string cache_name = VirtualHostData::instance()->getKey(NULL, name);
+        std::string cache_name = Policy::instance()->getKey(NULL, name);
         findStorage(name)->erase(cache_name);
     }
 }
@@ -312,7 +334,7 @@ XmlCache::fetchXml(const std::string &name) {
     if (denied_.end() != i) {
         return boost::shared_ptr<Xml>();
     }
-    std::string cache_name = VirtualHostData::instance()->getKey(NULL, name);
+    std::string cache_name = Policy::instance()->getKey(NULL, name);
     return findStorage(name)->fetch(cache_name);
 }
 
@@ -322,7 +344,7 @@ XmlCache::storeXml(const std::string &name, const boost::shared_ptr<Xml> &xml) {
     assert(NULL != xml.get());
     StringSet::const_iterator i = denied_.find(name);
     if (denied_.end() == i) {
-        std::string cache_name = VirtualHostData::instance()->getKey(NULL, name);
+        std::string cache_name = Policy::instance()->getKey(NULL, name);
         findStorage(name)->store(cache_name, xml);
     }
 }

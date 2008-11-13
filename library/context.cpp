@@ -8,14 +8,16 @@
 #include <boost/thread/xtime.hpp>
 #include <boost/current_function.hpp>
 
-#include "xscript/block.h"
-#include "xscript/state.h"
-#include "xscript/logger.h"
-#include "xscript/script.h"
-#include "xscript/context.h"
 #include "xscript/authorizer.h"
-#include "xscript/stylesheet.h"
+#include "xscript/block.h"
+#include "xscript/context.h"
+#include "xscript/logger.h"
+#include "xscript/policy.h"
 #include "xscript/request_data.h"
+#include "xscript/script.h"
+#include "xscript/server.h"
+#include "xscript/state.h"
+#include "xscript/stylesheet.h"
 #include "xscript/vhost_data.h"
 #include "xscript/xml_util.h"
 
@@ -168,7 +170,7 @@ DocumentWriter*
 Context::documentWriter() {
     if (NULL == writer_.get()) {
         writer_ = std::auto_ptr<DocumentWriter>(
-                      new XmlWriter(VirtualHostData::instance()->getOutputEncoding(request())));
+            new XmlWriter(Policy::instance()->getOutputEncoding(request())));
     }
 
     return writer_.get();
