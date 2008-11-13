@@ -323,7 +323,7 @@ MistBlock::setStateDomain(Context *ctx) {
     PROLOGUE;
 
     const std::vector<Param*> &p = params();
-    if (2 > p.size()) {
+    if (2 != p.size() && 3 != p.size()) {
         throw InvokeError("bad arity");
     }
 
