@@ -1,3 +1,13 @@
+xscript (5.43-0) unstable; urgency=low
+
+  * added xpointer in block properties
+  * InvokeResult structure added
+  * noXsltPort method added to Context
+  * Tag removed from postHttp (golubtsov work)
+  * setStateDomain returns full domain name if it hasn't third parameter
+
+ -- Leonid A. Movsesjan <lmovsesjan@yandex-team.ru>  Thu, 13 Nov 2008 12:45:14 +0300
+
 xscript (5.42-1) unstable; urgency=low
 
   * add mutex lock to RequestImpl::addInputHeader

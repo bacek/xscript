@@ -9,6 +9,16 @@
   </x:mist>
   <x:mist>
     <method>set_state_domain</method>
+    <param type="String">no_level</param>
+    <param type="String">http://localhost:1234/yandbtm?url=http%3A%2F%2Fwww.yandex.ru%2F&amp;text=%FF%ED%E4%E5%EA%F1</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_domain</method>
+    <param type="String">no_level_no_scheme</param>
+    <param type="String">www.yandex.ru:8090/yandbtm?url=http%3A%2F%2Fwww.yandex.ru%2F&amp;text=%FF%ED%E4%E5%EA%F1</param>
+  </x:mist>
+  <x:mist>
+    <method>set_state_domain</method>
     <param type="String">yandex.ru</param>
     <param type="String">http://www.yandex.ru/</param>
     <param type="Long">2</param>

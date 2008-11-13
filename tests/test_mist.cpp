@@ -213,6 +213,8 @@ MistTest::testDomain() {
     State* state = ctx->state();
 
     CPPUNIT_ASSERT_EQUAL(std::string("net"), state->asString("tld"));
+    CPPUNIT_ASSERT_EQUAL(std::string("localhost"), state->asString("no_level"));
+    CPPUNIT_ASSERT_EQUAL(std::string("www.yandex.ru"), state->asString("no_level_no_scheme"));
     CPPUNIT_ASSERT_EQUAL(std::string("yandex.ru"), state->asString("yandex.ru"));
     CPPUNIT_ASSERT_EQUAL(std::string("yandex.ru"), state->asString("no_scheme"));
     CPPUNIT_ASSERT_EQUAL(std::string("localhost"), state->asString("localhost"));

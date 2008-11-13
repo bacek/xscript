@@ -323,7 +323,7 @@ MistBlock::setStateDomain(Context *ctx) {
     PROLOGUE;
 
     const std::vector<Param*> &p = params();
-    if (3 != p.size()) {
+    if (2 > p.size()) {
         throw InvokeError("bad arity");
     }
 
@@ -331,22 +331,12 @@ MistBlock::setStateDomain(Context *ctx) {
     std::string n = p[0]->asString(ctx);
     state->checkName(n);
 
-    std::string url = p[1]->asString(ctx), level_str = p[2]->asString(ctx);
-    boost::int32_t level = 0;
-    try {
-        level = boost::lexical_cast<boost::int32_t>(level_str);
-    }
-    catch (const boost::bad_lexical_cast &) {
-    }
-
-    if (level <= 0) {
-        throw std::invalid_argument("bad param: level " + level_str);
-    }
+    std::string url = p[1]->asString(ctx);
 
     std::string::size_type pos;
     pos = url.find('?');
     if (std::string::npos != pos) {
-        url.erase(pos, std::string::npos);
+        url.erase(pos);
     }
 
     pos = url.find("://");
@@ -359,11 +349,29 @@ MistBlock::setStateDomain(Context *ctx) {
     pos = slash < colon ? slash : colon;
 
     if (std::string::npos != pos) {
-        url.erase(pos, url.size());
+        url.erase(pos);
     }
 
     if (url.empty() || '.' == *url.begin() || '.' == *url.rbegin()) {
         throw std::invalid_argument("bad param: domain='" + url + "'");
+    }
+
+    boost::int32_t level = 0;
+    boost::int32_t max = std::count(url.begin(), url.end(), '.');
+    if (3 == p.size()) {
+        std::string level_str = p[2]->asString(ctx);
+        try {
+            level = boost::lexical_cast<boost::int32_t>(level_str);
+        }
+            catch (const boost::bad_lexical_cast &) {
+        }
+        if (0 > level) {
+            throw std::invalid_argument("bad param: level");
+        }
+   }
+
+    if (0 == level) {
+        level = max + 1;
     }
 
     char c = url[url.rfind('.') + 1];
@@ -371,7 +379,6 @@ MistBlock::setStateDomain(Context *ctx) {
         throw std::invalid_argument("bad param: domain='" + url + "'");
     }
 
-    boost::int32_t max = std::count(url.begin(), url.end(), '.');
     if (max < level - 1) {
         log()->warn("max available domain level is less than required mist:set_state_domain");
     }
