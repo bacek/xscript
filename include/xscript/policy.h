@@ -23,6 +23,7 @@ public:
 
 protected:
     virtual bool isSkippedProxyHeader(const std::string &header) const;
+    static const std::string UTF8_ENCODING;
 };
 
 } // namespace xscript

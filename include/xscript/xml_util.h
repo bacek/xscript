@@ -72,8 +72,6 @@ public:
     XmlInfoCollector();
 
     static void ready(bool flag);
-    static bool ready();
-    static void addModifiedTime(const std::string &name, size_t modified);
     static Xml::TimeMapType* getModifiedInfo();
 
 private:

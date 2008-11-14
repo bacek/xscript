@@ -272,28 +272,31 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
 
     try {
         std::string fileName = Policy::instance()->getPathByScheme(url);
-        if (default_loader_ != NULL){
-            namespace fs = boost::filesystem;
-            try {
-                if (XmlInfoCollector::ready()) {
-                    fs::path path(fileName);
-                    if (fs::exists(path) && !fs::is_directory(path)) {
-                        time_t modified = fs::last_write_time(path);
-                        XmlInfoCollector::addModifiedTime(path.native_file_string(), modified);
+        if (default_loader_ != NULL) {
+            ret = default_loader_(fileName.c_str(), id, ctxt);
+            if (ret != NULL && fileName.find("://") == std::string::npos) {
+                namespace fs = boost::filesystem;
+                try {
+                    Xml::TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
+                    if (NULL != modified_info) {
+                        fs::path path(fileName);
+                        if (fs::exists(path) && !fs::is_directory(path)) {
+                            time_t modified = fs::last_write_time(path);
+                            modified_info->insert(std::make_pair(path.native_file_string(), modified));
+                        }
                     }
                 }
+                catch (const fs::filesystem_error &e) {
+                    log()->error("entityResolver error in fetching modified: %s. URL: %s. ID: %s",
+                        e.what(), url, id);
+                }
             }
-            catch (const fs::filesystem_error &e) {
-                log()->error("entityResolver error in fetching modified: %s. URL: %s. ID: %s",
-                    e.what(), url, id);
-            }
-            ret = default_loader_(fileName.c_str(), id, ctxt);
         }
         else{
             log()->error("entityResolver: defaultLoader not set. URL: %s. ID: %s", url, id);
         }
 
-        if(ret == NULL){
+        if (ret == NULL) {
             log()->error("entityResolver: can't resolve external entity. URL: %s. ID: %s", url, id);
         }
     }
@@ -318,19 +321,6 @@ XmlInfoCollector::ready(bool flag) {
     else {
         modified_info_.reset(NULL);
     }
-}
-
-bool
-XmlInfoCollector::ready() {
-    return modified_info_.get() != NULL;
-}
-
-void
-XmlInfoCollector::addModifiedTime(const std::string &name, size_t modified) {
-    if (!ready()) {
-        return;
-    }
-    modified_info_->insert(std::make_pair(name, modified));
 }
 
 Xml::TimeMapType*

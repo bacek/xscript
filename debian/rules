@@ -43,7 +43,7 @@ build-stamp: autogen-stamp configure-stamp
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f build-stamp configure-stamp
+	rm -f *-stamp
 	-$(MAKE) distclean
 	dh_clean 
 

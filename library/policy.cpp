@@ -14,6 +14,8 @@
 
 namespace xscript {
 
+const std::string Policy::UTF8_ENCODING = "utf-8";
+
 class ProxyHeadersHelper {
 public:
     static bool skipped(const char* name);
@@ -67,7 +69,7 @@ Policy::getPathByScheme(const std::string &url) const {
         if ('/' != url[pos]) {
             --pos;
         }
-        return VirtualHostData::instance()->getDocumentRoot(NULL) + url.substr(pos);
+        return VirtualHostData::instance()->getDocumentRoot(NULL) + (url.c_str() + pos);
     }
 
     return url;
@@ -82,7 +84,7 @@ Policy::getKey(const Request* request, const std::string& name) const {
 std::string
 Policy::getOutputEncoding(const Request* request) const {
     (void)request;
-    return std::string("utf-8");
+    return UTF8_ENCODING;
 }
 
 bool
