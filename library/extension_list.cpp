@@ -2,7 +2,9 @@
 
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
 
+#include <boost/bind.hpp>
 #include <boost/checked_delete.hpp>
 #include <boost/current_function.hpp>
 
@@ -28,6 +30,30 @@ ExtensionList::~ExtensionList() {
     ThreadPool::instance()->stop();
     std::for_each(extensions_.begin(), extensions_.end(),
                   boost::checked_deleter<Extension>());
+}
+
+void
+ExtensionList::initContext(Context *ctx) {
+    std::for_each(extensions_.begin(), extensions_.end(),
+                  boost::bind(&Extension::initContext, _1, ctx));
+}
+
+void
+ExtensionList::stopContext(Context *ctx) {
+    std::for_each(extensions_.begin(), extensions_.end(),
+                  boost::bind(&Extension::stopContext, _1, ctx));
+}
+
+void
+ExtensionList::destroyContext(Context *ctx) {
+    std::for_each(extensions_.begin(), extensions_.end(),
+                  boost::bind(&Extension::destroyContext, _1, ctx));
+}
+
+void
+ExtensionList::init(const Config *config) {
+    std::for_each(extensions_.begin(), extensions_.end(),
+                  boost::bind(&Extension::init, _1, config));
 }
 
 void

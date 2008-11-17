@@ -3,9 +3,7 @@
 
 #include <memory>
 #include <vector>
-#include <algorithm>
 
-#include <boost/bind.hpp>
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -27,25 +25,11 @@ public:
     ExtensionList();
     virtual ~ExtensionList();
 
-    inline void initContext(Context *ctx) {
-        std::for_each(extensions_.begin(), extensions_.end(),
-                      boost::bind(&Extension::initContext, _1, ctx));
-    }
+    void initContext(Context *ctx);
+    void stopContext(Context *ctx);
+    void destroyContext(Context *ctx);
 
-    inline void stopContext(Context *ctx) {
-        std::for_each(extensions_.begin(), extensions_.end(),
-                      boost::bind(&Extension::stopContext, _1, ctx));
-    }
-
-    inline void destroyContext(Context *ctx) {
-        std::for_each(extensions_.begin(), extensions_.end(),
-                      boost::bind(&Extension::destroyContext, _1, ctx));
-    }
-
-    inline void init(const Config *config) {
-        std::for_each(extensions_.begin(), extensions_.end(),
-                      boost::bind(&Extension::init, _1, config));
-    }
+    void init(const Config *config);
 
     void registerExtension(ExtensionHolder ext);
 
