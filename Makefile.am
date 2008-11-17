@@ -1,4 +1,5 @@
 AUTOMAKE_OPTIONS = 1.9 foreign
+ACLOCAL_AMFLAGS = -I config
 SUBDIRS = include library standard xscript daemon
 
 EXTRA_DIST = ChangeLog Doxyfile AUTHORS COPYING INSTALL NEWS README \
