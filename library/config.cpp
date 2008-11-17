@@ -5,6 +5,8 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
+#include <pcrecpp.h>
+
 #include <libxml/tree.h>
 #include <libxml/xpath.h>
 #include <libxml/parser.h>
@@ -129,7 +131,7 @@ Config::create(int &argc, char *argv[], bool dont_check, HelpFunc func) {
 }
 
 XmlConfig::XmlConfig(const char *file) :
-        doc_(NULL), regex_("\\$\\{([A-Za-z][A-Za-z0-9\\-]*)\\}") {
+        doc_(NULL) {
     namespace fs = boost::filesystem;
     fs::path path(file, fs::no_check);
     if (!fs::exists(path)) {
@@ -230,13 +232,35 @@ XmlConfig::findVariables(const XmlDocHelper &doc) {
 
 void
 XmlConfig::resolveVariables(std::string &val) const {
-    boost::smatch res;
-    while (boost::regex_search(val, res, regex_)) {
-        if (2 == res.size()) {
-            std::string key(res[1].first, res[1].second);
-            val.replace(res.position(0), res.length(0), findVariable(key));
-        }
+    std::string res;
+    std::string key;
+
+    // Prepare pcrecpp
+    // piece is iterator over val.
+    pcrecpp::StringPiece piece(val);
+    // Grab "key" from config.
+    pcrecpp::RE re("\\$\\{([A-Za-z][A-Za-z0-9\\-]*)\\}");
+    // Arg will put into key
+    const pcrecpp::Arg arg((&key));
+    // Number of capturing groups.
+    int groups = 1;
+    const pcrecpp::Arg * args[groups];
+    args[0] = &arg;
+    // Position in val
+    int consumed;
+    while (re.DoMatch(piece, pcrecpp::RE::UNANCHORED, &consumed, args, groups)) {
+        // Put prefix to res.
+        // Equals to data + consumed - 3 bytes for ${} - key
+        res.append(piece.data(), consumed-3 - key.length());
+        piece.remove_prefix(consumed);
+
+        // Put value
+        res += findVariable(key);
     }
+
+    //copy tail to res and assign back to val.
+    res += piece.data();
+    val = res;
 }
 
 const std::string&

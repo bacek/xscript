@@ -2,7 +2,6 @@
 #define _XSCRIPT_DETAILS_XML_CONFIG_H_
 
 #include <string>
-#include <boost/regex.hpp>
 
 #include "xscript/config.h"
 #include "xscript/xml_helpers.h"
@@ -38,7 +37,6 @@ private:
 private:
     VarMap vars_;
     XmlDocHelper doc_;
-    boost::regex regex_;
 };
 
 } // namespace xscript
