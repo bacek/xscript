@@ -28,7 +28,7 @@ ac_stored_libs=$LIBS
 ac_stored_cppflags=$CPPFLAGS
 ac_stored_cxxflags=$CXXFLAGS
  
-LIBS="$ac_stored_libs -lboost_thread -lboost_filesystem $yandex_platform_LIBS"
+LIBS="$ac_stored_libs -lboost_thread -lboost_regex -lboost_filesystem $yandex_platform_LIBS"
 CPPFLAGS="$ac_stored_cppflags -pthread $yandex_platform_CFLAGS"
 CXXFLAGS="$ac_stored_cxxflags -W -Wall -pthread"
 
@@ -40,6 +40,11 @@ AC_CHECK_HEADER([boost/function.hpp], [], [ac_have_boost="no"])
 AC_CHECK_HEADER([boost/shared_ptr.hpp], [], [ac_have_boost="no"])
 AC_CHECK_HEADER([boost/checked_delete.hpp], [], [ac_have_boost="no"])
 AC_CHECK_HEADER([boost/current_function.hpp], [], [ac_have_boost="no"])
+
+AC_CHECK_HEADER([boost/regex.hpp], [], [ac_have_boost="no"])
+AC_MSG_CHECKING([trying to link with boost regex])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/regex.hpp>]], [[ boost::regex r; ]])],
+	[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no); ac_have_boost="no"])
 
 AC_CHECK_HEADER([boost/thread.hpp], [], [ac_have_boost="no"])
 AC_CHECK_HEADER([boost/thread/once.hpp], [], [ac_have_boost="no"])
@@ -80,7 +85,8 @@ if test "f$ac_have_fcgi" != "fyes"; then
 	AC_MSG_ERROR([libfcgi++ not found])
 fi
 
-AC_CHECK_HEADER([pcrecpp.h], [LDFLAGS="$LDFLAGS -lpcrecpp"], AC_MSG_ERROR([libpcre not found]))
+AC_CHECK_HEADER([pcre.h], [ac_have_pcre="yes"; LDFLAGS="$LDFLAGS -lpcre"], [ac_have_pcre="no"])
+AM_CONDITIONAL(HAVE_PCRE, [test "f$ac_have_pcre" = "fyes"])	
 
 PKG_CHECK_MODULES(xslt, 
 	[libxslt], [], [ AC_MSG_ERROR([libxslt not found]) ])
