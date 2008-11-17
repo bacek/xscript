@@ -40,11 +40,9 @@ xscript_development_la_LIBADD = ../library/libxscript.la
 xscript_development_la_LDFLAGS = -module
 
 
-xscript_validators_la_SOURCES = range_validator.cpp
-
-if HAVE_PCRE
-xscript_validators_la_SOURCES += regex_validator.cpp
-endif
+xscript_validators_la_SOURCES = \
+	range_validator.cpp \
+	regex_validator.cpp
 
 xscript_validators_la_LIBADD = ../library/libxscript.la
 xscript_validators_la_LDFLAGS = -module
@@ -61,20 +59,15 @@ TESTS = test
 check_PROGRAMS = test
 
 noinst_LTLIBRARIES = libtest.la
-libtest_la_SOURCES = doc_pool.cpp range_validator.cpp
-if HAVE_PCRE
-libtest_la_SOURCES += regex_validator.cpp
-endif
+libtest_la_SOURCES = doc_pool.cpp range_validator.cpp regex_validator.cpp
 libtest_la_LDFLAGS = -static
 
 noinst_HEADERS = doc_pool.h range_validator.h
 
 test_SOURCES = test_main.cpp \
 			   doc_pool_test.cpp \
-			   range_validator_test.cpp
-if HAVE_PCRE
-test_SOURCES += regex_validator_test.cpp
-endif
+			   range_validator_test.cpp \
+			   regex_validator_test.cpp
 
 test_LDADD = ../library/libxscript.la libtest.la
 test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic

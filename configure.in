@@ -85,8 +85,7 @@ if test "f$ac_have_fcgi" != "fyes"; then
 	AC_MSG_ERROR([libfcgi++ not found])
 fi
 
-AC_CHECK_HEADER([pcre.h], [ac_have_pcre="yes"; LDFLAGS="$LDFLAGS -lpcre"], [ac_have_pcre="no"])
-AM_CONDITIONAL(HAVE_PCRE, [test "f$ac_have_pcre" = "fyes"])	
+AC_CHECK_HEADER([pcrecpp.h], [LDFLAGS="$LDFLAGS -lpcrecpp"], AC_MSG_ERROR([libpcre not found]))
 
 PKG_CHECK_MODULES(xslt, 
 	[libxslt], [], [ AC_MSG_ERROR([libxslt not found]) ])
