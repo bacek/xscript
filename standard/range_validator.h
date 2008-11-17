@@ -15,7 +15,7 @@ namespace xscript
 /**
  * Range validator. Validate that numeric value of param within given range.
  * Range is tested to include "mix", but not "max" similar to classic C++ style
- * [min, max) checks.
+ * [min, max] checks.
  *
  * Example of usage:
  *   param type="QueryArg" id="foo" validator="int_range" min="1" max="42"
@@ -46,7 +46,7 @@ public:
             throw std::runtime_error("Insufficient args for range validator");
         }
 
-        if (has_min_ && has_max_ && (min_ > max_)) {
+        if (has_min_ && has_max_ && (min_ >= max_)) {
             throw std::runtime_error("Invalid range");
         }
     }
@@ -61,7 +61,7 @@ public:
     bool checkString(const std::string &value) const {
         try {
             T val = boost::lexical_cast<T>(value);
-            return (!has_min_ || (min_ <= val)) && (!has_max_ || (val < max_));
+            return (!has_min_ || (min_ <= val)) && (!has_max_ || (val <= max_));
         }
         catch(...) {
             return false;

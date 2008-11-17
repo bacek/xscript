@@ -63,7 +63,8 @@ private:
 
         CPPUNIT_ASSERT(v);
         CPPUNIT_ASSERT(v->checkString("10"));
-        CPPUNIT_ASSERT(!v->checkString("100"));
+        CPPUNIT_ASSERT(v->checkString("100"));
+        CPPUNIT_ASSERT(!v->checkString("101"));
     }
 
     void testBothSide() {
@@ -75,9 +76,11 @@ private:
 
         CPPUNIT_ASSERT(v);
         CPPUNIT_ASSERT(!v->checkString("10"));
+        CPPUNIT_ASSERT(!v->checkString("99"));
         CPPUNIT_ASSERT(v->checkString("100"));
         CPPUNIT_ASSERT(v->checkString("150"));
-        CPPUNIT_ASSERT(!v->checkString("200"));
+        CPPUNIT_ASSERT(v->checkString("200"));
+        CPPUNIT_ASSERT(!v->checkString("201"));
         CPPUNIT_ASSERT(!v->checkString("1200"));
     }
 
