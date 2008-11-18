@@ -3,13 +3,12 @@
 #include <iostream>
 #include <set>
 
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
 #include <xscript/logger.h>
 #include <xscript/policy.h>
+#include <xscript/util.h>
 
 #include "standalone_request.h"
 
@@ -110,21 +109,20 @@ StandaloneRequest::attach(const std::string& url, const std::string& doc_root) {
                 throw std::runtime_error("working directory path is too long");
             }
 
-            std::string full_path = std::string(dirname) + "/" + processed_url;
+            std::string root_dir = std::string(dirname);
+            if (!root_dir.empty() && *root_dir.rbegin() != '/') {
+                root_dir.push_back('/');
+            }
 
-            namespace fs = boost::filesystem;
-            fs::path path(full_path);
-            path.normalize();
-            processed_url = path.native_file_string();
+            processed_url = FileUtils::normalize(root_dir + processed_url);
         }
     }
     else {
         std::string protocol = processed_url.substr(0, pos);
-
-        if (protocol == "http") {
+        if (strcasecmp(protocol.c_str(), "http") == 0) {
             isSecure_ = false;
         }
-        else if (protocol == "https"){
+        else if (strcasecmp(protocol.c_str(), "https") == 0) {
             isSecure_ = true;
         }
         else {
@@ -170,11 +168,7 @@ StandaloneRequest::attach(const std::string& url, const std::string& doc_root) {
         path_ = path.substr(0, slesh_pos);
     }
 
-    script_file_name_ = root_directory_ + path_ + script_name_;
-    namespace fs = boost::filesystem;
-    fs::path path(script_file_name_);
-    path.normalize();
-    script_file_name_ = path.native_file_string();
+    script_file_name_ = FileUtils::normalize(root_directory_ + path_ + script_name_);
 
     typedef boost::char_separator<char> Separator;
     typedef boost::tokenizer<Separator> Tokenizer;
