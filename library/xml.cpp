@@ -1,7 +1,6 @@
 #include "settings.h"
 
 #include <stdexcept>
-#include <boost/filesystem/path.hpp>
 
 #include "xscript/policy.h"
 #include "xscript/util.h"
@@ -15,8 +14,6 @@
 
 namespace xscript {
 
-namespace fs = boost::filesystem;
-
 Xml::Xml() {
 }
 
@@ -24,56 +21,39 @@ Xml::~Xml() {
 }
 
 std::string
-Xml::fullName(const std::string &object) const {
+Xml::filePath(const std::string &object) const {
 
     if (object.empty()) {
         throw std::runtime_error("Empty relative path");
     }
-
-    std::string res;
     if (*object.begin() == '/') {
-        res.assign(object);
+        return object;
     }
-    else {
-        const std::string transformed = Policy::instance()->getPathByScheme(NULL, object);
-        if (transformed.empty()) {
-            throw std::runtime_error("Empty relative path");
-        }
-        if (*transformed.begin() == '/') {
-            res.assign(transformed);
-        }
-        else {
-            const std::string &owner_name = name();
-            if (owner_name.empty()) {
-                res.assign(transformed);
+
+    std::string transformed = Policy::instance()->getPathByScheme(NULL, object);
+    if (transformed.empty()) {
+        throw std::runtime_error("Empty relative path");
+    }
+    if (*transformed.begin() != '/') {
+        const std::string &owner_name = name();
+        if (!owner_name.empty()) {
+            if (*owner_name.rbegin() == '/') {
+                return owner_name + transformed;
             }
-            else if (*owner_name.rbegin() == '/') {
-                res.assign(owner_name + transformed);
-            }
-            else {
-                std::string::size_type pos = owner_name.find_last_of('/');
-                if (pos == std::string::npos) {
-                    res.assign(transformed);
-                }
-                else {
-                    res.assign(owner_name.substr(0, pos + 1) + transformed);
-                }
+
+            std::string::size_type pos = owner_name.find_last_of('/');
+            if (pos != std::string::npos) {
+                return owner_name.substr(0, pos + 1) + transformed;
             }
         }
     }
-#if BOOST_VERSION < 103401
-    std::string::size_type length = res.length();
-    for (std::string::size_type i = 0; i < length - 1; ++i) {
-        if (res[i] == '/' && res[i + 1] == '/') {
-            res.erase(i, 1);
-            --i;
-            --length;
-        }
-    }
-#endif
-    fs::path path = fs::path(res);
-    path.normalize();
-    return path.string();
+    return transformed;
+}
+
+
+std::string
+Xml::fullName(const std::string &name) const {
+    return FileUtils::normalize(filePath(name));
 }
 
 void

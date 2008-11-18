@@ -116,6 +116,17 @@ private:
     virtual ~HashUtils();
 };
 
+class FileUtils : private boost::noncopyable {
+public:
+    static std::string normalize(const std::string &filepath);
+
+private:
+    FileUtils();
+    virtual ~FileUtils();
+};
+
+
+
 template<typename Cont> inline std::string
 StringUtils::urlencode(const Cont &cont) {
     return urlencode(createRange(cont));

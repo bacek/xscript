@@ -25,6 +25,7 @@ public:
 
 protected:
     virtual void swapModifiedInfo(TimeMapType &info);
+    virtual std::string filePath(const std::string &name) const;
         
     class IncludeModifiedTimeSetter {
     public:

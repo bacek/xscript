@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <iostream>
 
+#include <boost/filesystem/path.hpp>
 #include <boost/current_function.hpp>
 
 #include <openssl/blowfish.h>
@@ -318,6 +319,37 @@ std::string
 HashUtils::blowfish(const ByteArrayType &data, const ByteArrayType &key, const char *ivec) {
     return blowfish(&*data.begin(), data.size(), &*key.begin(), key.size(), ivec);
 }
+
+FileUtils::FileUtils() {
+}
+
+FileUtils::~FileUtils() {
+}
+
+std::string
+FileUtils::normalize(const std::string &filepath) {
+
+    namespace fs = boost::filesystem;
+
+#if BOOST_VERSION < 103401
+    std::string res(filepath);
+    std::string::size_type length = res.length();
+    for (std::string::size_type i = 0; i < length - 1; ++i) {
+        if (res[i] == '/' && res[i + 1] == '/') {
+            res.erase(i, 1);
+            --i;
+            --length;
+        }
+    }
+    fs::path path(res);
+#else
+    fs::path path(filepath);
+#endif
+
+    path.normalize();
+    return path.string();
+}
+
 
 const int TimeoutCounter::UNLIMITED_TIME = std::numeric_limits<int>::max();
 
