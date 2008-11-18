@@ -129,7 +129,7 @@ Config::create(int &argc, char *argv[], bool dont_check, HelpFunc func) {
 }
 
 XmlConfig::XmlConfig(const char *file) :
-        doc_(NULL), regex_("\\$\\{([A-Za-z][A-Za-z0-9\\-]*)\\}") {
+        doc_(NULL) {
     namespace fs = boost::filesystem;
     fs::path path(file, fs::no_check);
     if (!fs::exists(path)) {
@@ -230,11 +230,18 @@ XmlConfig::findVariables(const XmlDocHelper &doc) {
 
 void
 XmlConfig::resolveVariables(std::string &val) const {
-    boost::smatch res;
-    while (boost::regex_search(val, res, regex_)) {
-        if (2 == res.size()) {
-            std::string key(res[1].first, res[1].second);
-            val.replace(res.position(0), res.length(0), findVariable(key));
+    size_t pos_begin = 0, pos_end = 0;
+    while(pos_end != std::string::npos) {
+        pos_begin = val.find("${", 0);
+        pos_end = val.find('}', pos_begin);
+        if (pos_begin != std::string::npos && pos_end != std::string::npos) {
+            std::string name = val.substr(pos_begin + 2, pos_end - pos_begin - 2);
+            if (checkVariableName(name)) {
+                val.replace(pos_begin, pos_end - pos_begin + 1, findVariable(name));
+            }
+            else {
+                throw std::runtime_error("incorrect variable name format: " + name);
+            }
         }
     }
 }
@@ -248,6 +255,28 @@ XmlConfig::findVariable(const std::string &key) const {
     else {
         throw std::runtime_error(std::string("nonexistent variable ").append(key));
     }
+}
+
+bool
+XmlConfig::checkVariableName(const std::string &name) const {
+
+    if (name.empty()) {
+        return false;
+    }
+
+    if (!isalpha(name[0])) {
+        return false;
+    }
+
+    int size = name.size();
+    for (int i = 1; i < size; ++i) {
+        char character = name[i];
+        if (!isalnum(character) && character != '-') {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 } // namespace xscript

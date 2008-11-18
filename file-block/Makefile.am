@@ -10,5 +10,5 @@ noinst_HEADERS = file_block.h file_extension.h
 
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -W -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
-AM_LDFLAGS = -lboost_thread -lboost_regex -lboost_filesystem @yandex_platform_LIBS@
+AM_LDFLAGS = -lboost_thread -lboost_filesystem @yandex_platform_LIBS@
 

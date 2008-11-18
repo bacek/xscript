@@ -1,7 +1,7 @@
 Source: xscript
 Priority: optional
 Maintainer: Oleg Obolenskiy <highpower@yandex-team.ru>
-Build-Depends: debhelper (>= 4.0.0), automake1.9, autotools-dev, libboost-dev, libboost-thread-dev, libboost-regex-dev, libboost-filesystem-dev, libcurl-dev, libfcgi-dev, libcppunit-dev, libxml2-dev, libxslt1-dev, libssl-dev, liblua5.1-0-dev
+Build-Depends: debhelper (>= 4.0.0), automake1.9, autotools-dev, libboost-dev, libboost-thread-dev, libboost-filesystem-dev, libcurl-dev, libfcgi-dev, libcppunit-dev, libxml2-dev, libxslt1-dev, libssl-dev, liblua5.1-0-dev
 Standards-Version: 3.6.1
 Section: libs
 
@@ -15,7 +15,7 @@ Description: XScript is xml-based application server written in C++.
 Package: libxscript-dev
 Section: libdevel
 Architecture: any
-Depends: libxscript (=${Source-Version}), libboost-thread-dev, libboost-regex-dev, libxml2-dev, libxslt1-dev
+Depends: libxscript (=${Source-Version}), libboost-thread-dev, libxml2-dev, libxslt1-dev
 Description: Xscript is xml-based application server. 
  Headers and libraries to develop XScript extensions.
 

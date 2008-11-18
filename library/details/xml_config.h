@@ -2,7 +2,6 @@
 #define _XSCRIPT_DETAILS_XML_CONFIG_H_
 
 #include <string>
-#include <boost/regex.hpp>
 
 #include "xscript/config.h"
 #include "xscript/xml_helpers.h"
@@ -34,11 +33,11 @@ private:
     void findVariables(const XmlDocHelper &doc);
     void resolveVariables(std::string &val) const;
     const std::string& findVariable(const std::string &key) const;
+    bool checkVariableName(const std::string &name) const;
 
 private:
     VarMap vars_;
     XmlDocHelper doc_;
-    boost::regex regex_;
 };
 
 } // namespace xscript
