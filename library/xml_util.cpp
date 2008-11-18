@@ -271,7 +271,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
     log()->info("entityResolver. url: %s, id: %s", url, id);
 
     try {
-        std::string fileName = Policy::instance()->getPathByScheme(url);
+        std::string fileName = Policy::instance()->getPathByScheme(NULL, url);
         if (default_loader_ != NULL) {
             ret = default_loader_(fileName.c_str(), id, ctxt);
             if (ret != NULL && fileName.find("://") == std::string::npos) {

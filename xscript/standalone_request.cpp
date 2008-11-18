@@ -3,12 +3,15 @@
 #include <iostream>
 #include <set>
 
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/regex.hpp>
 #include <boost/tokenizer.hpp>
 
+#include <xscript/logger.h>
+#include <xscript/policy.h>
+
 #include "standalone_request.h"
-#include "xscript/logger.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -87,41 +90,91 @@ StandaloneRequest::sendError(unsigned short status, const std::string& message) 
 
 void
 StandaloneRequest::attach(const std::string& url, const std::string& doc_root) {
+
+    if (url.empty()) {
+        throw std::runtime_error("Cannot process empty url");
+    }
+
     root_directory_ = doc_root;
+    std::string processed_url = Policy::instance()->getPathByScheme(this, url);
+    std::string root_directory_ = Policy::instance()->getRootByScheme(this, url);
 
-    boost::regex expression(
-        "^(\?:([^:/\?#]+)://)\?(\\w+[^/\?#:]*)\?(\?::(\\d+))\?(/\?(\?:[^\?#/]*/)*)\?([^\?#]*)\?(\\\?.*)\?");
-    boost::cmatch matches;
-    if (boost::regex_match(url.c_str(), matches, expression)) {
-        std::string match(matches[1].first, matches[1].second);
-        isSecure_ = false;
-        if ("https" == std::string(matches[1].first, matches[1].second)) {
-            isSecure_ = true;
+    size_t base_pos = 0;
+    size_t pos = processed_url.find("://");
+    if (pos == std::string::npos) {
+        if (processed_url[0] != '/') {
+            int max_path_size = 8192;
+            char dirname[max_path_size];
+            char *ret = getcwd(dirname, max_path_size);
+            if (ret == NULL) {
+                throw std::runtime_error("working directory path is too long");
+            }
+
+            std::string full_path = std::string(dirname) + "/" + processed_url;
+
+            namespace fs = boost::filesystem;
+            fs::path path(full_path);
+            path.normalize();
+            processed_url = path.native_file_string();
         }
-
-        host_ = std::string(matches[2].first, matches[2].second);
-        match = std::string(matches[3].first, matches[3].second);
-        port_ = 80;
-        if (!match.empty()) {
-            port_ = boost::lexical_cast<unsigned short>(match);
-        }
-
-        path_ = std::string(matches[4].first, matches[4].second);
-        if (path_.empty()) {
-            path_ = "/";
-        }
-
-        script_name_ = std::string(matches[5].first, matches[5].second);
-        if (script_name_.empty()) {
-            script_name_.swap(host_);
-        }
-
-        script_file_name_ = root_directory_ + path_ + script_name_;
-        query_ = std::string(matches[6].first, matches[6].second).erase(0, 1);
     }
     else {
-        throw std::runtime_error("Cannot parse url: " + url);
+        std::string protocol = processed_url.substr(0, pos);
+
+        if (protocol == "http") {
+            isSecure_ = false;
+        }
+        else if (protocol == "https"){
+            isSecure_ = true;
+        }
+        else {
+            throw std::runtime_error("Protocol is not supported: " + protocol);
+        }
+
+        pos += 3;
+        base_pos = processed_url.find('/', pos);
+        std::string host = processed_url.substr(pos, base_pos - pos);
+
+        size_t port_pos = host.find(':');
+        if (port_pos == std::string::npos) {
+            port_ = 80;
+            host_ = host;
+        }
+        else {
+            host_ = host.substr(0, port_pos);
+            std::string port = host.substr(port_pos + 1);
+            try {
+                port_ = boost::lexical_cast<unsigned short>(port);
+            }
+            catch(const boost::bad_lexical_cast &e) {
+                throw std::runtime_error("Cannot parse port: " + port);
+            }
+        }
     }
+
+    if (base_pos != std::string::npos) {
+        std::string path = processed_url.substr(base_pos);
+        size_t size = root_directory_.size();
+        if (size <= path.size() &&
+            strncmp(root_directory_.c_str(), path.c_str(), size) == 0) {
+            path = path.substr(size);
+        }
+
+        size_t query_pos = path.find('?');
+        if (query_pos != std::string::npos) {
+            query_ = path.substr(query_pos + 1);
+        }
+
+        size_t slesh_pos = path.rfind('/', query_pos) + 1;
+        script_name_ = path.substr(slesh_pos, query_pos - slesh_pos);
+        path_ = path.substr(0, slesh_pos);
+    }
+
+    script_file_name_ = root_directory_ + path_ + script_name_;
+    namespace fs = boost::filesystem;
+    fs::path path(script_file_name_);
+    path.normalize();
+    script_file_name_ = path.native_file_string();
 
     typedef boost::char_separator<char> Separator;
     typedef boost::tokenizer<Separator> Tokenizer;

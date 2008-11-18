@@ -6,6 +6,7 @@
 #include "xscript/logger.h"
 #include "xscript/policy.h"
 #include "xscript/request.h"
+#include "xscript/util.h"
 #include "xscript/vhost_data.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -56,7 +57,7 @@ Policy::getProxyHttpHeaders(const Request *req, std::vector<std::string> &header
 }
 
 std::string
-Policy::getPathByScheme(const std::string &url) const {
+Policy::getPathByScheme(const Request *request, const std::string &url) const {
 
     const char file_scheme[] = "file://";
     if (!strncasecmp(url.c_str(), file_scheme, sizeof(file_scheme) - 1)) {
@@ -69,10 +70,28 @@ Policy::getPathByScheme(const std::string &url) const {
         if ('/' != url[pos]) {
             --pos;
         }
-        return VirtualHostData::instance()->getDocumentRoot(NULL) + (url.c_str() + pos);
+        return VirtualHostData::instance()->getDocumentRoot(request) + (url.c_str() + pos);
     }
 
     return url;
+}
+
+std::string
+Policy::getRootByScheme(const Request *request, const std::string &url) const {
+
+    const char file_scheme[] = "file://";
+    const char root_scheme[] = "docroot://";
+    const char http_scheme[] = "http://";
+    const char https_scheme[] = "https://";
+
+    if ((!strncasecmp(url.c_str(), file_scheme, sizeof(file_scheme) - 1)) ||
+        (!strncasecmp(url.c_str(), root_scheme, sizeof(root_scheme) - 1)) ||
+        (!strncasecmp(url.c_str(), http_scheme, sizeof(http_scheme) - 1)) ||
+        (!strncasecmp(url.c_str(), https_scheme, sizeof(https_scheme) - 1))) {
+        return VirtualHostData::instance()->getDocumentRoot(request);
+    }
+
+    return StringUtils::EMPTY_STRING;
 }
 
 std::string

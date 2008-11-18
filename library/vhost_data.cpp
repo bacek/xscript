@@ -88,7 +88,14 @@ VirtualHostData::checkVariable(const Request* request, const std::string& var) c
 
 std::string
 VirtualHostData::getDocumentRoot(const Request* request) const {
-    std::string root = getVariable(request, DOCUMENT_ROOT);
+    if (NULL == request) {
+        request = get();
+        if (NULL == request) {
+            return StringUtils::EMPTY_STRING;
+        }
+    }
+
+    std::string root = request->getDocumentRoot();
     while(!root.empty() && *root.rbegin() == '/') {
         root.erase(root.length() - 1, 1);
     }

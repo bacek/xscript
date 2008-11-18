@@ -29,6 +29,8 @@ public:
 
     friend class Server;
 
+    static const std::string DOCUMENT_ROOT;
+
 protected:
     void setServer(const Server* server);
     const Request* get() const;
@@ -46,8 +48,6 @@ private:
 
     const Server* server_;
     boost::thread_specific_ptr<RequestProvider> request_provider_;
-
-    static const std::string DOCUMENT_ROOT;
 };
 
 } // namespace xscript
