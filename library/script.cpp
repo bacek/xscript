@@ -105,17 +105,17 @@ Script::parse() {
     }
 
     XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar *) path.native_file_string().c_str()));
-    doc_ = XmlDocHelper(xmlReadFile(
-        (const char*) canonic_path.get(), NULL, XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT));
-
-    XmlUtils::throwUnless(NULL != doc_.get());
-    if (NULL == doc_->children) {
-        throw std::runtime_error("got empty xml doc");
-    }
-
     {
         IncludeModifiedTimeSetter setter(this);
-        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc_.get(), XML_PARSE_NOENT) >= 0);
+        doc_ = XmlDocHelper(xmlReadFile((const char*) canonic_path.get(), NULL,
+            XML_PARSE_DTDATTR | XML_PARSE_NOENT | XML_PARSE_NONET));
+
+        XmlUtils::throwUnless(NULL != doc_.get());
+        if (NULL == doc_->children) {
+            throw std::runtime_error("got empty xml doc");
+        }
+
+        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc_.get(), XML_PARSE_NOENT | XML_PARSE_NONET) >= 0);
     }
 
     std::vector<xmlNodePtr> xscript_nodes;

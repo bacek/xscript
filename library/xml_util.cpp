@@ -264,7 +264,6 @@ XmlUtils::reportXsltError(const std::string &error, const Context *ctx) {
     }
 }
 
-
 xmlParserInputPtr 
 XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt) {
     xmlParserInputPtr ret = NULL;

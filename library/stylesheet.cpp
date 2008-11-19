@@ -182,19 +182,24 @@ Stylesheet::parse() {
     }
 
     XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar *) path.native_file_string().c_str()));
-    XmlDocHelper doc(xmlReadFile(
-                         (const char*) canonic_path.get(), NULL, XML_PARSE_DTDATTR | XML_PARSE_DTDLOAD | XML_PARSE_NOENT | XML_PARSE_NOCDATA));
 
-    XmlUtils::throwUnless(NULL != doc.get());
-    log()->debug("%s stylesheet %s document parsed", BOOST_CURRENT_FUNCTION,  name_.c_str());
+    XmlDocHelper doc(NULL);
+    {
+        IncludeModifiedTimeSetter setter(this);
+        doc = XmlDocHelper(xmlReadFile((const char*) canonic_path.get(), NULL,
+            XML_PARSE_DTDATTR | XML_PARSE_NOENT | XML_PARSE_NONET | XML_PARSE_NOCDATA));
 
-    std::string type = detectContentType(doc);
-    if (!type.empty()) {
-        content_type_ = type;
+        XmlUtils::throwUnless(NULL != doc.get());
+        log()->debug("%s stylesheet %s document parsed", BOOST_CURRENT_FUNCTION,  name_.c_str());
+
+        std::string type = detectContentType(doc);
+        if (!type.empty()) {
+            content_type_ = type;
+        }
+
+        stylesheet_ = XsltStylesheetHelper(xsltParseStylesheetDoc(doc.get()));
+        XmlUtils::throwUnless(NULL != stylesheet_.get());
     }
-
-    stylesheet_ = XsltStylesheetHelper(xsltParseStylesheetDoc(doc.get()));
-    XmlUtils::throwUnless(NULL != stylesheet_.get());
 
     parseNode(xmlDocGetRootElement(doc.release()));
     parseImport(stylesheet_->imports);
