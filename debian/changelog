@@ -1,3 +1,11 @@
+xscript (5.44-1) unstable; urgency=low
+
+  * fetching xslt parameters fixed
+  * remove XML_PARSE_DTDLOAD and add XML_PARSE_NONET to parsing parameters
+  * checking entities modified time in xsl caching
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 19 Nov 2008 13:48:51 +0300
+
 xscript (5.44-0) unstable; urgency=low
 
   * entity resolver added

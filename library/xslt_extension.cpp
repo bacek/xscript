@@ -46,12 +46,13 @@ xscriptXsltHttpHeaderOut(xmlXPathParserContextPtr ctxt, int nargs) {
     if (NULL == ctxt) {
         return;
     }
+
+    XsltParamFetcher params(ctxt, nargs);
+
     if (2 != nargs) {
         XmlUtils::reportXsltError("xscript:http-header-out: bad param count", ctxt);
         return;
     }
-
-    XsltParamFetcher params(ctxt, nargs);
 
     const char* name = params.str(0);
     const char* value = params.str(1);
@@ -92,12 +93,13 @@ xscriptXsltHttpRedirect(xmlXPathParserContextPtr ctxt, int nargs) {
     if (ctxt == NULL) {
         return;
     }
+
+    XsltParamFetcher params(ctxt, nargs);
+
     if (1 != nargs) {
         XmlUtils::reportXsltError("xscript:http-redirect: bad param count", ctxt);
         return;
     }
-
-    XsltParamFetcher params(ctxt, nargs);
 
     const char* str = params.str(0);
     if (NULL == str) {
@@ -136,12 +138,13 @@ xscriptXsltSetHttpStatus(xmlXPathParserContextPtr ctxt, int nargs) {
     if (ctxt == NULL) {
         return;
     }
+
+    XsltParamFetcher params(ctxt, nargs);
+
     if (1 != nargs) {
         XmlUtils::reportXsltError("xscript:set-http-status: bad param count", ctxt);
         return;
     }
-
-    XsltParamFetcher params(ctxt, nargs);
 
     const char* str = params.str(0);
     if (NULL == str) {
@@ -183,12 +186,13 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
     if (ctxt == NULL) {
         return;
     }
+
+    XsltParamFetcher params(ctxt, nargs);
+
     if (1 != nargs) {
         XmlUtils::reportXsltError("xscript:get-state-arg: bad param count", ctxt);
         return;
     }
-
-    XsltParamFetcher params(ctxt, nargs);
 
     const char* str = params.str(0);
     if (NULL == str) {
@@ -234,12 +238,13 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
     if (ctxt == NULL) {
         return;
     }
+
+    XsltParamFetcher params(ctxt, nargs);
+
     if (1 != nargs) {
         XmlUtils::reportXsltError("xscript:sanitize: bad param count", ctxt);
         return;
     }
-
-    XsltParamFetcher params(ctxt, nargs);
 
     const char* str = params.str(0);
     if (NULL == str) {
@@ -290,12 +295,13 @@ xscriptXsltUrlencode(xmlXPathParserContextPtr ctxt, int nargs) {
     if (ctxt == NULL) {
         return;
     }
+
+    XsltParamFetcher params(ctxt, nargs);
+
     if (2 != nargs) {
         XmlUtils::reportXsltError("xscript:urlencode: bad param count", ctxt);
         return;
     }
-
-    XsltParamFetcher params(ctxt, nargs);
 
     const char* value = params.str(1);
     const char* encoding = params.str(0);
@@ -330,12 +336,13 @@ xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
     if (ctxt == NULL) {
         return;
     }
+
+    XsltParamFetcher params(ctxt, nargs);
+
     if (2 != nargs) {
         XmlUtils::reportXsltError("xscript:urldecode: bad param count", ctxt);
         return;
     }
-
-    XsltParamFetcher params(ctxt, nargs);
 
     const char* value = params.str(1);
     const char* encoding = params.str(0);
@@ -418,12 +425,13 @@ xscriptXsltEsc(xmlXPathParserContextPtr ctxt, int nargs) {
     if (ctxt == NULL) {
         return;
     }
+
+    XsltParamFetcher params(ctxt, nargs);
+
     if (1 != nargs) {
         XmlUtils::reportXsltError("xscript:esc: bad param count", ctxt);
         return;
     }
-
-    XsltParamFetcher params(ctxt, nargs);
 
     const char* str = params.str(0);
     if (NULL == str) {
@@ -456,12 +464,14 @@ xscriptXsltJsQuote(xmlXPathParserContextPtr ctxt, int nargs) {
     if (ctxt == NULL) {
         return;
     }
+
+    XsltParamFetcher params(ctxt, nargs);
+
     if (1 != nargs) {
         XmlUtils::reportXsltError("xscript:js-quote: bad param count", ctxt);
         return;
     }
 
-    XsltParamFetcher params(ctxt, nargs);
     const char* str = params.str(0);
 
     if (NULL == str) {
@@ -496,12 +506,13 @@ xscriptXsltMD5(xmlXPathParserContextPtr ctxt, int nargs) {
     if (ctxt == NULL) {
         return;
     }
+
+    XsltParamFetcher params(ctxt, nargs);
+
     if (1 != nargs) {
         XmlUtils::reportXsltError("xscript:md5: bad param count", ctxt);
         return;
     }
-
-    XsltParamFetcher params(ctxt, nargs);
 
     const char* str = params.str(0);
     if (NULL == str) {
@@ -534,12 +545,12 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
+    XsltParamFetcher params(ctxt, nargs);
+
     if (2 != nargs) {
         XmlUtils::reportXsltError("xscript:wbr: bad param count", ctxt);
         return;
     }
-
-    XsltParamFetcher params(ctxt, nargs);
 
     const char* str = params.str(0);
     if (NULL == str) {
@@ -644,12 +655,12 @@ xscriptXsltNl2br(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
+    XsltParamFetcher params(ctxt, nargs);
+
     if (1 != nargs) {
         XmlUtils::reportXsltError("xscript:nl2br: bad param count", ctxt);
         return;
     }
-
-    XsltParamFetcher params(ctxt, nargs);
 
     const char* str = params.str(0);
     if (NULL == str) {
@@ -728,6 +739,9 @@ xscriptXsltRemainedDepth(xmlXPathParserContextPtr ctxt, int nargs) {
     if (ctxt == NULL) {
         return;
     }
+
+    XsltParamFetcher params(ctxt, nargs);
+
     if (0 != nargs) {
         XmlUtils::reportXsltError("xscript:remained-depth: bad param count", ctxt);
         return;
@@ -832,6 +846,11 @@ XsltElementRegisterer::registerBlockInvokation(const char *name, const char *nsr
 }
 
 XsltParamFetcher::XsltParamFetcher(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    if (nargs <= 0) {
+        return;
+    }
+
     try {
         strings_.reserve(nargs);
         for (int i = 0; i < nargs; ++i) {
