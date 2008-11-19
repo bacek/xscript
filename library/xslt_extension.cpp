@@ -770,6 +770,114 @@ xscriptXsltRemainedDepth(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltLogInfo(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:log-info");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (nargs < 1) {
+        XmlUtils::reportXsltError("xscript:log-info: bad param count", ctxt);
+        return;
+    }
+
+    if (log()->level() < Logger::LEVEL_INFO) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    std::string result;
+    for(int i = 0; i < nargs; ++i) {
+        const char* str = params.str(i);
+        if (NULL == str) {
+            XmlUtils::reportXsltError("xscript:log-info: bad parameter " +
+                boost::lexical_cast<std::string>(i), ctxt);
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
+        result.append(str);
+    }
+
+    log()->info("%s", result.c_str());
+    xmlXPathReturnEmptyNodeSet(ctxt);
+}
+
+extern "C" void
+xscriptXsltLogWarn(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:log-warn");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (nargs < 1) {
+        XmlUtils::reportXsltError("xscript:log-warn: bad param count", ctxt);
+        return;
+    }
+
+    if (log()->level() < Logger::LEVEL_WARN) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    std::string result;
+    for(int i = 0; i < nargs; ++i) {
+        const char* str = params.str(i);
+        if (NULL == str) {
+            XmlUtils::reportXsltError("xscript:log-warn: bad parameter " +
+                boost::lexical_cast<std::string>(i), ctxt);
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
+        result.append(str);
+    }
+
+    log()->warn("%s", result.c_str());
+    xmlXPathReturnEmptyNodeSet(ctxt);
+}
+
+extern "C" void
+xscriptXsltLogError(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:log-error");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (nargs < 1) {
+        XmlUtils::reportXsltError("xscript:log-error: bad param count", ctxt);
+        return;
+    }
+
+    if (log()->level() < Logger::LEVEL_ERROR) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    std::string result;
+    for(int i = 0; i < nargs; ++i) {
+        const char* str = params.str(i);
+        if (NULL == str) {
+            XmlUtils::reportXsltError("xscript:log-error: bad parameter " +
+                boost::lexical_cast<std::string>(i), ctxt);
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
+        result.append(str);
+    }
+
+    log()->error("%s", result.c_str());
+    xmlXPathReturnEmptyNodeSet(ctxt);
+}
+
+extern "C" void
 xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
     (void)comp;
     if (tctx == NULL) {
@@ -910,6 +1018,10 @@ XsltExtensions::XsltExtensions() {
 
     XsltFunctionRegisterer("set-http-status", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSetHttpStatus);
     XsltFunctionRegisterer("set_http_status", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSetHttpStatus);
+
+    XsltFunctionRegisterer("log-info", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLogInfo);
+    XsltFunctionRegisterer("log-warn", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLogWarn);
+    XsltFunctionRegisterer("log-error", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLogError);
 }
 
 } // namespace xscript

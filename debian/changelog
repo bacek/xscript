@@ -1,3 +1,10 @@
+xscript (5.44-2) unstable; urgency=low
+
+  * log xslt extensions added
+  * xpointer fixed (Movsesjan's work)
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 19 Nov 2008 19:14:12 +0300
+
 xscript (5.44-1) unstable; urgency=low
 
   * fetching xslt parameters fixed
