@@ -303,8 +303,12 @@ HttpHelper::initEnvironment() {
         }
     }
     catch (const std::exception &e) {
-        log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
-        throw;
+        std::string error_msg("HttpExtension construction: caught exception: ");
+        error_msg += e.what();
+        terminate(1, error_msg.c_str(), true);
+    }
+    catch (...) {
+        terminate(1, "HttpExtension construction: caught unknown exception", true);
     }
 }
 
@@ -315,37 +319,29 @@ HttpHelper::destroyEnvironment() {
 
 bool
 HttpHelper::isXml() const {
-    std::string::size_type pos = contentType().find("/");
+    const std::string &content_type = contentType();
+    std::string::size_type pos = content_type.find('/');
     if (pos == std::string::npos) {
         return false;
     }
 
-    std::string type = contentType().substr(0, pos);
-    std::string subtype = contentType().substr(pos + 1);
-
-    if (type == "text" && subtype == "xml") {
-        return true;
+    if (0 == strncasecmp(content_type.c_str(), "text/", sizeof("text/") -1)) {
+        ++pos;
     }
-
-    if (type == "application") {
-        if (subtype == "xml") {
-            return true;
-        }
-
-        std::string::size_type pos_begin = subtype.rfind("+");
-        if (pos_begin == std::string::npos) {
-            pos_begin = 0;
+    else if (0 == strncasecmp(content_type.c_str(), "application/", sizeof("application/") -1)) {
+        std::string::size_type pos_plus = content_type.rfind('+');
+        if (pos_plus == std::string::npos) {
+            ++pos;
         }
         else {
-            pos_begin++;
-        }
-
-        if (subtype.substr(pos_begin) == "xml") {
-            return true;
+            pos = pos_plus + 1;
         }
     }
+    else {
+        return false;
+    }
 
-    return false;
+    return (0 == strcasecmp(content_type.c_str() + pos, "xml"));
 }
 
 } // namespace xscript
