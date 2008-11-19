@@ -152,24 +152,18 @@ XmlDocHelper
 Script::invoke(boost::shared_ptr<Context> ctx) {
 
     log()->info("%s, invoking %s", BOOST_CURRENT_FUNCTION, name().c_str());
-    try {
-        PROFILER(log(), "invoke script " + name());
+    PROFILER(log(), "invoke script " + name());
 
-        unsigned int count = 0;
-        int to = countTimeout();
-        ctx->expect(blocks_.size());
-        for (std::vector<Block*>::iterator i = blocks_.begin(), end = blocks_.end(); i != end; ++i, ++count) {
-            (*i)->invokeCheckThreaded(ctx, count);
-        }
-        ctx->wait(to);
-        log()->debug("%s, finished to wait", BOOST_CURRENT_FUNCTION);
-        addHeaders(ctx.get());
-        return fetchResults(ctx.get());
+    unsigned int count = 0;
+    int to = countTimeout();
+    ctx->expect(blocks_.size());
+    for (std::vector<Block*>::iterator i = blocks_.begin(), end = blocks_.end(); i != end; ++i, ++count) {
+        (*i)->invokeCheckThreaded(ctx, count);
     }
-    catch (const std::exception &e) {
-        log()->crit("%s, %s: caught exception: %s", BOOST_CURRENT_FUNCTION, name().c_str(), e.what());
-        throw;
-    }
+    ctx->wait(to);
+    log()->debug("%s, finished to wait", BOOST_CURRENT_FUNCTION);
+    addHeaders(ctx.get());
+    return fetchResults(ctx.get());
 }
 
 void
@@ -455,7 +449,15 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
             if (result_doc_root_node) {
                 const Block *block = blocks_[count];
                 if (block->xpointer(ctx) && result.success) {
-                    useXpointerExpr(doc, newnode, (xmlChar *)block->xpointerExpr().c_str());
+                    const std::string &expression = block->xpointerExpr();
+                    try {
+                        useXpointerExpr(doc, newnode, (xmlChar *)expression.c_str());
+                    }
+                    catch (std::exception &e) {
+                        std::string message = "XPointer error with expression " + expression + " : ";
+                        message.append(e.what());
+                        throw std::runtime_error(message);
+                    }
                 }
                 else {
                     xmlReplaceNode(newnode, xmlCopyNode(result_doc_root_node, 1));
@@ -483,7 +485,9 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
 void
 Script::useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const {
     XmlXPathContextHelper context(xmlXPathNewContext(doc));
+    XmlUtils::throwUnless(NULL != context.get());
     XmlXPathObjectHelper xpathObj(xmlXPathEvalExpression(xpath, context.get()));
+    XmlUtils::throwUnless(NULL != xpathObj.get());
     xmlNodeSetPtr nodeset = xpathObj.get()->nodesetval;
     if (0 == nodeset->nodeNr) {
         xmlUnlinkNode(newnode);
