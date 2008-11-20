@@ -27,97 +27,92 @@ Protocol::~Protocol() {
 }
 
 std::string
-Protocol::getPath(Context *ctx) {
+Protocol::getPath(const Context *ctx) {
     return ctx->request()->getScriptName();
 }
 
 std::string
-Protocol::getPathInfo(Context *ctx) {
+Protocol::getPathInfo(const Context *ctx) {
     return ctx->request()->getPathInfo();
 }
 
 std::string
-Protocol::getRealPath(Context *ctx) {
+Protocol::getRealPath(const Context *ctx) {
     return ctx->request()->getScriptFilename();
 }
 
 std::string
-Protocol::getOriginalURI(Context *ctx) {
+Protocol::getOriginalURI(const Context *ctx) {
     return ctx->request()->getOriginalURI();
 }
 
 std::string
-Protocol::getOriginalUrl(Context *ctx) {
+Protocol::getOriginalUrl(const Context *ctx) {
     return ctx->request()->getOriginalUrl();
 }
 
 std::string
-Protocol::getQuery(Context *ctx) {
+Protocol::getQuery(const Context *ctx) {
     return ctx->request()->getQueryString();
 }
 
 std::string
-Protocol::getRemoteIP(Context *ctx) {
+Protocol::getRemoteIP(const Context *ctx) {
     return ctx->request()->getRealIP();
 }
 
 std::string
-Protocol::getURI(Context *ctx) {
+Protocol::getURI(const Context *ctx) {
     return ctx->request()->getURI();
 }
 
 std::string
-Protocol::getHost(Context *ctx) {
+Protocol::getHost(const Context *ctx) {
     return ctx->request()->getHost();
 }
 
 std::string
-Protocol::getOriginalHost(Context *ctx) {
+Protocol::getOriginalHost(const Context *ctx) {
     return ctx->request()->getOriginalHost();
 }
 
 std::string
-Protocol::getMethod(Context *ctx) {
+Protocol::getMethod(const Context *ctx) {
     return ctx->request()->getRequestMethod();
 }
 
 std::string
-Protocol::getSecure(Context *ctx) {
+Protocol::getSecure(const Context *ctx) {
     return ctx->request()->isSecure() ? "yes" : "no";
 }
 
 std::string
-Protocol::getHttpUser(Context *ctx) {
+Protocol::getHttpUser(const Context *ctx) {
     return ctx->request()->getRemoteUser();
 }
 
 std::string
-Protocol::getContentLength(Context *ctx) {
+Protocol::getContentLength(const Context *ctx) {
     return boost::lexical_cast<std::string>(ctx->request()->getContentLength());
 }
 
 std::string
-Protocol::getContentEncoding(Context *ctx) {
+Protocol::getContentEncoding(const Context *ctx) {
     return ctx->request()->getContentEncoding();
 }
 
 std::string
-Protocol::getContentType(Context *ctx) {
+Protocol::getContentType(const Context *ctx) {
     return ctx->request()->getContentType();
 }
 
 std::string
-Protocol::getBot(Context *ctx) {
+Protocol::getBot(const Context *ctx) {
     return Authorizer::instance()->checkBot(const_cast<Context*>(ctx)) ? "yes" : "no";
 }
 
 std::string
 Protocol::get(const Context *ctx, const char* name) {
-    return get(const_cast<Context*>(ctx), name);    
-}
-
-std::string
-Protocol::get(Context *ctx, const char* name) {
 
     std::string val = StringUtils::tolower(name);
 

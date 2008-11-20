@@ -20,29 +20,28 @@ public:
     Protocol();
     virtual ~Protocol();
 
-    static std::string getPath(Context *ctx);
-    static std::string getPathInfo(Context *ctx);
-    static std::string getRealPath(Context *ctx);
-    static std::string getOriginalURI(Context *ctx);
-    static std::string getOriginalUrl(Context *ctx);
-    static std::string getQuery(Context *ctx);
-    static std::string getRemoteIP(Context *ctx);
-    static std::string getURI(Context *ctx);
-    static std::string getHost(Context *ctx);
-    static std::string getOriginalHost(Context *ctx);
-    static std::string getMethod(Context *ctx);
-    static std::string getSecure(Context *ctx);
-    static std::string getHttpUser(Context *ctx);
-    static std::string getContentLength(Context *ctx);
-    static std::string getContentEncoding(Context *ctx);
-    static std::string getContentType(Context *ctx);
-    static std::string getBot(Context *ctx);
+    static std::string getPath(const Context *ctx);
+    static std::string getPathInfo(const Context *ctx);
+    static std::string getRealPath(const Context *ctx);
+    static std::string getOriginalURI(const Context *ctx);
+    static std::string getOriginalUrl(const Context *ctx);
+    static std::string getQuery(const Context *ctx);
+    static std::string getRemoteIP(const Context *ctx);
+    static std::string getURI(const Context *ctx);
+    static std::string getHost(const Context *ctx);
+    static std::string getOriginalHost(const Context *ctx);
+    static std::string getMethod(const Context *ctx);
+    static std::string getSecure(const Context *ctx);
+    static std::string getHttpUser(const Context *ctx);
+    static std::string getContentLength(const Context *ctx);
+    static std::string getContentEncoding(const Context *ctx);
+    static std::string getContentType(const Context *ctx);
+    static std::string getBot(const Context *ctx);
 
     static std::string get(const Context *ctx, const char* name);
-    static std::string get(Context *ctx, const char* name);
 
 private:
-    typedef boost::function<std::string (Context*)> ProtocolMethod;
+    typedef boost::function<std::string (const Context*)> ProtocolMethod;
     friend class ProtocolRegistrator;
 
 private:

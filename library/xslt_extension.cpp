@@ -271,7 +271,7 @@ xscriptXsltGetProtocolArg(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    Context *ctx = NULL;
+    const Context *ctx = NULL;
     try {
         ctx = Stylesheet::getContext(tctx);
         std::string value = Protocol::get(ctx, str);
