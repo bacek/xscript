@@ -6,8 +6,9 @@
 #include <stdexcept>
 #include <iostream>
 
-#include <boost/filesystem/path.hpp>
 #include <boost/current_function.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 
 #include <openssl/blowfish.h>
 #include <openssl/md5.h>
@@ -350,6 +351,12 @@ FileUtils::normalize(const std::string &filepath) {
     return path.string();
 }
 
+bool
+FileUtils::fileExists(const std::string &name) {
+    namespace fs = boost::filesystem;
+    fs::path path(name);
+    return fs::exists(path) && !fs::is_directory(path);
+}
 
 const int TimeoutCounter::UNLIMITED_TIME = std::numeric_limits<int>::max();
 

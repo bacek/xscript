@@ -2,8 +2,9 @@ xscript (5.44-3) unstable; urgency=low
 
   * get-protocol-arg, get-query-arg, get-header, get-cookie xslt extensions
     added
+  * path checking added to Object::xsltName
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 20 Nov 2008 14:32:53 +0300
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 20 Nov 2008 17:33:10 +0300
 
 xscript (5.44-2) unstable; urgency=low
 

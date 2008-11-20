@@ -177,12 +177,4 @@ FCGIServer::needApplyPerblockStylesheet(Request *request) const {
     return (request->getServerPort() != noxslt_port_);
 }
 
-bool
-FCGIServer::fileExists(const std::string &name) const {
-
-    namespace fs = boost::filesystem;
-    fs::path path(name);
-    return fs::exists(path) && !fs::is_directory(path);
-}
-
 } // namespace xscript

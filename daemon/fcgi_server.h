@@ -26,7 +26,6 @@ public:
 protected:
     void handle();
     void pid(const std::string &file);
-    bool fileExists(const std::string &name) const;
 
 private:
     int socket_;

@@ -1260,7 +1260,6 @@ XsltExtensions::XsltExtensions() {
     XsltFunctionRegisterer("get-cookie", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetCookie);
     XsltFunctionRegisterer("get-header", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetHeader);
     
-
     XsltFunctionRegisterer("http-header-out", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltHttpHeaderOut);
     XsltFunctionRegisterer("http_header_out", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltHttpHeaderOut);
 

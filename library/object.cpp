@@ -2,14 +2,17 @@
 
 #include <algorithm>
 #include <stdexcept>
+
 #include <boost/checked_delete.hpp>
 #include <boost/current_function.hpp>
 
-#include "xscript/xml_util.h"
-#include "xscript/param.h"
 #include "xscript/logger.h"
 #include "xscript/object.h"
+#include "xscript/param.h"
 #include "xscript/stylesheet.h"
+#include "xscript/vhost_data.h"
+#include "xscript/xml_util.h"
+
 #include "internal/param_factory.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -33,10 +36,18 @@ void
 Object::xsltName(const std::string &value) {
     if (value.empty()) {
         xslt_name_.erase();
+        return;
     }
-    else {
-        xslt_name_ = fullName(value);
+
+    if (value[0] == '/') {
+        std::string full_name = VirtualHostData::instance()->getDocumentRoot(NULL) + value;
+        if (FileUtils::fileExists(full_name)) {
+            xslt_name_ = fullName(full_name);
+            return;
+        }
     }
+
+    xslt_name_ = fullName(value);
 }
 
 void

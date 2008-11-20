@@ -119,6 +119,7 @@ private:
 class FileUtils : private boost::noncopyable {
 public:
     static std::string normalize(const std::string &filepath);
+    static bool fileExists(const std::string &name);
 
 private:
     FileUtils();
