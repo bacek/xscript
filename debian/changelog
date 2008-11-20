@@ -3,7 +3,7 @@ xscript (5.44-3) unstable; urgency=low
   * get-protocol-arg, get-query-arg, get-header, get-cookie xslt extensions
     added
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 20 Nov 2008 13:56:56 +0300
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 20 Nov 2008 14:32:53 +0300
 
 xscript (5.44-2) unstable; urgency=low
 
@@ -17,6 +17,7 @@ xscript (5.44-1) unstable; urgency=low
   * fetching xslt parameters fixed
   * remove XML_PARSE_DTDLOAD and add XML_PARSE_NONET to parsing parameters
   * checking entities modified time in xsl caching
+  * Tag rollback into postHttp
 
  -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 19 Nov 2008 13:48:51 +0300
 

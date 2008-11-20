@@ -1,5 +1,7 @@
 #include "settings.h"
 
+#include <cassert>
+
 #include <boost/lexical_cast.hpp>
 
 #include <xscript/authorizer.h>
@@ -113,7 +115,7 @@ Protocol::getBot(const Context *ctx) {
 
 std::string
 Protocol::get(const Context *ctx, const char* name) {
-
+    assert(ctx);
     std::string val = StringUtils::tolower(name);
 
     MethodMap::iterator it = methods_.find(val);
