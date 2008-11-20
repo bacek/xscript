@@ -117,11 +117,11 @@ Protocol::get(const Context *ctx, const char* name) {
     std::string val = StringUtils::tolower(name);
 
     MethodMap::iterator it = methods_.find(val);
-    if (methods_.end() != it) {
-        return it->second(ctx);
+    if (methods_.end() == it) {
+        throw std::runtime_error(std::string("Unknown protocol arg: ") + name);
     }
 
-    return StringUtils::EMPTY_STRING;
+    return it->second(ctx);
 }
 
 ProtocolRegistrator::ProtocolRegistrator() {
