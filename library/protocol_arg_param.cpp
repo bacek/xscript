@@ -1,13 +1,8 @@
 #include "settings.h"
 
-#include "xscript/authorizer.h"
 #include "xscript/context.h"
-#include "xscript/logger.h"
 #include "xscript/param.h"
-#include "xscript/request.h"
-#include "xscript/util.h"
-
-#include <boost/lexical_cast.hpp>
+#include "xscript/protocol.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -34,61 +29,8 @@ ProtocolArgParam::~ProtocolArgParam() {
 
 std::string
 ProtocolArgParam::asString(const Context *ctx) const {
-    const Request *req = ctx->request();
-    std::string val = StringUtils::tolower(value());
-    if (val == "path") {
-        return req->getScriptName();
-    }
-    else if (val == "pathinfo") {
-        return req->getPathInfo();
-    }
-    else if (val == "realpath") {
-        return req->getScriptFilename();
-    }
-    else if (val == "originaluri") {
-        return req->getOriginalURI();
-    }
-    else if (val == "originalurl") {
-        return req->getOriginalUrl();
-    }
-    else if (val == "query") {
-        return req->getQueryString();
-    }
-    else if (val == "remote_ip") {
-        return req->getRealIP();
-    }
-    else if (val == "uri") {
-        return req->getURI();
-    }
-    else if (val == "host") {
-        return req->getHost();
-    }
-    else if (val == "originalhost") {
-        return req->getOriginalHost();
-    }
-    else if (val == "method") {
-        return req->getRequestMethod();
-    }
-    else if (val == "secure") {
-        return req->isSecure() ? "yes" : "no";
-    }
-    else if (val == "http_user") {
-        return req->getRemoteUser();
-    }
-    else if (val == "content-length") {
-        return boost::lexical_cast<std::string>(req->getContentLength());
-    }
-    else if (val == "content-encoding") {
-        return req->getContentEncoding();
-    }
-    else if (val == "content-type") {
-        return req->getContentType();
-    }
-    else if (val == "bot") {
-        return Authorizer::instance()->checkBot(const_cast<Context*>(ctx)) ? "yes" : "no";
-    }
-
-    return defaultValue();
+    std::string result = Protocol::get(ctx, value().c_str());
+    return result.empty() ? defaultValue() : result;
 }
 
 std::auto_ptr<Param>

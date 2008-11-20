@@ -12,17 +12,18 @@
 
 #include <libxml/xpathInternals.h>
 
-#include "xscript/util.h"
-#include "xscript/xml_util.h"
-#include "xscript/state.h"
-#include "xscript/range.h"
 #include "xscript/block.h"
-#include "xscript/logger.h"
 #include "xscript/context.h"
 #include "xscript/encoder.h"
+#include "xscript/logger.h"
+#include "xscript/protocol.h"
+#include "xscript/range.h"
 #include "xscript/response.h"
 #include "xscript/script.h"
+#include "xscript/state.h"
 #include "xscript/stylesheet.h"
+#include "xscript/util.h"
+#include "xscript/xml_util.h"
 #include "xscript/xml_helpers.h"
 #include "xscript/xslt_extension.h"
 
@@ -201,6 +202,11 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
+    if (*str == '\0') {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
     xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
     if (NULL == tctx) {
         xmlXPathReturnEmptyNodeSet(ctxt);
@@ -211,8 +217,8 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
     try {
         ctx = Stylesheet::getContext(tctx);
         State* state = ctx->state();
-        const std::string name(str);
-        if (!name.empty() && state->has(name)) {
+        std::string name(str);
+        if (state->has(name)) {
             valuePush(ctxt, xmlXPathNewCString(state->asString(name).c_str()));
         }
         else {
@@ -226,6 +232,243 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
     }
     catch (...) {
         XmlUtils::reportXsltError("xscript:get-state-arg: caught unknown exception", ctx);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+
+extern "C" void
+xscriptXsltGetProtocolArg(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:get-protocol-arg");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (1 != nargs) {
+        XmlUtils::reportXsltError("xscript:get-protocol-arg: bad param count", ctxt);
+        return;
+    }
+
+    const char* str = params.str(0);
+    if (NULL == str) {
+        XmlUtils::reportXsltError("xscript:get-protocol-arg: bad parameter", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    if (*str == '\0') {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    Context *ctx = NULL;
+    try {
+        ctx = Stylesheet::getContext(tctx);
+        std::string value = Protocol::get(ctx, str);
+        if (!value.empty()) {
+            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
+        }
+        else {
+            xmlXPathReturnEmptyNodeSet(ctxt);
+        }
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:get-protocol-arg: caught exception: " + std::string(e.what()), ctx);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:get-protocol-arg: caught unknown exception", ctx);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
+xscriptXsltGetQueryArg(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:get-query-arg");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (1 != nargs) {
+        XmlUtils::reportXsltError("xscript:get-query-arg: bad param count", ctxt);
+        return;
+    }
+
+    const char* str = params.str(0);
+    if (NULL == str) {
+        XmlUtils::reportXsltError("xscript:get-query-arg: bad parameter", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    if (*str == '\0') {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    Context *ctx = NULL;
+    try {
+        ctx = Stylesheet::getContext(tctx);
+        std::string name(str), value;
+        if (ctx->request()->hasArg(name)) {
+            value = ctx->request()->getArg(name);
+        }
+
+        if (!value.empty()) {
+            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
+        }
+        else {
+            xmlXPathReturnEmptyNodeSet(ctxt);
+        }
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:get-query-arg: caught exception: " + std::string(e.what()), ctx);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:get-query-arg: caught unknown exception", ctx);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
+xscriptXsltGetHeader(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:get-header");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (1 != nargs) {
+        XmlUtils::reportXsltError("xscript:get-header: bad param count", ctxt);
+        return;
+    }
+
+    const char* str = params.str(0);
+    if (NULL == str) {
+        XmlUtils::reportXsltError("xscript:get-header: bad parameter", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    if (*str == '\0') {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    Context *ctx = NULL;
+    try {
+        ctx = Stylesheet::getContext(tctx);
+        std::string name(str), value;
+        if (ctx->request()->hasHeader(name)) {
+            value = ctx->request()->getHeader(name);
+        }
+
+        if (!value.empty()) {
+            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
+        }
+        else {
+            xmlXPathReturnEmptyNodeSet(ctxt);
+        }
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:get-header: caught exception: " + std::string(e.what()), ctx);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:get-header: caught unknown exception", ctx);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
+xscriptXsltGetCookie(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:get-cookie");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (1 != nargs) {
+        XmlUtils::reportXsltError("xscript:get-cookie: bad param count", ctxt);
+        return;
+    }
+
+    const char* str = params.str(0);
+    if (NULL == str) {
+        XmlUtils::reportXsltError("xscript:get-cookie: bad parameter", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    if (*str == '\0') {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    Context *ctx = NULL;
+    try {
+        ctx = Stylesheet::getContext(tctx);
+        std::string name(str), value;
+        if (ctx->request()->hasCookie(name)) {
+            value = ctx->request()->getCookie(name);
+        }
+
+        if (!value.empty()) {
+            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
+        }
+        else {
+            xmlXPathReturnEmptyNodeSet(ctxt);
+        }
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:get-cookie: caught exception: " + std::string(e.what()), ctx);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:get-cookie: caught unknown exception", ctx);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -1012,6 +1255,11 @@ XsltExtensions::XsltExtensions() {
 
     XsltFunctionRegisterer("get-state-arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetStateArg);
     XsltFunctionRegisterer("get_state_arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetStateArg);
+    XsltFunctionRegisterer("get-protocol-arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetProtocolArg);
+    XsltFunctionRegisterer("get-query-arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetQueryArg);
+    XsltFunctionRegisterer("get-cookie", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetCookie);
+    XsltFunctionRegisterer("get-header", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetHeader);
+    
 
     XsltFunctionRegisterer("http-header-out", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltHttpHeaderOut);
     XsltFunctionRegisterer("http_header_out", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltHttpHeaderOut);
