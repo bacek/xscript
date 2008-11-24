@@ -6,6 +6,8 @@
 #include <stdexcept>
 #include <iostream>
 
+#include <boost/crc.hpp>
+#include <boost/cstdint.hpp>
 #include <boost/current_function.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
@@ -321,6 +323,18 @@ HashUtils::blowfish(const ByteArrayType &data, const ByteArrayType &key, const c
     return blowfish(&*data.begin(), data.size(), &*key.begin(), key.size(), ivec);
 }
 
+boost::uint32_t
+HashUtils::crc32(const std::string &key) {
+    return crc32(key.data(), key.size());
+}
+
+boost::uint32_t
+HashUtils::crc32(const char *key, unsigned long len) {
+    boost::crc_32_type result;
+    result.process_bytes(key, len);
+    return result.checksum();
+}
+
 FileUtils::FileUtils() {
 }
 
@@ -356,6 +370,13 @@ FileUtils::fileExists(const std::string &name) {
     namespace fs = boost::filesystem;
     fs::path path(name);
     return fs::exists(path) && !fs::is_directory(path);
+}
+
+time_t
+FileUtils::modified(const std::string &name) {
+    namespace fs = boost::filesystem;
+    fs::path path(name);
+    return fs::last_write_time(path);
 }
 
 const int TimeoutCounter::UNLIMITED_TIME = std::numeric_limits<int>::max();

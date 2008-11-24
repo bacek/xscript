@@ -110,7 +110,8 @@ public:
     static std::string blowfish(const ByteArrayType &data, const ByteArrayType &key, const char *ivec);
     static std::string blowfish(const char *data, unsigned long data_len,
                                 const char *key, unsigned long key_len, const char *ivec);
-
+    static boost::uint32_t crc32(const std::string &key);
+    static boost::uint32_t crc32(const char *key, unsigned long len);
 private:
     HashUtils();
     virtual ~HashUtils();
@@ -120,6 +121,7 @@ class FileUtils : private boost::noncopyable {
 public:
     static std::string normalize(const std::string &filepath);
     static bool fileExists(const std::string &name);
+    static time_t modified(const std::string &name);
 
 private:
     FileUtils();

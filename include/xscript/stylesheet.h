@@ -3,10 +3,13 @@
 
 #include <map>
 #include <vector>
+
 #include <boost/shared_ptr.hpp>
+#include <boost/thread/mutex.hpp>
 
 #include <xscript/xml.h>
 #include <xscript/xml_helpers.h>
+
 #include <libxslt/xsltInternals.h>
 
 namespace xscript {
@@ -69,9 +72,9 @@ protected:
     void appendXsltParams(const std::vector<Param*>& params, const Context *ctx, xsltTransformContextPtr tctx);
 
     static void attachContextData(xsltTransformContextPtr tctx, Context *ctx, Stylesheet *stylesheet);
+    static boost::shared_ptr<Stylesheet> createWithParse(const std::string &name);
 
 private:
-
     friend class StylesheetFactory;
 
 private:

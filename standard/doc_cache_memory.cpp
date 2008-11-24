@@ -168,12 +168,7 @@ DocCacheMemory::pool(const TagKey *key) const {
     const unsigned int sz = pools_.size();
     assert(sz);
 
-    const std::string &str = key->asString();
-
-    boost::crc_32_type result;
-    result.process_bytes(str.data(), str.size());
-    unsigned int index = result.checksum() % sz;
-    return pools_[index];
+    return pools_[HashUtils::crc32(key->asString()) % sz];
 }
 
 //REGISTER_COMPONENT(DocCacheMemory);

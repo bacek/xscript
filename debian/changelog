@@ -1,3 +1,11 @@
+xscript (5.45-0) unstable; urgency=low
+
+  * removed simultaniously parsing of new script/stylesheet
+  * added check of modified times after fixed period of time only
+  * crc32 added to HashUtils
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 24 Nov 2008 11:35:18 +0300
+
 xscript (5.44-3) unstable; urgency=low
 
   * get-protocol-arg, get-query-arg, get-header, get-cookie xslt extensions

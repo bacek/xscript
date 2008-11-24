@@ -98,16 +98,13 @@ TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const TaggedBlock *block) {
     assert(NULL != ctx);
     assert(NULL != block);
 
-    boost::crc_32_type method_hash, params_hash;
-
     if (!block->xsltName().empty()) {
         value_.assign(block->xsltName());
         value_.push_back('|');
     }
     value_.append(block->canonicalMethod(ctx));
 
-    method_hash.process_bytes(value_.data(), value_.size());
-    boost::uint32_t method_sum = method_hash.checksum();
+    boost::uint32_t method_sum = HashUtils::crc32(value_);
 
     std::string param_str;
     const std::vector<Param*> &params = block->params();
@@ -115,8 +112,7 @@ TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const TaggedBlock *block) {
         const std::string &val = params[i]->asString(ctx);
         param_str.append(1, ':').append(val);
     }
-    params_hash.process_bytes(param_str.data(), param_str.size());
-    boost::uint32_t params_sum = params_hash.checksum();
+    boost::uint32_t params_sum = HashUtils::crc32(param_str);
 
     char buf[255];
     boost::uint32_t common = method_sum ^ params_sum;

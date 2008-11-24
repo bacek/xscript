@@ -81,6 +81,7 @@ XmlCacheTest::testExpired() {
     CPPUNIT_ASSERT(NULL != script.get());
 
     system("touch script.xml");
+    sleep(5);
 
     boost::shared_ptr<Script> target = factory->fetch("script.xml");
     CPPUNIT_ASSERT(NULL == target.get());

@@ -5,6 +5,9 @@
 #include <set>
 #include <string>
 #include <vector>
+
+#include <boost/thread/mutex.hpp>
+
 #include <xscript/xml.h>
 #include <xscript/object.h>
 #include <xscript/xml_helpers.h>
@@ -120,6 +123,8 @@ protected:
     virtual void property(const char *name, const char *value);
 
     virtual void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const;
+
+    static boost::shared_ptr<Script> createWithParse(const std::string &name);
 
     static const unsigned int FLAG_THREADED = 1;
     static const unsigned int FLAG_FORCE_STYLESHEET = 1 << 1;

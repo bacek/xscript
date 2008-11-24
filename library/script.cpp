@@ -195,10 +195,21 @@ Script::create(const std::string &name) {
     if (NULL != script.get()) {
         return script;
     }
-    script = ScriptFactory::instance()->create(name);
-    script->parse();
 
-    cache->store(name, script);
+    boost::mutex *mutex = cache->getMutex(name);
+    if (NULL == mutex) {
+        return createWithParse(name);
+    }
+
+    boost::mutex::scoped_lock lock(*mutex);
+    return createWithParse(name);
+}
+
+boost::shared_ptr<Script>
+Script::createWithParse(const std::string &name) {
+    boost::shared_ptr<Script> script = ScriptFactory::instance()->create(name);
+    script->parse();
+    ScriptCache::instance()->store(name, script);
     return script;
 }
 

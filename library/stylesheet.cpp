@@ -381,12 +381,21 @@ Stylesheet::create(const std::string &name) {
         return stylesheet;
     }
 
-    stylesheet = StylesheetFactory::instance()->create(name);
+    boost::mutex *mutex = cache->getMutex(name);
+    if (NULL == mutex) {
+        return createWithParse(name);
+    }
+
+    boost::mutex::scoped_lock lock(*mutex);
+    return createWithParse(name);
+}
+
+boost::shared_ptr<Stylesheet>
+Stylesheet::createWithParse(const std::string &name) {
+    boost::shared_ptr<Stylesheet> stylesheet = StylesheetFactory::instance()->create(name);
     stylesheet->parse();
-
-    cache->store(name, stylesheet);
+    StylesheetCache::instance()->store(name, stylesheet);
     return stylesheet;
-
 }
 
 Block*

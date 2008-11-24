@@ -30,6 +30,12 @@ DummyStylesheetCache::store(const std::string &name, const boost::shared_ptr<Sty
     (void)stylesheet;
 }
 
+boost::mutex*
+DummyStylesheetCache::getMutex(const std::string &name) {
+    (void)name;
+    return NULL;
+}
+
 REGISTER_COMPONENT2(StylesheetCache, DummyStylesheetCache);
 
 } // namespace xscript
