@@ -40,12 +40,12 @@ Object::xsltName(const std::string &value) {
     }
 
     if (value[0] == '/') {
-        log()->warn("absolute path in stylesheet href: %s", value.c_str());
         std::string full_name = VirtualHostData::instance()->getDocumentRoot(NULL) + value;
         if (FileUtils::fileExists(full_name)) {
             xslt_name_ = fullName(full_name);
             return;
         }
+        log()->warn("absolute path in stylesheet href: %s", value.c_str());
     }
 
     xslt_name_ = fullName(value);
