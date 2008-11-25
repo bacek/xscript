@@ -1,3 +1,12 @@
+xscript (5.46-0) unstable; urgency=low
+
+  * Protocol updated
+  * modified removed from Script and Stylesheet 
+  * default value optional parameter added to get-query-arg, get-cookie,
+    get-header xslt extensions
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 25 Nov 2008 15:04:41 +0300
+
 xscript (5.45-0) unstable; urgency=low
 
   * removed simultaniously parsing of new script/stylesheet

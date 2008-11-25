@@ -190,21 +190,26 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
 
     XsltParamFetcher params(ctxt, nargs);
 
-    if (1 != nargs) {
+    if (nargs < 1 || nargs > 2) {
         XmlUtils::reportXsltError("xscript:get-state-arg: bad param count", ctxt);
         return;
     }
 
     const char* str = params.str(0);
     if (NULL == str) {
-        XmlUtils::reportXsltError("xscript:get-state-arg: bad parameter", ctxt);
+        XmlUtils::reportXsltError("xscript:get-state-arg: bad first parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
 
-    if (*str == '\0') {
-        xmlXPathReturnEmptyNodeSet(ctxt);
-        return;
+    const char* default_value = StringUtils::EMPTY_STRING.c_str();
+    if (nargs == 2) {
+        default_value = params.str(1);
+        if (NULL == default_value) {
+            XmlUtils::reportXsltError("xscript:get-state-arg: bad second parameter", ctxt);
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
     }
 
     xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
@@ -222,7 +227,8 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
             valuePush(ctxt, xmlXPathNewCString(state->asString(name).c_str()));
         }
         else {
-            xmlXPathReturnEmptyNodeSet(ctxt);
+            valuePush(ctxt, xmlXPathNewCString(default_value));
+
         }
     }
     catch (const std::exception &e) {
@@ -304,21 +310,26 @@ xscriptXsltGetQueryArg(xmlXPathParserContextPtr ctxt, int nargs) {
 
     XsltParamFetcher params(ctxt, nargs);
 
-    if (1 != nargs) {
+    if (nargs < 1 || nargs > 2) {
         XmlUtils::reportXsltError("xscript:get-query-arg: bad param count", ctxt);
         return;
     }
 
     const char* str = params.str(0);
     if (NULL == str) {
-        XmlUtils::reportXsltError("xscript:get-query-arg: bad parameter", ctxt);
+        XmlUtils::reportXsltError("xscript:get-query-arg: bad first parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
 
-    if (*str == '\0') {
-        xmlXPathReturnEmptyNodeSet(ctxt);
-        return;
+    const char* default_value = StringUtils::EMPTY_STRING.c_str();
+    if (nargs == 2) {
+        default_value = params.str(1);
+        if (NULL == default_value) {
+            XmlUtils::reportXsltError("xscript:get-query-arg: bad second parameter", ctxt);
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
     }
 
     xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
@@ -331,15 +342,12 @@ xscriptXsltGetQueryArg(xmlXPathParserContextPtr ctxt, int nargs) {
     try {
         ctx = Stylesheet::getContext(tctx);
         std::string name(str), value;
-        if (ctx->request()->hasArg(name)) {
-            value = ctx->request()->getArg(name);
-        }
-
-        if (!value.empty()) {
-            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
+        value = ctx->request()->getArg(name);
+        if (value.empty()) {
+            valuePush(ctxt, xmlXPathNewCString(default_value));
         }
         else {
-            xmlXPathReturnEmptyNodeSet(ctxt);
+            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
         }
     }
     catch (const std::exception &e) {
@@ -364,7 +372,7 @@ xscriptXsltGetHeader(xmlXPathParserContextPtr ctxt, int nargs) {
 
     XsltParamFetcher params(ctxt, nargs);
 
-    if (1 != nargs) {
+    if (nargs < 1 || nargs > 2) {
         XmlUtils::reportXsltError("xscript:get-header: bad param count", ctxt);
         return;
     }
@@ -376,9 +384,14 @@ xscriptXsltGetHeader(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    if (*str == '\0') {
-        xmlXPathReturnEmptyNodeSet(ctxt);
-        return;
+    const char* default_value = StringUtils::EMPTY_STRING.c_str();
+    if (nargs == 2) {
+        default_value = params.str(1);
+        if (NULL == default_value) {
+            XmlUtils::reportXsltError("xscript:get-header: bad second parameter", ctxt);
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
     }
 
     xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
@@ -391,15 +404,12 @@ xscriptXsltGetHeader(xmlXPathParserContextPtr ctxt, int nargs) {
     try {
         ctx = Stylesheet::getContext(tctx);
         std::string name(str), value;
-        if (ctx->request()->hasHeader(name)) {
-            value = ctx->request()->getHeader(name);
-        }
-
-        if (!value.empty()) {
-            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
+        value = ctx->request()->getHeader(name);
+        if (value.empty()) {
+            valuePush(ctxt, xmlXPathNewCString(default_value));
         }
         else {
-            xmlXPathReturnEmptyNodeSet(ctxt);
+            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
         }
     }
     catch (const std::exception &e) {
@@ -424,7 +434,7 @@ xscriptXsltGetCookie(xmlXPathParserContextPtr ctxt, int nargs) {
 
     XsltParamFetcher params(ctxt, nargs);
 
-    if (1 != nargs) {
+    if (nargs < 1 || nargs > 2) {
         XmlUtils::reportXsltError("xscript:get-cookie: bad param count", ctxt);
         return;
     }
@@ -436,9 +446,14 @@ xscriptXsltGetCookie(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    if (*str == '\0') {
-        xmlXPathReturnEmptyNodeSet(ctxt);
-        return;
+    const char* default_value = StringUtils::EMPTY_STRING.c_str();
+    if (nargs == 2) {
+        default_value = params.str(1);
+        if (NULL == default_value) {
+            XmlUtils::reportXsltError("xscript:get-header: bad second parameter", ctxt);
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
     }
 
     xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
@@ -451,15 +466,12 @@ xscriptXsltGetCookie(xmlXPathParserContextPtr ctxt, int nargs) {
     try {
         ctx = Stylesheet::getContext(tctx);
         std::string name(str), value;
-        if (ctx->request()->hasCookie(name)) {
-            value = ctx->request()->getCookie(name);
-        }
-
-        if (!value.empty()) {
-            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
+        value = ctx->request()->getCookie(name);
+        if (value.empty()) {
+            valuePush(ctxt, xmlXPathNewCString(default_value));
         }
         else {
-            xmlXPathReturnEmptyNodeSet(ctxt);
+            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
         }
     }
     catch (const std::exception &e) {
