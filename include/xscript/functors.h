@@ -33,10 +33,13 @@ struct CookieLess : public std::binary_function<const Cookie&, const Cookie&, bo
 
 typedef CILess<Range> RangeCILess;
 
-template <>
-bool CILess<std::string>::operator() (const std::string &val, const std::string &target) const {
-    return strcasecmp(val.c_str(), target.c_str()) < 0;
-}
+template<>
+struct CILess<std::string> {
+
+    bool operator() (const std::string &val, const std::string &target) const {
+	return strcasecmp(val.c_str(), target.c_str()) < 0;
+    }
+};
 
 #if defined(HAVE_GNUCXX_HASHMAP) || defined(HAVE_EXT_HASH_MAP) || defined(HAVE_STLPORT_HASHMAP)
 
