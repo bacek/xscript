@@ -5,8 +5,10 @@
 #include "xscript/authorizer.h"
 #include "xscript/context.h"
 #include "xscript/encoder.h"
-#include "xscript/util.h"
+#include "xscript/protocol.h"
 #include "xscript/request.h"
+#include "xscript/util.h"
+
 #include "state_param_node.h"
 #include "state_prefix_node.h"
 
@@ -171,85 +173,80 @@ StateProtocolNode::StateProtocolNode(const std::string& prefix, State* state) :
 void
 StateProtocolNode::build(Context* ctx) {
 
-    Request* req = ctx->request();
-    if (NULL != req) {
-        const std::string& script_name = req->getScriptName();
-        if (!script_name.empty()) {
-            setParameter("path", script_name);
-        }
-
-        const std::string& query_string = req->getQueryString();
-        if (!query_string.empty()) {
-            setParameter("query", query_string);
-        }
-
-        std::string uri = req->getURI();
-        if (!uri.empty()) {
-            setParameter("uri", uri);
-        }
-
-        std::string originaluri = req->getOriginalURI();
-        if (!originaluri.empty()) {
-            setParameter("originaluri", originaluri);
-        }
-
-        std::string originalurl = req->getOriginalUrl();
-        if (!originalurl.empty()) {
-            setParameter("originalurl", originalurl);
-        }
-
-        std::string host = req->getHost();
-        if (!host.empty()) {
-            setParameter("host", host);
-        }
-
-        std::string originalhost = req->getOriginalHost();
-        if (!originalhost.empty()) {
-            setParameter("originalhost", originalhost);
-        }
-
-        const std::string& path_info = req->getPathInfo();
-        if (!path_info.empty()) {
-            setParameter("pathinfo", path_info);
-        }
-
-        const std::string& script_filename = req->getScriptFilename();
-        if (!script_filename.empty()) {
-            setParameter("realpath", script_filename);
-        }
-
-        setParameter("secure", req->isSecure() ? "yes" : "no");
-        setParameter("method", req->getRequestMethod());
-
-        const std::string& user = req->getRemoteUser();
-        if (!user.empty()) {
-            setParameter("http_user", user);
-        }
-
-        const std::string& addr = req->getRealIP();
-        if (!addr.empty()) {
-            setParameter("remote_ip", addr);
-        }
-
-        std::streamsize length = req->getContentLength();
-        if (length > 0) {
-            std::string length_str = boost::lexical_cast<std::string>(length);
-            if (!length_str.empty()) {
-                setParameter("content-length", length_str);
-            }
-        }
-
-        const std::string& enc = req->getContentEncoding();
-        if (!enc.empty()) {
-            setParameter("content-encoding", enc);
-        }
-
-        const std::string& type = req->getContentType();
-        if (!type.empty()) {
-            setParameter("content-type", type);
-        }
+    const std::string& script_name = Protocol::getPathNative(ctx);
+    if (!script_name.empty()) {
+        setParameter(Protocol::PATH.c_str(), script_name);
     }
-    setParameter("bot", Authorizer::instance()->checkBot(ctx) ? "yes" : "no");
+
+    const std::string& query_string = Protocol::getQueryNative(ctx);
+    if (!query_string.empty()) {
+        setParameter(Protocol::QUERY.c_str(), query_string);
+    }
+
+    std::string uri = Protocol::getURI(ctx);
+    if (!uri.empty()) {
+        setParameter(Protocol::URI.c_str(), uri);
+    }
+
+    std::string originaluri = Protocol::getOriginalURI(ctx);
+    if (!originaluri.empty()) {
+        setParameter(Protocol::ORIGINAL_URI.c_str(), originaluri);
+    }
+
+    std::string originalurl = Protocol::getOriginalUrl(ctx);
+    if (!originalurl.empty()) {
+        setParameter(Protocol::ORIGINAL_URL.c_str(), originalurl);
+    }
+
+    std::string host = Protocol::getHost(ctx);
+    if (!host.empty()) {
+        setParameter(Protocol::HOST.c_str(), host);
+    }
+
+    std::string originalhost = Protocol::getOriginalHost(ctx);
+    if (!originalhost.empty()) {
+        setParameter(Protocol::ORIGINAL_HOST.c_str(), originalhost);
+    }
+
+    const std::string& path_info = Protocol::getPathNative(ctx);
+    if (!path_info.empty()) {
+        setParameter(Protocol::PATH_INFO.c_str(), path_info);
+    }
+
+    const std::string& script_filename = Protocol::getRealPathNative(ctx);
+    if (!script_filename.empty()) {
+        setParameter(Protocol::REAL_PATH.c_str(), script_filename);
+    }
+
+    setParameter(Protocol::SECURE.c_str(), Protocol::getSecure(ctx));
+    setParameter(Protocol::METHOD.c_str(), Protocol::getMethodNative(ctx));
+
+    const std::string& user = Protocol::getHttpUserNative(ctx);
+    if (!user.empty()) {
+        setParameter(Protocol::HTTP_USER.c_str(), user);
+    }
+
+    const std::string& addr = Protocol::getRemoteIPNative(ctx);
+    if (!addr.empty()) {
+        setParameter(Protocol::REMOTE_IP.c_str(), addr);
+    }
+
+    std::string content_length = Protocol::getContentLength(ctx);
+    if (!content_length.empty() && content_length[0] != '0' && content_length[0] != '-') {
+        setParameter(Protocol::CONTENT_LENGTH.c_str(), content_length);
+    }
+
+    const std::string& enc = Protocol::getContentEncodingNative(ctx);
+    if (!enc.empty()) {
+        setParameter(Protocol::CONTENT_ENCODING.c_str(), enc);
+    }
+
+    const std::string& type = Protocol::getContentTypeNative(ctx);
+    if (!type.empty()) {
+        setParameter(Protocol::CONTENT_TYPE.c_str(), type);
+    }
+
+    setParameter(Protocol::BOT.c_str(), Protocol::getBot(ctx));
 }
 
 
