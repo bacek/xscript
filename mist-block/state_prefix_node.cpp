@@ -208,7 +208,7 @@ StateProtocolNode::build(Context* ctx) {
         setParameter(Protocol::ORIGINAL_HOST.c_str(), originalhost);
     }
 
-    const std::string& path_info = Protocol::getPathNative(ctx);
+    const std::string& path_info = Protocol::getPathInfoNative(ctx);
     if (!path_info.empty()) {
         setParameter(Protocol::PATH_INFO.c_str(), path_info);
     }
