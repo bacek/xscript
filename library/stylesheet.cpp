@@ -72,19 +72,13 @@ private:
 static XsltInitalizer xsltInitalizer;
 
 Stylesheet::Stylesheet(const std::string &name) :
-        Xml(), modified_(std::numeric_limits<time_t>::min()),
-        name_(name), stylesheet_(NULL), blocks_(), have_output_info_(false) {
+    Xml(), name_(name), stylesheet_(NULL), blocks_(), have_output_info_(false) {
 }
 
 Stylesheet::~Stylesheet() {
     for (std::map<xmlNodePtr, Block*>::iterator i = blocks_.begin(), end = blocks_.end(); i != end; ++i) {
         delete i->second;
     }
-}
-
-time_t
-Stylesheet::modified() const {
-    return modified_;
 }
 
 const std::string&
@@ -207,8 +201,6 @@ Stylesheet::parse() {
     detectOutputMethod(stylesheet_);
     detectOutputEncoding(stylesheet_);
     detectOutputInfo(stylesheet_);
-
-    modified_ = fs::last_write_time(path);
 }
 
 void
@@ -387,6 +379,11 @@ Stylesheet::create(const std::string &name) {
     }
 
     boost::mutex::scoped_lock lock(*mutex);
+    stylesheet = cache->fetch(name);
+    if (NULL != stylesheet.get()) {
+        return stylesheet;
+    }
+
     return createWithParse(name);
 }
 

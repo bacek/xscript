@@ -24,7 +24,6 @@ class StylesheetFactory;
 class Stylesheet : public Xml {
 public:
     virtual ~Stylesheet();
-    virtual time_t modified() const;
     virtual const std::string& name() const;
 
     inline xsltStylesheetPtr stylesheet() const {
@@ -78,7 +77,6 @@ private:
     friend class StylesheetFactory;
 
 private:
-    time_t modified_;
     std::string name_;
     XsltStylesheetHelper stylesheet_;
     std::map<xmlNodePtr, Block*> blocks_;

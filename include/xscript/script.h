@@ -62,7 +62,6 @@ public:
         return headers_;
     }
 
-    virtual time_t modified() const;
     virtual const std::string& name() const;
 
     virtual std::string fullName(const std::string &name) const;
@@ -134,7 +133,6 @@ private:
     friend class ScriptFactory;
 
 private:
-    time_t modified_;
     XmlDocHelper doc_;
     std::vector<Block*> blocks_;
     std::string name_;

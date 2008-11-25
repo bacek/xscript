@@ -8,15 +8,12 @@
 
 namespace xscript {
 
-class XmlInfoCollector;
-
 class Xml : private boost::noncopyable {
 public:
     Xml();
     virtual ~Xml();
 
     virtual void parse() = 0;
-    virtual time_t modified() const = 0;
     virtual const std::string& name() const = 0;
     virtual std::string fullName(const std::string &name) const;
 

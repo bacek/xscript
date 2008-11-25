@@ -266,16 +266,6 @@ XmlStorage::expired(const Element &element) const {
         return false;
     }
 
-    std::time_t modified = FileUtils::modified(element.xml_->name());
-
-    log()->debug("is xml %s expired: %llu, %llu", element.xml_->name().c_str(),
-        static_cast<unsigned long long>(modified),
-        static_cast<unsigned long long>(element.xml_->modified()));
-
-    if (modified != element.xml_->modified()) {
-        return true;
-    }
-
     const Xml::TimeMapType& modified_info = element.xml_->modifiedInfo();
     for(Xml::TimeMapType::const_iterator it = modified_info.begin(), end = modified_info.end();
         it != end;

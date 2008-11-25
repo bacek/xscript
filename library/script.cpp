@@ -46,8 +46,7 @@
 namespace xscript {
 
 Script::Script(const std::string &name) :
-        Xml(), modified_(std::numeric_limits<time_t>::min()), doc_(NULL),
-        name_(name), flags_(FLAG_FORCE_STYLESHEET), expire_time_delta_(300) {
+    Xml(), doc_(NULL), name_(name), flags_(FLAG_FORCE_STYLESHEET), expire_time_delta_(300) {
 }
 
 Script::~Script() {
@@ -124,13 +123,6 @@ Script::parse() {
     parseBlocks();
     buildXScriptNodeSet(xscript_nodes);
     postParse();
-
-    modified_ = fs::last_write_time(path);
-}
-
-time_t
-Script::modified() const {
-    return modified_;
 }
 
 const std::string&
@@ -202,6 +194,11 @@ Script::create(const std::string &name) {
     }
 
     boost::mutex::scoped_lock lock(*mutex);
+    script = cache->fetch(name);
+    if (NULL != script.get()) {
+        return script;
+    }
+
     return createWithParse(name);
 }
 
