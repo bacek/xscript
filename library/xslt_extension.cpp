@@ -228,7 +228,6 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
         }
         else {
             valuePush(ctxt, xmlXPathNewCString(default_value));
-
         }
     }
     catch (const std::exception &e) {
@@ -341,13 +340,12 @@ xscriptXsltGetQueryArg(xmlXPathParserContextPtr ctxt, int nargs) {
     Context *ctx = NULL;
     try {
         ctx = Stylesheet::getContext(tctx);
-        std::string name(str), value;
-        value = ctx->request()->getArg(name);
-        if (value.empty()) {
-            valuePush(ctxt, xmlXPathNewCString(default_value));
+        std::string name(str);
+        if (ctx->request()->hasArg(name)) {
+            valuePush(ctxt, xmlXPathNewCString(ctx->request()->getArg(name).c_str()));
         }
         else {
-            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
+            valuePush(ctxt, xmlXPathNewCString(default_value));
         }
     }
     catch (const std::exception &e) {
@@ -403,13 +401,12 @@ xscriptXsltGetHeader(xmlXPathParserContextPtr ctxt, int nargs) {
     Context *ctx = NULL;
     try {
         ctx = Stylesheet::getContext(tctx);
-        std::string name(str), value;
-        value = ctx->request()->getHeader(name);
-        if (value.empty()) {
-            valuePush(ctxt, xmlXPathNewCString(default_value));
+        std::string name(str);
+        if (ctx->request()->hasHeader(name)) {
+            valuePush(ctxt, xmlXPathNewCString(ctx->request()->getHeader(name).c_str()));
         }
         else {
-            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
+            valuePush(ctxt, xmlXPathNewCString(default_value));
         }
     }
     catch (const std::exception &e) {
@@ -465,13 +462,12 @@ xscriptXsltGetCookie(xmlXPathParserContextPtr ctxt, int nargs) {
     Context *ctx = NULL;
     try {
         ctx = Stylesheet::getContext(tctx);
-        std::string name(str), value;
-        value = ctx->request()->getCookie(name);
-        if (value.empty()) {
-            valuePush(ctxt, xmlXPathNewCString(default_value));
+        std::string name(str);
+        if (ctx->request()->hasCookie(name)) {
+            valuePush(ctxt, xmlXPathNewCString(ctx->request()->getCookie(name).c_str()));
         }
         else {
-            valuePush(ctxt, xmlXPathNewCString(value.c_str()));
+            valuePush(ctxt, xmlXPathNewCString(default_value));
         }
     }
     catch (const std::exception &e) {
