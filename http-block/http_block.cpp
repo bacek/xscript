@@ -105,7 +105,7 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
 
     if (strncasecmp(url.c_str(), "file://", sizeof("file://") - 1) == 0) {
         namespace fs = boost::filesystem;
-        url = url.substr(sizeof("file://") - 1);
+        url.erase(0, sizeof("file://") - 1);
         fs::path file_path(url);
         if (!fs::exists(file_path)) {
             throw InvokeError("url is not exist", "url", url);

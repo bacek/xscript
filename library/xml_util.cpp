@@ -267,7 +267,7 @@ XmlUtils::reportXsltError(const std::string &error, const Context *ctx) {
 xmlParserInputPtr 
 XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt) {
     xmlParserInputPtr ret = NULL;
-    log()->info("entityResolver. url: %s, id: %s", url, id);
+    log()->info("entityResolver. url: %s, id: %s", url ? url : "", id ? id : "");
 
     try {
         std::string fileName = Policy::instance()->getPathByScheme(NULL, url);
@@ -287,23 +287,23 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
                 }
                 catch (const fs::filesystem_error &e) {
                     log()->error("entityResolver error in fetching modified: %s. URL: %s. ID: %s",
-                        e.what(), url, id);
+                        e.what(), url ? url : "", id ? id : "");
                 }
             }
         }
         else{
-            log()->error("entityResolver: defaultLoader not set. URL: %s. ID: %s", url, id);
+            log()->error("entityResolver: defaultLoader not set. URL: %s. ID: %s", url ? url : "", id ? id : "");
         }
 
         if (ret == NULL) {
-            log()->error("entityResolver: can't resolve external entity. URL: %s. ID: %s", url, id);
+            log()->error("entityResolver: can't resolve external entity. URL: %s. ID: %s", url ? url : "", id ? id : "");
         }
     }
     catch (const std::exception &e) {
-        log()->error("entityResolver error: %s. URL: %s. ID: %s", e.what(), url, id);
+        log()->error("entityResolver error: %s. URL: %s. ID: %s", e.what(), url ? url : "", id ? id : "");
     }
     catch (...) {
-        log()->error("entityResolver unknown error. URL: %s. ID: %s", url, id);
+        log()->error("entityResolver unknown error. URL: %s. ID: %s", url ? url : "", id ? id : "");
     }
 
     return ret;

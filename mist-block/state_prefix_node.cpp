@@ -173,80 +173,81 @@ StateProtocolNode::StateProtocolNode(const std::string& prefix, State* state) :
 void
 StateProtocolNode::build(Context* ctx) {
 
-    const std::string& script_name = Protocol::getPathNative(ctx);
+    const std::string& script_name = ctx->request()->getScriptName();
     if (!script_name.empty()) {
         setParameter(Protocol::PATH.c_str(), script_name);
     }
 
-    const std::string& query_string = Protocol::getQueryNative(ctx);
+    const std::string& query_string = ctx->request()->getQueryString();
     if (!query_string.empty()) {
         setParameter(Protocol::QUERY.c_str(), query_string);
     }
 
-    std::string uri = Protocol::getURI(ctx);
+    std::string uri = ctx->request()->getURI();
     if (!uri.empty()) {
         setParameter(Protocol::URI.c_str(), uri);
     }
 
-    std::string originaluri = Protocol::getOriginalURI(ctx);
+    std::string originaluri = ctx->request()->getOriginalURI();
     if (!originaluri.empty()) {
         setParameter(Protocol::ORIGINAL_URI.c_str(), originaluri);
     }
 
-    std::string originalurl = Protocol::getOriginalUrl(ctx);
+    std::string originalurl = ctx->request()->getOriginalUrl();
     if (!originalurl.empty()) {
         setParameter(Protocol::ORIGINAL_URL.c_str(), originalurl);
     }
 
-    std::string host = Protocol::getHost(ctx);
+    std::string host = ctx->request()->getHost();
     if (!host.empty()) {
         setParameter(Protocol::HOST.c_str(), host);
     }
 
-    std::string originalhost = Protocol::getOriginalHost(ctx);
+    std::string originalhost = ctx->request()->getOriginalHost();
     if (!originalhost.empty()) {
         setParameter(Protocol::ORIGINAL_HOST.c_str(), originalhost);
     }
 
-    const std::string& path_info = Protocol::getPathInfoNative(ctx);
+    const std::string& path_info = ctx->request()->getPathInfo();
     if (!path_info.empty()) {
         setParameter(Protocol::PATH_INFO.c_str(), path_info);
     }
 
-    const std::string& script_filename = Protocol::getRealPathNative(ctx);
+    const std::string& script_filename = ctx->request()->getScriptFilename();
     if (!script_filename.empty()) {
         setParameter(Protocol::REAL_PATH.c_str(), script_filename);
     }
 
-    setParameter(Protocol::SECURE.c_str(), Protocol::getSecure(ctx));
-    setParameter(Protocol::METHOD.c_str(), Protocol::getMethodNative(ctx));
+    setParameter(Protocol::SECURE.c_str(), ctx->request()->isSecure() ? "yes" : "no");
+    setParameter(Protocol::METHOD.c_str(), ctx->request()->getRequestMethod());
 
-    const std::string& user = Protocol::getHttpUserNative(ctx);
+    const std::string& user = ctx->request()->getRemoteUser();
     if (!user.empty()) {
         setParameter(Protocol::HTTP_USER.c_str(), user);
     }
 
-    const std::string& addr = Protocol::getRemoteIPNative(ctx);
+    const std::string& addr = ctx->request()->getRealIP();
     if (!addr.empty()) {
         setParameter(Protocol::REMOTE_IP.c_str(), addr);
     }
 
-    std::string content_length = Protocol::getContentLength(ctx);
-    if (!content_length.empty() && content_length[0] != '0' && content_length[0] != '-') {
-        setParameter(Protocol::CONTENT_LENGTH.c_str(), content_length);
+    int length = ctx->request()->getContentLength();
+    if (length > 0) {
+        setParameter(Protocol::CONTENT_LENGTH.c_str(), boost::lexical_cast<std::string>(length));
     }
 
-    const std::string& enc = Protocol::getContentEncodingNative(ctx);
+    const std::string& enc = ctx->request()->getContentEncoding();
     if (!enc.empty()) {
         setParameter(Protocol::CONTENT_ENCODING.c_str(), enc);
     }
 
-    const std::string& type = Protocol::getContentTypeNative(ctx);
+    const std::string& type = ctx->request()->getContentType();
     if (!type.empty()) {
         setParameter(Protocol::CONTENT_TYPE.c_str(), type);
     }
 
-    setParameter(Protocol::BOT.c_str(), Protocol::getBot(ctx));
+    setParameter(Protocol::BOT.c_str(),
+        Authorizer::instance()->checkBot(const_cast<Context*>(ctx)) ? "yes" : "no");
 }
 
 

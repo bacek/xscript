@@ -13,6 +13,75 @@
 #include <dmalloc.h>
 #endif
 
+static std::string getOriginalURI(const xscript::Context *ctx) {
+    return ctx->request()->getOriginalURI();
+}
+
+static std::string getOriginalUrl(const xscript::Context *ctx) {
+    return ctx->request()->getOriginalUrl();
+}
+
+static std::string getURI(const xscript::Context *ctx) {
+    return ctx->request()->getURI();
+}
+
+static std::string getHost(const xscript::Context *ctx) {
+    return ctx->request()->getHost();
+}
+
+static std::string getOriginalHost(const xscript::Context *ctx) {
+    return ctx->request()->getOriginalHost();
+}
+
+static std::string getSecure(const xscript::Context *ctx) {
+    return ctx->request()->isSecure() ? "yes" : "no";
+}
+
+static std::string getContentLength(const xscript::Context *ctx) {
+    return boost::lexical_cast<std::string>(ctx->request()->getContentLength());
+}
+
+static std::string getBot(const xscript::Context *ctx) {
+    return xscript::Authorizer::instance()->checkBot(
+        const_cast<xscript::Context*>(ctx)) ? "yes" : "no";
+}
+
+static std::string getPath(const xscript::Context *ctx) {
+    return ctx->request()->getScriptName();
+}
+
+static std::string getPathInfo(const xscript::Context *ctx) {
+    return ctx->request()->getPathInfo();
+}
+
+static std::string getRealPath(const xscript::Context *ctx) {
+    return ctx->request()->getScriptFilename();
+}
+
+static std::string getQuery(const xscript::Context *ctx) {
+    return ctx->request()->getQueryString();
+}
+
+static std::string getRemoteIP(const xscript::Context *ctx) {
+    return ctx->request()->getRealIP();
+}
+
+static std::string getMethod(const xscript::Context *ctx) {
+    return ctx->request()->getRequestMethod();
+}
+
+static std::string getHttpUser(const xscript::Context *ctx) {
+    return ctx->request()->getRemoteUser();
+}
+
+static std::string getContentEncoding(const xscript::Context *ctx) {
+    return ctx->request()->getContentEncoding();
+}
+
+static std::string getContentType(const xscript::Context *ctx) {
+    return ctx->request()->getContentType();
+}
+
 namespace xscript {
 
 Protocol::MethodMap Protocol::methods_;
@@ -47,136 +116,6 @@ Protocol::~Protocol() {
 }
 
 std::string
-Protocol::getPath(const Context *ctx) {
-    return getPathNative(ctx);
-}
-
-std::string
-Protocol::getPathInfo(const Context *ctx) {
-    return getPathInfoNative(ctx);
-}
-
-std::string
-Protocol::getRealPath(const Context *ctx) {
-    return getRealPathNative(ctx);
-}
-
-std::string
-Protocol::getOriginalURI(const Context *ctx) {
-    return ctx->request()->getOriginalURI();
-}
-
-std::string
-Protocol::getOriginalUrl(const Context *ctx) {
-    return ctx->request()->getOriginalUrl();
-}
-
-std::string
-Protocol::getQuery(const Context *ctx) {
-    return getQueryNative(ctx);
-}
-
-std::string
-Protocol::getRemoteIP(const Context *ctx) {
-    return getRemoteIPNative(ctx);
-}
-
-std::string
-Protocol::getURI(const Context *ctx) {
-    return ctx->request()->getURI();
-}
-
-std::string
-Protocol::getHost(const Context *ctx) {
-    return ctx->request()->getHost();
-}
-
-std::string
-Protocol::getOriginalHost(const Context *ctx) {
-    return ctx->request()->getOriginalHost();
-}
-
-std::string
-Protocol::getMethod(const Context *ctx) {
-    return getMethodNative(ctx);
-}
-
-std::string
-Protocol::getSecure(const Context *ctx) {
-    return ctx->request()->isSecure() ? "yes" : "no";
-}
-
-std::string
-Protocol::getHttpUser(const Context *ctx) {
-    return getHttpUserNative(ctx);
-}
-
-std::string
-Protocol::getContentLength(const Context *ctx) {
-    return boost::lexical_cast<std::string>(ctx->request()->getContentLength());
-}
-
-std::string
-Protocol::getContentEncoding(const Context *ctx) {
-    return getContentEncodingNative(ctx);
-}
-
-std::string
-Protocol::getContentType(const Context *ctx) {
-    return getContentTypeNative(ctx);
-}
-
-std::string
-Protocol::getBot(const Context *ctx) {
-    return Authorizer::instance()->checkBot(const_cast<Context*>(ctx)) ? "yes" : "no";
-}
-
-const std::string&
-Protocol::getPathNative(const Context *ctx) {
-    return ctx->request()->getScriptName();
-}
-
-const std::string&
-Protocol::getPathInfoNative(const Context *ctx) {
-    return ctx->request()->getPathInfo();
-}
-
-const std::string&
-Protocol::getRealPathNative(const Context *ctx) {
-    return ctx->request()->getScriptFilename();
-}
-
-const std::string&
-Protocol::getQueryNative(const Context *ctx) {
-    return ctx->request()->getQueryString();
-}
-
-const std::string&
-Protocol::getRemoteIPNative(const Context *ctx) {
-    return ctx->request()->getRealIP();
-}
-
-const std::string&
-Protocol::getMethodNative(const Context *ctx) {
-    return ctx->request()->getRequestMethod();
-}
-
-const std::string&
-Protocol::getHttpUserNative(const Context *ctx) {
-    return ctx->request()->getRemoteUser();
-}
-
-const std::string&
-Protocol::getContentEncodingNative(const Context *ctx) {
-    return ctx->request()->getContentEncoding();
-}
-
-const std::string&
-Protocol::getContentTypeNative(const Context *ctx) {
-    return ctx->request()->getContentType();
-}
-
-std::string
 Protocol::get(const Context *ctx, const char* name) {
     assert(ctx);
     MethodMap::iterator it = methods_.find(name);
@@ -188,23 +127,23 @@ Protocol::get(const Context *ctx, const char* name) {
 }
 
 ProtocolRegistrator::ProtocolRegistrator() {
-    Protocol::methods_[Protocol::PATH] = &Protocol::getPath;
-    Protocol::methods_[Protocol::PATH_INFO] = &Protocol::getPathInfo;
-    Protocol::methods_[Protocol::REAL_PATH] = &Protocol::getRealPath;
-    Protocol::methods_[Protocol::ORIGINAL_URI] = &Protocol::getOriginalURI;
-    Protocol::methods_[Protocol::ORIGINAL_URL] = &Protocol::getOriginalUrl;
-    Protocol::methods_[Protocol::QUERY] = &Protocol::getQuery;
-    Protocol::methods_[Protocol::REMOTE_IP] = &Protocol::getRemoteIP;
-    Protocol::methods_[Protocol::URI] = &Protocol::getURI;
-    Protocol::methods_[Protocol::HOST] = &Protocol::getHost;
-    Protocol::methods_[Protocol::ORIGINAL_HOST] = &Protocol::getOriginalHost;
-    Protocol::methods_[Protocol::METHOD] = &Protocol::getMethod;
-    Protocol::methods_[Protocol::SECURE] = &Protocol::getSecure;
-    Protocol::methods_[Protocol::HTTP_USER] = &Protocol::getHttpUser;
-    Protocol::methods_[Protocol::CONTENT_LENGTH] = &Protocol::getContentLength;
-    Protocol::methods_[Protocol::CONTENT_ENCODING] = &Protocol::getContentEncoding;
-    Protocol::methods_[Protocol::CONTENT_TYPE] = &Protocol::getContentType;
-    Protocol::methods_[Protocol::BOT] = &Protocol::getBot;
+    Protocol::methods_[Protocol::PATH] = &getPath;
+    Protocol::methods_[Protocol::PATH_INFO] = &getPathInfo;
+    Protocol::methods_[Protocol::REAL_PATH] = &getRealPath;
+    Protocol::methods_[Protocol::ORIGINAL_URI] = &getOriginalURI;
+    Protocol::methods_[Protocol::ORIGINAL_URL] = &getOriginalUrl;
+    Protocol::methods_[Protocol::QUERY] = &getQuery;
+    Protocol::methods_[Protocol::REMOTE_IP] = &getRemoteIP;
+    Protocol::methods_[Protocol::URI] = &getURI;
+    Protocol::methods_[Protocol::HOST] = &getHost;
+    Protocol::methods_[Protocol::ORIGINAL_HOST] = &getOriginalHost;
+    Protocol::methods_[Protocol::METHOD] = &getMethod;
+    Protocol::methods_[Protocol::SECURE] = &getSecure;
+    Protocol::methods_[Protocol::HTTP_USER] = &getHttpUser;
+    Protocol::methods_[Protocol::CONTENT_LENGTH] = &getContentLength;
+    Protocol::methods_[Protocol::CONTENT_ENCODING] = &getContentEncoding;
+    Protocol::methods_[Protocol::CONTENT_TYPE] = &getContentType;
+    Protocol::methods_[Protocol::BOT] = &getBot;
 }
 
 static ProtocolRegistrator reg_;
