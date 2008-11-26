@@ -88,9 +88,15 @@ TagKeyMemory::TagKeyMemory(const Context *ctx, const TaggedBlock *block) : value
     }
     value_.append(block->canonicalMethod(ctx));
 
-    const std::vector<Param*> &v = block->params();
-    for (std::vector<Param*>::const_iterator i = v.begin(), end = v.end(); i != end; ++i) {
-        value_.append(":").append((*i)->asString(ctx));
+    const std::vector<Param*> &params = block->params();
+    for (unsigned int i = 0, n = params.size(); i < n; ++i) {
+        value_.append(1, ':').append(params[i]->asString(ctx));
+    }
+
+    const std::vector<Param*> &xslt_params = block->xsltParams();
+    for (unsigned int i = 0, n = xslt_params.size(); i < n; ++i) {
+        value_.append(1, ':').append(xslt_params[i]->id());
+        value_.append(1, ':').append(xslt_params[i]->asString(ctx));
     }
 }
 

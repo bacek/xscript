@@ -109,9 +109,15 @@ TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const TaggedBlock *block) {
     std::string param_str;
     const std::vector<Param*> &params = block->params();
     for (unsigned int i = 0, n = params.size(); i < n; ++i) {
-        const std::string &val = params[i]->asString(ctx);
-        param_str.append(1, ':').append(val);
+        param_str.append(1, ':').append(params[i]->asString(ctx));
     }
+
+    const std::vector<Param*> &xslt_params = block->xsltParams();
+    for (unsigned int i = 0, n = xslt_params.size(); i < n; ++i) {
+        param_str.append(1, ':').append(xslt_params[i]->id());
+        param_str.append(1, ':').append(xslt_params[i]->asString(ctx));
+    }
+
     boost::uint32_t params_sum = HashUtils::crc32(param_str);
 
     char buf[255];
