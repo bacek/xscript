@@ -98,6 +98,13 @@ StandaloneRequest::attach(const std::string& url, const std::string& doc_root) {
     std::string processed_url = Policy::instance()->getPathByScheme(this, url);
     std::string root_directory_ = Policy::instance()->getRootByScheme(this, url);
 
+    query_ = StringUtils::EMPTY_STRING;
+    size_t query_pos = processed_url.rfind('?');
+    if (query_pos != std::string::npos) {
+        query_ = processed_url.substr(query_pos + 1);
+        processed_url.erase(query_pos);
+    }
+
     size_t base_pos = 0;
     size_t pos = processed_url.find("://");
     if (pos == std::string::npos) {
@@ -158,13 +165,8 @@ StandaloneRequest::attach(const std::string& url, const std::string& doc_root) {
             path = path.substr(size);
         }
 
-        size_t query_pos = path.find('?');
-        if (query_pos != std::string::npos) {
-            query_ = path.substr(query_pos + 1);
-        }
-
-        size_t slesh_pos = path.rfind('/', query_pos) + 1;
-        script_name_ = path.substr(slesh_pos, query_pos - slesh_pos);
+        size_t slesh_pos = path.rfind('/') + 1;
+        script_name_ = path.substr(slesh_pos);
         path_ = path.substr(0, slesh_pos);
     }
 

@@ -63,7 +63,7 @@ main(int argc, char *argv[]) {
                 throw std::runtime_error("url defined twice");
             }
         }
-        if (args.end() != args.find("help")) {
+        if (argc == 0 || args.end() != args.find("help")) {
             processUsage(std::cout) << std::endl;
             return EXIT_SUCCESS;
         }
