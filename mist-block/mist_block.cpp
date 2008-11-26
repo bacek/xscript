@@ -770,6 +770,10 @@ MistBlock::setStateSplitString(Context *ctx) {
 
     std::string val = p[1]->asString(ctx), delim = p[2]->asString(ctx);
 
+    if (delim.empty() || delim[0] == '\0') {
+        throw InvokeError("empty delimeter");
+    }
+
     StatePrefixNode node(prefix, "split_string", state);
 
     bool searching = true;
