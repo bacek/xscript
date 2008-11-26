@@ -202,7 +202,7 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    const char* default_value = StringUtils::EMPTY_STRING.c_str();
+    const char* default_value = "";
     if (nargs == 2) {
         default_value = params.str(1);
         if (NULL == default_value) {
@@ -321,7 +321,7 @@ xscriptXsltGetQueryArg(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    const char* default_value = StringUtils::EMPTY_STRING.c_str();
+    const char* default_value = "";
     if (nargs == 2) {
         default_value = params.str(1);
         if (NULL == default_value) {
@@ -382,7 +382,7 @@ xscriptXsltGetHeader(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    const char* default_value = StringUtils::EMPTY_STRING.c_str();
+    const char* default_value = "";
     if (nargs == 2) {
         default_value = params.str(1);
         if (NULL == default_value) {
@@ -443,7 +443,7 @@ xscriptXsltGetCookie(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    const char* default_value = StringUtils::EMPTY_STRING.c_str();
+    const char* default_value = "";
     if (nargs == 2) {
         default_value = params.str(1);
         if (NULL == default_value) {
@@ -549,23 +549,33 @@ xscriptXsltUrlencode(xmlXPathParserContextPtr ctxt, int nargs) {
 
     XsltParamFetcher params(ctxt, nargs);
 
-    if (2 != nargs) {
+    if (nargs < 1 || nargs > 2) {
         XmlUtils::reportXsltError("xscript:urlencode: bad param count", ctxt);
         return;
     }
 
-    const char* value = params.str(1);
-    const char* encoding = params.str(0);
-    if (NULL == value || NULL == encoding) {
+    const char* encoding = NULL;
+    const char* value = params.str(0);
+    if (nargs == 2) {
+        encoding = value;
+        value = params.str(1);
+    }
+
+    if (NULL == value || (2 == nargs && NULL == encoding)) {
         XmlUtils::reportXsltError("xscript:urlencode: bad parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
 
     try {
-        std::auto_ptr<Encoder> encoder = Encoder::createEscaping("utf-8", encoding);
         std::string encoded;
-        encoder->encode(createRange(value), encoded);
+        if (NULL != encoding) {
+            std::auto_ptr<Encoder> encoder = Encoder::createEscaping("utf-8", encoding);
+            encoder->encode(createRange(value), encoded);
+        }
+        else {
+            encoded = value;
+        }
         valuePush(ctxt, xmlXPathNewCString(StringUtils::urlencode(encoded).c_str()));
     }
     catch (const std::exception &e) {
@@ -590,25 +600,34 @@ xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
 
     XsltParamFetcher params(ctxt, nargs);
 
-    if (2 != nargs) {
+
+    if (nargs < 1 || nargs > 2) {
         XmlUtils::reportXsltError("xscript:urldecode: bad param count", ctxt);
         return;
     }
 
-    const char* value = params.str(1);
-    const char* encoding = params.str(0);
+    const char* encoding = NULL;
+    const char* value = params.str(0);
+    if (nargs == 2) {
+        encoding = value;
+        value = params.str(1);
+    }
 
-    if (NULL == value || NULL == encoding) {
+    if (NULL == value || (2 == nargs && NULL == encoding)) {
         XmlUtils::reportXsltError("xscript:urldecode: bad parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
 
     try {
-        std::auto_ptr<Encoder> encoder = Encoder::createEscaping(encoding, "utf-8");
-
         std::string decoded;
-        encoder->encode(StringUtils::urldecode(value), decoded);
+        if (NULL != encoding) {
+            std::auto_ptr<Encoder> encoder = Encoder::createEscaping(encoding, "utf-8");
+            encoder->encode(StringUtils::urldecode(value), decoded);
+        }
+        else {
+            decoded = StringUtils::urldecode(value);
+        }
         valuePush(ctxt, xmlXPathNewCString(decoded.c_str()));
     }
     catch (const std::exception &e) {
