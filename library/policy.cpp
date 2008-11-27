@@ -6,7 +6,6 @@
 #include "xscript/logger.h"
 #include "xscript/policy.h"
 #include "xscript/request.h"
-#include "xscript/sanitizer.h"
 #include "xscript/util.h"
 #include "xscript/vhost_data.h"
 
@@ -107,9 +106,8 @@ Policy::getOutputEncoding(const Request* request) const {
     return UTF8_ENCODING;
 }
 
-std::string
-Policy::sanitize(const Range &range) const {
-    return Sanitizer::instance()->sanitize(range);
+void
+Policy::useDefaultSanitizer() const {
 }
 
 bool

@@ -201,7 +201,7 @@ XmlUtils::escape(const Range &range) {
 
 std::string
 XmlUtils::sanitize(const Range &range) {
-    return Policy::instance()->sanitize(range);
+    return Sanitizer::instance()->sanitize(range);
 }
 
 bool

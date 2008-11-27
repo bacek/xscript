@@ -13,8 +13,6 @@ public:
     virtual ~Sanitizer();
 
     virtual std::string sanitize(const Range &range);
-
-    virtual bool isDefault() const;
 };
 
 } // namespace xscript

@@ -1,5 +1,6 @@
 #include "settings.h"
 #include <stdexcept>
+#include "xscript/policy.h"
 #include "xscript/sanitizer.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -16,12 +17,8 @@ Sanitizer::~Sanitizer() {
 
 std::string
 Sanitizer::sanitize(const Range &range) {
+    Policy::instance()->useDefaultSanitizer();
     return std::string(range.begin(), range.end());
-}
-
-bool
-Sanitizer::isDefault() const {
-    return true;
 }
 
 REGISTER_COMPONENT(Sanitizer);
