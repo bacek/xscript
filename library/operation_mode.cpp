@@ -20,7 +20,7 @@ OperationMode::~OperationMode() {
 
 void
 OperationMode::processError(const std::string& message) {
-    log()->debug("%s", message.c_str());
+    log()->warn("%s", message.c_str());
 }
 
 void

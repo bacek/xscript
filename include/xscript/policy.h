@@ -5,6 +5,7 @@
 #include <string>
 
 #include "xscript/component.h"
+#include "xscript/range.h"
 
 namespace xscript {
 
@@ -21,6 +22,8 @@ public:
 
     virtual std::string getKey(const Request* request, const std::string& name) const;
     virtual std::string getOutputEncoding(const Request* request) const;
+
+    virtual std::string sanitize(const Range &range) const;
 
 protected:
     virtual bool isSkippedProxyHeader(const std::string &header) const;

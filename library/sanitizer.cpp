@@ -19,6 +19,11 @@ Sanitizer::sanitize(const Range &range) {
     return std::string(range.begin(), range.end());
 }
 
+bool
+Sanitizer::isDefault() const {
+    return true;
+}
+
 REGISTER_COMPONENT(Sanitizer);
 
 } // namespace xscript
