@@ -1,11 +1,16 @@
 xscript (5.46-0) unstable; urgency=low
 
   * Protocol updated
-  * modified removed from Script and Stylesheet 
+  * modified removed from Script and Stylesheet
   * default value optional parameter added to get-query-arg, get-cookie,
     get-header xslt extensions
+  * make encoding optional in xslt urlencode and urldecode
+  * xslt-params added to tagged key calculations
+  * Mist set_state_split_string fixed for empty delimeter
+  * try catch added to lua cookie methods (bacek's work)
+  * checking sanitizer added (movsesjan's work)
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 25 Nov 2008 15:04:41 +0300
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 27 Nov 2008 14:32:38 +0300
 
 xscript (5.45-0) unstable; urgency=low
 
