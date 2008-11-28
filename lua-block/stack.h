@@ -5,6 +5,7 @@
 #include <sstream>
 #include <boost/cstdint.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/static_assert.hpp>
 #include <lua.hpp>
 
 namespace xscript {
@@ -83,6 +84,29 @@ template<> inline std::string
 luaReadStack<std::string>(lua_State *lua, int index) {
     luaCheckString(lua, index);
     return std::string(lua_tostring(lua, index));
+}
+
+
+
+template<typename Type>
+void luaPushStack(lua_State* lua, Type t) {
+    // We should specify how to push value
+    boost::STATIC_ASSERTION_FAILURE<false>();
+};
+
+template<>
+inline void luaPushStack(lua_State* lua, std::string str) {
+    lua_pushstring(lua, str.c_str());
+}
+
+template<>
+inline void luaPushStack(lua_State* lua, const std::string &str) {
+    lua_pushstring(lua, str.c_str());
+}
+
+template<>
+inline void luaPushStack(lua_State* lua, bool b) {
+    lua_pushboolean(lua, b);
 }
 
 } // namespace xscript
