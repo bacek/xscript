@@ -4,17 +4,19 @@
 #include <vector>
 #include <algorithm>
 
-#include <boost/crc.hpp>
 #include <boost/bind.hpp>
+#include <boost/checked_delete.hpp>
+#include <boost/crc.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/utility.hpp>
+#include <boost/filesystem/exception.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/checked_delete.hpp>
+#include <boost/utility.hpp>
 
 #include "xscript/cache_usage_counter.h"
 #include "xscript/config.h"
 #include "xscript/logger.h"
+#include "xscript/operation_mode.h"
 #include "xscript/policy.h"
 #include "xscript/script.h"
 #include "xscript/stylesheet.h"
@@ -270,7 +272,13 @@ XmlStorage::expired(const Element &element) const {
     for(Xml::TimeMapType::const_iterator it = modified_info.begin(), end = modified_info.end();
         it != end;
         ++it) {
-        std::time_t modified = FileUtils::modified(it->first);
+        std::time_t modified;
+        try {
+            modified = FileUtils::modified(it->first);
+        }
+        catch(const boost::filesystem::filesystem_error &e) {
+            return true;
+        }
 
         log()->debug("is included xml %s expired: %llu, %llu", it->first.c_str(),
             static_cast<unsigned long long>(modified),
@@ -316,7 +324,11 @@ XmlCache::init(const char *name, const Config *config) {
 
     int buckets = config->as<int>(std::string("/xscript/").append(name).append("/buckets"), 10);
     int bucksize = config->as<int>(std::string("/xscript/").append(name).append("/bucket-size"), 200);
-    size_t delay = config->as<size_t>(std::string("/xscript/").append(name).append("/refresh-delay"), 5);
+
+    size_t delay = 0;
+    if (OperationMode::instance()->isProduction()) {
+        delay = config->as<size_t>(std::string("/xscript/").append(name).append("/refresh-delay"), 5);
+    }
 
     StorageContainerHolder holder(storages_);
     storages_.reserve(buckets);
