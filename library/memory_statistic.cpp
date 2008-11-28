@@ -46,9 +46,9 @@ void make_key() {
  * Init statistic
  */
 void initAllocationStatistic() {
-    (void) pthread_once(&key_once, make_key);
+//    (void) pthread_once(&key_once, make_key);
 
-    xmlMemSetup(&freeCount, &mallocCount, &reallocCount, &strdupCount);
+//  xmlMemSetup(&freeCount, &mallocCount, &reallocCount, &strdupCount);
 }
 
 
@@ -56,7 +56,8 @@ void initAllocationStatistic() {
  * Get count of allocated memory.
  */
 size_t getAllocatedMemory() {
-    return (size_t)pthread_getspecific(key);
+    return 0;
+//    return (size_t)pthread_getspecific(key);
 }
 
 }
