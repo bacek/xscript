@@ -1,14 +1,14 @@
 #include "settings.h"
 
+#include <algorithm>
 #include <list>
 #include <vector>
-#include <algorithm>
+#include <stdexcept>
 
 #include <boost/bind.hpp>
 #include <boost/checked_delete.hpp>
 #include <boost/crc.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/filesystem/exception.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/utility.hpp>
@@ -276,7 +276,7 @@ XmlStorage::expired(const Element &element) const {
         try {
             modified = FileUtils::modified(it->first);
         }
-        catch(const boost::filesystem::filesystem_error &e) {
+        catch(const std::exception &e) {
             return true;
         }
 
