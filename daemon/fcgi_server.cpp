@@ -26,18 +26,20 @@
 
 #include "fcgi_server.h"
 #include "server_request.h"
-#include "xscript/xml_util.h"
-#include "xscript/state.h"
-#include "xscript/config.h"
-#include "xscript/logger.h"
-#include "xscript/script.h"
-#include "xscript/writer.h"
-#include "xscript/context.h"
+
 #include "xscript/authorizer.h"
-#include "xscript/request_data.h"
-#include "xscript/vhost_data.h"
 #include "xscript/checking_policy.h"
+#include "xscript/config.h"
+#include "xscript/context.h"
+#include "xscript/logger.h"
+#include "xscript/operation_mode.h"
+#include "xscript/request_data.h"
+#include "xscript/script.h"
+#include "xscript/state.h"
 #include "xscript/status_info.h"
+#include "xscript/vhost_data.h"
+#include "xscript/writer.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -123,8 +125,15 @@ FCGIServer::handle() {
                 boost::shared_ptr<RequestResponse> request(new ServerRequest());
                 ServerRequest* server_request = dynamic_cast<ServerRequest*>(request.get());
 
+                bool attach_error = false;
                 try {
-                    server_request->attach(&is, &os, req.envp);    
+                    try {
+                        server_request->attach(&is, &os, req.envp);    
+                    }
+                    catch (const std::exception &e) {
+                        attach_error = true;
+                        throw;
+                    }
 
                     boost::shared_ptr<RequestData> data(
                         new RequestData(request, boost::shared_ptr<State>(new State())));
@@ -137,6 +146,9 @@ FCGIServer::handle() {
                     FCGX_Finish_r(&req);
                 }
                 catch (const std::exception &e) {
+                    if (attach_error) {
+                        OperationMode::instance()->sendError(server_request, 400, e.what());
+                    }
                     server_request->detach();
                     throw;
                 }

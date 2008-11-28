@@ -1,3 +1,11 @@
+xscript (5.46-1) unstable; urgency=low
+
+  * %00 symbol considered as not acceptable in url
+  * modified time checking fixed for non-existing files
+  * delay for modified time checking set to 0 in development mode
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 28 Nov 2008 12:20:27 +0300
+
 xscript (5.46-0) unstable; urgency=low
 
   * Protocol updated

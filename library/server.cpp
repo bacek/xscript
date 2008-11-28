@@ -21,20 +21,20 @@
 #include <libxml/encoding.h>
 #include <libxslt/xsltutils.h>
 
-#include "xscript/server.h"
-#include "xscript/xml_util.h"
-#include "xscript/state.h"
-#include "xscript/config.h"
-#include "xscript/logger.h"
-#include "xscript/script.h"
-#include "xscript/writer.h"
-#include "xscript/context.h"
 #include "xscript/authorizer.h"
+#include "xscript/config.h"
+#include "xscript/context.h"
+#include "xscript/logger.h"
+#include "xscript/operation_mode.h"
 #include "xscript/profiler.h"
 #include "xscript/request_data.h"
 #include "xscript/response.h"
+#include "xscript/script.h"
+#include "xscript/server.h"
+#include "xscript/state.h"
+#include "xscript/xml_util.h"
 #include "xscript/vhost_data.h"
-#include "xscript/operation_mode.h"
+#include "xscript/writer.h"
 #include "xscript/xslt_profiler.h"
 
 #ifdef HAVE_DMALLOC_H

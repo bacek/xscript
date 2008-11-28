@@ -88,7 +88,7 @@ StringUtils::urldecode(const Range &range) {
     for (const char *i = range.begin(), *end = range.end(); i != end; ++i) {
         switch (*i) {
         case '+':
-            result.append(1, ' ');
+            result.push_back(' ');
             break;
         case '%':
             if (std::distance(i, end) > 2) {
@@ -96,15 +96,18 @@ StringUtils::urldecode(const Range &range) {
                 char f = *(i + 1), s = *(i + 2);
                 digit = (f >= 'A' ? ((f & 0xDF) - 'A') + 10 : (f - '0')) * 16;
                 digit += (s >= 'A') ? ((s & 0xDF) - 'A') + 10 : (s - '0');
-                result.append(1, static_cast<char>(digit));
+                if (digit == 0) {
+                    throw std::runtime_error("Null symbol in URL is not allowed");
+                }
+                result.push_back(static_cast<char>(digit));
                 i += 2;
             }
             else {
-                result.append(1, '%');
+                result.push_back('%');
             }
             break;
         default:
-            result.append(1, (*i));
+            result.push_back(*i);
             break;
         }
     }
@@ -124,19 +127,14 @@ StringUtils::parse(const Range &range, std::vector<NamedValue> &v, Encoder *enco
         splitFirstOf(part, "&;", head, tail);
         split(head, '=', key, value);
         if (!key.empty()) {
-            try {
-                std::pair<std::string, std::string> p(urldecode(key), urldecode(value));
-                if (!xmlCheckUTF8((const xmlChar*) p.first.c_str())) {
-                    encoder->encode(p.first).swap(p.first);
-                }
-                if (!xmlCheckUTF8((const xmlChar*) p.second.c_str())) {
-                    encoder->encode(p.second).swap(p.second);
-                }
-                v.push_back(p);
+            std::pair<std::string, std::string> p(urldecode(key), urldecode(value));
+            if (!xmlCheckUTF8((const xmlChar*) p.first.c_str())) {
+                encoder->encode(p.first).swap(p.first);
             }
-            catch (const std::exception &e) {
-                log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
+            if (!xmlCheckUTF8((const xmlChar*) p.second.c_str())) {
+                encoder->encode(p.second).swap(p.second);
             }
+            v.push_back(p);
         }
         part = tail;
     }
