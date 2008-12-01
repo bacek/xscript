@@ -14,6 +14,7 @@ namespace xscript {
 
 static pthread_key_t key;
 static pthread_once_t key_once = PTHREAD_ONCE_INIT;
+bool MemoryStatisticRegisterer::statistic_enable_ = false;
 
 void
 updateAllocated(size_t size) {
@@ -24,7 +25,7 @@ updateAllocated(size_t size) {
 
 void*
 mallocCount(size_t size) {
-    if (statistic_enable) {
+    if (MemoryStatisticRegisterer::statistic_enable_) {
         updateAllocated(size);
     }
     return malloc(size);
@@ -35,21 +36,18 @@ reallocCount(void *ptr, size_t size) {
     return realloc(ptr, size);
 }
 
-
 void
 freeCount(void *ptr) {
     free(ptr);
 }
 
-
 char*
 strdupCount(const char *str) {
-    if (statistic_enable) {
-        updateAllocated(strlen(str));
+    if (MemoryStatisticRegisterer::statistic_enable_) {
+        updateAllocated(strlen(str) + 1);
     }
     return strdup(str);
 }
-
 
 void
 make_key() {
@@ -65,13 +63,12 @@ initAllocationStatistic() {
     xmlMemSetup(&freeCount, &mallocCount, &reallocCount, &strdupCount);
 }
 
-
 /**
  * Get count of allocated memory.
  */
 size_t
 getAllocatedMemory() {
-    if (statistic_enable) {
+    if (MemoryStatisticRegisterer::statistic_enable_) {
         return (size_t)pthread_getspecific(key);
     }
     return 0;

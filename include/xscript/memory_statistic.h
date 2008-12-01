@@ -14,18 +14,17 @@ namespace xscript {
  */
 void initAllocationStatistic();
 
-
 /**
  * Get count of allocated memory.
  */
 size_t getAllocatedMemory();
 
-static bool statistic_enable = false;
-
-struct MemoryStatisticRegisterer {
+class MemoryStatisticRegisterer {
+public:
     MemoryStatisticRegisterer() {
-        statistic_enable = true;
+        statistic_enable_ = true;
     }
+    static bool statistic_enable_;
 };
 
 } // namespace xscript
