@@ -1,3 +1,11 @@
+xscript (5.47-0) unstable; urgency=low
+
+  * memory statistic make optional
+  * keep track about errors in xslt functions, only in development mode
+    (movsesjan's work)
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon,  1 Dec 2008 17:56:21 +0300
+
 xscript (5.46-2) unstable; urgency=low
 
   * memory statistic usage removed
