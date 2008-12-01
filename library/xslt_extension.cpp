@@ -77,11 +77,11 @@ xscriptXsltHttpHeaderOut(xmlXPathParserContextPtr ctxt, int nargs) {
         response->setHeader(name, value);
     }
     catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:http-header-out: caught exception: " + std::string(e.what()), ctx);
+        XmlUtils::reportXsltError("xscript:http-header-out: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
     }
     catch (...) {
-        XmlUtils::reportXsltError("xscript:http-header-out: caught unknown exception", ctx);
+        XmlUtils::reportXsltError("xscript:http-header-out: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
     }
     xmlXPathReturnEmptyNodeSet(ctxt);
@@ -122,11 +122,11 @@ xscriptXsltHttpRedirect(xmlXPathParserContextPtr ctxt, int nargs) {
         response->redirectToPath(str);
     }
     catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:http-redirect: caught exception: " + std::string(e.what()), ctx);
+        XmlUtils::reportXsltError("xscript:http-redirect: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
     }
     catch (...) {
-        XmlUtils::reportXsltError("xscript:http-redirect: caught unknown exception", ctx);
+        XmlUtils::reportXsltError("xscript:http-redirect: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
     }
     xmlXPathReturnEmptyNodeSet(ctxt);
@@ -169,12 +169,12 @@ xscriptXsltSetHttpStatus(xmlXPathParserContextPtr ctxt, int nargs) {
         xmlXPathReturnNumber(ctxt, status);
     }
     catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:set-http-status: caught exception: " + std::string(e.what()), ctx);
+        XmlUtils::reportXsltError("xscript:set-http-status: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
     catch (...) {
-        XmlUtils::reportXsltError("xscript:set-http-status: caught unknown exception", ctx);
+        XmlUtils::reportXsltError("xscript:set-http-status: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -231,12 +231,12 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
         }
     }
     catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:get-state-arg: caught exception: " + std::string(e.what()), ctx);
+        XmlUtils::reportXsltError("xscript:get-state-arg: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
     catch (...) {
-        XmlUtils::reportXsltError("xscript:get-state-arg: caught unknown exception", ctx);
+        XmlUtils::reportXsltError("xscript:get-state-arg: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -288,12 +288,12 @@ xscriptXsltGetProtocolArg(xmlXPathParserContextPtr ctxt, int nargs) {
         }
     }
     catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:get-protocol-arg: caught exception: " + std::string(e.what()), ctx);
+        XmlUtils::reportXsltError("xscript:get-protocol-arg: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
     catch (...) {
-        XmlUtils::reportXsltError("xscript:get-protocol-arg: caught unknown exception", ctx);
+        XmlUtils::reportXsltError("xscript:get-protocol-arg: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -349,12 +349,12 @@ xscriptXsltGetQueryArg(xmlXPathParserContextPtr ctxt, int nargs) {
         }
     }
     catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:get-query-arg: caught exception: " + std::string(e.what()), ctx);
+        XmlUtils::reportXsltError("xscript:get-query-arg: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
     catch (...) {
-        XmlUtils::reportXsltError("xscript:get-query-arg: caught unknown exception", ctx);
+        XmlUtils::reportXsltError("xscript:get-query-arg: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -410,12 +410,12 @@ xscriptXsltGetHeader(xmlXPathParserContextPtr ctxt, int nargs) {
         }
     }
     catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:get-header: caught exception: " + std::string(e.what()), ctx);
+        XmlUtils::reportXsltError("xscript:get-header: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
     catch (...) {
-        XmlUtils::reportXsltError("xscript:get-header: caught unknown exception", ctx);
+        XmlUtils::reportXsltError("xscript:get-header: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -471,12 +471,12 @@ xscriptXsltGetCookie(xmlXPathParserContextPtr ctxt, int nargs) {
         }
     }
     catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:get-cookie: caught exception: " + std::string(e.what()), ctx);
+        XmlUtils::reportXsltError("xscript:get-cookie: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
     catch (...) {
-        XmlUtils::reportXsltError("xscript:get-cookie: caught unknown exception", ctx);
+        XmlUtils::reportXsltError("xscript:get-cookie: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -528,12 +528,12 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
         xmlXPathReturnNodeSet(ctxt, ret);
     }
     catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:sanitize: caught exception: " + std::string(e.what()), ctx);
+        XmlUtils::reportXsltError("xscript:sanitize: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
     catch (...) {
-        XmlUtils::reportXsltError("xscript:sanitize: caught unknown exception", ctx);
+        XmlUtils::reportXsltError("xscript:sanitize: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -906,12 +906,12 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
         xmlXPathReturnNodeSet(ctxt, ret.release());
     }
     catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:wbr: caught exception: " + std::string(e.what()), ctx);
+        XmlUtils::reportXsltError("xscript:wbr: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
     catch (...) {
-        XmlUtils::reportXsltError("xscript:wbr: caught unknown exception", ctx);
+        XmlUtils::reportXsltError("xscript:wbr: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -991,12 +991,12 @@ xscriptXsltNl2br(xmlXPathParserContextPtr ctxt, int nargs) {
         xmlXPathReturnNodeSet(ctxt, ret.release());
     }
     catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:nl2br: caught exception: " + std::string(e.what()), ctx);
+        XmlUtils::reportXsltError("xscript:nl2br: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
     catch (...) {
-        XmlUtils::reportXsltError("xscript:nl2br: caught unknown exception", ctx);
+        XmlUtils::reportXsltError("xscript:nl2br: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -1160,26 +1160,26 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
         ctx = Stylesheet::getContext(tctx);
 
         if (node == NULL) {
-            XmlUtils::reportXsltError("xscript:ExtElementBlock: no current node", ctx);
+            XmlUtils::reportXsltError("xscript:ExtElementBlock: no current node", tctx);
             return;
         }
         if (inst == NULL) {
-            XmlUtils::reportXsltError("xscript:ExtElementBlock: no instruction", ctx);
+            XmlUtils::reportXsltError("xscript:ExtElementBlock: no instruction", tctx);
             return;
         }
         if (tctx->insert == NULL) {
-            XmlUtils::reportXsltError("xscript:ExtElementBlock: no insertion point", ctx);
+            XmlUtils::reportXsltError("xscript:ExtElementBlock: no insertion point", tctx);
             return;
         }
         
         Stylesheet *stylesheet = Stylesheet::getStylesheet(tctx);
         if (NULL == ctx || NULL == stylesheet) {
-            XmlUtils::reportXsltError("xscript:ExtElementBlock: no context or stylesheet", ctx);
+            XmlUtils::reportXsltError("xscript:ExtElementBlock: no context or stylesheet", tctx);
             return;
         }
         Block *block = stylesheet->block(inst);
         if (NULL == block) {
-            XmlUtils::reportXsltError("xscript:ExtElementBlock: no block found", ctx);
+            XmlUtils::reportXsltError("xscript:ExtElementBlock: no block found", tctx);
             return;
         }
 
@@ -1188,7 +1188,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
             block->startTimer(ctx);
             result = block->invoke(ctx);
             if (NULL == result.doc.get()) {
-                XmlUtils::reportXsltError("xscript:ExtElementBlock: empty result", ctx);
+                XmlUtils::reportXsltError("xscript:ExtElementBlock: empty result", tctx);
             }
         }
         catch (const InvokeError &e) {
@@ -1203,10 +1203,10 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
         }
     }
     catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:ExtElementBlock: caught exception: " + std::string(e.what()), ctx);
+        XmlUtils::reportXsltError("xscript:ExtElementBlock: caught exception: " + std::string(e.what()), tctx);
     }
     catch (...) {
-        XmlUtils::reportXsltError("xscript:ExtElementBlock: caught unknown exception", ctx);
+        XmlUtils::reportXsltError("xscript:ExtElementBlock: caught unknown exception", tctx);
     }
 }
 

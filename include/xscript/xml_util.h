@@ -38,7 +38,7 @@ public:
     static void printXMLError(const std::string& postfix);
 
     static void reportXsltError(const std::string &error, xmlXPathParserContextPtr ctxt);
-    static void reportXsltError(const std::string &error, const Context *ctx);
+    static void reportXsltError(const std::string &error, xsltTransformContextPtr tctx);
 
     static xmlParserInputPtr entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt);
 

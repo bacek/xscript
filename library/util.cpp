@@ -454,12 +454,25 @@ InvokeError::InvokeError(const std::string &error, const std::string &name, cons
 
 void
 InvokeError::add(const std::string &name, const std::string &value) {
-    info_.push_back(std::make_pair(name, value));
+    if (name.empty()) {
+        throw std::runtime_error("empty key");
+    }
+    if (!value.empty()) {
+        std::pair<std::string, std::string> info = std::make_pair(name, value);
+        if (info_.empty()) {
+            info_.push_back(info);
+            return;
+        }
+        InfoMapType::iterator it = std::find(info_.begin(), info_.end(), info);
+        if (info_.end() != it) {
+            info_.push_back(info);
+        }
+    }
 }
 
 void
 InvokeError::addEscaped(const std::string &name, const std::string &value) {
-    info_.push_back(std::make_pair(name, XmlUtils::escape(value)));
+    add(name, XmlUtils::escape(value));
 }
 
 std::string

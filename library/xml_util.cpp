@@ -238,6 +238,12 @@ void
 XmlUtils::reportXsltError(const std::string &error, xmlXPathParserContextPtr ctxt) {
     xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
 
+    reportXsltError(error, tctx);
+}
+
+void
+XmlUtils::reportXsltError(const std::string &error, xsltTransformContextPtr tctx) {
+
     Context *ctx = NULL;
     if (NULL != tctx) {
         try {
@@ -250,12 +256,6 @@ XmlUtils::reportXsltError(const std::string &error, xmlXPathParserContextPtr ctx
         }
     }
 
-    reportXsltError(error, ctx);
-
-}
-
-void
-XmlUtils::reportXsltError(const std::string &error, const Context *ctx) {
     if (NULL == ctx) {
         log()->error("%s", error.c_str());
     }

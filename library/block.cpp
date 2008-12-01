@@ -307,6 +307,11 @@ Block::errorResult(const char *error) const {
     return errorResult(error, InvokeError::InfoMapType());
 }
 
+void
+Block::throwBadArityError() const {
+    throw CriticalInvokeError("bad arity");
+}
+
 bool
 Block::checkGuard(Context *ctx) const {
     if (!guard_.empty()) {

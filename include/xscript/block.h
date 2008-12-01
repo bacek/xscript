@@ -77,6 +77,8 @@ public:
     InvokeResult errorResult(const char *error) const;
     InvokeResult errorResult(const char *error, const InvokeError::InfoMapType &error_info) const;
 
+    void throwBadArityError() const;
+
     Logger * log() const {
         return extension_->getLogger();
     }

@@ -97,7 +97,7 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
     const std::vector<Param*> &p = params();
 
     if (p.size() < 1 || p.size() > 2) {
-        throw CriticalInvokeError("bad arity");
+        throwBadArityError();
     }
 
     std::string url = p[0]->asString(ctx);
@@ -178,7 +178,7 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
     const std::vector<Param*> &p = params();
 
     if (p.size() < 2 || p.size() > 3) {
-        throw CriticalInvokeError("bad arity");
+        throwBadArityError();
     }
 
     std::string url = p[0]->asString(ctx);
@@ -220,7 +220,7 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
     const std::vector<Param*> &p = params();
 
     if (p.size() != 1 || tagged()) {
-        throw CriticalInvokeError("bad arity");
+        throwBadArityError();
     }
 
     std::string url = p[0]->asString(ctx);
@@ -265,7 +265,7 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
     const std::vector<Param*> &p = params();
 
     if (p.size() != 1 || tagged()) {
-        throw CriticalInvokeError("bad arity");
+        throwBadArityError();
     }
 
     std::string url = p[0]->asString(ctx);
