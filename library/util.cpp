@@ -464,7 +464,7 @@ InvokeError::add(const std::string &name, const std::string &value) {
             return;
         }
         InfoMapType::iterator it = std::find(info_.begin(), info_.end(), info);
-        if (info_.end() != it) {
+        if (info_.end() == it) {
             info_.push_back(info);
         }
     }
