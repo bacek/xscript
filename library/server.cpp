@@ -74,7 +74,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
     xmlOutputBufferPtr buf = NULL;
     const std::string &script_name = request_data->request()->getScriptFilename();
     std::string url = request_data->request()->getOriginalUrl();
-    log()->warn("original url: %s", url.c_str());
+    log()->info("original url: %s", url.c_str());
     try {
         PROFILER(log(), "overall time for " + script_name);
         log()->info("requested file: %s", script_name.c_str());
