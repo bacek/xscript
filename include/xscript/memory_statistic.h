@@ -20,6 +20,14 @@ void initAllocationStatistic();
  */
 size_t getAllocatedMemory();
 
+static bool statistic_enable = false;
+
+struct MemoryStatisticRegisterer {
+    MemoryStatisticRegisterer() {
+        statistic_enable = true;
+    }
+};
+
 } // namespace xscript
 
 #endif // _XSCRIPT_MEMORY_STATISTIC_H_
