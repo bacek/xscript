@@ -100,8 +100,8 @@ public:
     void forceNoThreaded(bool value);
     bool noXsltPort() const;
     void noXsltPort(bool value);
-    std::string getXsltError(Block *block) const;
-    void assignXsltError(Block *block, const std::string &error_message);
+    std::string getXsltError(const Block *block) const;
+    void assignXsltError(const Block *block, const std::string &error_message);
 
     const TimeoutCounter& timer() const;
     void startTimer(int timeout);
@@ -131,7 +131,7 @@ private:
 
     unsigned int flags_;
 
-    std::map<Block*, std::string> xslt_errors_;
+    std::map<const Block*, std::string> xslt_errors_;
 
     std::map<std::string, boost::any> params_;
     mutable boost::mutex params_mutex_, results_mutex_, node_list_mutex_, xslt_errors_mutex_;

@@ -50,7 +50,7 @@ public:
 
     static Context* getContext(xsltTransformContextPtr tctx);
     static Stylesheet* getStylesheet(xsltTransformContextPtr tctx);
-    static Block* getBlock(xsltTransformContextPtr tctx);
+    static const Block* getBlock(xsltTransformContextPtr tctx);
     static boost::shared_ptr<Stylesheet> create(const std::string &name);
 
     Block* block(xmlNodePtr node);
@@ -71,7 +71,7 @@ protected:
 
     void appendXsltParams(const std::vector<Param*>& params, const Context *ctx, xsltTransformContextPtr tctx);
 
-    static void attachContextData(xsltTransformContextPtr tctx, Context *ctx, Stylesheet *stylesheet, Block *block);
+    static void attachContextData(xsltTransformContextPtr tctx, Context *ctx, Stylesheet *stylesheet, const Block *block);
     static boost::shared_ptr<Stylesheet> createWithParse(const std::string &name);
 
 private:

@@ -237,9 +237,9 @@ Context::noXsltPort(bool value) {
 }
 
 std::string
-Context::getXsltError(Block *block) const {
+Context::getXsltError(const Block *block) const {
     boost::mutex::scoped_lock lock(xslt_errors_mutex_);
-    std::map<Block*, std::string>::const_iterator it = xslt_errors_.find(block);
+    std::map<const Block*, std::string>::const_iterator it = xslt_errors_.find(block);
     if (xslt_errors_.end() == it) {
         return std::string();
     }
@@ -247,7 +247,7 @@ Context::getXsltError(Block *block) const {
 }
 
 void
-Context::assignXsltError(Block *block, const std::string &error_message) {
+Context::assignXsltError(const Block *block, const std::string &error_message) {
     boost::mutex::scoped_lock lock(xslt_errors_mutex_);
     xslt_errors_[block].assign(error_message);
 }

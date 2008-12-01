@@ -52,7 +52,7 @@ struct ContextData {
     ContextData();
     Context *ctx;
     Stylesheet *stylesheet;
-    Block *block;
+    const Block *block;
 };
 
 ContextData::ContextData() : ctx(NULL), stylesheet(NULL), block(NULL) {
@@ -342,7 +342,7 @@ Stylesheet::detectContentType(const XmlDocHelper &doc) const {
 }
 
 void
-Stylesheet::attachContextData(xsltTransformContextPtr tctx, Context *ctx, Stylesheet *stylesheet, Block *block) {
+Stylesheet::attachContextData(xsltTransformContextPtr tctx, Context *ctx, Stylesheet *stylesheet, const Block *block) {
     ContextData* data = static_cast<ContextData*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
     XmlUtils::throwUnless(NULL != data);
     data->ctx = ctx;
@@ -364,7 +364,7 @@ Stylesheet::getStylesheet(xsltTransformContextPtr tctx) {
     return data->stylesheet;
 }
 
-Block*
+const Block*
 Stylesheet::getBlock(xsltTransformContextPtr tctx) {
     ContextData* data = static_cast<ContextData*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
     XmlUtils::throwUnless(NULL != data);
