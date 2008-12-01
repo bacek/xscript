@@ -30,6 +30,7 @@
 #include "xscript/context.h"
 #include "xscript/response.h"
 #include "xscript/extension.h"
+#include "xscript/operation_mode.h"
 #include "xscript/profiler.h"
 #include "xscript/stylesheet.h"
 #include "xscript/script_cache.h"
@@ -172,8 +173,15 @@ Script::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
         log()->info("applying stylesheet to %s", name().c_str());
         ctx->createDocumentWriter(stylesheet);
         Object::applyStylesheet(stylesheet, ctx, doc, false);
+        std::string postfix = "Script: " + name() + ". Main stylesheet: " + stylesheet->name();
+        if (!OperationMode::instance()->isProduction()) {
+            std::string result = ctx->rootContext()->getXsltError(NULL);
+            if (!result.empty()) {
+                result += ". " + postfix;
+                throw InvokeError(result.c_str());
+            }
+        }
         if (XmlUtils::hasXMLError()) {
-            std::string postfix = "Script: " + name() + ". Main stylesheet: " + stylesheet->name();
             XmlUtils::printXMLError(postfix);
         }
     }

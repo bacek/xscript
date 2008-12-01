@@ -62,6 +62,13 @@ private:
     InfoMapType info_;
 };
 
+class CriticalInvokeError : public InvokeError {
+public:
+    CriticalInvokeError(const std::string &error) : InvokeError(error) {}
+    CriticalInvokeError(const std::string &error, const std::string &name, const std::string &value) :
+        InvokeError(error, name, value) {}
+};
+
 class Encoder;
 
 class StringUtils : private boost::noncopyable {

@@ -52,9 +52,10 @@ struct ContextData {
     ContextData();
     Context *ctx;
     Stylesheet *stylesheet;
+    Block *block;
 };
 
-ContextData::ContextData() : ctx(NULL), stylesheet(NULL) {
+ContextData::ContextData() : ctx(NULL), stylesheet(NULL), block(NULL) {
 }
 
 
@@ -96,7 +97,7 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 
     log()->debug("%s: transform context created", name().c_str());
 
-    attachContextData(tctx.get(), ctx, this);
+    attachContextData(tctx.get(), ctx, this, dynamic_cast<Block*>(obj));
 
     bool use_profile = false;
     const Server* server = VirtualHostData::instance()->getServer();
@@ -341,11 +342,12 @@ Stylesheet::detectContentType(const XmlDocHelper &doc) const {
 }
 
 void
-Stylesheet::attachContextData(xsltTransformContextPtr tctx, Context *ctx, Stylesheet *stylesheet) {
+Stylesheet::attachContextData(xsltTransformContextPtr tctx, Context *ctx, Stylesheet *stylesheet, Block *block) {
     ContextData* data = static_cast<ContextData*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
     XmlUtils::throwUnless(NULL != data);
     data->ctx = ctx;
     data->stylesheet = stylesheet;
+    data->block = block;
 }
 
 Context*
@@ -360,6 +362,13 @@ Stylesheet::getStylesheet(xsltTransformContextPtr tctx) {
     ContextData* data = static_cast<ContextData*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
     XmlUtils::throwUnless(NULL != data);
     return data->stylesheet;
+}
+
+Block*
+Stylesheet::getBlock(xsltTransformContextPtr tctx) {
+    ContextData* data = static_cast<ContextData*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
+    XmlUtils::throwUnless(NULL != data);
+    return data->block;
 }
 
 boost::shared_ptr<Stylesheet>

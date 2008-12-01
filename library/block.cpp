@@ -21,6 +21,7 @@
 #include "xscript/block.h"
 #include "xscript/logger.h"
 #include "xscript/object.h"
+#include "xscript/operation_mode.h"
 #include "xscript/context.h"
 #include "xscript/vhost_data.h"
 #include "xscript/stylesheet.h"
@@ -165,6 +166,13 @@ Block::invokeInternal(Context *ctx) {
 
         return InvokeResult(processResponse(ctx, doc, a), true);
     }
+    catch (CriticalInvokeError &e) {
+        if (!OperationMode::instance()->isProduction()) {
+            e.add("method", method());
+            throw CriticalInvokeError(e.what_info());
+        }
+        return errorResult(e.what(), e.info());
+    }
     catch (const InvokeError &e) {
         return errorResult(e.what(), e.info());
     }
@@ -231,6 +239,12 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
         XmlUtils::throwUnless(NULL != doc.get());
         log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
 
+        if (!OperationMode::instance()->isProduction()) {
+            std::string result = ctx->rootContext()->getXsltError(this);
+            if (!result.empty()) {
+                throw CriticalInvokeError(result.c_str(), "xslt", xsltName());
+            }
+        }
         if (XmlUtils::hasXMLError()) {
             std::string postfix =
                 "Script: " + owner()->name() +

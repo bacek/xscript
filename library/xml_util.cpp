@@ -238,10 +238,11 @@ void
 XmlUtils::reportXsltError(const std::string &error, xmlXPathParserContextPtr ctxt) {
     xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
 
-    const Context *ctx = NULL;
+    Context *ctx = NULL;
     if (NULL != tctx) {
         try {
             ctx = Stylesheet::getContext(tctx);
+            ctx->rootContext()->assignXsltError(Stylesheet::getBlock(tctx), error);
         }
         catch(const std::exception &e) {
             log()->error("caught exception during handling of error: %s. Exception: %s", error.c_str(), e.what());

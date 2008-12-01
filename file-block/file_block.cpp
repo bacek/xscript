@@ -67,7 +67,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     const std::vector<Param*> &p = params();
 
     if (p.size() < 1 || p.size() > 2) {
-        throw std::logic_error("bad arity");
+        throw CriticalInvokeError("bad arity");
     }
 
     std::string filename = p[0]->asString(ctx);

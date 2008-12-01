@@ -236,6 +236,22 @@ Context::noXsltPort(bool value) {
     flag(FLAG_NO_XSLT_PORT, value);
 }
 
+std::string
+Context::getXsltError(Block *block) const {
+    boost::mutex::scoped_lock lock(xslt_errors_mutex_);
+    std::map<Block*, std::string>::const_iterator it = xslt_errors_.find(block);
+    if (xslt_errors_.end() == it) {
+        return std::string();
+    }
+    return it->second;
+}
+
+void
+Context::assignXsltError(Block *block, const std::string &error_message) {
+    boost::mutex::scoped_lock lock(xslt_errors_mutex_);
+    xslt_errors_[block].assign(error_message);
+}
+
 void
 Context::parentContext(Context* context) {
     parent_context_ = context;

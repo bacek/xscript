@@ -98,20 +98,14 @@ void
 Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh, Context *ctx, XmlDocHelper &doc, bool need_copy) {
 
     assert(NULL != doc.get());
-    try {
-        if (need_copy) {
-            XmlDocHelper newdoc = sh->apply(this, ctx, doc);
-            doc = XmlDocHelper(xmlCopyDoc(newdoc.get(), 1));
-        }
-        else {
-            doc = sh->apply(this, ctx, doc);
-        }
-        XmlUtils::throwUnless(NULL != doc.get());
+    if (need_copy) {
+        XmlDocHelper newdoc = sh->apply(this, ctx, doc);
+        doc = XmlDocHelper(xmlCopyDoc(newdoc.get(), 1));
     }
-    catch (const std::exception &e) {
-        log()->crit("caught exception while applying xslt [%s]: %s", sh->name().c_str(), e.what());
-        throw;
+    else {
+        doc = sh->apply(this, ctx, doc);
     }
+    XmlUtils::throwUnless(NULL != doc.get());
 }
 
 } // namespace xscript

@@ -9,6 +9,7 @@
 
 namespace xscript {
 
+class Block;
 class Param;
 class Context;
 class Stylesheet;
