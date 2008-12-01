@@ -109,6 +109,11 @@ inline void luaPushStack(lua_State* lua, bool b) {
     lua_pushboolean(lua, b);
 }
 
+template<>
+inline void luaPushStack(lua_State* lua, std::streamsize s) {
+    lua_pushnumber(lua, s);
+}
+
 } // namespace xscript
 
 #endif // _XSCRIPT_LUA_EXTRACT_H_
