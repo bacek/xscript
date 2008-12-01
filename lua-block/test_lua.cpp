@@ -182,10 +182,29 @@ public:
         return size;
     };
 
+    void setIsSecure(bool is) {
+        is_secure = is;
+    }
+
+    bool isSecure() const {
+        return is_secure;
+    }
+
+    void setContentLength(std::streamsize length) {
+        content_length = length;
+    }
+
+    std::streamsize getContentLength() const {
+        return content_length;
+    }
+
     unsigned short status;
     std::string content_type;
+    std::streamsize content_length;
     std::map<std::string, std::string> headers;
     std::map<std::string, Cookie> cookies;
+
+    bool is_secure;
 };
 
 void
@@ -198,6 +217,8 @@ LuaTest::testRequest() {
     fake_request->setArg("query", "QUERY");
     fake_request->addInputHeader("Host", "fireball.yandex.ru");
     fake_request->addInputCookie("SessionId", "2.12.85.0.6");
+    fake_request->setIsSecure(true);
+    fake_request->setContentLength(42);
 
     boost::shared_ptr<RequestData> data(new RequestData(request, state));
     boost::shared_ptr<Script> script = Script::create("lua-request.xml");
@@ -206,9 +227,11 @@ LuaTest::testRequest() {
 
     XmlDocHelper doc(script->invoke(ctx));
 
-    CPPUNIT_ASSERT("QUERY" == state->asString("test args"));
-    CPPUNIT_ASSERT("fireball.yandex.ru" == state->asString("test headers"));
-    CPPUNIT_ASSERT("2.12.85.0.6" == state->asString("test cookies"));
+    CPPUNIT_ASSERT_EQUAL(std::string("QUERY"), state->asString("test args"));
+    CPPUNIT_ASSERT_EQUAL(std::string("fireball.yandex.ru"), state->asString("test headers"));
+    CPPUNIT_ASSERT_EQUAL(std::string("2.12.85.0.6"), state->asString("test cookies"));
+    CPPUNIT_ASSERT_EQUAL(true, state->asBool("test isSecure"));
+    CPPUNIT_ASSERT_EQUAL(42LL, state->asLongLong("test content_length"));
 }
 
 void
