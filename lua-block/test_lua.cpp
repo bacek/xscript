@@ -231,7 +231,7 @@ LuaTest::testRequest() {
     CPPUNIT_ASSERT_EQUAL(std::string("fireball.yandex.ru"), state->asString("test headers"));
     CPPUNIT_ASSERT_EQUAL(std::string("2.12.85.0.6"), state->asString("test cookies"));
     CPPUNIT_ASSERT_EQUAL(true, state->asBool("test isSecure"));
-    CPPUNIT_ASSERT_EQUAL(42LL, state->asLongLong("test content_length"));
+    CPPUNIT_ASSERT_EQUAL(boost::int64_t(42), state->asLongLong("test content_length"));
 }
 
 void
