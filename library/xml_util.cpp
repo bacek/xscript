@@ -271,6 +271,13 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
     log()->info("entityResolver. url: %s, id: %s", url ? url : "", id ? id : "");
 
     try {
+        if ((strncasecmp(url, "http://", sizeof("http://") - 1) == 0) ||
+            (strncasecmp(url, "https://", sizeof("https://") - 1) == 0)) {
+            log()->warn("entityResolver: loading remote entity is forbidden. URL: %s. ID: %s",
+                url ? url : "", id ? id : "");
+            return NULL;
+        }
+
         std::string fileName = Policy::instance()->getPathByScheme(NULL, url);
         if (default_loader_ != NULL) {
             ret = default_loader_(fileName.c_str(), id, ctxt);

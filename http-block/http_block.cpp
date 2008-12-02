@@ -299,7 +299,7 @@ HttpBlock::response(const HttpHelper &helper) const {
     if (helper.isXml()) {
         return XmlDocHelper(xmlReadMemory(str.c_str(), str.size(), "",
                                           charset_.empty() ? NULL : charset_.c_str(),
-                                          XML_PARSE_DTDATTR | XML_PARSE_NOENT | XML_PARSE_NONET));
+                                          XML_PARSE_DTDATTR | XML_PARSE_NOENT));
     }
     else if (helper.contentType() == "text/plain") {
         std::string res;
@@ -310,7 +310,7 @@ HttpBlock::response(const HttpHelper &helper) const {
         std::string data = XmlUtils::sanitize(str);
         return XmlDocHelper(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
                                           helper.charset().c_str(),
-                                          XML_PARSE_DTDATTR | XML_PARSE_NOENT | XML_PARSE_NONET));
+                                          XML_PARSE_DTDATTR | XML_PARSE_NOENT));
     }
     throw InvokeError("format is not recognized: " + helper.contentType(), "url", helper.url());
 }

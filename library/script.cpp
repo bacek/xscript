@@ -108,14 +108,14 @@ Script::parse() {
     {
         IncludeModifiedTimeSetter setter(this);
         doc_ = XmlDocHelper(xmlReadFile((const char*) canonic_path.get(), NULL,
-            XML_PARSE_DTDATTR | XML_PARSE_NOENT | XML_PARSE_NONET));
+            XML_PARSE_DTDATTR | XML_PARSE_NOENT));
 
         XmlUtils::throwUnless(NULL != doc_.get());
         if (NULL == doc_->children) {
             throw std::runtime_error("got empty xml doc");
         }
 
-        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc_.get(), XML_PARSE_NOENT | XML_PARSE_NONET) >= 0);
+        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc_.get(), XML_PARSE_NOENT) >= 0);
     }
 
     std::vector<xmlNodePtr> xscript_nodes;

@@ -124,13 +124,13 @@ FileBlock::loadFile(const std::string& file_name, Context *ctx) {
     XmlDocHelper doc(xmlReadFile(
                          file_name.c_str(),
                          NULL,
-                         XML_PARSE_DTDATTR | XML_PARSE_NOENT | XML_PARSE_NONET)
+                         XML_PARSE_DTDATTR | XML_PARSE_NOENT)
                     );
 
     XmlUtils::throwUnless(NULL != doc.get());
 
     if (processXInclude_) {
-        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT | XML_PARSE_NONET) >= 0);
+        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT) >= 0);
     }
     return doc;
 }
