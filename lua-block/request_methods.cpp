@@ -61,123 +61,148 @@ struct lua_request_method<2> {
     }
 };
 
+// Automatically deduce template specialisation to call.
+template<typename Class, typename Ret>
+int
+call_method(lua_State *lua, Ret (Class::*func)()) {
+    return lua_request_method<1>::invoke(lua, std::mem_fun(func));
+}
+
+template<typename Class, typename Ret>
+int
+call_method(lua_State *lua, Ret (Class::*func)() const) {
+    return lua_request_method<1>::invoke(lua, std::mem_fun(func));
+}
+
+template<typename Class, typename Ret, typename A0>
+int
+call_method(lua_State *lua, Ret (Class::*func)(A0)) {
+    return lua_request_method<2>::invoke(lua, std::mem_fun(func));
+}
+
+template<typename Class, typename Ret, typename A0>
+int
+call_method(lua_State *lua, Ret (Class::*func)(A0) const) {
+    return lua_request_method<2>::invoke(lua, std::mem_fun(func));
+}
+
 
 extern "C" int
 luaRequestGetArg(lua_State *lua) throw () {
-    return lua_request_method<2>::invoke(lua, boost::bind(&Request::getArg, _1, _2));
+    return call_method(lua, &Request::getArg);
 }
 
 extern "C" int
 luaRequestGetHeader(lua_State *lua) throw () {
-    return lua_request_method<2>::invoke(lua, boost::bind(&Request::getHeader, _1, _2));
+    return call_method(lua, &Request::getHeader);
 }
 
 extern "C" int
 luaRequestGetCookie(lua_State *lua) throw () {
-    return lua_request_method<2>::invoke(lua, boost::bind(&Request::getCookie, _1, _2));
+    return call_method(lua, &Request::getCookie);
 }
 
 extern "C" int
 luaRequestHasArg(lua_State *lua) throw () {
-    return lua_request_method<2>::invoke(lua, boost::bind(&Request::hasArg, _1, _2));
+    return call_method(lua, &Request::hasArg);
 }
 
 extern "C" int
 luaRequestHasHeader(lua_State *lua) throw () {
-    return lua_request_method<2>::invoke(lua, boost::bind(&Request::hasHeader, _1, _2));
+    return call_method(lua, &Request::hasHeader);
 }
 
 extern "C" int
 luaRequestHasCookie(lua_State *lua) throw () {
-    return lua_request_method<2>::invoke(lua, boost::bind(&Request::hasCookie, _1, _2));
+    return call_method(lua, &Request::hasCookie);
 }
 
 extern "C" int
 luaRequestGetURI(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getURI, _1));
+    return call_method(lua, &Request::getURI);
 }
 
 extern "C" int
 luaRequestGetPath(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getScriptName, _1));
+    return call_method(lua, &Request::getScriptName);
 }
 
 extern "C" int
 luaRequestGetQuery(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getQueryString, _1));
+    return call_method(lua, &Request::getQueryString);
 }
 
 extern "C"
 int
 luaRequestIsSecure(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::isSecure, _1));
+    return call_method(lua, &Request::isSecure);
 }
 
 extern "C" int
 luaRequestGetScriptName(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getScriptName, _1));
+    return call_method(lua, &Request::getScriptName);
 }
 
 extern "C" int
 luaRequestGetMethod(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getRequestMethod, _1));
+    return call_method(lua, &Request::getRequestMethod);
 }
 
 extern "C" int
 luaRequestGetRemoteIp(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getRealIP, _1));
+    return call_method(lua, &Request::getRealIP);
 }
 
 extern "C" int
 luaRequestGetHostname(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getHost, _1));
+    return call_method(lua, &Request::getHost);
 }
 
 extern "C" int
 luaRequestGetPathInfo(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getPathInfo, _1));
+    return call_method(lua, &Request::getPathInfo);
 }
 
 extern "C" int
 luaRequestGetRealPath(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getPathTranslated, _1));
+    return call_method(lua, &Request::getPathTranslated);
 }
 
 extern "C" int
 luaRequestGetHTTPUser(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getRemoteUser, _1));
+    return call_method(lua, &Request::getRemoteUser);
 }
 
 
 extern "C" int
 luaRequestGetContentLength(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getContentLength, _1));
+    return call_method(lua, &Request::getContentLength);
 }
 
 
 extern "C" int
 luaRequestGetContentType(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getContentType, _1));
+    return call_method(lua, &Request::getContentType);
 }
 
 extern "C" int
 luaRequestGetContentEncoding(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getContentEncoding, _1));
+    return call_method(lua, &Request::getContentEncoding);
 }
 
 extern "C" int
 luaRequestGetOriginalHost(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getOriginalHost, _1));
+    return call_method(lua, &Request::getOriginalHost);
 }
 
 extern "C" int
 luaRequestGetOriginalURI(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getOriginalURI, _1));
+    return call_method(lua, &Request::getOriginalURI);
 }
 
 extern "C" int
 luaRequestGetOriginalUrl(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, boost::bind(&Request::getOriginalUrl, _1));
+    return call_method(lua, &Request::getOriginalUrl);
 }
 
 
