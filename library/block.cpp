@@ -423,11 +423,6 @@ Block::property(const char *name, const char *value) {
     else if (strncasecmp(name, "xslt", sizeof("xslt")) == 0) {
         xsltName(value);
     }
-    else if (strncasecmp(name, "strip-root-element", sizeof("strip-root-element")) == 0) {
-        if(strncasecmp(value, "yes", sizeof("yes")) == 0) {
-            xpointer_expr_.assign("/*/node()");
-        }
-    }
     else if (strncasecmp(name, "xpointer", sizeof("xpointer")) == 0) {
         xpointer_expr_.assign(value);
     }
