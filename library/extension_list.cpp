@@ -76,19 +76,19 @@ ExtensionList::registerExtension(ExtensionHolder ext) {
 }
 
 Extension*
-ExtensionList::extension(const xmlNodePtr node, bool check_empty_namespace) const {
+ExtensionList::extension(const xmlNodePtr node, bool allow_empty_namespace) const {
     const char *name = (const char*) node->name;
     const char *ref = node->ns ? (const char*) node->ns->href : NULL;
-    return extension(name, ref, check_empty_namespace);
+    return extension(name, ref, allow_empty_namespace);
 }
 
 Extension*
-ExtensionList::extension(const char *name, const char *ref, bool check_empty_namespace) const {
+ExtensionList::extension(const char *name, const char *ref, bool allow_empty_namespace) const {
     if (XSCRIPT_UNLIKELY(NULL == name)) {
         return NULL;
     }
     for (std::vector<Extension*>::const_iterator i = extensions_.begin(), end = extensions_.end(); i != end; ++i) {
-        if (accepts((*i), name, ref, check_empty_namespace)) {
+        if (accepts((*i), name, ref, allow_empty_namespace)) {
             return (*i);
         }
     }
@@ -96,7 +96,7 @@ ExtensionList::extension(const char *name, const char *ref, bool check_empty_nam
 }
 
 bool
-ExtensionList::accepts(Extension *ext, const char *name, const char *ref, bool check_empty_namespace) const {
+ExtensionList::accepts(Extension *ext, const char *name, const char *ref, bool allow_empty_namespace) const {
 
     const char *ename = (const char*) ext->name();
     const char *extref = (const char*) ext->nsref();
@@ -106,7 +106,7 @@ ExtensionList::accepts(Extension *ext, const char *name, const char *ref, bool c
     }
     
     if (NULL == ref) {
-	if (check_empty_namespace) {
+	if (!allow_empty_namespace) {
 	    return false;
 	} 
     }

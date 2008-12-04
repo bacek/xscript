@@ -81,7 +81,7 @@ LoaderTest::testLuaLoad() {
     using namespace xscript;
     boost::shared_ptr<Loader> loader = Loader::instance();
     loader->load("../lua-block/.libs/xscript-lua.so");
-    Extension *ext = ExtensionList::instance()->extension("lua", XmlUtils::XSCRIPT_NAMESPACE, false);
+    Extension *ext = ExtensionList::instance()->extension("lua", XmlUtils::XSCRIPT_NAMESPACE, true);
     CPPUNIT_ASSERT(NULL != ext);
 }
 
@@ -91,7 +91,7 @@ LoaderTest::testMistLoad() {
     using namespace xscript;
     boost::shared_ptr<Loader> loader = Loader::instance();
     loader->load("../mist-block/.libs/xscript-mist.so");
-    Extension *ext = ExtensionList::instance()->extension("mist", XmlUtils::XSCRIPT_NAMESPACE, false);
+    Extension *ext = ExtensionList::instance()->extension("mist", XmlUtils::XSCRIPT_NAMESPACE, true);
     CPPUNIT_ASSERT(NULL != ext);
 }
 
@@ -101,7 +101,7 @@ LoaderTest::testHttpLoad() {
     using namespace xscript;
     boost::shared_ptr<Loader> loader = Loader::instance();
     loader->load("../http-block/.libs/xscript-http.so");
-    Extension *ext = ExtensionList::instance()->extension("http", XmlUtils::XSCRIPT_NAMESPACE, false);
+    Extension *ext = ExtensionList::instance()->extension("http", XmlUtils::XSCRIPT_NAMESPACE, true);
     CPPUNIT_ASSERT(NULL != ext);
 }
 
@@ -110,8 +110,8 @@ LoaderTest::testModuleEqual() {
 
     using namespace xscript;
     boost::shared_ptr<Loader> loader = Loader::instance();
-    Extension *e1 = ExtensionList::instance()->extension("mist", XmlUtils::XSCRIPT_NAMESPACE, false);
-    Extension *e2 = ExtensionList::instance()->extension("mist", XmlUtils::XSCRIPT_NAMESPACE, false);
+    Extension *e1 = ExtensionList::instance()->extension("mist", XmlUtils::XSCRIPT_NAMESPACE, true);
+    Extension *e2 = ExtensionList::instance()->extension("mist", XmlUtils::XSCRIPT_NAMESPACE, true);
     CPPUNIT_ASSERT_EQUAL(e1, e2);
 }
 

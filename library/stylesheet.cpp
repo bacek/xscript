@@ -225,7 +225,7 @@ Stylesheet::parseNode(xmlNodePtr node) {
                 log()->debug("%s, block %s already created (node %p)", name().c_str(), prev_block->name(), node);
                 continue;
             }
-            Extension *ext = elist->extension(node, true);
+            Extension *ext = elist->extension(node, false);
             if (NULL != ext) {
                 log()->debug("%s, creating block %s (node %p)", name().c_str(), ext->name(), node);
                 std::auto_ptr<Block> b = ext->createBlock(this, node);
