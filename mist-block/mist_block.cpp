@@ -899,7 +899,7 @@ MistBlock::location(Context *ctx) {
     ctx->response()->setHeader("Location", location);
 
     XmlNode node("location");
-    node.setContent(location.c_str());
+    node.setContent(XmlUtils::escape(location).c_str());
     return node.releaseNode();
 }
 
