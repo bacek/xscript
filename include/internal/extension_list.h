@@ -33,12 +33,12 @@ public:
 
     void registerExtension(ExtensionHolder ext);
 
-    Extension* extension(const xmlNodePtr node) const;
-    Extension* extension(const char *name, const char *ref) const;
+    Extension* extension(const xmlNodePtr node, bool check_empty_namespace) const;
+    Extension* extension(const char *name, const char *ref, bool check_empty_namespace) const;
 
 private:
     friend class std::auto_ptr<ExtensionList>;
-    bool accepts(Extension *ext, const char *name, const char *ref) const;
+    bool accepts(Extension *ext, const char *name, const char *ref, bool check_empty_namespace) const;
 
 private:
     boost::shared_ptr<Loader> loader_;

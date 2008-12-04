@@ -1,3 +1,10 @@
+xscript (5.47-2) unstable; urgency=low
+
+  * checking empty block namespace added for xsl
+  * xml escaping added to mist::location output
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu,  4 Dec 2008 11:55:02 +0300
+
 xscript (5.47-1) unstable; urgency=low
 
   * strip-root-element removed

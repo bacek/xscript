@@ -58,7 +58,7 @@ ExtensionList::init(const Config *config) {
 
 void
 ExtensionList::registerExtension(ExtensionHolder ext) {
-    if (XSCRIPT_UNLIKELY(NULL != extension(ext->name(), ext->nsref()))) {
+    if (XSCRIPT_UNLIKELY(NULL != extension(ext->name(), ext->nsref(), false))) {
         std::stringstream stream;
         stream << "duplicate extension: " << ext->name();
         throw std::invalid_argument(stream.str());
@@ -76,19 +76,19 @@ ExtensionList::registerExtension(ExtensionHolder ext) {
 }
 
 Extension*
-ExtensionList::extension(const xmlNodePtr node) const {
+ExtensionList::extension(const xmlNodePtr node, bool check_empty_namespace) const {
     const char *name = (const char*) node->name;
     const char *ref = node->ns ? (const char*) node->ns->href : NULL;
-    return extension(name, ref);
+    return extension(name, ref, check_empty_namespace);
 }
 
 Extension*
-ExtensionList::extension(const char *name, const char *ref) const {
+ExtensionList::extension(const char *name, const char *ref, bool check_empty_namespace) const {
     if (XSCRIPT_UNLIKELY(NULL == name)) {
         return NULL;
     }
     for (std::vector<Extension*>::const_iterator i = extensions_.begin(), end = extensions_.end(); i != end; ++i) {
-        if (accepts((*i), name, ref)) {
+        if (accepts((*i), name, ref, check_empty_namespace)) {
             return (*i);
         }
     }
@@ -96,7 +96,7 @@ ExtensionList::extension(const char *name, const char *ref) const {
 }
 
 bool
-ExtensionList::accepts(Extension *ext, const char *name, const char *ref) const {
+ExtensionList::accepts(Extension *ext, const char *name, const char *ref, bool check_empty_namespace) const {
 
     const char *ename = (const char*) ext->name();
     const char *extref = (const char*) ext->nsref();
@@ -104,7 +104,13 @@ ExtensionList::accepts(Extension *ext, const char *name, const char *ref) const 
     if (strncasecmp(ename, name, strlen(ename) + 1) != 0) {
         return false;
     }
-    if (NULL != ref) {
+    
+    if (NULL == ref) {
+	if (check_empty_namespace) {
+	    return false;
+	} 
+    }
+    else {
         return strncasecmp(ref, extref, strlen(extref) + 1) == 0;
     }
     return true;

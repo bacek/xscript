@@ -275,7 +275,7 @@ Script::parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes) {
                 node = node->next;
                 continue;
             }
-            Extension *ext = elist->extension(node);
+            Extension *ext = elist->extension(node, false);
             if (NULL != ext) {
                 log()->debug("%s, creating block %s", name().c_str(), ext->name());
                 std::auto_ptr<Block> b = ext->createBlock(this, node);
