@@ -16,7 +16,9 @@ Sanitizer::~Sanitizer() {
 }
 
 std::string
-Sanitizer::sanitize(const Range &range) {
+Sanitizer::sanitize(const Range &range, const std::string &base_url, int line_limit) {
+	(void)base_url;
+	(void)line_limit;
     Policy::instance()->useDefaultSanitizer();
     return std::string(range.begin(), range.end());
 }

@@ -45,8 +45,8 @@ public:
     static std::string escape(const Range &value);
     template<typename Cont> static std::string escape(const Cont &value);
 
-    static std::string sanitize(const Range &value);
-    template<typename Cont> static std::string sanitize(const Cont &value);
+    static std::string sanitize(const Range &value, const std::string &base_url, int line_limit);
+    template<typename Cont> static std::string sanitize(const Cont &value, const std::string &base_url, int line_limit);
 
     template<typename NodePtr> static const char* value(NodePtr node);
 
@@ -84,8 +84,8 @@ XmlUtils::escape(const Cont &value) {
 }
 
 template<typename Cont> inline std::string
-XmlUtils::sanitize(const Cont &value) {
-    return sanitize(createRange(value));
+XmlUtils::sanitize(const Cont &value, const std::string &base_url, int line_limit) {
+    return sanitize(createRange(value), base_url, line_limit);
 }
 
 template <typename NodePtr> inline const char*

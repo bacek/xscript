@@ -200,8 +200,8 @@ XmlUtils::escape(const Range &range) {
 }
 
 std::string
-XmlUtils::sanitize(const Range &range) {
-    return Sanitizer::instance()->sanitize(range);
+XmlUtils::sanitize(const Range &range, const std::string &base_url, int line_limit) {
+    return Sanitizer::instance()->sanitize(range, base_url, line_limit);
 }
 
 bool
@@ -265,7 +265,7 @@ XmlUtils::reportXsltError(const std::string &error, xsltTransformContextPtr tctx
     }
 }
 
-xmlParserInputPtr 
+xmlParserInputPtr
 XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt) {
     xmlParserInputPtr ret = NULL;
     log()->info("entityResolver. url: %s, id: %s", url ? url : "", id ? id : "");

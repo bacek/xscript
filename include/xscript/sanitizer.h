@@ -12,7 +12,7 @@ public:
     Sanitizer();
     virtual ~Sanitizer();
 
-    virtual std::string sanitize(const Range &range);
+    virtual std::string sanitize(const Range &range, const std::string &base_url, int line_limit);
 };
 
 } // namespace xscript

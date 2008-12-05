@@ -492,28 +492,58 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
 
     XsltParamFetcher params(ctxt, nargs);
 
-    if (1 != nargs) {
+    if (nargs < 1 || nargs > 3) {
         XmlUtils::reportXsltError("xscript:sanitize: bad param count", ctxt);
         return;
     }
 
     const char* str = params.str(0);
     if (NULL == str) {
-        XmlUtils::reportXsltError("xscript:sanitize: bad parameter", ctxt);
+        XmlUtils::reportXsltError("xscript:sanitize: bad parameter content", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
 
-    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
-    if (NULL == tctx) {
-        xmlXPathReturnEmptyNodeSet(ctxt);
-        return;
+    const char *base_url = NULL;
+    if (nargs > 1) {
+		base_url = params.str(1);
+		if (NULL == base_url) {
+			XmlUtils::reportXsltError("xscript:sanitize: bad parameter base url", ctxt);
+			xmlXPathReturnEmptyNodeSet(ctxt);
+			return;
+		}
     }
 
-    Context* ctx = NULL;
+	Context* ctx = NULL;
     try {
+		unsigned int line_limit = 0;
+		if (nargs > 2) {
+			const char* limit_str = params.str(2);
+			if (NULL == limit_str) {
+				XmlUtils::reportXsltError("xscript:sanitize: bad parameter line limit", ctxt);
+				xmlXPathReturnEmptyNodeSet(ctxt);
+				return;
+			}
+			try {
+				line_limit = boost::lexical_cast<unsigned int>(limit_str);
+			}
+			catch(const boost::bad_lexical_cast &e) {
+				XmlUtils::reportXsltError("xscript:sanitize: bad format of line limit parameter", ctxt);
+				xmlXPathReturnEmptyNodeSet(ctxt);
+				return;
+			}
+		}
+
+		xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+		if (NULL == tctx) {
+			xmlXPathReturnEmptyNodeSet(ctxt);
+			return;
+		}
+
         std::stringstream stream;
-        stream << "<sanitized>" << XmlUtils::sanitize(str) << "</sanitized>" << std::endl;
+        stream << "<sanitized>" <<
+			XmlUtils::sanitize(str, base_url ? std::string(base_url) : StringUtils::EMPTY_STRING, line_limit) <<
+				"</sanitized>" << std::endl;
         std::string str = stream.str();
 
         XmlDocHelper doc(xmlParseMemory(str.c_str(), str.length()));
@@ -1171,7 +1201,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
             XmlUtils::reportXsltError("xscript:ExtElementBlock: no insertion point", tctx);
             return;
         }
-        
+
         Stylesheet *stylesheet = Stylesheet::getStylesheet(tctx);
         if (NULL == ctx || NULL == stylesheet) {
             XmlUtils::reportXsltError("xscript:ExtElementBlock: no context or stylesheet", tctx);
@@ -1286,7 +1316,7 @@ XsltExtensions::XsltExtensions() {
     XsltFunctionRegisterer("get-query-arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetQueryArg);
     XsltFunctionRegisterer("get-cookie", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetCookie);
     XsltFunctionRegisterer("get-header", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetHeader);
-    
+
     XsltFunctionRegisterer("http-header-out", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltHttpHeaderOut);
     XsltFunctionRegisterer("http_header_out", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltHttpHeaderOut);
 
