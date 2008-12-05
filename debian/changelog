@@ -1,3 +1,9 @@
+xscript (5.48-0) unstable; urgency=low
+
+  * sanitizer interface expanded
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri,  5 Dec 2008 12:01:21 +0300
+
 xscript (5.47-2) unstable; urgency=low
 
   * checking empty block namespace added for xsl

@@ -307,7 +307,7 @@ HttpBlock::response(const HttpHelper &helper) const {
         return XmlDocHelper(xmlParseMemory(res.c_str(), res.size()));
     }
     else if (helper.contentType() == "text/html") {
-        std::string data = XmlUtils::sanitize(str);
+        std::string data = XmlUtils::sanitize(str, StringUtils::EMPTY_STRING, 0);
         return XmlDocHelper(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
                                           helper.charset().c_str(),
                                           XML_PARSE_DTDATTR | XML_PARSE_NOENT));
