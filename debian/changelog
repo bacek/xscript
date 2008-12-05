@@ -1,8 +1,8 @@
-xscript (5.48-0) unstable; urgency=low
+xscript (5.47-3) unstable; urgency=low
 
   * sanitizer interface expanded
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri,  5 Dec 2008 12:01:21 +0300
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri,  5 Dec 2008 13:00:04 +0300
 
 xscript (5.47-2) unstable; urgency=low
 
