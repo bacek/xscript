@@ -155,7 +155,7 @@ luaRequestGetRemoteIp(lua_State *lua) throw () {
 }
 
 extern "C" int
-luaRequestGetHostname(lua_State *lua) throw () {
+luaRequestGetHost(lua_State *lua) throw () {
     return call_method(lua, &Request::getHost);
 }
 
@@ -224,7 +224,7 @@ static const struct luaL_reg requestlib [] = {
     {"getMethod",       luaRequestGetMethod},
     {"getRemoteIp",     luaRequestGetRemoteIp},
 
-    {"getHostname",     luaRequestGetHostname},
+    {"getHost",     luaRequestGetHost},
     {"getPathInfo",     luaRequestGetPathInfo},
     {"getRealPath",     luaRequestGetRealPath},
     {"getHTTPUser",     luaRequestGetHTTPUser},
