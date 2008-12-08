@@ -3,13 +3,12 @@
 #export DH_VERBOSE=1
 
 CXX = g++
-CPPFLAGS = -D_GNU_SOURCE 
-#CXXFLAGS = -I/usr/include/stlport
-LDFLAGS = -lm
-
 ACLOCAL = /usr/bin/aclocal-1.9
 AUTOMAKE = /usr/bin/automake-1.9
+LIBTOOLIZE = /usr/bin/libtoolize
+
 ACLOCAL_OPTIONS = "-I config"
+LIBTOOLIZE_OPTIONS = --force --copy --ltdl
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CXXFLAGS += -g -O0
@@ -21,7 +20,10 @@ autogen: autogen-stamp
 
 autogen-stamp:
 	dh_testdir
-	ACLOCAL_OPTIONS=$(ACLOCAL_OPTIONS) AUTOMAKE=$(AUTOMAKE) ACLOCAL=$(ACLOCAL) ./autogen.sh
+	rm -rf libltdl && $(LIBTOOLIZE) $(LIBTOOLIZE_OPTIONS)
+	cd libltdl && ../autogen.sh && cd ..
+	ACLOCAL_OPTIONS=$(ACLOCAL_OPTIONS) \
+	AUTOMAKE=$(AUTOMAKE) ACLOCAL=$(ACLOCAL) ./autogen.sh
 	touch autogen-stamp
 	
 configure: configure-stamp
@@ -30,7 +32,7 @@ configure-stamp:
 	dh_testdir
 	CXX="$(CXX)" CPPFLAGS="$(CPPFLAGS)" CXXFLAGS="$(CXXFLAGS) -g" LDFLAGS="$(LDFLAGS)" \
 		./configure --prefix=/usr --sysconfdir=/etc/xscript \
-		--enable-cppunit --enable-maintainer-mode
+		--with-cppunit --enable-maintainer-mode
 	touch configure-stamp
 
 build: build-stamp
