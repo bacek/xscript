@@ -21,7 +21,7 @@ autogen: autogen-stamp
 autogen-stamp:
 	dh_testdir
 	rm -rf libltdl && $(LIBTOOLIZE) $(LIBTOOLIZE_OPTIONS)
-	cd libltdl && ../autogen.sh && cd ..
+	cd libltdl && AUTOMAKE=$(AUTOMAKE) ACLOCAL=$(ACLOCAL) ../autogen.sh && cd ..
 	ACLOCAL_OPTIONS=$(ACLOCAL_OPTIONS) \
 	AUTOMAKE=$(AUTOMAKE) ACLOCAL=$(ACLOCAL) ./autogen.sh
 	touch autogen-stamp
