@@ -1,6 +1,7 @@
 #ifndef _XSCRIPT_RESPONSE_H_
 #define _XSCRIPT_RESPONSE_H_
 
+#include <memory>
 #include <string>
 #include <boost/utility.hpp>
 
