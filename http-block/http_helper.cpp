@@ -54,7 +54,8 @@ HeadersHelper::clear() {
 boost::once_flag HttpHelper::init_flag_ = BOOST_ONCE_INIT;
 
 HttpHelper::HttpHelper(const std::string &url, long timeout) :
-        curl_(NULL), status_(0), url_(url), sent_modified_since_(false) {
+        curl_(NULL), status_(0), url_(url), content_(new std::string),
+        sent_modified_since_(false) {
     curl_ = curl_easy_init();
     if (NULL != curl_) {
         if (timeout > 0) {
@@ -70,7 +71,7 @@ HttpHelper::HttpHelper(const std::string &url, long timeout) :
         setopt(CURLOPT_NOPROGRESS, static_cast<long>(1));
         setopt(CURLOPT_FORBID_REUSE, static_cast<long>(1));
 
-        setopt(CURLOPT_WRITEDATA, &content_);
+        setopt(CURLOPT_WRITEDATA, &*content_);
         setopt(CURLOPT_WRITEFUNCTION, &curlWrite);
         setopt(CURLOPT_WRITEHEADER, &headers_);
         setopt(CURLOPT_HEADERFUNCTION, &curlHeaders);
@@ -149,7 +150,7 @@ HttpHelper::charset() const {
     return charset_;
 }
 
-const std::string&
+boost::shared_ptr<std::string>
 HttpHelper::content() const {
     return content_;
 }
@@ -183,7 +184,7 @@ HttpHelper::checkStatus() const {
         stream << "server responded " << status_;
         processStatusError(stream.str());
     }
-    else if (0 == status_ && 0 == content_.size()) {
+    else if (0 == status_ && 0 == content_->size()) {
         processStatusError("empty local content: possibly not performed");
     }
     else if (304 == status_ && !sent_modified_since_) {
@@ -212,13 +213,13 @@ HttpHelper::createTag() const {
 
         if (im != headers_.end()) {
             tag.last_modified = HttpDateUtils::parse(im->second.c_str());
-            log()->debug("%s, last_modified: %llu", BOOST_CURRENT_FUNCTION, 
+            log()->debug("%s, last_modified: %llu", BOOST_CURRENT_FUNCTION,
                 static_cast<unsigned long long>(tag.last_modified));
         }
         std::multimap<std::string, std::string>::const_iterator ie = headers_.find("expires");
         if (ie != headers_.end()) {
             tag.expire_time = HttpDateUtils::parse(ie->second.c_str());
-            log()->debug("%s, expire_time: %llu", BOOST_CURRENT_FUNCTION, 
+            log()->debug("%s, expire_time: %llu", BOOST_CURRENT_FUNCTION,
                 static_cast<unsigned long long>(tag.expire_time));
         }
     }

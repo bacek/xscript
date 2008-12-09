@@ -10,6 +10,7 @@
 #include "xscript/request_impl.h"
 #include "xscript/request_response.h"
 #include "xscript/util.h"
+#include "xscript/writer.h"
 
 namespace xscript {
 
@@ -81,20 +82,45 @@ public:
 
     virtual void setHeader(const std::string &name, const std::string &value);
     virtual std::streamsize write(const char *buf, std::streamsize size);
+    virtual std::streamsize write(std::auto_ptr<BinaryWriter> writer);
     virtual std::string outputHeader(const std::string &name) const;
 
-    virtual void sendError(unsigned short status, const std::string& message);
+    virtual void sendError(unsigned short status, const std::string &message);
     virtual void sendHeaders();
     virtual bool suppressBody() const;
 
     void attach(std::istream *is, char *env[]);
+    virtual void detach();
+
+    virtual bool isBinary() const;
+
+protected:
+    typedef std::set<Cookie, CookieLess> CookieSet;
+    const HeaderMap& outHeaders() const;
+    const CookieSet& outCookies() const;
 
 private:
     DefaultRequestResponse(const DefaultRequestResponse &);
     DefaultRequestResponse& operator = (const DefaultRequestResponse &);
 
+    virtual void writeBuffer(const char *buf, std::streamsize size);
+    virtual void writeByWriter(BinaryWriter *writer);
+    virtual void writeError(unsigned short status, const std::string &message);
+    virtual void writeHeaders();
+    virtual void sendHeadersInternal();
+    virtual bool isBinaryInternal() const;
+
 private:
+    HeaderMap out_headers_;
+    CookieSet out_cookies_;
+
     std::auto_ptr<RequestImpl> impl_;
+    std::auto_ptr<BinaryWriter> writer_;
+
+    bool headers_sent_;
+    unsigned short status_;
+    bool detached_, stream_locked_;
+    mutable boost::mutex write_mutex_, resp_mutex_;
 };
 
 } // namespace xscript

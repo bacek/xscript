@@ -2,7 +2,11 @@
 
 #include <iostream>
 
+#include <boost/current_function.hpp>
+#include <boost/lexical_cast.hpp>
+
 #include "internal/default_request_response.h"
+#include "internal/parser.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -11,7 +15,8 @@
 namespace xscript {
 
 DefaultRequestResponse::DefaultRequestResponse() :
-    impl_(RequestFactory::instance()->create()) {
+    impl_(RequestFactory::instance()->create()), writer_(NULL),
+    headers_sent_(false), status_(200), detached_(false), stream_locked_(false) {
 }
 
 DefaultRequestResponse::~DefaultRequestResponse() {
@@ -142,7 +147,7 @@ DefaultRequestResponse::argNames(std::vector<std::string> &v) const {
     impl_->argNames(v);
 }
 
-void 
+void
 DefaultRequestResponse::setArg(const std::string &name, const std::string &value) {
     impl_->setArg(name, value);
 }
@@ -217,7 +222,7 @@ DefaultRequestResponse::variableNames(std::vector<std::string> &v) const {
     impl_->variableNames(v);
 }
 
-void 
+void
 DefaultRequestResponse::setVariable(const std::string &name, const std::string &value) {
     impl_->setVariable(name, value);
 }
@@ -254,50 +259,188 @@ DefaultRequestResponse::requestBody() const {
 
 bool
 DefaultRequestResponse::suppressBody() const {
-    return impl_->suppressBody();
+    return impl_->suppressBody() || 204 == status_ || 304 == status_;
 }
 
 void
 DefaultRequestResponse::setCookie(const Cookie &cookie) {
-    (void)cookie;
+    boost::mutex::scoped_lock sl(resp_mutex_);
+    if (!headers_sent_) {
+        out_cookies_.insert(cookie);
+    }
+    else {
+        throw std::runtime_error("headers already sent");
+    }
 }
 
 void
 DefaultRequestResponse::setStatus(unsigned short status) {
-    (void)status;
+    boost::mutex::scoped_lock sl(resp_mutex_);
+    if (!headers_sent_) {
+        status_ = status;
+    }
+    else {
+        throw std::runtime_error("headers already sent");
+    }
 }
 
 void
-DefaultRequestResponse::sendError(unsigned short status, const std::string& message) {
+DefaultRequestResponse::sendError(unsigned short status, const std::string &message) {
+    log()->debug("%s, clearing request output", BOOST_CURRENT_FUNCTION);
+    {
+        boost::mutex::scoped_lock sl(resp_mutex_);
+        if (!headers_sent_) {
+            out_cookies_.clear();
+            out_headers_.clear();
+        }
+        else {
+            throw std::runtime_error("headers already sent");
+        }
+        status_ = status;
+        out_headers_.insert(std::pair<std::string, std::string>("Content-type", "text/html"));
+    }
+
+    boost::mutex::scoped_lock sl(write_mutex_);
+    if (detached_) {
+        return;
+    }
+
+    if (stream_locked_ || isBinaryInternal()) {
+        throw std::runtime_error("Cannot write data. Output stream is already occupied");
+    }
+    sendHeadersInternal();
+    writeError(status, message);
+}
+
+void
+DefaultRequestResponse::setHeader(const std::string &name, const std::string &value) {
+    boost::mutex::scoped_lock sl(resp_mutex_);
+    if (headers_sent_) {
+        throw std::runtime_error("headers already sent");
+    }
+    std::string normalized_name = Parser::normalizeOutputHeaderName(name);
+    std::string::size_type pos = value.find_first_of("\r\n");
+    if (pos == std::string::npos) {
+        out_headers_[normalized_name] = value;
+    }
+    else {
+        out_headers_[normalized_name].assign(value.begin(), value.begin() + pos);
+    }
+}
+
+std::streamsize
+DefaultRequestResponse::write(const char *buf, std::streamsize size) {
+    boost::mutex::scoped_lock wl(write_mutex_);
+    if (isBinaryInternal()) {
+        throw std::runtime_error("Cannot write data. Output stream is already occupied");
+    }
+
+    stream_locked_ = true;
+    sendHeadersInternal();
+    if (!suppressBody()) {
+        if (detached_) {
+            return 0;
+        }
+        writeBuffer(buf, size);
+    }
+    return size;
+}
+
+std::streamsize
+DefaultRequestResponse::write(std::auto_ptr<BinaryWriter> writer) {
+    boost::mutex::scoped_lock wl(write_mutex_);
+    if (detached_) {
+        return 0;
+    }
+
+    if (stream_locked_ || isBinaryInternal()) {
+        throw std::runtime_error("Cannot write data. Output stream is already occupied");
+    }
+
+    writer_ = writer;
+    return writer_->size();
+}
+
+void
+DefaultRequestResponse::writeBuffer(const char *buf, std::streamsize size) {
+    (void)buf;
+    (void)size;
+}
+
+void
+DefaultRequestResponse::writeError(unsigned short status, const std::string &message) {
     (void)status;
     (void)message;
 }
 
 void
-DefaultRequestResponse::setHeader(const std::string &name, const std::string &value) {
-    (void)name;
-    (void)value;
+DefaultRequestResponse::writeHeaders() {
 }
 
-std::streamsize
-DefaultRequestResponse::write(const char *buf, std::streamsize size) {
-    (void)buf;
-    return size;
+void
+DefaultRequestResponse::writeByWriter(BinaryWriter *writer) {
+    (void)writer;
 }
 
 std::string
 DefaultRequestResponse::outputHeader(const std::string &name) const {
-    (void)name;
-    return StringUtils::EMPTY_STRING;
+    boost::mutex::scoped_lock sl(resp_mutex_);
+    return Parser::get(out_headers_, name);
 }
 
 void
 DefaultRequestResponse::sendHeaders() {
+    boost::mutex::scoped_lock sl(write_mutex_);
+    sendHeadersInternal();
+}
+
+void
+DefaultRequestResponse::sendHeadersInternal() {
+    boost::mutex::scoped_lock sl(resp_mutex_);
+    std::stringstream stream;
+    if (!headers_sent_) {
+        log()->debug("%s, sending headers", BOOST_CURRENT_FUNCTION);
+        stream << status_ << " " << Parser::statusToString(status_);
+        out_headers_["Status"] = stream.str();
+        writeHeaders();
+        headers_sent_ = true;
+    }
 }
 
 void
 DefaultRequestResponse::attach(std::istream *is, char *env[]) {
     impl_->attach(is, env);
+}
+
+void
+DefaultRequestResponse::detach() {
+    boost::mutex::scoped_lock wl(write_mutex_);
+    if (!stream_locked_ && isBinaryInternal()) {
+        setHeader("Content-length", boost::lexical_cast<std::string>(writer_->size()));
+        sendHeadersInternal();
+        writeByWriter(writer_.get());
+    }
+    detached_ = true;
+}
+
+const HeaderMap&
+DefaultRequestResponse::outHeaders() const {
+    return out_headers_;
+}
+const DefaultRequestResponse::CookieSet&
+DefaultRequestResponse::outCookies() const {
+    return out_cookies_;
+}
+
+bool
+DefaultRequestResponse::isBinary() const {
+    boost::mutex::scoped_lock wl(write_mutex_);
+    return isBinaryInternal();
+}
+
+bool
+DefaultRequestResponse::isBinaryInternal() const {
+    return NULL != writer_.get();
 }
 
 } // namespace xscript

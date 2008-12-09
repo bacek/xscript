@@ -75,20 +75,23 @@ StandaloneRequest::isSecure() const {
     return isSecure_;
 }
 
-std::streamsize
-StandaloneRequest::write(const char *buf, std::streamsize size) {
-    std::cout << std::endl;
+void
+StandaloneRequest::writeBuffer(const char *buf, std::streamsize size) {
     std::cout.write(buf, size);
-    return size;
 }
 
 void
-StandaloneRequest::sendError(unsigned short status, const std::string& message) {
+StandaloneRequest::writeError(unsigned short status, const std::string &message) {
     std::cerr << status << std::endl << message << std::endl;
 }
 
 void
-StandaloneRequest::attach(const std::string& url, const std::string& doc_root) {
+StandaloneRequest::writeByWriter(BinaryWriter *writer) {
+    writer->write(&std::cout);
+}
+
+void
+StandaloneRequest::attach(const std::string &url, const std::string &doc_root) {
 
     if (url.empty()) {
         throw std::runtime_error("Cannot process empty url");
@@ -182,6 +185,12 @@ StandaloneRequest::attach(const std::string& url, const std::string& doc_root) {
             setArg(it->substr(0, pos), it->substr(pos + 1));
         }
     }
+}
+
+void
+StandaloneRequest::detach() {
+    DefaultRequestResponse::detach();
+    std::cout << std::flush;
 }
 
 } // namespace xscript

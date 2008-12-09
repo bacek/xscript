@@ -4,8 +4,10 @@
 #include <map>
 #include <string>
 #include <time.h>
-#include <boost/utility.hpp>
+
+#include <boost/shared_ptr.hpp>
 #include <boost/thread/once.hpp>
+#include <boost/utility.hpp>
 #include <curl/curl.h>
 
 #include "xscript/tag.h"
@@ -47,7 +49,7 @@ public:
     long status() const;
     const std::string& url() const;
     const std::string& charset() const;
-    const std::string& content() const;
+    boost::shared_ptr<std::string> content() const;
     const std::string& contentType() const;
     const std::multimap<std::string, std::string>& headers() const;
 
@@ -77,7 +79,8 @@ private:
     CURL *curl_;
     long status_;
     std::multimap<std::string, std::string> headers_;
-    std::string url_, charset_, content_, content_type_;
+    std::string url_, charset_, content_type_;
+    boost::shared_ptr<std::string> content_;
     bool sent_modified_since_;
 
     static boost::once_flag init_flag_;

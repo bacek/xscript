@@ -110,8 +110,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
         XmlDocHelper doc = script->invoke(ctx);
         XmlUtils::throwUnless(NULL != doc.get());
 
-        if (script->binaryPage()) {
-            sendHeaders(ctx.get());
+        if (script->binaryPage() || request_data->response()->isBinary()) {
             return;
         }
 

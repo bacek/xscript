@@ -35,10 +35,14 @@ public:
     virtual const std::string& getRequestMethod() const;
 
     virtual bool isSecure() const;
-    virtual std::streamsize write(const char *buf, std::streamsize size);
 
-    virtual void sendError(unsigned short status, const std::string& message);
-    virtual void attach(const std::string& url, const std::string& doc_root);
+    virtual void attach(const std::string &url, const std::string &doc_root);
+    virtual void detach();
+
+private:
+    virtual void writeBuffer(const char *buf, std::streamsize size);
+    virtual void writeError(unsigned short status, const std::string &message);
+    virtual void writeByWriter(BinaryWriter *writer);
 
 private:
     bool isSecure_;

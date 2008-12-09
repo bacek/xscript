@@ -128,7 +128,7 @@ FCGIServer::handle() {
                 bool attach_error = false;
                 try {
                     try {
-                        server_request->attach(&is, &os, req.envp);    
+                        server_request->attach(&is, &os, req.envp);
                     }
                     catch (const std::exception &e) {
                         attach_error = true;
@@ -139,8 +139,6 @@ FCGIServer::handle() {
                         new RequestData(request, boost::shared_ptr<State>(new State())));
 
                     handleRequest(data);
-
-                    os << std::flush;
 
                     server_request->detach();
                     FCGX_Finish_r(&req);

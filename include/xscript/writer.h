@@ -20,6 +20,12 @@ public:
     virtual void write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf) = 0;
 };
 
+class BinaryWriter {
+public:
+    virtual void write(std::ostream *os) = 0;
+    virtual std::streamsize size() const = 0;
+};
+
 } // namespace xscript
 
 #endif // _XSCRIPT_WRITER_H_

@@ -51,6 +51,7 @@ protected:
     XmlDocHelper postHttp(Context *ctx, boost::any &a);
     XmlDocHelper getByState(Context *ctx, boost::any &a);
     XmlDocHelper getByRequest(Context *ctx, boost::any &a);
+    XmlDocHelper getBinaryPage(Context *ctx, boost::any &a);
 
     XmlDocHelper response(const HttpHelper &h) const;
     void createTagInfo(const HttpHelper &h, boost::any &a) const;

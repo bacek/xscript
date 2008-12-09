@@ -17,15 +17,17 @@
 
 #include "http_block.h"
 #include "http_helper.h"
-#include "xscript/xml.h"
-#include "xscript/xml_util.h"
-#include "xscript/param.h"
-#include "xscript/logger.h"
+
 #include "xscript/context.h"
+#include "xscript/logger.h"
+#include "xscript/param.h"
+#include "xscript/profiler.h"
 #include "xscript/request.h"
 #include "xscript/state.h"
-#include "xscript/profiler.h"
 #include "xscript/util.h"
+#include "xscript/writer.h"
+#include "xscript/xml.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -36,6 +38,21 @@ namespace xscript {
 class HttpMethodRegistrator {
 public:
     HttpMethodRegistrator();
+};
+
+class StringBinaryWriter : public BinaryWriter {
+public:
+    StringBinaryWriter(boost::shared_ptr<std::string> data) : data_(data) {}
+
+    void write(std::ostream *os) {
+        os->write(data_->data(), data_->size());
+    }
+
+    std::streamsize size() const {
+        return data_->size();
+    }
+private:
+    boost::shared_ptr<std::string> data_;
 };
 
 MethodMap HttpBlock::methods_;
@@ -170,6 +187,62 @@ HttpBlock::getHttpObsolete(Context *ctx, boost::any &a) {
     return getHttp(ctx, a);
 }
 
+
+XmlDocHelper
+HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
+    (void)a;
+
+    log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+
+    const std::vector<Param*> &p = params();
+
+    if (p.size() != 2 || tagged()) {
+        throw InvokeError("bad arity");
+    }
+
+    std::string url = p[0]->asString(ctx);
+    std::string content_type = p[1]->asString(ctx);
+    PROFILER(log(), "getBinaryPage: " + url);
+
+    int timeout = timer().remained();
+    if (timeout <= 0) {
+        InvokeError error("block is timed out", "url", url);
+        error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
+        throw error;
+    }
+
+    HttpHelper helper(url, timeout);
+    helper.appendHeaders(ctx->request(), proxy_, NULL);
+
+    helper.perform();
+    log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
+
+    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlUtils::throwUnless(NULL != doc.get());
+
+    long status = helper.status();
+    if (status == 200) {
+        XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"success", (const xmlChar*)"1"));
+        XmlUtils::throwUnless(NULL != node.get());
+        xmlDocSetRootElement(doc.get(), node.release());
+    }
+    else {
+        InvokeError error("Incorrect http status");
+        error.add("status", boost::lexical_cast<std::string>(status));
+        error.addEscaped("url", url);
+        throw error;
+    }
+
+    ctx->response()->setHeader("Content-type", content_type);
+    ctx->response()->write(
+        std::auto_ptr<BinaryWriter>(new StringBinaryWriter(helper.content())));
+
+    xsltName(StringUtils::EMPTY_STRING);
+
+    return doc;
+}
+
+
 XmlDocHelper
 HttpBlock::postHttp(Context *ctx, boost::any &a) {
 
@@ -295,19 +368,19 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
 XmlDocHelper
 HttpBlock::response(const HttpHelper &helper) const {
 
-    const std::string& str = helper.content();
+    boost::shared_ptr<std::string> str = helper.content();
     if (helper.isXml()) {
-        return XmlDocHelper(xmlReadMemory(str.c_str(), str.size(), "",
+        return XmlDocHelper(xmlReadMemory(str->c_str(), str->size(), "",
                                           charset_.empty() ? NULL : charset_.c_str(),
                                           XML_PARSE_DTDATTR | XML_PARSE_NOENT));
     }
     else if (helper.contentType() == "text/plain") {
         std::string res;
-        res.append("<text>").append(XmlUtils::escape(str)).append("</text>");
+        res.append("<text>").append(XmlUtils::escape(*str)).append("</text>");
         return XmlDocHelper(xmlParseMemory(res.c_str(), res.size()));
     }
     else if (helper.contentType() == "text/html") {
-        std::string data = XmlUtils::sanitize(str, StringUtils::EMPTY_STRING, 0);
+        std::string data = XmlUtils::sanitize(*str, StringUtils::EMPTY_STRING, 0);
         return XmlDocHelper(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
                                           helper.charset().c_str(),
                                           XML_PARSE_DTDATTR | XML_PARSE_NOENT));
@@ -405,6 +478,9 @@ HttpMethodRegistrator::HttpMethodRegistrator() {
 
     HttpBlock::registerMethod("getByRequest", &HttpBlock::getByRequest);
     HttpBlock::registerMethod("get_by_request", &HttpBlock::getByRequest);
+
+    HttpBlock::registerMethod("getBinaryPage", &HttpBlock::getBinaryPage);
+    HttpBlock::registerMethod("get_binary_page", &HttpBlock::getBinaryPage);
 }
 
 static HttpMethodRegistrator reg_;

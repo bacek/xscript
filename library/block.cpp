@@ -261,26 +261,26 @@ Block::errorResult(const char *error, const InvokeError::InfoMapType &error_info
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
 
-    xmlNodePtr node = xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"xscript_invoke_failed", NULL);
-    XmlUtils::throwUnless(NULL != node);
+    XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"xscript_invoke_failed", NULL));
+    XmlUtils::throwUnless(NULL != node.get());
 
     std::stringstream stream;
     stream << "Caught invocation error" << ": ";
     if (error != NULL) {
-        xmlNewProp(node, (const xmlChar*)"error", (const xmlChar*)error);
+        xmlNewProp(node.get(), (const xmlChar*)"error", (const xmlChar*)error);
         stream << error << ". ";
     }
 
-    xmlNewProp(node, (const xmlChar*)"block", (const xmlChar*)name());
+    xmlNewProp(node.get(), (const xmlChar*)"block", (const xmlChar*)name());
     stream << "block: " << name() << ". ";
 
     if (!method().empty()) {
-        xmlNewProp(node, (const xmlChar*)"method", (const xmlChar*)method().c_str());
+        xmlNewProp(node.get(), (const xmlChar*)"method", (const xmlChar*)method().c_str());
         stream << "method: " << method() << ". ";
     }
 
     if (!id().empty()) {
-        xmlNewProp(node, (const xmlChar*)"id", (const xmlChar*)id().c_str());
+        xmlNewProp(node.get(), (const xmlChar*)"id", (const xmlChar*)id().c_str());
         stream << "id: " << id() << ". ";
     }
 
@@ -288,14 +288,14 @@ Block::errorResult(const char *error, const InvokeError::InfoMapType &error_info
         it != error_info.end();
         ++it) {
         if (!it->second.empty()) {
-            xmlNewProp(node, (const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str());
+            xmlNewProp(node.get(), (const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str());
             stream << it->first << ": " << it->second << ". ";
         }
     }
 
     stream << "owner: " << owner()->name() << ".";
 
-    xmlDocSetRootElement(doc.get(), node);
+    xmlDocSetRootElement(doc.get(), node.release());
 
     log()->error("%s", stream.str().c_str());
 
