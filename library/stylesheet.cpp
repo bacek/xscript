@@ -196,12 +196,16 @@ Stylesheet::parse() {
         XmlUtils::throwUnless(NULL != stylesheet_.get());
     }
 
-    parseNode(xmlDocGetRootElement(doc.release()));
+    xmlDocPtr doc_ptr = doc.release();
+    parseNode(xmlDocGetRootElement(doc_ptr));
     parseImport(stylesheet_->imports);
 
     detectOutputMethod(stylesheet_);
     detectOutputEncoding(stylesheet_);
     detectOutputInfo(stylesheet_);
+    
+    XsltTransformContextHelper tctx(xsltNewTransformContext(stylesheet_.get(), doc_ptr));
+    XmlUtils::throwUnless(NULL != tctx.get());
 }
 
 void

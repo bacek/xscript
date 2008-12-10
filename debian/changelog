@@ -1,3 +1,9 @@
+xscript (5.47-4) unstable; urgency=low
+
+  * add threadsafety for applying stylesheet
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 10 Dec 2008 12:36:34 +0300
+
 xscript (5.47-3) unstable; urgency=low
 
   * sanitizer interface expanded
