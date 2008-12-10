@@ -59,12 +59,14 @@ public:
 
     static bool xpathExists(xmlDocPtr doc, const std::string &path);
     static std::string xpathValue(xmlDocPtr doc, const std::string &path, const std::string &defval = "");
-
+	
+    static xmlDocPtr fakeXml();
 public:
     static const char * const XSCRIPT_NAMESPACE;
 
 private:
     static xmlExternalEntityLoader default_loader_;
+    static XmlDocHelper fake_doc_;
 };
 
 class XmlInfoCollector {

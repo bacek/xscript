@@ -203,7 +203,7 @@ Stylesheet::parse() {
     detectOutputEncoding(stylesheet_);
     detectOutputInfo(stylesheet_);
     
-    XsltTransformContextHelper tctx(xsltNewTransformContext(stylesheet_.get(), NULL));
+    XsltTransformContextHelper tctx(xsltNewTransformContext(stylesheet_.get(), XmlUtils::fakeXml()));
     XmlUtils::throwUnless(NULL != tctx.get());
 }
 
