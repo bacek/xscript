@@ -9,7 +9,8 @@
 #include <boost/thread/once.hpp>
 #include <boost/current_function.hpp>
 
-#include "ltdl.h"
+#include <dlfcn.h>
+
 #include "internal/loader.h"
 #include "xscript/config.h"
 #include "xscript/resource_holder.h"
@@ -23,13 +24,13 @@
 namespace xscript {
 
 template<>
-void ResourceHolderTraits<lt_dlhandle>::destroy(lt_dlhandle handle) {
+void ResourceHolderTraits<void*>::destroy(void* handle) {
     if (NULL != handle) {
-        lt_dlclose(handle);
+        dlclose(handle);
     }
 };
 
-typedef ResourceHolder<lt_dlhandle> Handle;
+typedef ResourceHolder<void*> Handle;
 
 class LoaderImpl : public Loader {
 public:
@@ -45,20 +46,16 @@ protected:
     void checkLoad(bool success) const;
 
 private:
-    std::vector<lt_dlhandle> handles_;
+    std::vector<void*> handles_;
     static boost::shared_ptr<Loader> instance_;
 };
 
 boost::shared_ptr<Loader> LoaderImpl::instance_(new LoaderImpl());
 
 Loader::Loader() {
-    if (0 != lt_dlinit()) {
-        throw std::runtime_error("failed to init libltdl");
-    }
 }
 
 Loader::~Loader() {
-    lt_dlexit();
 }
 
 boost::shared_ptr<Loader>
@@ -70,7 +67,7 @@ LoaderImpl::LoaderImpl() {
 }
 
 LoaderImpl::~LoaderImpl() {
-    std::for_each(handles_.begin(), handles_.end(), boost::bind(&lt_dlclose, _1));
+    std::for_each(handles_.begin(), handles_.end(), boost::bind(&dlclose, _1));
 }
 
 boost::shared_ptr<Loader>
@@ -107,18 +104,18 @@ LoaderImpl::load(const char *name) {
 
     typedef ExtensionInfo* (*ExtensionFunc)();
     
-    Handle handle(lt_dlopen(name));
+    Handle handle(dlopen(name, RTLD_NOW | RTLD_GLOBAL));
     checkLoad(NULL != handle.get());
     handles_.push_back(handle.release());
     
-    ExtensionFunc func = (ExtensionFunc) lt_dlsym(handles_.back(), "get_extension_info");
+    ExtensionFunc func = (ExtensionFunc) dlsym(handles_.back(), "get_extension_info");
     return (NULL != func) ? func() : NULL;
 }
 
 void
 LoaderImpl::checkLoad(bool success) const {
     if (!success) {
-        throw std::runtime_error(lt_dlerror());
+        throw std::runtime_error(dlerror());
     }
 }
 

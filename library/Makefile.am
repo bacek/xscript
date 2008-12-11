@@ -36,10 +36,9 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	default_request_response.cpp \
 	validator_factory.cpp validator.cpp validator_exception.cpp
 
-libxscript_la_LDFLAGS = -lpthread @LTLIBICONV@ @LIBLTDL@ -lboost_thread -lboost_filesystem
+libxscript_la_LDFLAGS = -lpthread @LTLIBICONV@ -lboost_thread -lboost_filesystem
 
-AM_CXXFLAGS = -pthread 
-AM_CPPFLAGS = -I../include -I../config @INCLTDL@ @yandex_platform_CFLAGS@
-AM_LDFLAGS = -lboost_thread -lboost_filesystem @yandex_platform_LIBS@
+AM_CXXFLAGS = -W -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread -I@top_srcdir@/include -I@builddir@ @yandex_platform_CFLAGS@
+AM_LDFLAGS = -lboost_thread -lboost_filesystem -I@top_srcdir@/include @yandex_platform_LIBS@
 
 SUBDIRS = details

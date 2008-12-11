@@ -3,11 +3,7 @@ AC_INIT([xscript],[5.42.0],[highpower@yandex-team.ru])
 AM_INIT_AUTOMAKE
 
 AC_GNU_SOURCE
-AC_CONFIG_SUBDIRS([libltdl])
-AC_CONFIG_HEADERS([config/settings.h])
-
-AC_LIBTOOL_DLOPEN
-AC_LIBLTDL_CONVENIENCE
+AC_CONFIG_HEADERS(config/settings.h)
 
 AC_PROG_CXX
 AC_PROG_CXXCPP
@@ -205,6 +201,7 @@ else
 	AC_MSG_RESULT([dmalloc not found. dmalloc check disabled])
 fi
 
+AX_CHECK_CPPUNIT
 
 AC_ARG_ENABLE(coverage,
 	AS_HELP_STRING(--enable-coverage,enables coverage tests compilation),
@@ -214,17 +211,6 @@ AC_ARG_ENABLE(coverage,
 			LDFLAGS="$LDFLAGS --coverage"
 		fi
 	])
-
-for i in -W -Wall -Wextra -fexceptions -frtti -ftemplate-depth-128; do
-	AX_CHECK_COMPILER_FLAGS([$i], [CXXFLAGS="$CXXFLAGS $i"], [])
-done
-
-AX_CHECK_CPPUNIT([1.10.0], [], [
-	AC_MSG_WARN([cppunit not found. compilation of tests disabled])
-])
-
-AC_SUBST(INCLTDL)
-AC_SUBST(LIBLTDL)
 
 AC_CONFIG_FILES([Makefile
 	include/Makefile include/xscript/Makefile include/internal/Makefile

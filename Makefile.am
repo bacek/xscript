@@ -1,13 +1,12 @@
-ACLOCAL_AMFLAGS = -I config
 AUTOMAKE_OPTIONS = 1.9 foreign
-
-SUBDIRS = include libltdl library standard xscript daemon
+ACLOCAL_AMFLAGS = -I config
+SUBDIRS = include library standard xscript daemon
 
 EXTRA_DIST = ChangeLog Doxyfile AUTHORS COPYING INSTALL NEWS README \
-	autogen.sh config/ax_check_compiler_flags.m4 config/ax_check_cppunit.m4 \
-	config/cppunit.m4 config/pkg.m4 config/settings.h.in config/settings.h \
-	debian/rules debian/changelog debian/compat debian/xscript-daemon.files \
-	debian/control debian/xscript-daemon.init debian/xscript-utility.files \
+	autogen.sh config/cppunit.m4 config/ax_check_cppunit.m4 \
+	config/settings.h.in config/settings.h debian/rules debian/changelog \
+	debian/compat debian/xscript-daemon.files debian/control \
+	debian/xscript-daemon.init debian/xscript-utility.files \
 	debian/xscript-standard.preinst debian/libxscript-dev.files \
 	debian/xscript-daemon.preinst debian/xscript-standard.files \
 	debian/libxscript.files examples/control-logrotate.xml \
@@ -36,7 +35,7 @@ if HAVE_FILE_BLOCK
 SUBDIRS += file-block
 endif
 
-if HAVE_CPPUNIT
+if HAVE_TESTS
 SUBDIRS += tests
 endif
 

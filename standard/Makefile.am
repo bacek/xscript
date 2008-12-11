@@ -39,6 +39,7 @@ xscript_development_la_SOURCES = development_mode.cpp
 xscript_development_la_LIBADD = ../library/libxscript.la
 xscript_development_la_LDFLAGS = -module
 
+
 xscript_validators_la_SOURCES = range_validator.cpp
 
 if HAVE_PCRE
@@ -48,13 +49,13 @@ endif
 xscript_validators_la_LIBADD = ../library/libxscript.la
 xscript_validators_la_LDFLAGS = -module
 
-AM_CXXFLAGS = -pthread
-AM_CPPFLAGS = -I../include -I../config @yandex_platform_CFLAGS@
+AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
+AM_CXXFLAGS = -W -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_filesystem @yandex_platform_LIBS@
 
 EXTRA_DIST = test.conf
 
-if HAVE_CPPUNIT
+if HAVE_TESTS
 
 TESTS = test
 check_PROGRAMS = test
