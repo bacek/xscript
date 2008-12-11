@@ -15,9 +15,6 @@
 
 namespace xscript {
 
-DocumentWriter::DocumentWriter() {
-}
-
 DocumentWriter::~DocumentWriter() {
 }
 
@@ -82,6 +79,9 @@ HtmlWriter::write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPt
     addHeaders(response);
     xsltSaveResultTo(buf, doc.get(), stylesheet_->stylesheet());
     xmlOutputBufferClose(buf);
+}
+
+BinaryWriter::~BinaryWriter() {
 }
 
 } // namespace xscript

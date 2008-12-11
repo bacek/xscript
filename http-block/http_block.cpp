@@ -51,6 +51,8 @@ public:
     std::streamsize size() const {
         return data_->size();
     }
+    
+    virtual ~StringBinaryWriter() {}
 private:
     boost::shared_ptr<std::string> data_;
 };
@@ -214,6 +216,9 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
         throw error;
     }
 
+    ctx->response()->write(
+        std::auto_ptr<BinaryWriter>(new StringBinaryWriter(helper.content())));
+    
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
     
@@ -222,13 +227,11 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
     
     const std::string& content_type = helper.contentType();
     if (!content_type.empty()) {
-        xmlNewProp(node.get(), (const xmlChar*)"content-type", (const xmlChar*)content_type.c_str());
+        xmlNewProp(node.get(), (const xmlChar*)"content-type", (const xmlChar*)XmlUtils::escape(content_type).c_str());
+        xmlNewProp(node.get(), (const xmlChar*)"url", (const xmlChar*)XmlUtils::escape(url).c_str());
         ctx->response()->setHeader("Content-type", content_type);
     }        
     xmlDocSetRootElement(doc.get(), node.release());
-    
-    ctx->response()->write(
-        std::auto_ptr<BinaryWriter>(new StringBinaryWriter(helper.content())));
 
     return doc;
 }

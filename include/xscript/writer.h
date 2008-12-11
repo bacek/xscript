@@ -11,7 +11,6 @@ class Response;
 
 class DocumentWriter : private boost::noncopyable {
 public:
-    DocumentWriter();
     virtual ~DocumentWriter();
 
     virtual const std::string& outputEncoding() const = 0;
@@ -20,8 +19,10 @@ public:
     virtual void write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf) = 0;
 };
 
-class BinaryWriter {
+class BinaryWriter : private boost::noncopyable {
 public:
+    virtual ~BinaryWriter();
+	
     virtual void write(std::ostream *os) const = 0;
     virtual std::streamsize size() const = 0;
 };
