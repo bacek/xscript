@@ -228,9 +228,9 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
     const std::string& content_type = helper.contentType();
     if (!content_type.empty()) {
         xmlNewProp(node.get(), (const xmlChar*)"content-type", (const xmlChar*)XmlUtils::escape(content_type).c_str());
-        xmlNewProp(node.get(), (const xmlChar*)"url", (const xmlChar*)XmlUtils::escape(url).c_str());
         ctx->response()->setHeader("Content-type", content_type);
     }        
+    xmlNewProp(node.get(), (const xmlChar*)"url", (const xmlChar*)XmlUtils::escape(url).c_str());
     xmlDocSetRootElement(doc.get(), node.release());
 
     return doc;
