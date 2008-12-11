@@ -691,16 +691,16 @@ xscriptTemplatedEscStr(const char *str, const char *esc_template, std::string &r
     for (std::string::const_iterator i = s.begin(), end = s.end(); i != end; ++i) {
         char ch = *i;
         if (ch == '\r' || ch == '\n') {
-            result.append(1, '\\');
+            result.push_back('\\');
             ch = 'n';
         }
         else {
             const char *res = strchr(esc_template, ch);
             if (NULL != res) {
-                result.append(1, '\\');
+                result.push_back('\\');
             }
         }
-        result.append(1, ch);
+        result.push_back(ch);
     }
 }
 
@@ -815,9 +815,9 @@ xscriptXsltJsQuote(xmlXPathParserContextPtr ctxt, int nargs) {
 
     try {
         std::string result;
-        result.append(1,'\'');
+        result.push_back('\'');
         xscriptXsltJSQuoteStr(str, result);
-        result.append(1, '\'');
+        result.push_back('\'');
         valuePush(ctxt, xmlXPathNewCString(result.c_str()));
     }
     catch (const std::exception &e) {
@@ -857,9 +857,9 @@ xscriptXsltJSONQuote(xmlXPathParserContextPtr ctxt, int nargs) {
 
     try {
         std::string result;
-        result.append(1,'"');
+        result.push_back('"');
         xscriptXsltJSONQuoteStr(str, result);
-        result.append(1, '"');
+        result.push_back('"');
         valuePush(ctxt, xmlXPathNewCString(result.c_str()));
     }
     catch (const std::exception &e) {
