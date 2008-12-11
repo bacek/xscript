@@ -19,7 +19,7 @@
 
 namespace xscript {
 
-OfflineServer::OfflineServer(Config *config, const std::string& url, const std::multimap<std::string, std::string>& args) :
+OfflineServer::OfflineServer(Config *config, const std::string &url, const std::multimap<std::string, std::string> &args) :
     Server(config), url_(url), apply_main_stylesheet_(true), apply_perblock_stylesheet_(true), use_remote_call_(true) {
 
     root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");

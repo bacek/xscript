@@ -378,7 +378,7 @@ DefaultRequestResponse::writeHeaders() {
 }
 
 void
-DefaultRequestResponse::writeByWriter(BinaryWriter *writer) {
+DefaultRequestResponse::writeByWriter(const BinaryWriter *writer) {
     (void)writer;
 }
 

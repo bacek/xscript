@@ -42,7 +42,7 @@ public:
 private:
     virtual void writeBuffer(const char *buf, std::streamsize size);
     virtual void writeError(unsigned short status, const std::string &message);
-    virtual void writeByWriter(BinaryWriter *writer);
+    virtual void writeByWriter(const BinaryWriter *writer);
 
 private:
     bool isSecure_;

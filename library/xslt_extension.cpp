@@ -506,44 +506,44 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
 
     const char *base_url = NULL;
     if (nargs > 1) {
-		base_url = params.str(1);
-		if (NULL == base_url) {
-			XmlUtils::reportXsltError("xscript:sanitize: bad parameter base url", ctxt);
-			xmlXPathReturnEmptyNodeSet(ctxt);
-			return;
-		}
+        base_url = params.str(1);
+        if (NULL == base_url) {
+            XmlUtils::reportXsltError("xscript:sanitize: bad parameter base url", ctxt);
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
     }
 
-	Context* ctx = NULL;
+    Context* ctx = NULL;
     try {
-		unsigned int line_limit = 0;
-		if (nargs > 2) {
-			const char* limit_str = params.str(2);
-			if (NULL == limit_str) {
-				XmlUtils::reportXsltError("xscript:sanitize: bad parameter line limit", ctxt);
-				xmlXPathReturnEmptyNodeSet(ctxt);
-				return;
-			}
-			try {
-				line_limit = boost::lexical_cast<unsigned int>(limit_str);
-			}
-			catch(const boost::bad_lexical_cast &e) {
-				XmlUtils::reportXsltError("xscript:sanitize: bad format of line limit parameter", ctxt);
-				xmlXPathReturnEmptyNodeSet(ctxt);
-				return;
-			}
-		}
+        unsigned int line_limit = 0;
+        if (nargs > 2) {
+            const char* limit_str = params.str(2);
+            if (NULL == limit_str) {
+                XmlUtils::reportXsltError("xscript:sanitize: bad parameter line limit", ctxt);
+                xmlXPathReturnEmptyNodeSet(ctxt);
+                return;
+            }
+            try {
+                line_limit = boost::lexical_cast<unsigned int>(limit_str);
+            }
+            catch(const boost::bad_lexical_cast &e) {
+                XmlUtils::reportXsltError("xscript:sanitize: bad format of line limit parameter", ctxt);
+                xmlXPathReturnEmptyNodeSet(ctxt);
+                return;
+            }
+        }
 
-		xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
-		if (NULL == tctx) {
-			xmlXPathReturnEmptyNodeSet(ctxt);
-			return;
-		}
+        xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+        if (NULL == tctx) {
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
 
         std::stringstream stream;
         stream << "<sanitized>" <<
-			XmlUtils::sanitize(str, base_url ? std::string(base_url) : StringUtils::EMPTY_STRING, line_limit) <<
-				"</sanitized>" << std::endl;
+            XmlUtils::sanitize(str, base_url ? std::string(base_url) : StringUtils::EMPTY_STRING, line_limit) <<
+                "</sanitized>" << std::endl;
         std::string str = stream.str();
 
         XmlDocHelper doc(xmlParseMemory(str.c_str(), str.length()));

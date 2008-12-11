@@ -64,7 +64,7 @@ ServerRequest::writeHeaders() {
 }
 
 void
-ServerRequest::writeByWriter(BinaryWriter *writer) {
+ServerRequest::writeByWriter(const BinaryWriter *writer) {
     writer->write(stream_);
 }
 

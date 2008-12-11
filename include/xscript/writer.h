@@ -22,7 +22,7 @@ public:
 
 class BinaryWriter {
 public:
-    virtual void write(std::ostream *os) = 0;
+    virtual void write(std::ostream *os) const = 0;
     virtual std::streamsize size() const = 0;
 };
 

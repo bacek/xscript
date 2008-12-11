@@ -86,7 +86,7 @@ StandaloneRequest::writeError(unsigned short status, const std::string &message)
 }
 
 void
-StandaloneRequest::writeByWriter(BinaryWriter *writer) {
+StandaloneRequest::writeByWriter(const BinaryWriter *writer) {
     writer->write(&std::cout);
 }
 

@@ -104,7 +104,7 @@ private:
     DefaultRequestResponse& operator = (const DefaultRequestResponse &);
 
     virtual void writeBuffer(const char *buf, std::streamsize size);
-    virtual void writeByWriter(BinaryWriter *writer);
+    virtual void writeByWriter(const BinaryWriter *writer);
     virtual void writeError(unsigned short status, const std::string &message);
     virtual void writeHeaders();
     virtual void sendHeadersInternal();

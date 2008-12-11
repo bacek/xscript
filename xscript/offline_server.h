@@ -9,7 +9,7 @@ class Config;
 
 class OfflineServer : public Server {
 public:
-    OfflineServer(Config *config, const std::string& url, const std::multimap<std::string, std::string>& args);
+    OfflineServer(Config *config, const std::string &url, const std::multimap<std::string, std::string> &args);
     virtual ~OfflineServer();
 
     virtual bool needApplyMainStylesheet(Request *request) const;

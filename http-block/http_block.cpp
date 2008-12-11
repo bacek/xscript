@@ -44,7 +44,7 @@ class StringBinaryWriter : public BinaryWriter {
 public:
     StringBinaryWriter(boost::shared_ptr<std::string> data) : data_(data) {}
 
-    void write(std::ostream *os) {
+    void write(std::ostream *os) const {
         os->write(data_->data(), data_->size());
     }
 
@@ -156,15 +156,10 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
         return doc;
     }
 
-    int timeout = timer().remained();
-    if (timeout <= 0) {
-        InvokeError error("block is timed out", "url", url);
-        error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
-        throw error;
-    }
+    checkTimeout(url);
 
     const Tag *tag = boost::any_cast<Tag>(&a);
-    HttpHelper helper(url, timeout);
+    HttpHelper helper(url, timer().remained());
     helper.appendHeaders(ctx->request(), proxy_, tag);
 
     helper.perform();
@@ -196,22 +191,16 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
 
     const std::vector<Param*> &p = params();
 
-    if (p.size() != 2 || tagged()) {
+    if (p.size() < 1 || p.size() > 2 || tagged()) {
         throw InvokeError("bad arity");
     }
 
     std::string url = p[0]->asString(ctx);
-    std::string content_type = p[1]->asString(ctx);
     PROFILER(log(), "getBinaryPage: " + url);
 
-    int timeout = timer().remained();
-    if (timeout <= 0) {
-        InvokeError error("block is timed out", "url", url);
-        error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
-        throw error;
-    }
+    checkTimeout(url);
 
-    HttpHelper helper(url, timeout);
+    HttpHelper helper(url, timer().remained());
     helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     helper.perform();
@@ -233,7 +222,14 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
         throw error;
     }
 
-    ctx->response()->setHeader("Content-type", content_type);
+    const std::string& content_type = helper.contentType();
+    if (!content_type.empty()) {
+        ctx->response()->setHeader("Content-type", content_type);
+    }
+    else if (p.size() == 2) {
+        ctx->response()->setHeader("Content-type", p[1]->asString(ctx));
+    }
+
     ctx->response()->write(
         std::auto_ptr<BinaryWriter>(new StringBinaryWriter(helper.content())));
 
@@ -256,15 +252,10 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
 
     std::string url = p[0]->asString(ctx);
 
-    int timeout = timer().remained();
-    if (timeout <= 0) {
-        InvokeError error("block is timed out", "url", url);
-        error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
-        throw error;
-    }
+    checkTimeout(url);
 
     const Tag *tag = boost::any_cast<Tag>(&a);
-    HttpHelper helper(url, timeout);
+    HttpHelper helper(url, timer().remained());
     std::string body = p[1]->asString(ctx);
     helper.appendHeaders(ctx->request(), proxy_, tag);
 
@@ -312,14 +303,9 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
         has_query = true;
     }
 
-    int timeout = timer().remained();
-    if (timeout <= 0) {
-        InvokeError error("block is timed out", "url", url);
-        error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
-        throw error;
-    }
+    checkTimeout(url);
 
-    HttpHelper helper(url, timeout);
+    HttpHelper helper(url, timer().remained());
     helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     helper.perform();
@@ -348,14 +334,9 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
         url.append(query);
     }
 
-    int timeout = timer().remained();
-    if (timeout <= 0) {
-        InvokeError error("block is timed out", "url", url);
-        error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
-        throw error;
-    }
+    checkTimeout(url);
 
-    HttpHelper helper(url, timeout);
+    HttpHelper helper(url, timer().remained());
     helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     helper.perform();
@@ -396,6 +377,16 @@ HttpBlock::createTagInfo(const HttpHelper &helper, boost::any &a) const {
 
     Tag tag = helper.createTag();
     a = boost::any(tag);
+}
+
+void
+HttpBlock::checkTimeout(const std::string &url) {
+    if (timer().remained() > 0) {
+        return;
+    }
+    InvokeError error("block is timed out", "url", url);
+    error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
+    throw error;
 }
 
 void

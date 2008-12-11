@@ -320,7 +320,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
 
 xmlDocPtr
 XmlUtils::fakeXml() {
-	return fake_doc_.get();
+    return fake_doc_.get();
 }
 
 XmlInfoCollector::XmlInfoCollector() {
