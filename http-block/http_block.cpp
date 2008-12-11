@@ -191,7 +191,7 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
 
     const std::vector<Param*> &p = params();
 
-    if (p.size() < 1 || p.size() > 2 || tagged()) {
+    if (p.size() != 1 || tagged()) {
         throw InvokeError("bad arity");
     }
 
@@ -206,34 +206,29 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
     helper.perform();
     log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
 
-    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
-    XmlUtils::throwUnless(NULL != doc.get());
-
     long status = helper.status();
-    if (status == 200) {
-        XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"success", (const xmlChar*)"1"));
-        XmlUtils::throwUnless(NULL != node.get());
-        xmlDocSetRootElement(doc.get(), node.release());
-    }
-    else {
+    if (status != 200) {
         InvokeError error("Incorrect http status");
         error.add("status", boost::lexical_cast<std::string>(status));
         error.addEscaped("url", url);
         throw error;
     }
 
+    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlUtils::throwUnless(NULL != doc.get());
+    
+    XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"success", (const xmlChar*)"1"));
+    XmlUtils::throwUnless(NULL != node.get());
+    
     const std::string& content_type = helper.contentType();
     if (!content_type.empty()) {
+        xmlNewProp(node.get(), (const xmlChar*)"content-type", (const xmlChar*)content_type.c_str());
         ctx->response()->setHeader("Content-type", content_type);
-    }
-    else if (p.size() == 2) {
-        ctx->response()->setHeader("Content-type", p[1]->asString(ctx));
-    }
-
+    }        
+    xmlDocSetRootElement(doc.get(), node.release());
+    
     ctx->response()->write(
         std::auto_ptr<BinaryWriter>(new StringBinaryWriter(helper.content())));
-
-    xsltName(StringUtils::EMPTY_STRING);
 
     return doc;
 }
