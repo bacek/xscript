@@ -705,6 +705,39 @@ xscriptTemplatedEscStr(const char *str, const char *esc_template, std::string &r
 }
 
 void
+xscriptXsltJSONQuoteStr(const char *str, std::string &result) {
+
+    log()->debug("xscriptXsltJSONQuoteStr: %s", str);
+
+    const char* end = str + strlen(str);
+    const char* str_new = NULL;
+    
+    log()->debug("strlen: %d", strlen(str));
+    
+    while (str < end) {
+        char ch = *str;
+        if (ch == '"' || ch == '\\' || ch == '/' ||
+            ch == '\b' || ch == '\f' || ch == '\n' ||
+            ch == '\r' || ch == '\t') {
+            result.push_back('\\');
+            str_new = str + 1;
+        }
+        else if (ch == 'u' && end - str > 4 &&
+                 isxdigit(*(str + 1)) && isxdigit(*(str + 2)) &&
+                 isxdigit(*(str + 3)) && isxdigit(*(str + 4))) {
+            result.push_back('\\');
+            str_new = str + 5;
+        }
+        else {
+            str_new = StringUtils::nextUTF8(str);
+        }
+        
+        result.append(str, str_new - str);
+        str = str_new;
+    }
+}
+
+void
 xscriptXsltEscStr(const char *str, std::string &result) {
 
     log()->debug("xscriptXsltEscStr: %s", str);
@@ -794,6 +827,48 @@ xscriptXsltJsQuote(xmlXPathParserContextPtr ctxt, int nargs) {
     }
     catch (...) {
         XmlUtils::reportXsltError("xscript:js-quote: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
+xscriptXsltJSONQuote(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:json-quote");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (1 != nargs) {
+        XmlUtils::reportXsltError("xscript:json-quote: bad param count", ctxt);
+        return;
+    }
+
+    const char* str = params.str(0);
+
+    if (NULL == str) {
+        XmlUtils::reportXsltError("xscript:json-quote: bad parameter", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        std::string result;
+        result.append(1,'"');
+        xscriptXsltJSONQuoteStr(str, result);
+        result.append(1, '"');
+        valuePush(ctxt, xmlXPathNewCString(result.c_str()));
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:json-quote: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:json-quote: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -1297,6 +1372,8 @@ XsltExtensions::XsltExtensions() {
 
     XsltFunctionRegisterer("esc", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltEsc);
     XsltFunctionRegisterer("js-quote", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltJsQuote);
+    XsltFunctionRegisterer("json-quote", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltJSONQuote);
+    
     XsltFunctionRegisterer("md5", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltMD5);
     XsltFunctionRegisterer("wbr", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltWbr);
     XsltFunctionRegisterer("nl2br", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltNl2br);
