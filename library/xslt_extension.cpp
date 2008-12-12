@@ -712,28 +712,28 @@ xscriptXsltJSONQuoteStr(const char *str, std::string &result) {
         if (ch == '"' || ch == '/') {
             result.push_back('\\');
         }
-		else if (ch == '\b') {
-			result.push_back('\\');
-			ch = 'b';
-		}
-		else if (ch == '\f') {
-			result.push_back('\\');
-			ch = 'f';
-		}
-		else if (ch == '\n') {
-			result.push_back('\\');
-			ch = 'n';
-		}
-		else if (ch == '\r') {
-			result.push_back('\\');
-			ch = 'r';
-		}
-		else if (ch == '\t') {
-			result.push_back('\\');
-			ch = 't';
-		}
+        else if (ch == '\b') {
+            result.push_back('\\');
+            ch = 'b';
+        }
+        else if (ch == '\f') {
+            result.push_back('\\');
+            ch = 'f';
+        }
+        else if (ch == '\n') {
+            result.push_back('\\');
+            ch = 'n';
+        }
+        else if (ch == '\r') {
+            result.push_back('\\');
+            ch = 'r';
+        }
+        else if (ch == '\t') {
+            result.push_back('\\');
+            ch = 't';
+        }
         else if (ch == '\\' && end - str > 5 &&
-        		 *(str + 1) == 'u' &&
+                 *(str + 1) == 'u' &&
                  isxdigit(*(str + 2)) && isxdigit(*(str + 3)) &&
                  isxdigit(*(str + 4)) && isxdigit(*(str + 5))) {
             result.push_back('\\');
@@ -741,9 +741,9 @@ xscriptXsltJSONQuoteStr(const char *str, std::string &result) {
             str += 6;
             continue;
         }
-		else if (ch == '\\') {
-			result.push_back('\\');
-		}
+        else if (ch == '\\') {
+            result.push_back('\\');
+        }
         result.push_back(ch);
         ++str;
     }

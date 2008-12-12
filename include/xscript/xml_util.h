@@ -61,6 +61,9 @@ public:
     static std::string xpathValue(xmlDocPtr doc, const std::string &path, const std::string &defval = "");
     
     static xmlDocPtr fakeXml();
+private:
+    static xmlDocPtr createFakeDoc();
+    
 public:
     static const char * const XSCRIPT_NAMESPACE;
 

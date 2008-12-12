@@ -44,7 +44,7 @@ namespace xscript {
 static const Range ESCAPE_PATTERN = createRange("&'\"<>");
 const char * const XmlUtils::XSCRIPT_NAMESPACE = "http://www.yandex.ru/xscript";
 xmlExternalEntityLoader XmlUtils::default_loader_ = NULL;
-XmlDocHelper XmlUtils::fake_doc_(xmlNewDoc((const xmlChar*) "1.0"));
+XmlDocHelper XmlUtils::fake_doc_(XmlUtils::createFakeDoc());
 
 boost::thread_specific_ptr<Xml::TimeMapType> XmlInfoCollector::modified_info_;
 
@@ -321,6 +321,18 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
 xmlDocPtr
 XmlUtils::fakeXml() {
     return fake_doc_.get();
+}
+
+xmlDocPtr
+XmlUtils::createFakeDoc() {
+    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+    if (NULL != doc.get()) {
+        XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"fake", NULL));
+        if (node.get() != NULL) {
+            xmlDocSetRootElement(doc.get(), node.release());
+        }
+    }
+    return doc.release();
 }
 
 XmlInfoCollector::XmlInfoCollector() {
