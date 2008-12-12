@@ -1,8 +1,9 @@
-xscript (5.48-0) hardy; urgency=low
+xscript (5.48-0) unstable; urgency=low
 
-  * test
+  * x:json-quote xslt extension added
+  * http getBinaryPage added
 
- -- Ilya Golubtsov <golubtsov@golubtsov-nb-xp>  Thu, 11 Dec 2008 18:10:32 +0300
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 12 Dec 2008 15:49:15 +0300
 
 xscript (5.47-4) unstable; urgency=low
 
