@@ -676,8 +676,6 @@ xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
 void
 xscriptTemplatedEscStr(const char *str, const char *esc_template, std::string &result) {
 
-    log()->debug("templatedEscStr: %s", str);
-
     std::string s(str);
     std::string::size_type pos = (std::string::size_type)-1;
     while (true) {
@@ -707,33 +705,47 @@ xscriptTemplatedEscStr(const char *str, const char *esc_template, std::string &r
 void
 xscriptXsltJSONQuoteStr(const char *str, std::string &result) {
 
-    log()->debug("xscriptXsltJSONQuoteStr: %s", str);
-
     const char* end = str + strlen(str);
-    const char* str_new = NULL;
-    
-    log()->debug("strlen: %d", strlen(str));
     
     while (str < end) {
         char ch = *str;
-        if (ch == '"' || ch == '\\' || ch == '/' ||
-            ch == '\b' || ch == '\f' || ch == '\n' ||
-            ch == '\r' || ch == '\t') {
+        if (ch == '"' || ch == '/') {
             result.push_back('\\');
-            str_new = str + 1;
         }
-        else if (ch == 'u' && end - str > 4 &&
-                 isxdigit(*(str + 1)) && isxdigit(*(str + 2)) &&
-                 isxdigit(*(str + 3)) && isxdigit(*(str + 4))) {
+		else if (ch == '\b') {
+			result.push_back('\\');
+			ch = 'b';
+		}
+		else if (ch == '\f') {
+			result.push_back('\\');
+			ch = 'f';
+		}
+		else if (ch == '\n') {
+			result.push_back('\\');
+			ch = 'n';
+		}
+		else if (ch == '\r') {
+			result.push_back('\\');
+			ch = 'r';
+		}
+		else if (ch == '\t') {
+			result.push_back('\\');
+			ch = 't';
+		}
+        else if (ch == '\\' && end - str > 5 &&
+        		 *(str + 1) == 'u' &&
+                 isxdigit(*(str + 2)) && isxdigit(*(str + 3)) &&
+                 isxdigit(*(str + 4)) && isxdigit(*(str + 5))) {
             result.push_back('\\');
-            str_new = str + 5;
+            result.append(str, 6);
+            str += 6;
+            continue;
         }
-        else {
-            str_new = StringUtils::nextUTF8(str);
-        }
-        
-        result.append(str, str_new - str);
-        str = str_new;
+		else if (ch == '\\') {
+			result.push_back('\\');
+		}
+        result.push_back(ch);
+        ++str;
     }
 }
 

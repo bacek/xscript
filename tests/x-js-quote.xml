@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="x-js-quote.xsl"?>
+<tests url="test.xml" name="x:js-quote">
+    <test>
+        <source>"</source>
+        <result>'"'</result>
+    </test>
+    <test>
+        <source>'</source>
+        <result>'\''</result>
+    </test>
+
+    <test>
+        <source>--</source>
+        <result>'\-\-'</result>
+    </test>
+
+    <test>
+        <source>\\</source>
+        <result>'\\\\'</result>
+    </test>
+
+    <test>
+        <source>
+</source>
+        <result>'\n'</result>
+    </test>
+
+    <test>
+        <source>&#13;&#10;&#13;&#10;</source>
+        <result>'\n\n'</result>
+    </test>
+
+    <test>
+        <source>&#13;&#13;</source>
+        <result>'\n\n'</result>
+    </test>
+
+    <test>
+        <source>Blah "blah"
+blah
+</source>
+        <result>'Blah "blah"\nblah\n'</result>
+    </test>
+</tests>

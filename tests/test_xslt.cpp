@@ -17,6 +17,8 @@
 class XsltTest : public CppUnit::TestFixture {
 public:
     void testEsc();
+    void testJsQuote();
+    void testJSONQuote();
     void testUrlencode();
     void testUrldecode();
     void testMD5();
@@ -31,6 +33,8 @@ private:
 private:
     CPPUNIT_TEST_SUITE(XsltTest);
     CPPUNIT_TEST(testEsc);
+    CPPUNIT_TEST(testJsQuote);
+    CPPUNIT_TEST(testJSONQuote);
     CPPUNIT_TEST(testUrlencode);
     CPPUNIT_TEST(testUrldecode);
     CPPUNIT_TEST(testMD5);
@@ -46,6 +50,16 @@ CPPUNIT_REGISTRY_ADD("xslt", "xscript");
 void
 XsltTest::testEsc() {
     testFile("x-esc.xml");
+}
+
+void
+XsltTest::testJsQuote() {
+    testFile("x-js-quote.xml");
+}
+
+void
+XsltTest::testJSONQuote() {
+    testFile("x-json-quote.xml");
 }
 
 void

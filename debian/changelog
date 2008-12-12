@@ -1,3 +1,9 @@
+xscript (5.48-0) hardy; urgency=low
+
+  * test
+
+ -- Ilya Golubtsov <golubtsov@golubtsov-nb-xp>  Thu, 11 Dec 2008 18:10:32 +0300
+
 xscript (5.47-4) unstable; urgency=low
 
   * add threadsafety for applying stylesheet
