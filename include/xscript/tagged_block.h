@@ -26,6 +26,7 @@ protected:
     virtual InvokeResult invokeInternal(Context *ctx);
     virtual void postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a);
     virtual void postParse();
+    static bool isTagParam(const Param *param);
 
 private:
     std::string canonical_method_;

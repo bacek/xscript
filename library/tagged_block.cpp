@@ -3,6 +3,7 @@
 #include <boost/current_function.hpp>
 #include <limits>
 
+#include "details/tag_param.h"
 #include "xscript/context.h"
 #include "xscript/logger.h"
 #include "xscript/doc_cache.h"
@@ -164,6 +165,11 @@ TaggedBlock::createCanonicalMethod(const char *prefix) {
             }
         }
     }
+}
+
+bool
+TaggedBlock::isTagParam(const Param *param) {
+	return NULL != dynamic_cast<const TagParam*>(param);
 }
 
 } // namespace xscript

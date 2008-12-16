@@ -3,30 +3,18 @@
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>
 
+#include "details/tag_param.h"
+
 #include "xscript/args.h"
 #include "xscript/param.h"
 #include "xscript/tagged_block.h"
+#include "xscript/util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
 
 namespace xscript {
-
-class TagParam : public Param {
-public:
-    TagParam(TaggedBlock *owner, xmlNodePtr node);
-    virtual ~TagParam();
-
-    virtual void parse();
-    virtual std::string asString(const Context *ctx) const;
-    virtual void add(const Context *ctx, ArgList &al) const;
-
-    static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
-
-private:
-    TaggedBlock *owner_;
-};
 
 TagParam::TagParam(TaggedBlock *owner, xmlNodePtr node) :
         Param(owner, node), owner_(owner) {
@@ -47,7 +35,7 @@ TagParam::parse() {
 std::string
 TagParam::asString(const Context *ctx) const {
     (void)ctx;
-    return std::string();
+    return StringUtils::EMPTY_STRING;
 }
 
 void
