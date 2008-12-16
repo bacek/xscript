@@ -415,10 +415,13 @@ DefaultRequestResponse::attach(std::istream *is, char *env[]) {
 void
 DefaultRequestResponse::detach() {
     boost::mutex::scoped_lock wl(write_mutex_);
-    if (!stream_locked_ && isBinaryInternal()) {
+    if (!stream_locked_ && isBinaryInternal()) {   
         setHeader("Content-length", boost::lexical_cast<std::string>(writer_->size()));
         sendHeadersInternal();
         writeByWriter(writer_.get());
+    }
+    else {
+        sendHeadersInternal();
     }
     detached_ = true;
 }

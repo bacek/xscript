@@ -2,6 +2,7 @@ xscript (5.48-1) unstable; urgency=low
 
   * isTagParam added to TaggedBlock
   * modified conditions fixed 
+  * fix in Request detaching
 
  -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 16 Dec 2008 13:08:41 +0300
 
