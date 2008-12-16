@@ -98,8 +98,8 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     XmlDocHelper doc;
     bool modified;
 
-    if (tag && tag->last_modified != Tag::UNDEFINED_TIME && st.st_mtime <= tag->last_modified) {
-        // We got tag and file modification time not greater than last_modified in tag
+    if (tag && tag->last_modified != Tag::UNDEFINED_TIME && st.st_mtime == tag->last_modified) {
+        // We got tag and file modification time equal than last_modified in tag
         // Set "modified" to false and omit loading doc.
         modified = false;
     }

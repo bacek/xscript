@@ -147,7 +147,7 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
             const Tag* tag = boost::any_cast<Tag>(&a);
             bool modified = true;
 
-            if (tag && tag->last_modified != Tag::UNDEFINED_TIME && st.st_mtime <= tag->last_modified) {
+            if (tag && tag->last_modified != Tag::UNDEFINED_TIME && st.st_mtime == tag->last_modified) {
                 modified = false;
             }
 
