@@ -13,6 +13,7 @@ namespace xscript {
 
 class Config;
 class Request;
+class ServerRequest;
 
 class FCGIServer : public Server, private boost::thread_group {
 public:
@@ -28,6 +29,17 @@ protected:
     void pid(const std::string &file);
 
 private:
+    class RequestAcceptor;
+
+    class RequestDetacher {
+    public:
+        explicit RequestDetacher(ServerRequest *req);
+        ~RequestDetacher();
+
+    private:
+        ServerRequest *req_;
+    };
+
     int socket_;
     int inbuf_size_, outbuf_size_;
     unsigned short alternate_port_, noxslt_port_;

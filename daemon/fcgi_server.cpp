@@ -47,6 +47,19 @@
 
 namespace xscript {
 
+class FCGIServer::RequestAcceptor {
+    public:
+        explicit RequestAcceptor(FCGX_Request *req);
+        ~RequestAcceptor();
+
+        bool accepted() const { return NULL != req_; }
+
+    private:
+        FCGX_Request *req_;
+};
+
+
+
 FCGIServer::FCGIServer(Config *config) :
         Server(config), socket_(-1), inbuf_size_(0), outbuf_size_(0), alternate_port_(0),
         workerCounter_(SimpleCounterFactory::instance()->createCounter("fcgi-workers", true)),
@@ -110,9 +123,10 @@ FCGIServer::handle() {
     }
 
     XmlUtils::registerReporters();
-
-    while (true) {
-        if (-1 != FCGX_Accept_r(&req)) {
+    
+    for (;;) {
+        RequestAcceptor request_acceptor(&req);
+        if (request_acceptor.accepted()) {
             try {
                 SimpleCounter::ScopedCount c(workerCounter_.get());
 
@@ -123,41 +137,29 @@ FCGIServer::handle() {
                 std::ostream os(&outbuf);
 
                 boost::shared_ptr<RequestResponse> request(new ServerRequest());
-                ServerRequest* server_request = dynamic_cast<ServerRequest*>(request.get());
+                ServerRequest *server_request = dynamic_cast<ServerRequest*>(request.get());
+                RequestDetacher request_detacher(server_request);
 
-                bool attach_error = false;
+                bool attach_success = false;
                 try {
-                    try {
-                        server_request->attach(&is, &os, req.envp);
-                    }
-                    catch (const std::exception &e) {
-                        attach_error = true;
-                        throw;
-                    }
+                    server_request->attach(&is, &os, req.envp);
+                    attach_success = true;
 
                     boost::shared_ptr<RequestData> data(
                         new RequestData(request, boost::shared_ptr<State>(new State())));
 
                     handleRequest(data);
-
-                    server_request->detach();
-                    FCGX_Finish_r(&req);
                 }
                 catch (const std::exception &e) {
-                    if (attach_error) {
+                    if (!attach_success) {
                         OperationMode::instance()->sendError(server_request, 400, e.what());
                     }
-                    server_request->detach();
                     throw;
                 }
             }
             catch (const std::exception &e) {
-                FCGX_Finish_r(&req);
                 log()->error("caught exception while handling request: %s", e.what());
             }
-        }
-        else {
-            log()->error("failed to accept fastcgi request");
         }
     }
     FCGX_Free(&req, 1);
@@ -186,5 +188,32 @@ bool
 FCGIServer::needApplyPerblockStylesheet(Request *request) const {
     return (request->getServerPort() != noxslt_port_);
 }
+
+
+FCGIServer::RequestAcceptor::RequestAcceptor(FCGX_Request *req) : req_(NULL) {
+    int result = FCGX_Accept_r(req);
+    if (0 == result) {
+        req_ = req;
+    }
+    else {
+        log()->error("failed to accept fastcgi request, result: %d", result);
+    }
+}
+
+FCGIServer::RequestAcceptor::~RequestAcceptor() {
+    if (NULL != req_) {
+        FCGX_Finish_r(req_);
+    }
+}
+
+
+FCGIServer::RequestDetacher::RequestDetacher(ServerRequest *req) : req_(req) {
+    assert(NULL != req);
+}
+
+FCGIServer::RequestDetacher::~RequestDetacher() {
+    req_->detach();
+}
+
 
 } // namespace xscript
