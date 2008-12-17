@@ -249,7 +249,7 @@ XmlUtils::reportXsltError(const std::string &error, xsltTransformContextPtr tctx
     if (NULL != tctx) {
         try {
             ctx = Stylesheet::getContext(tctx);
-            ctx->rootContext()->assignXsltError(Stylesheet::getBlock(tctx), error);
+            ctx->rootContext()->assignRuntimeError(Stylesheet::getBlock(tctx), error);
         }
         catch(const std::exception &e) {
             log()->error("caught exception during handling of error: %s. Exception: %s", error.c_str(), e.what());

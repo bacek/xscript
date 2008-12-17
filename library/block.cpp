@@ -166,12 +166,13 @@ Block::invokeInternal(Context *ctx) {
 
         return InvokeResult(processResponse(ctx, doc, a), true);
     }
-    catch (CriticalInvokeError &e) {
+    catch (const CriticalInvokeError &e) {
+        std::string full_error;
+        InvokeResult result = errorResult(e.what(), e.info(), full_error);
         if (!OperationMode::instance()->isProduction()) {
-            e.add("method", method());
-            throw CriticalInvokeError(e.what_info());
+            ctx->rootContext()->assignRuntimeError(this, full_error);
         }
-        return errorResult(e.what(), e.info());
+        return result;
     }
     catch (const InvokeError &e) {
         return errorResult(e.what(), e.info());
@@ -240,7 +241,7 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
         log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
 
         if (!OperationMode::instance()->isProduction()) {
-            std::string result = ctx->rootContext()->getXsltError(this);
+            std::string result = ctx->rootContext()->getRuntimeError(this);
             if (!result.empty()) {
                 throw CriticalInvokeError(result.c_str(), "xslt", xsltName());
             }
@@ -257,6 +258,12 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
 
 InvokeResult
 Block::errorResult(const char *error, const InvokeError::InfoMapType &error_info) const {
+    std::string full_error;
+    return errorResult(error, error_info, full_error);
+}
+
+InvokeResult
+Block::errorResult(const char *error, const InvokeError::InfoMapType &error_info, std::string &full_error) const {
 
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
@@ -297,7 +304,8 @@ Block::errorResult(const char *error, const InvokeError::InfoMapType &error_info
 
     xmlDocSetRootElement(doc.get(), node.release());
 
-    log()->error("%s", stream.str().c_str());
+    full_error.assign(stream.str());
+    log()->error("%s", full_error.c_str());
 
     return InvokeResult(doc, false);
 }

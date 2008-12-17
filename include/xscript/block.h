@@ -76,6 +76,7 @@ public:
 
     InvokeResult errorResult(const char *error) const;
     InvokeResult errorResult(const char *error, const InvokeError::InfoMapType &error_info) const;
+    InvokeResult errorResult(const char *error, const InvokeError::InfoMapType &error_info, std::string &full_error) const;
 
     void throwBadArityError() const;
 

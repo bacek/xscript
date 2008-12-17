@@ -237,19 +237,19 @@ Context::noXsltPort(bool value) {
 }
 
 std::string
-Context::getXsltError(const Block *block) const {
-    boost::mutex::scoped_lock lock(xslt_errors_mutex_);
-    std::map<const Block*, std::string>::const_iterator it = xslt_errors_.find(block);
-    if (xslt_errors_.end() == it) {
-        return std::string();
+Context::getRuntimeError(const Block *block) const {
+    boost::mutex::scoped_lock lock(runtime_errors_mutex_);
+    std::map<const Block*, std::string>::const_iterator it = runtime_errors_.find(block);
+    if (runtime_errors_.end() == it) {
+        return StringUtils::EMPTY_STRING;
     }
     return it->second;
 }
 
 void
-Context::assignXsltError(const Block *block, const std::string &error_message) {
-    boost::mutex::scoped_lock lock(xslt_errors_mutex_);
-    xslt_errors_[block].assign(error_message);
+Context::assignRuntimeError(const Block *block, const std::string &error_message) {
+    boost::mutex::scoped_lock lock(runtime_errors_mutex_);
+    runtime_errors_[block].assign(error_message);
 }
 
 void
