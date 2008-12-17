@@ -1,3 +1,9 @@
+xscript (5.48-2) unstable; urgency=low
+
+  * added stability on fcgi accept failed (compwolf's work)
+
+ -- Ilya Golubtsov <golubtsov@yandex-team.ru>  Wed, 17 Dec 2008 12:04:46 +0300
+
 xscript (5.48-1) unstable; urgency=low
 
   * isTagParam added to TaggedBlock
