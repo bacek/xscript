@@ -83,7 +83,15 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     }
 
     if (!tagged()) {
-        return (this->*method_)(file, ctx);
+        try {
+        	return (this->*method_)(file, ctx);
+        }
+        catch(const InvokeError &e) {
+        	throw;
+        }
+        catch(const std::exception &e) {
+        	throw InvokeError(e.what(), "file", file);
+        }
     }
 
     struct stat st;
@@ -105,7 +113,15 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     }
     else {
         modified = true;
-        doc = (this->*method_)(file, ctx);
+        try {
+        	doc = (this->*method_)(file, ctx);
+        }
+        catch(const InvokeError &e) {
+        	throw;
+        }
+        catch(const std::exception &e) {
+        	throw InvokeError(e.what(), "file", file);
+        }
     }
 
     Tag local_tag(modified, st.st_mtime, Tag::UNDEFINED_TIME);
