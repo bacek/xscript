@@ -1,3 +1,10 @@
+xscript (5.49-0) unstable; urgency=low
+
+  * error reporting fixed
+  * version synchronization added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 18 Dec 2008 15:19:19 +0300
+
 xscript (5.48-2) unstable; urgency=low
 
   * added stability on fcgi accept failed (compwolf's work)
