@@ -4,7 +4,7 @@ xscript_file_la_SOURCES = file_block.cpp file_extension.cpp
 
 
 xscript_file_la_LIBADD = ../library/libxscript.la
-xscript_file_la_LDFLAGS = -lcurl -module -avoid-version -export-dynamic
+xscript_file_la_LDFLAGS = -lcurl -module -export-dynamic @VERSION_INFO@
 
 noinst_HEADERS = file_block.h file_extension.h
 

@@ -4,7 +4,7 @@ xscript_http_la_SOURCES = http_helper.cpp http_block.cpp
 
 
 xscript_http_la_LIBADD = ../library/libxscript.la
-xscript_http_la_LDFLAGS = -lcurl -module -avoid-version -export-dynamic
+xscript_http_la_LDFLAGS = -lcurl -module -export-dynamic @VERSION_INFO@
 
 noinst_HEADERS = http_helper.h http_block.h
 
