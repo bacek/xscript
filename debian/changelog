@@ -1,3 +1,10 @@
+xscript (5.49-1) unstable; urgency=low
+
+  * stat files fixed in file block and http block
+  * exception handling fixed in tagged block
+
+ -- Ilya Golubtsov <golubtsov@yandex-team.ru>  Fri, 19 Dec 2008 15:15:49 +0300
+
 xscript (5.49-0) unstable; urgency=low
 
   * error reporting fixed

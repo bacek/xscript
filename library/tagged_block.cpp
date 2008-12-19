@@ -66,47 +66,31 @@ TaggedBlock::invokeInternal(Context *ctx) {
         return Block::invokeInternal(ctx);
     }
 
+    bool have_cached_doc = false;
+    XmlDocHelper doc(NULL);
+    Tag tag;
     try {
-        bool have_cached_doc = false;
-        XmlDocHelper doc(NULL);
-        try {
-            Tag tag;
-            have_cached_doc = DocCache::instance()->loadDoc(ctx, this, tag, doc);
-
-            if (have_cached_doc && Tag::UNDEFINED_TIME == tag.expire_time) {
-
-                tag.modified = true;
-
-                boost::any a(tag);
-                XmlDocHelper newdoc = call(ctx, a);
-                tag = boost::any_cast<Tag>(a);
-
-                if (NULL != newdoc.get()) {
-                    return InvokeResult(processResponse(ctx, newdoc, a), true);
-                }
-
-                if (tag.modified) {
-                    log()->error("Got empty document in tagged block. Cached copy used");
-                }
-                else {
-                    log()->debug("Got empty document and tag not modified. Cached copy used");
-                }
-            }
-        }
-        catch (const std::exception &e) {
-            log()->error("caught exception while invoking tagged block: %s", e.what());
-        }
-
-        if (have_cached_doc) {
-            evalXPath(ctx, doc);
-            return InvokeResult(doc, true);
-        }
-
-        return Block::invokeInternal(ctx);
+        have_cached_doc = DocCache::instance()->loadDoc(ctx, this, tag, doc);
     }
     catch (const std::exception &e) {
-        return errorResult(e.what());
+        log()->error("caught exception while fetching cached doc: %s", e.what());
     }
+
+    if (!have_cached_doc) {
+        return Block::invokeInternal(ctx);
+    }
+    
+    if (Tag::UNDEFINED_TIME == tag.expire_time) {
+        tag.modified = true;
+        boost::any a(tag);
+        XmlDocHelper newdoc = call(ctx, a);
+        if (NULL != newdoc.get()) {
+            return InvokeResult(processResponse(ctx, newdoc, a), true);
+        }
+    }
+
+    evalXPath(ctx, doc);
+    return InvokeResult(doc, true);
 }
 
 void
@@ -169,7 +153,7 @@ TaggedBlock::createCanonicalMethod(const char *prefix) {
 
 bool
 TaggedBlock::isTagParam(const Param *param) {
-	return NULL != dynamic_cast<const TagParam*>(param);
+    return NULL != dynamic_cast<const TagParam*>(param);
 }
 
 } // namespace xscript

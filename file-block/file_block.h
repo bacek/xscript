@@ -16,8 +16,8 @@ typedef XmlDocHelper (FileBlock::*Method)(const std::string&, Context*);
  * xinclude and tagging.
  *
  * Support two methods:
- *	1. load - loading file
- *	2. include - loading file with xinclude processing.
+ *    1. load - loading file
+ *    2. include - loading file with xinclude processing.
  *
  * Both methods support tagging based on file modification time.
  */
@@ -33,13 +33,15 @@ protected:
     /**
      * Loading file with optional xinclude processing.
      */
-    XmlDocHelper loadFile(const std::string& file_name, Context *ctx);
+    XmlDocHelper loadFile(const std::string &file_name, Context *ctx);
 
     /**
      * Create full filename based on relative name in first arg.
      */
 
-    XmlDocHelper invokeFile(const std::string& file_name, Context *ctx);
+    XmlDocHelper invokeFile(const std::string &file_name, Context *ctx);
+    
+    XmlDocHelper invokeMethod(const std::string &file_name, Context *ctx);
 
 private:
     Method method_;

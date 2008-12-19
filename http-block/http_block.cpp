@@ -126,27 +126,19 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
         namespace fs = boost::filesystem;
         url.erase(0, sizeof("file://") - 1);
         fs::path file_path(url);
-        if (!fs::exists(file_path)) {
-            throw InvokeError("url is not exist", "url", url);
-        }
-
         std::string native_path = file_path.native_file_string();
-        XmlDocHelper doc = XmlDocHelper(xmlParseFile(native_path.c_str()));
-        if (doc.get() == NULL) {
-            throw InvokeError("got empty document", "url", url);
+        
+        struct stat st;
+        int res = stat(native_path.c_str(), &st);
+        if (res != 0) {
+            std::stringstream stream;
+            StringUtils::report("failed to stat file: ", errno, stream);
+            throw InvokeError(stream.str(), "url", url);
         }
-
+        
+        bool modified = true;
         if (tagged()) {
-
-            struct stat st;
-            int res = stat(native_path.c_str(), &st);
-            if (res != 0) {
-                return XmlDocHelper();
-            }
-
             const Tag* tag = boost::any_cast<Tag>(&a);
-            bool modified = true;
-
             if (tag && tag->last_modified != Tag::UNDEFINED_TIME && st.st_mtime == tag->last_modified) {
                 modified = false;
             }
@@ -154,7 +146,14 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
             Tag local_tag(modified, st.st_mtime, Tag::UNDEFINED_TIME);
             a = boost::any(local_tag);
         }
-
+        
+        XmlDocHelper doc;
+        if (modified) {
+            doc = XmlDocHelper(xmlParseFile(native_path.c_str()));
+            if (doc.get() == NULL) {
+                throw InvokeError("got empty document", "url", url);
+            }
+        }
         return doc;
     }
 

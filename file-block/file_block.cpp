@@ -1,6 +1,7 @@
 #include "settings.h"
 
 #include <sys/stat.h>
+#include <cerrno>
 
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
@@ -82,46 +83,29 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
         throw error;
     }
 
-    if (!tagged()) {
-        try {
-        	return (this->*method_)(file, ctx);
-        }
-        catch(const InvokeError &e) {
-        	throw;
-        }
-        catch(const std::exception &e) {
-        	throw InvokeError(e.what(), "file", file);
-        }
-    }
-
     struct stat st;
     int res = stat(file.c_str(), &st);
     if (res != 0) {
-        // Return empty document if we can't stat file. It's not available anyway.
-        return XmlDocHelper();
+        std::stringstream stream;
+        StringUtils::report("failed to stat file: ", errno, stream);
+        throw InvokeError(stream.str(), "file", file);
+    }
+    
+    if (!tagged()) {
+        return invokeMethod(file, ctx);
     }
 
     const Tag* tag = boost::any_cast<Tag>(&a);
 
     XmlDocHelper doc;
-    bool modified;
-
+    bool modified = true;
     if (tag && tag->last_modified != Tag::UNDEFINED_TIME && st.st_mtime == tag->last_modified) {
         // We got tag and file modification time equal than last_modified in tag
         // Set "modified" to false and omit loading doc.
         modified = false;
     }
     else {
-        modified = true;
-        try {
-        	doc = (this->*method_)(file, ctx);
-        }
-        catch(const InvokeError &e) {
-        	throw;
-        }
-        catch(const std::exception &e) {
-        	throw InvokeError(e.what(), "file", file);
-        }
+        doc = invokeMethod(file, ctx);
     }
 
     Tag local_tag(modified, st.st_mtime, Tag::UNDEFINED_TIME);
@@ -131,7 +115,20 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
 }
 
 XmlDocHelper
-FileBlock::loadFile(const std::string& file_name, Context *ctx) {
+FileBlock::invokeMethod(const std::string &file_name, Context *ctx) {
+    try {
+        return (this->*method_)(file_name, ctx);
+    }
+    catch(const InvokeError &e) {
+        throw;
+    }
+    catch(const std::exception &e) {
+        throw InvokeError(e.what(), "file", file_name);
+    }
+}
+
+XmlDocHelper
+FileBlock::loadFile(const std::string &file_name, Context *ctx) {
     (void)ctx;
     log()->debug("%s: loading file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
@@ -152,7 +149,7 @@ FileBlock::loadFile(const std::string& file_name, Context *ctx) {
 }
 
 XmlDocHelper
-FileBlock::invokeFile(const std::string& file_name, Context *ctx) {
+FileBlock::invokeFile(const std::string &file_name, Context *ctx) {
     log()->debug("%s: invoking file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
     PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
