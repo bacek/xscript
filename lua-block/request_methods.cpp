@@ -87,7 +87,6 @@ call_method(lua_State *lua, Ret (Class::*func)(A0) const) {
     return lua_request_method<2>::invoke(lua, std::mem_fun(func));
 }
 
-
 extern "C" int
 luaRequestGetArg(lua_State *lua) throw () {
     return call_method(lua, &Request::getArg);
@@ -137,6 +136,12 @@ extern "C"
 int
 luaRequestIsSecure(lua_State *lua) throw () {
     return call_method(lua, &Request::isSecure);
+}
+
+extern "C"
+int
+luaRequestIsBot(lua_State *lua) throw () {
+    return call_method(lua, &Request::isBot);
 }
 
 extern "C" int
@@ -217,6 +222,7 @@ static const struct luaL_reg requestlib [] = {
     {"hasCookie",     luaRequestHasCookie},
 
     {"isSecure",        luaRequestIsSecure},
+    {"isBot",           luaRequestIsBot},
     {"getURI",          luaRequestGetURI},
     {"getPath",         luaRequestGetPath},
     {"getQuery",        luaRequestGetQuery},
@@ -224,7 +230,7 @@ static const struct luaL_reg requestlib [] = {
     {"getMethod",       luaRequestGetMethod},
     {"getRemoteIp",     luaRequestGetRemoteIp},
 
-    {"getHost",     luaRequestGetHost},
+    {"getHost",         luaRequestGetHost},
     {"getPathInfo",     luaRequestGetPathInfo},
     {"getRealPath",     luaRequestGetRealPath},
     {"getHTTPUser",     luaRequestGetHTTPUser},

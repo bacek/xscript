@@ -8,6 +8,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/current_function.hpp>
 
+#include "xscript/authorizer.h"
 #include "xscript/request_impl.h"
 #include "internal/parser.h"
 #include "xscript/range.h"
@@ -74,7 +75,7 @@ File::data() const {
     return data_;
 }
 
-RequestImpl::RequestImpl() {
+RequestImpl::RequestImpl() : is_bot_(false) {
 }
 
 RequestImpl::~RequestImpl() {
@@ -379,6 +380,11 @@ RequestImpl::isSecure() const {
     return !val.empty() && ("on" == val);
 }
 
+bool
+RequestImpl::isBot() const {
+    return is_bot_;
+}
+
 std::pair<const char*, std::streamsize>
 RequestImpl::requestBody() const {
     return std::make_pair<const char*, std::streamsize>(&body_[0], body_.size());
@@ -428,6 +434,8 @@ RequestImpl::attach(std::istream *is, char *env[]) {
     else {
         StringUtils::parse(createRange(body_), args_, enc.get());
     }
+    
+    is_bot_ = Authorizer::instance()->isBot(getHeader("User-Agent"));
 }
 
 

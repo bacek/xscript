@@ -252,6 +252,11 @@ DefaultRequestResponse::isSecure() const {
     return impl_->isSecure();
 }
 
+bool
+DefaultRequestResponse::isBot() const {
+    return impl_->isBot();
+}
+
 std::pair<const char*, std::streamsize>
 DefaultRequestResponse::requestBody() const {
     return impl_->requestBody();

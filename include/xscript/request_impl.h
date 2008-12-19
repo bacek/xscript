@@ -121,6 +121,7 @@ public:
     virtual std::pair<const char*, std::streamsize> remoteFile(const std::string &name) const;
 
     virtual bool isSecure() const;
+    virtual bool isBot() const;
     virtual std::pair<const char*, std::streamsize> requestBody() const;
     virtual bool suppressBody() const;
 
@@ -139,6 +140,7 @@ private:
 
     std::map<std::string, File> files_;
     std::vector<StringUtils::NamedValue> args_;
+    bool is_bot_;
 };
 
 class RequestFactory : public Component<RequestFactory> {

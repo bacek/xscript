@@ -4,7 +4,6 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include <xscript/authorizer.h>
 #include <xscript/context.h>
 #include <xscript/protocol.h>
 #include <xscript/util.h>
@@ -42,8 +41,7 @@ static std::string getContentLength(const xscript::Context *ctx) {
 }
 
 static std::string getBot(const xscript::Context *ctx) {
-    return xscript::Authorizer::instance()->checkBot(
-        const_cast<xscript::Context*>(ctx)) ? "yes" : "no";
+	return ctx->request()->isBot() ? "yes" : "no";
 }
 
 static std::string getPath(const xscript::Context *ctx) {

@@ -1,6 +1,8 @@
 #ifndef _XSCRIPT_AUTHORIZER_H_
 #define _XSCRIPT_AUTHORIZER_H_
 
+#include <vector>
+
 #include <xscript/component.h>
 
 namespace xscript {
@@ -19,9 +21,13 @@ public:
     Authorizer();
     virtual ~Authorizer();
 
+    virtual void init(const Config *config);
     virtual boost::shared_ptr<AuthContext> checkAuth(const boost::shared_ptr<Context> &ctx);
     virtual void redirectToAuth(const boost::shared_ptr<Context> &ctx, const AuthContext *auth) const;
-    virtual bool checkBot(Context *ctx);
+    virtual bool isBot(const std::string &user_agent);
+    
+private:
+    static std::vector<std::string> bots_;
 };
 
 } // namespace xscript

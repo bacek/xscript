@@ -2,7 +2,6 @@
 
 #include <cassert>
 
-#include "xscript/authorizer.h"
 #include "xscript/context.h"
 #include "xscript/encoder.h"
 #include "xscript/protocol.h"
@@ -219,6 +218,7 @@ StateProtocolNode::build(Context* ctx) {
     }
 
     setParameter(Protocol::SECURE.c_str(), ctx->request()->isSecure() ? "yes" : "no");
+    setParameter(Protocol::BOT.c_str(), ctx->request()->isBot() ? "yes" : "no");
     setParameter(Protocol::METHOD.c_str(), ctx->request()->getRequestMethod());
 
     const std::string& user = ctx->request()->getRemoteUser();
@@ -245,9 +245,6 @@ StateProtocolNode::build(Context* ctx) {
     if (!type.empty()) {
         setParameter(Protocol::CONTENT_TYPE.c_str(), type);
     }
-
-    setParameter(Protocol::BOT.c_str(),
-        Authorizer::instance()->checkBot(const_cast<Context*>(ctx)) ? "yes" : "no");
 }
 
 

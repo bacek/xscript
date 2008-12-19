@@ -67,6 +67,7 @@ public:
     virtual std::pair<const char*, std::streamsize> remoteFile(const std::string &name) const = 0;
 
     virtual bool isSecure() const = 0;
+    virtual bool isBot() const = 0;
     virtual std::pair<const char*, std::streamsize> requestBody() const = 0;
     virtual bool suppressBody() const = 0;
 };

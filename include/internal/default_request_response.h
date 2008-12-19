@@ -75,6 +75,7 @@ public:
     virtual std::pair<const char*, std::streamsize> remoteFile(const std::string &name) const;
 
     virtual bool isSecure() const;
+    virtual bool isBot() const;
     virtual std::pair<const char*, std::streamsize> requestBody() const;
 
     virtual void setCookie(const Cookie &cookie);
