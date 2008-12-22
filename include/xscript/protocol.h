@@ -22,7 +22,7 @@ public:
     Protocol();
     virtual ~Protocol();
 
-    static std::string get(const Context *ctx, const char* name);
+    static std::string get(const Context *ctx, const char *name);
 
     static const std::string PATH;
     static const std::string PATH_INFO;
@@ -43,11 +43,11 @@ public:
     static const std::string BOT;
 
 private:
-    typedef boost::function<std::string (const Context*)> ProtocolMethod;
     friend class ProtocolRegistrator;
-
-private:
+    
+    typedef boost::function<std::string (const Context*)> ProtocolMethod;
     typedef std::map<std::string, ProtocolMethod, StringCILess> MethodMap;
+    
     static MethodMap methods_;
 };
 

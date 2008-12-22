@@ -30,15 +30,29 @@
 
 namespace xscript {
 
-Context::Context(const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData>& data) :
+Context::Context(const boost::shared_ptr<Script> &script,
+                 const boost::shared_ptr<RequestData> &data) :
         stopped_(false), request_data_(data), parent_context_(NULL), xslt_name_(script->xsltName()),
-        script_(script), writer_(), flags_(0) {
+        script_(script), writer_(), flags_(0),
+        params_(new std::map<std::string, boost::any>()), params_mutex_(new boost::mutex()) {
+
     assert(script_.get());
-    ExtensionList::instance()->initContext(this);
-    const Server *server = VirtualHostData::instance()->getServer();
-    if (NULL != server) {
-        noXsltPort(!server->needApplyPerblockStylesheet(request()));
-    }
+    init();
+}
+
+Context::Context(const boost::shared_ptr<Script> &script, Context *ctx) :
+        stopped_(false), parent_context_(ctx), xslt_name_(script->xsltName()),
+        script_(script), writer_(), flags_(0) {
+
+    assert(script_.get());
+    assert(ctx);
+
+    request_data_ = ctx->request_data_;
+    params_mutex_ = ctx->params_mutex_;
+    params_ = ctx->params_;
+    auth_ = ctx->auth_;
+
+    init();
 }
 
 Context::~Context() {
@@ -48,6 +62,22 @@ Context::~Context() {
     }
     ExtensionList::instance()->destroyContext(this);
     std::for_each(clear_node_list_.begin(), clear_node_list_.end(), boost::bind(&xmlFreeNode, _1));
+}
+
+void
+Context::init() {
+    if (isRoot()) {
+        ExtensionList::instance()->initContext(this);
+    }
+    const Server *server = VirtualHostData::instance()->getServer();
+    if (NULL != server) {
+        noXsltPort(!server->needApplyPerblockStylesheet(request()));
+    }
+}
+
+boost::shared_ptr<Context>
+Context::createChildContext(const boost::shared_ptr<Script> &script) {
+    return boost::shared_ptr<Context>(new Context(script, this));
 }
 
 void
@@ -146,13 +176,13 @@ Context::result(unsigned int n) const {
 
 std::string
 Context::xsltName() const {
-    boost::mutex::scoped_lock sl(params_mutex_);
+    boost::mutex::scoped_lock sl(attr_mutex_);
     return xslt_name_;
 }
 
 void
 Context::xsltName(const std::string &value) {
-    boost::mutex::scoped_lock sl(params_mutex_);
+    boost::mutex::scoped_lock sl(attr_mutex_);
     if (value.empty()) {
         xslt_name_.erase();
     }
@@ -190,25 +220,25 @@ Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
 
 bool
 Context::forceNoThreaded() const {
-    boost::mutex::scoped_lock lock(params_mutex_);
+    boost::mutex::scoped_lock lock(attr_mutex_);
     return flags_ & FLAG_FORCE_NO_THREADED;
 }
 
 void
 Context::forceNoThreaded(bool value) {
-    boost::mutex::scoped_lock lock(params_mutex_);
+    boost::mutex::scoped_lock lock(attr_mutex_);
     flag(FLAG_FORCE_NO_THREADED, value);
 }
 
 bool
 Context::noXsltPort() const {
-    boost::mutex::scoped_lock lock(params_mutex_);
+    boost::mutex::scoped_lock lock(attr_mutex_);
     return flags_ & FLAG_NO_XSLT_PORT;
 }
 
 void
 Context::noXsltPort(bool value) {
-    boost::mutex::scoped_lock lock(params_mutex_);
+    boost::mutex::scoped_lock lock(attr_mutex_);
     flag(FLAG_NO_XSLT_PORT, value);
 }
 
@@ -228,11 +258,6 @@ Context::assignRuntimeError(const Block *block, const std::string &error_message
     runtime_errors_[block].assign(error_message);
 }
 
-void
-Context::parentContext(Context* context) {
-    parent_context_ = context;
-}
-
 Context*
 Context::parentContext() const {
     return parent_context_;
@@ -241,10 +266,15 @@ Context::parentContext() const {
 Context*
 Context::rootContext() const {
     const Context* ctx = this;
-    while (NULL != ctx->parentContext()) {
-        ctx = ctx->parentContext();
+    while (NULL != ctx->parent_context_) {
+        ctx = ctx->parent_context_;
     }
     return const_cast<Context*>(ctx);
+}
+
+bool
+Context::isRoot() const {
+    return parent_context_ == NULL;
 }
 
 bool
@@ -275,7 +305,9 @@ ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {
 }
 
 ContextStopper::~ContextStopper() {
-    ExtensionList::instance()->stopContext(ctx_.get());
+    if (ctx_->isRoot()) {
+        ExtensionList::instance()->stopContext(ctx_.get());
+    }
     ctx_->stop();
 }
 

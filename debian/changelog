@@ -3,8 +3,9 @@ xscript (5.50-0) unstable; urgency=low
   * bot flag moved to request
   * bot checking added to Authorizer
   * isBot added to Lua
+  * Context refactoring
 
- -- Ilya Golubtsov <golubtsov@yandex-team.ru>  Fri, 19 Dec 2008 17:10:25 +0300
+ -- Ilya Golubtsov <golubtsov@yandex-team.ru>  Mon, 22 Dec 2008 16:42:51 +0300
 
 xscript (5.49-1) unstable; urgency=low
 

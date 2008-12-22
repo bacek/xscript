@@ -35,9 +35,12 @@ class DocumentWriter;
  */
 class Context : private boost::noncopyable {
 public:
-    Context(const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData>& data);
+    Context(const boost::shared_ptr<Script> &script,
+            const boost::shared_ptr<RequestData> &data);
     virtual ~Context();
 
+    boost::shared_ptr<Context> createChildContext(const boost::shared_ptr<Script> &script);
+    
     void wait(int millis);
     void expect(unsigned int count);
     void result(unsigned int n, InvokeResult result);
@@ -67,9 +70,9 @@ public:
         return script_;
     }
 
-    void parentContext(Context* context);
     Context* parentContext() const;
     Context* rootContext() const;
+    bool isRoot() const;
 
     std::string xsltName() const;
     void xsltName(const std::string &value);
@@ -88,7 +91,7 @@ public:
     template<typename T> void param(const std::string &name, const T &t);
 
     // Get or create param
-    template<typename T> T param(const std::string &name, const boost::function<T ()>& creator);
+    template<typename T> T param(const std::string &name, const boost::function<T ()> &creator);
 
     bool stopped() const;
 
@@ -105,6 +108,8 @@ public:
     friend class ContextStopper;
 
 private:
+    Context(const boost::shared_ptr<Script> &script, Context *ctx);
+    void init();
     void stop();
 
     inline void flag(unsigned int type, bool value) {
@@ -129,8 +134,10 @@ private:
 
     std::map<const Block*, std::string> runtime_errors_;
 
-    std::map<std::string, boost::any> params_;
-    mutable boost::mutex params_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_;
+    boost::shared_ptr<std::map<std::string, boost::any> > params_;
+    boost::shared_ptr<boost::mutex> params_mutex_;
+    
+    mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_;
 
     TimeoutCounter timer_;
 
@@ -148,9 +155,9 @@ private:
 
 template<typename T> inline T
 Context::param(const std::string &name) const {
-    boost::mutex::scoped_lock sl(params_mutex_);
-    std::map<std::string, boost::any>::const_iterator i = params_.find(name);
-    if (params_.end() != i) {
+    boost::mutex::scoped_lock sl(*params_mutex_);
+    std::map<std::string, boost::any>::const_iterator i = params_->find(name);
+    if (params_->end() != i) {
         return boost::any_cast<T>(i->second);
     }
     else {
@@ -161,10 +168,10 @@ Context::param(const std::string &name) const {
 template<typename T> inline void
 Context::param(const std::string &name, const T &t) {
     std::pair<std::string, boost::any> p(name, boost::any(t));
-    boost::mutex::scoped_lock sl(params_mutex_);
-    std::map<std::string, boost::any>::iterator i = params_.find(name);
-    if (params_.end() == i) {
-        params_.insert(p);
+    boost::mutex::scoped_lock sl(*params_mutex_);
+    std::map<std::string, boost::any>::iterator i = params_->find(name);
+    if (params_->end() == i) {
+        params_->insert(p);
     }
     else {
         throw std::invalid_argument(std::string("duplicate param: ").append(name));
@@ -172,16 +179,16 @@ Context::param(const std::string &name, const T &t) {
 }
 
 template<typename T> inline T
-Context::param(const std::string &name, const boost::function<T ()>& creator) {
-    boost::mutex::scoped_lock sl(params_mutex_);
-    std::map<std::string, boost::any>::const_iterator i = params_.find(name);
-    if (params_.end() != i) {
+Context::param(const std::string &name, const boost::function<T ()> &creator) {
+    boost::mutex::scoped_lock sl(*params_mutex_);
+    std::map<std::string, boost::any>::const_iterator i = params_->find(name);
+    if (params_->end() != i) {
         return boost::any_cast<T>(i->second);
     }
     else {
         T t = creator();
         std::pair<std::string, boost::any> p(name, boost::any(t));
-        params_.insert(p);
+        params_->insert(p);
         return t;
     }
 }

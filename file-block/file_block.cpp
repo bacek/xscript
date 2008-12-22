@@ -170,8 +170,8 @@ FileBlock::invokeFile(const std::string &file_name, Context *ctx) {
     }
 
     boost::shared_ptr<Script> script = Script::create(file_name);
-    boost::shared_ptr<Context> local_ctx(new Context(script, ctx->requestData()));
-    local_ctx->parentContext(ctx);
+    boost::shared_ptr<Context> local_ctx = ctx->createChildContext(script);
+    
     local_ctx->startTimer(std::min(ctx->timer().remained(), timer().remained()));
 
     if (threaded() || ctx->forceNoThreaded()) {
@@ -179,7 +179,6 @@ FileBlock::invokeFile(const std::string &file_name, Context *ctx) {
     }
 
     ContextStopper ctx_stopper(local_ctx);
-    local_ctx->authContext(ctx->authContext());
 
     XmlDocHelper doc = script->invoke(local_ctx);
     XmlUtils::throwUnless(NULL != doc.get());

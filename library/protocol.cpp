@@ -114,7 +114,7 @@ Protocol::~Protocol() {
 }
 
 std::string
-Protocol::get(const Context *ctx, const char* name) {
+Protocol::get(const Context *ctx, const char *name) {
     assert(ctx);
     MethodMap::iterator it = methods_.find(name);
     if (methods_.end() == it) {

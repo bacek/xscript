@@ -159,7 +159,7 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
     if (!OperationMode::instance()->isProduction()) {
         std::string result;
         for (std::vector<Block*>::iterator i = blocks_.begin(), end = blocks_.end(); i != end; ++i) {
-            std::string error = ctx->rootContext()->getRuntimeError(*i);
+            std::string error = ctx->getRuntimeError(*i);
             if (!error.empty()) {
                 result.append(error);
                 result.push_back(' ');
@@ -191,7 +191,7 @@ Script::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
         Object::applyStylesheet(stylesheet, ctx, doc, false);
         std::string postfix = "Script: " + name() + ". Main stylesheet: " + stylesheet->name();
         if (!OperationMode::instance()->isProduction()) {
-            std::string result = ctx->rootContext()->getRuntimeError(NULL);
+            std::string result = ctx->getRuntimeError(NULL);
             if (!result.empty()) {
                 result += ". " + postfix;
                 throw InvokeError(result.c_str());

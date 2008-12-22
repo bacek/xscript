@@ -146,13 +146,13 @@ Block::invoke(Context *ctx) {
     }
 
     try {
-    	return invokeInternal(ctx);
+        return invokeInternal(ctx);
     }
     catch (const CriticalInvokeError &e) {
         std::string full_error;
         InvokeResult result = errorResult(e.what(), e.info(), full_error);
         if (!OperationMode::instance()->isProduction()) {
-            ctx->rootContext()->assignRuntimeError(this, full_error);
+            ctx->assignRuntimeError(this, full_error);
         }
         return result;
     }
@@ -162,7 +162,6 @@ Block::invoke(Context *ctx) {
     catch (const std::exception &e) {
         return errorResult(e.what());
     }
-    
 }
 
 InvokeResult
@@ -243,7 +242,7 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
         log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
 
         if (!OperationMode::instance()->isProduction()) {
-            std::string result = ctx->rootContext()->getRuntimeError(this);
+            std::string result = ctx->getRuntimeError(this);
             if (!result.empty()) {
                 throw CriticalInvokeError(result.c_str(), "xslt", xsltName());
             }
