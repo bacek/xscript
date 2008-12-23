@@ -303,19 +303,19 @@ Context::startTimer(int timeout) {
 bool
 Context::ParamsMap::insert(const std::string &name, const boost::any &value) {
     boost::mutex::scoped_lock sl(mutex_);
-    iterator it = params_->find(name);
-    if (params_->end() != it) {
-    	return false;
+    iterator it = params_.find(name);
+    if (params_.end() != it) {
+        return false;
     }
-    params_->insert(std::make_pair(name, value));
+    params_.insert(std::make_pair(name, value));
     return true;
 }
 
 bool
 Context::ParamsMap::find(const std::string &name, boost::any &value) const {
     boost::mutex::scoped_lock sl(mutex_);
-    iterator it = params_->find(name);
-    if (params_->end() == it) {
+    iterator it = params_.find(name);
+    if (params_.end() == it) {
         return false;
     }
     value = it->second;
