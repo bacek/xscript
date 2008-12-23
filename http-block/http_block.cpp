@@ -114,12 +114,17 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
     const std::vector<Param*> &p = params();
-
-    if (p.size() < 1 || p.size() > 2) {
+    unsigned int size = p.size();
+    if (size == 0) {
         throwBadArityError();
     }
-
-    std::string url = p[0]->asString(ctx);
+    
+    unsigned int shift = isTagParam(p.back()) ? 1 : 0;
+    if (shift >= size) {
+        throwBadArityError();
+    }
+    
+    std::string url = concatParams(ctx, 0, size - shift - 1);
     PROFILER(log(), "getHttp: " + url);
 
     if (strncasecmp(url.c_str(), "file://", sizeof("file://") - 1) == 0) {
@@ -191,12 +196,13 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
     const std::vector<Param*> &p = params();
-
-    if (p.size() != 1 || tagged()) {
+    unsigned int size = p.size();
+    
+    if (size == 0 || tagged()) {
         throw InvokeError("bad arity");
     }
-
-    std::string url = p[0]->asString(ctx);
+    
+    std::string url = concatParams(ctx, 0, size - 1);
     PROFILER(log(), "getBinaryPage: " + url);
 
     checkTimeout(url);
@@ -242,18 +248,23 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
     const std::vector<Param*> &p = params();
-
-    if (p.size() < 2 || p.size() > 3) {
+    unsigned int size = p.size();
+    if (size < 2) {
         throwBadArityError();
     }
-
-    std::string url = p[0]->asString(ctx);
-
+    
+    unsigned int shift = isTagParam(p.back()) ? 2 : 1;
+    if (shift >= size) {
+        throwBadArityError();
+    }
+    
+    std::string url = concatParams(ctx, 0, size - shift - 1);
+    
     checkTimeout(url);
 
     const Tag *tag = boost::any_cast<Tag>(&a);
     HttpHelper helper(url, timer().remained());
-    std::string body = p[1]->asString(ctx);
+    std::string body = p[size - shift]->asString(ctx);
     helper.appendHeaders(ctx->request(), proxy_, tag);
 
     helper.postData(body.data(), body.size());
@@ -277,14 +288,16 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
     (void)a;
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
-
+    
     const std::vector<Param*> &p = params();
-
-    if (p.size() != 1 || tagged()) {
-        throwBadArityError();
+    unsigned int size = p.size();
+    
+    if (size == 0 || tagged()) {
+        throw InvokeError("bad arity");
     }
-
-    std::string url = p[0]->asString(ctx);
+    
+    std::string url = concatParams(ctx, 0, size - 1);
+    
     bool has_query = url.find('?') != std::string::npos;
 
     State* state = ctx->state();
@@ -319,12 +332,14 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
     const std::vector<Param*> &p = params();
-
-    if (p.size() != 1 || tagged()) {
-        throwBadArityError();
+    unsigned int size = p.size();
+    
+    if (size == 0 || tagged()) {
+        throw InvokeError("bad arity");
     }
-
-    std::string url = p[0]->asString(ctx);
+    
+    std::string url = concatParams(ctx, 0, size - 1);
+    
     const std::string &query = ctx->request()->getQueryString();
     if (!query.empty()) {
         url.append(1, url.find('?') != std::string::npos ? '&' : '?');

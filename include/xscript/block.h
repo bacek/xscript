@@ -115,6 +115,8 @@ protected:
     }
 
     bool runByMainThread(const Context *ctx) const;
+    
+    virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const; 
 
 private:
     const Extension *extension_;

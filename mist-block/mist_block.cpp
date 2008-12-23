@@ -806,14 +806,11 @@ MistBlock::setStateConcatString(Context *ctx) {
         throwBadArityError();
     }
 
-    std::string n = p[0]->asString(ctx), val;
+    std::string n = p[0]->asString(ctx);
     State* state = ctx->state();
     state->checkName(n);
 
-    for (std::vector<std::string>::size_type i = 1; i < p.size(); ++i) {
-        val.append(p[i]->asString(ctx));
-    }
-
+    std::string val = concatParams(ctx, 1, p.size() - 1);
     state->setString(n, val);
 
     StateNode node("concat_string", n.c_str(), XmlUtils::escape(val).c_str());

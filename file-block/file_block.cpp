@@ -66,12 +66,17 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
     const std::vector<Param*> &p = params();
-
-    if (p.size() < 1 || p.size() > 2) {
+    unsigned int size = p.size();
+    if (size == 0) {
         throwBadArityError();
     }
-
-    std::string filename = p[0]->asString(ctx);
+    
+    unsigned int shift = isTagParam(p.back()) ? 1 : 0;
+    if (shift >= size) {
+        throwBadArityError();
+    }
+    
+    std::string filename = concatParams(ctx, 0, size - shift - 1);
     if (filename.empty()) {
         throw InvokeError("empty path", "file", filename);
     }

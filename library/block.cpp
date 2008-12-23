@@ -508,4 +508,22 @@ Block::runByMainThread(const Context *ctx) const {
     return (ctx->timer().unlimited() && (ctx->forceNoThreaded() || !threaded()));
 }
 
+std::string
+Block::concatParams(const Context *ctx, unsigned int first, unsigned int last) const {
+    const std::vector<Param*> &p = params();
+    unsigned int size = p.size();
+    if (first >= size) {
+        return StringUtils::EMPTY_STRING;
+    }
+    
+    last = std::min(last, size - 1);
+    
+    std::string result;
+    for(unsigned int i = first; i <= last; ++i) {
+        result.append(p[i]->asString(ctx));
+    }
+    
+    return result;
+}
+
 } // namespace xscript
