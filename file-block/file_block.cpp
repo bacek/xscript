@@ -119,8 +119,9 @@ FileBlock::invokeMethod(const std::string &file_name, Context *ctx) {
     try {
         return (this->*method_)(file_name, ctx);
     }
-    catch(const InvokeError &e) {
-        throw;
+    catch(InvokeError &e) {
+        e.add("file", file_name);
+        throw e;
     }
     catch(const std::exception &e) {
         throw InvokeError(e.what(), "file", file_name);
@@ -158,12 +159,12 @@ FileBlock::invokeFile(const std::string &file_name, Context *ctx) {
     unsigned int depth = 0;
     while (tmp_ctx) {
         if (file_name == tmp_ctx->script()->name()) {
-            throw InvokeError("self-recursive invocation", "file", file_name);
+            throw InvokeError("self-recursive invocation");
         }
 
         ++depth;
         if (depth > FileExtension::max_invoke_depth_) {
-            throw InvokeError("too much recursive invocation depth", "file", file_name);
+            throw InvokeError("too much recursive invocation depth");
         }
 
         tmp_ctx = tmp_ctx->parentContext();
@@ -179,17 +180,10 @@ FileBlock::invokeFile(const std::string &file_name, Context *ctx) {
     }
 
     ContextStopper ctx_stopper(local_ctx);
-
-    XmlDocHelper doc;
-    try {
-        doc = script->invoke(local_ctx);
-    }
-    catch(InvokeError &e) {
-        e.add("file", file_name);
-        throw e;
-    }
-
+    
+    XmlDocHelper doc = script->invoke(local_ctx);
     XmlUtils::throwUnless(NULL != doc.get());
+    
     return doc;
 }
 
