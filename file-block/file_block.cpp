@@ -180,9 +180,16 @@ FileBlock::invokeFile(const std::string &file_name, Context *ctx) {
 
     ContextStopper ctx_stopper(local_ctx);
 
-    XmlDocHelper doc = script->invoke(local_ctx);
-    XmlUtils::throwUnless(NULL != doc.get());
+    XmlDocHelper doc;
+    try {
+        doc = script->invoke(local_ctx);
+    }
+    catch(InvokeError &e) {
+        e.add("file", file_name);
+        throw e;
+    }
 
+    XmlUtils::throwUnless(NULL != doc.get());
     return doc;
 }
 
