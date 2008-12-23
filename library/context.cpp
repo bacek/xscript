@@ -34,7 +34,7 @@ Context::Context(const boost::shared_ptr<Script> &script,
                  const boost::shared_ptr<RequestData> &data) :
         stopped_(false), request_data_(data), parent_context_(NULL), xslt_name_(script->xsltName()),
         script_(script), writer_(), flags_(0),
-        params_(new std::map<std::string, boost::any>()), params_mutex_(new boost::mutex()) {
+        params_(new ParamsMap()) {
 
     assert(script_.get());
     init();
@@ -48,7 +48,6 @@ Context::Context(const boost::shared_ptr<Script> &script, Context *ctx) :
     assert(ctx);
 
     request_data_ = ctx->request_data_;
-    params_mutex_ = ctx->params_mutex_;
     params_ = ctx->params_;
     auth_ = ctx->auth_;
 
@@ -299,6 +298,28 @@ Context::timer() const {
 void
 Context::startTimer(int timeout) {
     timer_.reset(timeout);
+}
+
+bool
+Context::ParamsMap::insert(const std::string &name, const boost::any &value) {
+    boost::mutex::scoped_lock sl(mutex_);
+    iterator it = params_->find(name);
+    if (params_->end() != it) {
+    	return false;
+    }
+    params_->insert(std::make_pair(name, value));
+    return true;
+}
+
+bool
+Context::ParamsMap::find(const std::string &name, boost::any &value) const {
+    boost::mutex::scoped_lock sl(mutex_);
+    iterator it = params_->find(name);
+    if (params_->end() == it) {
+        return false;
+    }
+    value = it->second;
+    return true;
 }
 
 ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {

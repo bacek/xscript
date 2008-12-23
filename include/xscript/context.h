@@ -134,8 +134,7 @@ private:
 
     std::map<const Block*, std::string> runtime_errors_;
 
-    boost::shared_ptr<std::map<std::string, boost::any> > params_;
-    boost::shared_ptr<boost::mutex> params_mutex_;
+    boost::shared_ptr<ParamsMap> params_;
     
     mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_;
 
@@ -143,6 +142,18 @@ private:
 
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
     static const unsigned int FLAG_NO_XSLT_PORT = 1 << 1;
+    
+    class ParamsMap {
+    public:
+    	typedef std::map<std::string, boost::any> MapType;
+    	typedef MapType::const_iterator iterator;
+    	
+    	bool insert(const std::string &key, const boost::any &value);
+    	bool find(const std::string &key, boost::any &value) const;
+    private:
+    	boost::mutex mutex_;
+    	MapType params_;
+    }
 };
 
 class ContextStopper {
@@ -155,10 +166,9 @@ private:
 
 template<typename T> inline T
 Context::param(const std::string &name) const {
-    boost::mutex::scoped_lock sl(*params_mutex_);
-    std::map<std::string, boost::any>::const_iterator i = params_->find(name);
-    if (params_->end() != i) {
-        return boost::any_cast<T>(i->second);
+	boost::any value;
+    if (params_->find(name, value)) {
+        return boost::any_cast<T>(value);
     }
     else {
         throw std::invalid_argument(std::string("nonexistent param: ").append(name));
@@ -167,28 +177,20 @@ Context::param(const std::string &name) const {
 
 template<typename T> inline void
 Context::param(const std::string &name, const T &t) {
-    std::pair<std::string, boost::any> p(name, boost::any(t));
-    boost::mutex::scoped_lock sl(*params_mutex_);
-    std::map<std::string, boost::any>::iterator i = params_->find(name);
-    if (params_->end() == i) {
-        params_->insert(p);
-    }
-    else {
+    if (!params_->insert(name, boost::any(t))) {
         throw std::invalid_argument(std::string("duplicate param: ").append(name));
     }
 }
 
 template<typename T> inline T
 Context::param(const std::string &name, const boost::function<T ()> &creator) {
-    boost::mutex::scoped_lock sl(*params_mutex_);
-    std::map<std::string, boost::any>::const_iterator i = params_->find(name);
-    if (params_->end() != i) {
-        return boost::any_cast<T>(i->second);
+    boost::any value;
+    if (params_->find(name, value)) {
+        return boost::any_cast<T>(value);
     }
     else {
         T t = creator();
-        std::pair<std::string, boost::any> p(name, boost::any(t));
-        params_->insert(p);
+        params_->insert(name, boost::any(t));
         return t;
     }
 }
