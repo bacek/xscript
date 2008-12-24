@@ -3,8 +3,11 @@
 #include <cerrno>
 #include <fstream>
 #include <sstream>
+
 #include <boost/crc.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 
 #include <sys/stat.h>
 #include <libxml/xmlIO.h>
@@ -101,6 +104,13 @@ TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const TaggedBlock *block) {
     if (!block->xsltName().empty()) {
         value_.assign(block->xsltName());
         value_.push_back('|');
+        
+        namespace fs = boost::filesystem;
+        fs::path path(block->xsltName());
+        if (fs::exists(path) && !fs::is_directory(path)) {
+            value_.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
+            value_.push_back('|');
+        }
     }
     value_.append(block->canonicalMethod(ctx));
 

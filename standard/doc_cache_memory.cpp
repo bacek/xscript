@@ -5,6 +5,9 @@
 #include <cassert>
 #include <algorithm>
 
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
+
 #include "xscript/tag.h"
 #include "xscript/util.h"
 #include "xscript/config.h"
@@ -85,6 +88,13 @@ TagKeyMemory::TagKeyMemory(const Context *ctx, const TaggedBlock *block) : value
     if (!block->xsltName().empty()) {
         value_.assign(block->xsltName());
         value_.push_back('|');
+        
+        namespace fs = boost::filesystem;
+        fs::path path(block->xsltName());
+        if (fs::exists(path) && !fs::is_directory(path)) {
+            value_.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
+            value_.push_back('|');
+        }
     }
     value_.append(block->canonicalMethod(ctx));
 
