@@ -822,14 +822,12 @@ MistBlock::dropState(Context *ctx) {
 
     PROLOGUE;
 
-    std::string prefix;
     const std::vector<Param*> &p = params();
-    if (p.size() > 1) {
+    if (1 != p.size()) {
         throwBadArityError();
     }
-    if (1 == p.size()) {
-        prefix = p[0]->asString(ctx);
-    }
+    
+    std::string prefix = p[0]->asString(ctx);
 
     State* state = ctx->state();
     if (prefix.empty()) {
