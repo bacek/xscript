@@ -42,6 +42,13 @@ ThreadedBlock::threaded(bool value) {
 
 void
 ThreadedBlock::property(const char *name, const char *value) {
+    if (!propertyInternal(name , value)) {
+        Block::property(name, value);
+    }
+}
+
+bool
+ThreadedBlock::propertyInternal(const char *name, const char *value) {
     if (strncasecmp(name, "threaded", sizeof("threaded")) == 0) {
         threaded_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
@@ -49,8 +56,9 @@ ThreadedBlock::property(const char *name, const char *value) {
         timeout_ = boost::lexical_cast<int>(value);
     }
     else {
-        Block::property(name, value);
+        return false;
     }
+    return true;
 }
 
 void

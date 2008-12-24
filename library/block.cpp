@@ -489,8 +489,13 @@ Block::parseXPathNode(const xmlNodePtr node) {
 void
 Block::parseParamNode(const xmlNodePtr node, ParamFactory *pf) {
     std::auto_ptr<Param> p = pf->param(this, node);
-    params_.push_back(p.get());
-    p.release();
+    processParam(p);
+}
+
+void
+Block::processParam(std::auto_ptr<Param> p) {
+	params_.push_back(p.get());
+	p.release();
 }
 
 void

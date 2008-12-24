@@ -118,13 +118,8 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
     if (size == 0) {
         throwBadArityError();
     }
-    
-    unsigned int shift = isTagParam(p.back()) ? 1 : 0;
-    if (shift >= size) {
-        throwBadArityError();
-    }
-    
-    std::string url = concatParams(ctx, 0, size - shift - 1);
+
+    std::string url = concatParams(ctx, 0, size - 1);
     PROFILER(log(), "getHttp: " + url);
 
     if (strncasecmp(url.c_str(), "file://", sizeof("file://") - 1) == 0) {
@@ -253,18 +248,12 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
         throwBadArityError();
     }
     
-    unsigned int shift = isTagParam(p.back()) ? 2 : 1;
-    if (shift >= size) {
-        throwBadArityError();
-    }
-    
-    std::string url = concatParams(ctx, 0, size - shift - 1);
-    
+    std::string url = concatParams(ctx, 0, size - 2);
     checkTimeout(url);
 
     const Tag *tag = boost::any_cast<Tag>(&a);
     HttpHelper helper(url, timer().remained());
-    std::string body = p[size - shift]->asString(ctx);
+    std::string body = p[size-1]->asString(ctx);
     helper.appendHeaders(ctx->request(), proxy_, tag);
 
     helper.postData(body.data(), body.size());

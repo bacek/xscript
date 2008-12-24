@@ -23,15 +23,6 @@ TagParam::TagParam(TaggedBlock *owner, xmlNodePtr node) :
 TagParam::~TagParam() {
 }
 
-void
-TagParam::parse() {
-    Param::parse();
-    const std::string& v = value();
-    if (!v.empty()) {
-        owner_->cacheTime(boost::lexical_cast<time_t>(v));
-    }
-}
-
 std::string
 TagParam::asString(const Context *ctx) const {
     (void)ctx;
@@ -49,7 +40,6 @@ TagParam::create(Object *owner, xmlNodePtr node) {
     if (NULL == tblock) {
         throw std::runtime_error("Conflict: tag param in non-tagged-block");
     }
-    tblock->tagged(true);
     return std::auto_ptr<Param>(new TagParam(tblock, node));
 }
 

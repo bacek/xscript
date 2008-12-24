@@ -20,7 +20,8 @@ static const time_t CACHE_TIME_MINIMUM = 5;
 static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
 
 TaggedBlock::TaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        Block(ext, owner, node), canonical_method_(), tagged_(false), cache_time_(CACHE_TIME_UNDEFINED) {
+        Block(ext, owner, node), canonical_method_(),
+        tagged_(false), cache_time_(CACHE_TIME_UNDEFINED), tag_position_(-1) {
 }
 
 TaggedBlock::~TaggedBlock() {
@@ -129,12 +130,57 @@ TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a
 }
 
 void
+TaggedBlock::processParam(std::auto_ptr<Param> p) {
+    if (NULL == dynamic_cast<const TagParam*>(p.get())) {
+        Block::processParam(p);
+        return;
+    }
+    
+    if (haveTagParam()) {
+        throw std::runtime_error("duplicated tag param");
+    }
+    tagged(true);
+    tag_position_ = params().size();
+    
+    const std::string& v = p->value();
+    if (!v.empty()) {
+        cacheTime(boost::lexical_cast<time_t>(v));
+    }
+}
+
+void
 TaggedBlock::postParse() {
     if (tagged()) {
         if ((CACHE_TIME_UNDEFINED != cache_time_) && (cache_time_ < DocCache::instance()->minimalCacheTime())) {
             tagged(false);
         }
     }
+}
+
+void
+TaggedBlock::property(const char *name, const char *value) {
+    if (!propertyInternal(name , value)) {
+        Block::property(name, value);
+    }
+}
+
+bool
+TaggedBlock::propertyInternal(const char *name, const char *value) {
+    if (strncasecmp(name, "tag", sizeof("tag")) == 0) {
+        if (strncasecmp(value, "no", sizeof("no")) == 0) {
+            tagged(false);
+        }
+        else {
+            tagged(true);
+            if (strncasecmp(value, "yes", sizeof("yes")) != 0) {
+                cache_time_ = boost::lexical_cast<time_t>(value); 
+            }
+        }
+    }
+    else {
+        return false;
+    }
+    return true;
 }
 
 void
@@ -151,9 +197,14 @@ TaggedBlock::createCanonicalMethod(const char *prefix) {
     }
 }
 
+int
+TaggedBlock::tagPosition() const {
+    return tag_position_;
+}
+
 bool
-TaggedBlock::isTagParam(const Param *param) {
-    return NULL != dynamic_cast<const TagParam*>(param);
+TaggedBlock::haveTagParam() const {
+    return tag_position_ >= 0;
 }
 
 } // namespace xscript

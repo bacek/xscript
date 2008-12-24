@@ -42,6 +42,8 @@ protected:
     XmlDocHelper invokeFile(const std::string &file_name, Context *ctx);
     
     XmlDocHelper invokeMethod(const std::string &file_name, Context *ctx);
+    
+    virtual void property(const char *name, const char *value);
 
 private:
     Method method_;

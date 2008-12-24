@@ -109,6 +109,7 @@ protected:
 
     void parseXPathNode(const xmlNodePtr node);
     void parseParamNode(const xmlNodePtr node, ParamFactory *pf);
+    virtual void processParam(std::auto_ptr<Param> p);
 
     inline const std::vector<XPathExpr>& xpath() const {
         return xpath_;

@@ -38,6 +38,17 @@ FileBlock::~FileBlock() {
 }
 
 void
+FileBlock::property(const char *name, const char *value) {
+    if (ThreadedBlock::propertyInternal(name, value)) {
+    }
+    else if (TaggedBlock::propertyInternal(name, value)) {
+    }
+    else {
+        Block::property(name, value);
+    }
+}
+
+void
 FileBlock::postParse() {
 
     ThreadedBlock::postParse();
@@ -71,12 +82,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
         throwBadArityError();
     }
     
-    unsigned int shift = isTagParam(p.back()) ? 1 : 0;
-    if (shift >= size) {
-        throwBadArityError();
-    }
-    
-    std::string filename = concatParams(ctx, 0, size - shift - 1);
+    std::string filename = concatParams(ctx, 0, size - 1);
     if (filename.empty()) {
         throw InvokeError("empty path", "file", filename);
     }

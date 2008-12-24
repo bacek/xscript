@@ -14,7 +14,6 @@ public:
     virtual ~TaggedBlock();
 
     virtual std::string canonicalMethod(const Context *ctx) const;
-
     void createCanonicalMethod(const char* prefix);
 
     virtual bool tagged() const;
@@ -23,15 +22,20 @@ public:
     virtual void cacheTime(time_t cache_time);
 
 protected:
+    virtual void processParam(std::auto_ptr<Param> p);
     virtual InvokeResult invokeInternal(Context *ctx);
     virtual void postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a);
     virtual void postParse();
-    static bool isTagParam(const Param *param);
+    virtual void property(const char *name, const char *value);
+    bool propertyInternal(const char *name, const char *value);
+    int tagPosition() const;
+    bool haveTagParam() const;
 
 private:
     std::string canonical_method_;
     bool tagged_;
     time_t cache_time_;
+    int tag_position_;
 };
 
 } // namespace xscript
