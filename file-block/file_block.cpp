@@ -39,12 +39,8 @@ FileBlock::~FileBlock() {
 
 void
 FileBlock::property(const char *name, const char *value) {
-    if (ThreadedBlock::propertyInternal(name, value)) {
-    }
-    else if (TaggedBlock::propertyInternal(name, value)) {
-    }
-    else {
-        Block::property(name, value);
+    if (!TaggedBlock::propertyInternal(name, value)) {
+        ThreadedBlock::property(name, value);
     }
 }
 

@@ -85,15 +85,19 @@ TagKeyMemory::TagKeyMemory(const Context *ctx, const TaggedBlock *block) : value
     assert(NULL != ctx);
     assert(NULL != block);
 
-    if (!block->xsltName().empty()) {
-        value_.assign(block->xsltName());
+    const std::string& xslt = block->xsltName();
+    if (!xslt.empty()) {
+        value_.assign(xslt);
         value_.push_back('|');
         
         namespace fs = boost::filesystem;
-        fs::path path(block->xsltName());
+        fs::path path(xslt);
         if (fs::exists(path) && !fs::is_directory(path)) {
             value_.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
             value_.push_back('|');
+        }
+        else {
+            throw std::runtime_error("Cannot stat stylesheet " + xslt);
         }
     }
     value_.append(block->canonicalMethod(ctx));

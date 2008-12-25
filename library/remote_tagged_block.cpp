@@ -29,15 +29,10 @@ RemoteTaggedBlock::property(const char *name, const char *value) {
     if (strncasecmp(name, "remote-timeout", sizeof("remote-timeout")) == 0) {
         remote_timeout_ = boost::lexical_cast<int>(value);
     }
-    else if (ThreadedBlock::propertyInternal(name, value)) {
-    }
-    else if (TaggedBlock::propertyInternal(name, value)) {
-    }
-    else {
-        Block::property(name, value);
+    else if (!TaggedBlock::propertyInternal(name, value)) {
+        ThreadedBlock::property(name, value);
     }
 }
-
 
 int
 RemoteTaggedBlock::remoteTimeout() const {

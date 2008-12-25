@@ -166,20 +166,18 @@ TaggedBlock::property(const char *name, const char *value) {
 
 bool
 TaggedBlock::propertyInternal(const char *name, const char *value) {
-    if (strncasecmp(name, "tag", sizeof("tag")) == 0) {
-        if (strncasecmp(value, "no", sizeof("no")) == 0) {
-            tagged(false);
-        }
-        else {
-            tagged(true);
-            if (strncasecmp(value, "yes", sizeof("yes")) != 0) {
-                cache_time_ = boost::lexical_cast<time_t>(value); 
-            }
-        }
-    }
-    else {
+    if (strncasecmp(name, "tag", sizeof("tag")) != 0) {
         return false;
     }
+    
+    if (tagged()) {
+        throw std::runtime_error("duplicated tag");
+    }
+    
+    if (strncasecmp(value, "yes", sizeof("yes")) != 0) {
+        cache_time_ = boost::lexical_cast<time_t>(value); 
+    }
+    tagged(true);
     return true;
 }
 

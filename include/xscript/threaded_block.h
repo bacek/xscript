@@ -21,7 +21,6 @@ public:
 
 protected:
     virtual void property(const char *name, const char *value);
-    bool propertyInternal(const char *name, const char *value);
     virtual void resetTimer(int timeout);
 
 private:
