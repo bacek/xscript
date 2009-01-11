@@ -126,6 +126,10 @@ public:
     virtual bool suppressBody() const;
 
     void attach(std::istream *is, char *env[]);
+    virtual bool normalizeHeader(const std::string &name, const Range &value, std::string &result);
+
+protected:
+    std::string checkUrlEscaping(const Range &range);
 
 private:
     RequestImpl(const RequestImpl &);

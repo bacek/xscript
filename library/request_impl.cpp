@@ -439,6 +439,26 @@ RequestImpl::attach(std::istream *is, char *env[]) {
     is_bot_ = Authorizer::instance()->isBot(getHeader("User-Agent"));
 }
 
+bool
+RequestImpl::normalizeHeader(const std::string &name, const Range &value, std::string &result) {
+    return false;
+}
+
+std::string
+RequestImpl::checkUrlEscaping(const Range &range) {
+    std::string result;
+    unsigned int length = range.size();
+    const char *value = range.begin();
+    for(unsigned int i = 0; i < length; ++i, ++value) {
+        if (static_cast<unsigned char>(*value) > 127) {
+            result.append(StringUtils::urlencode(Range(value, value + 1)));
+        }
+        else {
+            result.push_back(*value);
+        }
+    }
+    return result;
+}
 
 RequestFactory::RequestFactory() {
 }

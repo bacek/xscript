@@ -124,13 +124,19 @@ Parser::addCookie(RequestImpl *req, const Range &range, Encoder *encoder) {
 void
 Parser::addHeader(RequestImpl *req, const Range &key, const Range &value, Encoder *encoder) {
     std::string header = normalizeInputHeaderName(key);
-    if (!xmlCheckUTF8((const xmlChar*) value.begin())) {
-        encoder->encode(value).swap(req->headers_[header]);
+    std::string result;
+    Range norm_value = value;
+    if (req->normalizeHeader(header, value, result)) {
+        norm_value = createRange(result);
+    }
+    
+    if (!xmlCheckUTF8((const xmlChar*) norm_value.begin())) {
+        encoder->encode(norm_value).swap(req->headers_[header]);
     }
     else {
         std::string &str = req->headers_[header];
-        str.reserve(value.size());
-        str.assign(value.begin(), value.end());
+        str.reserve(norm_value.size());
+        str.assign(norm_value.begin(), norm_value.end());
     }
 }
 
@@ -153,7 +159,7 @@ Parser::parse(RequestImpl *req, char *env[], Encoder *encoder, const std::string
             std::string name(key.begin(), key.end());
             std::string query_value;
             if (strcmp(name.c_str(), query_key.c_str()) == 0) {
-                query_value = normalizeQuery(value);
+                query_value = req->checkUrlEscaping(value);
                 value = createRange(query_value);
             }
             
