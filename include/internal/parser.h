@@ -26,7 +26,7 @@ public:
     static void addCookie(RequestImpl *req, const Range &range, Encoder *encoder);
     static void addHeader(RequestImpl *req, const Range &key, const Range &value, Encoder *encoder);
 
-    static void parse(RequestImpl *req, char *env[], Encoder *encoder);
+    static void parse(RequestImpl *req, char *env[], Encoder *encoder, const std::string &query_key);
     static void parseCookies(RequestImpl *req, const Range &range, Encoder *encoder);
 
     static void parsePart(RequestImpl *req, Range &part, Encoder *encoder);
@@ -39,6 +39,7 @@ public:
 
     static std::string normalizeInputHeaderName(const Range &range);
     static std::string normalizeOutputHeaderName(const std::string &name);
+    static std::string normalizeQuery(const Range &range);
 
     static const Range RN_RANGE;
     static const Range NAME_RANGE;

@@ -207,7 +207,7 @@ TaggedBlock::haveTagParam() const {
 
 bool
 TaggedBlock::cacheTimeUndefined() const {
-	return cache_time_ == CACHE_TIME_UNDEFINED;
+    return cache_time_ == CACHE_TIME_UNDEFINED;
 }
 
 } // namespace xscript

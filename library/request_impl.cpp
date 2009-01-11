@@ -408,23 +408,9 @@ void
 RequestImpl::attach(std::istream *is, char *env[]) {
 
     std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
-    Parser::parse(this, env, enc.get());
-
-    VarMap::iterator it = vars_.find(QUERY_STRING_KEY);
-    if (it != vars_.end()) {
-    	std::string &query = it->second;
-    	for(unsigned int i = 0; i < query.size(); ++i) {
-    		const char* symb = &*query.begin() + i;
-    		if (static_cast<unsigned char>(*symb) > 127) {
-    			std::string encoded = StringUtils::urlencode(Range(symb, symb + 1));
-    			query.replace(i, 1, encoded);
-    			i += encoded.size() - 1;
-    		}
-    	}
-    }
+    Parser::parse(this, env, enc.get(), QUERY_STRING_KEY);
     
     if ("POST" == getRequestMethod()) {
-
         body_.resize(getContentLength());
         is->exceptions(std::ios::badbit);
         is->read(&body_[0], body_.size());
@@ -432,20 +418,22 @@ RequestImpl::attach(std::istream *is, char *env[]) {
         if (is->gcount() != static_cast<std::streamsize>(body_.size())) {
             throw std::runtime_error("failed to read request entity");
         }
+        
+        const std::string &type = getContentType();
+        if (strncasecmp("multipart/form-data", type.c_str(), sizeof("multipart/form-data") - 1) == 0) {
+            Range body = createRange(body_);
+            std::string boundary = Parser::getBoundary(createRange(type));
+            Parser::parseMultipart(this, body, boundary, enc.get());
+        }
+        else if (!body_.empty()) {
+            StringUtils::parse(createRange(body_), args_, enc.get());
+        }
     }
     else {
         const std::string &query = getQueryString();
-        body_.assign(query.begin(), query.end());
-    }
-
-    const std::string &type = getContentType();
-    if (strncasecmp("multipart/form-data", type.c_str(), sizeof("multipart/form-data") - 1) == 0) {
-        Range body = createRange(body_);
-        std::string boundary = Parser::getBoundary(createRange(type));
-        Parser::parseMultipart(this, body, boundary, enc.get());
-    }
-    else {
-        StringUtils::parse(createRange(body_), args_, enc.get());
+        if (!query.empty()) {
+            StringUtils::parse(createRange(query), args_, enc.get());
+        }
     }
     
     is_bot_ = Authorizer::instance()->isBot(getHeader("User-Agent"));

@@ -135,7 +135,7 @@ Parser::addHeader(RequestImpl *req, const Range &key, const Range &value, Encode
 }
 
 void
-Parser::parse(RequestImpl *req, char *env[], Encoder *encoder) {
+Parser::parse(RequestImpl *req, char *env[], Encoder *encoder, const std::string &query_key) {
     for (int i = 0; NULL != env[i]; ++i) {
         Range key, value;
         split(createRange(env[i]), '=', key, value);
@@ -151,6 +151,12 @@ Parser::parse(RequestImpl *req, char *env[], Encoder *encoder) {
         }
         else {
             std::string name(key.begin(), key.end());
+            std::string query_value;
+            if (strcmp(name.c_str(), query_key.c_str()) == 0) {
+                query_value = normalizeQuery(value);
+                value = createRange(query_value);
+            }
+            
             if (!xmlCheckUTF8((const xmlChar*) value.begin())) {
                 encoder->encode(value).swap(req->vars_[name]);
             }
@@ -279,6 +285,22 @@ Parser::normalizeOutputHeaderName(const std::string &name) {
         }
     }
     return res;
+}
+
+std::string
+Parser::normalizeQuery(const Range &range) {
+    std::string result;
+    unsigned int length = range.size();
+    const char *query = range.begin();
+    for(unsigned int i = 0; i < length; ++i, ++query) {
+        if (static_cast<unsigned char>(*query) > 127) {
+            result.append(StringUtils::urlencode(Range(query, query + 1)));
+        }
+        else {
+            result.push_back(*query);
+        }
+    }
+    return result;
 }
 
 } // namespace xscript
