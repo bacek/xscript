@@ -410,6 +410,19 @@ RequestImpl::attach(std::istream *is, char *env[]) {
     std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
     Parser::parse(this, env, enc.get());
 
+    VarMap::iterator it = vars_.find(QUERY_STRING_KEY);
+    if (it != vars_.end()) {
+    	std::string &query = it->second;
+    	for(unsigned int i = 0; i < query.size(); ++i) {
+    		const char* symb = &*query.begin() + i;
+    		if (static_cast<unsigned char>(*symb) > 127) {
+    			std::string encoded = StringUtils::urlencode(Range(symb, symb + 1));
+    			query.replace(i, 1, encoded);
+    			i += encoded.size() - 1;
+    		}
+    	}
+    }
+    
     if ("POST" == getRequestMethod()) {
 
         body_.resize(getContentLength());
