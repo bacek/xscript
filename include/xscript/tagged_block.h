@@ -30,6 +30,7 @@ protected:
     bool propertyInternal(const char *name, const char *value);
     int tagPosition() const;
     bool haveTagParam() const;
+    bool cacheTimeUndefined() const;
 
 private:
     std::string canonical_method_;

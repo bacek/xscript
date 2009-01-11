@@ -205,4 +205,9 @@ TaggedBlock::haveTagParam() const {
     return tag_position_ >= 0;
 }
 
+bool
+TaggedBlock::cacheTimeUndefined() const {
+	return cache_time_ == CACHE_TIME_UNDEFINED;
+}
+
 } // namespace xscript
