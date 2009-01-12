@@ -4,8 +4,11 @@ xscript (5.50-0) unstable; urgency=low
   * bot checking added to Authorizer
   * isBot added to Lua
   * Context refactoring
+  * concatination params added to mist, http and file methods
+  * tag attribute added to Tagged block
+  * patching request query for unencoded symbols
 
- -- Ilya Golubtsov <golubtsov@yandex-team.ru>  Mon, 22 Dec 2008 16:42:51 +0300
+ -- Ilya Golubtsov <golubtsov@yandex-team.ru>  Mon, 12 Jan 2009 12:55:22 +0300
 
 xscript (5.49-1) unstable; urgency=low
 
