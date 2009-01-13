@@ -1,3 +1,9 @@
+xscript (5.50-1) unstable; urgency=low
+
+  * parsing query parameters for POST fixed
+
+ -- Ilya Golubtsov <golubtsov@yandex-team.ru>  Tue, 13 Jan 2009 10:06:31 +0300
+
 xscript (5.50-0) unstable; urgency=low
 
   * bot flag moved to request
