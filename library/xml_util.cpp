@@ -47,6 +47,7 @@ xmlExternalEntityLoader XmlUtils::default_loader_ = NULL;
 XmlDocHelper XmlUtils::fake_doc_(XmlUtils::createFakeDoc());
 
 boost::thread_specific_ptr<Xml::TimeMapType> XmlInfoCollector::modified_info_;
+boost::thread_specific_ptr<XmlInfoCollector::ErrorMapType> XmlInfoCollector::error_info_;
 
 class XmlErrorReporter {
 public:
@@ -272,6 +273,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
     log()->info("entityResolver. url: %s, id: %s", url ? url : "", id ? id : "");
 
     try {
+        XmlInfoCollector::ErrorMapType* error_info = XmlInfoCollector::getErrorInfo();
         if ((strncasecmp(url, "http://", sizeof("http://") - 1) == 0) ||
             (strncasecmp(url, "https://", sizeof("https://") - 1) == 0)) {
             log()->warn("entityResolver: loading remote entity is forbidden. URL: %s. ID: %s",
@@ -280,9 +282,35 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
         }
 
         std::string fileName = Policy::instance()->getPathByScheme(NULL, url);
-        if (default_loader_ != NULL) {
+        try {
+            if (default_loader_ == NULL) {
+                std::string error = std::string("Default entity loader not set. URL: ") +
+                                    std::string(url ? url : "");
+                if (id) {
+                    error.append(". ID: ").append(id);
+                }
+                if (error_info) {
+                    error_info->insert(std::make_pair(fileName, error));
+                }
+                log()->error("%s", error.c_str());
+                return NULL;
+            }
+            
             ret = default_loader_(fileName.c_str(), id, ctxt);
-            if (ret != NULL && fileName.find("://") == std::string::npos) {
+            if (ret == NULL) {
+                std::string error = std::string("Cannot resolve external entity: ") +
+                                    std::string(url ? url : "");
+                if (id) {
+                    error.append(". ID: ").append(id);
+                }
+                if (error_info) {
+                    error_info->insert(std::make_pair(fileName, error));
+                }
+                log()->error("%s", error.c_str());
+                return NULL;
+            }
+            
+            if (fileName.find("://") == std::string::npos) {
                 namespace fs = boost::filesystem;
                 try {
                     Xml::TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
@@ -295,17 +323,41 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
                     }
                 }
                 catch (const fs::filesystem_error &e) {
-                    log()->error("entityResolver error in fetching modified: %s. URL: %s. ID: %s",
-                        e.what(), url ? url : "", id ? id : "");
+                    std::string error = std::string("Cannot stat file: ") +
+                                        std::string(e.what()) +
+                                        std::string(url ? url : "");
+                    if (id) {
+                        error.append(". ID: ").append(id);
+                    }
+                    if (error_info) {
+                        error_info->insert(std::make_pair(fileName, error));
+                    }
+                    log()->error("%s", error.c_str());
                 }
             }
         }
-        else{
-            log()->error("entityResolver: defaultLoader not set. URL: %s. ID: %s", url ? url : "", id ? id : "");
+        catch (const std::exception &e) {
+            std::string error = std::string("Entity resolver error: ") +
+                                std::string(e.what()) +
+                                std::string(url ? url : "");
+            if (id) {
+                error.append(". ID: ").append(id);
+            }
+            if (error_info) {
+                error_info->insert(std::make_pair(fileName, error));
+            }
+            log()->error("%s", error.c_str());
         }
-
-        if (ret == NULL) {
-            log()->error("entityResolver: can't resolve external entity. URL: %s. ID: %s", url ? url : "", id ? id : "");
+        catch (...) {
+            std::string error = std::string("Entity resolver unknown error. URL: ") +
+                                std::string(url ? url : "");
+            if (id) {
+                error.append(". ID: ").append(id);
+            }
+            if (error_info) {
+                error_info->insert(std::make_pair(fileName, error));
+            }
+            log()->error("%s", error.c_str());
         }
     }
     catch (const std::exception &e) {
@@ -342,15 +394,49 @@ void
 XmlInfoCollector::ready(bool flag) {
     if (flag) {
         modified_info_.reset(new Xml::TimeMapType());
+        error_info_.reset(new ErrorMapType());
     }
     else {
         modified_info_.reset(NULL);
+        error_info_.reset(NULL);
     }
 }
 
 Xml::TimeMapType*
 XmlInfoCollector::getModifiedInfo() {
     return modified_info_.get();
+}
+
+XmlInfoCollector::ErrorMapType*
+XmlInfoCollector::getErrorInfo() {
+    return error_info_.get();
+}
+
+std::string
+XmlInfoCollector::getError() {
+    ErrorMapType *info = error_info_.get();
+    if (info == NULL) {
+        return StringUtils::EMPTY_STRING;
+    }
+    std::string error;
+    for(XmlInfoCollector::ErrorMapType::const_iterator it = info->begin();
+        it != info->end();
+        ++it) {
+        error.append("Error while process file: ");
+        error.append(it->first);
+        error.append(". ");
+        error.append(it->second);
+        error.append(". ");
+    }
+    return error;
+}
+
+XmlInfoCollector::Starter::Starter() {
+    XmlInfoCollector::ready(true);
+}
+
+XmlInfoCollector::Starter::~Starter() {
+    XmlInfoCollector::ready(false);
 }
 
 XmlErrorReporter::XmlErrorReporter() : error_(false)

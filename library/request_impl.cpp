@@ -409,7 +409,7 @@ RequestImpl::attach(std::istream *is, char *env[]) {
 
     std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
     Parser::parse(this, env, enc.get(), QUERY_STRING_KEY);
-    
+
     if ("POST" == getRequestMethod()) {
         body_.resize(getContentLength());
         is->exceptions(std::ios::badbit);
@@ -418,24 +418,24 @@ RequestImpl::attach(std::istream *is, char *env[]) {
         if (is->gcount() != static_cast<std::streamsize>(body_.size())) {
             throw std::runtime_error("failed to read request entity");
         }
-    }
-    else {
-        const std::string &query = getQueryString();
-        body_.assign(query.begin(), query.end());
-    }
 
-    if (!body_.empty()) {
         const std::string &type = getContentType();
         if (strncasecmp("multipart/form-data", type.c_str(), sizeof("multipart/form-data") - 1) == 0) {
             Range body = createRange(body_);
             std::string boundary = Parser::getBoundary(createRange(type));
             Parser::parseMultipart(this, body, boundary, enc.get());
         }
-        else {
+        else if (!body_.empty()) {
             StringUtils::parse(createRange(body_), args_, enc.get());
         }
     }
-    
+    else {
+        const std::string &query = getQueryString();
+        if (!query.empty()) {
+            StringUtils::parse(createRange(query), args_, enc.get());
+        }
+    }
+
     is_bot_ = Authorizer::instance()->isBot(getHeader("User-Agent"));
 }
 

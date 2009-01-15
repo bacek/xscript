@@ -106,7 +106,8 @@ Script::parse() {
 
     XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar *) path.native_file_string().c_str()));
     {
-        IncludeModifiedTimeSetter setter(this);
+        XmlInfoCollector::Starter starter;
+        
         doc_ = XmlDocHelper(xmlReadFile((const char*) canonic_path.get(), NULL,
             XML_PARSE_DTDATTR | XML_PARSE_NOENT));
 
@@ -116,6 +117,15 @@ Script::parse() {
         }
 
         XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc_.get(), XML_PARSE_NOENT) >= 0);
+        
+        TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
+        TimeMapType fake;
+        modified_info ? swapModifiedInfo(*modified_info) : swapModifiedInfo(fake);
+        
+        std::string error = XmlInfoCollector::getError();
+        if (!error.empty()) {
+            throw UnboundRuntimeError(error);
+        }
     }
 
     std::vector<xmlNodePtr> xscript_nodes;

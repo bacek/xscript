@@ -23,16 +23,6 @@ public:
 protected:
     virtual void swapModifiedInfo(TimeMapType &info);
     virtual std::string filePath(const std::string &name) const;
-        
-    class IncludeModifiedTimeSetter {
-    public:
-        IncludeModifiedTimeSetter(Xml *xml);
-        ~IncludeModifiedTimeSetter();
-    private:
-        Xml *xml_;
-    };
-
-    friend class IncludeModifiedTimeSetter;
 
 private:
     TimeMapType modified_info_;

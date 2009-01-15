@@ -180,7 +180,8 @@ Stylesheet::parse() {
 
     XmlDocHelper doc(NULL);
     {
-        IncludeModifiedTimeSetter setter(this);
+        XmlInfoCollector::Starter starter;
+        
         doc = XmlDocHelper(xmlReadFile((const char*) canonic_path.get(), NULL,
             XML_PARSE_DTDATTR | XML_PARSE_NOENT | XML_PARSE_NOCDATA));
 
@@ -194,6 +195,15 @@ Stylesheet::parse() {
 
         stylesheet_ = XsltStylesheetHelper(xsltParseStylesheetDoc(doc.get()));
         XmlUtils::throwUnless(NULL != stylesheet_.get());
+        
+        TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
+        TimeMapType fake;
+        modified_info ? swapModifiedInfo(*modified_info) : swapModifiedInfo(fake);
+        
+        std::string error = XmlInfoCollector::getError();
+        if (!error.empty()) {
+            throw UnboundRuntimeError(error);
+        }
     }
 
     parseNode(xmlDocGetRootElement(doc.release()));

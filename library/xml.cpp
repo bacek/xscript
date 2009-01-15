@@ -66,23 +66,4 @@ Xml::modifiedInfo() const {
     return modified_info_;
 }
 
-
-Xml::IncludeModifiedTimeSetter::IncludeModifiedTimeSetter(Xml *xml) : xml_(xml) {
-    XmlInfoCollector::ready(true);
-}
-
-Xml::IncludeModifiedTimeSetter::~IncludeModifiedTimeSetter() {
-    TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
-    if (NULL != modified_info) {
-        xml_->swapModifiedInfo(*modified_info);
-    }
-    else {
-        TimeMapType fake;
-        xml_->swapModifiedInfo(fake);
-    }
-    XmlInfoCollector::ready(false);
-}
-
-
-
 } // namespace xscript

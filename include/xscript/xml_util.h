@@ -76,11 +76,22 @@ class XmlInfoCollector {
 public:
     XmlInfoCollector();
 
+    typedef std::map<std::string, std::string> ErrorMapType;
+    
     static void ready(bool flag);
     static Xml::TimeMapType* getModifiedInfo();
+    static ErrorMapType* getErrorInfo();
+    static std::string getError();
+    
+    class Starter {
+    public:
+        Starter();
+        ~Starter();
+    };
 
 private:
     static boost::thread_specific_ptr<Xml::TimeMapType> modified_info_;
+    static boost::thread_specific_ptr<ErrorMapType> error_info_;
 };
 
 template<typename Cont> inline std::string
