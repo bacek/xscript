@@ -269,10 +269,22 @@ XmlUtils::reportXsltError(const std::string &error, xsltTransformContextPtr tctx
 
 xmlParserInputPtr
 XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt) {
-    xmlParserInputPtr ret = NULL;
     log()->info("entityResolver. url: %s, id: %s", url ? url : "", id ? id : "");
 
     try {
+        if (default_loader_ == NULL) {
+            std::string error = std::string("Default entity loader not set. URL: ") +
+                                            std::string(url ? url : "");
+            if (id) {
+                error.append(". ID: ").append(id);
+            }
+            if (error_info) {
+                error_info->insert(std::make_pair(fileName, error));
+            }
+            log()->error("%s", error.c_str());
+            return NULL;
+        }
+
         XmlInfoCollector::ErrorMapType* error_info = XmlInfoCollector::getErrorInfo();
         if ((strncasecmp(url, "http://", sizeof("http://") - 1) == 0) ||
             (strncasecmp(url, "https://", sizeof("https://") - 1) == 0)) {
@@ -282,21 +294,11 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
         }
 
         std::string fileName = Policy::instance()->getPathByScheme(NULL, url);
+        if (filename != url) {
+            log()->info("entityResolver: url changed %s", filename.c_str());
+        }
         try {
-            if (default_loader_ == NULL) {
-                std::string error = std::string("Default entity loader not set. URL: ") +
-                                    std::string(url ? url : "");
-                if (id) {
-                    error.append(". ID: ").append(id);
-                }
-                if (error_info) {
-                    error_info->insert(std::make_pair(fileName, error));
-                }
-                log()->error("%s", error.c_str());
-                return NULL;
-            }
-            
-            ret = default_loader_(fileName.c_str(), id, ctxt);
+            xmlParserInputPtr ret = default_loader_(fileName.c_str(), id, ctxt);
             if (ret == NULL) {
                 std::string error = std::string("Cannot resolve external entity: ") +
                                     std::string(url ? url : "");
