@@ -272,6 +272,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
     log()->info("entityResolver. url: %s, id: %s", url ? url : "", id ? id : "");
 
     try {
+        XmlInfoCollector::ErrorMapType* error_info = XmlInfoCollector::getErrorInfo();
         if (default_loader_ == NULL) {
             std::string error = std::string("Default entity loader not set. URL: ") +
                                             std::string(url ? url : "");
@@ -279,13 +280,12 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
                 error.append(". ID: ").append(id);
             }
             if (error_info) {
-                error_info->insert(std::make_pair(fileName, error));
+                error_info->insert(std::make_pair(url, error));
             }
             log()->error("%s", error.c_str());
             return NULL;
         }
 
-        XmlInfoCollector::ErrorMapType* error_info = XmlInfoCollector::getErrorInfo();
         if ((strncasecmp(url, "http://", sizeof("http://") - 1) == 0) ||
             (strncasecmp(url, "https://", sizeof("https://") - 1) == 0)) {
             log()->warn("entityResolver: loading remote entity is forbidden. URL: %s. ID: %s",
@@ -294,8 +294,8 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
         }
 
         std::string fileName = Policy::instance()->getPathByScheme(NULL, url);
-        if (filename != url) {
-            log()->info("entityResolver: url changed %s", filename.c_str());
+        if (fileName != url) {
+            log()->info("entityResolver: url changed %s", fileName.c_str());
         }
         try {
             xmlParserInputPtr ret = default_loader_(fileName.c_str(), id, ctxt);
@@ -337,6 +337,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
                     log()->error("%s", error.c_str());
                 }
             }
+            return ret;
         }
         catch (const std::exception &e) {
             std::string error = std::string("Entity resolver error: ") +
@@ -369,7 +370,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
         log()->error("entityResolver unknown error. URL: %s. ID: %s", url ? url : "", id ? id : "");
     }
 
-    return ret;
+    return NULL;
 }
 
 xmlDocPtr
