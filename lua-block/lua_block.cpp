@@ -39,6 +39,9 @@ typedef ResourceHolder<lua_State*> LuaHolder;
 
 // Struct to store lua_State and mutex in Context
 struct LuaState {
+    // Buffer to store output from lua
+    std::string buffer;
+
     LuaHolder       lua;
     boost::mutex    mutex;
 
@@ -132,12 +135,12 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
     log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 }
 
-LuaSharedContext create_lua(Context *ctx, std::string &buffer) {
+LuaSharedContext create_lua(Context *ctx) {
     LuaSharedContext lua_context(new LuaState(luaL_newstate()));
     lua_State * lua = lua_context->lua.get();
     luaL_openlibs(lua);
 
-    setupXScript(lua, &buffer);
+    setupXScript(lua, &(lua_context->buffer));
 
     Request *request = ctx->request();
 
@@ -158,22 +161,18 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 
     PROFILER(log(), "Lua block execution, " + owner()->name());
 
-    lua_State * lua = 0;
-
-    // Buffer to store output from lua
-    std::string buffer;
-
     // Try to fetch previously created lua interpret. If failed - create new one.
-    boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx, boost::ref(buffer));
+    boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx);
 
     LuaSharedContext lua_context = ctx->param(
                                        std::string("xscript.lua"),
                                        creator
                                    );
-    lua = lua_context->lua.get();
+    lua_State * lua = lua_context->lua.get();
 
     // Lock interpreter during processing.
     boost::mutex::scoped_lock lock(lua_context->mutex);
+    lua_context->buffer.clear();
 
     if (LUA_ERRMEM == luaL_loadstring(lua, code_)) {
         throw std::bad_alloc();
@@ -191,14 +190,14 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     XmlUtils::throwUnless(NULL != doc.get());
 
     XmlNodeHelper node;
-    if (buffer.empty()) {
+    if (lua_context->buffer.empty()) {
         node = XmlNodeHelper(xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "lua", 
           (const xmlChar*) ""));
     }
     else {
-        log()->debug("Lua output: %s", buffer.c_str());
+        log()->debug("Lua output: %s", lua_context->buffer.c_str());
         node = XmlNodeHelper(xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "lua",
-            (const xmlChar*) XmlUtils::escape(buffer).c_str()));
+            (const xmlChar*) XmlUtils::escape(lua_context->buffer).c_str()));
     }
     xmlDocSetRootElement(doc.get(), node.get());
     node.release();
