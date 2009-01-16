@@ -301,10 +301,8 @@ Script::parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes) {
                 node = node->next;
                 continue;
             }
-            if (node->ns && node->ns->href &&
-                (xmlStrEqual(node->ns->href, XINCLUDE_NS) ||
-                 xmlStrEqual(node->ns->href, XINCLUDE_OLD_NS)) &&
-                xmlStrEqual(node->name, XINCLUDE_NODE)) {
+            if (node->ns && node->ns->href && xmlStrEqual(node->name, XINCLUDE_NODE) &&
+                (xmlStrEqual(node->ns->href, XINCLUDE_NS) || xmlStrEqual(node->ns->href, XINCLUDE_OLD_NS))) {
                 const char *href = XmlUtils::attrValue(node, "href");
                 if (NULL != href) {
                     throw UnboundRuntimeError(
