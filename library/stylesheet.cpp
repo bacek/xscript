@@ -199,15 +199,15 @@ Stylesheet::parse() {
         TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
         TimeMapType fake;
         modified_info ? swapModifiedInfo(*modified_info) : swapModifiedInfo(fake);
+
+        parseNode(xmlDocGetRootElement(doc.release()));
+        parseImport(stylesheet_->imports);
         
         std::string error = XmlInfoCollector::getError();
         if (!error.empty()) {
             throw UnboundRuntimeError(error);
         }
     }
-
-    parseNode(xmlDocGetRootElement(doc.release()));
-    parseImport(stylesheet_->imports);
 
     detectOutputMethod(stylesheet_);
     detectOutputEncoding(stylesheet_);
