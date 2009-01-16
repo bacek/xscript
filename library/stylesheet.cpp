@@ -179,6 +179,7 @@ Stylesheet::parse() {
     XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar *) path.native_file_string().c_str()));
 
     XmlDocHelper doc(NULL);
+    xmlNodePtr doc_root(NULL);
     {
         XmlInfoCollector::Starter starter;
         
@@ -196,12 +197,11 @@ Stylesheet::parse() {
         stylesheet_ = XsltStylesheetHelper(xsltParseStylesheetDoc(doc.get()));
         XmlUtils::throwUnless(NULL != stylesheet_.get());
         
+        doc_root = xmlDocGetRootElement(doc.release());
+        
         TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
         TimeMapType fake;
         modified_info ? swapModifiedInfo(*modified_info) : swapModifiedInfo(fake);
-
-        parseNode(xmlDocGetRootElement(doc.release()));
-        parseImport(stylesheet_->imports);
         
         std::string error = XmlInfoCollector::getError();
         if (!error.empty()) {
@@ -209,6 +209,9 @@ Stylesheet::parse() {
         }
     }
 
+    parseNode(doc_root);
+    parseImport(stylesheet_->imports);
+    
     detectOutputMethod(stylesheet_);
     detectOutputEncoding(stylesheet_);
     detectOutputInfo(stylesheet_);
