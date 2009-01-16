@@ -301,6 +301,17 @@ Script::parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes) {
                 node = node->next;
                 continue;
             }
+            if (node->ns && node->ns->href &&
+                (xmlStrEqual(node->ns->href, XINCLUDE_NS) ||
+                 xmlStrEqual(node->ns->href, XINCLUDE_OLD_NS)) &&
+                xmlStrEqual(node->name, XINCLUDE_NODE)) {
+                const char *href = XmlUtils::attrValue(node, "href");
+                if (NULL != href) {
+                    throw UnboundRuntimeError(
+                        std::string("Cannot include file: ") + href +
+                            ". Check include file for syntax error");
+                }
+            }            
             Extension *ext = elist->extension(node, true);
             if (NULL != ext) {
                 log()->debug("%s, creating block %s", name().c_str(), ext->name());
