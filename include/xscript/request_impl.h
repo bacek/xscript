@@ -81,8 +81,8 @@ public:
     virtual const std::string& getRequestMethod() const;
     virtual std::string getURI() const;
     virtual std::string getOriginalURI() const;
-    virtual std::string getHost() const;
-    virtual std::string getOriginalHost() const;
+    virtual const std::string& getHost() const;
+    virtual const std::string& getOriginalHost() const;
 
     virtual std::string getOriginalUrl() const;
 
@@ -130,6 +130,7 @@ public:
 
 protected:
     std::string checkUrlEscaping(const Range &range);
+    Range checkHost(const Range &range);
 
 private:
     RequestImpl(const RequestImpl &);
@@ -145,6 +146,29 @@ private:
     std::map<std::string, File> files_;
     std::vector<StringUtils::NamedValue> args_;
     bool is_bot_;
+    
+    static const std::string HEAD;
+    static const std::string HOST_KEY;
+    static const std::string CONTENT_TYPE_KEY;
+    static const std::string CONTENT_ENCODING_KEY;
+    static const std::string CONTENT_LENGTH_KEY;
+
+    static const std::string HTTPS_KEY;
+    static const std::string SERVER_ADDR_KEY;
+    static const std::string SERVER_PORT_KEY;
+
+    static const std::string PATH_INFO_KEY;
+    static const std::string PATH_TRANSLATED_KEY;
+
+    static const std::string SCRIPT_NAME_KEY;
+    static const std::string SCRIPT_FILENAME_KEY;
+    static const std::string DOCUMENT_ROOT_KEY;
+
+    static const std::string REMOTE_USER_KEY;
+    static const std::string REMOTE_ADDR_KEY;
+
+    static const std::string QUERY_STRING_KEY;
+    static const std::string REQUEST_METHOD_KEY;
 };
 
 class RequestFactory : public Component<RequestFactory> {

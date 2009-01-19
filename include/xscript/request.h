@@ -31,8 +31,8 @@ public:
     virtual const std::string& getRequestMethod() const = 0;
     virtual std::string getURI() const = 0;
     virtual std::string getOriginalURI() const = 0;
-    virtual std::string getHost() const = 0;
-    virtual std::string getOriginalHost() const = 0;
+    virtual const std::string& getHost() const = 0;
+    virtual const std::string& getOriginalHost() const = 0;
     virtual std::string getOriginalUrl() const = 0;
 
     virtual std::streamsize getContentLength() const = 0;

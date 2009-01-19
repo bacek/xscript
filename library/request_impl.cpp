@@ -21,28 +21,28 @@
 
 namespace xscript {
 
-static const std::string HEAD("HEAD");
-static const std::string HOST_KEY("HOST");
-static const std::string CONTENT_TYPE_KEY("Content-Type");
-static const std::string CONTENT_ENCODING_KEY("Content-Encoding");
-static const std::string CONTENT_LENGTH_KEY("Content-Length");
+const std::string RequestImpl::HEAD("HEAD");
+const std::string RequestImpl::HOST_KEY("HOST");
+const std::string RequestImpl::CONTENT_TYPE_KEY("Content-Type");
+const std::string RequestImpl::CONTENT_ENCODING_KEY("Content-Encoding");
+const std::string RequestImpl::CONTENT_LENGTH_KEY("Content-Length");
 
-static const std::string HTTPS_KEY("HTTPS");
-static const std::string SERVER_ADDR_KEY("SERVER_ADDR");
-static const std::string SERVER_PORT_KEY("SERVER_PORT");
+const std::string RequestImpl::HTTPS_KEY("HTTPS");
+const std::string RequestImpl::SERVER_ADDR_KEY("SERVER_ADDR");
+const std::string RequestImpl::SERVER_PORT_KEY("SERVER_PORT");
 
-static const std::string PATH_INFO_KEY("PATH_INFO");
-static const std::string PATH_TRANSLATED_KEY("PATH_TRANSLATED");
+const std::string RequestImpl::PATH_INFO_KEY("PATH_INFO");
+const std::string RequestImpl::PATH_TRANSLATED_KEY("PATH_TRANSLATED");
 
-static const std::string SCRIPT_NAME_KEY("SCRIPT_NAME");
-static const std::string SCRIPT_FILENAME_KEY("SCRIPT_FILENAME");
-static const std::string DOCUMENT_ROOT_KEY("DOCUMENT_ROOT");
+const std::string RequestImpl::SCRIPT_NAME_KEY("SCRIPT_NAME");
+const std::string RequestImpl::SCRIPT_FILENAME_KEY("SCRIPT_FILENAME");
+const std::string RequestImpl::DOCUMENT_ROOT_KEY("DOCUMENT_ROOT");
 
-static const std::string REMOTE_USER_KEY("REMOTE_USER");
-static const std::string REMOTE_ADDR_KEY("REMOTE_ADDR");
+const std::string RequestImpl::REMOTE_USER_KEY("REMOTE_USER");
+const std::string RequestImpl::REMOTE_ADDR_KEY("REMOTE_ADDR");
 
-static const std::string QUERY_STRING_KEY("QUERY_STRING");
-static const std::string REQUEST_METHOD_KEY("REQUEST_METHOD");
+const std::string RequestImpl::QUERY_STRING_KEY("QUERY_STRING");
+const std::string RequestImpl::REQUEST_METHOD_KEY("REQUEST_METHOD");
 
 File::File(const std::map<Range, Range, RangeCILess> &m, const Range &content) :
         data_(content.begin(), static_cast<std::streamsize>(content.size())) {
@@ -168,24 +168,12 @@ RequestImpl::getOriginalUrl() const {
 }
 
 
-std::string
+const std::string&
 RequestImpl::getHost() const {
-    const std::string& host_header = getHeader(HOST_KEY);
-    if (host_header.empty()) {
-        return StringUtils::EMPTY_STRING;
-    }
-
-    if (!isSecure() && host_header.find(':') == std::string::npos) {
-        int port = getServerPort();
-        if (port != 80) {
-            return std::string(host_header).append(":").append(boost::lexical_cast<std::string>(port));
-        }
-    }
-
-    return host_header;
+    return getHeader(HOST_KEY);
 }
 
-std::string
+const std::string&
 RequestImpl::getOriginalHost() const {
     return getHost();
 }
@@ -408,7 +396,7 @@ void
 RequestImpl::attach(std::istream *is, char *env[]) {
 
     std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
-    Parser::parse(this, env, enc.get(), QUERY_STRING_KEY);
+    Parser::parse(this, env, enc.get());
 
     if ("POST" == getRequestMethod()) {
         body_.resize(getContentLength());
@@ -461,6 +449,28 @@ RequestImpl::checkUrlEscaping(const Range &range) {
         }
     }
     return result;
+}
+
+Range
+RequestImpl::checkHost(const Range &range) {
+    Range host(range);
+    int length = range.size();
+    const char *end_pos = range.begin() + length - 1;
+    for (int i = 0; i < length; ++i) {
+        if (*(end_pos - i) == ':' && i + 1 != length) {
+            host = Range(range.begin(), end_pos - i);
+            break;
+        }
+    }
+     
+    for(const char *it = host.begin(); it != host.end(); ++it) {
+        if (*it == '/' || *it == ':') {
+            throw std::runtime_error("Incorrect host");
+        }
+        
+    }
+    
+    return host;
 }
 
 RequestFactory::RequestFactory() {

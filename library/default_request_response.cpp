@@ -92,12 +92,12 @@ DefaultRequestResponse::getOriginalURI() const {
     return impl_->getOriginalURI();
 }
 
-std::string
+const std::string&
 DefaultRequestResponse::getHost() const {
     return impl_->getHost();
 }
 
-std::string
+const std::string&
 DefaultRequestResponse::getOriginalHost() const {
     return impl_->getOriginalHost();
 }

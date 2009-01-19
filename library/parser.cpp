@@ -124,9 +124,15 @@ Parser::addCookie(RequestImpl *req, const Range &range, Encoder *encoder) {
 void
 Parser::addHeader(RequestImpl *req, const Range &key, const Range &value, Encoder *encoder) {
     std::string header = normalizeInputHeaderName(key);
+    
+    Range checked_value = value;
+    if (strcmp(header.c_str(), RequestImpl::HOST_KEY.c_str()) == 0) {
+        checked_value = req->checkHost(value);
+    }
+        
+    Range norm_value = checked_value;
     std::string result;
-    Range norm_value = value;
-    if (req->normalizeHeader(header, value, result)) {
+    if (req->normalizeHeader(header, checked_value, result)) {
         norm_value = createRange(result);
     }
     
@@ -141,7 +147,7 @@ Parser::addHeader(RequestImpl *req, const Range &key, const Range &value, Encode
 }
 
 void
-Parser::parse(RequestImpl *req, char *env[], Encoder *encoder, const std::string &query_key) {
+Parser::parse(RequestImpl *req, char *env[], Encoder *encoder) {
     for (int i = 0; NULL != env[i]; ++i) {
         Range key, value;
         split(createRange(env[i]), '=', key, value);
@@ -152,13 +158,13 @@ Parser::parse(RequestImpl *req, char *env[], Encoder *encoder, const std::string
         else if (CONTENT_TYPE_RANGE == key) {
             addHeader(req, key, trim(value), encoder);
         }
-        else if (startsWith(key, HEADER_RANGE)) {
+        else if (startsWith(key, HEADER_RANGE)) { 
             addHeader(req, truncate(key, HEADER_RANGE.size(), 0), trim(value), encoder);
         }
         else {
             std::string name(key.begin(), key.end());
             std::string query_value;
-            if (strcmp(name.c_str(), query_key.c_str()) == 0) {
+            if (strcmp(name.c_str(), RequestImpl::QUERY_STRING_KEY.c_str()) == 0) {
                 query_value = req->checkUrlEscaping(value);
                 value = createRange(query_value);
             }

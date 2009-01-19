@@ -26,7 +26,7 @@ public:
     static void addCookie(RequestImpl *req, const Range &range, Encoder *encoder);
     static void addHeader(RequestImpl *req, const Range &key, const Range &value, Encoder *encoder);
 
-    static void parse(RequestImpl *req, char *env[], Encoder *encoder, const std::string &query_key);
+    static void parse(RequestImpl *req, char *env[], Encoder *encoder);
     static void parseCookies(RequestImpl *req, const Range &range, Encoder *encoder);
 
     static void parsePart(RequestImpl *req, Range &part, Encoder *encoder);
