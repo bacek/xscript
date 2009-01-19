@@ -19,7 +19,8 @@ public:
     void setDefaultRemoteTimeout();
 
     virtual int invokeTimeout() const;
-    virtual void startTimer(const Context *ctx);
+    virtual void startTimer(Context *ctx);
+
 protected:
     virtual void property(const char *name, const char *value);
     virtual void postParse();

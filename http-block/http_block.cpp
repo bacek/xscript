@@ -157,10 +157,11 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
         return doc;
     }
 
-    checkTimeout(url);
+    const TimeoutCounter &timer = ctx->blockTimer(this);
+    checkTimeout(timer, url);
 
     const Tag *tag = boost::any_cast<Tag>(&a);
-    HttpHelper helper(url, timer().remained());
+    HttpHelper helper(url, timer.remained());
     helper.appendHeaders(ctx->request(), proxy_, tag);
 
     helper.perform();
@@ -200,9 +201,10 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
     std::string url = concatParams(ctx, 0, size - 1);
     PROFILER(log(), "getBinaryPage: " + url);
 
-    checkTimeout(url);
+    const TimeoutCounter &timer = ctx->blockTimer(this);
+    checkTimeout(timer, url);
 
-    HttpHelper helper(url, timer().remained());
+    HttpHelper helper(url, timer.remained());
     helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     helper.perform();
@@ -249,10 +251,12 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
     }
     
     std::string url = concatParams(ctx, 0, size - 2);
-    checkTimeout(url);
+
+    const TimeoutCounter &timer = ctx->blockTimer(this);
+    checkTimeout(timer, url);
 
     const Tag *tag = boost::any_cast<Tag>(&a);
-    HttpHelper helper(url, timer().remained());
+    HttpHelper helper(url, timer.remained());
     std::string body = p[size-1]->asString(ctx);
     helper.appendHeaders(ctx->request(), proxy_, tag);
 
@@ -302,9 +306,10 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
         has_query = true;
     }
 
-    checkTimeout(url);
+    const TimeoutCounter &timer = ctx->blockTimer(this);
+    checkTimeout(timer, url);
 
-    HttpHelper helper(url, timer().remained());
+    HttpHelper helper(url, timer.remained());
     helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     helper.perform();
@@ -335,9 +340,10 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
         url.append(query);
     }
 
-    checkTimeout(url);
+    const TimeoutCounter &timer = ctx->blockTimer(this);
+    checkTimeout(timer, url);
 
-    HttpHelper helper(url, timer().remained());
+    HttpHelper helper(url, timer.remained());
     helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     helper.perform();
@@ -381,12 +387,12 @@ HttpBlock::createTagInfo(const HttpHelper &helper, boost::any &a) const {
 }
 
 void
-HttpBlock::checkTimeout(const std::string &url) {
-    if (timer().remained() > 0) {
+HttpBlock::checkTimeout(const TimeoutCounter &timer, const std::string &url) {
+    if (timer.remained() > 0) {
         return;
     }
     InvokeError error("block is timed out", "url", url);
-    error.add("timeout", boost::lexical_cast<std::string>(timer().timeout()));
+    error.add("timeout", boost::lexical_cast<std::string>(timer.timeout()));
     throw error;
 }
 

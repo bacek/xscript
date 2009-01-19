@@ -35,8 +35,6 @@
 
 namespace xscript {
 
-TimeoutCounter Block::default_timer_;
-
 Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
         extension_(ext), owner_(owner), node_(node), is_guard_not_(false)
 {
@@ -228,9 +226,10 @@ Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
 void
 Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
     if (!xsltName().empty()) {
-        if (timer().expired()) {
+        const TimeoutCounter &timer = ctx->blockTimer(this);
+        if (timer.expired()) {
             throw InvokeError("block is timed out", "timeout",
-                boost::lexical_cast<std::string>(timer().timeout()));
+                boost::lexical_cast<std::string>(timer.timeout()));
         }
         boost::shared_ptr<Stylesheet> sh = Stylesheet::create(xsltName());
         {
@@ -499,13 +498,8 @@ Block::processParam(std::auto_ptr<Param> p) {
 }
 
 void
-Block::startTimer(const Context *ctx) {
+Block::startTimer(Context *ctx) {
     (void)ctx;
-}
-
-const TimeoutCounter&
-Block::timer() const {
-    return default_timer_;
 }
 
 bool

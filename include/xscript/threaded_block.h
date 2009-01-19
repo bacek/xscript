@@ -16,17 +16,14 @@ public:
     virtual bool threaded() const;
     virtual void threaded(bool value);
 
-    virtual const TimeoutCounter& timer() const;
-    virtual void startTimer(const Context *ctx);
+    virtual void startTimer(Context *ctx);
 
 protected:
     virtual void property(const char *name, const char *value);
-    virtual void resetTimer(int timeout);
 
 private:
     bool threaded_;
     int timeout_;
-    TimeoutCounter timer_;
 };
 
 } // namespace xscript

@@ -83,8 +83,7 @@ public:
     Logger * log() const {
         return extension_->getLogger();
     }
-    virtual const TimeoutCounter& timer() const;
-    virtual void startTimer(const Context *ctx);
+    virtual void startTimer(Context *ctx);
 
 protected:
     class XPathExpr;
@@ -127,7 +126,6 @@ private:
     std::vector<XPathExpr> xpath_;
     std::string id_, guard_, method_;
     bool is_guard_not_;
-    static TimeoutCounter default_timer_;
     std::string xpointer_expr_;
 
 protected:

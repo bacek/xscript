@@ -54,21 +54,11 @@ ThreadedBlock::property(const char *name, const char *value) {
 }
 
 void
-ThreadedBlock::startTimer(const Context *ctx) {
+ThreadedBlock::startTimer(Context *ctx) {
     if (runByMainThread(ctx)) {
         return;
     }
-    resetTimer(std::min(ctx->timer().remained(), invokeTimeout()));
-}
-
-const TimeoutCounter&
-ThreadedBlock::timer() const {
-    return timer_;
-}
-
-void
-ThreadedBlock::resetTimer(int timeout) {
-    timer_.reset(timeout);
+    ctx->startBlockTimer(this, std::min(ctx->timer().remained(), invokeTimeout()));
 }
 
 } // namespace xscript

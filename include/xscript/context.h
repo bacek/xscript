@@ -104,6 +104,8 @@ public:
 
     const TimeoutCounter& timer() const;
     void startTimer(int timeout);
+    const TimeoutCounter& blockTimer(const Block *block) const;
+    void startBlockTimer(const Block *block, int timeout);
 
     friend class ContextStopper;
 
@@ -146,10 +148,11 @@ private:
     unsigned int flags_;
 
     std::map<const Block*, std::string> runtime_errors_;
+    std::map<const Block*, TimeoutCounter> timers_;
 
     boost::shared_ptr<ParamsMap> params_;
     
-    mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_;
+    mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_, timers_mutex_;
 
     TimeoutCounter timer_;
 

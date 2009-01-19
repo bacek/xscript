@@ -300,6 +300,26 @@ Context::startTimer(int timeout) {
     timer_.reset(timeout);
 }
 
+const TimeoutCounter&
+Context::blockTimer(const Block *block) const {
+    boost::mutex::scoped_lock lock(timers_mutex_);
+    std::map<const Block*, TimeoutCounter>::const_iterator it = timers_.find(block);
+    if (it == timers_.end()) {
+        return timer_;
+    }
+    return it->second;
+}
+
+void
+Context::startBlockTimer(const Block *block, int timeout) {
+    boost::mutex::scoped_lock lock(timers_mutex_);
+    std::pair<std::map<const Block*, TimeoutCounter>::iterator, bool> result =
+        timers_.insert(std::make_pair(block, TimeoutCounter(timeout)));
+    if (!result.second) {
+        throw std::runtime_error("second block timer started in one context");
+    }
+}
+
 bool
 Context::ParamsMap::insert(const std::string &name, const boost::any &value) {
     boost::mutex::scoped_lock sl(mutex_);

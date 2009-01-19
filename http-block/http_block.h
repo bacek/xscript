@@ -61,7 +61,7 @@ protected:
 private:
     HttpBlock(const HttpBlock &);
     HttpBlock& operator = (const HttpBlock &);
-    void checkTimeout(const std::string &url);
+    void checkTimeout(const TimeoutCounter &timer, const std::string &url);
 
     friend class HttpMethodRegistrator;
 
