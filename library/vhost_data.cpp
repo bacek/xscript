@@ -76,10 +76,18 @@ VirtualHostData::checkVariable(const Request* request, const std::string& var) c
 
     if (hasVariable(request, var)) {
         std::string value = VirtualHostData::instance()->getVariable(request, var);
-        if (strncasecmp("yes", value.c_str(), sizeof("yes") - 1) == 0 ||
-            strncasecmp("true", value.c_str(), sizeof("true") - 1) == 0 ||
-            boost::lexical_cast<bool>(value) == 1) {
-            return true;
+        try {
+            if (strncasecmp("yes", value.c_str(), sizeof("yes") - 1) == 0 ||
+                strncasecmp("true", value.c_str(), sizeof("true") - 1) == 0 ||
+                boost::lexical_cast<bool>(value) == 1) {
+                return true;
+            }
+        }
+        catch(boost::bad_lexical_cast &) {
+            std::stringstream stream;
+            stream << "Cannot cast to bool environment variable " << var
+                   << ". Value: " << value;
+            throw std::runtime_error(stream.str());
         }
     }
 
