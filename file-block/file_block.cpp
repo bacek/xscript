@@ -91,7 +91,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     std::string filename = concatParams(ctx, 0, size - 1);
     if (filename.empty()) {
         if (isTest()) {
-            return testFileDoc(false);
+            return testFileDoc(false, filename);
         }
         ignore_not_existed_ ? throw SkipResultInvokeError("empty path") :
             throw InvokeError("empty path");
@@ -109,7 +109,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     int res = stat(file.c_str(), &st);
     
     if (isTest()) {
-        return testFileDoc(!res);
+        return testFileDoc(!res, file);
     }
     
     if (res != 0) {
@@ -225,13 +225,16 @@ FileBlock::invokeFile(const std::string &file_name, Context *ctx) {
 
 
 XmlDocHelper
-FileBlock::testFileDoc(bool result) {
+FileBlock::testFileDoc(bool result, const std::string &file) {
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
     
     std::string res = boost::lexical_cast<std::string>(result);
     XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"exist", (const xmlChar*)res.c_str()));
     XmlUtils::throwUnless(NULL != node.get());
+    if (!file.empty()) {
+        xmlNewProp(node.get(), (const xmlChar*)"file", (const xmlChar*)XmlUtils::escape(file).c_str());
+    }
 
     xmlDocSetRootElement(doc.get(), node.release());
     return doc;

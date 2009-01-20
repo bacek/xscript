@@ -28,7 +28,7 @@ public:
 
 protected:
     virtual void postParse();
-    virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception);
+    virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception); 
 
     /**
      * Loading file with optional xinclude processing.
@@ -43,7 +43,7 @@ protected:
     
     XmlDocHelper invokeMethod(const std::string &file_name, Context *ctx);
     
-    XmlDocHelper testFileDoc(bool result);
+    XmlDocHelper testFileDoc(bool result, const std::string &file);
     
     virtual void property(const char *name, const char *value);
     
