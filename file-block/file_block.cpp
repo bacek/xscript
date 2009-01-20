@@ -31,7 +31,7 @@ namespace fs = boost::filesystem;
 
 FileBlock::FileBlock(const Extension *ext, Xml *owner, xmlNodePtr node)
     : Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node),
-    method_(NULL), processXInclude_(false) {
+    method_(NULL), processXInclude_(false), ignore_not_existed_(false) {
 }
 
 FileBlock::~FileBlock() {
@@ -39,7 +39,10 @@ FileBlock::~FileBlock() {
 
 void
 FileBlock::property(const char *name, const char *value) {
-    if (!TaggedBlock::propertyInternal(name, value)) {
+    if (strncasecmp(name, "ignore-not-existed", sizeof("ignore-not-existed")) == 0) {
+        ignore_not_existed_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
+    }
+    else if (!TaggedBlock::propertyInternal(name, value)) {
         ThreadedBlock::property(name, value);
     }
 }
@@ -63,9 +66,16 @@ FileBlock::postParse() {
     else if (method() == "invoke") {
         method_ = &FileBlock::invokeFile;
     }
+    else if (method() == "test") {
+    }
     else {
         throw std::invalid_argument("Unknown method for file-block: " + method());
     }
+}
+
+bool
+FileBlock::isTest() const {
+    return NULL == method_;
 }
 
 XmlDocHelper
@@ -80,7 +90,12 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
     
     std::string filename = concatParams(ctx, 0, size - 1);
     if (filename.empty()) {
-        throw InvokeError("empty path", "file", filename);
+        if (isTest()) {
+            return testFileDoc(false);
+        }
+        
+        ignore_not_existed_ ? throw SkipResultInvokeError("empty path") :
+            throw InvokeError("empty path");
     }
     std::string file = fullName(filename);
 
@@ -93,10 +108,16 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
 
     struct stat st;
     int res = stat(file.c_str(), &st);
+    
+    if (isTest()) {
+        return testFileDoc(!res);
+    }
+    
     if (res != 0) {
         std::stringstream stream;
         StringUtils::report("failed to stat file: ", errno, stream);
-        throw InvokeError(stream.str(), "file", file);
+        ignore_not_existed_ ? throw SkipResultInvokeError(stream.str(), "file", file) :
+            throw InvokeError(stream.str(), "file", file);
     }
     
     if (!tagged()) {
@@ -203,5 +224,19 @@ FileBlock::invokeFile(const std::string &file_name, Context *ctx) {
     return doc;
 }
 
+
+XmlDocHelper
+FileBlock::testFileDoc(bool result) {
+    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlUtils::throwUnless(NULL != doc.get());
+    
+    std::string res = boost::lexical_cast<std::string>(result);
+    XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"exist", (const xmlChar*)res.c_str()));
+    XmlUtils::throwUnless(NULL != node.get());
+
+    xmlDocSetRootElement(doc.get(), node.release());
+    return doc;
+}
+    
 }
 

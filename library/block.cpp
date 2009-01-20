@@ -154,6 +154,10 @@ Block::invoke(Context *ctx) {
         }
         return result;
     }
+    catch (const SkipResultInvokeError &e) {
+        log()->info("%s", errorMessage(e.what(), e.info()).c_str());
+        return InvokeResult(fakeResult(), false);
+    }
     catch (const InvokeError &e) {
         return errorResult(e.what(), e.info());
     }
@@ -308,6 +312,38 @@ Block::errorResult(const char *error, const InvokeError::InfoMapType &error_info
     log()->error("%s", full_error.c_str());
 
     return InvokeResult(doc, false);
+}
+
+std::string
+Block::errorMessage(const char *error, const InvokeError::InfoMapType &error_info) const {
+
+    std::stringstream stream;
+    stream << "Caught invocation error" << ": ";
+    if (error != NULL) {
+        stream << error << ". ";
+    }
+
+    stream << "block: " << name() << ". ";
+
+    if (!method().empty()) {
+        stream << "method: " << method() << ". ";
+    }
+
+    if (!id().empty()) {
+        stream << "id: " << id() << ". ";
+    }
+
+    for(InvokeError::InfoMapType::const_iterator it = error_info.begin();
+        it != error_info.end();
+        ++it) {
+        if (!it->second.empty()) {
+            stream << it->first << ": " << it->second << ". ";
+        }
+    }
+
+    stream << "owner: " << owner()->name() << ".";
+
+    return stream.str();
 }
 
 InvokeResult

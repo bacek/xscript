@@ -43,11 +43,16 @@ protected:
     
     XmlDocHelper invokeMethod(const std::string &file_name, Context *ctx);
     
+    XmlDocHelper testFileDoc(bool result);
+    
     virtual void property(const char *name, const char *value);
+    
+    bool isTest() const;
 
 private:
     Method method_;
     bool processXInclude_;
+    bool ignore_not_existed_;
 };
 
 

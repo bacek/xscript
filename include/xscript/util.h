@@ -69,6 +69,13 @@ public:
         InvokeError(error, name, value) {}
 };
 
+class SkipResultInvokeError : public InvokeError {
+public:
+    SkipResultInvokeError(const std::string &error) : InvokeError(error) {}
+    SkipResultInvokeError(const std::string &error, const std::string &name, const std::string &value) :
+        InvokeError(error, name, value) {}
+};
+
 class Encoder;
 
 class StringUtils : private boost::noncopyable {
