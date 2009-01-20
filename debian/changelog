@@ -1,3 +1,12 @@
+xscript (5.51-0) unstable; urgency=low
+
+  * move timeout counters to context
+  * host validation added
+  * VirtualHostData::checkVariable exception handking added
+  * check unresolved xi:include tags
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 20 Jan 2009 12:45:40 +0300
+
 xscript (5.50-4) unstable; urgency=low
 
   * fix crashing xscript while throwing exception during stylesheet parsing
