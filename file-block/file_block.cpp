@@ -93,7 +93,6 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
         if (isTest()) {
             return testFileDoc(false);
         }
-        
         ignore_not_existed_ ? throw SkipResultInvokeError("empty path") :
             throw InvokeError("empty path");
     }
