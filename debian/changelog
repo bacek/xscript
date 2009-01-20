@@ -1,3 +1,9 @@
+xscript (5.51-2) unstable; urgency=low
+
+  * added file attribute to the file:test method output
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 20 Jan 2009 18:56:53 +0300
+
 xscript (5.51-1) unstable; urgency=low
 
   * added test method to File block
