@@ -451,7 +451,7 @@ RequestImpl::checkUrlEscaping(const Range &range) {
     return result;
 }
 
-Range
+void
 RequestImpl::checkHost(const Range &range) {
     Range host(range);
     int length = range.size();
@@ -469,8 +469,6 @@ RequestImpl::checkHost(const Range &range) {
         }
         
     }
-    
-    return host;
 }
 
 RequestFactory::RequestFactory() {
