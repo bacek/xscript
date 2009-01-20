@@ -451,13 +451,17 @@ RequestImpl::checkUrlEscaping(const Range &range) {
     return result;
 }
 
-void
+Range
 RequestImpl::checkHost(const Range &range) {
     Range host(range);
     int length = range.size();
     const char *end_pos = range.begin() + length - 1;
+    bool remove_port = false;
     for (int i = 0; i < length; ++i) {
         if (*(end_pos - i) == ':' && i + 1 != length) {
+            if (i == 3 && *(end_pos - 2) == '8' && *(end_pos - 1) == '0') {
+                remove_port = true;
+            }
             host = Range(range.begin(), end_pos - i);
             break;
         }
@@ -467,8 +471,13 @@ RequestImpl::checkHost(const Range &range) {
         if (*it == '/' || *it == ':') {
             throw std::runtime_error("Incorrect host");
         }
-        
     }
+    
+    if (remove_port) {
+        return host;
+    }
+    
+    return range;
 }
 
 RequestFactory::RequestFactory() {

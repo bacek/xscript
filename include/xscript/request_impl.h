@@ -130,7 +130,7 @@ public:
 
 protected:
     std::string checkUrlEscaping(const Range &range);
-    void checkHost(const Range &range);
+    Range checkHost(const Range &range);
 
 private:
     RequestImpl(const RequestImpl &);

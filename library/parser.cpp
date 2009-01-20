@@ -125,13 +125,14 @@ void
 Parser::addHeader(RequestImpl *req, const Range &key, const Range &value, Encoder *encoder) {
     std::string header = normalizeInputHeaderName(key);
     
+    Range checked_value = value;
     if (strcmp(header.c_str(), RequestImpl::HOST_KEY.c_str()) == 0) {
-        req->checkHost(value);
+        checked_value = req->checkHost(value);
     }
         
-    Range norm_value = value;
+    Range norm_value = checked_value;
     std::string result;
-    if (req->normalizeHeader(header, value, result)) {
+    if (req->normalizeHeader(header, checked_value, result)) {
         norm_value = createRange(result);
     }
     
