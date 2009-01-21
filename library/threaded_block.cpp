@@ -13,7 +13,7 @@
 namespace xscript {
 
 ThreadedBlock::ThreadedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        Block(ext, owner, node), threaded_(false), timeout_(0), check_elapsed_time_(0) {
+        Block(ext, owner, node), threaded_(false), timeout_(0), check_elapsed_time_(false) {
 }
 
 ThreadedBlock::~ThreadedBlock() {
