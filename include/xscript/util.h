@@ -169,6 +169,7 @@ public:
     bool unlimited() const;
     bool expired() const;
     int remained() const;
+    int elapsed() const;
     void timeout(int timeout);
     int timeout() const;
 

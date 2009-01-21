@@ -95,6 +95,7 @@ protected:
     virtual XmlDocHelper processResponse(Context *ctx, XmlDocHelper doc, boost::any &a);
     virtual void property(const char *name, const char *value);
     virtual void postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a);
+    virtual void postInvoke(Context *ctx, const XmlDocHelper &doc);
     virtual void callInternal(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
 

@@ -144,7 +144,11 @@ Block::invoke(Context *ctx) {
     }
 
     try {
-        return invokeInternal(ctx);
+        InvokeResult result = invokeInternal(ctx);
+        if (result.success) {
+            postInvoke(ctx, result.doc);
+        }
+        return result;
     }
     catch (const CriticalInvokeError &e) {
         std::string full_error;
@@ -479,6 +483,10 @@ Block::property(const char *name, const char *value) {
 
 void
 Block::postCall(Context *, const XmlDocHelper &, const boost::any &) {
+}
+
+void
+Block::postInvoke(Context *, const XmlDocHelper &) {
 }
 
 void

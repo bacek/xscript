@@ -13,7 +13,7 @@
 namespace xscript {
 
 ThreadedBlock::ThreadedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        Block(ext, owner, node), threaded_(false), timeout_(0) {
+        Block(ext, owner, node), threaded_(false), timeout_(0), check_elapsed_time_(0) {
 }
 
 ThreadedBlock::~ThreadedBlock() {
@@ -48,9 +48,25 @@ ThreadedBlock::property(const char *name, const char *value) {
     else if (strncasecmp(name, "timeout", sizeof("timeout")) == 0) {
         timeout_ = boost::lexical_cast<int>(value);
     }
+    else if (strncasecmp(name, "elapsed-time", sizeof("elapsed-time")) == 0) {
+        check_elapsed_time_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
+    }
     else {
         Block::property(name, value);
     }
+}
+
+void
+ThreadedBlock::postInvoke(Context *ctx, const XmlDocHelper &doc) {
+    if (!check_elapsed_time_ || tagged()) {
+        return;
+    }
+    xmlNodePtr node = xmlDocGetRootElement(doc.get());
+    if (NULL == node) {
+        return;
+    }
+    std::string elapsed = boost::lexical_cast<std::string>(0.001*ctx->blockTimer(this).elapsed());
+    xmlNewProp(node, (const xmlChar*)"elapsed-time", (const xmlChar*)elapsed.c_str());
 }
 
 void

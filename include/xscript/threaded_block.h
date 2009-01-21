@@ -20,10 +20,12 @@ public:
 
 protected:
     virtual void property(const char *name, const char *value);
+    virtual void postInvoke(Context *ctx, const XmlDocHelper &doc);
 
 private:
     bool threaded_;
     int timeout_;
+    bool check_elapsed_time_;
 };
 
 } // namespace xscript
