@@ -196,8 +196,7 @@ Stylesheet::parse() {
 
         stylesheet_ = XsltStylesheetHelper(xsltParseStylesheetDoc(doc.get()));
         XmlUtils::throwUnless(NULL != stylesheet_.get());
-        
-        doc_root = xmlDocGetRootElement(doc.release());
+        doc.release();
         
         TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
         TimeMapType fake;
@@ -209,8 +208,7 @@ Stylesheet::parse() {
         }
     }
 
-    parseNode(doc_root);
-    parseImport(stylesheet_->imports);
+    parseStylesheet(stylesheet_.get());
     
     detectOutputMethod(stylesheet_);
     detectOutputEncoding(stylesheet_);
@@ -221,12 +219,17 @@ Stylesheet::parse() {
 }
 
 void
-Stylesheet::parseImport(xsltStylesheetPtr imp) {
-    for ( ; imp ; imp = imp->next) {
-        if (imp->doc) {
-            parseNode(xmlDocGetRootElement(imp->doc));
+Stylesheet::parseStylesheet(xsltStylesheetPtr style) {
+    for ( ; style; style = style->next) {
+        if (style->doc) {
+            parseNode(xmlDocGetRootElement(style->doc));
         }
-        parseImport(imp->imports);
+        for (xsltDocumentPtr include = style->docList; include; include = include->next) {
+            if (include->doc) {
+                parseNode(xmlDocGetRootElement(include->doc));
+            }
+        }
+        parseStylesheet(style->imports);
     }
 }
 
