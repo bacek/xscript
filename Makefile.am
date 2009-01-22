@@ -17,7 +17,7 @@ EXTRA_DIST = ChangeLog Doxyfile AUTHORS COPYING INSTALL NEWS README \
 	examples/http_3.xml examples/http_4.xml examples/http-local-tagged.xml \
 	examples/include.xml examples/simple.xml examples/xinclude.xml \
 	extra/xscript-cache-clean extra/xscriptcacheclean.sh \
-	extra/xscriptstart.sh
+	extra/xscriptstart.sh extra/xscript-fix-shlibdeps.sh
 
 if HAVE_LUA_BLOCK
 SUBDIRS += lua-block

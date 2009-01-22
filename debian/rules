@@ -60,6 +60,8 @@ install: build tests
 	mkdir -p $(CURDIR)/debian/tmp/usr/bin
 	install -m 755 $(CURDIR)/extra/xscriptstart.sh $(CURDIR)/debian/tmp/usr/bin
 	install -m 755 $(CURDIR)/extra/xscriptcacheclean.sh $(CURDIR)/debian/tmp/usr/bin
+	mkdir -p $(CURDIR)/debian/tmp/usr/local/bin
+	install -m 755 $(CURDIR)/extra/xscript-fix-shlibdeps.sh	$(CURDIR)/debian/tmp/usr/local/bin
 	mkdir -p $(CURDIR)/debian/tmp/etc/cron.d
 	install -m 644 $(CURDIR)/extra/xscript-cache-clean $(CURDIR)/debian/tmp/etc/cron.d
 

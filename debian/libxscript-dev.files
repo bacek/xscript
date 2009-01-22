@@ -1,3 +1,4 @@
 usr/include/xscript/*
 usr/lib/libxscript.a
 usr/lib/libxscript.la
+usr/local/bin/*
