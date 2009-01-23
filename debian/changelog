@@ -1,3 +1,10 @@
+xscript (5.52-0) unstable; urgency=low
+
+  * checking elapsed time for threaded block addded
+  * parsing stylesheet includes added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 23 Jan 2009 10:06:26 +0300
+
 xscript (5.51-2) unstable; urgency=low
 
   * added file attribute to the file:test method output
