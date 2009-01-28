@@ -140,6 +140,30 @@ luaMD5(lua_State *lua) {
     return 0;
 }
 
+static int
+luaDomain(lua_State *lua) {
+    try {
+        int stack_size = lua_gettop(lua);
+        if (stack_size < 1 || stack_size > 2) 
+            throw BadArgCount(stack_size);
+
+        std::string url = luaReadStack<std::string>(lua, 1);
+        boost::int32_t level = 0;
+        if (stack_size == 2) {
+            level = luaReadStack<boost::int32_t>(lua, 2);
+        }
+
+        lua_pushstring(lua, StringUtils::parseDomainFromURL(url, level).c_str());
+        // Our value on stack
+        return 1;
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:domain]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
 void
 setupXScript(lua_State *lua, std::string * buf) {
     log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
@@ -169,6 +193,9 @@ setupXScript(lua_State *lua, std::string * buf) {
     // Setup md5 function
     lua_pushcfunction(lua, &luaMD5);
     lua_setfield(lua, -2, "md5");
+
+    lua_pushcfunction(lua, &luaDomain);
+    lua_setfield(lua, -2, "domain");
 
     lua_pop(lua, 2); // pop _G and xscript
 

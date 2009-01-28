@@ -42,6 +42,7 @@ public:
 
     void testMultiBlock();
     void testMD5();
+    void testDomain();
     
     void testLogger();
 private:
@@ -64,6 +65,7 @@ private:
 
     CPPUNIT_TEST(testMultiBlock);
     CPPUNIT_TEST(testMD5);
+    CPPUNIT_TEST(testDomain);
 
     CPPUNIT_TEST(testLogger);
 
@@ -388,6 +390,31 @@ LuaTest::testMD5() {
     );
 }
 
+void
+LuaTest::testDomain() {
+
+    using namespace xscript;
+
+    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Script> script = Script::create("lua-domain.xml");
+    boost::shared_ptr<Context> ctx(new Context(script, data));
+    ContextStopper ctx_stopper(ctx);
+
+    XmlDocHelper doc(script->invoke(ctx));
+    CPPUNIT_ASSERT(NULL != doc.get());
+
+    State* state = ctx->state();
+
+    CPPUNIT_ASSERT_EQUAL(std::string("hghltd.yandex.net"), state->asString("no_level"));
+    CPPUNIT_ASSERT_EQUAL(std::string("net"), state->asString("tld"));
+    CPPUNIT_ASSERT_EQUAL(std::string("www.yandex.ru"), state->asString("no_level_no_scheme"));
+    CPPUNIT_ASSERT_EQUAL(std::string("yandex.ru"), state->asString("yandex.ru"));
+    CPPUNIT_ASSERT_EQUAL(std::string("yandex.ru"), state->asString("no_scheme"));
+    CPPUNIT_ASSERT_EQUAL(std::string("localhost"), state->asString("localhost"));
+    CPPUNIT_ASSERT(!state->has("invalid"));
+    CPPUNIT_ASSERT(!state->has("localfile"));
+    CPPUNIT_ASSERT(!state->has("empty"));
+}
 // Incomplete test for logger... Just check manually default.log
 void
 LuaTest::testLogger() {

@@ -1,0 +1,62 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <x:lua>
+    xscript.state:setString(
+        "no_level",
+        xscript.domain("http://hghltd.yandex.net:1234/yandbtm?url=http%3A%2F%2Fwww.yandex.ru%2F&amp;text=%FF%ED%E4%E5%EA%F1")
+        );
+
+    xscript.state:setString(
+        "tld",
+        xscript.domain("http://hghltd.yandex.net:1234/yandbtm?url=http%3A%2F%2Fwww.yandex.ru%2F&amp;text=%FF%ED%E4%E5%EA%F1", 1)
+        );
+
+    xscript.state:setString(
+        "no_level_no_scheme",
+        xscript.domain("www.yandex.ru:8090/yandbtm?url=http%3A%2F%2Fwww.yandex.ru%2F&amp;text=%FF%ED%E4%E5%EA%F1")
+        );
+
+    xscript.state:setString(
+        "yandex.ru",
+        xscript.domain("http://www.yandex.ru/", 2)
+        );
+        
+    xscript.state:setString(
+        "no_scheme",
+        xscript.domain("www.yandex.ru:8090", 2)
+        );
+    </x:lua>
+
+    <!-- 
+    Separate error call to different blocks. Otherwise "whole" lua-script
+    will stop of first error
+    -->
+    <x:lua>
+    xscript.state:setString(
+        "empty",
+        xscript.domain("")
+        );
+    </x:lua>
+
+    <x:lua>
+    xscript.state:setString(
+        "localfile",
+        xscript.domain("file:///test.xml")
+        );
+    </x:lua>
+
+    <x:lua>
+    xscript.state:setString(
+        "invalid",
+        xscript.domain("http://.www.yandex.ru/index.html")
+        );
+    </x:lua>
+
+    <x:lua>
+    xscript.state:setString(
+        "localhost",
+        xscript.domain("http://localhost:8080/test.xml", 1)
+        );
+    </x:lua>
+</page>
