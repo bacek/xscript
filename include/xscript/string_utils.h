@@ -3,6 +3,7 @@
 
 #include <string>
 #include <ostream>
+#include <boost/cstdint.hpp> // for boost::int32_t
 
 #include <xscript/range.h>
 
@@ -38,6 +39,14 @@ namespace StringUtils {
     std::string tolower(const std::string& str);
     std::string toupper(const std::string& str);
     const char* nextUTF8(const char* data);
+
+    /**
+     * Parse domain part from url.
+     * \param url - url to parse. Copy-on-pass.
+     * \param level - [optional] cut to this level. If level == 0 returns full domain.
+     * \return domain part of url.
+     */
+    std::string parseDomainFromURL(std::string url, boost::int32_t level = 0);
 };
 
 

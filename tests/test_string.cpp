@@ -10,6 +10,8 @@
 #include <dmalloc.h>
 #endif
 
+using namespace xscript;
+
 class StringTest : public CppUnit::TestFixture {
 public:
     void testAmp();
@@ -24,6 +26,10 @@ public:
     void testUrldecodeEmpty();
     void testUrldecodeLatin();
     void testUrldecodeBadSuffix();
+    void testParseDomain();
+    void testParseDomainEmpty();
+    void testParseDomainFile();
+    void testParseDomainInvalid();
 
 private:
     CPPUNIT_TEST_SUITE(StringTest);
@@ -39,6 +45,12 @@ private:
     CPPUNIT_TEST(testUrldecodeEmpty);
     CPPUNIT_TEST(testUrldecodeLatin);
     CPPUNIT_TEST(testUrldecodeBadSuffix);
+
+    CPPUNIT_TEST(testParseDomain);
+    CPPUNIT_TEST_EXCEPTION(testParseDomainEmpty, std::exception);
+    CPPUNIT_TEST_EXCEPTION(testParseDomainFile, std::exception);
+    CPPUNIT_TEST_EXCEPTION(testParseDomainInvalid, std::exception);
+
     CPPUNIT_TEST_SUITE_END();
 };
 
@@ -89,10 +101,9 @@ StringTest::testEscape() {
     CPPUNIT_ASSERT_EQUAL(std::string("&lt;td colspan=&quot;2&quot;&gt;"), XmlUtils::escape("<td colspan=\"2\">"));
 }
 
+
 void
 StringTest::testParams() {
-
-    using namespace xscript;
     std::vector<StringUtils::NamedValue> v;
 
     std::string str("test=yes&successful=try%20again");
@@ -107,32 +118,24 @@ StringTest::testParams() {
 
 void
 StringTest::testUrlencode() {
-
-    using namespace xscript;
     std::string str("раз два три четыре пять"), res = StringUtils::urlencode(str);
     CPPUNIT_ASSERT_EQUAL(std::string("%D2%C1%DA%20%C4%D7%C1%20%D4%D2%C9%20%DE%C5%D4%D9%D2%C5%20%D0%D1%D4%D8"), res);
 }
 
 void
 StringTest::testUrlencodeEmpty() {
-
-    using namespace xscript;
     std::string str, res = StringUtils::urlencode(str);
     CPPUNIT_ASSERT_EQUAL(std::string(""), res);
 }
 
 void
 StringTest::testUrlencodeLatin() {
-
-    using namespace xscript;
     std::string str("abcd efgh"), res = StringUtils::urlencode(str);
     CPPUNIT_ASSERT_EQUAL(std::string("abcd%20efgh"), res);
 }
 
 void
 StringTest::testUrldecode() {
-
-    using namespace xscript;
     std::string str("%D2%C1%DA%20%C4%D7%C1%20%D4%D2%C9%20%DE%C5%D4%D9%D2%C5%20%D0%D1%D4%D8"), res = StringUtils::urldecode(str);
     CPPUNIT_ASSERT_EQUAL(std::string("раз два три четыре пять"), res);
 
@@ -140,24 +143,66 @@ StringTest::testUrldecode() {
 
 void
 StringTest::testUrldecodeEmpty() {
-
-    using namespace xscript;
     std::string str, res = StringUtils::urldecode(str);
     CPPUNIT_ASSERT_EQUAL(std::string(""), res);
 }
 
 void
 StringTest::testUrldecodeLatin() {
-
-    using namespace xscript;
     std::string str("abcd%20efgh"), res = StringUtils::urldecode(str);
     CPPUNIT_ASSERT_EQUAL(std::string("abcd efgh"), res);
 }
 
 void
 StringTest::testUrldecodeBadSuffix() {
-
-    using namespace xscript;
     std::string str("abcd%20efgh%"), res = StringUtils::urldecode(str);
     CPPUNIT_ASSERT_EQUAL(std::string("abcd efgh%"), res);
 }
+
+void 
+StringTest::testParseDomain() {
+    // Parse domain
+    CPPUNIT_ASSERT_EQUAL(
+        std::string("hghltd.yandex.net"),
+        StringUtils::parseDomainFromURL("http://hghltd.yandex.net:1234/yandbtm?url=http%3A%2F%2Fwww.yandex.ru%2F&amp;text=%FF%ED%E4%E5%EA%F1")
+    );
+    // Parse domain with cut to level
+    CPPUNIT_ASSERT_EQUAL(
+        std::string("net"),
+        StringUtils::parseDomainFromURL("http://hghltd.yandex.net:1234/yandbtm?url=http%3A%2F%2Fwww.yandex.ru%2F&amp;text=%FF%ED%E4%E5%EA%F1", 1)
+    );
+
+    // no_level_no_scheme
+    CPPUNIT_ASSERT_EQUAL(
+        std::string("www.yandex.ru"),
+        StringUtils::parseDomainFromURL("www.yandex.ru:8090/yandbtm?url=http%3A%2F%2Fwww.yandex.ru%2F&amp;text=%FF%ED%E4%E5%EA%F1")
+    );
+
+    // yandex.ru
+    CPPUNIT_ASSERT_EQUAL(
+        std::string("yandex.ru"),
+        StringUtils::parseDomainFromURL("http://www.yandex.ru/", 2)
+    );
+    
+    // yandex.ru
+    CPPUNIT_ASSERT_EQUAL(
+        std::string("yandex.ru"),
+        StringUtils::parseDomainFromURL("www.yandex.ru/", 2)
+    );
+}
+
+void
+StringTest::testParseDomainEmpty() {
+    StringUtils::parseDomainFromURL("");
+}
+
+void
+StringTest::testParseDomainFile() {
+    StringUtils::parseDomainFromURL("file:///home/bacek/bad/bad/boy.xml");
+}
+
+void
+StringTest::testParseDomainInvalid() {
+    StringUtils::parseDomainFromURL("http://.www.yandex.ru/index.html");
+}
+

@@ -1,6 +1,7 @@
 #include <libxml/tree.h>
 #include <stdexcept>
 #include <memory>
+#include <algorithm>
 #include "xscript/string_utils.h"
 #include "xscript/encoder.h"
 #include "xscript/algorithm.h"
@@ -154,6 +155,66 @@ StringUtils::toupper(const std::string& str) {
 const char*
 StringUtils::nextUTF8(const char* data) {
     return data + NEXT_UTF8[static_cast<unsigned char>(*data)];
+}
+
+std::string StringUtils::parseDomainFromURL(std::string url, boost::int32_t level) {
+    
+    if (0 > level) {
+        throw std::invalid_argument("bad param: level");
+    }
+
+    std::string::size_type pos;
+    pos = url.find('?');
+    if (std::string::npos != pos) {
+        url.erase(pos);
+    }
+
+    pos = url.find("://");
+    if (std::string::npos != pos) {
+        url.erase(0, pos + 3);
+    }
+
+    pos = std::min(url.find('/'), url.find(':'));
+
+    if (std::string::npos != pos) {
+        url.erase(pos);
+    }
+
+    if (url.empty() || '.' == *url.begin() || '.' == *url.rbegin()) {
+        throw std::invalid_argument("bad param: domain='" + url + "'");
+    }
+
+    boost::int32_t max = std::count(url.begin(), url.end(), '.');
+    if (0 == level) {
+        level = max + 1;
+    }
+
+    char c = url[url.rfind('.') + 1];
+    if (c >= '0' && c <= '9') {
+        throw std::invalid_argument("bad param: domain='" + url + "'");
+    }
+
+    //if (max < level - 1) {
+    //    log()->warn("max available domain level is less than required mist:set_state_domain");
+    //}
+    if (max) {
+        std::string::size_type end = std::string::npos, tmp = 0;
+        for (boost::int32_t i = 0; i <= max; ++i) {
+            pos = url.rfind('.', --tmp);
+            if (tmp == pos) {
+                throw std::invalid_argument("bad param: domain='" + url + "'");
+            }
+            tmp = pos;
+            if (i < level) {
+                end = pos + 1;
+            }
+        }
+        if (end) {
+            url.erase(0, end);
+        }
+    }
+
+    return url;
 }
 
 }
