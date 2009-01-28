@@ -333,32 +333,7 @@ MistBlock::setStateDomain(Context *ctx) {
     state->checkName(n);
 
     std::string url = p[1]->asString(ctx);
-
-    std::string::size_type pos;
-    pos = url.find('?');
-    if (std::string::npos != pos) {
-        url.erase(pos);
-    }
-
-    pos = url.find("://");
-    if (std::string::npos != pos) {
-        url.erase(0, pos + 3);
-    }
-
-    std::string::size_type slash = url.find('/');
-    std::string::size_type colon = url.find(':');
-    pos = slash < colon ? slash : colon;
-
-    if (std::string::npos != pos) {
-        url.erase(pos);
-    }
-
-    if (url.empty() || '.' == *url.begin() || '.' == *url.rbegin()) {
-        throw std::invalid_argument("bad param: domain='" + url + "'");
-    }
-
     boost::int32_t level = 0;
-    boost::int32_t max = std::count(url.begin(), url.end(), '.');
     if (3 == p.size()) {
         std::string level_str = p[2]->asString(ctx);
         try {
@@ -366,40 +341,9 @@ MistBlock::setStateDomain(Context *ctx) {
         }
             catch (const boost::bad_lexical_cast &) {
         }
-        if (0 > level) {
-            throw std::invalid_argument("bad param: level");
-        }
-   }
-
-    if (0 == level) {
-        level = max + 1;
     }
 
-    char c = url[url.rfind('.') + 1];
-    if (c >= '0' && c <= '9') {
-        throw std::invalid_argument("bad param: domain='" + url + "'");
-    }
-
-    if (max < level - 1) {
-        log()->warn("max available domain level is less than required mist:set_state_domain");
-    }
-    if (max) {
-        std::string::size_type end = std::string::npos, tmp = 0;
-        for (boost::int32_t i = 0; i <= max; ++i) {
-            pos = url.rfind('.', --tmp);
-            if (tmp == pos) {
-                throw std::invalid_argument("bad param: domain='" + url + "'");
-            }
-            tmp = pos;
-            if (i < level) {
-                end = pos + 1;
-            }
-        }
-        if (end) {
-            url.erase(0, end);
-        }
-    }
-    state->setString(n, url);
+    state->setString(n, StringUtils::parseDomainFromURL(url, level));
 
     StateNode node("domain", n.c_str(), XmlUtils::escape(url).c_str());
     return node.releaseNode();
