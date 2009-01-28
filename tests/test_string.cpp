@@ -4,7 +4,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "xscript/xml_util.h"
-#include "xscript/util.h"
+#include "xscript/string_utils.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

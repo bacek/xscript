@@ -18,6 +18,7 @@
 #include "state_prefix_node.h"
 
 #include "xscript/util.h"
+#include "xscript/string_utils.h"
 #include "xscript/xml.h"
 #include "xscript/xml_util.h"
 #include "xscript/state.h"

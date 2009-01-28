@@ -10,6 +10,7 @@
 #include "xscript/util.h"
 #include "xscript/range.h"
 #include "xscript/encoder.h"
+#include "xscript/string_utils.h"
 #include "internal/expect.h"
 
 #ifdef HAVE_DMALLOC_H

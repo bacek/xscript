@@ -3,6 +3,7 @@
 #include "xscript/operation_mode.h"
 #include "xscript/response.h"
 #include "xscript/util.h"
+#include "xscript/string_utils.h"
 
 #include <stdexcept>
 

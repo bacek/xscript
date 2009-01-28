@@ -13,6 +13,7 @@
 #include "http_helper.h"
 #include "xscript/policy.h"
 #include "xscript/util.h"
+#include "xscript/string_utils.h"
 #include "xscript/range.h"
 #include "xscript/logger.h"
 #include "xscript/request.h"

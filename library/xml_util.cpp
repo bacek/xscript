@@ -32,6 +32,7 @@
 #include "xscript/script.h"
 #include "xscript/stylesheet.h"
 #include "xscript/util.h"
+#include "xscript/string_utils.h"
 #include "xscript/xml_helpers.h"
 #include "xscript/xml_util.h"
 

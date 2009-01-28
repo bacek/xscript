@@ -20,6 +20,7 @@
 #include <libxml/xinclude.h>
 #include "file_block.h"
 #include "file_extension.h"
+#include <xscript/string_utils.h>
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

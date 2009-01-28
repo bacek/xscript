@@ -11,6 +11,7 @@
 #include <boost/checked_delete.hpp>
 
 #include "xscript/util.h"
+#include "xscript/string_utils.h"
 #include "xscript/resource_holder.h"
 #include "internal/expect.h"
 

@@ -76,32 +76,6 @@ public:
         InvokeError(error, name, value) {}
 };
 
-class Encoder;
-
-class StringUtils : private boost::noncopyable {
-public:
-    static const std::string EMPTY_STRING;
-    typedef std::pair<std::string, std::string> NamedValue;
-
-    static void report(const char *what, int error, std::ostream &stream);
-
-    static std::string urlencode(const Range &val);
-    template<typename Cont> static std::string urlencode(const Cont &cont);
-
-    static std::string urldecode(const Range &val);
-    template<typename Cont> static std::string urldecode(const Cont &cont);
-
-    static void parse(const Range &range, std::vector<NamedValue> &v, Encoder *encoder = NULL);
-    template<typename Cont> static void parse(const Cont &cont, std::vector<NamedValue> &v, Encoder *encoder = NULL);
-
-    static std::string tolower(const std::string& str);
-    static std::string toupper(const std::string& str);
-    static const char* nextUTF8(const char* data);
-
-private:
-    StringUtils();
-    virtual ~StringUtils();
-};
 
 class HttpDateUtils : private boost::noncopyable {
 public:
@@ -142,22 +116,6 @@ private:
     virtual ~FileUtils();
 };
 
-
-
-template<typename Cont> inline std::string
-StringUtils::urlencode(const Cont &cont) {
-    return urlencode(createRange(cont));
-}
-
-template<typename Cont> inline std::string
-StringUtils::urldecode(const Cont &cont) {
-    return urldecode(createRange(cont));
-}
-
-template<typename Cont> inline void
-StringUtils::parse(const Cont &cont, std::vector<NamedValue> &v, Encoder *encoder) {
-    parse(createRange(cont), v, encoder);
-}
 
 class TimeoutCounter {
 public:

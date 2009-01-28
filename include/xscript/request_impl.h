@@ -22,6 +22,7 @@
 #include "xscript/range.h"
 #include "xscript/cookie.h"
 #include "xscript/request.h"
+#include "xscript/string_utils.h"
 
 namespace xscript {
 

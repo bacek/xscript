@@ -7,6 +7,7 @@
 #include "xscript/policy.h"
 #include "xscript/request.h"
 #include "xscript/util.h"
+#include "xscript/string_utils.h"
 #include "xscript/vhost_data.h"
 
 #ifdef HAVE_DMALLOC_H

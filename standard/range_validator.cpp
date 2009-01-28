@@ -3,6 +3,7 @@
 #include <map>
 #include <boost/cstdint.hpp>
 #include "xscript/util.h"
+#include "xscript/string_utils.h"
 #include "range_validator.h"
 
 #ifdef HAVE_DMALLOC_H

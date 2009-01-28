@@ -34,7 +34,8 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	dummy_cache_counter.cpp \
 	dummy_cache_usage_counter.cpp \
 	default_request_response.cpp \
-	validator_factory.cpp validator.cpp validator_exception.cpp
+	validator_factory.cpp validator.cpp validator_exception.cpp \
+	string_utils.cpp
 
 libxscript_la_LDFLAGS = @VERSION_INFO@
 

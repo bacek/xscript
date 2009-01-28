@@ -25,6 +25,7 @@
 #include "xscript/request.h"
 #include "xscript/state.h"
 #include "xscript/util.h"
+#include "xscript/string_utils.h"
 #include "xscript/writer.h"
 #include "xscript/xml.h"
 #include "xscript/xml_util.h"

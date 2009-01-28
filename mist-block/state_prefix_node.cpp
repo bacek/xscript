@@ -7,6 +7,7 @@
 #include "xscript/protocol.h"
 #include "xscript/request.h"
 #include "xscript/util.h"
+#include "xscript/string_utils.h"
 
 #include "state_param_node.h"
 #include "state_prefix_node.h"

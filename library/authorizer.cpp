@@ -6,6 +6,7 @@
 #include "xscript/context.h"
 #include "xscript/response.h"
 #include "xscript/authorizer.h"
+#include "xscript/string_utils.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

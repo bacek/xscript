@@ -9,6 +9,7 @@
 #include "xscript/param.h"
 #include "xscript/tagged_block.h"
 #include "xscript/util.h"
+#include "xscript/string_utils.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

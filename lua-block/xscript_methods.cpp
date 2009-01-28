@@ -8,6 +8,7 @@
 #include "xscript/request.h"
 #include "xscript/encoder.h"
 #include "xscript/util.h"
+#include "xscript/string_utils.h"
 
 #include "stack.h"
 #include "exception.h"
