@@ -1,3 +1,9 @@
+xscript (5.53-1) unstable; urgency=low
+
+  * set_state_domain fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 29 Jan 2009 16:55:35 +0300
+
 xscript (5.53-0) unstable; urgency=low
 
   * library version xslt extensions added

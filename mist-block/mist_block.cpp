@@ -343,9 +343,10 @@ MistBlock::setStateDomain(Context *ctx) {
         }
     }
 
-    state->setString(n, StringUtils::parseDomainFromURL(url, level));
+    std::string domain = StringUtils::parseDomainFromURL(url, level);
+    state->setString(n, domain);
 
-    StateNode node("domain", n.c_str(), XmlUtils::escape(url).c_str());
+    StateNode node("domain", n.c_str(), XmlUtils::escape(domain).c_str());
     return node.releaseNode();
 }
 
