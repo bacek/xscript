@@ -71,9 +71,6 @@ ThreadedBlock::postInvoke(Context *ctx, const XmlDocHelper &doc) {
 
 void
 ThreadedBlock::startTimer(Context *ctx) {
-    if (runByMainThread(ctx)) {
-        return;
-    }
     ctx->startBlockTimer(this, std::min(ctx->timer().remained(), invokeTimeout()));
 }
 

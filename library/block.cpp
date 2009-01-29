@@ -546,11 +546,6 @@ Block::startTimer(Context *ctx) {
     (void)ctx;
 }
 
-bool
-Block::runByMainThread(const Context *ctx) const {
-    return (ctx->timer().unlimited() && (ctx->forceNoThreaded() || !threaded()));
-}
-
 std::string
 Block::concatParams(const Context *ctx, unsigned int first, unsigned int last) const {
     const std::vector<Param*> &p = params();

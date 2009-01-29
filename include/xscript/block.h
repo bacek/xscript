@@ -115,8 +115,6 @@ protected:
     inline const std::vector<XPathExpr>& xpath() const {
         return xpath_;
     }
-
-    bool runByMainThread(const Context *ctx) const;
     
     virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const; 
 
