@@ -9,6 +9,7 @@
 #include <libxslt/xsltutils.h>
 #include <libxslt/transform.h>
 #include <libxslt/extensions.h>
+#include <libexslt/exslt.h>
 
 #include <libxml/xpathInternals.h>
 
@@ -1266,6 +1267,114 @@ xscriptXsltLogError(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltLibxmlVersion(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:libxml-version");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (0 != nargs) {
+        XmlUtils::reportXsltError("xscript:libxml-version: bad param count", ctxt);
+        return;
+    }
+
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        valuePush(ctxt, xmlXPathNewCString(xmlParserVersion));
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:libxml-version: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:libxml-version: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
+xscriptXsltLibxsltVersion(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:libxslt-version");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (0 != nargs) {
+        XmlUtils::reportXsltError("xscript:libxslt-version: bad param count", ctxt);
+        return;
+    }
+
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        valuePush(ctxt, xmlXPathNewCString(xsltEngineVersion));
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:libxslt-version: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:libxslt-version: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
+xscriptXsltLibexsltVersion(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:libexslt-version");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (0 != nargs) {
+        XmlUtils::reportXsltError("xscript:libexslt-version: bad param count", ctxt);
+        return;
+    }
+
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        valuePush(ctxt, xmlXPathNewCString(exsltLibraryVersion));
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:libexslt-version: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:libexslt-version: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
 xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
     (void)comp;
     if (tctx == NULL) {
@@ -1416,6 +1525,11 @@ XsltExtensions::XsltExtensions() {
     XsltFunctionRegisterer("log-info", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLogInfo);
     XsltFunctionRegisterer("log-warn", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLogWarn);
     XsltFunctionRegisterer("log-error", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLogError);
+    
+    XsltFunctionRegisterer("libxml-version", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLibxmlVersion);
+    XsltFunctionRegisterer("libxslt-version", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLibxsltVersion);
+    XsltFunctionRegisterer("libexslt-version", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLibexsltVersion);
+    
 }
 
 } // namespace xscript
