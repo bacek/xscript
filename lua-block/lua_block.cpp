@@ -162,7 +162,11 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     PROFILER(log(), "Lua block execution, " + owner()->name());
 
     if (NULL == code_) {
-        throw SkipResultInvokeError("empty lua node");
+        XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+        XmlUtils::throwUnless(NULL != doc.get());
+        XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "lua", (const xmlChar*) ""));
+        xmlDocSetRootElement(doc.get(), node.release());
+        return doc;
     }
     
     // Try to fetch previously created lua interpret. If failed - create new one.
