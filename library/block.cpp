@@ -472,7 +472,12 @@ Block::property(const char *name, const char *value) {
         xsltName(value);
     }
     else if (strncasecmp(name, "xpointer", sizeof("xpointer")) == 0) {
-        xpointer_expr_.assign(value);
+        if (strncasecmp(value, "xpointer(", sizeof("xpointer(") - 1) == 0) {
+            xpointer_expr_.assign(value, sizeof("xpointer(") - 1, strlen(value) - sizeof("xpointer("));
+        }
+        else {
+            xpointer_expr_.assign(value);
+        }
     }
     else {
         std::stringstream stream;
