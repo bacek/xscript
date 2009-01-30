@@ -26,6 +26,7 @@ private:
     bool threaded_;
     int timeout_;
     bool check_elapsed_time_;
+    static const std::string SHOW_ELAPSED_TIME;
 };
 
 } // namespace xscript

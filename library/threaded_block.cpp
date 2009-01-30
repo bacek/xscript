@@ -3,14 +3,18 @@
 #include <boost/lexical_cast.hpp>
 
 #include "xscript/context.h"
-#include "xscript/threaded_block.h"
+#include "xscript/operation_mode.h"
 #include "xscript/script.h"
+#include "xscript/threaded_block.h"
+#include "xscript/vhost_data.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
 
 namespace xscript {
+
+const std::string ThreadedBlock::SHOW_ELAPSED_TIME("SHOW_ELAPSED_TIME");
 
 ThreadedBlock::ThreadedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), threaded_(false), timeout_(0), check_elapsed_time_(false) {
@@ -58,7 +62,16 @@ ThreadedBlock::property(const char *name, const char *value) {
 
 void
 ThreadedBlock::postInvoke(Context *ctx, const XmlDocHelper &doc) {
-    if (!check_elapsed_time_ || tagged()) {
+    
+    bool show_elapsed_time = check_elapsed_time_;
+    if (!OperationMode::instance()->isProduction()) {
+        if (!show_elapsed_time) {
+            show_elapsed_time =
+                VirtualHostData::instance()->checkVariable(ctx->request(), SHOW_ELAPSED_TIME);
+        }
+    }
+    
+    if (!show_elapsed_time || tagged()) {
         return;
     }
     xmlNodePtr node = xmlDocGetRootElement(doc.get());
