@@ -501,13 +501,18 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
                 const Block *block = blocks_[count];
                 if (block->xpointer(ctx) && result.success) {
                     const std::string &expression = block->xpointerExpr();
-                    try {
-                        useXpointerExpr(doc, newnode, (xmlChar *)expression.c_str());
+                    if ("/.." == expression) {
+                        xmlUnlinkNode(newnode);
                     }
-                    catch (std::exception &e) {
-                        std::string message = "XPointer error with expression " + expression + " : ";
-                        message.append(e.what());
-                        throw std::runtime_error(message);
+                    else {
+                        try {
+                            useXpointerExpr(doc, newnode, (xmlChar *)expression.c_str());
+                        }
+                        catch (std::exception &e) {
+                            std::string message = "XPointer error with expression " + expression + " : ";
+                            message.append(e.what());
+                            throw std::runtime_error(message);
+                        }
                     }
                 }
                 else {
