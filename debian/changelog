@@ -1,3 +1,10 @@
+xscript (5.53-2) unstable; urgency=low
+
+  * lua print fixed
+  * added empty lua node to result in case of empty lua code
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 30 Jan 2009 11:29:08 +0300
+
 xscript (5.53-1) unstable; urgency=low
 
   * set_state_domain fixed

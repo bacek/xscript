@@ -41,6 +41,7 @@ static int luaPrint (lua_State *lua) {
         //std::string* buf = output_buffer_.get();
     
         lua_getglobal(lua, "tostring");
+        std::string local_buf; 
         for (i=1; i<=n; i++) {
             const char *s;
             lua_pushvalue(lua, -1);  /* function to be called */
@@ -50,11 +51,17 @@ static int luaPrint (lua_State *lua) {
             if (s == NULL)
                 return luaL_error(lua, LUA_QL("tostring") " must return a string to "
                                   LUA_QL("print"));
-            if (i>1) buf->append("\t");
-            buf->append(s);
+            if (i>1) local_buf.push_back('\t');
+            local_buf.append(s);
             lua_pop(lua, 1);  /* pop result */
         }
-        buf->append("\n");
+        if (local_buf.empty()) {
+            buf->push_back('\n');
+        }
+        else {
+            if (!buf->empty()) buf->push_back('\n');
+            buf->append(local_buf);
+        }
     }
     catch (const std::exception &e) {
         log()->error("caught exception in [xscript:print]: %s", e.what());
