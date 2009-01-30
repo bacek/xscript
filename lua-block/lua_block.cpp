@@ -70,9 +70,9 @@ LuaBlock::postParse() {
     }
     if (NULL == code_) {
         code_ = XmlUtils::value(node());
-    }
-    if (NULL == code_) {
-        throw std::runtime_error("empty lua node");
+        if (NULL == code_) {
+            return;
+        }
     }
     LuaHolder lua(luaL_newstate());
     int res = luaL_loadstring(lua.get(), code_);
@@ -157,10 +157,14 @@ LuaSharedContext create_lua(Context *ctx) {
 XmlDocHelper
 LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
 
-    log()->entering(BOOST_CURRENT_FUNCTION);
-
+    log()->entering(BOOST_CURRENT_FUNCTION);    
+    
     PROFILER(log(), "Lua block execution, " + owner()->name());
 
+    if (NULL == code_) {
+        throw SkipResultInvokeError("empty lua node");
+    }
+    
     // Try to fetch previously created lua interpret. If failed - create new one.
     boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx);
 
