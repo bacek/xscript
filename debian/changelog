@@ -1,3 +1,11 @@
+xscript (5.53-3) unstable; urgency=low
+
+  * xpointer expression "/.." optimized
+  * added show all elapsed times functionality for all threaded blocks
+  * fixed buffer in FileLogger::pushIntoQueue
+
+ -- Leonid A. Movsesjan <lmovsesjan@yandex-team.ru>  Wed, 04 Feb 2009 16:14:47 +0300
+
 xscript (5.53-2) unstable; urgency=low
 
   * lua print fixed

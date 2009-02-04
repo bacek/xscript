@@ -19,7 +19,7 @@
 #include <dmalloc.h>
 #endif
 
-const size_t BUF_SIZE = 512;
+const size_t BUF_SIZE = 5120;
 
 namespace xscript {
 
@@ -117,11 +117,12 @@ FileLogger::pushIntoQueue(const char* type, const char* format, va_list args) {
         return;
 
     char fmt[BUF_SIZE];
-    prepareFormat(fmt, type, format);
+    prepareFormat(fmt, sizeof(fmt), type, format);
 
     char buf[BUF_SIZE];
-    int size = vsnprintf(buf, BUF_SIZE, fmt, args);
+    int size = vsnprintf(buf, BUF_SIZE - 1, fmt, args);
     if (size > 0) {
+        buf[BUF_SIZE - 1] = '\0';
         boost::mutex::scoped_lock lock(queueMutex_);
         queue_.push_back(buf);
         queueCondition_.notify_one();
@@ -129,16 +130,17 @@ FileLogger::pushIntoQueue(const char* type, const char* format, va_list args) {
 }
 
 void
-FileLogger::prepareFormat(char * buf, const char* type, const char* format) {
+FileLogger::prepareFormat(char * buf, size_t size, const char* type, const char* format) {
     time_t t;
     struct tm tm;
     time(&t);
     localtime_r(&t, &tm);
 
-    char timestr[BUF_SIZE];
-    strftime(timestr, BUF_SIZE, "[%Y/%m/%d %T]", &tm);
+    char timestr[64];
+    strftime(timestr, sizeof(timestr) - 1, "[%Y/%m/%d %T]", &tm);
 
-    snprintf(buf, BUF_SIZE, "%s %s: %s\n", timestr, type, format);
+    snprintf(buf, size - 1, "%s %s: %s\n", timestr, type, format);
+    buf[size - 1] = '\0';
 }
 
 void

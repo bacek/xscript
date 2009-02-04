@@ -65,7 +65,7 @@ private:
 
 
     void openFile();
-    void prepareFormat(char * buf, const char* type, const char* format);
+    static void prepareFormat(char * buf, size_t size, const char* type, const char* format);
     void pushIntoQueue(const char* type, const char* format, va_list args);
 
     void writingThread();
