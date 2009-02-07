@@ -49,6 +49,14 @@ endif
 xscript_validators_la_LIBADD = ../library/libxscript.la
 xscript_validators_la_LDFLAGS = -module
 
+if HAVE_MEMCACHE
+pkglib_LTLIBRARIES += xscript-memcached.la
+xscript_memcached_la_SOURCES = doc_cache_memcached.cpp tag_key_memory.cpp
+xscript_memcached_la_CFLAGS = -g -O0
+xscript_memcached_la_LIBADD = ../library/libxscript.la
+xscript_memcached_la_LDFLAGS = -module -lmemcache
+endif
+
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -W -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_filesystem @yandex_platform_LIBS@ @VERSION_INFO@
@@ -78,5 +86,10 @@ endif
 
 test_LDADD = ../library/libxscript.la libtest.la
 test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic
+
+if HAVE_MEMCACHE
+test_SOURCES += memcached_test.cpp
+test_LDFLAGS += -lmemcache
+endif
 
 endif

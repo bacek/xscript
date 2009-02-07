@@ -178,6 +178,9 @@ fi
 
 AM_CONDITIONAL(HAVE_FILE_BLOCK, [test "f$ac_have_file" = "fyes"])
 
+AC_CHECK_HEADER([memcache.h], [ac_have_memcache="yes"], [ac_have_memcache="no"])
+AM_CONDITIONAL(HAVE_MEMCACHE, [test "f$ac_have_memcache" = "fyes"])	
+
 
 ac_have_dmalloc="no"
 ac_dmalloc_found="no"
@@ -203,6 +206,7 @@ if test "f$ac_dmalloc_found" = "fyes"; then
 else
 	AC_MSG_RESULT([dmalloc not found. dmalloc check disabled])
 fi
+
 
 AX_CHECK_CPPUNIT
 

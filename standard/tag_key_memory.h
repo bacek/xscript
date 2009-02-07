@@ -10,7 +10,7 @@ public:
     TagKeyMemory(const Context *ctx, const TaggedBlock *block);
     virtual const std::string& asString() const;
 
-private:
+protected:
     std::string value_;
 };
 
