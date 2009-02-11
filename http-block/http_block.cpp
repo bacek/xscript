@@ -179,12 +179,6 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
     return response(helper);
 }
 
-XmlDocHelper
-HttpBlock::getHttpObsolete(Context *ctx, boost::any &a) {
-    log()->warn("Obsoleted call");
-    return getHttp(ctx, a);
-}
-
 
 XmlDocHelper
 HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
@@ -463,14 +457,15 @@ HttpExtension::init(const Config *config) {
 
 HttpMethodRegistrator::HttpMethodRegistrator() {
     HttpBlock::registerMethod("getHttp", &HttpBlock::getHttp);
-    HttpBlock::registerMethod("get_http", &HttpBlock::getHttpObsolete);
+    HttpBlock::registerMethod("get_http", &HttpBlock::getHttp);
 
-    HttpBlock::registerMethod("getHTTP", &HttpBlock::getHttpObsolete);
-    HttpBlock::registerMethod("getPageT", &HttpBlock::getHttpObsolete);
-    HttpBlock::registerMethod("curlGetHttp", &HttpBlock::getHttpObsolete);
+    HttpBlock::registerMethod("getHTTP", &HttpBlock::getHttp);
+    HttpBlock::registerMethod("getPageT", &HttpBlock::getHttp);
+    HttpBlock::registerMethod("curlGetHttp", &HttpBlock::getHttp);
 
     HttpBlock::registerMethod("postHttp", &HttpBlock::postHttp);
     HttpBlock::registerMethod("post_http", &HttpBlock::postHttp);
+    HttpBlock::registerMethod("postHTTP", &HttpBlock::postHttp);
 
     HttpBlock::registerMethod("getByState", &HttpBlock::getByState);
     HttpBlock::registerMethod("get_by_state", &HttpBlock::getByState);
