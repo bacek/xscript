@@ -1,3 +1,11 @@
+xscript (5.53-4) unstable; urgency=low
+
+  * xml escaping fixed
+  * set_state_xmlescape added to mist
+  * postHTTP alias added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 11 Feb 2009 11:59:34 +0300
+
 xscript (5.53-3) unstable; urgency=low
 
   * xpointer expression "/.." optimized
