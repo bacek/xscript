@@ -319,6 +319,27 @@ MistBlock::setStateUrldecode(Context *ctx) {
 }
 
 xmlNodePtr
+MistBlock::setStateXmlescape(Context *ctx) {
+
+    PROLOGUE;
+
+    const std::vector<Param*> &p = params();
+    if (2 != p.size()) {
+        throwBadArityError();
+    }
+
+    State* state = ctx->state();
+    std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
+
+    state->checkName(n);
+    val = XmlUtils::escape(val);
+    state->setString(n, val);
+
+    StateNode node("xmlescape", n.c_str(), XmlUtils::escape(val).c_str());
+    return node.releaseNode();
+}
+
+xmlNodePtr
 MistBlock::setStateDomain(Context *ctx) {
 
     PROLOGUE;
@@ -962,6 +983,9 @@ MistMethodRegistrator::MistMethodRegistrator() {
     MistBlock::registerMethod("set_state_urldecode", &MistBlock::setStateUrldecode);
     MistBlock::registerMethod("setStateUrldecode", &MistBlock::setStateUrldecode);
 
+    MistBlock::registerMethod("set_state_xmlescape", &MistBlock::setStateXmlescape);
+    MistBlock::registerMethod("setStateXmlescape", &MistBlock::setStateXmlescape);
+    
     MistBlock::registerMethod("setStateDomain", &MistBlock::setStateDomain);
     MistBlock::registerMethod("set_state_domain", &MistBlock::setStateDomain);
 

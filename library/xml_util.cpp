@@ -182,17 +182,15 @@ XmlUtils::escape(const Range &range) {
         case '>':
             dest.append("&gt;");
             break;
-
         case '"':
             dest.append("&quot;");
             break;
-        case '\'':  {
+        case '\'':
             dest.append("&apos;");
-        }
-        case '&': {
+            break;
+        case '&':
             dest.append("&amp;");
             break;
-        }
         default:
             dest.push_back(*pos);
             break;
