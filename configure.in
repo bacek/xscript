@@ -24,7 +24,7 @@ AC_CHECK_FUNCS(memmem, [], [])
 
 AX_SET_VERSION_INFO(AC_PACKAGE_VERSION)
 
-PKG_CHECK_MODULES(yandex_platform, [yandex-platform], [], [echo yandex-platform not found])
+PKG_CHECK_MODULES(yandex_platform, [yandex-platform], [], [AC_MSG_NOTICE(Yandex platform configuration not found)])
 
 ac_have_boost="yes"
 ac_stored_libs=$LIBS
