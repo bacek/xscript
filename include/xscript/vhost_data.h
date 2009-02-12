@@ -29,6 +29,7 @@ public:
 
     friend class Server;
 
+    // todo: remove unused variable
     static const std::string DOCUMENT_ROOT;
 
 protected:

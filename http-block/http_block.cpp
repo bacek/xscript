@@ -272,6 +272,42 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
 }
 
 XmlDocHelper
+HttpBlock::postByRequest(Context *ctx, boost::any &a) {
+    (void)a;
+    
+    log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+
+    const std::vector<Param*> &p = params();
+    unsigned int size = p.size();
+    if (size == 0 || tagged()) {
+        throw InvokeError("bad arity");
+    }
+    
+    std::string url = concatParams(ctx, 0, size - 1);
+    
+    const std::string &query = ctx->request()->getQueryString();
+    if (!query.empty()) {
+        url.append(1, url.find('?') != std::string::npos ? '&' : '?');
+        url.append(query);
+    }
+
+    const TimeoutCounter &timer = ctx->blockTimer(this);
+    checkTimeout(timer, url);
+
+    HttpHelper helper(url, timer.remained());    
+    helper.appendHeaders(ctx->request(), proxy_, NULL);
+
+    std::pair<const char*, std::streamsize> body = ctx->request()->requestBody();
+    helper.postData(body.first, body.second);
+
+    helper.perform();
+    log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
+    helper.checkStatus();
+    
+    return response(helper);
+}
+
+XmlDocHelper
 HttpBlock::getByState(Context *ctx, boost::any &a) {
     (void)a;
 
@@ -472,6 +508,9 @@ HttpMethodRegistrator::HttpMethodRegistrator() {
 
     HttpBlock::registerMethod("getByRequest", &HttpBlock::getByRequest);
     HttpBlock::registerMethod("get_by_request", &HttpBlock::getByRequest);
+    
+    HttpBlock::registerMethod("postByRequest", &HttpBlock::postByRequest);
+    HttpBlock::registerMethod("post_by_request", &HttpBlock::postByRequest);
 
     HttpBlock::registerMethod("getBinaryPage", &HttpBlock::getBinaryPage);
     HttpBlock::registerMethod("get_binary_page", &HttpBlock::getBinaryPage);

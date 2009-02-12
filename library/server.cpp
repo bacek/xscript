@@ -43,19 +43,25 @@
 
 namespace xscript {
 
+const std::string Server::MAX_BODY_LENGTH = "MAX_BODY_LENGTH";
+
 extern "C" int closeFunc(void *ctx);
 extern "C" int writeFunc(void *ctx, const char *data, int len);
 
 Server::Server(Config *config) :
         config_(config) {
     config_->startup();
-    VirtualHostData::instance()->setServer(this);
+    
+    max_body_length_ = config_->as<std::streamsize>("/xscript/max-body-length",
+            std::numeric_limits<std::streamsize>::max());
 
     char buf[256];
     int res = ::gethostname(buf, sizeof(buf));
     if (0 == res) {
         hostname_.assign(buf);
     }
+    
+    VirtualHostData::instance()->setServer(this);
 }
 
 Server::~Server() {
@@ -193,6 +199,20 @@ Server::sendHeaders(Context *ctx) {
 const std::string&
 Server::hostname() const {
     return hostname_;
+}
+
+std::streamsize
+Server::maxBodyLength(Request *request) const {
+    std::string length = VirtualHostData::instance()->getVariable(request, MAX_BODY_LENGTH);
+    if (!length.empty()) {
+        try {
+            return boost::lexical_cast<std::streamsize>(length);
+        }
+        catch(const boost::bad_lexical_cast &e) {
+            log()->error("Cannot parse MAX_BODY_LENGTH environment variable: %s", length.c_str());
+        }
+    }
+    return max_body_length_;
 }
 
 extern "C" int

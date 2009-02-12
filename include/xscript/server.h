@@ -20,6 +20,7 @@ public:
 
     virtual bool needApplyMainStylesheet(Request *request) const;
     virtual bool needApplyPerblockStylesheet(Request *request) const;
+    virtual std::streamsize maxBodyLength(Request *request) const;
     virtual void run() = 0;
     virtual bool isOffline() const;
     const std::string& hostname() const;
@@ -37,6 +38,10 @@ protected:
 
 private:
     std::string hostname_;
+    std::streamsize max_body_length_;
+    
+    // todo: move to VirtualHostData
+    static const std::string MAX_BODY_LENGTH;
 };
 
 } // namespace xscript
