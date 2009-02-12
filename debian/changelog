@@ -1,3 +1,10 @@
+xscript (5.53-5) unstable; urgency=low
+
+  * postByRequest added
+  * body length checked
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 12 Feb 2009 12:57:45 +0300
+
 xscript (5.53-4) unstable; urgency=low
 
   * xml escaping fixed
