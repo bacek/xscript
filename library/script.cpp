@@ -545,8 +545,7 @@ Script::useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const
     XmlXPathObjectHelper xpathObj(xmlXPathEvalExpression(xpath, context.get()));
     XmlUtils::throwUnless(NULL != xpathObj.get());
     xmlNodeSetPtr nodeset = xpathObj.get()->nodesetval;
-    XmlUtils::throwUnless(NULL != nodeset);
-    if (0 == nodeset->nodeNr) {
+    if (NULL == nodeset || 0 == nodeset->nodeNr) {
         xmlUnlinkNode(newnode);
         return;
     }
