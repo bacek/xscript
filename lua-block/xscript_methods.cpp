@@ -9,6 +9,7 @@
 #include "xscript/encoder.h"
 #include "xscript/util.h"
 #include "xscript/string_utils.h"
+#include "xscript/xml_util.h"
 
 #include "stack.h"
 #include "exception.h"
@@ -171,6 +172,24 @@ luaDomain(lua_State *lua) {
     return 0;
 }
 
+static int
+luaXmlEscape(lua_State *lua) {
+    try {
+        luaCheckStackSize(lua, 1);
+        std::string value = luaReadStack<std::string>(lua, 1);
+
+        std::string md5 = XmlUtils::escape(value.c_str());
+        lua_pushstring(lua, md5.c_str());
+        // Our value on stack
+        return 1;
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:md5]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
 void
 setupXScript(lua_State *lua, std::string * buf) {
     log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
@@ -203,6 +222,9 @@ setupXScript(lua_State *lua, std::string * buf) {
 
     lua_pushcfunction(lua, &luaDomain);
     lua_setfield(lua, -2, "domain");
+
+    lua_pushcfunction(lua, &luaXmlEscape);
+    lua_setfield(lua, -2, "xmlescape");
 
     lua_pop(lua, 2); // pop _G and xscript
 

@@ -43,6 +43,7 @@ public:
     void testMultiBlock();
     void testMD5();
     void testDomain();
+    void testXmlEncode();
     
     void testLogger();
 private:
@@ -66,6 +67,7 @@ private:
     CPPUNIT_TEST(testMultiBlock);
     CPPUNIT_TEST(testMD5);
     CPPUNIT_TEST(testDomain);
+    CPPUNIT_TEST(testXmlEncode);
 
     CPPUNIT_TEST(testLogger);
 
@@ -415,6 +417,24 @@ LuaTest::testDomain() {
     CPPUNIT_ASSERT(!state->has("localfile"));
     CPPUNIT_ASSERT(!state->has("empty"));
 }
+
+void
+LuaTest::testXmlEncode() {
+    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Script> script = Script::create("lua-xmlescape.xml");
+    boost::shared_ptr<Context> ctx(new Context(script, data));
+    ContextStopper ctx_stopper(ctx);
+
+    XmlDocHelper doc(script->invoke(ctx));
+
+    CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
+    CPPUNIT_ASSERT_EQUAL(
+        std::string("&lt;some &amp; value&gt;"),
+        XmlUtils::xpathValue(doc.get(), "/page/lua", "foo")
+    );
+}
+
 // Incomplete test for logger... Just check manually default.log
 void
 LuaTest::testLogger() {
