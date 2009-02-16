@@ -1,7 +1,7 @@
 Source: xscript
 Priority: optional
 Maintainer: Oleg Obolenskiy <highpower@yandex-team.ru>
-Build-Depends: debhelper (>= 4.0.0), automake1.9, autotools-dev, libboost-dev, libboost-thread-dev, libboost-filesystem-dev, libcurl-dev, libfcgi-dev, libcppunit-dev, libxml2-dev, libxslt1-dev, libssl-dev, liblua5.1-0-dev, memcached
+Build-Depends: debhelper (>= 4.0.0), automake1.9, autotools-dev, libboost-dev, libboost-thread-dev, libboost-filesystem-dev, libboost-python-dev, libcurl-dev, libfcgi-dev, libcppunit-dev, libxml2-dev, libxslt1-dev, libssl-dev, liblua5.1-0-dev, memcached
 Standards-Version: 3.6.1
 Section: libs
 
@@ -39,3 +39,17 @@ Architecture: any
 Depends: ${shlibs:Depends}, libxscript (=${Source-Version})
 Description: XScript is xml-based application server written in C++. 
  XScript offline processor.
+
+Package: xscript-utility-dev
+Section: libdevel
+Architecture: any
+Depends: libxscript (=${Source-Version})
+Description: Xscript is xml-based application server. 
+ Headers and libraries to develop oflline XScript extensions.
+ 
+Package: libxscript-python
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, libxscript (=${Source-Version})
+Description: XScript is xml-based application server written in C++. 
+ Python binding to XScript.

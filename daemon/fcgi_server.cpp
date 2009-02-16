@@ -61,7 +61,7 @@ class FCGIServer::RequestAcceptor {
 
 
 FCGIServer::FCGIServer(Config *config) :
-        Server(config), socket_(-1), inbuf_size_(0), outbuf_size_(0), alternate_port_(0),
+        Server(config), socket_(-1), inbuf_size_(0), outbuf_size_(0),
         workerCounter_(SimpleCounterFactory::instance()->createCounter("fcgi-workers", true)),
         uptimeCounter_() {
     if (0 != FCGX_Init()) {
@@ -74,6 +74,11 @@ FCGIServer::FCGIServer(Config *config) :
 FCGIServer::~FCGIServer() {
 }
 
+bool
+FCGIServer::isOffline() const {
+    return false;
+}
+
 void
 FCGIServer::run() {
 
@@ -84,9 +89,6 @@ FCGIServer::run() {
 
     inbuf_size_ = config_->as<unsigned int>("/xscript/input-buffer", 4096);
     outbuf_size_ = config_->as<unsigned int>("/xscript/output-buffer", 4096);
-
-    alternate_port_ = config_->as<unsigned short>("/xscript/alternate-port", 8080);
-    noxslt_port_ = config_->as<unsigned short>("/xscript/noxslt-port", 8079);
 
     if (!socket.empty()) {
         socket_ = FCGX_OpenSocket(socket.c_str(), backlog);
@@ -177,18 +179,6 @@ FCGIServer::pid(const std::string &file) {
         throw;
     }
 }
-
-bool
-FCGIServer::needApplyMainStylesheet(Request *request) const {
-    unsigned short port = request->getServerPort();
-    return (port != alternate_port_) && (port != noxslt_port_);
-}
-
-bool
-FCGIServer::needApplyPerblockStylesheet(Request *request) const {
-    return (request->getServerPort() != noxslt_port_);
-}
-
 
 FCGIServer::RequestAcceptor::RequestAcceptor(FCGX_Request *req) : req_(NULL) {
     int result = FCGX_Accept_r(req);

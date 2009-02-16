@@ -1,11 +1,18 @@
+lib_LTLIBRARIES = libxscript-offline.la
+libxscript_offline_la_SOURCES = offline_request.cpp offline_server.cpp server_wrapper.cpp
+libxscript_offline_la_LIBADD = ../library/libxscript.la
+
+offlinedir = $(includedir)/xscript-utility
+offline_DATA = server_wrapper.h
+
+noinst_HEADERS = offline_server.h offline_request.h proc_server.h xslt_profiler.h
+
 bin_PROGRAMS = xscript-proc
 
-xscript_proc_SOURCES = standalone_request.cpp offline_server.cpp main.cpp xslt_profiler.cpp
+xscript_proc_SOURCES = proc_server.cpp main.cpp xslt_profiler.cpp
 
-xscript_proc_LDADD = ../library/libxscript.la
+xscript_proc_LDADD = libxscript-offline.la
 xscript_proc_LDFLAGS = -export-dynamic
-
-noinst_HEADERS = offline_server.h standalone_request.h xslt_profiler.h
 
 xsldir = $(datadir)/xscript-proc
 dist_xsl_DATA = profile.xsl

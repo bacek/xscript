@@ -21,12 +21,12 @@ public:
     virtual bool needApplyMainStylesheet(Request *request) const;
     virtual bool needApplyPerblockStylesheet(Request *request) const;
     virtual std::streamsize maxBodyLength(Request *request) const;
-    virtual void run() = 0;
-    virtual bool isOffline() const;
+    virtual bool isOffline() const = 0;
     const std::string& hostname() const;
 
 protected:
     virtual void handleRequest(const boost::shared_ptr<RequestData>& request_data);
+    virtual boost::shared_ptr<Script> getScript(const std::string &name, Request *request);
     static std::pair<std::string, bool> findScript(const std::string &name);
     void sendHeaders(Context *ctx);
 
@@ -35,6 +35,7 @@ protected:
 
 protected:
     Config *config_;
+    unsigned short alternate_port_, noxslt_port_;
 
 private:
     std::string hostname_;

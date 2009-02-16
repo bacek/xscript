@@ -39,6 +39,10 @@ if HAVE_TESTS
 SUBDIRS += tests
 endif
 
+if HAVE_PYTHON
+SUBDIRS += python
+endif
+
 coverage: 
 	lcov -c -d . -o lcov.tmp
 	lcov -r lcov.tmp '/usr*' -o lcov.info

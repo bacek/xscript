@@ -72,6 +72,7 @@ public:
 
     // TODO: remove this method. It should be in ScriptFactory.
     static boost::shared_ptr<Script> create(const std::string &name);
+    static boost::shared_ptr<Script> create(const std::string &name, const std::string &xml);
 
 protected:
     Script(const std::string &name);
@@ -118,12 +119,13 @@ protected:
     void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsigned int &count, unsigned int &xscript_count) const;
 
     virtual void parse();
+    virtual void parse(const std::string &xml);
     virtual void postParse();
     virtual void property(const char *name, const char *value);
 
     virtual void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const;
 
-    static boost::shared_ptr<Script> createWithParse(const std::string &name);
+    static boost::shared_ptr<Script> createWithParse(const std::string &name, const std::string &xml);
 
     static const unsigned int FLAG_THREADED = 1;
     static const unsigned int FLAG_FORCE_STYLESHEET = 1 << 1;

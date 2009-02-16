@@ -20,8 +20,7 @@ public:
     FCGIServer(Config *config);
     virtual ~FCGIServer();
 
-    bool needApplyMainStylesheet(Request *request) const;
-    bool needApplyPerblockStylesheet(Request *request) const;
+    virtual bool isOffline() const;
     void run();
 
 protected:
@@ -42,7 +41,6 @@ private:
 
     int socket_;
     int inbuf_size_, outbuf_size_;
-    unsigned short alternate_port_, noxslt_port_;
 
     std::auto_ptr<SimpleCounter> workerCounter_;
     UptimeCounter uptimeCounter_;

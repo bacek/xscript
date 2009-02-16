@@ -8,7 +8,7 @@
 #include <cstring>
 
 #include "xscript/config.h"
-#include "offline_server.h"
+#include "proc_server.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -68,7 +68,7 @@ main(int argc, char *argv[]) {
             return EXIT_SUCCESS;
         }
 
-        OfflineServer server(config.get(), url, args);
+        ProcServer server(config.get(), url, args);
         server.run();
 
         return EXIT_SUCCESS;

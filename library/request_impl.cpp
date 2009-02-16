@@ -399,7 +399,7 @@ RequestImpl::attach(std::istream *is, char *env[]) {
     std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
     Parser::parse(this, env, enc.get());
 
-    if ("POST" == getRequestMethod()) {
+    if (is && "POST" == getRequestMethod()) {
         std::streamsize body_length = getContentLength();
         std::streamsize max_body_length = VirtualHostData::instance()->getServer()->maxBodyLength(this);
         if (body_length > max_body_length) {
@@ -411,11 +411,11 @@ RequestImpl::attach(std::istream *is, char *env[]) {
         body_.resize(getContentLength());
         is->exceptions(std::ios::badbit);
         is->read(&body_[0], body_.size());
-
+        
         if (is->gcount() != static_cast<std::streamsize>(body_.size())) {
             throw std::runtime_error("failed to read request entity");
         }
-
+        
         const std::string &type = getContentType();
         if (strncasecmp("multipart/form-data", type.c_str(), sizeof("multipart/form-data") - 1) == 0) {
             Range body = createRange(body_);

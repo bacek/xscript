@@ -32,6 +32,7 @@
 #include "xscript/script.h"
 #include "xscript/server.h"
 #include "xscript/state.h"
+#include "xscript/string_utils.h"
 #include "xscript/xml_util.h"
 #include "xscript/vhost_data.h"
 #include "xscript/writer.h"
@@ -55,6 +56,9 @@ Server::Server(Config *config) :
     max_body_length_ = config_->as<std::streamsize>("/xscript/max-body-length",
             std::numeric_limits<std::streamsize>::max());
 
+    alternate_port_ = config_->as<unsigned short>("/xscript/alternate-port", 8080);
+    noxslt_port_ = config_->as<unsigned short>("/xscript/noxslt-port", 8079);
+    
     char buf[256];
     int res = ::gethostname(buf, sizeof(buf));
     if (0 == res) {
@@ -67,13 +71,8 @@ Server::Server(Config *config) :
 Server::~Server() {
 }
 
-bool
-Server::isOffline() const {
-    return false;
-}
-
 void
-Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
+Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
     VirtualHostData::instance()->set(request_data->request());
     XmlUtils::resetReporter();
     xmlOutputBufferPtr buf = NULL;
@@ -85,15 +84,13 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
         PROFILER(log(), "overall time for " + script_name);
         log()->info("requested file: %s", script_name.c_str());
 
-        std::pair<std::string, bool> name = findScript(script_name);
-
-        if (!name.second) {
+        boost::shared_ptr<Script> script = getScript(script_name, request_data->request());
+        if (NULL == script.get()) {
             OperationMode::instance()->sendError(request_data->response(), 404,
                                                  script_name + " not found");
-            return;
+            return;  
         }
 
-        boost::shared_ptr<Script> script = Script::create(name.first);
         if (!script->allowMethod(request_data->request()->getRequestMethod())) {
             OperationMode::instance()->sendError(request_data->response(), 405,
                                                  request_data->request()->getRequestMethod() + " not allowed");
@@ -115,15 +112,15 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
 
         XmlDocHelper doc = script->invoke(ctx);
         XmlUtils::throwUnless(NULL != doc.get());
-
+        
         if (script->binaryPage() || request_data->response()->isBinary()) {
             return;
         }
-
+        
         if (script->forceStylesheet() && needApplyMainStylesheet(ctx->request())) {
             script->applyStylesheet(ctx.get(), doc);
         }
-
+        
         sendHeaders(ctx.get());
 
         if (!request_data->request()->suppressBody()) {
@@ -147,16 +144,29 @@ Server::handleRequest(const boost::shared_ptr<RequestData>& request_data) {
     }
 }
 
+boost::shared_ptr<Script>
+Server::getScript(const std::string &script_name, Request *request) {
+    (void)request;
+    
+    std::pair<std::string, bool> name = findScript(script_name);
+    if (!name.second) {
+        log()->error("Server::getScript 0");
+        return boost::shared_ptr<Script>();
+    }
+
+    log()->error("Server::getScript: %s", name.first.c_str());
+    return Script::create(name.first);
+}
+
 bool
 Server::needApplyMainStylesheet(Request *request) const {
-    (void)request;
-    return true;
+    unsigned short port = request->getServerPort();
+    return (port != alternate_port_) && (port != noxslt_port_);
 }
 
 bool
 Server::needApplyPerblockStylesheet(Request *request) const {
-    (void)request;
-    return true;
+    return (request->getServerPort() != noxslt_port_);
 }
 
 Context*

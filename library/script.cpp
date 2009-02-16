@@ -94,22 +94,36 @@ Script::header(const std::string &name) const {
 
 void
 Script::parse() {
+    parse(StringUtils::EMPTY_STRING);
+}
 
-    namespace fs = boost::filesystem;
+void
+Script::parse(const std::string &xml) {
 
-    fs::path path(name());
-    if (!fs::exists(path) || fs::is_directory(path)) {
-        std::stringstream stream;
-        stream << "can not open " << path.native_file_string();
-        throw std::runtime_error(stream.str());
+    XmlCharHelper canonic_path;
+    bool read_from_disk = xml.empty();
+    if (read_from_disk) {
+        namespace fs = boost::filesystem;
+        fs::path path(name());
+        if (!fs::exists(path) || fs::is_directory(path)) {
+            std::stringstream stream;
+            stream << "can not open " << path.native_file_string();
+            throw std::runtime_error(stream.str());
+        }
+        canonic_path = XmlCharHelper(xmlCanonicPath((const xmlChar *) path.native_file_string().c_str()));
     }
 
-    XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar *) path.native_file_string().c_str()));
     {
         XmlInfoCollector::Starter starter;
         
-        doc_ = XmlDocHelper(xmlReadFile((const char*) canonic_path.get(), NULL,
-            XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        if (!read_from_disk) {
+            doc_ = XmlDocHelper(xmlReadMemory(xml.c_str(), xml.size(), StringUtils::EMPTY_STRING.c_str(),
+                                    NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        }
+        else {
+            doc_ = XmlDocHelper(xmlReadFile((const char*) canonic_path.get(),
+                                    NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        }
 
         XmlUtils::throwUnless(NULL != doc_.get());
         if (NULL == doc_->children) {
@@ -215,31 +229,36 @@ Script::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
 
 boost::shared_ptr<Script>
 Script::create(const std::string &name) {
+    return Script::create(name, StringUtils::EMPTY_STRING);
+}
+
+boost::shared_ptr<Script>
+Script::create(const std::string &name, const std::string &xml) {
 
     ScriptCache *cache = ScriptCache::instance();
     boost::shared_ptr<Script> script = cache->fetch(name);
     if (NULL != script.get()) {
         return script;
     }
-
+  
     boost::mutex *mutex = cache->getMutex(name);
     if (NULL == mutex) {
-        return createWithParse(name);
+        return createWithParse(name, xml);
     }
-
+    
     boost::mutex::scoped_lock lock(*mutex);
     script = cache->fetch(name);
     if (NULL != script.get()) {
         return script;
     }
 
-    return createWithParse(name);
+    return createWithParse(name, xml);
 }
 
 boost::shared_ptr<Script>
-Script::createWithParse(const std::string &name) {
+Script::createWithParse(const std::string &name, const std::string &xml) {
     boost::shared_ptr<Script> script = ScriptFactory::instance()->create(name);
-    script->parse();
+    script->parse(xml);
     ScriptCache::instance()->store(name, script);
     return script;
 }
@@ -471,10 +490,10 @@ Script::fetchResults(Context *ctx) const {
 
     xmlNodePtr node = xmlDocGetRootElement(doc_.get());
     assert(node);
-
+    
     xmlNodePtr newnode = xmlDocGetRootElement(newdoc.get());
     assert(newnode);
-
+    
     fetchRecursive(ctx, node, newnode, count, xscript_count);
     return newdoc;
 }

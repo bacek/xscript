@@ -9,24 +9,24 @@ class Config;
 
 class OfflineServer : public Server {
 public:
-    OfflineServer(Config *config, const std::string &url, const std::multimap<std::string, std::string> &args);
+    OfflineServer(Config *config);
     virtual ~OfflineServer();
 
-    virtual bool needApplyMainStylesheet(Request *request) const;
-    virtual bool needApplyPerblockStylesheet(Request *request) const;
-    virtual void run();
+    virtual std::string renderBuffer(const std::string &xml,
+                                     const std::string &url,
+                                     const std::string &docroot,
+                                     const std::string &headers,
+                                     const std::string &args);
+    
+    virtual std::string renderFile(const std::string &file,
+                                   const std::string &docroot,
+                                   const std::string &headers,
+                                   const std::string &args);
+    
     virtual bool isOffline() const;
-
+    
 protected:
-    virtual Context* createContext(
-        const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData> &request_data);
-
-private:
-    std::string root_;
-    std::string url_;
-    std::string stylesheet_;
-    bool apply_main_stylesheet_, apply_perblock_stylesheet_, use_remote_call_;
-    std::map<std::string, std::string> headers_;
+    boost::shared_ptr<Script> getScript(const std::string &script_name, Request *request);
 };
 
 } // namespace xscript
