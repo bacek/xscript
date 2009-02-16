@@ -4,12 +4,13 @@ SUBDIRS = include library standard xscript daemon
 
 EXTRA_DIST = ChangeLog Doxyfile AUTHORS COPYING INSTALL NEWS README \
 	autogen.sh config/cppunit.m4 config/ax_check_cppunit.m4 \
-	config/settings.h.in config/settings.h debian/rules debian/changelog \
+	config/ac_python_devel.m4 config/settings.h.in \
+	config/settings.h debian/rules debian/changelog \
 	debian/compat debian/xscript-daemon.files debian/control \
 	debian/xscript-daemon.init debian/xscript-utility.files \
 	debian/xscript-standard.preinst debian/libxscript-dev.files \
 	debian/xscript-daemon.preinst debian/xscript-standard.files \
-	debian/libxscript.files examples/control-logrotate.xml \
+	debian/libxscript.files debian/xscript-utility-dev.files examples/control-logrotate.xml \
 	examples/control-status-info.xml examples/control-tagged-cache-stat.xml \
 	examples/control-xml-cache-stat.xml examples/data/1.xml \
 	examples/data/2.xml examples/file-include.xml examples/file-load.xml \

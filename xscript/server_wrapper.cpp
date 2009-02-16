@@ -1,8 +1,6 @@
 #include <memory>
 #include <string>
 
-#include <boost/python.hpp>
-
 #include "xscript/config.h"
 #include "xscript/string_utils.h"
 
