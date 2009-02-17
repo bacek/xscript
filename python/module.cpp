@@ -2,7 +2,7 @@
 
 #include "../xscript/server_wrapper.h"
 
-BOOST_PYTHON_MODULE(xscript_server) {
+BOOST_PYTHON_MODULE(xscript) {
     using namespace boost::python;
     def("initialize", initialize);
     def("renderBuffer", renderBuffer);
