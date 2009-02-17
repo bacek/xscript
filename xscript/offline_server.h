@@ -12,16 +12,16 @@ public:
     OfflineServer(Config *config);
     virtual ~OfflineServer();
 
-    virtual std::string renderBuffer(const std::string &xml,
-                                     const std::string &url,
-                                     const std::string &docroot,
+    virtual std::string renderBuffer(const std::string &url,
+                                     const std::string &xml,
+                                     const std::string &body,
                                      const std::string &headers,
-                                     const std::string &args);
+                                     const std::string &vars);
     
     virtual std::string renderFile(const std::string &file,
-                                   const std::string &docroot,
+                                   const std::string &body,
                                    const std::string &headers,
-                                   const std::string &args);
+                                   const std::string &vars);
     
     virtual bool isOffline() const;
     

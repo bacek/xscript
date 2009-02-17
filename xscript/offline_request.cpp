@@ -9,6 +9,7 @@
 #include <xscript/logger.h>
 #include <xscript/policy.h>
 #include <xscript/util.h>
+#include <internal/algorithm.h>
 
 #include "offline_request.h"
 
@@ -42,10 +43,10 @@ OfflineRequest::writeByWriter(const BinaryWriter *writer) {
 
 void
 OfflineRequest::attach(const std::string &uri,
-                       const std::string &doc_root,
-                       const std::vector<std::string> &headers,
-                       const std::vector<std::string> &args,
                        const std::string &xml,
+                       const std::string &body,
+                       const std::vector<std::string> &headers,
+                       const std::vector<std::string> &vars,
                        std::ostream *data_stream,
                        std::ostream *error_stream) {
     
@@ -59,11 +60,44 @@ OfflineRequest::attach(const std::string &uri,
     
     std::string processed_url = Policy::instance()->getPathByScheme(this, uri);
     std::string root_directory = Policy::instance()->getRootByScheme(this, uri);
-    if (root_directory.empty()) {
-        root_directory = doc_root;
-    }
+    
+    std::vector<std::string> env(vars);
+    bool need_method = true;
+    bool need_docroot = true;
+    bool is_post = false;
+    Range root_range = createRange("DOCUMENT_ROOT=");
+    Range method_range = createRange("REQUEST_METHOD=");
+    for(std::vector<std::string>::const_iterator it = vars.begin();
+        it != vars.end();
+        ++it) {
+        Range var = createRange(*it);
+        if (need_docroot) {
+            if (startsWith(var, root_range)) {
+                need_docroot = false;
+                if (root_directory.empty()) {
+                    Range key, value;
+                    split(var, '=', key, value);
+                    root_directory = std::string(value.begin(), value.end());
+                }
+            }
+        }
+        if (need_method) {
+            if (startsWith(var, method_range)) {
+                Range key, value;
+                split(var, '=', key, value);
+                is_post = (value == createRange("POST"));
+                need_method = false;
+            }
+        }
 
-    std::vector<std::string> env(args);
+        if (!need_docroot && !need_method) {
+            break;
+        } 
+    }
+    
+    if (need_method) {
+        env.push_back(std::string(method_range.begin(), method_range.end()).append("GET"));
+    }
     
     size_t query_pos = processed_url.rfind('?');
     if (query_pos != std::string::npos) {
@@ -145,19 +179,28 @@ OfflineRequest::attach(const std::string &uri,
     env.push_back(std::string("SCRIPT_NAME=").append(script_name));
     env.push_back(std::string("SCRIPT_FILENAME=").append(script_file_name));
     
-    if (!root_directory.empty()) {
-        env.push_back(std::string("DOCUMENT_ROOT=").append(root_directory));
+    if (need_docroot && !root_directory.empty()) {
+        env.push_back(std::string(root_range.begin(), root_range.end()).append(root_directory));
     }
     
-    env.push_back("REQUEST_METHOD=GET");
-
+    bool have_content_length = false;
     for(std::vector<std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
         size_t eq_pos = it->find('=');
         if (eq_pos != std::string::npos) {
             std::string header("HTTP_");
-            header.append(StringUtils::toupper(it->substr(0, eq_pos))).append(it->substr(eq_pos));
+            std::string header_name = StringUtils::toupper(it->substr(0, eq_pos));
+            if (!have_content_length &&
+                strncmp(header_name.c_str(), "CONTENT_LENGTH", sizeof("CONTENT_LENGTH")-1) == 0) {
+                have_content_length = true;
+            }
+            header.append(header_name).append(it->substr(eq_pos));
             env.push_back(header);
         }
+    }
+    if (!have_content_length && is_post) {
+        env.push_back(
+            std::string("HTTP_CONTENT_LENGTH=").
+                append(boost::lexical_cast<std::string>(body.size())));
     }
     
     char* env_vars[env.size() + 1];
@@ -165,8 +208,9 @@ OfflineRequest::attach(const std::string &uri,
     for(unsigned int i = 0; i < env.size(); ++i) {
         env_vars[i] = const_cast<char*>(env[i].c_str());
     }
-    
-    DefaultRequestResponse::attach(NULL, env_vars);
+
+    std::stringstream stream(body);  
+    DefaultRequestResponse::attach(&stream, env_vars);
 }
 
 void

@@ -21,10 +21,10 @@ public:
     virtual ~OfflineRequest();
 
     virtual void attach(const std::string &uri,
-                        const std::string &doc_root,
-                        const std::vector<std::string> &headers,
-                        const std::vector<std::string> &args,
                         const std::string &xml,
+                        const std::string &body,
+                        const std::vector<std::string> &headers,
+                        const std::vector<std::string> &vars,
                         std::ostream *data_stream,
                         std::ostream *error_stream);
     virtual void detach();

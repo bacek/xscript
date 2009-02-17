@@ -33,29 +33,29 @@ OfflineServer::isOffline() const {
 }
 
 std::string
-OfflineServer::renderBuffer(const std::string &xml,
-                            const std::string &url,
-                            const std::string &docroot,
+OfflineServer::renderBuffer(const std::string &url,
+                            const std::string &xml,
+                            const std::string &body,
                             const std::string &headers,
-                            const std::string &args) {
+                            const std::string &vars) {
     XmlUtils::registerReporters();
 
-    std::vector<std::string> header_list, arg_list;
+    std::vector<std::string> header_list, var_list;
     
     typedef boost::char_separator<char> Separator;
     typedef boost::tokenizer<Separator> Tokenizer;
     
     if (!headers.empty()) {
-        Tokenizer tok(headers, Separator("\n"));
+        Tokenizer tok(headers, Separator("\n\r"));
         for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
             header_list.push_back(*it);
         }
     }
     
-    if (!args.empty()) {
-        Tokenizer tok(args, Separator("\n"));
+    if (!vars.empty()) {
+        Tokenizer tok(vars, Separator("\n\r"));
         for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
-            arg_list.push_back(*it);
+            var_list.push_back(*it);
         }
     }
     
@@ -66,7 +66,7 @@ OfflineServer::renderBuffer(const std::string &xml,
     
     bool attach_success = false;
     try {
-        offline_request->attach(url, docroot, header_list, arg_list, xml, &buffer, &buffer);
+        offline_request->attach(url, xml, body, header_list, var_list, &buffer, &buffer);        
         attach_success = true;
         
         boost::shared_ptr<RequestData> data(
@@ -88,10 +88,10 @@ OfflineServer::renderBuffer(const std::string &xml,
 
 std::string
 OfflineServer::renderFile(const std::string &file,
-                          const std::string &docroot,
+                          const std::string &body,
                           const std::string &headers,
-                          const std::string &args) {
-    return renderBuffer(StringUtils::EMPTY_STRING, file, docroot, headers, args);
+                          const std::string &vars) {
+    return renderBuffer(file, StringUtils::EMPTY_STRING, body, headers, vars);
 }
 
 boost::shared_ptr<Script>

@@ -13,10 +13,10 @@ namespace {
 }
 
 bool
-initialize(const char *path) {
+initialize(const char *config_path) {
     try {
         server.reset(NULL);
-        config = xscript::Config::create(path);
+        config = xscript::Config::create(config_path);
         server.reset(new xscript::OfflineServer(config.get()));
         return true;
     }
@@ -25,18 +25,17 @@ initialize(const char *path) {
     }
 }
 
-
 std::string
-renderBuffer(const std::string &xml,
-             const std::string &url,
-             const std::string &docroot,
+renderBuffer(const std::string &url,
+             const std::string &xml,
+             const std::string &body,
              const std::string &headers,
-             const std::string &args) {
+             const std::string &vars) {
     try {
         if (!server.get()) {
             return xscript::StringUtils::EMPTY_STRING;
         }
-        return server->renderBuffer(xml, url, docroot, headers, args);
+        return server->renderBuffer(url, xml, body, headers, vars);
     }
     catch (...) {
         return xscript::StringUtils::EMPTY_STRING;
@@ -46,14 +45,14 @@ renderBuffer(const std::string &xml,
 
 std::string
 renderFile(const std::string &file,
-           const std::string &docroot,
+           const std::string &body,
            const std::string &headers,
-           const std::string &args) {
+           const std::string &vars) {
     try {
         if (!server.get()) {
             return xscript::StringUtils::EMPTY_STRING;
         }
-        return server->renderFile(file, docroot, headers, args);
+        return server->renderFile(file, body, headers, vars);
     }
     catch (...) {
         return xscript::StringUtils::EMPTY_STRING;

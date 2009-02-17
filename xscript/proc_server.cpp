@@ -107,10 +107,10 @@ ProcServer::run() {
 
     XmlUtils::registerReporters();
 
-    std::vector<std::string> args, headers;
+    std::vector<std::string> vars, headers;
     
     if (!use_remote_call_) {
-        args.push_back("DONT_USE_REMOTE_CALL=1");
+        vars.push_back("DONT_USE_REMOTE_CALL=1");
     }
     
 
@@ -128,9 +128,14 @@ ProcServer::run() {
     OfflineRequest* offline_request = dynamic_cast<OfflineRequest*>(request.get());
     
     bool attach_success = false;
-    try {
-        offline_request->attach(url_, root_, headers, args,
-                StringUtils::EMPTY_STRING, &std::cout, &std::cerr);
+    try {        
+        offline_request->attach(url_,
+                                StringUtils::EMPTY_STRING,
+                                StringUtils::EMPTY_STRING,
+                                headers,
+                                vars,
+                                &std::cout,
+                                &std::cerr);
         attach_success = true;
         
         boost::shared_ptr<RequestData> data(
