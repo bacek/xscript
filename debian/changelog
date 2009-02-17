@@ -1,3 +1,10 @@
+xscript (5.54-0) unstable; urgency=low
+
+  * python binding added
+  * xscript offline functionality extended
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 17 Feb 2009 10:39:59 +0300
+
 xscript (5.53-7) unstable; urgency=low
 
   * NULL nodeset is not xml error
