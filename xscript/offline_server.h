@@ -27,6 +27,7 @@ public:
     
 protected:
     boost::shared_ptr<Script> getScript(const std::string &script_name, Request *request);
+    std::string root_;
 };
 
 } // namespace xscript

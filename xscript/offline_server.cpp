@@ -22,6 +22,7 @@
 namespace xscript {
 
 OfflineServer::OfflineServer(Config *config) : Server(config) {
+    root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");
 }
 
 OfflineServer::~OfflineServer() {
@@ -61,7 +62,7 @@ OfflineServer::renderBuffer(const std::string &url,
     
     std::stringstream buffer;
     
-    boost::shared_ptr<RequestResponse> request(new OfflineRequest());
+    boost::shared_ptr<RequestResponse> request(new OfflineRequest(root_));
     OfflineRequest* offline_request = dynamic_cast<OfflineRequest*>(request.get());
     
     bool attach_success = false;

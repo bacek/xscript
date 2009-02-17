@@ -19,8 +19,8 @@
 
 namespace xscript {
 
-OfflineRequest::OfflineRequest() :
-    data_stream_(NULL), error_stream_(NULL) {
+OfflineRequest::OfflineRequest(const std::string &docroot) :
+    data_stream_(NULL), error_stream_(NULL), docroot_(docroot) {
 }
 
 OfflineRequest::~OfflineRequest() {
@@ -42,6 +42,72 @@ OfflineRequest::writeByWriter(const BinaryWriter *writer) {
 }
 
 void
+OfflineRequest::processHeaders(const std::vector<std::string> &headers,
+                               unsigned long body_size,
+                               std::vector<std::string> &env) {
+    bool have_content_length = false;
+    for(std::vector<std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {      
+        Range var = createRange(*it);
+        Range key, value;
+        split(var, '=', key, value);
+        if (value.empty()) {
+            continue;
+        }
+        
+        std::string header_name = StringUtils::toupper(std::string(key.begin(), key.end()));
+        std::replace(header_name.begin(), header_name.end(), '-', '_');
+        
+        std::string header("HTTP_");
+        if (!have_content_length &&
+            strncmp(header_name.c_str(), "CONTENT_LENGTH", sizeof("CONTENT_LENGTH")-1) == 0) {
+            have_content_length = true;
+        }
+        
+        header.append(header_name);
+        header.push_back('=');
+        header.append(std::string(value.begin(), value.end()));
+        env.push_back(header);
+    }
+    
+    if (!have_content_length && body_size) {
+        env.push_back(std::string("HTTP_CONTENT_LENGTH=").
+                append(boost::lexical_cast<std::string>(body_size)));
+    }
+}
+
+void
+OfflineRequest::processVariables(const std::vector<std::string> &vars,
+                                 std::vector<std::string> &env) {
+  
+    Range method = createRange("GET");
+    for(std::vector<std::string>::const_iterator it = vars.begin(); it != vars.end(); ++it) {      
+        Range var = createRange(*it);
+        Range key, value;
+        split(var, '=', key, value);
+        if (value.empty()) {
+            continue;
+        }
+        
+        if (key == createRange("DOCUMENT_ROOT")) {
+            docroot_ = std::string(value.begin(), value.end());
+        }
+        else if (key == createRange("REQUEST_METHOD")) {
+            method = value;
+        }
+        else {
+            env.push_back(*it);
+        }
+    }
+    
+    if (*docroot_.rbegin() == '/') {
+        docroot_.erase(docroot_.size() - 1);
+    }
+    
+    env.push_back(std::string("DOCUMENT_ROOT=").append(docroot_));
+    env.push_back(std::string("REQUEST_METHOD=").append(method.begin(), method.end())); 
+}
+
+void
 OfflineRequest::attach(const std::string &uri,
                        const std::string &xml,
                        const std::string &body,
@@ -59,46 +125,11 @@ OfflineRequest::attach(const std::string &uri,
     }
     
     std::string processed_url = Policy::instance()->getPathByScheme(this, uri);
-    std::string root_directory = Policy::instance()->getRootByScheme(this, uri);
     
-    std::vector<std::string> env(vars);
-    bool need_method = true;
-    bool need_docroot = true;
-    bool is_post = false;
-    Range root_range = createRange("DOCUMENT_ROOT=");
-    Range method_range = createRange("REQUEST_METHOD=");
-    for(std::vector<std::string>::const_iterator it = vars.begin();
-        it != vars.end();
-        ++it) {
-        Range var = createRange(*it);
-        if (need_docroot) {
-            if (startsWith(var, root_range)) {
-                need_docroot = false;
-                if (root_directory.empty()) {
-                    Range key, value;
-                    split(var, '=', key, value);
-                    root_directory = std::string(value.begin(), value.end());
-                }
-            }
-        }
-        if (need_method) {
-            if (startsWith(var, method_range)) {
-                Range key, value;
-                split(var, '=', key, value);
-                is_post = (value == createRange("POST"));
-                need_method = false;
-            }
-        }
-
-        if (!need_docroot && !need_method) {
-            break;
-        } 
-    }
-    
-    if (need_method) {
-        env.push_back(std::string(method_range.begin(), method_range.end()).append("GET"));
-    }
-    
+    std::vector<std::string> env;
+    processVariables(vars, env);
+    processHeaders(headers, body.size(), env);
+      
     size_t query_pos = processed_url.rfind('?');
     if (query_pos != std::string::npos) {
         std::string query = processed_url.substr(query_pos + 1);
@@ -107,19 +138,12 @@ OfflineRequest::attach(const std::string &uri,
         }
         processed_url.erase(query_pos);
     }
-    
-    if (!root_directory.empty() && *root_directory.rbegin() != '/') {
-        root_directory.push_back('/');
-    }
-
+     
     size_t base_pos = 0;
     size_t pos = processed_url.find("://");
     if (pos == std::string::npos) {
         if (processed_url[0] != '/') {
-            processed_url = FileUtils::normalize(root_directory + processed_url);
-        }
-        else {
-            root_directory = "/";
+            processed_url = FileUtils::normalize(docroot_ + "/" + processed_url);
         }
     }
     else {
@@ -157,51 +181,23 @@ OfflineRequest::attach(const std::string &uri,
             env.push_back(std::string("SERVER_PORT=").append(boost::lexical_cast<std::string>(port_int)));
             env.push_back(std::string("HTTP_HOST=").append(full_host));
         }
-        processed_url = FileUtils::normalize(root_directory + processed_url.substr(base_pos));
+        processed_url = FileUtils::normalize(docroot_ + "/" + processed_url.substr(base_pos));
     }
     
     std::string script_name;
-    size_t size = root_directory.size() - 1;
+    size_t size = docroot_.size();
     if (size <= processed_url.size() &&
-        strncmp(root_directory.c_str(), processed_url.c_str(), size) == 0) {
+        strncmp(docroot_.c_str(), processed_url.c_str(), size) == 0) {
         script_name = processed_url.substr(size);
     }
     else {
         script_name = processed_url;
     }
-    
-    if (*root_directory.rbegin() == '/') {
-        root_directory.erase(root_directory.size() - 1);
-    }
 
-    std::string script_file_name = FileUtils::normalize(root_directory + script_name);
+    std::string script_file_name = FileUtils::normalize(docroot_ + script_name);
     
     env.push_back(std::string("SCRIPT_NAME=").append(script_name));
     env.push_back(std::string("SCRIPT_FILENAME=").append(script_file_name));
-    
-    if (need_docroot && !root_directory.empty()) {
-        env.push_back(std::string(root_range.begin(), root_range.end()).append(root_directory));
-    }
-    
-    bool have_content_length = false;
-    for(std::vector<std::string>::const_iterator it = headers.begin(); it != headers.end(); ++it) {
-        size_t eq_pos = it->find('=');
-        if (eq_pos != std::string::npos) {
-            std::string header("HTTP_");
-            std::string header_name = StringUtils::toupper(it->substr(0, eq_pos));
-            if (!have_content_length &&
-                strncmp(header_name.c_str(), "CONTENT_LENGTH", sizeof("CONTENT_LENGTH")-1) == 0) {
-                have_content_length = true;
-            }
-            header.append(header_name).append(it->substr(eq_pos));
-            env.push_back(header);
-        }
-    }
-    if (!have_content_length && is_post) {
-        env.push_back(
-            std::string("HTTP_CONTENT_LENGTH=").
-                append(boost::lexical_cast<std::string>(body.size())));
-    }
     
     char* env_vars[env.size() + 1];
     env_vars[env.size()] = NULL;

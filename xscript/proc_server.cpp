@@ -124,7 +124,7 @@ ProcServer::run() {
         headers.push_back(header);
     }
 
-    boost::shared_ptr<RequestResponse> request(new OfflineRequest());
+    boost::shared_ptr<RequestResponse> request(new OfflineRequest(root_));
     OfflineRequest* offline_request = dynamic_cast<OfflineRequest*>(request.get());
     
     bool attach_success = false;

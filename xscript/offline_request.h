@@ -17,7 +17,7 @@ namespace xscript {
 
 class OfflineRequest : public DefaultRequestResponse {
 public:
-    OfflineRequest();
+    OfflineRequest(const std::string &docroot);
     virtual ~OfflineRequest();
 
     virtual void attach(const std::string &uri,
@@ -34,10 +34,17 @@ private:
     virtual void writeBuffer(const char *buf, std::streamsize size);
     virtual void writeError(unsigned short status, const std::string &message);
     virtual void writeByWriter(const BinaryWriter *writer);
-
+    
+    static void processHeaders(const std::vector<std::string> &headers,
+                               unsigned long body_size,
+                               std::vector<std::string> &env);
+    void processVariables(const std::vector<std::string> &vars,
+                          std::vector<std::string> &env);
+    
 private:
     std::ostream *data_stream_;
     std::ostream *error_stream_;
+    std::string docroot_;
     std::string xml_;
 };
 
