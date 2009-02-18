@@ -23,7 +23,7 @@ public:
                                    const std::string &headers,
                                    const std::string &vars);
     
-    virtual bool isOffline() const;
+    virtual bool useXsltProfiler() const;
     
 protected:
     boost::shared_ptr<Script> getScript(const std::string &script_name, Request *request);

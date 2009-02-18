@@ -21,7 +21,7 @@ public:
     virtual bool needApplyMainStylesheet(Request *request) const;
     virtual bool needApplyPerblockStylesheet(Request *request) const;
     virtual std::streamsize maxBodyLength(Request *request) const;
-    virtual bool isOffline() const = 0;
+    virtual bool useXsltProfiler() const = 0;
     const std::string& hostname() const;
 
 protected:

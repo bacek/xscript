@@ -29,8 +29,8 @@ OfflineServer::~OfflineServer() {
 }
 
 bool
-OfflineServer::isOffline() const {
-    return true;
+OfflineServer::useXsltProfiler() const {
+    return false;
 }
 
 std::string

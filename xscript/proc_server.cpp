@@ -98,7 +98,7 @@ ProcServer::~ProcServer() {
 }
 
 bool
-ProcServer::isOffline() const {
+ProcServer::useXsltProfiler() const {
     return true;
 }
 

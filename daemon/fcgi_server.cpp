@@ -75,7 +75,7 @@ FCGIServer::~FCGIServer() {
 }
 
 bool
-FCGIServer::isOffline() const {
+FCGIServer::useXsltProfiler() const {
     return false;
 }
 

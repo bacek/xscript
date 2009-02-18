@@ -20,7 +20,7 @@ public:
     FCGIServer(Config *config);
     virtual ~FCGIServer();
 
-    virtual bool isOffline() const;
+    virtual bool useXsltProfiler() const;
     void run();
 
 protected:

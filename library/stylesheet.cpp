@@ -99,11 +99,8 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
 
     attachContextData(tctx.get(), ctx, this, dynamic_cast<const Block*>(obj));
 
-    bool use_profile = false;
     const Server* server = VirtualHostData::instance()->getServer();
-    if (server) {
-        use_profile = server->isOffline();
-    }
+    bool use_profile = server ? server->useXsltProfiler() : false;
 
     tctx->profile = use_profile;
     if (NULL == tctx->globalVars) {

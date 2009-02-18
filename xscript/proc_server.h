@@ -15,7 +15,7 @@ public:
     virtual bool needApplyMainStylesheet(Request *request) const;
     virtual bool needApplyPerblockStylesheet(Request *request) const;
     virtual void run();
-    virtual bool isOffline() const;
+    virtual bool useXsltProfiler() const;
 
 protected:
     virtual Context* createContext(
