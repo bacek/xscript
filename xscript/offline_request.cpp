@@ -209,11 +209,6 @@ OfflineRequest::attach(const std::string &uri,
     DefaultRequestResponse::attach(&stream, env_vars);
 }
 
-void
-OfflineRequest::detach() {
-    DefaultRequestResponse::detach();
-}
-
 const std::string&
 OfflineRequest::xml() const {
     return xml_;

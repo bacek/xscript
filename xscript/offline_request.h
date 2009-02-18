@@ -27,7 +27,6 @@ public:
                         const std::vector<std::string> &vars,
                         std::ostream *data_stream,
                         std::ostream *error_stream);
-    virtual void detach();
     const std::string& xml() const;
 
 private:

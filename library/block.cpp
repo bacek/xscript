@@ -152,10 +152,8 @@ Block::invoke(Context *ctx) {
     }
     catch (const CriticalInvokeError &e) {
         std::string full_error;
-        InvokeResult result = errorResult(e.what(), e.info(), full_error);
-        if (!OperationMode::instance()->isProduction()) {
-            ctx->assignRuntimeError(this, full_error);
-        }
+        InvokeResult result = errorResult(e.what(), e.info(), full_error);        
+        OperationMode::instance()->assignBlockError(ctx, this, full_error);        
         return result;
     }
     catch (const SkipResultInvokeError &e) {
@@ -241,19 +239,17 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
         }
         boost::shared_ptr<Stylesheet> sh = Stylesheet::create(xsltName());
         {
-            PROFILER(log(), std::string("per-block-xslt: '") + xsltName() + "' block: '" + name() + "' block-id: '" + id() + "' method: '" + method() + "' owner: '" + owner()->name() + "'");
+            PROFILER(log(), std::string("per-block-xslt: '") + xsltName() +
+                    "' block: '" + name() + "' block-id: '" + id() +
+                    "' method: '" + method() + "' owner: '" + owner()->name() + "'");
             Object::applyStylesheet(sh, ctx, doc, true);
         }
 
         XmlUtils::throwUnless(NULL != doc.get());
         log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
 
-        if (!OperationMode::instance()->isProduction()) {
-            std::string result = ctx->getRuntimeError(this);
-            if (!result.empty()) {
-                throw CriticalInvokeError(result.c_str(), "xslt", xsltName());
-            }
-        }
+        OperationMode::instance()->processPerblockXsltError(ctx, this);
+
         if (XmlUtils::hasXMLError()) {
             std::string postfix =
                 "Script: " + owner()->name() +

@@ -63,14 +63,9 @@ ThreadedBlock::property(const char *name, const char *value) {
 void
 ThreadedBlock::postInvoke(Context *ctx, const XmlDocHelper &doc) {
     
-    bool show_elapsed_time = check_elapsed_time_;
-    if (!OperationMode::instance()->isProduction()) {
-        if (!show_elapsed_time) {
-            show_elapsed_time =
-                VirtualHostData::instance()->checkVariable(ctx->request(), SHOW_ELAPSED_TIME);
-        }
-    }
-    
+    bool show_elapsed_time = check_elapsed_time_ ? check_elapsed_time_ :
+        OperationMode::instance()->checkDevelopmentVariable(ctx->request(), SHOW_ELAPSED_TIME);
+       
     if (!show_elapsed_time || tagged()) {
         return;
     }

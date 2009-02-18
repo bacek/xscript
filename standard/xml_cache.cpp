@@ -327,7 +327,7 @@ XmlCache::init(const char *name, const Config *config) {
 
     time_t delay = 0;
     if (OperationMode::instance()->isProduction()) {
-        delay = config->as<size_t>(std::string("/xscript/").append(name).append("/refresh-delay"), 5);
+        delay = config->as<time_t>(std::string("/xscript/").append(name).append("/refresh-delay"), 5);
     }
 
     StorageContainerHolder holder(storages_);

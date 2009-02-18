@@ -1,6 +1,9 @@
 #include "settings.h"
+#include "xscript/context.h"
 #include "xscript/logger.h"
 #include "xscript/operation_mode.h"
+#include "xscript/remote_tagged_block.h"
+#include "xscript/request.h"
 #include "xscript/response.h"
 #include "xscript/util.h"
 #include "xscript/string_utils.h"
@@ -33,6 +36,63 @@ OperationMode::sendError(Response* response, unsigned short status, const std::s
 bool
 OperationMode::isProduction() const {
     return true;
+}
+
+void
+OperationMode::assignBlockError(Context *ctx, const Block *block, const std::string &error) {
+    (void)ctx;
+    (void)block;
+    (void)error;
+}
+
+void
+OperationMode::processPerblockXsltError(const Context *ctx, const Block *block) {
+    (void)ctx;
+    (void)block;
+}
+
+void
+OperationMode::processScriptError(const Context *ctx, const Script *script) {
+    (void)ctx;
+    (void)script;
+}
+
+void
+OperationMode::processMainXsltError(const Context *ctx, const Script *script, const Stylesheet *style) {
+    (void)ctx;
+    (void)script;
+    (void)style;
+}
+
+void
+OperationMode::collectError(const InvokeError &error, InvokeError &full_error) {  
+    std::stringstream stream;
+    stream << error.what() << ": " << full_error.what_info() << "";
+    
+    const InvokeError::InfoMapType& info = error.info();
+    for(InvokeError::InfoMapType::const_iterator it = info.begin();
+        it != info.end();
+        ++it) {
+        stream << ". " << it->first << ": " << it->second;        
+    }
+    
+    log()->error("%s", stream.str().c_str());    
+}
+
+bool
+OperationMode::checkDevelopmentVariable(const Request* request, const std::string &var) {
+    (void)request;
+    (void)var;
+    return false;
+}
+
+void
+OperationMode::checkRemoteTimeout(RemoteTaggedBlock *block) {
+    if (!block->tagged() && !block->isDefaultRemoteTimeout()) {
+        block->setDefaultRemoteTimeout();
+        log()->warn("remote timeout setup is prohibited for non-tagged blocks or when tag cache time is nil: %s",
+                block->owner()->name().c_str());
+    }
 }
 
 REGISTER_COMPONENT(OperationMode);
