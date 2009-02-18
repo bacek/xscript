@@ -1,8 +1,13 @@
+xscript (5.54-2) unstable; urgency=low
+
+  * OperationMode refactoring
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 18 Feb 2009 17:10:22 +0300
+
 xscript (5.54-1) unstable; urgency=low
 
   * POST processing added to offline request
   * server_wrapper interface changed
-  * 
 
  -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 17 Feb 2009 13:55:00 +0300
 
