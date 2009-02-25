@@ -28,7 +28,6 @@
 #include "server_request.h"
 
 #include "xscript/authorizer.h"
-#include "xscript/checking_policy.h"
 #include "xscript/config.h"
 #include "xscript/context.h"
 #include "xscript/logger.h"

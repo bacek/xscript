@@ -1,3 +1,9 @@
+xscript (5.54-3) unstable; urgency=low
+
+  * libxscript-offline build with fpic
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 25 Feb 2009 15:48:30 +0300
+
 xscript (5.54-2) unstable; urgency=low
 
   * OperationMode refactoring

@@ -18,7 +18,6 @@
 #include "xscript/authorizer.h"
 #include "xscript/thread_pool.h"
 #include "xscript/vhost_data.h"
-#include "xscript/checking_policy.h"
 #include "xscript/doc_cache.h"
 #include "xscript/script_cache.h"
 #include "xscript/script_factory.h"
