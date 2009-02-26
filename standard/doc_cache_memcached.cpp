@@ -56,6 +56,7 @@ DocCacheMemcached::DocCacheMemcached()
         throw std::runtime_error("Unable to allocate new memcache object");
 
     statBuilder_.setName("tagged-cache-memcached");
+    DocCache::instance()->addStrategy(this, "memcached");
 }
 
 DocCacheMemcached::~DocCacheMemcached()
@@ -67,9 +68,6 @@ DocCacheMemcached::~DocCacheMemcached()
 void
 DocCacheMemcached::init(const Config *config) {
     log()->debug("initing Memcached");
-    
-    DocCache::instance()->addStrategy(this, "memcached");
-    
     std::vector<std::string> names;
     config->subKeys(std::string("/xscript/tagged-cache-memcached/server"), names);
     if (names.empty()) {

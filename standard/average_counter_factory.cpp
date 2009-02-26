@@ -20,6 +20,6 @@ AverageCounterFactoryImpl::createCounter(const std::string &name, bool want_real
     return std::auto_ptr<AverageCounter>(new AverageCounterImpl(name));
 }
 
-static ComponentImplRegisterer<AverageCounterFactory> reg_(new AverageCounterFactoryImpl());
+static ComponentRegisterer<AverageCounterFactory> reg_(new AverageCounterFactoryImpl());
 }
 

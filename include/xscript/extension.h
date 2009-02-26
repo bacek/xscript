@@ -38,16 +38,11 @@ public:
         return logger_;
     }
 
-    struct ExtensionResourceTraits {
-        static Extension* const DEFAULT_VALUE;
-        static void destroy(Extension * ptr);
-    };
-    
 private:
     Logger * logger_;
 };
 
-typedef ResourceHolder<Extension*, Extension::ExtensionResourceTraits > ExtensionHolder;
+typedef ResourceHolder<Extension*, Component<Extension>::ResourceTraits > ExtensionHolder;
 
 class ExtensionRegisterer : private boost::noncopyable {
 public:

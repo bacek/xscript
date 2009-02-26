@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS = 1.9 foreign
 ACLOCAL_AMFLAGS = -I config
-SUBDIRS = include library xscript standard daemon
+SUBDIRS = include library standard xscript daemon
 
 EXTRA_DIST = ChangeLog Doxyfile AUTHORS COPYING INSTALL NEWS README \
 	autogen.sh config/cppunit.m4 config/ax_check_cppunit.m4 \

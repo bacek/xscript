@@ -76,6 +76,7 @@ const time_t DocCacheMemory::DEFAULT_CACHE_TIME = 5; // sec
 DocCacheMemory::DocCacheMemory() :
         min_time_(Tag::UNDEFINED_TIME), max_size_(0) {
     statBuilder_.setName("tagged-cache-memory");
+    DocCache::instance()->addStrategy(this, "memory");
 }
 
 DocCacheMemory::~DocCacheMemory() {
@@ -89,7 +90,6 @@ DocCacheMemory::createKey(const Context *ctx, const TaggedBlock *block) const {
 
 void
 DocCacheMemory::init(const Config *config) {
-    DocCache::instance()->addStrategy(this, "memory");
     DocCacheStrategy::init(config);
 
     assert(pools_.empty());
@@ -145,12 +145,10 @@ DocCacheMemory::pool(const TagKey *key) const {
     return pools_[HashUtils::crc32(key->asString()) % sz];
 }
 
-static ComponentRegisterer<DocCacheMemory> reg_;
-
 //REGISTER_COMPONENT(DocCacheMemory);
-//namespace {
-//static DocCacheMemory cache_;
+namespace {
+static DocCacheMemory cache_;
 //static ComponentRegisterer<DocCacheMemory> reg_(new DocCacheMemory());
-// }
+}
 
 } // namespace xscript
