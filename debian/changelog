@@ -1,3 +1,9 @@
+xscript (5.54-5) unstable; urgency=low
+
+  * Content-Type caseinsensitive parsing added in multipart
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 26 Feb 2009 12:26:19 +0300
+
 xscript (5.54-4) unstable; urgency=low
 
   * Content-Type parsing in multipart fixed

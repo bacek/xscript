@@ -198,16 +198,19 @@ Parser::parseLine(Range &line, std::map<Range, Range, RangeCILess> &m) {
 
     Range head, tail, name, value;
     while (!line.empty()) {
-        split(line, ';', head, tail);
-	if (startsWith(head, CONTENT_TYPE_MULTIPART_RANGE)) {
-	    split(head, ':', name, value);
-	    value = trim(value);
-	}
-	else {
-	    split(head, '=', name, value);
-    	    if (NAME_RANGE == name || FILENAME_RANGE == name) {
-        	value = truncate(value, 1, 1);
-	    }
+        split(line, ';', head, tail);        
+        if (head.size() >= CONTENT_TYPE_MULTIPART_RANGE.size() &&
+            strncasecmp(head.begin(),
+                    CONTENT_TYPE_MULTIPART_RANGE.begin(),
+                    CONTENT_TYPE_MULTIPART_RANGE.size()) == 0) {
+            split(head, ':', name, value);
+            value = trim(value);
+        }
+        else {
+            split(head, '=', name, value);
+            if (NAME_RANGE == name || FILENAME_RANGE == name) {
+                value = truncate(value, 1, 1);
+            }
         }
         m.insert(std::make_pair(name, value));
         line = trim(tail);
