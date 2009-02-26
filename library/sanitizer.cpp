@@ -23,6 +23,7 @@ Sanitizer::sanitize(const Range &range, const std::string &base_url, int line_li
     return std::string(range.begin(), range.end());
 }
 
-REGISTER_COMPONENT(Sanitizer);
+// REGISTER_COMPONENT(Sanitizer);
+static ComponentRegisterer<Sanitizer> reg;
 
 } // namespace xscript

@@ -24,6 +24,7 @@ StatusInfo::init(const Config *config) {
     ControlExtension::registerConstructor("status-info", f);
 }
 
-REGISTER_COMPONENT(StatusInfo);
+// REGISTER_COMPONENT(StatusInfo);
+static ComponentRegisterer<StatusInfo> reg;
 
 } // namespace xscript

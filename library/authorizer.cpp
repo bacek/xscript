@@ -72,6 +72,7 @@ Authorizer::isBot(const std::string &user_agent) {
     return false;
 }
 
-REGISTER_COMPONENT(Authorizer);
+static ComponentRegisterer<Authorizer> reg; 
+//REGISTER_COMPONENT(Authorizer);
 
 } // namespace xscript

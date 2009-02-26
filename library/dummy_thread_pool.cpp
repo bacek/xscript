@@ -17,6 +17,7 @@ void
 DummyThreadPool::stop() {
 }
 
-REGISTER_COMPONENT2(ThreadPool, DummyThreadPool);
+static ComponentImplRegisterer<ThreadPool> reg_(new DummyThreadPool());
+//REGISTER_COMPONENT2(ThreadPool, DummyThreadPool);
 
 } // namespace xscript

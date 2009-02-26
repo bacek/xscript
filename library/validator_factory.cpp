@@ -6,15 +6,19 @@
 #include <dmalloc.h>
 #endif
 
+#include <iostream>
+
 namespace xscript
 {
 
-REGISTER_COMPONENT(ValidatorFactory);
+// REGISTER_COMPONENT(ValidatorFactory);
 
 ValidatorFactory::ValidatorFactory() {
+    std::cout << "ValidatorFactory constructor: " << this << std::endl; 
 }
 
 ValidatorFactory::~ValidatorFactory() {
+    std::cout << "ValidatorFactory destructor: " << this << std::endl;
 }
 
 std::auto_ptr<Validator>
@@ -45,5 +49,7 @@ ValidatorFactory::registerConstructor(const std::string &type, const ValidatorCo
         throw std::runtime_error("Duplicate validator type: " + type);
     validator_creators_.insert(i, std::make_pair(type, ctor));
 }
+
+static ComponentRegisterer<ValidatorFactory> reg_;
 
 } // namespace xscript

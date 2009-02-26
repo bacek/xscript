@@ -19,6 +19,7 @@ StylesheetFactory::create(const std::string &name) {
     return boost::shared_ptr<Stylesheet>(new Stylesheet(name));
 }
 
-REGISTER_COMPONENT(StylesheetFactory);
+// REGISTER_COMPONENT(StylesheetFactory);
+static ComponentRegisterer<StylesheetFactory> reg;
 
 } // namespace xscript

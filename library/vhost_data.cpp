@@ -15,7 +15,7 @@ namespace xscript {
 
 const std::string VirtualHostData::DOCUMENT_ROOT = "DOCUMENT_ROOT";
 
-REGISTER_COMPONENT(VirtualHostData);
+// REGISTER_COMPONENT(VirtualHostData);
 
 VirtualHostData::VirtualHostData() : server_(NULL) {
 }
@@ -110,5 +110,7 @@ VirtualHostData::getDocumentRoot(const Request* request) const {
     }
     return root;
 }
+
+static ComponentRegisterer<VirtualHostData> reg;
 
 } // namespace xscript
