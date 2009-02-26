@@ -48,7 +48,7 @@ const std::string RequestImpl::REQUEST_METHOD_KEY("REQUEST_METHOD");
 File::File(const std::map<Range, Range, RangeCILess> &m, const Range &content) :
         data_(content.begin(), static_cast<std::streamsize>(content.size())) {
     std::map<Range, Range, RangeCILess>::const_iterator i;
-    i = m.find(Parser::CONTENT_TYPE_RANGE);
+    i = m.find(Parser::CONTENT_TYPE_MULTIPART_RANGE);
     if (m.end() != i) {
         type_.assign(i->second.begin(), i->second.end());
     }

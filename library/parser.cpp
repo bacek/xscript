@@ -29,6 +29,7 @@ const Range Parser::HEADER_RANGE = createRange("HTTP_");
 const Range Parser::COOKIE_RANGE = createRange("HTTP_COOKIE");
 const Range Parser::EMPTY_LINE_RANGE = createRange("\r\n\r\n");
 const Range Parser::CONTENT_TYPE_RANGE = createRange("CONTENT_TYPE");
+const Range Parser::CONTENT_TYPE_MULTIPART_RANGE = createRange("Content-Type");
 
 const char*
 Parser::statusToString(short status) {
@@ -198,9 +199,15 @@ Parser::parseLine(Range &line, std::map<Range, Range, RangeCILess> &m) {
     Range head, tail, name, value;
     while (!line.empty()) {
         split(line, ';', head, tail);
-        split(head, '=', name, value);
-        if (NAME_RANGE == name || FILENAME_RANGE == name) {
-            value = truncate(value, 1, 1);
+	if (startsWith(head, CONTENT_TYPE_MULTIPART_RANGE)) {
+	    split(head, ':', name, value);
+	    value = trim(value);
+	}
+	else {
+	    split(head, '=', name, value);
+    	    if (NAME_RANGE == name || FILENAME_RANGE == name) {
+        	value = truncate(value, 1, 1);
+	    }
         }
         m.insert(std::make_pair(name, value));
         line = trim(tail);

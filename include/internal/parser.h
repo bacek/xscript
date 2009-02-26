@@ -50,6 +50,7 @@ public:
     static const Range COOKIE_RANGE;
     static const Range EMPTY_LINE_RANGE;
     static const Range CONTENT_TYPE_RANGE;
+    static const Range CONTENT_TYPE_MULTIPART_RANGE;
 };
 
 template<typename Map> inline bool
