@@ -25,7 +25,7 @@ std::auto_ptr<CacheCounter> DefaultCacheCounterFactory::createCounter(const std:
         return std::auto_ptr<CacheCounter>(new DummyCacheCounter());
 }
 
-//REGISTER_COMPONENT2(CacheCounterFactory, DefaultCacheCounterFactory);
-static ComponentImplRegisterer<CacheCounterFactory> reg_(new DefaultCacheCounterFactory());
+REGISTER_COMPONENT2(CacheCounterFactory, DefaultCacheCounterFactory);
+static ComponentRegisterer<CacheCounterFactory> reg_(new DefaultCacheCounterFactory());
 
 } // namespace xscript

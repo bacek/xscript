@@ -21,7 +21,7 @@ CacheCounterFactoryImpl::createCounter(const std::string &name, bool want_real) 
     return std::auto_ptr<CacheCounter>(new CacheCounterImpl(name));
 }
 
-static ComponentRegisterer<CacheCounterFactory> reg_(new CacheCounterFactoryImpl());
+static ComponentImplRegisterer<CacheCounterFactory> reg_(new CacheCounterFactoryImpl());
 static MemoryStatisticRegisterer reg2_;
 }
 

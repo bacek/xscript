@@ -52,9 +52,7 @@ private:
     std::auto_ptr<SimpleCounter> counter_;
 };
 
-StandardThreadPool::StandardThreadPool() :
-        running_(true),
-        counter_(SimpleCounterFactory::instance()->createCounter("working-threads", true)) {
+StandardThreadPool::StandardThreadPool() : running_(true) {
 }
 
 StandardThreadPool::~StandardThreadPool() {
@@ -65,6 +63,7 @@ void
 StandardThreadPool::init(const Config *config) {
 
     try {
+        counter_ = SimpleCounterFactory::instance()->createCounter("working-threads", true);
         int nthreads = config->as<unsigned short>("/xscript/pool-workers");
         counter_->max(nthreads);
         boost::function<void()> f = boost::bind(&StandardThreadPool::handle, this);
@@ -132,6 +131,6 @@ StandardThreadPool::wait() {
     return f;
 }
 
-static ComponentRegisterer<ThreadPool> reg_(new StandardThreadPool());
+static ComponentImplRegisterer<ThreadPool> reg_(new StandardThreadPool());
 
 } // namespace xscript

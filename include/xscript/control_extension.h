@@ -32,11 +32,16 @@ protected:
     /**
     * Find constructor for method. Throws and exception in case of non-existent method.
     */
+    typedef std::map<std::string, Constructor> ConstructorMap;
+    
     Constructor findConstructor(const std::string& method);
+    static ConstructorMap& constructors() {
+        static std::auto_ptr<ConstructorMap> constructors(new ConstructorMap());
+        return *constructors;
+    }
 
 private:
-    typedef std::map<std::string, Constructor> ConstructorMap;
-    static ConstructorMap constructors_;
+//    static ConstructorMap constructors_;
 };
 
 } // namespace xscript

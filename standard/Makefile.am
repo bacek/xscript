@@ -32,6 +32,8 @@ xscript_statistics_la_SOURCES = \
 		simple_counter_factory.cpp \
 		cache_counter_factory.cpp \
 		cache_usage_counter_factory.cpp
+
+xscript_statistics_la_LIBADD = ../library/libxscript.la
 xscript_statistics_la_LDFLAGS = -module
 
 xscript_development_la_SOURCES = development_mode.cpp

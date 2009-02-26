@@ -32,7 +32,7 @@ DefaultCacheUsageCounterFactory::createCounter(const std::string& name, bool wan
     }
 }
 
-//REGISTER_COMPONENT2(CacheUsageCounterFactory, DefaultCacheUsageCounterFactory);
-static ComponentImplRegisterer<CacheUsageCounterFactory> reg_(new DefaultCacheUsageCounterFactory());
+REGISTER_COMPONENT2(CacheUsageCounterFactory, DefaultCacheUsageCounterFactory);
+static ComponentRegisterer<CacheUsageCounterFactory> reg_(new DefaultCacheUsageCounterFactory());
 
 }

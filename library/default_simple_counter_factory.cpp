@@ -25,7 +25,7 @@ std::auto_ptr<SimpleCounter> DefaultSimpleCounterFactory::createCounter(const st
         return std::auto_ptr<SimpleCounter>(new DummySimpleCounter());
 }
 
-//REGISTER_COMPONENT2(SimpleCounterFactory, DefaultSimpleCounterFactory);
-static ComponentImplRegisterer<SimpleCounterFactory> reg_(new DefaultSimpleCounterFactory());
+REGISTER_COMPONENT2(SimpleCounterFactory, DefaultSimpleCounterFactory);
+static ComponentRegisterer<SimpleCounterFactory> reg_(new DefaultSimpleCounterFactory());
 
 } // namespace xscript

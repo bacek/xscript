@@ -36,7 +36,6 @@ DummyStylesheetCache::getMutex(const std::string &name) {
     return NULL;
 }
 
-// REGISTER_COMPONENT2(StylesheetCache, DummyStylesheetCache);
-static ComponentImplRegisterer<StylesheetCache> reg_(new DummyStylesheetCache());
+REGISTER_COMPONENT2(StylesheetCache, DummyStylesheetCache);
 
 } // namespace xscript

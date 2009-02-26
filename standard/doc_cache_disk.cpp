@@ -180,17 +180,20 @@ void DocCacheDisk::WriteFile::write(const void *ptr, size_t size) const {
 }
 
 
-DocCacheDisk::DocCacheDisk() :
-        min_time_(DEFAULT_CACHE_TIME) {
+DocCacheDisk::DocCacheDisk() : min_time_(DEFAULT_CACHE_TIME) {
+    log()->error("DocCacheDisk constructor");
     statBuilder_.setName("tagged-cache-disk");
-    DocCache::instance()->addStrategy(this, "disk");
 }
 
 DocCacheDisk::~DocCacheDisk() {
 }
 
 void
-DocCacheDisk::init(const Config *config) {
+DocCacheDisk::init(const Config *config) {   
+    log()->error("DocCacheDisk init 1");
+    DocCache::instance()->addStrategy(this, "disk");
+    log()->error("DocCacheDisk init 2");
+    
     DocCacheStrategy::init(config);
 
     root_ = config->as<std::string>("/xscript/tagged-cache-disk/root-dir", "").append("/");
@@ -429,9 +432,9 @@ DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &t
 }
 
 //REGISTER_COMPONENT(DocCacheDisk);
-//static ComponentRegisterer<DocCacheDisk> reg_(new DocCacheDisk());
-namespace {
-static DocCacheDisk cache;
-}
+static ComponentRegisterer<DocCacheDisk> reg_;
+//namespace {
+//static DocCacheDisk cache;
+//}
 
 } // namespace xscript

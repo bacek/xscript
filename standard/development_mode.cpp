@@ -116,6 +116,6 @@ DevelopmentMode::checkRemoteTimeout(RemoteTaggedBlock *block) {
     }
 }
 
-static ComponentRegisterer<OperationMode> reg_(new DevelopmentMode());
+static ComponentImplRegisterer<OperationMode> reg_(new DevelopmentMode());
 
 } // namespace xscript

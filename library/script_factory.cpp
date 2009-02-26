@@ -20,7 +20,6 @@ ScriptFactory::create(const std::string &name) {
     return boost::shared_ptr<Script>(new Script(name));
 }
 
-// REGISTER_COMPONENT(ScriptFactory);
-static ComponentRegisterer<ScriptFactory> reg;
+REGISTER_COMPONENT(ScriptFactory);
 
 } // namespace xscript

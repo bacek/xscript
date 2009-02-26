@@ -104,24 +104,17 @@ LoaderImpl::load(const char *name) {
 
     typedef ExtensionInfo* (*ExtensionFunc)();
     
-    log()->error("LoaderImpl::load1: %s", name);
-    
     Handle handle(dlopen(name, RTLD_NOW | RTLD_GLOBAL));
-    log()->error("LoaderImpl::load2: %s", name);
     checkLoad(NULL != handle.get());
-    log()->error("LoaderImpl::load3: %s", name);
     handles_.push_back(handle.release());
     
     ExtensionFunc func = (ExtensionFunc) dlsym(handles_.back(), "get_extension_info");
-    log()->error("LoaderImpl::load4: %s", name);
     return (NULL != func) ? func() : NULL;
 }
 
 void
 LoaderImpl::checkLoad(bool success) const {
-    log()->error("LoaderImpl::checkLoad: yes success");
     if (!success) {
-        log()->error("LoaderImpl::checkLoad: no success: %s", dlerror());
         throw std::runtime_error(dlerror());
     }
 }

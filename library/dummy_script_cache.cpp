@@ -35,7 +35,6 @@ DummyScriptCache::getMutex(const std::string &name) {
     return NULL;
 }
 
-static ComponentImplRegisterer<ScriptCache> reg_(new DummyScriptCache());
-//REGISTER_COMPONENT2(ScriptCache, DummyScriptCache);
+REGISTER_COMPONENT2(ScriptCache, DummyScriptCache);
 
 } // namespace xscript

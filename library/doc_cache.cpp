@@ -124,7 +124,6 @@ DocCache::createReport() const {
     return doc;
 }
 
-static ComponentRegisterer<DocCache> reg;
-//REGISTER_COMPONENT(DocCache);
+REGISTER_COMPONENT(DocCache);
 
 } // namespace xscript

@@ -19,7 +19,7 @@ SimpleCounterFactoryImpl::createCounter(const std::string &name, bool want_real)
     return std::auto_ptr<SimpleCounter>(new SimpleCounterImpl(name));
 }
 
-static ComponentRegisterer<SimpleCounterFactory> reg_(new SimpleCounterFactoryImpl());
+static ComponentImplRegisterer<SimpleCounterFactory> reg_(new SimpleCounterFactoryImpl());
 }
 
 

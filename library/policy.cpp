@@ -138,7 +138,6 @@ ProxyHeadersHelper::skipped(const char* name) {
     return false;
 }
 
-// REGISTER_COMPONENT(Policy);
-static ComponentRegisterer<Policy> reg;
+REGISTER_COMPONENT(Policy);
 
 } // namespace xscript

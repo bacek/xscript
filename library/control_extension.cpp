@@ -10,13 +10,13 @@
 
 namespace xscript {
 
-// ControlExtension::ConstructorMap ControlExtension::constructors_;
+ControlExtension::ConstructorMap ControlExtension::constructors_;
 
 ControlExtension::ControlExtension() {
 }
 
 ControlExtension::~ControlExtension() {
-    constructors().clear();
+    constructors_.clear();
 }
 
 const char*
@@ -67,13 +67,13 @@ ControlExtension::createBlock(Xml *owner, xmlNodePtr orig) {
 
 void
 ControlExtension::registerConstructor(const std::string & method, Constructor ctor) {
-    constructors()[method] = ctor;
+    constructors_[method] = ctor;
 }
 
 ControlExtension::Constructor
 ControlExtension::findConstructor(const std::string& method) {
-    ConstructorMap::const_iterator m = constructors().find(method);
-    if (m == constructors().end()) {
+    ConstructorMap::const_iterator m = constructors_.find(method);
+    if (m == constructors_.end()) {
         throw std::runtime_error("method doesn't exists");
     }
     return m->second;

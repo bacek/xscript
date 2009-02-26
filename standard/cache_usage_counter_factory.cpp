@@ -20,6 +20,6 @@ CacheUsageCounterFactoryImpl::createCounter(const std::string &name, bool want_r
     return std::auto_ptr<CacheUsageCounter>(new CacheUsageCounterImpl(name));
 }
 
-static ComponentRegisterer<CacheUsageCounterFactory> reg_(new CacheUsageCounterFactoryImpl());
+static ComponentImplRegisterer<CacheUsageCounterFactory> reg_(new CacheUsageCounterFactoryImpl());
 }
 

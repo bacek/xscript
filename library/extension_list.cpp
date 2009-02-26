@@ -23,6 +23,7 @@
 namespace xscript {
 
 ExtensionList::ExtensionList() {
+    loader_ = Loader::instance();
 }
 
 ExtensionList::~ExtensionList() {

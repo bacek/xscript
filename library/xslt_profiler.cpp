@@ -24,7 +24,6 @@ XsltProfiler::dumpProfileInfo(Context* ctx) {
     (void)ctx;
 }
 
-static ComponentRegisterer<XsltProfiler> reg;
-// REGISTER_COMPONENT(XsltProfiler);
+REGISTER_COMPONENT(XsltProfiler);
 
 } // namespace xscript

@@ -54,10 +54,10 @@ Config::startup() {
 
     DocCache::instance()->init(this);
     log()->debug("doc cache started");
-    
+
     Loader::instance()->init(this);
     log()->debug("loader started");
-    
+
     Policy::instance()->init(this);
     log()->debug("policy started");
 
