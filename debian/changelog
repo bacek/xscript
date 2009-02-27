@@ -1,3 +1,9 @@
+xscript (5.54-7) unstable; urgency=low
+
+  * fix log message
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 27 Feb 2009 13:54:27 +0300
+
 xscript (5.54-6) unstable; urgency=low
 
   * fix python dependence

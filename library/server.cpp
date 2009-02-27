@@ -150,11 +150,9 @@ Server::getScript(const std::string &script_name, Request *request) {
     
     std::pair<std::string, bool> name = findScript(script_name);
     if (!name.second) {
-        log()->error("Server::getScript 0");
         return boost::shared_ptr<Script>();
     }
 
-    log()->error("Server::getScript: %s", name.first.c_str());
     return Script::create(name.first);
 }
 
