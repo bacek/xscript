@@ -66,6 +66,7 @@ DocCacheMemcached::~DocCacheMemcached()
 void
 DocCacheMemcached::init(const Config *config) {
     log()->debug("initing Memcached");
+    DocCacheStrategy::init(config);
     
     std::vector<std::string> names;
     config->subKeys(std::string("/xscript/tagged-cache-memcached/server"), names);

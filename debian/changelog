@@ -1,6 +1,6 @@
 xscript (5.55-0) unstable; urgency=low
 
-  * fix singletone initialization in offline mode
+  * fix singleton initialization in offline mode
 
  -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 27 Feb 2009 16:28:00 +0300
 
