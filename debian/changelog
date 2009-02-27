@@ -1,3 +1,9 @@
+xscript (5.55-1) unstable; urgency=low
+
+  * fix python package
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 27 Feb 2009 19:16:35 +0300
+
 xscript (5.55-0) unstable; urgency=low
 
   * fix singleton initialization in offline mode
