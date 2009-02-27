@@ -1,7 +1,9 @@
 #ifndef _XSCRIPT_COMPONENT_H_
 #define _XSCRIPT_COMPONENT_H_
 
+#include <map>
 #include <string>
+#include <typeinfo>
 #include <boost/utility.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/checked_delete.hpp>
@@ -12,13 +14,17 @@ namespace xscript {
 class Loader;
 class Config;
 
-
 template<typename Type>
 class ComponentRegisterer {
 public:
-    ComponentRegisterer(Type *var);
+    ComponentRegisterer();
 };
 
+template<typename Type>
+class ComponentImplRegisterer {
+public:
+    ComponentImplRegisterer(Type *var);
+};
 
 class ComponentBase : private boost::noncopyable {
 public:
@@ -32,9 +38,35 @@ public:
     virtual void init(const Config *config) {
         (void)config;
     }
+    
+    struct ResourceTraits {
+        static ComponentBase* const DEFAULT_VALUE;
+        static void destroy(ComponentBase * ptr);
+    };
+    
+    typedef ResourceHolder<ComponentBase*, ResourceTraits> Holder;
 
+protected:
+    class StringComparator {
+    public:
+        bool operator() (const char* s1, const char* s2) const {
+            return strcmp(s1, s2) < 0;
+        }
+    };
+    
+    typedef std::map<const char*, boost::shared_ptr<Holder>, StringComparator> ComponentMapType;
+    
+    static ComponentMapType& componentMap() {
+        if (components_ == NULL) {
+            static ComponentMapType *map = new ComponentMapType();
+            components_ = map;
+        }
+        return *components_;
+    }
+    
 private:
-    boost::shared_ptr<Loader> loader_;
+    static ComponentMapType* components_;
+    boost::shared_ptr<Loader> loader_; 
 };
 
 
@@ -42,72 +74,50 @@ template<typename Type>
 class Component : public ComponentBase {
 public:
     static Type* instance();
-
-    struct ResourceTraits {
-        static Type* const DEFAULT_VALUE;
-        static void destroy(Type * ptr);
-    };
-
-    typedef ResourceHolder<Type*, ResourceTraits> Holder;
-
 private:
-    static void attachImpl(Holder helper);
+    static void createImpl();
+    static void attachImpl(Type *component);
     friend class ComponentRegisterer<Type>;
-
-private:
-    static Holder holder_;
-
-    static Type* createImpl();
-
+    friend class ComponentImplRegisterer<Type>;
 };
-
-
-/**
- * Implementation of ResourceHolderTraits used in ComponentHolder
- */
-template<typename Type>
-void Component<Type>::ResourceTraits::destroy(Type *component) {
-    // Acquire loader to avoid premature unload of shared library.
-    boost::shared_ptr<Loader> loader = component->loader();
-    boost::checked_delete(component);
-};
-
-template<typename Type>
-Type* const Component<Type>::ResourceTraits::DEFAULT_VALUE = static_cast<Type*>(NULL);
-
-template<typename Type>
-typename Component<Type>::Holder
-Component<Type>::holder_(Component<Type>::createImpl());
 
 template<typename Type> inline Type*
 Component<Type>::instance() {
-    assert(Holder::Traits::DEFAULT_VALUE != holder_.get());
-    return holder_.get();
+    ComponentMapType::const_iterator it = componentMap().find(typeid(Type).name());
+    if (it == componentMap().end()) {
+        assert(false);
+    }
+    return dynamic_cast<Type*>(it->second->get());
 }
 
 template<typename Type> inline void
-Component<Type>::attachImpl(typename Component<Type>::Holder holder) {
-    assert(Holder::Traits::DEFAULT_VALUE != holder.get());
-    holder_ = holder;
+Component<Type>::createImpl() {
+    ComponentMapType::const_iterator it = componentMap().find(typeid(Type).name());
+    if (it != componentMap().end()) {
+        return;
+    }
+    boost::shared_ptr<Holder> holder(
+            new Holder(dynamic_cast<ComponentBase*>(new Type())));
+    
+    componentMap()[typeid(Type).name()] = holder;
+}
+
+template<typename Type> inline void
+Component<Type>::attachImpl(Type *component) {
+    assert(Holder::Traits::DEFAULT_VALUE != component);
+    componentMap()[typeid(Type).name()] = 
+        boost::shared_ptr<Holder>(new Holder(dynamic_cast<ComponentBase*>(component)));
 }
 
 template<typename Type>
-ComponentRegisterer<Type>::ComponentRegisterer(Type *var) {
-    Component<Type>::attachImpl(typename Component<Type>::Holder(var));
+ComponentRegisterer<Type>::ComponentRegisterer() {
+    Component<Type>::createImpl();
 }
 
-#define REGISTER_COMPONENT(TYPE) \
-	template<> \
-	TYPE * Component<TYPE>::createImpl() { \
-		return new TYPE(); \
-	}
-
-
-#define REGISTER_COMPONENT2(TYPE, IMPL) \
-	template<> \
-	TYPE * Component<TYPE>::createImpl() { \
-		return new IMPL(); \
-	}
+template<typename Type>
+ComponentImplRegisterer<Type>::ComponentImplRegisterer(Type *var) {
+    Component<Type>::attachImpl(var);
+}
 
 } // namespace xscript
 

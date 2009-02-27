@@ -17,14 +17,7 @@ TagKey::TagKey() {
 TagKey::~TagKey() {
 }
 
-DocCacheStrategy::DocCacheStrategy()
-        : statBuilder_("tagged-cache"),
-        hitCounter_(AverageCounterFactory::instance()->createCounter("hits")),
-        missCounter_(AverageCounterFactory::instance()->createCounter("miss")),
-        saveCounter_(AverageCounterFactory::instance()->createCounter("save")) {
-    statBuilder_.addCounter(hitCounter_.get());
-    statBuilder_.addCounter(missCounter_.get());
-    statBuilder_.addCounter(saveCounter_.get());
+DocCacheStrategy::DocCacheStrategy() : statBuilder_("tagged-cache") {
 }
 
 DocCacheStrategy::~DocCacheStrategy() {
@@ -32,6 +25,12 @@ DocCacheStrategy::~DocCacheStrategy() {
 
 void DocCacheStrategy::init(const Config *config) {
     (void)config;
+    hitCounter_ = AverageCounterFactory::instance()->createCounter("hits");
+    missCounter_ = AverageCounterFactory::instance()->createCounter("miss");
+    saveCounter_ = AverageCounterFactory::instance()->createCounter("save");
+    statBuilder_.addCounter(hitCounter_.get());
+    statBuilder_.addCounter(missCounter_.get());
+    statBuilder_.addCounter(saveCounter_.get());
 }
 
 

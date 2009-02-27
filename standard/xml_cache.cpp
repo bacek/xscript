@@ -471,7 +471,7 @@ StandardStylesheetCache::getMutex(const std::string &name) {
     return mutexes_ + HashUtils::crc32(name) % NUMBER_OF_MUTEXES;
 }
 
-static ComponentRegisterer<ScriptCache> script_reg_(new StandardScriptCache());
-static ComponentRegisterer<StylesheetCache> stylesheet_reg_(new StandardStylesheetCache());
+static ComponentImplRegisterer<ScriptCache> script_reg_(new StandardScriptCache());
+static ComponentImplRegisterer<StylesheetCache> stylesheet_reg_(new StandardStylesheetCache());
 
 } // namespace xscript

@@ -29,14 +29,11 @@ public:
 
 class AverageCounterFactory : public Component<AverageCounterFactory> {
 public:
+    AverageCounterFactory();
+    ~AverageCounterFactory();
 
-    friend class ComponentRegisterer<AverageCounterFactory>;
-
-    /**
-     * By default factory produces DummyCounters. But if some block really need counter
-     * he can ask.
-     */
-    virtual std::auto_ptr<AverageCounter> createCounter(const std::string& name, bool want_real = false) = 0;
+    virtual void init(const Config *config);
+    virtual std::auto_ptr<AverageCounter> createCounter(const std::string& name, bool want_real = false);
 };
 
 } // namespace xscript

@@ -76,7 +76,7 @@ ProcServer::ProcServer(Config *config,
         std::string xslt_path = config->as<std::string>("/xscript/offline/xslt-profile-path",
             "/usr/share/xscript-proc/profile.xsl");
 
-        ComponentRegisterer<XsltProfiler> reg2(new OfflineXsltProfiler(xslt_path, text_mode));
+        ComponentImplRegisterer<XsltProfiler> reg2(new OfflineXsltProfiler(xslt_path, text_mode));
         (void)reg2;
     }
     

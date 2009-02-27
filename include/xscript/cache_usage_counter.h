@@ -25,13 +25,11 @@ namespace xscript {
 
     class CacheUsageCounterFactory : public Component<CacheUsageCounterFactory> {
     public:
-        friend class ComponentRegisterer<CacheUsageCounterFactory>;
+        CacheUsageCounterFactory();
+        ~CacheUsageCounterFactory();
 
-        /**
-        * By default factory produces DummyCounters. But if some block really need counter
-        * he can ask.
-        */
-        virtual std::auto_ptr<CacheUsageCounter> createCounter(const std::string& name, bool want_real = false) = 0;
+        virtual void init(const Config *config);      
+        virtual std::auto_ptr<CacheUsageCounter> createCounter(const std::string& name, bool want_real = false);
     };
 
 } // namespace xscript

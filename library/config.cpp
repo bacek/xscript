@@ -51,13 +51,13 @@ Config::startup() {
     log()->debug("logger factory started");
 
     XmlUtils::init(this);
-
-    DocCache::instance()->init(this);
-    log()->debug("doc cache started");
-
+    
     Loader::instance()->init(this);
     log()->debug("loader started");
-
+    
+    DocCache::instance()->init(this);
+    log()->debug("doc cache started");
+    
     Policy::instance()->init(this);
     log()->debug("policy started");
 

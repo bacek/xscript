@@ -29,14 +29,16 @@ public:
     static void registerConstructor(const std::string & method, Constructor ctor);
 
 protected:
+    typedef std::map<std::string, Constructor> ConstructorMap;
+
     /**
     * Find constructor for method. Throws and exception in case of non-existent method.
-    */
+    */    
     Constructor findConstructor(const std::string& method);
-
-private:
-    typedef std::map<std::string, Constructor> ConstructorMap;
-    static ConstructorMap constructors_;
+    static ConstructorMap& constructors() {
+        static ConstructorMap map;
+        return map;
+    }
 };
 
 } // namespace xscript

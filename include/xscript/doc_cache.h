@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <string>
-#include <xscript/component.h>
 #include <xscript/control_extension.h>
 #include <xscript/xml_helpers.h>
 
@@ -21,7 +20,7 @@ class Xml;
 /**
  * Cache result of block invokations using sequence of different strategies.
  */
-class DocCache : public Component<DocCache> {
+class DocCache {
 public:
     DocCache();
     virtual ~DocCache();
@@ -43,6 +42,11 @@ public:
      * Create aggregate report. Caller must free result.
      */
     XmlDocHelper createReport() const;
+    
+    static DocCache* instance() {
+        static DocCache cache;
+        return &cache;
+    }
 
 private:
     // Used for init added strategies
@@ -53,7 +57,6 @@ private:
 
     // Sorted list of strategies
     std::vector<DocCacheStrategy*> strategies_;
-
 };
 
 } // namespace xscript

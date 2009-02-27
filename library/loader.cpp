@@ -101,7 +101,6 @@ LoaderImpl::init(const Config *config) {
 
 ExtensionInfo *
 LoaderImpl::load(const char *name) {
-
     typedef ExtensionInfo* (*ExtensionFunc)();
     
     Handle handle(dlopen(name, RTLD_NOW | RTLD_GLOBAL));

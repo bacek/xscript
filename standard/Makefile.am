@@ -32,6 +32,8 @@ xscript_statistics_la_SOURCES = \
 		simple_counter_factory.cpp \
 		cache_counter_factory.cpp \
 		cache_usage_counter_factory.cpp
+
+xscript_statistics_la_LIBADD = ../library/libxscript.la
 xscript_statistics_la_LDFLAGS = -module
 
 xscript_development_la_SOURCES = development_mode.cpp
@@ -58,7 +60,7 @@ xscript_memcached_la_LDFLAGS = -module -lmemcache
 endif
 
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
-AM_CXXFLAGS = -W -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
+AM_CXXFLAGS = -W -Wall -fexceptions -frtti -fPIC -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_filesystem @yandex_platform_LIBS@ @VERSION_INFO@
 
 EXTRA_DIST = test.conf

@@ -95,6 +95,6 @@ OperationMode::checkRemoteTimeout(RemoteTaggedBlock *block) {
     }
 }
 
-REGISTER_COMPONENT(OperationMode);
+static ComponentRegisterer<OperationMode> reg;
 
 } // namespace xscript

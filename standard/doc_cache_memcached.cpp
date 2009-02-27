@@ -10,8 +10,6 @@
 #include <dmalloc.h>
 #endif
 
-#include <iostream>
-
 namespace xscript {
 
 /**
@@ -68,6 +66,7 @@ DocCacheMemcached::~DocCacheMemcached()
 void
 DocCacheMemcached::init(const Config *config) {
     log()->debug("initing Memcached");
+    
     std::vector<std::string> names;
     config->subKeys(std::string("/xscript/tagged-cache-memcached/server"), names);
     if (names.empty()) {
@@ -165,8 +164,6 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
     }
 }
 
-namespace {
-    static DocCacheMemcached cache_;
-}
+static ComponentRegisterer<DocCacheMemcached> reg_;
 
 };

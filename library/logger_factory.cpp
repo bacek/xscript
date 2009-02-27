@@ -17,12 +17,8 @@
 
 namespace xscript {
 
-REGISTER_COMPONENT(LoggerFactory);
-
 LoggerFactory::LoggerFactory() : defaultLogger_(0)
 {
-    ControlExtension::Constructor f = boost::bind(boost::mem_fn(&LoggerFactory::createBlock), this, _1, _2, _3);
-    ControlExtension::registerConstructor("logrotate", f);
 }
 
 LoggerFactory::~LoggerFactory() {
@@ -56,6 +52,9 @@ LoggerFactory::createBlock(const ControlExtension *ext, Xml *owner, xmlNodePtr n
 
 void
 LoggerFactory::init(const Config * config) {
+    ControlExtension::Constructor f = boost::bind(boost::mem_fn(&LoggerFactory::createBlock), this, _1, _2, _3);
+    ControlExtension::registerConstructor("logrotate", f);
+    
     std::vector<std::string> v;
     std::string key("/xscript/logger-factory/logger");
 
@@ -132,5 +131,7 @@ LoggerFactory::logRotate() const {
     }
     getDefaultLogger()->info("Log rotated");
 }
+
+static ComponentRegisterer<LoggerFactory> reg;
 
 } // namespace xscript

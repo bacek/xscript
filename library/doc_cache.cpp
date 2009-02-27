@@ -42,6 +42,12 @@ DocCache::init(const Config *config) {
     config_ = config;
     ControlExtension::Constructor f = boost::bind(boost::mem_fn(&DocCache::createBlock), this, _1, _2, _3);
     ControlExtension::registerConstructor("tagged-cache-stat", f);
+    
+    for (std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
+            i != strategies_.end();
+            ++i) {
+        (*i)->init(config_);
+    }
 }
 
 void
@@ -50,7 +56,6 @@ DocCache::addStrategy(DocCacheStrategy* strategy, const std::string& name) {
     (void)name;
     log()->debug("%s %s", BOOST_CURRENT_FUNCTION, name.c_str());
     strategies_.push_back(strategy);
-    strategy->init(config_);
 }
 
 time_t
@@ -123,7 +128,5 @@ DocCache::createReport() const {
 
     return doc;
 }
-
-REGISTER_COMPONENT(DocCache);
 
 } // namespace xscript

@@ -33,13 +33,11 @@ public:
 
 class SimpleCounterFactory : public Component<SimpleCounterFactory> {
 public:
-    friend class ComponentRegisterer<SimpleCounterFactory>;
+    SimpleCounterFactory();
+    ~SimpleCounterFactory();
 
-    /**
-     * By default factory produces DummyCounters. But if some block really need counter
-     * he can ask.
-     */
-    virtual std::auto_ptr<SimpleCounter> createCounter(const std::string& name, bool want_real = false) = 0;
+    virtual void init(const Config *config);  
+    virtual std::auto_ptr<SimpleCounter> createCounter(const std::string& name, bool want_real = false);
 };
 
 } // namespace xscript

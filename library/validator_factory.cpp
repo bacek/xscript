@@ -8,9 +8,6 @@
 
 namespace xscript
 {
-
-REGISTER_COMPONENT(ValidatorFactory);
-
 ValidatorFactory::ValidatorFactory() {
 }
 
@@ -45,5 +42,7 @@ ValidatorFactory::registerConstructor(const std::string &type, const ValidatorCo
         throw std::runtime_error("Duplicate validator type: " + type);
     validator_creators_.insert(i, std::make_pair(type, ctor));
 }
+
+static ComponentRegisterer<ValidatorFactory> reg_;
 
 } // namespace xscript

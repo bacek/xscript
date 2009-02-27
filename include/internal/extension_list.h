@@ -41,7 +41,6 @@ private:
     bool accepts(Extension *ext, const char *name, const char *ref, bool allow_empty_namespace) const;
 
 private:
-    boost::shared_ptr<Loader> loader_;
     std::vector<Extension*> extensions_;
 };
 

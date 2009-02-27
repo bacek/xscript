@@ -7,8 +7,6 @@
 #include "xscript/validator.h"
 #include "xscript/validator_exception.h"
 
-#include <iostream>
-
 namespace xscript
 {
 

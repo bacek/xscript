@@ -180,8 +180,7 @@ void DocCacheDisk::WriteFile::write(const void *ptr, size_t size) const {
 }
 
 
-DocCacheDisk::DocCacheDisk() :
-        min_time_(DEFAULT_CACHE_TIME) {
+DocCacheDisk::DocCacheDisk() : min_time_(DEFAULT_CACHE_TIME) {
     statBuilder_.setName("tagged-cache-disk");
     DocCache::instance()->addStrategy(this, "disk");
 }
@@ -428,10 +427,6 @@ DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &t
     }
 }
 
-//REGISTER_COMPONENT(DocCacheDisk);
-//static ComponentRegisterer<DocCacheDisk> reg_(new DocCacheDisk());
-namespace {
-static DocCacheDisk cache;
-}
+static ComponentRegisterer<DocCacheDisk> reg_;
 
 } // namespace xscript

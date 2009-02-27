@@ -14,17 +14,17 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	vhost_data.cpp protocol_arg_param.cpp \
 	logger_factory.cpp syslog_logger.cpp file_logger.cpp server.cpp \
 	control_extension.cpp operation_mode.cpp \
-	dummy_thread_pool.cpp dummy_script_cache.cpp \
-	dummy_stylesheet_cache.cpp \
+	thread_pool.cpp script_cache.cpp \
+	stylesheet_cache.cpp \
 	stat_builder.cpp hostname_param.cpp \
 	status_info.cpp protocol.cpp \
 	memory_statistic.cpp \
 	doc_cache.cpp doc_cache_strategy.cpp \
 	profiler.cpp xslt_profiler.cpp \
-	default_average_counter_factory.cpp \
-	default_simple_counter_factory.cpp \
-	default_cache_counter_factory.cpp \
-	default_cache_usage_counter_factory.cpp \
+	average_counter_factory.cpp \
+	simple_counter_factory.cpp \
+	cache_counter_factory.cpp \
+	cache_usage_counter_factory.cpp \
 	average_counter_impl.cpp \
 	simple_counter_impl.cpp \
 	cache_counter_impl.cpp \
@@ -41,7 +41,7 @@ libxscript_la_LDFLAGS = @VERSION_INFO@
 
 libxscript_la_LIBADD = -lpthread @LTLIBICONV@ -lboost_thread -lboost_filesystem
 
-AM_CXXFLAGS = -W -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread -I@top_srcdir@/include -I@builddir@ @yandex_platform_CFLAGS@
+AM_CXXFLAGS = -W -Wall -fexceptions -frtti -fPIC -ftemplate-depth-128 -finline -pthread -I@top_srcdir@/include -I@builddir@ @yandex_platform_CFLAGS@
 AM_LDFLAGS = -lboost_thread -lboost_filesystem -I@top_srcdir@/include @yandex_platform_LIBS@
 
 SUBDIRS = details

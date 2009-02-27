@@ -145,10 +145,6 @@ DocCacheMemory::pool(const TagKey *key) const {
     return pools_[HashUtils::crc32(key->asString()) % sz];
 }
 
-//REGISTER_COMPONENT(DocCacheMemory);
-namespace {
-static DocCacheMemory cache_;
-//static ComponentRegisterer<DocCacheMemory> reg_(new DocCacheMemory());
-}
+static ComponentRegisterer<DocCacheMemory> reg_;
 
 } // namespace xscript

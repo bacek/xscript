@@ -500,6 +500,6 @@ RequestFactory::create() {
     return std::auto_ptr<RequestImpl>(new RequestImpl());
 }
 
-REGISTER_COMPONENT(RequestFactory);
+static ComponentRegisterer<RequestFactory> reg;
 
 } // namespace xscript
