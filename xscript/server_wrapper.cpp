@@ -2,6 +2,7 @@
 #include <string>
 
 #include "xscript/config.h"
+#include "xscript/memory_statistic.h"
 #include "xscript/string_utils.h"
 
 #include "offline_server.h"
@@ -15,6 +16,7 @@ namespace {
 bool
 initialize(const char *config_path) {
     try {
+        xscript::initAllocationStatistic();
         server.reset(NULL);
         config = xscript::Config::create(config_path);
         server.reset(new xscript::OfflineServer(config.get()));

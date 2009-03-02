@@ -139,11 +139,10 @@ OfflineRequest::attach(const std::string &uri,
         processed_url.erase(query_pos);
     }
      
-    size_t base_pos = 0;
     size_t pos = processed_url.find("://");
     if (pos == std::string::npos) {
         if (processed_url[0] != '/') {
-            processed_url = FileUtils::normalize(docroot_ + "/" + processed_url);
+            processed_url = docroot_ + "/" + processed_url;
         }
     }
     else {
@@ -158,7 +157,7 @@ OfflineRequest::attach(const std::string &uri,
         }
         
         pos += 3;
-        base_pos = processed_url.find('/', pos);
+        size_t base_pos = processed_url.find('/', pos);
         std::string full_host = processed_url.substr(pos, base_pos - pos);
 
         unsigned short port_int;
@@ -181,21 +180,21 @@ OfflineRequest::attach(const std::string &uri,
             env.push_back(std::string("SERVER_PORT=").append(boost::lexical_cast<std::string>(port_int)));
             env.push_back(std::string("HTTP_HOST=").append(full_host));
         }
-        processed_url = FileUtils::normalize(docroot_ + "/" + processed_url.substr(base_pos));
-    }
-    
-    std::string script_name;
-    size_t size = docroot_.size();
-    if (size <= processed_url.size() &&
-        strncmp(docroot_.c_str(), processed_url.c_str(), size) == 0) {
-        script_name = processed_url.substr(size);
-    }
-    else {
-        script_name = processed_url;
+        processed_url = docroot_ + "/" + processed_url.substr(base_pos);
     }
 
-    std::string script_file_name = FileUtils::normalize(docroot_ + script_name);
+    std::string script_file_name = FileUtils::normalize(processed_url);
+    std::string script_name;
     
+    size_t size = docroot_.size();
+    if (size <= script_file_name.size() &&
+        strncmp(docroot_.c_str(), processed_url.c_str(), size) == 0) {
+        script_name = script_file_name.substr(size);
+    }
+    else {
+        script_name = script_file_name;
+    }
+
     env.push_back(std::string("SCRIPT_NAME=").append(script_name));
     env.push_back(std::string("SCRIPT_FILENAME=").append(script_file_name));
     
