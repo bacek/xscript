@@ -572,6 +572,63 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltXmlparse(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:xmlparse");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (1 != nargs) {
+        XmlUtils::reportXsltError("xscript:xmlparse: bad param count", ctxt);
+        return;
+    }
+
+    const char* str = params.str(0);
+    if (NULL == str) {
+        XmlUtils::reportXsltError("xscript:xmlparse: bad parameter", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    Context* ctx = NULL;
+    try {
+        xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+        if (NULL == tctx) {
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
+
+        std::stringstream stream;
+        stream << "<parsed>" << str << "</parsed>" << std::endl;
+        std::string text = stream.str();
+
+        XmlDocHelper doc(xmlParseMemory(text.c_str(), text.length()));
+        XmlUtils::throwUnless(NULL != doc.get());
+
+        xmlNodePtr node = xmlCopyNode(xmlDocGetRootElement(doc.get()), 1);
+
+        ctx = Stylesheet::getContext(tctx);
+        ctx->addNode(node);
+
+        xmlNodeSetPtr ret = xmlXPathNodeSetCreate(node);
+        xmlXPathReturnNodeSet(ctxt, ret);
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:xmlparse: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:xmlparse: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
 xscriptXsltUrlencode(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:urlencode");
@@ -1502,6 +1559,7 @@ XsltExtensions::XsltExtensions() {
     XsltFunctionRegisterer("remained-depth", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltRemainedDepth);
 
     XsltFunctionRegisterer("sanitize", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSanitize);
+    XsltFunctionRegisterer("xmlparse", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltXmlparse);
 
     XsltFunctionRegisterer("urlencode", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltUrlencode);
     XsltFunctionRegisterer("urldecode", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltUrldecode);
