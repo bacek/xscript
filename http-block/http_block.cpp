@@ -91,7 +91,7 @@ HttpBlock::postParse() {
 }
 
 XmlDocHelper
-HttpBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
+HttpBlock::retryCall(Context *ctx, boost::any &a) throw (std::exception) {
     return (this->*method_)(ctx, a);
 }
 
@@ -159,16 +159,18 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
     }
 
     const TimeoutCounter &timer = ctx->blockTimer(this);
+    int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
-
+        
     const Tag *tag = boost::any_cast<Tag>(&a);
-    HttpHelper helper(url, timer.remained());
+    HttpHelper helper(url, timeout);
     helper.appendHeaders(ctx->request(), proxy_, tag);
 
     helper.perform();
     log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
+    
     helper.checkStatus();
-
+    
     createTagInfo(helper, a);
     const Tag *result_tag = boost::any_cast<Tag>(&a);
 
@@ -197,9 +199,10 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
     PROFILER(log(), "getBinaryPage: " + url);
 
     const TimeoutCounter &timer = ctx->blockTimer(this);
+    int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
 
-    HttpHelper helper(url, timer.remained());
+    HttpHelper helper(url, timeout);
     helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     helper.perform();
@@ -207,7 +210,7 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
 
     long status = helper.status();
     if (status != 200) {
-        InvokeError error("Incorrect http status");
+        RetryInvokeError error("Incorrect http status");
         error.add("status", boost::lexical_cast<std::string>(status));
         error.addEscaped("url", url);
         throw error;
@@ -248,17 +251,19 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
     std::string url = concatParams(ctx, 0, size - 2);
 
     const TimeoutCounter &timer = ctx->blockTimer(this);
+    int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
-
+    
+    HttpHelper helper(url, timeout);
+    
     const Tag *tag = boost::any_cast<Tag>(&a);
-    HttpHelper helper(url, timer.remained());
-    std::string body = p[size-1]->asString(ctx);
     helper.appendHeaders(ctx->request(), proxy_, tag);
-
+    std::string body = p[size-1]->asString(ctx);
     helper.postData(body.data(), body.size());
 
     helper.perform();
     log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
+    
     helper.checkStatus();
 
     createTagInfo(helper, a);
@@ -292,9 +297,10 @@ HttpBlock::postByRequest(Context *ctx, boost::any &a) {
     }
 
     const TimeoutCounter &timer = ctx->blockTimer(this);
+    int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
-
-    HttpHelper helper(url, timer.remained());    
+    
+    HttpHelper helper(url, timeout);        
     helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     std::pair<const char*, std::streamsize> body = ctx->request()->requestBody();
@@ -302,8 +308,8 @@ HttpBlock::postByRequest(Context *ctx, boost::any &a) {
 
     helper.perform();
     log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
-    helper.checkStatus();
     
+    helper.checkStatus();
     return response(helper);
 }
 
@@ -337,16 +343,17 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
         has_query = true;
     }
 
-    const TimeoutCounter &timer = ctx->blockTimer(this);
+    const TimeoutCounter &timer = ctx->blockTimer(this);    
+    int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
 
-    HttpHelper helper(url, timer.remained());
+    HttpHelper helper(url, timeout);
     helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     helper.perform();
     log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
-    helper.checkStatus();
 
+    helper.checkStatus();
     return response(helper);
 }
 
@@ -372,15 +379,16 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
     }
 
     const TimeoutCounter &timer = ctx->blockTimer(this);
+    int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
-
-    HttpHelper helper(url, timer.remained());
+    
+    HttpHelper helper(url, timeout);
     helper.appendHeaders(ctx->request(), proxy_, NULL);
 
     helper.perform();
     log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
-    helper.checkStatus();
 
+    helper.checkStatus();
     return response(helper);
 }
 

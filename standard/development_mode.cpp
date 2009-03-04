@@ -111,7 +111,10 @@ DevelopmentMode::checkDevelopmentVariable(const Request* request, const std::str
 
 void
 DevelopmentMode::checkRemoteTimeout(RemoteTaggedBlock *block) {
-    if (!block->tagged() && !block->isDefaultRemoteTimeout()) {
+    if (block->retryCount() == 0 &&
+        !block->tagged() &&
+        !block->isDefaultRemoteTimeout()) {
+        
         throw std::runtime_error("remote timeout setup is prohibited for non-tagged blocks or when tag cache time is nil");
     }
 }

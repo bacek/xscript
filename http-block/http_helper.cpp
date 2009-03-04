@@ -16,6 +16,7 @@
 #include "xscript/string_utils.h"
 #include "xscript/range.h"
 #include "xscript/logger.h"
+#include "xscript/remote_tagged_block.h"
 #include "xscript/request.h"
 #include "internal/algorithm.h"
 
@@ -177,9 +178,7 @@ HttpHelper::base() const {
 
 void
 HttpHelper::checkStatus() const {
-
     log()->debug("%s, status: %ld", BOOST_CURRENT_FUNCTION, status_);
-
     if (status_ >= 400) {
         std::stringstream stream;
         stream << "server responded " << status_;
@@ -196,7 +195,7 @@ HttpHelper::checkStatus() const {
 void
 HttpHelper::processStatusError(const std::string& error_msg) const {
     std::string status = boost::lexical_cast<std::string>(status_);
-    InvokeError error(error_msg);
+    RetryInvokeError error(error_msg);
     error.add("status", status);
     error.addEscaped("url", url());
     throw error;

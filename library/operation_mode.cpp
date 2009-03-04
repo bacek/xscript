@@ -88,7 +88,10 @@ OperationMode::checkDevelopmentVariable(const Request* request, const std::strin
 
 void
 OperationMode::checkRemoteTimeout(RemoteTaggedBlock *block) {
-    if (!block->tagged() && !block->isDefaultRemoteTimeout()) {
+    if (block->retryCount() == 0 &&
+        !block->tagged() &&
+        !block->isDefaultRemoteTimeout()) {
+        
         block->setDefaultRemoteTimeout();
         log()->warn("remote timeout setup is prohibited for non-tagged blocks or when tag cache time is nil: %s",
                 block->owner()->name().c_str());

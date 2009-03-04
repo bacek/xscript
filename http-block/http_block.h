@@ -41,7 +41,7 @@ public:
 protected:
     virtual void postParse();
     virtual void property(const char *name, const char *value);
-    virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception);
+    virtual XmlDocHelper retryCall(Context *ctx, boost::any &a) throw (std::exception);
 
     XmlDocHelper getHttp(Context *ctx, boost::any &a);
     XmlDocHelper postHttp(Context *ctx, boost::any &a);

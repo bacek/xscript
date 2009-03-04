@@ -13,19 +13,31 @@ public:
     RemoteTaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~RemoteTaggedBlock();
 
+    virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception);
+    
     int remoteTimeout() const;
     void remoteTimeout(int timeout);
     bool isDefaultRemoteTimeout() const;
     void setDefaultRemoteTimeout();
 
     virtual int invokeTimeout() const;
+    unsigned int retryCount() const;
 
 protected:
     virtual void property(const char *name, const char *value);
+    virtual XmlDocHelper retryCall(Context *ctx, boost::any &a) throw (std::exception) = 0;
     virtual void postParse();
 
 private:
     int remote_timeout_;
+    unsigned int retry_count_;
+};
+
+class RetryInvokeError : public InvokeError {
+public:
+    RetryInvokeError(const std::string &error) : InvokeError(error) {}
+    RetryInvokeError(const std::string &error, const std::string &name, const std::string &value) :
+        InvokeError(error, name, value) {}
 };
 
 } // namespace xscript
