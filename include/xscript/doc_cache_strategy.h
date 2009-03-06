@@ -9,6 +9,7 @@
 #include <xscript/xml_helpers.h>
 #include <xscript/stat_builder.h>
 #include <xscript/average_counter.h>
+#include <xscript/tagged_cache_usage_counter.h>
 
 namespace xscript {
 
@@ -34,7 +35,7 @@ public:
     virtual time_t minimalCacheTime() const = 0;
     virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const TaggedBlock *block) const = 0;
 
-    virtual bool loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc);
+    virtual bool loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc, const TaggedBlock *block);
     virtual bool saveDoc(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);
 
     /**
@@ -52,6 +53,7 @@ protected:
     std::auto_ptr<AverageCounter> hitCounter_;
     std::auto_ptr<AverageCounter> missCounter_;
     std::auto_ptr<AverageCounter> saveCounter_;
+    std::auto_ptr<TaggedCacheUsageCounter> usageCounter_;
 };
 
 } // namespace xscript

@@ -28,14 +28,17 @@ void DocCacheStrategy::init(const Config *config) {
     hitCounter_ = AverageCounterFactory::instance()->createCounter("hits");
     missCounter_ = AverageCounterFactory::instance()->createCounter("miss");
     saveCounter_ = AverageCounterFactory::instance()->createCounter("save");
+    usageCounter_ = TaggedCacheUsageCounterFactory::instance()->createCounter("usage");
+    
     statBuilder_.addCounter(hitCounter_.get());
     statBuilder_.addCounter(missCounter_.get());
     statBuilder_.addCounter(saveCounter_.get());
+    statBuilder_.addCounter(usageCounter_.get());
 }
 
 
 
-bool DocCacheStrategy::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
+bool DocCacheStrategy::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc, const TaggedBlock *block) {
 
     //return loadDocImpl(key, tag, doc);
 
@@ -45,6 +48,8 @@ bool DocCacheStrategy::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
                                  );
     std::pair<bool, uint64_t> res = profile(f);
 
+    usageCounter_->fetched(key, block);
+    
     if (res.first)
         hitCounter_->add(res.second);
     else

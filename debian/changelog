@@ -1,3 +1,9 @@
+xscript (5.55-6) unstable; urgency=low
+
+  * tagged cache hit counter added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 06 Mar 2009 19:19:19 +0300
+
 xscript (5.55-5) unstable; urgency=low
 
   * version up
