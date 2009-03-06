@@ -62,7 +62,10 @@ TaggedCacheUsageCounterImpl::createReport() const {
     boost::mutex::scoped_lock lock(mtx_);
 
     int count = 0;
-    for(RecordIterator it = records_by_ratio_.begin(); it != records_by_ratio_.end(); ++it, ++count) {
+    for(typename RecordIterator it = records_by_ratio_.begin();
+        it != records_by_ratio_.end();
+        ++it, ++count) {
+        
         if (count == 5) {
             break;
         }
