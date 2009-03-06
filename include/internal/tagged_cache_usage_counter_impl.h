@@ -41,6 +41,7 @@ private:
     std::map<std::string, RecordInfoPtr> records_;
     std::multiset<RecordInfoPtr, RecordComparator> records_by_ratio_;
     typedef std::multiset<RecordInfoPtr, RecordComparator>::iterator RecordIterator;
+    typedef std::multiset<RecordInfoPtr, RecordComparator>::const_iterator RecordConstIterator;
 };
 
 }
