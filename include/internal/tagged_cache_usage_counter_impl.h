@@ -20,13 +20,22 @@ public:
     TaggedCacheUsageCounterImpl(const std::string& name);
     virtual XmlNodeHelper createReport() const;
 
-    void fetched(const TagKey *key, const TaggedBlock *block);
+    void fetchedHit(const TagKey *key, const TaggedBlock *block);
+    void fetchedMiss(const TagKey *key, const TaggedBlock *block);
 
-private:    
+private:
+    
+    void fetched(const TagKey *key, const TaggedBlock *block, bool is_hit);
+    
     struct RecordInfo {
-        RecordInfo() : hit_ratio_(0.0), calls_(0) {}
-        double hit_ratio_;
-        boost::uint64_t calls_;
+        RecordInfo() : hits_(0), misses_(0) {}
+        boost::uint64_t calls() {return hits_ + misses_;}
+        double hitRatio() {return (double)hits_/calls();}
+        bool isGoodHitRatio() {
+            return hitRatio() > TaggedCacheUsageCounterFactory::hitRatioLevel();
+        }
+        boost::uint64_t hits_;
+        boost::uint64_t misses_;
         std::string block_info_;
         std::set<std::string> owners_;
     };
@@ -34,7 +43,15 @@ private:
     
     struct RecordComparator {
         bool operator() (RecordInfoPtr r1, RecordInfoPtr r2) const {
-            return r1->hit_ratio_ > r2->hit_ratio_;
+            if (r1->hitRatio() > TaggedCacheUsageCounterFactory::hitRatioLevel()) {
+                return false;
+            }
+            
+            if (r2->hitRatio() > TaggedCacheUsageCounterFactory::hitRatioLevel()) {
+                return true;
+            }
+            
+            return r1->hits_ + r1->misses_ > r2->hits_ + r2->misses_;
         }
     };
     

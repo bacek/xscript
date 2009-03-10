@@ -18,22 +18,16 @@ TaggedCacheUsageCounterImpl::TaggedCacheUsageCounterImpl(const std::string& name
 }
 
 void
-TaggedCacheUsageCounterImpl::fetched(const TagKey *key, const TaggedBlock *block) {
-    boost::mutex::scoped_lock lock(mtx_);    
+TaggedCacheUsageCounterImpl::fetched(const TagKey *key, const TaggedBlock *block, bool is_hit) {
     const std::string& block_key = key->asString();    
     std::map<std::string, RecordInfoPtr>::iterator it = records_.find(block_key);
+    RecordInfoPtr record;
     if (it == records_.end()) {
-        RecordInfoPtr record(new RecordInfo());
-        record->hit_ratio_ = 0.0;
-        record->calls_ = 1;
+        record = RecordInfoPtr(new RecordInfo());
         record->block_info_ = block->name();
-        record->owners_.insert(block->owner()->name());
-        
-        records_.insert(std::make_pair(block_key, record));
-        records_by_ratio_.insert(record);
     }
     else {
-        RecordInfoPtr record = it->second;
+        record = it->second;
         records_.erase(it);
 
         std::pair<RecordIterator, RecordIterator> range = records_by_ratio_.equal_range(record);        
@@ -43,16 +37,30 @@ TaggedCacheUsageCounterImpl::fetched(const TagKey *key, const TaggedBlock *block
                 break;
             }
         }
-        
-        double t = 1.0/record->calls_;
-        record->hit_ratio_ = (record->hit_ratio_ + t)/(t + 1.0);
-        record->calls_++;
-        record->owners_.insert(block->owner()->name());
-        
-        records_.insert(std::make_pair(block_key, record));
-        records_by_ratio_.insert(record);
-    } 
+    }
+
+    if (is_hit) {
+        ++record->hits_;
+    }
+    else {
+        ++record->misses_;
+    }
     
+    record->owners_.insert(block->owner()->name());
+    records_.insert(std::make_pair(block_key, record));
+    records_by_ratio_.insert(record);
+}
+
+void
+TaggedCacheUsageCounterImpl::fetchedHit(const TagKey *key, const TaggedBlock *block) {
+    boost::mutex::scoped_lock lock(mtx_);
+    fetched(key, block, true);
+}
+
+void
+TaggedCacheUsageCounterImpl::fetchedMiss(const TagKey *key, const TaggedBlock *block) {
+    boost::mutex::scoped_lock lock(mtx_);
+    fetched(key, block, false);
 }
 
 XmlNodeHelper
@@ -61,22 +69,23 @@ TaggedCacheUsageCounterImpl::createReport() const {
     
     boost::mutex::scoped_lock lock(mtx_);
 
-    int count = 0;
+    unsigned int count = 0;
     for(RecordConstIterator it = records_by_ratio_.begin();
         it != records_by_ratio_.end();
         ++it) {
         
-        if (count++ == 5) {
+        if (count++ == TaggedCacheUsageCounterFactory::outputSize() ||
+            (*it)->hitRatio() > TaggedCacheUsageCounterFactory::hitRatioLevel()) {
             break;
         }
         
         xmlNodePtr line = xmlNewChild(root.get(), NULL, (const xmlChar*)"block", NULL);
         
         xmlSetProp(line, (const xmlChar*)"hit-ratio",
-                (const xmlChar*) boost::lexical_cast<std::string>((*it)->hit_ratio_).c_str());
+                (const xmlChar*) boost::lexical_cast<std::string>((*it)->hitRatio()).c_str());
         
         xmlSetProp(line, (const xmlChar*)"calls",
-                (const xmlChar*) boost::lexical_cast<std::string>((*it)->calls_).c_str());
+                (const xmlChar*) boost::lexical_cast<std::string>((*it)->calls()).c_str());
         
         xmlSetProp(line, (const xmlChar*) "info", (const xmlChar*)((*it)->block_info_.c_str()));
         

@@ -14,9 +14,9 @@ class TagKey;
 
 class TaggedCacheUsageCounter : public CounterBase {
 public:
-    virtual void fetched(const TagKey *key, const TaggedBlock *block) = 0;
+    virtual void fetchedHit(const TagKey *key, const TaggedBlock *block) = 0;
+    virtual void fetchedMiss(const TagKey *key, const TaggedBlock *block) = 0;
 };
-
 
 class TaggedCacheUsageCounterFactory : public Component<TaggedCacheUsageCounterFactory> {
 public:
@@ -25,6 +25,12 @@ public:
 
     virtual void init(const Config *config);      
     virtual std::auto_ptr<TaggedCacheUsageCounter> createCounter(const std::string& name, bool want_real = false);
+    static unsigned int outputSize();
+    static double hitRatioLevel();
+
+private:
+    static unsigned int output_size_;
+    static double hit_ratio_level_;
 };
 
 } // namespace xscript

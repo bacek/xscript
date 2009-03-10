@@ -9,7 +9,8 @@ namespace xscript {
  */
 class DummyTaggedCacheUsageCounter : public TaggedCacheUsageCounter {
 public:    
-    void fetched(const TagKey *key, const TaggedBlock *block);
+    void fetchedHit(const TagKey *key, const TaggedBlock *block);
+    void fetchedMiss(const TagKey *key, const TaggedBlock *block);
     virtual XmlNodeHelper createReport() const;
 };
 
