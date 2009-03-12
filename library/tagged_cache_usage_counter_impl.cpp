@@ -105,7 +105,7 @@ TaggedCacheUsageCounterImpl::createReport() const {
             owners.insert(std::make_pair(it_owner->second, it_owner->first.c_str()));
         }
         
-        for(std::map<boost::uint64_t, const char*, std::greater<boost::uint64_t> >::iterator it_owner = owners.begin();
+        for(std::multimap<boost::uint64_t, const char*, std::greater<boost::uint64_t> >::iterator it_owner = owners.begin();
             it_owner != owners.end();
             ++it_owner) {           
             xmlNodePtr owner_line = xmlNewChild(line, NULL, (const xmlChar*)"owner",
