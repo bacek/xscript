@@ -98,15 +98,15 @@ TaggedCacheUsageCounterImpl::createReport() const {
         
         xmlSetProp(line, (const xmlChar*) "info", (const xmlChar*)((*it)->block_info_.c_str()));
         
-        std::multimap<boost::uint64_t, const char*> owners;        
+        std::multimap<boost::uint64_t, const char*, std::greater<boost::uint64_t> > owners;        
         for(std::map<std::string, boost::uint64_t>::iterator it_owner = (*it)->owners_.begin();
             it_owner != (*it)->owners_.end();
             ++it_owner) {            
             owners.insert(std::make_pair(it_owner->second, it_owner->first.c_str()));
         }
         
-        for(std::map<boost::uint64_t, const char*>::reverse_iterator it_owner = owners.rbegin();
-            it_owner != owners.rend();
+        for(std::map<boost::uint64_t, const char*, std::greater<boost::uint64_t> >::iterator it_owner = owners.begin();
+            it_owner != owners.end();
             ++it_owner) {           
             xmlNodePtr owner_line = xmlNewChild(line, NULL, (const xmlChar*)"owner",
                     (const xmlChar*)it_owner->second);
