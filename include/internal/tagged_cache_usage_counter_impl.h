@@ -17,48 +17,44 @@ namespace xscript {
  */
 class TaggedCacheUsageCounterImpl : virtual public TaggedCacheUsageCounter, virtual private CounterImpl {
 public:
-    TaggedCacheUsageCounterImpl(const std::string& name);
+    TaggedCacheUsageCounterImpl(const std::string &name);
     virtual XmlNodeHelper createReport() const;
 
-    void fetchedHit(const TagKey *key, const TaggedBlock *block);
-    void fetchedMiss(const TagKey *key, const TaggedBlock *block);
+    void fetchedHit(const Context *ctx, const TaggedBlock *block);
+    void fetchedMiss(const Context *ctx, const TaggedBlock *block);
 
 private:
     
-    void fetched(const TagKey *key, const TaggedBlock *block, bool is_hit);
+    void fetched(const Context *ctx, const TaggedBlock *block, bool is_hit);
     
     struct RecordInfo {
-        RecordInfo() : hits_(0), misses_(0) {}
-        boost::uint64_t calls() {return hits_ + misses_;}
-        double hitRatio() {return (double)hits_/calls();}
-        bool isGoodHitRatio() {
-            return hitRatio() > TaggedCacheUsageCounterFactory::hitRatioLevel();
-        }
+        RecordInfo();
+        RecordInfo(const std::string &block_info);
+        
+        boost::uint64_t calls();
+        double hitRatio();
+        bool isGoodHitRatio();
+        
         boost::uint64_t hits_;
         boost::uint64_t misses_;
         std::string block_info_;
-        std::set<std::string> owners_;
+        time_t last_call_time_;
+        std::map<std::string, boost::uint64_t> owners_;
     };
     typedef boost::shared_ptr<RecordInfo> RecordInfoPtr;
     
     struct RecordComparator {
-        bool operator() (RecordInfoPtr r1, RecordInfoPtr r2) const {
-            if (r1->hitRatio() > TaggedCacheUsageCounterFactory::hitRatioLevel()) {
-                return false;
-            }
-            
-            if (r2->hitRatio() > TaggedCacheUsageCounterFactory::hitRatioLevel()) {
-                return true;
-            }
-            
-            return r1->hits_ + r1->misses_ > r2->hits_ + r2->misses_;
-        }
+        bool operator() (RecordInfoPtr r1, RecordInfoPtr r2) const;        
+    };    
+    struct RecordHitComparator {
+        bool operator() (RecordInfoPtr r1, RecordInfoPtr r2) const;
     };
     
-    std::map<std::string, RecordInfoPtr> records_;
-    std::multiset<RecordInfoPtr, RecordComparator> records_by_ratio_;
-    typedef std::multiset<RecordInfoPtr, RecordComparator>::iterator RecordIterator;
-    typedef std::multiset<RecordInfoPtr, RecordComparator>::const_iterator RecordConstIterator;
+    std::set<RecordInfoPtr, RecordComparator> records_;
+    std::multiset<RecordInfoPtr, RecordHitComparator> records_by_ratio_;
+    typedef std::set<RecordInfoPtr, RecordComparator>::iterator RecordIterator;
+    typedef std::multiset<RecordInfoPtr, RecordHitComparator>::iterator RecordHitIterator;
+    typedef std::multiset<RecordInfoPtr, RecordHitComparator>::const_iterator RecordHitConstIterator;
 };
 
 }

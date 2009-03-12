@@ -26,6 +26,7 @@ public:
     SimpleParam(Object *owner, xmlNodePtr node);
     virtual ~SimpleParam();
 
+    virtual const char* type() const;
     T typedValue() const;
     virtual std::string asString(const Context *ctx) const;
     virtual void add(const Context *ctx, ArgList &al) const;
@@ -86,6 +87,51 @@ SimpleParam<T>::SimpleParam(Object *owner, xmlNodePtr node) :
 
 template<typename T>
 SimpleParam<T>::~SimpleParam() {
+}
+
+template<typename T> const char*
+SimpleParam<T>::type() const {
+    throw std::logic_error("Undefined simple param type");
+}
+
+template<> const char*
+SimpleParam<bool>::type() const {
+    return "boolean";
+}
+
+template<> const char*
+SimpleParam<float>::type() const {
+    return "float";
+}
+
+template<> const char*
+SimpleParam<double>::type() const {
+    return "double";
+}
+
+template<> const char*
+SimpleParam<std::string>::type() const {
+    return "string";
+}
+
+template<> const char*
+SimpleParam<boost::int32_t>::type() const {
+    return "long";
+}
+
+template<> const char*
+SimpleParam<boost::uint32_t>::type() const {
+    return "unsigned long";
+}
+
+template<> const char*
+SimpleParam<boost::int64_t>::type() const {
+    return "long long";
+}
+
+template<> const char*
+SimpleParam<boost::uint64_t>::type() const {
+    return "unsigned long long";
 }
 
 template<typename T> T

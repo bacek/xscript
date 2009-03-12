@@ -19,6 +19,7 @@ public:
 
     virtual void parse();
 
+    virtual const char* type() const;
     virtual std::string asString(const Context *ctx) const;
     virtual void add(const Context *ctx, ArgList &al) const;
 
@@ -31,6 +32,11 @@ HostnameParam::HostnameParam(Object *owner, xmlNodePtr node) :
 }
 
 HostnameParam::~HostnameParam() {
+}
+
+const char*
+HostnameParam::type() const {
+    return "Hostname";
 }
 
 void

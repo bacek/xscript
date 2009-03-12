@@ -12,6 +12,7 @@ public:
     TagParam(TaggedBlock *owner, xmlNodePtr node);
     virtual ~TagParam();
 
+    virtual const char* type() const;
     virtual std::string asString(const Context *ctx) const;
     virtual void add(const Context *ctx, ArgList &al) const;
 

@@ -20,6 +20,7 @@ public:
     virtual void tagged(bool tagged);
     virtual time_t cacheTime() const;
     virtual void cacheTime(time_t cache_time);
+    virtual std::string info(const Context *ctx) const;
 
 protected:
     virtual void processParam(std::auto_ptr<Param> p);

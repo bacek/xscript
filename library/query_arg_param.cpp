@@ -15,6 +15,7 @@ public:
     QueryArgParam(Object *owner, xmlNodePtr node);
     virtual ~QueryArgParam();
 
+    virtual const char* type() const;
     virtual std::string asString(const Context *ctx) const;
 
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
@@ -25,6 +26,11 @@ QueryArgParam::QueryArgParam(Object *owner, xmlNodePtr node) :
 }
 
 QueryArgParam::~QueryArgParam() {
+}
+
+const char*
+QueryArgParam::type() const {
+    return "QueryArg";
 }
 
 std::string

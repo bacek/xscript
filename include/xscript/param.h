@@ -28,6 +28,7 @@ public:
         return id_;
     }
 
+    virtual const char* type() const = 0;
     virtual const std::string& value() const;
 
     virtual std::string asString(const Context *ctx) const = 0;

@@ -14,6 +14,7 @@ public:
     CookieParam(Object *owner, xmlNodePtr node);
     virtual ~CookieParam();
 
+    virtual const char* type() const;
     virtual std::string asString(const Context *ctx) const;
 
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
@@ -24,6 +25,11 @@ CookieParam::CookieParam(Object *owner, xmlNodePtr node) :
 }
 
 CookieParam::~CookieParam() {
+}
+
+const char*
+CookieParam::type() const {
+    return "Cookie";
 }
 
 std::string

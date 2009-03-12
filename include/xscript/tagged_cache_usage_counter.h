@@ -9,13 +9,13 @@
 
 namespace xscript {
 
+class Context;
 class TaggedBlock;
-class TagKey;
 
 class TaggedCacheUsageCounter : public CounterBase {
 public:
-    virtual void fetchedHit(const TagKey *key, const TaggedBlock *block) = 0;
-    virtual void fetchedMiss(const TagKey *key, const TaggedBlock *block) = 0;
+    virtual void fetchedHit(const Context *ctx, const TaggedBlock *block) = 0;
+    virtual void fetchedMiss(const Context *ctx, const TaggedBlock *block) = 0;
 };
 
 class TaggedCacheUsageCounterFactory : public Component<TaggedCacheUsageCounterFactory> {
@@ -27,10 +27,12 @@ public:
     virtual std::auto_ptr<TaggedCacheUsageCounter> createCounter(const std::string& name, bool want_real = false);
     static unsigned int outputSize();
     static double hitRatioLevel();
+    static time_t storeTime();
 
 private:
     static unsigned int output_size_;
     static double hit_ratio_level_;
+    static time_t store_time_;
 };
 
 } // namespace xscript

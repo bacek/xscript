@@ -210,4 +210,52 @@ TaggedBlock::cacheTimeUndefined() const {
     return cache_time_ == CACHE_TIME_UNDEFINED;
 }
 
+std::string
+TaggedBlock::info(const Context *ctx) const {
+    
+    std::string info = canonicalMethod(ctx);
+    
+    const std::string& xslt = xsltName();
+    if (!xslt.empty()) {        
+        info.append(" | Xslt: ");
+        info.append(xslt);
+    }
+
+    const std::vector<Param*> &block_params = params();
+    if (!block_params.empty()) {
+        info.append(" | Params: ");
+        for (unsigned int i = 0, n = block_params.size(); i < n; ++i) {
+            if (i > 0) {
+                info.append(", ");
+            }
+            info.append(block_params[i]->type());
+            const std::string& value =  block_params[i]->value();
+            if (!value.empty()) {
+                info.push_back('(');
+                info.append(value);
+                info.push_back(')');
+            }            
+        }
+    }
+    
+    const std::vector<Param*> &xslt_params = xsltParams();
+    if (!xslt_params.empty()) {
+        info.append(" | Xslt-Params: ");
+        for (unsigned int i = 0, n = xslt_params.size(); i < n; ++i) {
+            if (i > 0) {
+                info.append(", ");
+            }
+            info.append(xslt_params[i]->type());
+            const std::string& value =  xslt_params[i]->value();
+            if (!value.empty()) {
+                info.push_back('(');
+                info.append(value);
+                info.push_back(')');
+            }            
+        }
+    }
+    
+    return info;
+}
+
 } // namespace xscript

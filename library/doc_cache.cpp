@@ -73,7 +73,7 @@ DocCache::loadDoc(const Context *ctx, const TaggedBlock *block, Tag &tag, XmlDoc
     std::vector<DocCacheStrategy*>::iterator i = strategies_.begin();
     while ( !loaded && i != strategies_.end()) {
         std::auto_ptr<TagKey> key = (*i)->createKey(ctx, block);
-        loaded = (*i)->loadDoc(key.get(), tag, doc, block);
+        loaded = (*i)->loadDoc(key.get(), tag, doc, ctx, block);
         ++i;
     }
 

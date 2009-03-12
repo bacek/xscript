@@ -13,32 +13,33 @@
 
 namespace xscript {
 
-TaggedCacheUsageCounterImpl::TaggedCacheUsageCounterImpl(const std::string& name)
+TaggedCacheUsageCounterImpl::TaggedCacheUsageCounterImpl(const std::string &name)
         : CounterImpl(name) {
 }
 
 void
-TaggedCacheUsageCounterImpl::fetched(const TagKey *key, const TaggedBlock *block, bool is_hit) {
-    const std::string& block_key = key->asString();    
-    std::map<std::string, RecordInfoPtr>::iterator it = records_.find(block_key);
-    RecordInfoPtr record;
-    if (it == records_.end()) {
-        record = RecordInfoPtr(new RecordInfo());
-        record->block_info_ = block->name();
-    }
-    else {
-        record = it->second;
+TaggedCacheUsageCounterImpl::fetched(const Context *ctx, const TaggedBlock *block, bool is_hit) {
+    RecordInfoPtr record(new RecordInfo(block->info(ctx)));
+    RecordIterator it = records_.find(record);
+    time_t now = time(NULL);
+    if (it != records_.end()) {
+        if (now - (*it)->last_call_time_ < TaggedCacheUsageCounterFactory::storeTime()) {
+            record = *it;            
+        } 
+        
         records_.erase(it);
 
-        std::pair<RecordIterator, RecordIterator> range = records_by_ratio_.equal_range(record);        
-        for(RecordIterator rit = range.first; rit != range.second; ++rit) {
-            if (rit->get() == record.get()) {
+        std::pair<RecordHitIterator, RecordHitIterator> range = records_by_ratio_.equal_range(*it);        
+        for(RecordHitIterator rit = range.first; rit != range.second; ++rit) {
+            if (rit->get() == it->get()) {
                 records_by_ratio_.erase(rit);
                 break;
             }
         }
     }
 
+    record->last_call_time_ = now;
+    
     if (is_hit) {
         ++record->hits_;
     }
@@ -46,21 +47,29 @@ TaggedCacheUsageCounterImpl::fetched(const TagKey *key, const TaggedBlock *block
         ++record->misses_;
     }
     
-    record->owners_.insert(block->owner()->name());
-    records_.insert(std::make_pair(block_key, record));
+    const std::string& owner_name = block->owner()->name();
+    std::map<std::string, boost::uint64_t>::iterator it_owner = record->owners_.find(owner_name);
+    if (it_owner == record->owners_.end()) {
+        record->owners_.insert(std::make_pair(owner_name, 1));
+    }
+    else {
+        ++(it_owner->second);
+    }
+    
+    records_.insert(record);
     records_by_ratio_.insert(record);
 }
 
 void
-TaggedCacheUsageCounterImpl::fetchedHit(const TagKey *key, const TaggedBlock *block) {
+TaggedCacheUsageCounterImpl::fetchedHit(const Context *ctx, const TaggedBlock *block) {
     boost::mutex::scoped_lock lock(mtx_);
-    fetched(key, block, true);
+    fetched(ctx, block, true);
 }
 
 void
-TaggedCacheUsageCounterImpl::fetchedMiss(const TagKey *key, const TaggedBlock *block) {
+TaggedCacheUsageCounterImpl::fetchedMiss(const Context *ctx, const TaggedBlock *block) {
     boost::mutex::scoped_lock lock(mtx_);
-    fetched(key, block, false);
+    fetched(ctx, block, false);
 }
 
 XmlNodeHelper
@@ -70,7 +79,7 @@ TaggedCacheUsageCounterImpl::createReport() const {
     boost::mutex::scoped_lock lock(mtx_);
 
     unsigned int count = 0;
-    for(RecordConstIterator it = records_by_ratio_.begin();
+    for(RecordHitConstIterator it = records_by_ratio_.begin();
         it != records_by_ratio_.end();
         ++it) {
         
@@ -89,14 +98,66 @@ TaggedCacheUsageCounterImpl::createReport() const {
         
         xmlSetProp(line, (const xmlChar*) "info", (const xmlChar*)((*it)->block_info_.c_str()));
         
-        for(std::set<std::string>::iterator it_owner = (*it)->owners_.begin();
+        std::multimap<boost::uint64_t, const char*> owners;        
+        for(std::map<std::string, boost::uint64_t>::iterator it_owner = (*it)->owners_.begin();
             it_owner != (*it)->owners_.end();
-            ++it_owner) {
-            xmlNewTextChild(line, NULL, (const xmlChar*)"owner", (const xmlChar*)it_owner->c_str());
+            ++it_owner) {            
+            owners.insert(std::make_pair(it_owner->second, it_owner->first.c_str()));
+        }
+        
+        for(std::map<boost::uint64_t, const char*>::reverse_iterator it_owner = owners.rbegin();
+            it_owner != owners.rend();
+            ++it_owner) {           
+            xmlNodePtr owner_line = xmlNewChild(line, NULL, (const xmlChar*)"owner",
+                    (const xmlChar*)it_owner->second);
+            
+            xmlSetProp(owner_line, (const xmlChar*)"calls",
+                    (const xmlChar*) boost::lexical_cast<std::string>(it_owner->first).c_str());
         }
     }
 
     return root;
 }
+
+TaggedCacheUsageCounterImpl::RecordInfo::RecordInfo() :
+    hits_(0), misses_(0), last_call_time_(0)
+{}
+
+TaggedCacheUsageCounterImpl::RecordInfo::RecordInfo(const std::string &block_info) :
+    hits_(0), misses_(0), block_info_(block_info), last_call_time_(0)
+{}
+
+boost::uint64_t
+TaggedCacheUsageCounterImpl::RecordInfo::calls() {
+    return hits_ + misses_;
+}
+
+double
+TaggedCacheUsageCounterImpl::RecordInfo::hitRatio() {
+    return (double)hits_/calls();
+}
+
+bool
+TaggedCacheUsageCounterImpl::RecordInfo::isGoodHitRatio() {
+    return hitRatio() > TaggedCacheUsageCounterFactory::hitRatioLevel();
+}
+
+
+bool
+TaggedCacheUsageCounterImpl::RecordComparator::operator() (RecordInfoPtr r1, RecordInfoPtr r2) const {
+    return r1->block_info_ < r2->block_info_;
+}        
+
+bool
+TaggedCacheUsageCounterImpl::RecordHitComparator::operator() (RecordInfoPtr r1, RecordInfoPtr r2) const {
+    if (r1->hitRatio() > TaggedCacheUsageCounterFactory::hitRatioLevel()) {
+        return false;
+    }            
+    if (r2->hitRatio() > TaggedCacheUsageCounterFactory::hitRatioLevel()) {
+        return true;
+    }            
+    return r1->calls() > r2->calls();
+}
+
 
 }

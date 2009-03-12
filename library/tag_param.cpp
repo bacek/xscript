@@ -24,6 +24,11 @@ TagParam::TagParam(TaggedBlock *owner, xmlNodePtr node) :
 TagParam::~TagParam() {
 }
 
+const char*
+TagParam::type() const {
+    return "Tag";
+}
+
 std::string
 TagParam::asString(const Context *ctx) const {
     (void)ctx;

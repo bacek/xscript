@@ -15,6 +15,7 @@ public:
     RequestParam(Object *owner, xmlNodePtr node);
     virtual ~RequestParam();
 
+    virtual const char* type() const;
     virtual std::string asString(const Context *ctx) const;
     virtual void add(const Context *ctx, ArgList &al) const;
 
@@ -26,6 +27,11 @@ RequestParam::RequestParam(Object *owner, xmlNodePtr node) :
 }
 
 RequestParam::~RequestParam() {
+}
+
+const char*
+RequestParam::type() const {
+    return "Request";
 }
 
 std::string

@@ -15,6 +15,7 @@ public:
     ProtocolArgParam(Object *owner, xmlNodePtr node);
     virtual ~ProtocolArgParam();
 
+    virtual const char* type() const;
     virtual std::string asString(const Context *ctx) const;
 
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
@@ -25,6 +26,11 @@ ProtocolArgParam::ProtocolArgParam(Object *owner, xmlNodePtr node) :
 }
 
 ProtocolArgParam::~ProtocolArgParam() {
+}
+
+const char*
+ProtocolArgParam::type() const {
+    return "ProtocolArg";
 }
 
 std::string

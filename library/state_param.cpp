@@ -19,6 +19,7 @@ public:
     StateParam(Object *owner, xmlNodePtr node);
     virtual ~StateParam();
 
+    virtual const char* type() const;
     virtual std::string asString(const Context *ctx) const;
     virtual void add(const Context *ctx, ArgList &al) const;
 
@@ -30,6 +31,11 @@ StateParam::StateParam(Object *owner, xmlNodePtr node) :
 }
 
 StateParam::~StateParam() {
+}
+
+const char*
+StateParam::type() const {
+    return "State";
 }
 
 std::string

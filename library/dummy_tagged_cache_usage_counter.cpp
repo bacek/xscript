@@ -8,14 +8,14 @@
 namespace xscript {
 
 void
-DummyTaggedCacheUsageCounter::fetchedHit(const TagKey *key, const TaggedBlock *block) {
-    (void)key;
+DummyTaggedCacheUsageCounter::fetchedHit(const Context *ctx, const TaggedBlock *block) {
+    (void)ctx;
     (void)block;
 }
 
 void
-DummyTaggedCacheUsageCounter::fetchedMiss(const TagKey *key, const TaggedBlock *block) {
-    (void)key;
+DummyTaggedCacheUsageCounter::fetchedMiss(const Context *ctx, const TaggedBlock *block) {
+    (void)ctx;
     (void)block;
 }
 

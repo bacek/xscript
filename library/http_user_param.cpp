@@ -16,6 +16,7 @@ public:
     HttpUserParam(Object *owner, xmlNodePtr node);
     virtual ~HttpUserParam();
 
+    virtual const char* type() const;
     virtual std::string asString(const Context *ctx) const;
     virtual void add(const Context *ctx, ArgList &al) const;
 
@@ -28,6 +29,11 @@ HttpUserParam::HttpUserParam(Object *owner, xmlNodePtr node) :
 }
 
 HttpUserParam::~HttpUserParam() {
+}
+
+const char*
+HttpUserParam::type() const {
+    return "HttpUser";
 }
 
 std::string

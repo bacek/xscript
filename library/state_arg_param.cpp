@@ -15,6 +15,7 @@ public:
     StateArgParam(Object *owner, xmlNodePtr node);
     virtual ~StateArgParam();
 
+    virtual const char* type() const;
     virtual std::string asString(const Context *ctx) const;
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
 
@@ -25,6 +26,11 @@ StateArgParam::StateArgParam(Object *owner, xmlNodePtr node) :
 }
 
 StateArgParam::~StateArgParam() {
+}
+
+const char*
+StateArgParam::type() const {
+    return "StateArg";
 }
 
 std::string

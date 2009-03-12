@@ -38,7 +38,11 @@ void DocCacheStrategy::init(const Config *config) {
 
 
 
-bool DocCacheStrategy::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc, const TaggedBlock *block) {
+bool DocCacheStrategy::loadDoc(const TagKey *key,
+                               Tag &tag,
+                               XmlDocHelper &doc,
+                               const Context *ctx,
+                               const TaggedBlock *block) {
 
     //return loadDocImpl(key, tag, doc);
 
@@ -49,11 +53,11 @@ bool DocCacheStrategy::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc, c
     std::pair<bool, uint64_t> res = profile(f);
     
     if (res.first) {
-        usageCounter_->fetchedHit(key, block);
+        usageCounter_->fetchedHit(ctx, block);
         hitCounter_->add(res.second);
     }
     else {
-        usageCounter_->fetchedMiss(key, block);
+        usageCounter_->fetchedMiss(ctx, block);
         missCounter_->add(res.second);
     }
     return res.first;
