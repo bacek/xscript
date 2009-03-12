@@ -27,11 +27,12 @@ TaggedCacheUsageCounterImpl::fetched(const Context *ctx, const TaggedBlock *bloc
             record = *it;            
         } 
         
+        RecordInfoPtr record_holder = *it;
         records_.erase(it);
 
-        std::pair<RecordHitIterator, RecordHitIterator> range = records_by_ratio_.equal_range(*it);        
+        std::pair<RecordHitIterator, RecordHitIterator> range = records_by_ratio_.equal_range(record_holder);        
         for(RecordHitIterator rit = range.first; rit != range.second; ++rit) {
-            if (rit->get() == it->get()) {
+            if (rit->get() == record_holder.get()) {
                 records_by_ratio_.erase(rit);
                 break;
             }
