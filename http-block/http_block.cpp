@@ -430,7 +430,7 @@ HttpBlock::checkTimeout(const TimeoutCounter &timer, const std::string &url) {
     if (timer.remained() > 0) {
         return;
     }
-    InvokeError error("block is timed out", "url", url);
+    RetryInvokeError error("block is timed out", "url", url);
     error.add("timeout", boost::lexical_cast<std::string>(timer.timeout()));
     throw error;
 }
