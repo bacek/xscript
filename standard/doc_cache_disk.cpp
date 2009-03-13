@@ -117,32 +117,26 @@ TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const TaggedBlock *block) {
             throw std::runtime_error("Cannot stat stylesheet " + xslt);
         }
     }
+    value_.append(boost::lexical_cast<std::string>(block->cacheTime()));
+    value_.push_back('|');
     value_.append(block->canonicalMethod(ctx));
 
-    boost::uint32_t method_sum = HashUtils::crc32(value_);
-
-    std::string param_str;
     const std::vector<Param*> &params = block->params();
     for (unsigned int i = 0, n = params.size(); i < n; ++i) {
-        param_str.append(1, ':').append(params[i]->asString(ctx));
+        value_.append(1, ':').append(params[i]->asString(ctx));
     }
-
     const std::vector<Param*> &xslt_params = block->xsltParams();
     for (unsigned int i = 0, n = xslt_params.size(); i < n; ++i) {
-        param_str.append(1, ':').append(xslt_params[i]->id());
-        param_str.append(1, ':').append(xslt_params[i]->asString(ctx));
+        value_.append(1, ':').append(xslt_params[i]->id());
+        value_.append(1, ':').append(xslt_params[i]->asString(ctx));
     }
 
-    boost::uint32_t params_sum = HashUtils::crc32(param_str);
-
+    std::string hash = HashUtils::hexMD5(value_.c_str(), value_.length());
+    number_ = HashUtils::crc32(hash) & 0xFF;
+    
     char buf[255];
-    boost::uint32_t common = method_sum ^ params_sum;
-
-    number_ = common & 0xFF;
-    snprintf(buf, sizeof(buf), "%02x/%08x%08x", number_, method_sum, params_sum);
-
+    snprintf(buf, sizeof(buf), "%02x/%s", number_, hash.c_str());
     filename_.assign(buf);
-    value_.append(param_str);
 }
 
 boost::uint32_t

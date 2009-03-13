@@ -26,6 +26,8 @@ TagKeyMemory::TagKeyMemory(const Context *ctx, const TaggedBlock *block) : value
             throw std::runtime_error("Cannot stat stylesheet " + xslt);
         }
     }
+    value_.append(boost::lexical_cast<std::string>(block->cacheTime()));
+    value_.push_back('|');
     value_.append(block->canonicalMethod(ctx));
 
     const std::vector<Param*> &params = block->params();
