@@ -258,7 +258,7 @@ void
 HttpHelper::check(CURLcode code) const {
     if (CURLE_OK != code) {
         std::string error_msg(curl_easy_strerror(code));
-        throw InvokeError(error_msg, "url", url());
+        throw RetryInvokeError(error_msg, "url", url());
     }
 }
 
