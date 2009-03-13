@@ -550,10 +550,19 @@ Script::useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const
         xmlUnlinkNode(newnode);
         return;
     }
-    xmlNodePtr last_input_node = xmlCopyNode(nodeset->nodeTab[0], 1);
+    
+    xmlNodePtr current_node = nodeset->nodeTab[0];    
+    if (XML_ATTRIBUTE_NODE == current_node->type) {
+        current_node = current_node->children;
+    }    
+    xmlNodePtr last_input_node = xmlCopyNode(current_node, 1);         
     xmlReplaceNode(newnode, last_input_node);
     for (int i = 1; i < nodeset->nodeNr; ++i) {
-        xmlNodePtr insert_node = xmlCopyNode(nodeset->nodeTab[i], 1);
+        xmlNodePtr current_node = nodeset->nodeTab[i];    
+        if (XML_ATTRIBUTE_NODE == current_node->type) {
+            current_node = current_node->children;
+        }                
+        xmlNodePtr insert_node = xmlCopyNode(current_node, 1);         
         xmlAddNextSibling(last_input_node, insert_node);
         last_input_node = insert_node;
     }
