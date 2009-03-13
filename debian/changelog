@@ -1,3 +1,10 @@
+xscript (5.55-12) unstable; urgency=low
+
+  * retrying fixed in http
+  * xpointer fixed for attributes fetching
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 13 Mar 2009 13:09:28 +0300
+
 xscript (5.55-11) unstable; urgency=low
 
   * TaggedCacheUsageCounterImpl::fetched fixed
