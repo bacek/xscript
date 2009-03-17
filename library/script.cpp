@@ -217,6 +217,10 @@ Script::create(const std::string &name) {
 boost::shared_ptr<Script>
 Script::create(const std::string &name, const std::string &xml) {
 
+    if (!xml.empty()) {
+        return createWithParse(name, xml);
+    }
+    
     ScriptCache *cache = ScriptCache::instance();
     boost::shared_ptr<Script> script = cache->fetch(name);
     if (NULL != script.get()) {
@@ -241,7 +245,9 @@ boost::shared_ptr<Script>
 Script::createWithParse(const std::string &name, const std::string &xml) {
     boost::shared_ptr<Script> script = ScriptFactory::instance()->create(name);
     script->parse(xml);
-    ScriptCache::instance()->store(name, script);
+    if (xml.empty()) {
+        ScriptCache::instance()->store(name, script);
+    }
     return script;
 }
 
