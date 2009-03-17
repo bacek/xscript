@@ -7,6 +7,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "xscript/refresher.h"
 #include "xscript/tagged_cache_usage_counter.h"
 #include "internal/counter_impl.h"
 
@@ -26,6 +27,7 @@ public:
 private:
     
     void fetched(const Context *ctx, const TaggedBlock *block, bool is_hit);
+    void refresh();
     
     struct RecordInfo {
         RecordInfo();
@@ -41,6 +43,7 @@ private:
         time_t last_call_time_;
         std::map<std::string, boost::uint64_t> owners_;
     };
+    
     typedef boost::shared_ptr<RecordInfo> RecordInfoPtr;
     
     struct RecordComparator {
@@ -50,11 +53,16 @@ private:
         bool operator() (RecordInfoPtr r1, RecordInfoPtr r2) const;
     };
     
-    std::set<RecordInfoPtr, RecordComparator> records_;
-    std::multiset<RecordInfoPtr, RecordHitComparator> records_by_ratio_;
     typedef std::set<RecordInfoPtr, RecordComparator>::iterator RecordIterator;
     typedef std::multiset<RecordInfoPtr, RecordHitComparator>::iterator RecordHitIterator;
     typedef std::multiset<RecordInfoPtr, RecordHitComparator>::const_iterator RecordHitConstIterator;
+    
+    void eraseRecord(RecordIterator it);
+    
+    std::auto_ptr<Refresher> refresher_;
+    std::set<RecordInfoPtr, RecordComparator> records_;
+    std::multiset<RecordInfoPtr, RecordHitComparator> records_by_ratio_;
+
 };
 
 }

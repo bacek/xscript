@@ -15,31 +15,20 @@ namespace xscript {
 
 TaggedCacheUsageCounterImpl::TaggedCacheUsageCounterImpl(const std::string &name)
         : CounterImpl(name) {
+    boost::function<void()> func = boost::bind(&TaggedCacheUsageCounterImpl::refresh, this);
+    refresher_.reset(new Refresher(func, TaggedCacheUsageCounterFactory::refreshTime()));
 }
 
 void
 TaggedCacheUsageCounterImpl::fetched(const Context *ctx, const TaggedBlock *block, bool is_hit) {
     RecordInfoPtr record(new RecordInfo(block->info(ctx)));
     RecordIterator it = records_.find(record);
-    time_t now = time(NULL);
     if (it != records_.end()) {
-        if (now - (*it)->last_call_time_ < TaggedCacheUsageCounterFactory::storeTime()) {
-            record = *it;            
-        } 
-        
-        RecordInfoPtr record_holder = *it;
-        records_.erase(it);
-
-        std::pair<RecordHitIterator, RecordHitIterator> range = records_by_ratio_.equal_range(record_holder);        
-        for(RecordHitIterator rit = range.first; rit != range.second; ++rit) {
-            if (rit->get() == record_holder.get()) {
-                records_by_ratio_.erase(rit);
-                break;
-            }
-        }
+        record = *it;
+        eraseRecord(it);
     }
 
-    record->last_call_time_ = now;
+    record->last_call_time_ = time(NULL);
     
     if (is_hit) {
         ++record->hits_;
@@ -118,6 +107,32 @@ TaggedCacheUsageCounterImpl::createReport() const {
     }
 
     return root;
+}
+
+void
+TaggedCacheUsageCounterImpl::refresh() {
+    boost::mutex::scoped_lock lock(mtx_);
+    
+    time_t now = time(NULL);
+    for(RecordIterator it = records_.begin(); it != records_.end(); ++it) {        
+        if (now - (*it)->last_call_time_ <= TaggedCacheUsageCounterFactory::maxIdleTime()) {
+            continue;
+        }
+        eraseRecord(it);
+    }
+}
+
+void
+TaggedCacheUsageCounterImpl::eraseRecord(RecordIterator it) {
+    std::pair<RecordHitIterator, RecordHitIterator> range = records_by_ratio_.equal_range(*it);        
+    for(RecordHitIterator rit = range.first; rit != range.second; ++rit) {
+        if (rit->get() == it->get()) {
+            records_by_ratio_.erase(rit);
+            break;
+        }
+    }
+    
+    records_.erase(it);
 }
 
 TaggedCacheUsageCounterImpl::RecordInfo::RecordInfo() :

@@ -1,3 +1,9 @@
+xscript (5.55-15) unstable; urgency=low
+
+  * cleaning thread added to TaggedCache usage counter
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 17 Mar 2009 18:13:03 +0300
+
 xscript (5.55-14) unstable; urgency=low
 
   * forbid script cache using for render buffer mode
