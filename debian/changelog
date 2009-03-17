@@ -1,3 +1,9 @@
+xscript (5.55-13) unstable; urgency=low
+
+  * cached-time used in tag calculation
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 17 Mar 2009 10:24:16 +0300
+
 xscript (5.55-12) unstable; urgency=low
 
   * retrying fixed in http
