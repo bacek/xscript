@@ -27,14 +27,14 @@ public:
     virtual std::auto_ptr<TaggedCacheUsageCounter> createCounter(const std::string& name, bool want_real = false);
     static unsigned int outputSize();
     static double hitRatioLevel();
-    static time_t refreshTime();
-    static time_t maxIdleTime();
+    static boost::uint32_t refreshTime();
+    static boost::uint32_t maxIdleTime();
 
 private:
     static unsigned int output_size_;
     static double hit_ratio_level_;
-    static time_t refresh_time_;
-    static time_t max_idle_time_;
+    static boost::uint32_t refresh_time_;
+    static boost::uint32_t max_idle_time_;
 };
 
 } // namespace xscript

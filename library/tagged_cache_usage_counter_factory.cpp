@@ -14,8 +14,8 @@ namespace xscript
 
 double TaggedCacheUsageCounterFactory::hit_ratio_level_;
 unsigned int TaggedCacheUsageCounterFactory::output_size_;
-time_t TaggedCacheUsageCounterFactory::refresh_time_;
-time_t TaggedCacheUsageCounterFactory::max_idle_time_;
+boost::uint32_t TaggedCacheUsageCounterFactory::refresh_time_;
+boost::uint32_t TaggedCacheUsageCounterFactory::max_idle_time_;
 
 TaggedCacheUsageCounterFactory::TaggedCacheUsageCounterFactory() {
 } 
@@ -27,8 +27,9 @@ void
 TaggedCacheUsageCounterFactory::init(const Config *config) {
     output_size_ = config->as<unsigned int>("/xscript/statistics/tagged-cache/output-size", 20);
     hit_ratio_level_ = config->as<double>("/xscript/statistics/tagged-cache/hit-ratio-level", 0.3);
-    refresh_time_ = std::max(config->as<time_t>("/xscript/statistics/tagged-cache/refresh-time", 60), (time_t)30);
-    max_idle_time_ = config->as<time_t>("/xscript/statistics/tagged-cache/max-idle-time", 600);
+    refresh_time_ = std::max(config->as<boost::uint32_t>("/xscript/statistics/tagged-cache/refresh-time", 60),
+                             static_cast<boost::uint32_t>(30));
+    max_idle_time_ = config->as<boost::uint32_t>("/xscript/statistics/tagged-cache/max-idle-time", 600);
 }
 
 std::auto_ptr<TaggedCacheUsageCounter>
@@ -51,12 +52,12 @@ TaggedCacheUsageCounterFactory::hitRatioLevel() {
     return hit_ratio_level_;
 }
 
-time_t
+boost::uint32_t
 TaggedCacheUsageCounterFactory::refreshTime() {
     return refresh_time_;
 }
 
-time_t
+boost::uint32_t
 TaggedCacheUsageCounterFactory::maxIdleTime() {
     return max_idle_time_;
 }

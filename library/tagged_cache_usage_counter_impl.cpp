@@ -115,7 +115,7 @@ TaggedCacheUsageCounterImpl::refresh() {
     
     time_t now = time(NULL);
     for(RecordIterator it = records_.begin(); it != records_.end(); ++it) {        
-        if (now - (*it)->last_call_time_ <= TaggedCacheUsageCounterFactory::maxIdleTime()) {
+        if (now - (*it)->last_call_time_ <= (time_t)TaggedCacheUsageCounterFactory::maxIdleTime()) {
             continue;
         }
         eraseRecord(it);
