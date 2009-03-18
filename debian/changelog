@@ -1,3 +1,9 @@
+xscript (5.55-17) unstable; urgency=low
+
+  * added exceptions to python binding
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 18 Mar 2009 18:03:20 +0300
+
 xscript (5.55-16) unstable; urgency=low
 
   * VHostArg param added

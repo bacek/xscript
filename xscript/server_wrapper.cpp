@@ -1,4 +1,5 @@
 #include <memory>
+#include <stdexcept>
 #include <string>
 
 #include "xscript/config.h"
@@ -13,18 +14,17 @@ namespace {
     std::auto_ptr<xscript::Config> config;
 }
 
-bool
+namespace xscript {
+namespace offline {
+
+void
 initialize(const char *config_path) {
-    try {
-        xscript::initAllocationStatistic();
-        server.reset(NULL);
-        config = xscript::Config::create(config_path);
-        server.reset(new xscript::OfflineServer(config.get()));
-        return true;
+    if (server.get()) {
+        throw std::runtime_error("server is already initialized");
     }
-    catch (...) {
-        return false;
-    }
+    xscript::initAllocationStatistic();
+    config = xscript::Config::create(config_path);
+    server.reset(new xscript::OfflineServer(config.get()));
 }
 
 std::string
@@ -33,30 +33,21 @@ renderBuffer(const std::string &url,
              const std::string &body,
              const std::string &headers,
              const std::string &vars) {
-    try {
-        if (!server.get()) {
-            return xscript::StringUtils::EMPTY_STRING;
-        }
-        return server->renderBuffer(url, xml, body, headers, vars);
+    if (!server.get()) {
+        throw std::runtime_error("server is not initialized");
     }
-    catch (...) {
-        return xscript::StringUtils::EMPTY_STRING;
-    }
+    return server->renderBuffer(url, xml, body, headers, vars);
 }
-
 
 std::string
 renderFile(const std::string &file,
            const std::string &body,
            const std::string &headers,
            const std::string &vars) {
-    try {
-        if (!server.get()) {
-            return xscript::StringUtils::EMPTY_STRING;
-        }
-        return server->renderFile(file, body, headers, vars);
+    if (!server.get()) {
+        throw std::runtime_error("server is not initialized");
     }
-    catch (...) {
-        return xscript::StringUtils::EMPTY_STRING;
-    }
+    return server->renderFile(file, body, headers, vars);
 }
+
+}}
