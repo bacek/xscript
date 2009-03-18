@@ -1,3 +1,10 @@
+xscript (5.55-16) unstable; urgency=low
+
+  * VHostArg param added
+  * port added to ProtocolArg
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 18 Mar 2009 14:41:31 +0300
+
 xscript (5.55-15) unstable; urgency=low
 
   * cleaning thread added to TaggedCache usage counter 
