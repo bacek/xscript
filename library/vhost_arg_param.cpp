@@ -10,7 +10,7 @@
 
 namespace xscript {
 
-class VHostArgParam : public ConvertedParam {
+class VHostArgParam : public TypedParam {
 public:
     VHostArgParam(Object *owner, xmlNodePtr node);
     virtual ~VHostArgParam();
@@ -22,7 +22,7 @@ public:
 };
 
 VHostArgParam::VHostArgParam(Object *owner, xmlNodePtr node) :
-    ConvertedParam(owner, node) {
+    TypedParam(owner, node) {
 }
 
 VHostArgParam::~VHostArgParam() {
@@ -37,16 +37,20 @@ std::string
 VHostArgParam::asString(const Context *ctx) const {
     (void)ctx;
     const std::string &param_name = value();
+    std::string result;
     if (strncasecmp(param_name.c_str(), "noxslt-port", sizeof("noxslt-port") - 1) == 0) {
-        return boost::lexical_cast<std::string>(
+        result = boost::lexical_cast<std::string>(
                 VirtualHostData::instance()->getServer()->noXsltPort());
     }
     else if (strncasecmp(param_name.c_str(), "alternate-port", sizeof("alternate-port") - 1) == 0) {
-        return boost::lexical_cast<std::string>(
+        result = boost::lexical_cast<std::string>(
                 VirtualHostData::instance()->getServer()->alternatePort());
     }
-
-    throw std::runtime_error(std::string("Unknown virtual host arg: ") + param_name);
+    else {
+        throw std::runtime_error(std::string("Unknown virtual host arg: ") + param_name);
+    }
+    
+    return result.empty() ? defaultValue() : result;
 }
 
 std::auto_ptr<Param>
