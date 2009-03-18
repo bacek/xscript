@@ -80,6 +80,10 @@ static std::string getContentType(const xscript::Context *ctx) {
     return ctx->request()->getContentType();
 }
 
+static std::string getServerPort(const xscript::Context *ctx) {
+    return boost::lexical_cast<std::string>(ctx->request()->getServerPort());
+}
+
 namespace xscript {
 
 Protocol::MethodMap Protocol::methods_;
@@ -101,6 +105,7 @@ const std::string Protocol::CONTENT_LENGTH = "content-length";
 const std::string Protocol::CONTENT_ENCODING = "content-encoding";
 const std::string Protocol::CONTENT_TYPE = "content-type";
 const std::string Protocol::BOT = "bot";
+const std::string Protocol::PORT = "port";
 
 class ProtocolRegistrator {
 public:
@@ -142,6 +147,7 @@ ProtocolRegistrator::ProtocolRegistrator() {
     Protocol::methods_[Protocol::CONTENT_ENCODING] = &getContentEncoding;
     Protocol::methods_[Protocol::CONTENT_TYPE] = &getContentType;
     Protocol::methods_[Protocol::BOT] = &getBot;
+    Protocol::methods_[Protocol::PORT] = &getServerPort;
 }
 
 static ProtocolRegistrator reg_;

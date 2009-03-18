@@ -41,6 +41,7 @@ public:
     static const std::string CONTENT_ENCODING;
     static const std::string CONTENT_TYPE;
     static const std::string BOT;
+    static const std::string PORT;
 
 private:
     friend class ProtocolRegistrator;

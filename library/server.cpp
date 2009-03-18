@@ -223,6 +223,16 @@ Server::maxBodyLength(Request *request) const {
     return max_body_length_;
 }
 
+unsigned short
+Server::alternatePort() const {
+    return alternate_port_;
+}
+
+unsigned short
+Server::noXsltPort() const {
+    return noxslt_port_;
+}
+
 extern "C" int
 closeFunc(void *ctx) {
     (void)ctx;
