@@ -29,7 +29,8 @@ TaggedCacheUsageCounterFactory::init(const Config *config) {
     hit_ratio_level_ = config->as<double>("/xscript/statistics/tagged-cache/hit-ratio-level", 0.3);
     refresh_time_ = std::max(config->as<boost::uint32_t>("/xscript/statistics/tagged-cache/refresh-time", 60),
                              static_cast<boost::uint32_t>(30));
-    max_idle_time_ = config->as<boost::uint32_t>("/xscript/statistics/tagged-cache/max-idle-time", 600);
+    max_idle_time_ = std::max(config->as<boost::uint32_t>("/xscript/statistics/tagged-cache/max-idle-time", 600),
+                            static_cast<boost::uint32_t>(60));
 }
 
 std::auto_ptr<TaggedCacheUsageCounter>

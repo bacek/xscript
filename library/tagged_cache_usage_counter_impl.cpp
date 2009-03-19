@@ -114,11 +114,13 @@ TaggedCacheUsageCounterImpl::refresh() {
     boost::mutex::scoped_lock lock(mtx_);
     
     time_t now = time(NULL);
-    for(RecordIterator it = records_.begin(); it != records_.end(); ++it) {        
-        if (now - (*it)->last_call_time_ <= (time_t)TaggedCacheUsageCounterFactory::maxIdleTime()) {
-            continue;
+    for(RecordIterator it = records_.begin(); it != records_.end();) {
+        if (now - (*it)->last_call_time_ > (time_t)TaggedCacheUsageCounterFactory::maxIdleTime()) {
+            eraseRecord(it++);
         }
-        eraseRecord(it);
+        else {
+            ++it;
+        }
     }
 }
 
