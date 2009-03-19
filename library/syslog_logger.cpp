@@ -31,7 +31,7 @@ SyslogLogger::~SyslogLogger() {
 
 void
 SyslogLogger::critInternal(const char *format, va_list args) {
-    vsyslog(LOG_NOTICE, format, args);
+    vsyslog(LOG_CRIT, format, args);
 }
 
 void
