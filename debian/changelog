@@ -1,3 +1,9 @@
+xscript (5.55-19) usntable; urgency=low
+
+  * added binary page saving after applying stylesheet
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 20 Mar 2009 16:54:07 +0300
+
 xscript (5.55-18) unstable; urgency=low
 
   * fixed refreshing of tagged cache usage counter

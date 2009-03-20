@@ -119,6 +119,9 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
         
         if (script->forceStylesheet() && needApplyMainStylesheet(ctx->request())) {
             script->applyStylesheet(ctx.get(), doc);
+            if (request_data->response()->isBinary()) {
+                return;
+            }
         }
         
         sendHeaders(ctx.get());

@@ -32,7 +32,7 @@ public:
 private:
     CPPUNIT_TEST_SUITE(DocCacheTest);
     CPPUNIT_TEST(testMissed);
-    CPPUNIT_TEST(testStoreLoad);
+//    CPPUNIT_TEST(testStoreLoad);
 //    CPPUNIT_TEST(testGetLocalTagged);
 //    CPPUNIT_TEST(testGetLocalTaggedPrefetch);
     CPPUNIT_TEST_SUITE_END();
