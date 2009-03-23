@@ -1432,6 +1432,43 @@ xscriptXsltLibexsltVersion(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltXmlEscape(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:xmlescape");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (1 != nargs) {
+        XmlUtils::reportXsltError("xscript:xmlescape: bad param count", ctxt);
+        return;
+    }
+
+    const char* str = params.str(0);
+    if (NULL == str) {
+        XmlUtils::reportXsltError("xscript:xmlescape: bad parameter", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        valuePush(ctxt, xmlXPathNewCString(XmlUtils::escape(str).c_str()));
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:xmlescape: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:xmlescape: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
 xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
     (void)comp;
     if (tctx == NULL) {
@@ -1588,6 +1625,7 @@ XsltExtensions::XsltExtensions() {
     XsltFunctionRegisterer("libxslt-version", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLibxsltVersion);
     XsltFunctionRegisterer("libexslt-version", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLibexsltVersion);
     
+    XsltFunctionRegisterer("xmlescape", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltXmlEscape);
 }
 
 } // namespace xscript
