@@ -3,6 +3,7 @@
 #include <cctype>
 #include <cstdarg>
 #include <cassert>
+#include <cerrno>
 #include <stdexcept>
 #include <iostream>
 
@@ -61,8 +62,13 @@ HttpDateUtils::format(time_t value) {
         if (0 < res) {
             return std::string(buf, buf + res);
         }
+        else {
+            std::stringstream stream;
+            StringUtils::report("format date failed: ", errno, stream);
+            throw std::runtime_error(stream.str());
+        }
     }
-    throw std::runtime_error("format date failed");
+    throw std::runtime_error("format date failed. Value: " + boost::lexical_cast<std::string>(value));
 }
 
 time_t

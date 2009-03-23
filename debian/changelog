@@ -1,3 +1,9 @@
+xscript (5.55-21) unstable; urgency=low
+
+  * HttpDateUtils::format logging improved
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 23 Mar 2009 16:15:33 +0300
+
 xscript (5.55-20) unstable; urgency=low
 
   * xslt extension xmlescape added
