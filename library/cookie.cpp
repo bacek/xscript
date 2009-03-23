@@ -12,7 +12,7 @@
 
 namespace xscript {
 
-const time_t Cookie::MAX_LIVE_TIME = std::numeric_limits<time_t>::max();
+const time_t Cookie::MAX_LIVE_TIME = std::numeric_limits<boost::int32_t>::max();
 
 Cookie::Cookie() {
 }
