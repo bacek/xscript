@@ -229,18 +229,19 @@ XmlConfig::findVariables(const XmlDocHelper &doc) {
 
 void
 XmlConfig::resolveVariables(std::string &val) const {
-    size_t pos_begin = 0, pos_end = 0;
-    while(pos_end != std::string::npos) {
-        pos_begin = val.find("${", 0);
-        pos_end = val.find('}', pos_begin);
-        if (pos_begin != std::string::npos && pos_end != std::string::npos) {
-            std::string name = val.substr(pos_begin + 2, pos_end - pos_begin - 2);
-            if (checkVariableName(name)) {
-                val.replace(pos_begin, pos_end - pos_begin + 1, findVariable(name));
-            }
-            else {
-                throw std::runtime_error("incorrect variable name format: " + name);
-            }
+    size_t pos_begin = std::string::npos;
+    while(true) {
+        pos_begin = val.rfind("${", pos_begin);
+        if (pos_begin == std::string::npos) {
+            return;
+        }
+        size_t pos_end = val.find('}', pos_begin);
+        std::string name = val.substr(pos_begin + 2, pos_end - pos_begin - 2);
+        if (checkVariableName(name)) {
+            val.replace(pos_begin, pos_end - pos_begin + 1, findVariable(name));
+        }
+        else {
+            throw std::runtime_error("incorrect variable name format: " + name);
         }
     }
 }
