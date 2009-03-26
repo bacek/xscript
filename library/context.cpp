@@ -51,6 +51,8 @@ Context::Context(const boost::shared_ptr<Script> &script, Context *ctx) :
     params_ = ctx->params_;
     auth_ = ctx->auth_;
 
+    timer_.reset(ctx->timer().remained());
+    
     init();
 }
 
@@ -292,32 +294,33 @@ Context::stop() {
 
 const TimeoutCounter&
 Context::timer() const {
-    return timer_;
-}
-
-void
-Context::startTimer(int timeout) {
-    timer_.reset(timeout);
-}
-
-const TimeoutCounter&
-Context::blockTimer(const Block *block) const {
-    boost::mutex::scoped_lock lock(timers_mutex_);
-    std::map<const Block*, TimeoutCounter>::const_iterator it = timers_.find(block);
-    if (it == timers_.end()) {
+    if (NULL == block_timers_.get()) {
         return timer_;
     }
-    return it->second;
+    return block_timers_->back();
 }
 
 void
-Context::startBlockTimer(const Block *block, int timeout) {
-    boost::mutex::scoped_lock lock(timers_mutex_);
-    std::pair<std::map<const Block*, TimeoutCounter>::iterator, bool> result =
-        timers_.insert(std::make_pair(block, TimeoutCounter(timeout)));
-    if (!result.second) {
-        throw std::runtime_error("second block timer started in one context");
+Context::startTimer(int timeout) {   
+    if (NULL == block_timers_.get()) {
+        block_timers_.reset(new std::list<TimeoutCounter>);
     }
+    std::list<TimeoutCounter>* timers = block_timers_.get();
+    if (timers->empty()) {
+        timers->push_back(TimeoutCounter(std::min(timeout, timer_.remained())));
+    }
+    else {
+        timers->push_back(TimeoutCounter(std::min(timeout, timers->back().remained())));
+    }
+}
+
+void
+Context::stopTimer() {
+    if (NULL == block_timers_.get()) {
+        throw std::runtime_error("Cannot stop timer that is not exist");
+    }
+    
+    block_timers_->pop_back();
 }
 
 bool

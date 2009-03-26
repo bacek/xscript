@@ -189,7 +189,6 @@ Block::invokeInternal(Context *ctx) {
 
 void
 Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
-    startTimer(ctx.get());
     if (threaded() && !ctx->forceNoThreaded()) {
         boost::function<void()> f = boost::bind(&Block::callInternalThreaded, this, ctx, slot);
         ThreadPool::instance()->invoke(f);
@@ -232,7 +231,7 @@ Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
 void
 Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
     if (!xsltName().empty()) {
-        const TimeoutCounter &timer = ctx->blockTimer(this);
+        const TimeoutCounter &timer = ctx->timer();
         if (timer.expired()) {
             throw InvokeError("block is timed out", "timeout",
                 boost::lexical_cast<std::string>(timer.timeout()));
@@ -492,6 +491,7 @@ Block::postInvoke(Context *, const XmlDocHelper &) {
 
 void
 Block::callInternal(boost::shared_ptr<Context> ctx, unsigned int slot) {
+    BlockTimerStarter starter(ctx.get(), this);
     ctx->result(slot, invoke(ctx.get()));
 }
 
@@ -544,6 +544,11 @@ Block::processParam(std::auto_ptr<Param> p) {
 
 void
 Block::startTimer(Context *ctx) {
+    (void)ctx;
+}
+
+void
+Block::stopTimer(Context *ctx) {
     (void)ctx;
 }
 

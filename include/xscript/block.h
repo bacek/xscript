@@ -84,8 +84,10 @@ public:
     Logger * log() const {
         return extension_->getLogger();
     }
-    virtual void startTimer(Context *ctx);
 
+    virtual void startTimer(Context *ctx);
+    virtual void stopTimer(Context *ctx);
+    
 protected:
     class XPathExpr;
 
@@ -117,7 +119,7 @@ protected:
     }
     
     virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const; 
-
+    
 private:
     const Extension *extension_;
     Xml *owner_;
@@ -167,6 +169,18 @@ protected:
         std::string delimeter_;
         NamespaceListType namespaces_;
     };
+};
+
+struct BlockTimerStarter {
+    BlockTimerStarter(Context *ctx, Block *block) : ctx_(ctx), block_(block) {
+        block_->startTimer(ctx_);
+    }
+    virtual ~BlockTimerStarter() {
+        block_->stopTimer(ctx_);
+    }
+private:
+    Context *ctx_;
+    Block *block_;
 };
 
 } // namespace xscript

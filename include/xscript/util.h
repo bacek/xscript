@@ -8,13 +8,14 @@
 #include <vector>
 #include <iosfwd>
 #include <stdexcept>
+
 #include <boost/cstdint.hpp>
 #include <boost/utility.hpp>
+
 #include <xscript/config.h>
+#include <xscript/logger.h>
 #include <xscript/range.h>
 #include <xscript/xml_helpers.h>
-
-#include <xscript/logger.h>
 
 namespace xscript {
 
@@ -115,7 +116,6 @@ private:
     FileUtils();
     virtual ~FileUtils();
 };
-
 
 class TimeoutCounter {
 public:

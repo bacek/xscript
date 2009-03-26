@@ -1506,7 +1506,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
 
         InvokeResult result;
         try {
-            block->startTimer(ctx);
+            BlockTimerStarter starter(ctx, block);
             result = block->invoke(ctx);
             if (NULL == result.doc.get()) {
                 XmlUtils::reportXsltError("xscript:ExtElementBlock: empty result", tctx);

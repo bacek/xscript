@@ -158,7 +158,7 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
         return doc;
     }
 
-    const TimeoutCounter &timer = ctx->blockTimer(this);
+    const TimeoutCounter &timer = ctx->timer();
     int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
         
@@ -198,7 +198,7 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
     std::string url = concatParams(ctx, 0, size - 1);
     PROFILER(log(), "getBinaryPage: " + url);
 
-    const TimeoutCounter &timer = ctx->blockTimer(this);
+    const TimeoutCounter &timer = ctx->timer();
     int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
 
@@ -250,7 +250,7 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
     
     std::string url = concatParams(ctx, 0, size - 2);
 
-    const TimeoutCounter &timer = ctx->blockTimer(this);
+    const TimeoutCounter &timer = ctx->timer();
     int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
     
@@ -296,7 +296,7 @@ HttpBlock::postByRequest(Context *ctx, boost::any &a) {
         url.append(query);
     }
 
-    const TimeoutCounter &timer = ctx->blockTimer(this);
+    const TimeoutCounter &timer = ctx->timer();
     int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
     
@@ -343,7 +343,7 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
         has_query = true;
     }
 
-    const TimeoutCounter &timer = ctx->blockTimer(this);    
+    const TimeoutCounter &timer = ctx->timer();    
     int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
 
@@ -378,7 +378,7 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
         url.append(query);
     }
 
-    const TimeoutCounter &timer = ctx->blockTimer(this);
+    const TimeoutCounter &timer = ctx->timer();
     int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
     

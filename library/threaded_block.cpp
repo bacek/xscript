@@ -73,13 +73,18 @@ ThreadedBlock::postInvoke(Context *ctx, const XmlDocHelper &doc) {
     if (NULL == node) {
         return;
     }
-    std::string elapsed = boost::lexical_cast<std::string>(0.001*ctx->blockTimer(this).elapsed());
+    std::string elapsed = boost::lexical_cast<std::string>(0.001*ctx->timer().elapsed());
     xmlNewProp(node, (const xmlChar*)"elapsed-time", (const xmlChar*)elapsed.c_str());
 }
 
 void
 ThreadedBlock::startTimer(Context *ctx) {
-    ctx->startBlockTimer(this, std::min(ctx->timer().remained(), invokeTimeout()));
+    ctx->startTimer(invokeTimeout());
+}
+
+void
+ThreadedBlock::stopTimer(Context *ctx) {
+    ctx->stopTimer();
 }
 
 } // namespace xscript

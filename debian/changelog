@@ -1,3 +1,9 @@
+xscript (5.56-0) unstable; urgency=low
+
+  * block timeouts updated
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 26 Mar 2009 14:38:46 +0300
+
 xscript (5.55-22) unstable; urgency=low
 
   * fixed permanent cookies for 64-bit systems

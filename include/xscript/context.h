@@ -104,8 +104,7 @@ public:
 
     const TimeoutCounter& timer() const;
     void startTimer(int timeout);
-    const TimeoutCounter& blockTimer(const Block *block) const;
-    void startBlockTimer(const Block *block, int timeout);
+    void stopTimer();
 
     friend class ContextStopper;
 
@@ -113,12 +112,13 @@ private:
     Context(const boost::shared_ptr<Script> &script, Context *ctx);
     void init();
     void stop();
-
+    
     inline void flag(unsigned int type, bool value) {
         flags_ = value ? (flags_ | type) : (flags_ &= ~type);
     }
 
 private:
+    
     class ParamsMap {
     public:
         typedef std::map<std::string, boost::any> MapType;
@@ -148,16 +148,17 @@ private:
     unsigned int flags_;
 
     std::map<const Block*, std::string> runtime_errors_;
-    std::map<const Block*, TimeoutCounter> timers_;
+    boost::thread_specific_ptr<std::list<TimeoutCounter> > block_timers_;
+    TimeoutCounter timer_;
 
     boost::shared_ptr<ParamsMap> params_;
     
-    mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_, timers_mutex_;
-
-    TimeoutCounter timer_;
+    mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_;
 
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
     static const unsigned int FLAG_NO_XSLT_PORT = 1 << 1;
+    
+    static TimeoutCounter default_timer_;
 };
 
 class ContextStopper {
