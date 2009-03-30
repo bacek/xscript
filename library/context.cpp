@@ -294,18 +294,20 @@ Context::stop() {
 
 const TimeoutCounter&
 Context::timer() const {
-    if (NULL == block_timers_.get()) {
+    std::list<TimeoutCounter> *timers = block_timers_.get();
+    if (NULL == timers || timers->empty()) {
         return timer_;
     }
-    return block_timers_->back();
+    return timers->back();
 }
 
 void
-Context::startTimer(int timeout) {   
-    if (NULL == block_timers_.get()) {
+Context::startTimer(int timeout) {
+    std::list<TimeoutCounter> *timers = block_timers_.get();
+    if (NULL == timers) {
         block_timers_.reset(new std::list<TimeoutCounter>);
+        timers = block_timers_.get();
     }
-    std::list<TimeoutCounter>* timers = block_timers_.get();
     if (timers->empty()) {
         timers->push_back(TimeoutCounter(std::min(timeout, timer_.remained())));
     }
@@ -316,11 +318,12 @@ Context::startTimer(int timeout) {
 
 void
 Context::stopTimer() {
-    if (NULL == block_timers_.get()) {
+    std::list<TimeoutCounter> *timers = block_timers_.get();
+    if (NULL == timers) {
         throw std::runtime_error("Cannot stop timer that is not exist");
     }
     
-    block_timers_->pop_back();
+    timers->pop_back();
 }
 
 bool
