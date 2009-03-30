@@ -319,7 +319,7 @@ Context::startTimer(int timeout) {
 void
 Context::stopTimer() {
     std::list<TimeoutCounter> *timers = block_timers_.get();
-    if (NULL == timers) {
+    if (NULL == timers || timers->empty()) {
         throw std::runtime_error("Cannot stop timer that is not exist");
     }
     

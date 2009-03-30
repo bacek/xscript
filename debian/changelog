@@ -1,8 +1,8 @@
 xscript (5.56-1) unstable; urgency=low
 
-  * fix incorrect block timeouts
+  * fix incorrect block timeouts  
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 30 Mar 2009 11:03:18 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 30 Mar 2009 11:11:00 +0400
 
 xscript (5.56-0) unstable; urgency=low
 
