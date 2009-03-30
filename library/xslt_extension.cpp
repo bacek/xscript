@@ -733,23 +733,31 @@ xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
 
 
 void
-xscriptTemplatedEscStr(const char *str, const char *esc_template, std::string &result) {
+xscriptTemplatedEscStr(const char *str, const char *esc_template, bool js_check, std::string &result) {
 
-    std::string s(str);
-    std::string::size_type pos = (std::string::size_type)-1;
-    while (true) {
-        pos = s.find("\r\n", pos + 1);
-        if (pos == std::string::npos) {
-            break;
-        }
-        s.erase(pos, 1);
-    }
-
-    for (std::string::const_iterator i = s.begin(), end = s.end(); i != end; ++i) {
-        char ch = *i;
-        if (ch == '\r' || ch == '\n') {
+    const char* end = str + strlen(str);    
+    while (str < end) {
+        char ch = *str;
+        if (ch == '\r' && end - str > 0 && *(str + 1) == '\n') {
             result.push_back('\\');
             ch = 'n';
+            ++str;
+        }
+        else if (ch == '\r' || ch == '\n') {
+            result.push_back('\\');
+            ch = 'n';
+        }
+        else if (js_check && ch == '\\' && end - str > 5 && *(str + 1) == 'u' &&
+                 isxdigit(*(str + 2)) && isxdigit(*(str + 3)) &&
+                 isxdigit(*(str + 4)) && isxdigit(*(str + 5))) {
+            if ((*(str + 2) == '0' && *(str + 3) == '0' && *(str + 4) == '8' && *(str + 5) == '5') ||
+                (*(str + 2) == '2' && *(str + 3) == '0' && *(str + 4) == '2' && *(str + 5) == '8') ||
+                (*(str + 2) == '2' && *(str + 3) == '0' && *(str + 4) == '2' && *(str + 5) == '9')) {
+                result.push_back('\\');
+            }
+            result.append(str, 6);
+            str += 6;
+            continue;
         }
         else {
             const char *res = strchr(esc_template, ch);
@@ -758,6 +766,7 @@ xscriptTemplatedEscStr(const char *str, const char *esc_template, std::string &r
             }
         }
         result.push_back(ch);
+        ++str;
     }
 }
 
@@ -791,8 +800,7 @@ xscriptXsltJSONQuoteStr(const char *str, std::string &result) {
             result.push_back('\\');
             ch = 't';
         }
-        else if (ch == '\\' && end - str > 5 &&
-                 *(str + 1) == 'u' &&
+        else if (ch == '\\' && end - str > 5 && *(str + 1) == 'u' &&
                  isxdigit(*(str + 2)) && isxdigit(*(str + 3)) &&
                  isxdigit(*(str + 4)) && isxdigit(*(str + 5))) {
             result.push_back('\\');
@@ -812,14 +820,14 @@ void
 xscriptXsltEscStr(const char *str, std::string &result) {
 
     log()->debug("xscriptXsltEscStr: %s", str);
-    xscriptTemplatedEscStr(str, "\\/-'\"", result);
+    xscriptTemplatedEscStr(str, "\\/-'\"", false, result);
 }
 
 void
 xscriptXsltJSQuoteStr(const char *str, std::string &result) {
 
     log()->debug("xscriptXsltJSQuoteStr: %s", str);
-    xscriptTemplatedEscStr(str, "\\/-'", result);
+    xscriptTemplatedEscStr(str, "\\/-'", true, result);
 }
 
 extern "C" void
@@ -1338,12 +1346,6 @@ xscriptXsltLibxmlVersion(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
-    if (NULL == tctx) {
-        xmlXPathReturnEmptyNodeSet(ctxt);
-        return;
-    }
-
     try {
         valuePush(ctxt, xmlXPathNewCString(xmlParserVersion));
     }
@@ -1374,12 +1376,6 @@ xscriptXsltLibxsltVersion(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
-    if (NULL == tctx) {
-        xmlXPathReturnEmptyNodeSet(ctxt);
-        return;
-    }
-
     try {
         valuePush(ctxt, xmlXPathNewCString(xsltEngineVersion));
     }
@@ -1407,12 +1403,6 @@ xscriptXsltLibexsltVersion(xmlXPathParserContextPtr ctxt, int nargs) {
 
     if (0 != nargs) {
         XmlUtils::reportXsltError("xscript:libexslt-version: bad param count", ctxt);
-        return;
-    }
-
-    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
-    if (NULL == tctx) {
-        xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
 
