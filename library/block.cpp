@@ -144,6 +144,7 @@ Block::invoke(Context *ctx) {
     }
 
     try {
+        BlockTimerStarter starter(ctx, this);
         InvokeResult result = invokeInternal(ctx);
         if (result.success) {
             postInvoke(ctx, result.doc);
@@ -491,7 +492,6 @@ Block::postInvoke(Context *, const XmlDocHelper &) {
 
 void
 Block::callInternal(boost::shared_ptr<Context> ctx, unsigned int slot) {
-    BlockTimerStarter starter(ctx.get(), this);
     ctx->result(slot, invoke(ctx.get()));
 }
 
@@ -499,6 +499,7 @@ void
 Block::callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
     XmlUtils::registerReporters();
     VirtualHostData::instance()->set(ctx->request());
+    Context::resetTimer();
     callInternal(ctx, slot);
 }
 

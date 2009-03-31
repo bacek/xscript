@@ -74,6 +74,7 @@ Server::~Server() {
 void
 Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
     VirtualHostData::instance()->set(request_data->request());
+    Context::resetTimer();
     XmlUtils::resetReporter();
     xmlOutputBufferPtr buf = NULL;
     const std::string &script_name = request_data->request()->getScriptFilename();

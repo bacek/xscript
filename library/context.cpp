@@ -30,6 +30,8 @@
 
 namespace xscript {
 
+boost::thread_specific_ptr<std::list<TimeoutCounter> > Context::block_timers_;
+
 Context::Context(const boost::shared_ptr<Script> &script,
                  const boost::shared_ptr<RequestData> &data) :
         stopped_(false), request_data_(data), parent_context_(NULL), xslt_name_(script->xsltName()),
@@ -299,6 +301,14 @@ Context::timer() const {
         return timer_;
     }
     return timers->back();
+}
+
+void
+Context::resetTimer() {
+    std::list<TimeoutCounter> *timers = block_timers_.get();
+    if (NULL != timers) {
+        timers->clear();
+    }
 }
 
 void

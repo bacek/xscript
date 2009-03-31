@@ -105,6 +105,7 @@ public:
     const TimeoutCounter& timer() const;
     void startTimer(int timeout);
     void stopTimer();
+    static void resetTimer();
 
     friend class ContextStopper;
 
@@ -148,7 +149,7 @@ private:
     unsigned int flags_;
 
     std::map<const Block*, std::string> runtime_errors_;
-    boost::thread_specific_ptr<std::list<TimeoutCounter> > block_timers_;
+    static boost::thread_specific_ptr<std::list<TimeoutCounter> > block_timers_;
     TimeoutCounter timer_;
 
     boost::shared_ptr<ParamsMap> params_;
@@ -157,8 +158,6 @@ private:
 
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
     static const unsigned int FLAG_NO_XSLT_PORT = 1 << 1;
-    
-    static TimeoutCounter default_timer_;
 };
 
 class ContextStopper {
