@@ -731,42 +731,49 @@ xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
     }
 }
 
-
 void
 xscriptTemplatedEscStr(const char *str, const char *esc_template, bool js_check, std::string &result) {
-
-    const char* end = str + strlen(str);    
-    while (str < end) {
-        char ch = *str;
+    const char* end = str + strlen(str);
+    const char* str_next = str;
+    while (str_next < end) {
+        str = str_next;
+        str_next = StringUtils::nextUTF8(str);
+        unsigned char ch = *str;
         if (ch == '\r' && end - str > 0 && *(str + 1) == '\n') {
-            result.push_back('\\');
-            ch = 'n';
+            result.append("\\n");
             ++str;
-        }
-        else if (ch == '\r' || ch == '\n') {
-            result.push_back('\\');
-            ch = 'n';
-        }
-        else if (js_check && ch == '\\' && end - str > 5 && *(str + 1) == 'u' &&
-                 isxdigit(*(str + 2)) && isxdigit(*(str + 3)) &&
-                 isxdigit(*(str + 4)) && isxdigit(*(str + 5))) {
-            if ((*(str + 2) == '0' && *(str + 3) == '0' && *(str + 4) == '8' && *(str + 5) == '5') ||
-                (*(str + 2) == '2' && *(str + 3) == '0' && *(str + 4) == '2' && *(str + 5) == '8') ||
-                (*(str + 2) == '2' && *(str + 3) == '0' && *(str + 4) == '2' && *(str + 5) == '9')) {
-                result.push_back('\\');
-            }
-            result.append(str, 6);
-            str += 6;
+            ++str_next;
             continue;
         }
-        else {
-            const char *res = strchr(esc_template, ch);
-            if (NULL != res) {
-                result.push_back('\\');
+        else if (ch == '\r' || ch == '\n') {
+            result.append("\\n");
+            continue;
+        }
+        else if (str_next - str == 1 && NULL != strchr(esc_template, ch)) {
+            result.push_back('\\');
+        }
+        else if (js_check && str_next - str > 1) {
+            if (str_next - str == 2) {
+                unsigned char ch2 = *(str + 1);
+                if (ch == 0xC2 && ch2 == 0x85) {
+                    result.append("\\u0085");
+                    continue;
+                }
+            }
+            else if (str_next - str == 3) {
+                unsigned char ch2 = *(str + 1);
+                unsigned char ch3 = *(str + 2);
+                if (ch == 0xE2 && ch2 == 0x80 && ch3 == 0xA8) {
+                    result.append("\\u2028");
+                    continue;                    
+                }
+                else if (ch == 0xE2 && ch2 == 0x80 && ch3 == 0xA9) {
+                    result.append("\\u2029");
+                    continue;                    
+                }
             }
         }
-        result.push_back(ch);
-        ++str;
+        result.append(str, str_next - str);
     }
 }
 
