@@ -228,11 +228,15 @@ FileBlock::testFileDoc(bool result, const std::string &file) {
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
     
-    std::string res = boost::lexical_cast<std::string>(result);
-    XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"exist", (const xmlChar*)res.c_str()));
+    const xmlChar* res = result ? (const xmlChar*)"1" : (const xmlChar*)"0";
+    XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"exist", res));
     XmlUtils::throwUnless(NULL != node.get());
     if (!file.empty()) {
         xmlNewProp(node.get(), (const xmlChar*)"file", (const xmlChar*)XmlUtils::escape(file).c_str());
+    }
+    
+    if (result) {
+        xmlNewProp(node.get(), (const xmlChar*)"success", res);
     }
 
     xmlDocSetRootElement(doc.get(), node.release());
