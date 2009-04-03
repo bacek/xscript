@@ -264,31 +264,48 @@ HttpHelper::check(CURLcode code) const {
 
 size_t
 HttpHelper::curlWrite(void *ptr, size_t size, size_t nmemb, void *arg) {
-    std::string *str = static_cast<std::string*>(arg);
-    str->append((const char*) ptr, size * nmemb);
-    return (size * nmemb);
+    try {
+        std::string *str = static_cast<std::string*>(arg);
+        str->append((const char*) ptr, size * nmemb);
+        return (size * nmemb);
+    }
+    catch(const std::exception &e) {
+        log()->error("caught exception while curl write result: %s", e.what());
+    }
+    catch(...) {
+        log()->error("caught unknown exception while curl write result");
+    }
+    return 0;
 }
 
 size_t
 HttpHelper::curlHeaders(void *ptr, size_t size, size_t nmemb, void *arg) {
-
-    typedef std::multimap<std::string, std::string> HeaderMap;
-    HeaderMap *m = static_cast<HeaderMap*>(arg);
-    const char *header = (const char*) ptr, *pos = strchr(header, ':');
-    if (NULL != pos) {
-
-        std::pair<std::string, std::string> pair;
-        Range name = trim(Range(header, pos)), value = trim(createRange(pos + 1));
-
-        pair.first.reserve(name.size());
-        std::transform(name.begin(), name.end(), std::back_inserter(pair.first), &tolower);
-
-        pair.second.reserve(value.size());
-        pair.second.assign(value.begin(), value.end());
-
-        m->insert(pair);
+    try {
+        typedef std::multimap<std::string, std::string> HeaderMap;
+        HeaderMap *m = static_cast<HeaderMap*>(arg);
+        const char *header = (const char*) ptr, *pos = strchr(header, ':');
+        if (NULL != pos) {
+    
+            std::pair<std::string, std::string> pair;
+            Range name = trim(Range(header, pos)), value = trim(createRange(pos + 1));
+    
+            pair.first.reserve(name.size());
+            std::transform(name.begin(), name.end(), std::back_inserter(pair.first), &tolower);
+    
+            pair.second.reserve(value.size());
+            pair.second.assign(value.begin(), value.end());
+    
+            m->insert(pair);
+        }
+        return (size * nmemb);
     }
-    return (size * nmemb);
+    catch(const std::exception &e) {
+        log()->error("caught exception while curl process header: %s", e.what());
+    }
+    catch(...) {
+        log()->error("caught unknown exception while curl process header");
+    }
+    return 0;
 }
 
 void

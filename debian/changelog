@@ -1,3 +1,9 @@
+xscript (5.57-2) unstable; urgency=low
+
+  * exception handling added to curl functions
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 03 Apr 2009 12:33:38 +0400
+
 xscript (5.57-1) usntable; urgency=low
 
   * testFileDoc updated
