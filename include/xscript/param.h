@@ -73,6 +73,7 @@ public:
         return default_value_;
     }
 
+    virtual void add(const Context *ctx, ArgList &al) const;
     virtual const std::string& value() const;
 
 protected:

@@ -233,6 +233,16 @@ TypedParam::value() const {
     return id();
 }
 
+void
+TypedParam::add(const Context *ctx, ArgList &al) const {
+    const std::string& as = ConvertedParam::as();
+    if (as.empty()) {
+        al.add(asString(ctx));
+    }
+    else {
+        al.addAs(as, asString(ctx));
+    }
+}
 
 class SimpleParamRegisterer {
 public:
