@@ -38,11 +38,11 @@ VHostArgParam::asString(const Context *ctx) const {
     (void)ctx;
     const std::string &param_name = value();
     std::string result;
-    if (strncasecmp(param_name.c_str(), "noxslt-port", sizeof("noxslt-port") - 1) == 0) {
+    if (strncasecmp(param_name.c_str(), "noxslt-port", sizeof("noxslt-port")) == 0) {
         result = boost::lexical_cast<std::string>(
                 VirtualHostData::instance()->getServer()->noXsltPort());
     }
-    else if (strncasecmp(param_name.c_str(), "alternate-port", sizeof("alternate-port") - 1) == 0) {
+    else if (strncasecmp(param_name.c_str(), "alternate-port", sizeof("alternate-port")) == 0) {
         result = boost::lexical_cast<std::string>(
                 VirtualHostData::instance()->getServer()->alternatePort());
     }

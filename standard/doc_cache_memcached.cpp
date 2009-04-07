@@ -1,6 +1,7 @@
 #include <memcache.h>
 
 #include "xscript/doc_cache.h"
+#include "xscript/string_utils.h"
 #include "xscript/tag.h"
 #include "xscript/util.h"
 #include "xscript/xml_util.h"

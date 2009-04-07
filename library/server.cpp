@@ -217,7 +217,7 @@ Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc)
     
     const HeaderMap& headers = ctx->response()->outHeaders();
     for(HeaderMap::const_iterator h = headers.begin(); h != headers.end(); ++h) {
-        if (strncasecmp(h->first.c_str(), "expires", sizeof("expires") - 1) == 0) {
+        if (strncasecmp(h->first.c_str(), "expires", sizeof("expires")) == 0) {
             continue;
         }
         XmlNodeHelper header(xmlNewNode(0, BAD_CAST "header"));
