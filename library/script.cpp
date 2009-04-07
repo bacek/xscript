@@ -700,11 +700,8 @@ Script::info(const Context *ctx) const {
     info.append(ctx->request()->getOriginalUrl());
     info.append(" | Filename: ");
     info.append(name());
-    info.append(" | Cache-time: ");
-    if (cacheTimeUndefined()) {
-        info.append("undefined");    
-    }
-    else {
+    if (!cacheTimeUndefined()) {
+        info.append(" | Cache-time: ");
         info.append(boost::lexical_cast<std::string>(cacheTime()));
     }
     
