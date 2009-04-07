@@ -99,6 +99,8 @@ public:
     void forceNoThreaded(bool value);
     bool noXsltPort() const;
     void noXsltPort(bool value);
+    bool hasError() const;
+    void setError();
     std::string getRuntimeError(const Block *block) const;
     void assignRuntimeError(const Block *block, const std::string &error_message);
 
@@ -106,6 +108,11 @@ public:
     void startTimer(int timeout);
     void stopTimer();
     static void resetTimer();
+    
+    bool xsltChanged(const Script *script) const;
+    
+    const std::string& key() const;
+    void key(const std::string &key);
 
     friend class ContextStopper;
 
@@ -145,6 +152,8 @@ private:
 
     boost::shared_ptr<AuthContext> auth_;
     std::auto_ptr<DocumentWriter> writer_;
+    
+    std::string key_;
 
     unsigned int flags_;
 
@@ -158,6 +167,7 @@ private:
 
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
     static const unsigned int FLAG_NO_XSLT_PORT = 1 << 1;
+    static const unsigned int FLAG_HAS_ERROR = 1 << 2;
 };
 
 class ContextStopper {

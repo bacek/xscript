@@ -18,7 +18,7 @@
 #include "xscript/authorizer.h"
 #include "xscript/thread_pool.h"
 #include "xscript/vhost_data.h"
-#include "xscript/doc_cache.h"
+#include "xscript/doc_cache_strategy.h"
 #include "xscript/script_cache.h"
 #include "xscript/script_factory.h"
 #include "xscript/stylesheet_cache.h"
@@ -55,8 +55,8 @@ Config::startup() {
     Loader::instance()->init(this);
     log()->debug("loader started");
     
-    DocCache::instance()->init(this);
-    log()->debug("doc cache started");
+    CacheStrategyCollector::instance()->init(this);
+    log()->debug("doc and page cache started");
     
     Policy::instance()->init(this);
     log()->debug("policy started");

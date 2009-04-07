@@ -1,9 +1,12 @@
 #include "settings.h"
 
+#include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
+
 #include "internal/tagged_cache_usage_counter_impl.h"
 
 #include "xscript/doc_cache_strategy.h"
+#include "xscript/script.h"
 #include "xscript/tagged_block.h"
 #include "xscript/xml.h"
 
@@ -17,49 +20,6 @@ TaggedCacheUsageCounterImpl::TaggedCacheUsageCounterImpl(const std::string &name
         : CounterImpl(name) {
     boost::function<void()> func = boost::bind(&TaggedCacheUsageCounterImpl::refresh, this);
     refresher_.reset(new Refresher(func, TaggedCacheUsageCounterFactory::refreshTime()));
-}
-
-void
-TaggedCacheUsageCounterImpl::fetched(const Context *ctx, const TaggedBlock *block, bool is_hit) {
-    RecordInfoPtr record(new RecordInfo(block->info(ctx)));
-    RecordIterator it = records_.find(record);
-    if (it != records_.end()) {
-        record = *it;
-        eraseRecord(it);
-    }
-
-    record->last_call_time_ = time(NULL);
-    
-    if (is_hit) {
-        ++record->hits_;
-    }
-    else {
-        ++record->misses_;
-    }
-    
-    const std::string& owner_name = block->owner()->name();
-    std::map<std::string, boost::uint64_t>::iterator it_owner = record->owners_.find(owner_name);
-    if (it_owner == record->owners_.end()) {
-        record->owners_.insert(std::make_pair(owner_name, 1));
-    }
-    else {
-        ++(it_owner->second);
-    }
-    
-    records_.insert(record);
-    records_by_ratio_.insert(record);
-}
-
-void
-TaggedCacheUsageCounterImpl::fetchedHit(const Context *ctx, const TaggedBlock *block) {
-    boost::mutex::scoped_lock lock(mtx_);
-    fetched(ctx, block, true);
-}
-
-void
-TaggedCacheUsageCounterImpl::fetchedMiss(const Context *ctx, const TaggedBlock *block) {
-    boost::mutex::scoped_lock lock(mtx_);
-    fetched(ctx, block, false);
 }
 
 XmlNodeHelper
@@ -78,7 +38,7 @@ TaggedCacheUsageCounterImpl::createReport() const {
             break;
         }
         
-        xmlNodePtr line = xmlNewChild(root.get(), NULL, (const xmlChar*)"block", NULL);
+        xmlNodePtr line = xmlNewChild(root.get(), NULL, (const xmlChar*)"element", NULL);
         
         xmlSetProp(line, (const xmlChar*)"hit-ratio",
                 (const xmlChar*) boost::lexical_cast<std::string>((*it)->hitRatio()).c_str());
@@ -86,7 +46,7 @@ TaggedCacheUsageCounterImpl::createReport() const {
         xmlSetProp(line, (const xmlChar*)"calls",
                 (const xmlChar*) boost::lexical_cast<std::string>((*it)->calls()).c_str());
         
-        xmlSetProp(line, (const xmlChar*) "info", (const xmlChar*)((*it)->block_info_.c_str()));
+        xmlSetProp(line, (const xmlChar*) "info", (const xmlChar*)((*it)->info_.c_str()));
         
         std::multimap<boost::uint64_t, const char*, std::greater<boost::uint64_t> > owners;        
         for(std::map<std::string, boost::uint64_t>::iterator it_owner = (*it)->owners_.begin();
@@ -141,8 +101,8 @@ TaggedCacheUsageCounterImpl::RecordInfo::RecordInfo() :
     hits_(0), misses_(0), last_call_time_(0)
 {}
 
-TaggedCacheUsageCounterImpl::RecordInfo::RecordInfo(const std::string &block_info) :
-    hits_(0), misses_(0), block_info_(block_info), last_call_time_(0)
+TaggedCacheUsageCounterImpl::RecordInfo::RecordInfo(const std::string &info) :
+    hits_(0), misses_(0), info_(info), last_call_time_(0)
 {}
 
 boost::uint64_t
@@ -163,7 +123,7 @@ TaggedCacheUsageCounterImpl::RecordInfo::isGoodHitRatio() {
 
 bool
 TaggedCacheUsageCounterImpl::RecordComparator::operator() (RecordInfoPtr r1, RecordInfoPtr r2) const {
-    return r1->block_info_ < r2->block_info_;
+    return r1->info_ < r2->info_;
 }        
 
 bool
@@ -177,5 +137,106 @@ TaggedCacheUsageCounterImpl::RecordHitComparator::operator() (RecordInfoPtr r1, 
     return r1->calls() > r2->calls();
 }
 
+TaggedCacheScriptUsageCounterImpl::TaggedCacheScriptUsageCounterImpl(const std::string &name) :
+    CounterImpl(name), TaggedCacheUsageCounterImpl(name)
+{}
+
+void
+TaggedCacheScriptUsageCounterImpl::fetchedHit(const Context *ctx, const Object *obj) {
+    const Script *script = dynamic_cast<const Script*>(obj);
+    if (NULL == script) {
+        return;
+    }
+    boost::mutex::scoped_lock lock(mtx_);
+    fetched(ctx, script, true);
+}
+
+void
+TaggedCacheScriptUsageCounterImpl::fetchedMiss(const Context *ctx, const Object *obj) {
+    const Script *script = dynamic_cast<const Script*>(obj);
+    if (NULL == script) {
+        return;
+    }
+    boost::mutex::scoped_lock lock(mtx_);
+    fetched(ctx, script, false);
+}
+
+void
+TaggedCacheScriptUsageCounterImpl::fetched(const Context *ctx, const Script *script, bool is_hit) {
+    (void)ctx;
+    RecordInfoPtr record(new RecordInfo(script->info(ctx)));
+    RecordIterator it = records_.find(record);
+    if (it != records_.end()) {
+        record = *it;
+        eraseRecord(it);
+    }
+
+    record->last_call_time_ = time(NULL);
+    
+    if (is_hit) {
+        ++record->hits_;
+    }
+    else {
+        ++record->misses_;
+    }
+    
+    records_.insert(record);
+    records_by_ratio_.insert(record);
+}
+
+TaggedCacheBlockUsageCounterImpl::TaggedCacheBlockUsageCounterImpl(const std::string &name) :
+    CounterImpl(name), TaggedCacheUsageCounterImpl(name)
+{}
+
+void
+TaggedCacheBlockUsageCounterImpl::fetchedHit(const Context *ctx, const Object *obj) {
+    const TaggedBlock *block = dynamic_cast<const TaggedBlock*>(obj);
+    if (NULL == block) {
+        return;
+    }
+    boost::mutex::scoped_lock lock(mtx_);
+    fetched(ctx, block, true);
+}
+
+void
+TaggedCacheBlockUsageCounterImpl::fetchedMiss(const Context *ctx, const Object *obj) {
+    const TaggedBlock *block = dynamic_cast<const TaggedBlock*>(obj);
+    if (NULL == block) {
+        return;
+    }
+    boost::mutex::scoped_lock lock(mtx_);
+    fetched(ctx, block, false);
+}
+
+void
+TaggedCacheBlockUsageCounterImpl::fetched(const Context *ctx, const TaggedBlock *block, bool is_hit) {
+    RecordInfoPtr record(new RecordInfo(block->info(ctx)));
+    RecordIterator it = records_.find(record);
+    if (it != records_.end()) {
+        record = *it;
+        eraseRecord(it);
+    }
+
+    record->last_call_time_ = time(NULL);
+    
+    if (is_hit) {
+        ++record->hits_;
+    }
+    else {
+        ++record->misses_;
+    }
+    
+    const std::string& owner_name = block->owner()->name();
+    std::map<std::string, boost::uint64_t>::iterator it_owner = record->owners_.find(owner_name);
+    if (it_owner == record->owners_.end()) {
+        record->owners_.insert(std::make_pair(owner_name, 1));
+    }
+    else {
+        ++(it_owner->second);
+    }
+    
+    records_.insert(record);
+    records_by_ratio_.insert(record);
+}
 
 }

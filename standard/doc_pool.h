@@ -16,6 +16,8 @@
 
 namespace xscript {
 
+class AverageCounter;
+
 /**
  * Class for storing documents in memory.
  * Combination of hash and LRU list. Will store documents available

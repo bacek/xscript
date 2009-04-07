@@ -8,15 +8,15 @@
 namespace xscript {
 
 void
-DummyTaggedCacheUsageCounter::fetchedHit(const Context *ctx, const TaggedBlock *block) {
+DummyTaggedCacheUsageCounter::fetchedHit(const Context *ctx, const Object *obj) {
     (void)ctx;
-    (void)block;
+    (void)obj;
 }
 
 void
-DummyTaggedCacheUsageCounter::fetchedMiss(const Context *ctx, const TaggedBlock *block) {
+DummyTaggedCacheUsageCounter::fetchedMiss(const Context *ctx, const Object *obj) {
     (void)ctx;
-    (void)block;
+    (void)obj;
 }
 
 XmlNodeHelper

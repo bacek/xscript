@@ -1,41 +1,37 @@
 #include "settings.h"
 
-#include <map>
-#include <list>
-#include <cassert>
 #include <algorithm>
+#include <cassert>
+#include <list>
+#include <map>
 
+#include <boost/checked_delete.hpp>
+#include <boost/crc.hpp>
+#include <boost/current_function.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
+#include <boost/thread/mutex.hpp>
 
-#include "xscript/tag.h"
-#include "xscript/util.h"
-#include "xscript/config.h"
-#include "xscript/logger.h"
-#include "xscript/param.h"
-#include "xscript/tagged_block.h"
-#include "xscript/doc_cache_strategy.h"
-#include "xscript/doc_cache.h"
 #include "xscript/cache_counter.h"
-#include "xscript/memory_statistic.h"
+#include "xscript/config.h"
 #include "xscript/doc_cache.h"
+#include "xscript/doc_cache_strategy.h"
+#include "xscript/logger.h"
+#include "xscript/memory_statistic.h"
+#include "xscript/param.h"
+#include "xscript/string_utils.h"
+#include "xscript/tag.h"
+#include "xscript/tagged_block.h"
+#include "xscript/util.h"
 
 #include "doc_pool.h"
 #include "tag_key_memory.h"
-
-#include <boost/crc.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/checked_delete.hpp>
-#include <boost/current_function.hpp>
-
-
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
 
 namespace xscript {
-
 
 class DocCacheMemory :
             public Component<DocCacheMemory>,
@@ -47,10 +43,13 @@ public:
     virtual void init(const Config *config);
 
     virtual time_t minimalCacheTime() const;
+    virtual std::string name() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const TaggedBlock *block) const;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Object *obj) const;
 
     unsigned int maxSize() const;
+    
+    virtual void fillStatBuilder(StatBuilder *builder);
 
 protected:
     virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc);
@@ -75,8 +74,7 @@ const time_t DocCacheMemory::DEFAULT_CACHE_TIME = 5; // sec
 
 DocCacheMemory::DocCacheMemory() :
         min_time_(Tag::UNDEFINED_TIME), max_size_(0) {
-    statBuilder_.setName("tagged-cache-memory");
-    DocCache::instance()->addStrategy(this, "memory");
+    CacheStrategyCollector::instance()->addStrategy(this, name());
 }
 
 DocCacheMemory::~DocCacheMemory() {
@@ -84,8 +82,8 @@ DocCacheMemory::~DocCacheMemory() {
 }
 
 std::auto_ptr<TagKey>
-DocCacheMemory::createKey(const Context *ctx, const TaggedBlock *block) const {
-    return std::auto_ptr<TagKey>(new TagKeyMemory(ctx, block));
+DocCacheMemory::createKey(const Context *ctx, const Object *obj) const {
+    return std::auto_ptr<TagKey>(new TagKeyMemory(ctx, obj));
 }
 
 void
@@ -102,18 +100,36 @@ DocCacheMemory::init(const Config *config) {
         char buf[20];
         snprintf(buf, 20, "pool%d", i);
         pools_.push_back(new DocPool(max_size_, buf));
-        statBuilder_.addCounter((*pools_.rbegin())->getCounter());
-        statBuilder_.addCounter((*pools_.rbegin())->getMemoryCounter());
     }
     min_time_ = config->as<time_t>("/xscript/tagged-cache-memory/min-cache-time", DEFAULT_CACHE_TIME);
     if (min_time_ <= 0) {
         min_time_ = DEFAULT_CACHE_TIME;
+    }
+    
+    std::string no_cache =
+        config->as<std::string>("/xscript/tagged-cache-memory/no-cache", StringUtils::EMPTY_STRING);
+
+    insert2Cache(no_cache);
+}
+
+void
+DocCacheMemory::fillStatBuilder(StatBuilder *builder) {
+    for(std::vector<DocPool*>::iterator it = pools_.begin();
+        it != pools_.end();
+        ++it) {
+        builder->addCounter((*it)->getCounter());
+        builder->addCounter((*it)->getMemoryCounter());
     }
 }
 
 time_t
 DocCacheMemory::minimalCacheTime() const {
     return min_time_;
+}
+
+std::string
+DocCacheMemory::name() const {
+    return "memory";
 }
 
 bool

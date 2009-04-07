@@ -5,6 +5,8 @@
 #include <boost/utility.hpp>
 #include <string>
 
+#include "xscript/xml_helpers.h"
+
 namespace xscript {
 
 class Config;
@@ -28,6 +30,14 @@ public:
 
 protected:
     virtual void handleRequest(const boost::shared_ptr<RequestData>& request_data);
+    void writeDoc(Context *ctx, XmlDocHelper doc, void *io_ctx,
+                  xmlOutputWriteCallback write_func,
+                  xmlOutputCloseCallback close_func);
+    
+    bool processCachedDoc(Context *ctx, const Script *script);
+    void sendResponse(Context *ctx, XmlDocHelper doc);
+    void sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc);
+                               
     virtual boost::shared_ptr<Script> getScript(const std::string &name, Request *request);
     static std::pair<std::string, bool> findScript(const std::string &name);
     void sendHeaders(Context *ctx);

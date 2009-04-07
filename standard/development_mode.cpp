@@ -65,6 +65,7 @@ DevelopmentMode::processPerblockXsltError(const Context *ctx, const Block *block
     if (!result.empty()) {
         throw CriticalInvokeError(result.c_str(), "xslt", block->xsltName());
     }
+    OperationMode::processPerblockXsltError(ctx, block);
 }
 
 void
@@ -92,6 +93,7 @@ DevelopmentMode::processMainXsltError(const Context *ctx, const Script *script, 
         stream << result << ". Script: " << script->name() << ". Main stylesheet: " << style->name(); 
         throw InvokeError(stream.str());
     }
+    OperationMode::processMainXsltError(ctx, script, style);
 }
 
 void

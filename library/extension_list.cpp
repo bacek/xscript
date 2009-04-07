@@ -105,14 +105,27 @@ ExtensionList::accepts(Extension *ext, const char *name, const char *ref, bool a
     }
     
     if (NULL == ref) {
-	if (!allow_empty_namespace) {
-	    return false;
-	} 
+        if (!allow_empty_namespace) {
+            return false;
+        } 
     }
     else {
         return strncasecmp(ref, extref, strlen(extref) + 1) == 0;
     }
     return true;
+}
+
+bool
+ExtensionList::checkScriptProperty(const char *prop, const char *value) {
+    bool result = false;
+    for(std::vector<Extension*>::iterator it = extensions_.begin();
+        it != extensions_.end();
+        ++it) {
+        if ((*it)->checkScriptProperty(prop, value)) {
+            result = true;
+        }
+    }
+    return result;
 }
 
 ExtensionRegisterer::ExtensionRegisterer(ExtensionHolder helper) throw () {

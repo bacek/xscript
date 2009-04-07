@@ -22,6 +22,8 @@ public:
     virtual void cacheTime(time_t cache_time);
     virtual std::string info(const Context *ctx) const;
 
+    virtual std::string createTagKey(const Context *ctx) const;
+    
 protected:
     virtual void processParam(std::auto_ptr<Param> p);
     virtual InvokeResult invokeInternal(Context *ctx);

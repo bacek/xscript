@@ -10,12 +10,12 @@
 namespace xscript {
 
 class Context;
-class TaggedBlock;
+class Object;
 
 class TaggedCacheUsageCounter : public CounterBase {
 public:
-    virtual void fetchedHit(const Context *ctx, const TaggedBlock *block) = 0;
-    virtual void fetchedMiss(const Context *ctx, const TaggedBlock *block) = 0;
+    virtual void fetchedHit(const Context *ctx, const Object *obj) = 0;
+    virtual void fetchedMiss(const Context *ctx, const Object *obj) = 0;
 };
 
 class TaggedCacheUsageCounterFactory : public Component<TaggedCacheUsageCounterFactory> {
@@ -24,7 +24,8 @@ public:
     ~TaggedCacheUsageCounterFactory();
 
     virtual void init(const Config *config);      
-    virtual std::auto_ptr<TaggedCacheUsageCounter> createCounter(const std::string& name, bool want_real = false);
+    virtual std::auto_ptr<TaggedCacheUsageCounter> createBlockCounter(const std::string& name, bool want_real = false);
+    virtual std::auto_ptr<TaggedCacheUsageCounter> createScriptCounter(const std::string& name, bool want_real = false);
     static unsigned int outputSize();
     static double hitRatioLevel();
     static boost::uint32_t refreshTime();

@@ -5,11 +5,12 @@
 #include <string>
 #include <boost/utility.hpp>
 
+#include <xscript/request.h>
+
 namespace xscript {
 
 class BinaryWriter;
 class Cookie;
-class Request;
 
 class Response : private boost::noncopyable {
 public:
@@ -34,6 +35,8 @@ public:
     void setContentEncoding(const std::string &encoding);
 
     virtual bool isBinary() const = 0;
+    
+    virtual const HeaderMap& outHeaders() const = 0;
 
 private:
 };

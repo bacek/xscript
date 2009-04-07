@@ -108,4 +108,10 @@ Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh, Context *ctx, XmlDocHe
     XmlUtils::throwUnless(NULL != doc.get());
 }
 
+std::string
+Object::createTagKey(const Context *ctx) const {
+    (void)ctx;
+    return StringUtils::EMPTY_STRING;
+}
+
 } // namespace xscript

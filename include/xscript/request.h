@@ -1,12 +1,38 @@
 #ifndef _XSCRIPT_REQUEST_H_
 #define _XSCRIPT_REQUEST_H_
 
+#include <map>
 #include <string>
 #include <vector>
 #include <boost/utility.hpp>
-#include <libxml/tree.h>
+
+#if defined(HAVE_STLPORT_HASHMAP)
+#include <hash_set>
+#include <hash_map>
+#elif defined(HAVE_EXT_HASH_MAP) || defined(HAVE_GNUCXX_HASHMAP)
+#include <ext/hash_set>
+#include <ext/hash_map>
+#endif
+
+#include "xscript/functors.h"
+
+//#include <libxml/tree.h>
 
 namespace xscript {
+
+#if defined(HAVE_GNUCXX_HASHMAP)
+
+typedef __gnu_cxx::hash_map<std::string, std::string, StringCIHash, StringCIEqual> HeaderMap;
+
+#elif defined(HAVE_EXT_HASH_MAP) || defined(HAVE_STLPORT_HASHMAP)
+
+typedef std::hash_map<std::string, std::string, StringCIHash, StringCIEqual> HeaderMap;
+
+#else
+
+typedef std::map<std::string, std::string, StringCILess> HeaderMap;
+
+#endif
 
 class Request : private boost::noncopyable {
 public:

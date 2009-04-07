@@ -13,56 +13,80 @@
 
 namespace xscript {
 
+class Script;
+class TaggedBlock;
+
 /**
  * Counter for measure tagged cache usage statistic.
  */
-class TaggedCacheUsageCounterImpl : virtual public TaggedCacheUsageCounter, virtual private CounterImpl {
+class TaggedCacheUsageCounterImpl : virtual public TaggedCacheUsageCounter, virtual public CounterImpl {
 public:
     TaggedCacheUsageCounterImpl(const std::string &name);
     virtual XmlNodeHelper createReport() const;
 
-    void fetchedHit(const Context *ctx, const TaggedBlock *block);
-    void fetchedMiss(const Context *ctx, const TaggedBlock *block);
-
+protected:
+    struct RecordInfo {
+            RecordInfo();
+            RecordInfo(const std::string &info);
+            
+            boost::uint64_t calls();
+            double hitRatio();
+            bool isGoodHitRatio();
+            
+            boost::uint64_t hits_;
+            boost::uint64_t misses_;
+            std::string info_;
+            time_t last_call_time_;
+            std::map<std::string, boost::uint64_t> owners_;
+        };
+        
+        typedef boost::shared_ptr<RecordInfo> RecordInfoPtr;
+        
+        struct RecordComparator {
+            bool operator() (RecordInfoPtr r1, RecordInfoPtr r2) const;        
+        };    
+        struct RecordHitComparator {
+            bool operator() (RecordInfoPtr r1, RecordInfoPtr r2) const;
+        };
+        
+        typedef std::set<RecordInfoPtr, RecordComparator>::iterator RecordIterator;
+        typedef std::multiset<RecordInfoPtr, RecordHitComparator>::iterator RecordHitIterator;
+        typedef std::multiset<RecordInfoPtr, RecordHitComparator>::const_iterator RecordHitConstIterator;
+        
+        void eraseRecord(RecordIterator it);
+        
 private:
-    
-    void fetched(const Context *ctx, const TaggedBlock *block, bool is_hit);
     void refresh();
     
-    struct RecordInfo {
-        RecordInfo();
-        RecordInfo(const std::string &block_info);
-        
-        boost::uint64_t calls();
-        double hitRatio();
-        bool isGoodHitRatio();
-        
-        boost::uint64_t hits_;
-        boost::uint64_t misses_;
-        std::string block_info_;
-        time_t last_call_time_;
-        std::map<std::string, boost::uint64_t> owners_;
-    };
-    
-    typedef boost::shared_ptr<RecordInfo> RecordInfoPtr;
-    
-    struct RecordComparator {
-        bool operator() (RecordInfoPtr r1, RecordInfoPtr r2) const;        
-    };    
-    struct RecordHitComparator {
-        bool operator() (RecordInfoPtr r1, RecordInfoPtr r2) const;
-    };
-    
-    typedef std::set<RecordInfoPtr, RecordComparator>::iterator RecordIterator;
-    typedef std::multiset<RecordInfoPtr, RecordHitComparator>::iterator RecordHitIterator;
-    typedef std::multiset<RecordInfoPtr, RecordHitComparator>::const_iterator RecordHitConstIterator;
-    
-    void eraseRecord(RecordIterator it);
-    
-    std::auto_ptr<Refresher> refresher_;
+protected:    
     std::set<RecordInfoPtr, RecordComparator> records_;
     std::multiset<RecordInfoPtr, RecordHitComparator> records_by_ratio_;
+    
+private:
+    std::auto_ptr<Refresher> refresher_;
 
+};
+
+class TaggedCacheScriptUsageCounterImpl : public TaggedCacheUsageCounterImpl {
+public:
+    TaggedCacheScriptUsageCounterImpl(const std::string &name);
+    
+    void fetchedHit(const Context *ctx, const Object *obj);
+    void fetchedMiss(const Context *ctx, const Object *obj);
+    
+private:
+    void fetched(const Context *ctx, const Script *script, bool is_hit);
+};
+
+class TaggedCacheBlockUsageCounterImpl : public TaggedCacheUsageCounterImpl {
+public:
+    TaggedCacheBlockUsageCounterImpl(const std::string &name);
+    
+    void fetchedHit(const Context *ctx, const Object *obj);
+    void fetchedMiss(const Context *ctx, const Object *obj);
+    
+private:
+    void fetched(const Context *ctx, const TaggedBlock *block, bool is_hit);
 };
 
 }

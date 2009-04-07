@@ -95,9 +95,9 @@ public:
 
     virtual bool isBinary() const;
 
+    const HeaderMap& outHeaders() const;
 protected:
     typedef std::set<Cookie, CookieLess> CookieSet;
-    const HeaderMap& outHeaders() const;
     const CookieSet& outCookies() const;
 
 private:

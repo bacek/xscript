@@ -17,8 +17,8 @@ namespace xscript {
  */
 class TagKeyMemcached : public TagKeyMemory {
 public:
-    TagKeyMemcached(const Context *ctx, const TaggedBlock *block)
-        : TagKeyMemory(ctx, block)
+    TagKeyMemcached(const Context *ctx, const Object *obj)
+        : TagKeyMemory(ctx, obj)
     {
         value_ = HashUtils::hexMD5(value_.c_str(), value_.length());
     }
@@ -37,8 +37,9 @@ public:
     virtual void init(const Config *config);
 
     virtual time_t minimalCacheTime() const;
+    virtual std::string name() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const TaggedBlock *block) const;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Object *obj) const;
 protected:
     virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc);
     virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);
@@ -53,8 +54,7 @@ DocCacheMemcached::DocCacheMemcached()
     if (!mc_) 
         throw std::runtime_error("Unable to allocate new memcache object");
 
-    statBuilder_.setName("tagged-cache-memcached");
-    DocCache::instance()->addStrategy(this, "memcached");
+    CacheStrategyCollector::instance()->addStrategy(this, name());
 }
 
 DocCacheMemcached::~DocCacheMemcached()
@@ -79,6 +79,11 @@ DocCacheMemcached::init(const Config *config) {
         log()->debug("Adding %s", server.c_str());
         mc_server_add4(mc_, server.c_str());
     }
+    
+    std::string no_cache =
+        config->as<std::string>("/xscript/tagged-cache-memcached/no-cache", StringUtils::EMPTY_STRING);
+
+    insert2Cache(no_cache);
 }
     
 time_t 
@@ -86,10 +91,15 @@ DocCacheMemcached::minimalCacheTime() const {
     return 5;
 }
 
+std::string
+DocCacheMemcached::name() const {
+    return "memcached";
+}
+
 std::auto_ptr<TagKey> 
-DocCacheMemcached::createKey(const Context *ctx, const TaggedBlock *block) const {
+DocCacheMemcached::createKey(const Context *ctx, const Object *obj) const {
     log()->debug("Creating key");
-    return std::auto_ptr<TagKey>(new TagKeyMemcached(ctx, block));
+    return std::auto_ptr<TagKey>(new TagKeyMemcached(ctx, obj));
 }
 
 extern "C" int

@@ -143,30 +143,35 @@ Block::invoke(Context *ctx) {
         return InvokeResult(fakeResult(), false);
     }
 
+    InvokeResult result;
     try {
         BlockTimerStarter starter(ctx, this);
-        InvokeResult result = invokeInternal(ctx);
+        result = invokeInternal(ctx);
         if (result.success) {
             postInvoke(ctx, result.doc);
         }
-        return result;
     }
     catch (const CriticalInvokeError &e) {
         std::string full_error;
-        InvokeResult result = errorResult(e.what(), e.info(), full_error);        
-        OperationMode::instance()->assignBlockError(ctx, this, full_error);        
-        return result;
+        result = errorResult(e.what(), e.info(), full_error);        
+        OperationMode::instance()->assignBlockError(ctx, this, full_error);
     }
     catch (const SkipResultInvokeError &e) {
         log()->info("%s", errorMessage(e.what(), e.info()).c_str());
-        return InvokeResult(fakeResult(), false);
+        result = InvokeResult(fakeResult(), false);
     }
     catch (const InvokeError &e) {
-        return errorResult(e.what(), e.info());
+        result = errorResult(e.what(), e.info());
     }
     catch (const std::exception &e) {
-        return errorResult(e.what());
+        result = errorResult(e.what());
     }
+    
+    if (!result.success) {
+        ctx->rootContext()->setError();
+    }
+    
+    return result;
 }
 
 InvokeResult
@@ -249,14 +254,6 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
         log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
 
         OperationMode::instance()->processPerblockXsltError(ctx, this);
-
-        if (XmlUtils::hasXMLError()) {
-            std::string postfix =
-                "Script: " + owner()->name() +
-                ". Block: name: " + name() +  ", id: " + id() + ", method: " + method() +
-                ". Perblock stylesheet: " + xsltName();
-            XmlUtils::printXMLError(postfix);
-        }
     }
 }
 

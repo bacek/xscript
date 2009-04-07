@@ -34,9 +34,19 @@ TaggedCacheUsageCounterFactory::init(const Config *config) {
 }
 
 std::auto_ptr<TaggedCacheUsageCounter>
-TaggedCacheUsageCounterFactory::createCounter(const std::string& name, bool want_real) {
+TaggedCacheUsageCounterFactory::createBlockCounter(const std::string& name, bool want_real) {
     if (want_real) {
-        return std::auto_ptr<TaggedCacheUsageCounter>(new TaggedCacheUsageCounterImpl(name));
+        return std::auto_ptr<TaggedCacheUsageCounter>(new TaggedCacheBlockUsageCounterImpl(name));
+    }
+    else {
+        return std::auto_ptr<TaggedCacheUsageCounter>(new DummyTaggedCacheUsageCounter());
+    }
+}
+
+std::auto_ptr<TaggedCacheUsageCounter>
+TaggedCacheUsageCounterFactory::createScriptCounter(const std::string& name, bool want_real) {
+    if (want_real) {
+        return std::auto_ptr<TaggedCacheUsageCounter>(new TaggedCacheScriptUsageCounterImpl(name));
     }
     else {
         return std::auto_ptr<TaggedCacheUsageCounter>(new DummyTaggedCacheUsageCounter());

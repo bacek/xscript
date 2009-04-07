@@ -34,21 +34,22 @@ boost::thread_specific_ptr<std::list<TimeoutCounter> > Context::block_timers_;
 
 Context::Context(const boost::shared_ptr<Script> &script,
                  const boost::shared_ptr<RequestData> &data) :
-        stopped_(false), request_data_(data), parent_context_(NULL), xslt_name_(script->xsltName()),
+        stopped_(false), request_data_(data), parent_context_(NULL),
         script_(script), writer_(), flags_(0),
         params_(new ParamsMap()) {
 
     assert(script_.get());
+    xslt_name_ = script_->xsltName();
     init();
 }
 
 Context::Context(const boost::shared_ptr<Script> &script, Context *ctx) :
-        stopped_(false), parent_context_(ctx), xslt_name_(script->xsltName()),
-        script_(script), writer_(), flags_(0) {
+        stopped_(false), parent_context_(ctx), script_(script), writer_(), flags_(0) {
 
     assert(script_.get());
     assert(ctx);
 
+    xslt_name_ = script_->xsltName();
     request_data_ = ctx->request_data_;
     params_ = ctx->params_;
     auth_ = ctx->auth_;
@@ -245,6 +246,18 @@ Context::noXsltPort(bool value) {
     flag(FLAG_NO_XSLT_PORT, value);
 }
 
+bool
+Context::hasError() const {
+    boost::mutex::scoped_lock lock(attr_mutex_);
+    return flags_ & FLAG_HAS_ERROR;
+}
+
+void
+Context::setError() {
+    boost::mutex::scoped_lock lock(attr_mutex_);
+    flag(FLAG_HAS_ERROR, true);
+}
+
 std::string
 Context::getRuntimeError(const Block *block) const {
     boost::mutex::scoped_lock lock(runtime_errors_mutex_);
@@ -287,6 +300,21 @@ Context::stopped() const {
     }
 
     return stopped_;
+}
+
+bool
+Context::xsltChanged(const Script *script) const {
+    return script->xsltName() != xsltName();
+}
+
+const std::string&
+Context::key() const {
+    return key_;
+}
+
+void
+Context::key(const std::string &key) {
+    key_ = key;
 }
 
 void
@@ -365,6 +393,10 @@ ContextStopper::~ContextStopper() {
     if (ctx_->isRoot()) {
         ExtensionList::instance()->stopContext(ctx_.get());
     }
+    else if (ctx_->hasError() || !ctx_->runtime_errors_.empty()) {
+        ctx_->rootContext()->setError();
+    }
+    
     ctx_->stop();
 }
 

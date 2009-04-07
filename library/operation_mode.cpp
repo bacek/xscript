@@ -5,8 +5,11 @@
 #include "xscript/remote_tagged_block.h"
 #include "xscript/request.h"
 #include "xscript/response.h"
+#include "xscript/script.h"
+#include "xscript/stylesheet.h"
 #include "xscript/util.h"
 #include "xscript/string_utils.h"
+#include "xscript/xml_util.h"
 
 #include <stdexcept>
 
@@ -47,8 +50,13 @@ OperationMode::assignBlockError(Context *ctx, const Block *block, const std::str
 
 void
 OperationMode::processPerblockXsltError(const Context *ctx, const Block *block) {
-    (void)ctx;
-    (void)block;
+    if (XmlUtils::hasXMLError()) {
+        ctx->rootContext()->setError();
+        std::string postfix = "Script: " + block->owner()->name() +
+            ". Block: name: " + block->name() + ", id: " + block->id() +
+            ", method: " + block->method() + ". Perblock stylesheet: " + block->xsltName();
+        XmlUtils::printXMLError(postfix);
+    }
 }
 
 void
@@ -59,9 +67,11 @@ OperationMode::processScriptError(const Context *ctx, const Script *script) {
 
 void
 OperationMode::processMainXsltError(const Context *ctx, const Script *script, const Stylesheet *style) {
-    (void)ctx;
-    (void)script;
-    (void)style;
+    if (XmlUtils::hasXMLError()) {
+        ctx->rootContext()->setError();
+        std::string postfix = "Script: " + script->name() + ". Main stylesheet: " + style->name();
+        XmlUtils::printXMLError(postfix);
+    }
 }
 
 void

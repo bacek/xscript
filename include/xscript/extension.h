@@ -29,6 +29,7 @@ public:
     virtual void destroyContext(Context *ctx) = 0;
 
     virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node) = 0;
+    virtual bool checkScriptProperty(const char *prop, const char *value);
 
     void setLogger(Logger* logger) {
         logger_ = logger;

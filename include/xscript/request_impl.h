@@ -43,17 +43,14 @@ private:
 #if defined(HAVE_GNUCXX_HASHMAP)
 
 typedef __gnu_cxx::hash_map<std::string, std::string, StringCIHash> VarMap;
-typedef __gnu_cxx::hash_map<std::string, std::string, StringCIHash, StringCIEqual> HeaderMap;
 
 #elif defined(HAVE_EXT_HASH_MAP) || defined(HAVE_STLPORT_HASHMAP)
 
 typedef std::hash_map<std::string, std::string, StringCIHash> VarMap;
-typedef std::hash_map<std::string, std::string, StringCIHash, StringCIEqual> HeaderMap;
 
 #else
 
 typedef std::map<std::string, std::string> VarMap;
-typedef std::map<std::string, std::string, StringCILess> HeaderMap;
 
 #endif
 

@@ -1,7 +1,9 @@
-<page xmlns:x="http://www.yandex.ru/xscript"
-    >
+<page xmlns:x="http://www.yandex.ru/xscript">
+    <x:control>
+        <method>page-cache-stat</method>
+    </x:control>
 
     <x:control>
-        <method>tagged-cache-stat</method>
+        <method>block-cache-stat</method>
     </x:control>
 </page>

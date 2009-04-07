@@ -2,8 +2,10 @@
 
 #include <boost/current_function.hpp>
 
+#include "xscript/average_counter.h"
 #include "xscript/logger.h"
 #include "xscript/xml_util.h"
+
 #include "doc_pool.h"
 
 #ifdef HAVE_DMALLOC_H

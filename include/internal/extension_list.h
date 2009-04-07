@@ -35,6 +35,8 @@ public:
 
     Extension* extension(const xmlNodePtr node, bool allow_empty_namespace) const;
     Extension* extension(const char *name, const char *ref, bool allow_empty_namespace) const;
+    
+    bool checkScriptProperty(const char *prop, const char *value);
 
 private:
     friend class std::auto_ptr<ExtensionList>;

@@ -32,7 +32,7 @@ namespace xscript {
 
 class TaggedKeyDisk : public TagKey {
 public:
-    TaggedKeyDisk(const Context *ctx, const TaggedBlock *block);
+    TaggedKeyDisk(const Context *ctx, const Object *obj);
 
     boost::uint32_t number() const;
     virtual const std::string& asString() const;
@@ -54,8 +54,9 @@ public:
     virtual void init(const Config *config);
 
     virtual time_t minimalCacheTime() const;
+    virtual std::string name() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const TaggedBlock *block) const;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Object *obj) const;
 
 protected:
     virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc);
@@ -98,38 +99,11 @@ const boost::uint32_t DocCacheDisk::VERSION_SIGNATURE_MARKED = 0xdfc00202;
 const boost::uint32_t DocCacheDisk::DOC_SIGNATURE_START = 0x0a0b0d0a;
 const boost::uint32_t DocCacheDisk::DOC_SIGNATURE_END = 0x0a0e0d0a;
 
-TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const TaggedBlock *block) {
+TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const Object *obj) {
     assert(NULL != ctx);
-    assert(NULL != block);
+    assert(NULL != obj);
 
-    const std::string& xslt = block->xsltName();
-    if (!xslt.empty()) {
-        value_.assign(xslt);
-        value_.push_back('|');
-        
-        namespace fs = boost::filesystem;
-        fs::path path(xslt);
-        if (fs::exists(path) && !fs::is_directory(path)) {
-            value_.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
-            value_.push_back('|');
-        }
-        else {
-            throw std::runtime_error("Cannot stat stylesheet " + xslt);
-        }
-    }
-    value_.append(boost::lexical_cast<std::string>(block->cacheTime()));
-    value_.push_back('|');
-    value_.append(block->canonicalMethod(ctx));
-
-    const std::vector<Param*> &params = block->params();
-    for (unsigned int i = 0, n = params.size(); i < n; ++i) {
-        value_.append(1, ':').append(params[i]->asString(ctx));
-    }
-    const std::vector<Param*> &xslt_params = block->xsltParams();
-    for (unsigned int i = 0, n = xslt_params.size(); i < n; ++i) {
-        value_.append(1, ':').append(xslt_params[i]->id());
-        value_.append(1, ':').append(xslt_params[i]->asString(ctx));
-    }
+    value_ = obj->createTagKey(ctx);
 
     std::string hash = HashUtils::hexMD5(value_.c_str(), value_.length());
     number_ = HashUtils::crc32(hash) & 0xFF;
@@ -175,8 +149,7 @@ void DocCacheDisk::WriteFile::write(const void *ptr, size_t size) const {
 
 
 DocCacheDisk::DocCacheDisk() : min_time_(DEFAULT_CACHE_TIME) {
-    statBuilder_.setName("tagged-cache-disk");
-    DocCache::instance()->addStrategy(this, "disk");
+    CacheStrategyCollector::instance()->addStrategy(this, name());
 }
 
 DocCacheDisk::~DocCacheDisk() {
@@ -191,11 +164,21 @@ DocCacheDisk::init(const Config *config) {
     if (min_time_ <= 0) {
         min_time_ = DEFAULT_CACHE_TIME;
     }
+    
+    std::string no_cache =
+        config->as<std::string>("/xscript/tagged-cache-disk/no-cache", StringUtils::EMPTY_STRING);
+
+    insert2Cache(no_cache);
 }
 
 time_t
 DocCacheDisk::minimalCacheTime() const {
     return min_time_;
+}
+
+std::string
+DocCacheDisk::name() const {
+    return "disk";
 }
 
 bool
@@ -282,8 +265,8 @@ DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper 
 }
 
 std::auto_ptr<TagKey>
-DocCacheDisk::createKey(const Context *ctx, const TaggedBlock *block) const {
-    return std::auto_ptr<TagKey>(new TaggedKeyDisk(ctx, block));
+DocCacheDisk::createKey(const Context *ctx, const Object *obj) const {
+    return std::auto_ptr<TagKey>(new TaggedKeyDisk(ctx, obj));
 }
 
 void

@@ -366,7 +366,7 @@ RequestImpl::remoteFile(const std::string &name) const {
 bool
 RequestImpl::isSecure() const {
     const std::string &val = Parser::get(vars_, HTTPS_KEY);
-    return !val.empty() && ("on" == val);
+    return !val.empty() && strncasecmp(val.c_str(), "on", sizeof("on") - 1) == 0;
 }
 
 bool

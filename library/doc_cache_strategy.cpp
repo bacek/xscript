@@ -1,8 +1,11 @@
-#include <boost/bind.hpp>
 #include "settings.h"
-#include "xscript/doc_cache_strategy.h"
+
+#include <boost/bind.hpp>
+#include <boost/tokenizer.hpp>
+
 #include "xscript/control_extension.h"
-#include "xscript/profiler.h"
+#include "xscript/doc_cache.h"
+#include "xscript/doc_cache_strategy.h"
 #include "xscript/tag.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -17,60 +20,83 @@ TagKey::TagKey() {
 TagKey::~TagKey() {
 }
 
-DocCacheStrategy::DocCacheStrategy() : statBuilder_("tagged-cache") {
+DocCacheStrategy::DocCacheStrategy() {
 }
 
 DocCacheStrategy::~DocCacheStrategy() {
 }
 
-void DocCacheStrategy::init(const Config *config) {
-    hitCounter_ = AverageCounterFactory::instance()->createCounter("hits");
-    missCounter_ = AverageCounterFactory::instance()->createCounter("miss");
-    saveCounter_ = AverageCounterFactory::instance()->createCounter("save");
-    TaggedCacheUsageCounterFactory::instance()->init(config);
-    usageCounter_ = TaggedCacheUsageCounterFactory::instance()->createCounter("usage");
-    
-    statBuilder_.addCounter(hitCounter_.get());
-    statBuilder_.addCounter(missCounter_.get());
-    statBuilder_.addCounter(saveCounter_.get());
-    statBuilder_.addCounter(usageCounter_.get());
+void
+DocCacheStrategy::init(const Config *config) {
+    (void)config;
 }
 
-
-
-bool DocCacheStrategy::loadDoc(const TagKey *key,
-                               Tag &tag,
-                               XmlDocHelper &doc,
-                               const Context *ctx,
-                               const TaggedBlock *block) {
-
-    //return loadDocImpl(key, tag, doc);
-
-    boost::function<bool ()> f = boost::bind(
-                                     &DocCacheStrategy::loadDocImpl,
-                                     this, boost::cref(key), boost::ref(tag), boost::ref(doc)
-                                 );
-    std::pair<bool, uint64_t> res = profile(f);
-    
-    if (res.first) {
-        usageCounter_->fetchedHit(ctx, block);
-        hitCounter_->add(res.second);
-    }
-    else {
-        usageCounter_->fetchedMiss(ctx, block);
-        missCounter_->add(res.second);
-    }
-    return res.first;
+bool
+DocCacheStrategy::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
+    return loadDocImpl(key, tag, doc);
 }
 
-bool DocCacheStrategy::saveDoc(const TagKey *key, const Tag& tag, const XmlDocHelper &doc) {
-    boost::function<bool ()> f = boost::bind(
-                                     &DocCacheStrategy::saveDocImpl,
-                                     this, boost::cref(key), boost::ref(tag), boost::ref(doc)
-                                 );
-    std::pair<bool, uint64_t> res = profile(f);
-    saveCounter_->add(res.second);
-    return res.first;
+bool
+DocCacheStrategy::saveDoc(const TagKey *key, const Tag& tag, const XmlDocHelper &doc) {
+    return saveDocImpl(key, tag, doc);
+}
+
+void
+DocCacheStrategy::insert2Cache(const std::string &no_cache) {
+
+    typedef boost::char_separator<char> Separator;
+    typedef boost::tokenizer<Separator> Tokenizer;
+
+    bool cache_block = true, cache_page = true;
+    Tokenizer tok(no_cache, Separator(" ,"));
+    for (Tokenizer::iterator it = tok.begin(), end = tok.end(); it != end; ++it) {
+        if (strcasecmp(no_cache.c_str(), "page") == 0) {
+            cache_page = false;
+        }
+        else if (strcasecmp(no_cache.c_str(), "block") == 0) {
+            cache_block = false;
+        }
+    }
+        
+    if (cache_page) {
+        PageCache::instance()->addStrategy(this, name());
+    }
+    if (cache_block) {
+        DocCache::instance()->addStrategy(this, name());
+    }
+}
+
+void
+DocCacheStrategy::fillStatBuilder(StatBuilder *builder) {
+    (void)builder;
+}
+
+CacheStrategyCollector::CacheStrategyCollector() {
+}
+
+CacheStrategyCollector::~CacheStrategyCollector() {
+}
+
+CacheStrategyCollector*
+CacheStrategyCollector::instance() {
+    static CacheStrategyCollector collector;
+    return &collector;
+}
+
+void
+CacheStrategyCollector::addStrategy(DocCacheStrategy* strategy, const std::string& name) {
+    strategies_.push_back(std::make_pair(strategy, name));
+}
+
+void
+CacheStrategyCollector::init(const Config *config) {
+    for(std::vector<std::pair<DocCacheStrategy*, std::string> >::iterator it = strategies_.begin();
+        it != strategies_.end();
+        ++it) {
+        it->first->init(config);
+    }
+    DocCache::instance()->init(config);
+    PageCache::instance()->init(config);
 }
 
 } // namespace xscript

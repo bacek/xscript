@@ -31,6 +31,8 @@ public:
     virtual std::string fullName(const std::string &name) const = 0;
     virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc) = 0;
 
+    virtual std::string createTagKey(const Context *ctx) const;
+    
 protected:
     virtual void postParse();
     void xsltName(const std::string &value);

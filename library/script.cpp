@@ -23,19 +23,20 @@
 #include <libxml/xinclude.h>
 #include <libxml/uri.h>
 
-#include "xscript/xml_util.h"
 #include "xscript/block.h"
-#include "xscript/logger.h"
-#include "xscript/script.h"
 #include "xscript/context.h"
-#include "xscript/response.h"
+#include "xscript/doc_cache.h"
 #include "xscript/extension.h"
+#include "xscript/logger.h"
 #include "xscript/operation_mode.h"
 #include "xscript/profiler.h"
-#include "xscript/stylesheet.h"
+#include "xscript/response.h"
+#include "xscript/script.h"
 #include "xscript/script_cache.h"
-#include "xscript/threaded_block.h"
 #include "xscript/script_factory.h"
+#include "xscript/stylesheet.h"
+#include "xscript/threaded_block.h"
+#include "xscript/xml_util.h"
 
 #include "internal/param_factory.h"
 #include "internal/extension_list.h"
@@ -46,8 +47,11 @@
 
 namespace xscript {
 
+static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
+
 Script::Script(const std::string &name) :
-    Xml(), doc_(NULL), name_(name), flags_(FLAG_FORCE_STYLESHEET), expire_time_delta_(300) {
+    Xml(), doc_(NULL), name_(name), flags_(FLAG_FORCE_STYLESHEET),
+    expire_time_delta_(300), cache_time_(CACHE_TIME_UNDEFINED) {
 }
 
 Script::~Script() {
@@ -187,26 +191,21 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
 }
 
 void
-Script::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
-    boost::shared_ptr<Stylesheet> stylesheet(static_cast<Stylesheet*>(NULL));
-    if (!ctx->xsltName().empty()) {
-        stylesheet = Stylesheet::create(ctx->xsltName());
+Script::applyStylesheet(Context *ctx, XmlDocHelper &doc) {    
+    std::string xslt = ctx->xsltName();
+    if (xslt.empty()) {
+        return;
     }
-    else if (!xsltName().empty()) {
-        stylesheet = Stylesheet::create(xsltName());
-    }
-    if (NULL != stylesheet.get()) {
-        PROFILER(log(), "apply stylesheet " + name());
-        log()->info("applying stylesheet to %s", name().c_str());
-        ctx->createDocumentWriter(stylesheet);
-        Object::applyStylesheet(stylesheet, ctx, doc, false);
-        
-        OperationMode::instance()->processMainXsltError(ctx, this, stylesheet.get());
-        if (XmlUtils::hasXMLError()) {
-            std::string postfix = "Script: " + name() + ". Main stylesheet: " + stylesheet->name();
-            XmlUtils::printXMLError(postfix);
-        }
-    }
+    
+    boost::shared_ptr<Stylesheet> stylesheet(Stylesheet::create(xslt));
+    
+    PROFILER(log(), "apply stylesheet " + name());
+    log()->info("applying stylesheet to %s", name().c_str());
+    
+    ctx->createDocumentWriter(stylesheet);
+    Object::applyStylesheet(stylesheet, ctx, doc, false);
+    
+    OperationMode::instance()->processMainXsltError(ctx, this, stylesheet.get());
 }
 
 boost::shared_ptr<Script>
@@ -461,11 +460,17 @@ Script::addHeaders(Context *ctx) const {
     if (NULL == response) { // request can be null only when running tests
         return;
     }
-    response->setHeader("Expires", HttpDateUtils::format(time(NULL) + expire_time_delta_));
+    addExpiresHeader(ctx);
     for (std::map<std::string, std::string>::const_iterator i = headers_.begin(), end = headers_.end(); i != end; ++i) {
         response->setHeader(i->first, i->second);
     }
 
+}
+
+void
+Script::addExpiresHeader(const Context *ctx) const {
+    ctx->response()->setHeader(
+            "Expires", HttpDateUtils::format(time(NULL) + expire_time_delta_));
 }
 
 XmlDocHelper
@@ -595,8 +600,15 @@ Script::property(const char *prop, const char *value) {
     else if (strncasecmp(prop, "http-expire-time-delta", sizeof("http-expire-time-delta")) == 0) {
         expireTimeDelta(boost::lexical_cast<unsigned int>(value));
     }
+    else if (strncasecmp(prop, "cache-time", sizeof("cache-time")) == 0) {
+        cacheTime(boost::lexical_cast<time_t>(value));
+    }
     else if (strncasecmp(prop, "binary-page", sizeof("binary-page")) == 0) {
         binaryPage(strncasecmp(value, "yes", sizeof("yes")) == 0);
+    }
+    else if (ExtensionList::instance()->checkScriptProperty(prop, value)) {
+        extension_properties_.insert(
+                std::make_pair(std::string(prop), std::string(value)));
     }
     else {
         throw std::runtime_error(std::string("invalid script property: ").append(prop));
@@ -609,6 +621,114 @@ Script::replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) co
     (void)node;
     xmlUnlinkNode(newnode);
     xmlFreeNode(newnode);
+}
+
+const std::string&
+Script::extensionProperty(const std::string &name) const {
+    std::map<std::string, std::string, StringCILess>::const_iterator it =
+        extension_properties_.find(name);
+    
+    if (it == extension_properties_.end()) {
+        return StringUtils::EMPTY_STRING;
+    }
+    
+    return it->second;
+}
+
+bool
+Script::cacheTimeUndefined() const {
+    return cache_time_ == CACHE_TIME_UNDEFINED;
+}
+
+std::string
+Script::createTagKey(const Context *ctx) const {
+   
+    std::string key(ctx->request()->getOriginalUrl());
+    key.push_back('|');
+
+    const TimeMapType& modified_info = modifiedInfo();
+    for(TimeMapType::const_iterator it = modified_info.begin();
+        it != modified_info.end();
+        ++it) {
+        key.append(boost::lexical_cast<std::string>(it->second));
+        key.push_back('|');
+    }
+    
+    const std::string &xslt = xsltName();
+    if (!xslt.empty()) {
+        namespace fs = boost::filesystem;
+        fs::path path(xslt);
+        if (fs::exists(path) && !fs::is_directory(path)) {
+            key.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
+            key.push_back('|');
+        }
+        else {
+            throw std::runtime_error("Cannot stat stylesheet " + xslt);
+        }
+    }
+    
+    for(std::vector<Block*>::const_iterator it = blocks_.begin();
+        it != blocks_.end();
+        ++it) {
+        Block *block = (*it);
+        const std::string& xslt_name = block->xsltName();
+        if (!xslt_name.empty()) {              
+            namespace fs = boost::filesystem;
+            fs::path path(xslt_name);
+            if (fs::exists(path) && !fs::is_directory(path)) {
+                key.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
+                key.push_back('|');
+            }
+            else {
+                throw std::runtime_error("Cannot stat stylesheet " + xslt_name);
+            }                
+        }            
+    }
+    
+    const std::string &ctx_key = ctx->key();
+    if (!ctx_key.empty()) {
+        key.push_back('|');
+        key.append(ctx_key);
+    }
+    
+    return key;
+}
+
+std::string
+Script::info(const Context *ctx) const {
+    std::string info("Original url: ");
+    info.append(ctx->request()->getOriginalUrl());
+    info.append(" | Filename: ");
+    info.append(name());
+    info.append(" | Cache-time: ");
+    if (cacheTimeUndefined()) {
+        info.append("undefined");    
+    }
+    else {
+        info.append(boost::lexical_cast<std::string>(cacheTime()));
+    }
+    
+    return info;
+}
+
+bool
+Script::cachable(const Context *ctx) const {
+
+    if (binaryPage()) {
+        return false;
+    }
+    
+    if (cacheTimeUndefined() || cache_time_ <= DocCache::instance()->minimalCacheTime()) {
+        return false;
+    }
+    
+    if (ctx) {
+        if (ctx->hasError() || ctx->xsltChanged(this)) {
+            return false;
+        }
+    }
+    
+    return true;
 }
 
 } // namespace xscript

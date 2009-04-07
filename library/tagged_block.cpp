@@ -1,6 +1,9 @@
 #include "settings.h"
 
 #include <boost/current_function.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
+
 #include <limits>
 
 #include "details/tag_param.h"
@@ -16,7 +19,6 @@
 
 namespace xscript {
 
-static const time_t CACHE_TIME_MINIMUM = 5;
 static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
 
 TaggedBlock::TaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
@@ -255,15 +257,53 @@ TaggedBlock::info(const Context *ctx) const {
         }
     }
     
-    info.append(" | Cache-time: ");
-    if (cacheTimeUndefined()) {
-        info.append("undefined");    
-    }
-    else {
-        info.append(boost::lexical_cast<std::string>(cacheTime()));
+    if (tagged()) {
+        info.append(" | Cache-time: ");
+        if (cacheTimeUndefined()) {
+            info.append("undefined");    
+        }
+        else {
+            info.append(boost::lexical_cast<std::string>(cacheTime()));
+        }
     }
     
     return info;
+}
+
+std::string
+TaggedBlock::createTagKey(const Context *ctx) const {
+    std::string key;
+    
+    const std::string& xslt = xsltName();
+    if (!xslt.empty()) {
+        key.assign(xslt);
+        key.push_back('|');
+        
+        namespace fs = boost::filesystem;
+        fs::path path(xslt);
+        if (fs::exists(path) && !fs::is_directory(path)) {
+            key.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
+            key.push_back('|');
+        }
+        else {
+            throw std::runtime_error("Cannot stat stylesheet " + xslt);
+        }
+    }
+    key.append(boost::lexical_cast<std::string>(cacheTime()));
+    key.push_back('|');
+    key.append(canonicalMethod(ctx));
+    
+    const std::vector<Param*> &block_params = params();
+    for (unsigned int i = 0, n = block_params.size(); i < n; ++i) {
+        key.append(1, ':').append(block_params[i]->asString(ctx));
+    }
+    const std::vector<Param*> &xslt_params = xsltParams();
+    for (unsigned int i = 0, n = xslt_params.size(); i < n; ++i) {
+        key.append(1, ':').append(xslt_params[i]->id());
+        key.append(1, ':').append(xslt_params[i]->asString(ctx));
+    }
+    
+    return key;
 }
 
 } // namespace xscript

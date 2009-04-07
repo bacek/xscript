@@ -8,8 +8,9 @@
 
 #include <boost/thread/mutex.hpp>
 
-#include <xscript/xml.h>
+#include <xscript/functors.h>
 #include <xscript/object.h>
+#include <xscript/xml.h>
 #include <xscript/xml_helpers.h>
 
 namespace xscript {
@@ -44,6 +45,10 @@ public:
         return expire_time_delta_;
     }
 
+    inline time_t cacheTime() const {
+        return cache_time_;
+    }
+    
     bool allowMethod(const std::string& value) const;
 
     inline const Block* block(unsigned int n) const {
@@ -70,6 +75,14 @@ public:
     virtual XmlDocHelper invoke(boost::shared_ptr<Context> ctx);
     virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc);
 
+    virtual std::string createTagKey(const Context *ctx) const;
+    virtual std::string info(const Context *ctx) const;
+    virtual bool cachable(const Context *ctx) const;
+    
+    void addExpiresHeader(const Context *ctx) const;
+
+    const std::string& extensionProperty(const std::string &name) const;
+    
     // TODO: remove this method. It should be in ScriptFactory.
     static boost::shared_ptr<Script> create(const std::string &name);
     static boost::shared_ptr<Script> create(const std::string &name, const std::string &xml);
@@ -89,6 +102,10 @@ protected:
         expire_time_delta_ = value;
     }
 
+    inline void cacheTime(time_t value) {
+        cache_time_ = value;
+    }    
+    
     inline void binaryPage(bool value) {
         flag(FLAG_BINARY_PAGE, value);
     }
@@ -123,8 +140,10 @@ protected:
     virtual void postParse();
     virtual void property(const char *name, const char *value);
 
+    bool cacheTimeUndefined() const;
+    
     virtual void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const;
-
+    
     static boost::shared_ptr<Script> createWithParse(const std::string &name, const std::string &xml);
 
     static const unsigned int FLAG_THREADED = 1;
@@ -138,10 +157,13 @@ private:
     XmlDocHelper doc_;
     std::vector<Block*> blocks_;
     std::string name_;
-    unsigned int flags_, expire_time_delta_;
+    unsigned int flags_;
+    unsigned int expire_time_delta_;
+    time_t cache_time_;
     std::set<xmlNodePtr> xscript_node_set_;
     std::map<std::string, std::string> headers_;
     std::vector<std::string> allow_methods_;
+    std::map<std::string, std::string, StringCILess> extension_properties_;
 };
 
 } // namespace xscript
