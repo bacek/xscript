@@ -447,6 +447,12 @@ DefaultRequestResponse::isBinary() const {
 }
 
 bool
+DefaultRequestResponse::isStatusOK() const {
+    boost::mutex::scoped_lock sl(resp_mutex_);
+    return status_ == 200;
+}
+
+bool
 DefaultRequestResponse::isBinaryInternal() const {
     return NULL != writer_.get();
 }

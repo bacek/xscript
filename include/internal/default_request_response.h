@@ -94,7 +94,7 @@ public:
     virtual void detach();
 
     virtual bool isBinary() const;
-
+    virtual bool isStatusOK() const;
     const HeaderMap& outHeaders() const;
 protected:
     typedef std::set<Cookie, CookieLess> CookieSet;

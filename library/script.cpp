@@ -720,7 +720,7 @@ Script::cachable(const Context *ctx) const {
     }
     
     if (ctx) {
-        if (ctx->hasError() || ctx->xsltChanged(this)) {
+        if (ctx->hasError() || ctx->xsltChanged(this) || !ctx->response()->isStatusOK()) {
             return false;
         }
     }
