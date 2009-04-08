@@ -1,3 +1,10 @@
+xscript (5.58-1) unstable; urgency=low
+
+  * page cache doc format changed
+  * change default type of TypedParam to string, except StateArg
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 08 Apr 2009 11:38:04 +0400
+
 xscript (5.58-0) unstable; urgency=low
 
   * fullpage cache implemented
