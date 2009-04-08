@@ -50,7 +50,6 @@ const std::string Server::MAX_BODY_LENGTH = "MAX_BODY_LENGTH";
 
 extern "C" int closeFunc(void *ctx);
 extern "C" int writeFunc(void *ctx, const char *data, int len);
-extern "C" int writeBufFunc(void *ctx, const char *data, int len);
 
 Server::Server(Config *config) :
         config_(config) {
@@ -154,36 +153,39 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
 bool
 Server::processCachedDoc(Context *ctx, const Script *script) {
     XmlDocHelper doc(NULL);
-    bool loaded = false;
+    xmlNodePtr headers_node(NULL);
     try {
         Tag tag;
-        loaded = PageCache::instance()->loadDoc(ctx, script, tag, doc);
+        if (!PageCache::instance()->loadDoc(ctx, script, tag, doc)) {
+            return false;
+        }
+
+        xmlNodePtr root = xmlDocGetRootElement(doc.get());
+        XmlUtils::throwUnless(NULL != root);
+           
+        headers_node = root->last;
+        if (NULL == headers_node) {
+            throw std::runtime_error("Incorrect cache document structure: headers node is absent");
+        }
+        
+        if (strcmp((const char*)(headers_node->name), "headers") != 0) {
+            throw std::runtime_error(
+                std::string("Unexpected tag in cached document: ") + (const char*)(headers_node->name));
+        }
     }
     catch(const std::exception &e) {
-        log()->error("Error in loading cached doc: %s", e.what());
-        loaded = false;
-    }
-    
-    if (!loaded) {
+        log()->error("Error in loading cached page: %s", e.what());
         return false;
     }
     
     script->addExpiresHeader(ctx);
     
-    xmlNodePtr root = xmlDocGetRootElement(doc.get());
-    xmlNodePtr node = root->children;
+    xmlNodePtr node = headers_node->children;
     while(node) {
         const char *name = (const char*)(node->name);
         if (strcmp(name, "header") == 0) {
             ctx->response()->setHeader(XmlUtils::attrValue(node, "name"),
                                        XmlUtils::attrValue(node, "value"));
-        }
-        else if (strcmp(name, "content") == 0) {
-            sendHeaders(ctx);
-            if (!ctx->request()->suppressBody()) {
-                std::string out = XmlUtils::value(node);
-                ctx->response()->write(out.c_str(), out.length());
-            }
         }
         else {
             throw std::runtime_error(std::string("Unexpected tag in cached document: ") + name);
@@ -192,6 +194,11 @@ Server::processCachedDoc(Context *ctx, const Script *script) {
         node = node->next;
     }
     
+    xmlUnlinkNode(headers_node);
+    xmlFreeNode(headers_node);
+    
+    sendResponse(ctx, doc);
+    
     return true;
 }
 
@@ -199,74 +206,59 @@ void
 Server::sendResponse(Context *ctx, XmlDocHelper doc) {
     sendHeaders(ctx);
     if (!ctx->request()->suppressBody()) {
-        writeDoc(ctx, doc, ctx, &writeFunc, &closeFunc);
+        xmlCharEncodingHandlerPtr encoder = NULL;
+        const std::string &encoding = ctx->documentWriter()->outputEncoding();
+        if (!encoding.empty()) {
+            encoder = xmlFindCharEncodingHandler(encoding.c_str());
+        }
+
+        xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(writeFunc, closeFunc, ctx, encoder);
+        XmlUtils::throwUnless(NULL != buf);
+        
+        try {
+            ctx->documentWriter()->write(ctx->response(), doc, buf);
+        }
+        catch(const std::exception &e) {
+            xmlOutputBufferClose(buf);
+            throw e;
+        }
     }
 }
 
 void
 Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc) {
-    
-    XmlDocHelper new_doc(xmlNewDoc((const xmlChar*) "1.0"));
-    xmlNodePtr root = xmlNewDocNode(new_doc.get(), NULL, BAD_CAST "result", 0);
-    XmlUtils::throwUnless(NULL != root);
- 
-    xmlDocSetRootElement(new_doc.get(), root);
- 
-    std::string out;
-    writeDoc(ctx, doc, &out, &writeBufFunc, &closeFunc);
+       
+    XmlNodeHelper headers_node(xmlNewNode(NULL, (const xmlChar*)"headers"));
     
     const HeaderMap& headers = ctx->response()->outHeaders();
     for(HeaderMap::const_iterator h = headers.begin(); h != headers.end(); ++h) {
         if (strncasecmp(h->first.c_str(), "expires", sizeof("expires")) == 0) {
             continue;
         }
-        XmlNodeHelper header(xmlNewNode(0, BAD_CAST "header"));
-        xmlSetProp(header.get(), BAD_CAST "name", BAD_CAST h->first.c_str());
-        xmlSetProp(header.get(), BAD_CAST "value", BAD_CAST h->second.c_str());
-        xmlAddChild(root, header.get());
+        XmlNodeHelper header(xmlNewNode(NULL, (const xmlChar*)"header"));
+        xmlSetProp(header.get(), (const xmlChar*)"name", (const xmlChar*)h->first.c_str());
+        xmlSetProp(header.get(), (const xmlChar*)"value", (const xmlChar*)h->second.c_str());
+        xmlAddChild(headers_node.get(), header.get());
         header.release();
     }
- 
-    XmlNodeHelper content(xmlNewNode(0, BAD_CAST "content"));
-    xmlAddChild(content.get(), xmlNewTextLen(BAD_CAST out.c_str(), out.length()));
-    xmlAddChild(root, content.get());
-    content.release();
- 
+
+    xmlNodePtr root = xmlDocGetRootElement(doc.get());
+    xmlAddChild(root, headers_node.get());
+
     if (script->cacheTime() > PageCache::instance()->minimalCacheTime()) {
-        Tag tag;
-        tag.expire_time = time(NULL) + script->cacheTime();
-        PageCache::instance()->saveDoc(ctx, script, tag, new_doc);
+        try {
+            Tag tag;
+            tag.expire_time = time(NULL) + script->cacheTime();
+            PageCache::instance()->saveDoc(ctx, script, tag, doc);
+        }
+        catch(const std::exception &e) {
+            log()->error("Error in saving page to cache: %s", e.what());
+        }
     }
  
-    sendHeaders(ctx);
-    if (!ctx->request()->suppressBody()) {
-        ctx->response()->write(out.c_str(), out.length());
-    }
-}
-
-void
-Server::writeDoc(Context *ctx,
-                 XmlDocHelper doc,
-                 void *io_ctx,
-                 xmlOutputWriteCallback write_func,
-                 xmlOutputCloseCallback close_func) {
+    xmlUnlinkNode(headers_node.get());
     
-    xmlCharEncodingHandlerPtr encoder = NULL;
-    const std::string &encoding = ctx->documentWriter()->outputEncoding();
-    if (!encoding.empty()) {
-        encoder = xmlFindCharEncodingHandler(encoding.c_str());
-    }
-
-    xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(write_func, close_func, io_ctx, encoder);
-    XmlUtils::throwUnless(NULL != buf);
-    
-    try {
-        ctx->documentWriter()->write(ctx->response(), doc, buf);
-    }
-    catch(const std::runtime_error &e) {
-        xmlOutputBufferClose(buf);
-        throw e;
-    }
+    sendResponse(ctx, doc);
 }
 
 boost::shared_ptr<Script>
@@ -376,22 +368,6 @@ writeFunc(void *ctx, const char *data, int len) {
     catch (const std::exception &e) {
         log()->error("caught exception while writing result: %s %s",
                      context->request()->getScriptFilename().c_str(), e.what());
-    }
-    return -1;
-}
-
-extern "C" int
-writeBufFunc(void *ctx, const char *data, int len) {
-    if (len == 0) {
-        return 0;
-    }
-    try {
-        std::string * str = static_cast<std::string*>(ctx);
-        str->append(data, len);
-        return len;
-    }
-    catch (const std::exception &e) {
-        log()->error("caught exception while writing result to buffer: %s", e.what());
     }
     return -1;
 }

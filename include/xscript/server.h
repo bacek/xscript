@@ -29,11 +29,7 @@ public:
     const std::string& hostname() const;
 
 protected:
-    virtual void handleRequest(const boost::shared_ptr<RequestData>& request_data);
-    void writeDoc(Context *ctx, XmlDocHelper doc, void *io_ctx,
-                  xmlOutputWriteCallback write_func,
-                  xmlOutputCloseCallback close_func);
-    
+    virtual void handleRequest(const boost::shared_ptr<RequestData>& request_data);    
     bool processCachedDoc(Context *ctx, const Script *script);
     void sendResponse(Context *ctx, XmlDocHelper doc);
     void sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc);
