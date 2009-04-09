@@ -116,6 +116,19 @@ Policy::isSkippedProxyHeader(const std::string &header) const {
     return ProxyHeadersHelper::skipped(header.c_str());
 }
 
+void
+Policy::processCacheLevel(TaggedBlock *block, const std::string &no_cache) const {
+    (void)block;
+    (void)no_cache;
+}
+
+bool
+Policy::allowCaching(const Context *ctx, const TaggedBlock *block) const {
+    (void)ctx;
+    (void)block;
+    return true;
+}
+
 const ProxyHeadersHelper::StrSize
 ProxyHeadersHelper::skipped_headers[] = {
     { "host", sizeof("host") },

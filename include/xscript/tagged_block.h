@@ -2,8 +2,10 @@
 #define _XSCRIPT_TAGGED_BLOCK_H_
 
 #include <ctime>
-#include <xscript/tag.h>
+
 #include <xscript/block.h>
+#include <xscript/functors.h>
+#include <xscript/tag.h>
 #include <xscript/xml_helpers.h>
 
 namespace xscript {
@@ -18,11 +20,16 @@ public:
 
     virtual bool tagged() const;
     virtual void tagged(bool tagged);
+    
     virtual time_t cacheTime() const;
     virtual void cacheTime(time_t cache_time);
+    
     virtual std::string info(const Context *ctx) const;
 
     virtual std::string createTagKey(const Context *ctx) const;
+
+    void cacheLevel(unsigned char type, bool value);
+    bool cacheLevel(unsigned char type) const;
     
 protected:
     virtual void processParam(std::auto_ptr<Param> p);
@@ -37,9 +44,11 @@ protected:
 
 private:
     std::string canonical_method_;
-    bool tagged_;
+    unsigned char cache_level_;
     time_t cache_time_;
     int tag_position_;
+    
+    static const unsigned char FLAG_TAGGED = 1;
 };
 
 } // namespace xscript

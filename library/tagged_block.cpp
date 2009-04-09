@@ -3,13 +3,15 @@
 #include <boost/current_function.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <limits>
 
-#include "details/tag_param.h"
 #include "xscript/context.h"
-#include "xscript/logger.h"
 #include "xscript/doc_cache.h"
+#include "xscript/logger.h"
+#include "xscript/policy.h"
+#include "details/tag_param.h"
 #include "xscript/tagged_block.h"
 #include "xscript/vhost_data.h"
 
@@ -23,7 +25,7 @@ static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
 
 TaggedBlock::TaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), canonical_method_(),
-        tagged_(false), cache_time_(CACHE_TIME_UNDEFINED), tag_position_(-1) {
+        cache_level_(0), cache_time_(CACHE_TIME_UNDEFINED), tag_position_(-1) {
 }
 
 TaggedBlock::~TaggedBlock() {
@@ -37,12 +39,22 @@ TaggedBlock::canonicalMethod(const Context *ctx) const {
 
 bool
 TaggedBlock::tagged() const {
-    return tagged_;
+    return cacheLevel(FLAG_TAGGED);
 }
 
 void
 TaggedBlock::tagged(bool tagged) {
-    tagged_ = tagged;
+    cacheLevel(FLAG_TAGGED, tagged);
+}
+
+void
+TaggedBlock::cacheLevel(unsigned char type, bool value) {
+    cache_level_ = value ? (cache_level_ | type) : (cache_level_ &= ~type);
+}
+
+bool
+TaggedBlock::cacheLevel(unsigned char type) const {
+    return cache_level_ & type;
 }
 
 time_t
@@ -66,6 +78,10 @@ TaggedBlock::invokeInternal(Context *ctx) {
     }
 
     if (!xsltName().empty() && ctx->noXsltPort()) {
+        return Block::invokeInternal(ctx);
+    }
+    
+    if (!Policy::instance()->allowCaching(ctx, this)) {
         return Block::invokeInternal(ctx);
     }
 
@@ -105,6 +121,10 @@ TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a
     }
 
     if (!xsltName().empty() && ctx->noXsltPort()) {
+        return;
+    }
+    
+    if (!Policy::instance()->allowCaching(ctx, this)) {
         return;
     }
 
@@ -168,18 +188,23 @@ TaggedBlock::property(const char *name, const char *value) {
 
 bool
 TaggedBlock::propertyInternal(const char *name, const char *value) {
-    if (strncasecmp(name, "tag", sizeof("tag")) != 0) {
+    if (strncasecmp(name, "no-cache", sizeof("no-cache")) == 0) {
+        Policy::instance()->processCacheLevel(this, value);
+    }
+    else if (strncasecmp(name, "tag", sizeof("tag")) == 0) {
+        if (tagged()) {
+            throw std::runtime_error("duplicated tag");
+        }
+        
+        if (strncasecmp(value, "yes", sizeof("yes")) != 0) {
+            cache_time_ = boost::lexical_cast<time_t>(value); 
+        }
+        tagged(true);
+    }
+    else {
         return false;
     }
     
-    if (tagged()) {
-        throw std::runtime_error("duplicated tag");
-    }
-    
-    if (strncasecmp(value, "yes", sizeof("yes")) != 0) {
-        cache_time_ = boost::lexical_cast<time_t>(value); 
-    }
-    tagged(true);
     return true;
 }
 

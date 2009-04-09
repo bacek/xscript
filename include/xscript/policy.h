@@ -1,14 +1,17 @@
 #ifndef _XSCRIPT_POLICY_H_
 #define _XSCRIPT_POLICY_H_
 
-#include <vector>
 #include <string>
+#include <vector>
 
 #include "xscript/component.h"
+#include "xscript/functors.h"
 
 namespace xscript {
 
+class Context;
 class Request;
+class TaggedBlock;
 
 class Policy: public virtual Component<Policy> {
 public:
@@ -23,6 +26,8 @@ public:
     virtual std::string getOutputEncoding(const Request* request) const;
 
     virtual void useDefaultSanitizer() const;
+    virtual void processCacheLevel(TaggedBlock *block, const std::string &no_cache) const;
+    virtual bool allowCaching(const Context *ctx, const TaggedBlock *block) const;
 
 protected:
     virtual bool isSkippedProxyHeader(const std::string &header) const;
