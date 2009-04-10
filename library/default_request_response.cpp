@@ -435,7 +435,7 @@ const HeaderMap&
 DefaultRequestResponse::outHeaders() const {
     return out_headers_;
 }
-const DefaultRequestResponse::CookieSet&
+const CookieSet&
 DefaultRequestResponse::outCookies() const {
     return out_cookies_;
 }

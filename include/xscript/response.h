@@ -37,8 +37,7 @@ public:
     virtual bool isBinary() const = 0;
     virtual bool isStatusOK() const = 0; 
     virtual const HeaderMap& outHeaders() const = 0;
-
-private:
+    virtual const CookieSet& outCookies() const = 0;
 };
 
 } // namespace xscript

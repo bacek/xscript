@@ -129,6 +129,12 @@ Policy::allowCaching(const Context *ctx, const TaggedBlock *block) const {
     return true;
 }
 
+bool
+Policy::allowCachingCookie(const char *name) const {
+    (void)name;
+    return true;
+}
+
 const ProxyHeadersHelper::StrSize
 ProxyHeadersHelper::skipped_headers[] = {
     { "host", sizeof("host") },

@@ -28,6 +28,7 @@ public:
     virtual void useDefaultSanitizer() const;
     virtual void processCacheLevel(TaggedBlock *block, const std::string &no_cache) const;
     virtual bool allowCaching(const Context *ctx, const TaggedBlock *block) const;
+    virtual bool allowCachingCookie(const char *name) const;
 
 protected:
     virtual bool isSkippedProxyHeader(const std::string &header) const;

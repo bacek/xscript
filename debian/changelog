@@ -1,3 +1,9 @@
+xscript (5.59-1) unstable; urgency=low
+
+  * cookie added to page caching
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 10 Apr 2009 12:55:13 +0400
+
 xscript (5.59-0) unstable; urgency=low
 
   * no-cache restrictions to tagged block added

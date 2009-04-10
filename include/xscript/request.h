@@ -2,6 +2,7 @@
 #define _XSCRIPT_REQUEST_H_
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 #include <boost/utility.hpp>
@@ -33,6 +34,8 @@ typedef std::hash_map<std::string, std::string, StringCIHash, StringCIEqual> Hea
 typedef std::map<std::string, std::string, StringCILess> HeaderMap;
 
 #endif
+
+typedef std::set<Cookie, CookieLess> CookieSet;
 
 class Request : private boost::noncopyable {
 public:
