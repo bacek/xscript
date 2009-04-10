@@ -132,7 +132,7 @@ Policy::allowCaching(const Context *ctx, const TaggedBlock *block) const {
 bool
 Policy::allowCachingCookie(const char *name) const {
     (void)name;
-    return true;
+    return false;
 }
 
 const ProxyHeadersHelper::StrSize

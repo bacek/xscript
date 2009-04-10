@@ -29,6 +29,7 @@
 #include "xscript/extension.h"
 #include "xscript/logger.h"
 #include "xscript/operation_mode.h"
+#include "xscript/policy.h"
 #include "xscript/profiler.h"
 #include "xscript/response.h"
 #include "xscript/script.h"
@@ -722,6 +723,14 @@ Script::cachable(const Context *ctx) const {
     if (ctx) {
         if (ctx->hasError() || ctx->xsltChanged(this) || !ctx->response()->isStatusOK()) {
             return false;
+        }
+        
+        const CookieSet &cookies = ctx->response()->outCookies();       
+        Policy *policy = Policy::instance();
+        for(CookieSet::const_iterator it = cookies.begin(); it != cookies.end(); ++it) {
+            if (!policy->allowCachingCookie(it->name().c_str())) {
+                return false;
+            }
         }
     }
     
