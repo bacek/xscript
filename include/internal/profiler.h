@@ -29,6 +29,10 @@ public:
         struct timeval delta;
         delta.tv_sec = finishTime_.tv_sec - startTime_.tv_sec;
         delta.tv_usec = finishTime_.tv_usec - startTime_.tv_usec;
+        if (delta.tv_usec < 0) {
+            delta.tv_sec -= 1;
+            delta.tv_usec += 1000000;
+        }
         std::stringstream os;
         os << "'" << funcName_ << "' time="
         << delta.tv_sec << "."

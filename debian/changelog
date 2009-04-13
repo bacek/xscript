@@ -1,3 +1,9 @@
+xscript (5.60-2) unstable; urgency=low
+
+  * applying stylesheet fixed in xscript-proc
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 13 Apr 2009 14:22:58 +0400
+
 xscript (5.60-1) unstable; urgency=low
 
   * page cache cookie checking updated

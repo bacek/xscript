@@ -172,7 +172,9 @@ Context*
 ProcServer::createContext(
     const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData> &request_data) {
     std::auto_ptr<Context> ctx(new Context(script, request_data));
-    ctx->xsltName(stylesheet_);
+    if (!stylesheet_.empty()) {
+        ctx->xsltName(stylesheet_);
+    }
     return ctx.release();
 }
 
