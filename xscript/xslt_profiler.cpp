@@ -48,7 +48,7 @@ OfflineXsltProfiler::insertProfileDoc(const std::string& name, xmlDocPtr doc) {
 }
 
 void
-OfflineXsltProfiler::dumpProfileInfo(Context* ctx) {
+OfflineXsltProfiler::dumpProfileInfo(boost::shared_ptr<Context> ctx) {
     boost::mutex::scoped_lock lock(mutex_);
 
     std::cout << std::endl << "XSLT PROFILE INFO" << std::endl;
@@ -70,7 +70,7 @@ OfflineXsltProfiler::dumpProfileInfo(Context* ctx) {
     for (std::multimap<std::string, xmlDocPtr>::const_iterator it = docs_.begin();
             it != docs_.end();
             ++it) {
-        xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(&writeProfileFunc, &closeProfileFunc, ctx, NULL);
+        xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(&writeProfileFunc, &closeProfileFunc, ctx.get(), NULL);
         XmlUtils::throwUnless(NULL != buf);
 
         std::cout << std::endl << it->first << std::endl;

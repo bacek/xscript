@@ -20,7 +20,7 @@ XsltProfiler::insertProfileDoc(const std::string& name, xmlDocPtr doc) {
 }
 
 void
-XsltProfiler::dumpProfileInfo(Context* ctx) {
+XsltProfiler::dumpProfileInfo(boost::shared_ptr<Context> ctx) {
     (void)ctx;
 }
 

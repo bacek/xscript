@@ -72,11 +72,8 @@ xscriptXsltHttpHeaderOut(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    Context *ctx = NULL;
     try {
-        ctx = Stylesheet::getContext(tctx);
-        Response *response = ctx->response();
-        response->setHeader(name, value);
+        Stylesheet::getContext(tctx)->response()->setHeader(name, value);
     }
     catch (const std::exception &e) {
         XmlUtils::reportXsltError("xscript:http-header-out: caught exception: " + std::string(e.what()), ctxt);
@@ -117,11 +114,8 @@ xscriptXsltHttpRedirect(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    Context *ctx = NULL;
     try {
-        ctx = Stylesheet::getContext(tctx);
-        Response* response = ctx->response();
-        response->redirectToPath(str);
+        Stylesheet::getContext(tctx)->response()->redirectToPath(str);
     }
     catch (const std::exception &e) {
         XmlUtils::reportXsltError("xscript:http-redirect: caught exception: " + std::string(e.what()), ctxt);
@@ -162,12 +156,9 @@ xscriptXsltSetHttpStatus(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    Context* ctx = NULL;
     try {
         unsigned short status = boost::lexical_cast<unsigned short>(str);
-        ctx = Stylesheet::getContext(tctx);
-        Response *response = ctx->response();
-        response->setStatus(status);
+        Stylesheet::getContext(tctx)->response()->setStatus(status);
         xmlXPathReturnNumber(ctxt, status);
     }
     catch (const std::exception &e) {
@@ -220,10 +211,8 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    Context *ctx = NULL;
     try {
-        ctx = Stylesheet::getContext(tctx);
-        State* state = ctx->state();
+        State* state = Stylesheet::getContext(tctx)->state();
         std::string name(str);
         if (state->has(name)) {
             valuePush(ctxt, xmlXPathNewCString(state->asString(name).c_str()));
@@ -278,10 +267,8 @@ xscriptXsltGetProtocolArg(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    const Context *ctx = NULL;
     try {
-        ctx = Stylesheet::getContext(tctx);
-        std::string value = Protocol::get(ctx, str);
+        std::string value = Protocol::get(Stylesheet::getContext(tctx).get(), str);
         if (!value.empty()) {
             valuePush(ctxt, xmlXPathNewCString(value.c_str()));
         }
@@ -339,12 +326,11 @@ xscriptXsltGetQueryArg(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    Context *ctx = NULL;
     try {
-        ctx = Stylesheet::getContext(tctx);
         std::string name(str);
-        if (ctx->request()->hasArg(name)) {
-            valuePush(ctxt, xmlXPathNewCString(ctx->request()->getArg(name).c_str()));
+        Request *request = Stylesheet::getContext(tctx)->request();
+        if (request->hasArg(name)) {
+            valuePush(ctxt, xmlXPathNewCString(request->getArg(name).c_str()));
         }
         else {
             valuePush(ctxt, xmlXPathNewCString(default_value));
@@ -400,12 +386,11 @@ xscriptXsltGetHeader(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    Context *ctx = NULL;
     try {
-        ctx = Stylesheet::getContext(tctx);
+        Request *request = Stylesheet::getContext(tctx)->request();
         std::string name(str);
-        if (ctx->request()->hasHeader(name)) {
-            valuePush(ctxt, xmlXPathNewCString(ctx->request()->getHeader(name).c_str()));
+        if (request->hasHeader(name)) {
+            valuePush(ctxt, xmlXPathNewCString(request->getHeader(name).c_str()));
         }
         else {
             valuePush(ctxt, xmlXPathNewCString(default_value));
@@ -461,12 +446,11 @@ xscriptXsltGetCookie(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    Context *ctx = NULL;
     try {
-        ctx = Stylesheet::getContext(tctx);
+        Request *request = Stylesheet::getContext(tctx)->request();
         std::string name(str);
-        if (ctx->request()->hasCookie(name)) {
-            valuePush(ctxt, xmlXPathNewCString(ctx->request()->getCookie(name).c_str()));
+        if (request->hasCookie(name)) {
+            valuePush(ctxt, xmlXPathNewCString(request->getCookie(name).c_str()));
         }
         else {
             valuePush(ctxt, xmlXPathNewCString(default_value));
@@ -516,7 +500,6 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
         }
     }
 
-    Context* ctx = NULL;
     try {
         unsigned int line_limit = 0;
         if (nargs > 2) {
@@ -553,8 +536,7 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
 
         xmlNodePtr node = xmlCopyNode(xmlDocGetRootElement(doc.get()), 1);
 
-        ctx = Stylesheet::getContext(tctx);
-        ctx->addNode(node);
+        Stylesheet::getContext(tctx)->addNode(node);
 
         xmlNodeSetPtr ret = xmlXPathNodeSetCreate(node);
         xmlXPathReturnNodeSet(ctxt, ret);
@@ -593,7 +575,6 @@ xscriptXsltXmlparse(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    Context* ctx = NULL;
     try {
         xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
         if (NULL == tctx) {
@@ -610,8 +591,7 @@ xscriptXsltXmlparse(xmlXPathParserContextPtr ctxt, int nargs) {
 
         xmlNodePtr node = xmlCopyNode(xmlDocGetRootElement(doc.get()), 1);
 
-        ctx = Stylesheet::getContext(tctx);
-        ctx->addNode(node);
+        Stylesheet::getContext(tctx)->addNode(node);
 
         xmlNodeSetPtr ret = xmlXPathNodeSetCreate(node);
         xmlXPathReturnNodeSet(ctxt, ret);
@@ -1054,9 +1034,8 @@ xscriptXsltWbr(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    Context* ctx = NULL;
     try {
-        ctx = Stylesheet::getContext(tctx);
+        Context* ctx = Stylesheet::getContext(tctx).get();
         XmlNodeSetHelper ret(xmlXPathNodeSetCreate(NULL));
 
         const char* end = str + strlen(str);
@@ -1141,9 +1120,8 @@ xscriptXsltNl2br(xmlXPathParserContextPtr ctxt, int nargs) {
         return;
     }
 
-    Context* ctx = NULL;
     try {
-        ctx = Stylesheet::getContext(tctx);
+        Context *ctx = Stylesheet::getContext(tctx).get();
         XmlNodeSetHelper ret(xmlXPathNodeSetCreate(NULL));
 
         const char* end = str + strlen(str);
@@ -1473,10 +1451,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
         return;
     }
 
-    Context *ctx = NULL;
     try {
-        ctx = Stylesheet::getContext(tctx);
-
         if (node == NULL) {
             XmlUtils::reportXsltError("xscript:ExtElementBlock: no current node", tctx);
             return;
@@ -1490,8 +1465,9 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
             return;
         }
 
+        boost::shared_ptr<Context> ctx = Stylesheet::getContext(tctx);
         Stylesheet *stylesheet = Stylesheet::getStylesheet(tctx);
-        if (NULL == ctx || NULL == stylesheet) {
+        if (NULL == ctx.get() || NULL == stylesheet) {
             XmlUtils::reportXsltError("xscript:ExtElementBlock: no context or stylesheet", tctx);
             return;
         }

@@ -75,7 +75,7 @@ InvokeTest::testParams() {
     CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("params.xsl"), script->xsltName());
-    script->applyStylesheet(ctx.get(), doc);
+    script->applyStylesheet(ctx, doc);
 
     CPPUNIT_ASSERT_EQUAL(std::string("success"),
                          XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));

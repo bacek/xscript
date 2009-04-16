@@ -32,29 +32,74 @@ namespace xscript {
 
 boost::thread_specific_ptr<std::list<TimeoutCounter> > Context::block_timers_;
 
-Context::Context(const boost::shared_ptr<Script> &script,
-                 const boost::shared_ptr<RequestData> &data) :
-        stopped_(false), request_data_(data), parent_context_(NULL),
-        script_(script), writer_(), flags_(0),
-        params_(new ParamsMap()) {
+class ParamsMap {
+public:
+    typedef std::map<std::string, boost::any> MapType;
+    typedef MapType::const_iterator iterator;
+    
+    bool insert(const std::string &key, const boost::any &value);
+    bool find(const std::string &key, boost::any &value) const;
+private:
+    mutable boost::mutex mutex_;
+    MapType params_;
+};
 
-    assert(script_.get());
-    xslt_name_ = script_->xsltName();
+struct ContextData {
+    volatile bool stopped_;
+    boost::shared_ptr<RequestData> request_data_;
+    boost::shared_ptr<Context> parent_context_;
+    std::string xslt_name_;
+    std::vector<InvokeResult> results_;
+    std::list<xmlNodePtr> clear_node_list_;
+
+    boost::condition condition_;
+    boost::shared_ptr<Script> script_;
+
+    boost::shared_ptr<AuthContext> auth_;
+    std::auto_ptr<DocumentWriter> writer_;
+    
+    std::string key_;
+
+    unsigned int flags_;
+
+    std::map<const Block*, std::string> runtime_errors_;
+    TimeoutCounter timer_;
+
+    boost::shared_ptr<ParamsMap> params_;
+    
+    mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_;
+};
+
+Context::Context(const boost::shared_ptr<Script> &script,
+                 const boost::shared_ptr<RequestData> &data) : ctx_data_(NULL) {
+    assert(script.get());
+    
+    ctx_data_ = new ContextData();
+    ctx_data_->stopped_ = false;
+    ctx_data_->script_ = script;
+    ctx_data_->request_data_ = data;
+    ctx_data_->flags_ = 0;
+    ctx_data_->params_ = boost::shared_ptr<ParamsMap>(new ParamsMap());
+    ctx_data_->xslt_name_ = script->xsltName();
+    
     init();
 }
 
-Context::Context(const boost::shared_ptr<Script> &script, Context *ctx) :
-        stopped_(false), parent_context_(ctx), script_(script), writer_(), flags_(0) {
-
-    assert(script_.get());
-    assert(ctx);
-
-    xslt_name_ = script_->xsltName();
-    request_data_ = ctx->request_data_;
-    params_ = ctx->params_;
-    auth_ = ctx->auth_;
-
-    timer_.reset(ctx->timer().remained());
+Context::Context(const boost::shared_ptr<Script> &script,
+                 const boost::shared_ptr<Context> &ctx) : ctx_data_(NULL) {
+    assert(script.get());
+    assert(ctx.get());
+    
+    ctx_data_ = new ContextData();
+    ctx_data_->stopped_ = false;
+    ctx_data_->parent_context_ = ctx;
+    ctx_data_->script_ = script;
+    ctx_data_->request_data_ = ctx->requestData();
+    ctx_data_->flags_ = 0;
+    ctx_data_->params_ = ctx->ctx_data_->params_;
+    ctx_data_->xslt_name_ = script->xsltName();
+    ctx_data_->auth_ = ctx->authContext();
+    ctx_data_->timer_.reset(ctx->timer().remained());
     
     init();
 }
@@ -65,7 +110,10 @@ Context::~Context() {
         XmlUtils::printXMLError(postfix);
     }
     ExtensionList::instance()->destroyContext(this);
-    std::for_each(clear_node_list_.begin(), clear_node_list_.end(), boost::bind(&xmlFreeNode, _1));
+    std::for_each(ctx_data_->clear_node_list_.begin(),
+                  ctx_data_->clear_node_list_.end(),
+                  boost::bind(&xmlFreeNode, _1));
+    delete ctx_data_;
 }
 
 void
@@ -80,8 +128,38 @@ Context::init() {
 }
 
 boost::shared_ptr<Context>
-Context::createChildContext(const boost::shared_ptr<Script> &script) {
-    return boost::shared_ptr<Context>(new Context(script, this));
+Context::createChildContext(const boost::shared_ptr<Script> &script, const boost::shared_ptr<Context> &ctx) {
+    return boost::shared_ptr<Context>(new Context(script, ctx));
+}
+
+const boost::shared_ptr<RequestData>&
+Context::requestData() const {
+    return ctx_data_->request_data_;
+}
+
+Request*
+Context::request() const {
+    return ctx_data_->request_data_->request();
+}
+
+Response*
+Context::response() const {
+    return ctx_data_->request_data_->response();
+}
+
+State*
+Context::state() const {
+    return ctx_data_->request_data_->state();
+}
+
+const boost::shared_ptr<Script>&
+Context::script() const {
+    return ctx_data_->script_;
+}
+
+const boost::shared_ptr<AuthContext>&
+Context::authContext() const {
+    return ctx_data_->auth_;
 }
 
 void
@@ -90,13 +168,13 @@ Context::wait(int millis) {
     log()->debug("%s, setting timeout: %d", BOOST_CURRENT_FUNCTION, millis);
 
     boost::xtime xt = delay(millis);
-    boost::mutex::scoped_lock sl(results_mutex_);
-    bool timedout = !condition_.timed_wait(sl, xt, boost::bind(&Context::resultsReady, this));
+    boost::mutex::scoped_lock sl(ctx_data_->results_mutex_);
+    bool timedout = !ctx_data_->condition_.timed_wait(sl, xt, boost::bind(&Context::resultsReady, this));
 
     if (timedout) {
-        for (std::vector<xmlDocPtr>::size_type i = 0; i < results_.size(); ++i) {
-            if (NULL == results_[i].doc.get()) {
-                results_[i] = script_->block(i)->errorResult("timed out");
+        for (std::vector<xmlDocPtr>::size_type i = 0; i < ctx_data_->results_.size(); ++i) {
+            if (NULL == ctx_data_->results_[i].doc.get()) {
+                ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult("timed out");
             }
         }
     }
@@ -105,12 +183,12 @@ Context::wait(int millis) {
 void
 Context::expect(unsigned int count) {
 
-    boost::mutex::scoped_lock sl(results_mutex_);
+    boost::mutex::scoped_lock sl(ctx_data_->results_mutex_);
     if (stopped()) {
         throw std::logic_error("context already stopped");
     }
-    if (results_.size() == 0) {
-        results_.resize(count);
+    if (ctx_data_->results_.size() == 0) {
+        ctx_data_->results_.resize(count);
     }
     else {
         throw std::logic_error("context already started");
@@ -123,11 +201,11 @@ Context::result(unsigned int n, InvokeResult result) {
     log()->debug("%s: %d, result of %u block: %p", BOOST_CURRENT_FUNCTION,
                  static_cast<int>(stopped()), n, result.doc.get());
 
-    boost::mutex::scoped_lock sl(results_mutex_);
-    if (!stopped() && results_.size() != 0) {
-        if (NULL == results_[n].doc.get()) {
-            results_[n] = result;
-            condition_.notify_all();
+    boost::mutex::scoped_lock sl(ctx_data_->results_mutex_);
+    if (!stopped() && ctx_data_->results_.size() != 0) {
+        if (NULL == ctx_data_->results_[n].doc.get()) {
+            ctx_data_->results_[n] = result;
+            ctx_data_->condition_.notify_all();
         }
     }
     else {
@@ -138,7 +216,8 @@ Context::result(unsigned int n, InvokeResult result) {
 bool
 Context::resultsReady() const {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
-    for (std::vector<InvokeResult>::const_iterator i = results_.begin(), end = results_.end(); i != end; ++i) {
+    for (std::vector<InvokeResult>::const_iterator i = ctx_data_->results_.begin(),
+            end = ctx_data_->results_.end(); i != end; ++i) {
         if (NULL == i->doc.get()) {
             return false;
         }
@@ -149,8 +228,8 @@ Context::resultsReady() const {
 void
 Context::addNode(xmlNodePtr node) {
 
-    boost::mutex::scoped_lock sl(node_list_mutex_);
-    clear_node_list_.push_back(node);
+    boost::mutex::scoped_lock sl(ctx_data_->node_list_mutex_);
+    ctx_data_->clear_node_list_.push_back(node);
 }
 
 boost::xtime
@@ -169,9 +248,9 @@ Context::delay(int millis) const {
 InvokeResult
 Context::result(unsigned int n) const {
 
-    boost::mutex::scoped_lock sl(results_mutex_);
-    if (results_.size() > 0) {
-        return results_[n];
+    boost::mutex::scoped_lock sl(ctx_data_->results_mutex_);
+    if (ctx_data_->results_.size() > 0) {
+        return ctx_data_->results_[n];
     }
     else {
         throw std::logic_error("not started");
@@ -180,89 +259,94 @@ Context::result(unsigned int n) const {
 
 std::string
 Context::xsltName() const {
-    boost::mutex::scoped_lock sl(attr_mutex_);
-    return xslt_name_;
+    boost::mutex::scoped_lock sl(ctx_data_->attr_mutex_);
+    return ctx_data_->xslt_name_;
 }
 
 void
 Context::xsltName(const std::string &value) {
-    boost::mutex::scoped_lock sl(attr_mutex_);
+    boost::mutex::scoped_lock sl(ctx_data_->attr_mutex_);
     if (value.empty()) {
-        xslt_name_.erase();
+        ctx_data_->xslt_name_.erase();
     }
     else {
-        xslt_name_ = script_->fullName(value);
+        ctx_data_->xslt_name_ = ctx_data_->script_->fullName(value);
     }
 }
 
 void
 Context::authContext(const boost::shared_ptr<AuthContext> &auth) {
-    auth_ = auth;
+    ctx_data_->auth_ = auth;
 }
 
 DocumentWriter*
 Context::documentWriter() {
-    if (NULL == writer_.get()) {
-        writer_ = std::auto_ptr<DocumentWriter>(
+    if (NULL == ctx_data_->writer_.get()) {
+        ctx_data_->writer_ = std::auto_ptr<DocumentWriter>(
             new XmlWriter(Policy::instance()->getOutputEncoding(request())));
     }
 
-    return writer_.get();
+    return ctx_data_->writer_.get();
 }
 
 void
 Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
     if (sh->outputMethod() == "xml" && !sh->haveOutputInfo()) {
-        writer_ = std::auto_ptr<DocumentWriter>(new XmlWriter(sh->outputEncoding()));
+        ctx_data_->writer_ = std::auto_ptr<DocumentWriter>(new XmlWriter(sh->outputEncoding()));
         log()->debug("xml writer created");
     }
     else {
-        writer_ = std::auto_ptr<DocumentWriter>(new HtmlWriter(sh));
+        ctx_data_->writer_ = std::auto_ptr<DocumentWriter>(new HtmlWriter(sh));
         log()->debug("html writer created");
     }
 }
 
 bool
 Context::forceNoThreaded() const {
-    boost::mutex::scoped_lock lock(attr_mutex_);
-    return flags_ & FLAG_FORCE_NO_THREADED;
+    boost::mutex::scoped_lock lock(ctx_data_->attr_mutex_);
+    return ctx_data_->flags_ & FLAG_FORCE_NO_THREADED;
 }
 
 void
 Context::forceNoThreaded(bool value) {
-    boost::mutex::scoped_lock lock(attr_mutex_);
+    boost::mutex::scoped_lock lock(ctx_data_->attr_mutex_);
     flag(FLAG_FORCE_NO_THREADED, value);
 }
 
 bool
 Context::noXsltPort() const {
-    boost::mutex::scoped_lock lock(attr_mutex_);
-    return flags_ & FLAG_NO_XSLT_PORT;
+    boost::mutex::scoped_lock lock(ctx_data_->attr_mutex_);
+    return ctx_data_->flags_ & FLAG_NO_XSLT_PORT;
 }
 
 void
 Context::noXsltPort(bool value) {
-    boost::mutex::scoped_lock lock(attr_mutex_);
+    boost::mutex::scoped_lock lock(ctx_data_->attr_mutex_);
     flag(FLAG_NO_XSLT_PORT, value);
 }
 
 bool
 Context::hasError() const {
-    boost::mutex::scoped_lock lock(attr_mutex_);
-    return flags_ & FLAG_HAS_ERROR;
+    boost::mutex::scoped_lock lock(ctx_data_->attr_mutex_);
+    return ctx_data_->flags_ & FLAG_HAS_ERROR;
 }
 
 void
 Context::setError() {
-    boost::mutex::scoped_lock lock(attr_mutex_);
+    boost::mutex::scoped_lock lock(ctx_data_->attr_mutex_);
     flag(FLAG_HAS_ERROR, true);
+}
+
+void
+Context::flag(unsigned int type, bool value) {
+    ctx_data_->flags_ = value ? (ctx_data_->flags_ | type) : (ctx_data_->flags_ &= ~type);
 }
 
 std::string
 Context::getRuntimeError(const Block *block) const {
-    boost::mutex::scoped_lock lock(runtime_errors_mutex_);
-    std::map<const Block*, std::string>::const_iterator it = runtime_errors_.find(block);
-    if (runtime_errors_.end() == it) {
+    boost::mutex::scoped_lock lock(ctx_data_->runtime_errors_mutex_);
+    std::map<const Block*, std::string>::const_iterator it = ctx_data_->runtime_errors_.find(block);
+    if (ctx_data_->runtime_errors_.end() == it) {
         return StringUtils::EMPTY_STRING;
     }
     return it->second;
@@ -270,36 +354,36 @@ Context::getRuntimeError(const Block *block) const {
 
 void
 Context::assignRuntimeError(const Block *block, const std::string &error_message) {
-    boost::mutex::scoped_lock lock(runtime_errors_mutex_);
-    runtime_errors_[block].assign(error_message);
+    boost::mutex::scoped_lock lock(ctx_data_->runtime_errors_mutex_);
+    ctx_data_->runtime_errors_[block].assign(error_message);
 }
 
 Context*
 Context::parentContext() const {
-    return parent_context_;
+    return ctx_data_->parent_context_.get();
 }
 
 Context*
 Context::rootContext() const {
     const Context* ctx = this;
-    while (NULL != ctx->parent_context_) {
-        ctx = ctx->parent_context_;
+    while (NULL != ctx->parentContext()) {
+        ctx = ctx->parentContext();
     }
     return const_cast<Context*>(ctx);
 }
 
 bool
 Context::isRoot() const {
-    return parent_context_ == NULL;
+    return parentContext() == NULL;
 }
 
 bool
 Context::stopped() const {
-    if (parent_context_) {
-        return stopped_ || parent_context_->stopped();
+    if (parentContext()) {
+        return ctx_data_->stopped_ || parentContext()->stopped();
     }
 
-    return stopped_;
+    return ctx_data_->stopped_;
 }
 
 bool
@@ -309,24 +393,24 @@ Context::xsltChanged(const Script *script) const {
 
 const std::string&
 Context::key() const {
-    return key_;
+    return ctx_data_->key_;
 }
 
 void
 Context::key(const std::string &key) {
-    key_ = key;
+    ctx_data_->key_ = key;
 }
 
 void
 Context::stop() {
-    stopped_ = true;
+    ctx_data_->stopped_ = true;
 }
 
 const TimeoutCounter&
 Context::timer() const {
     std::list<TimeoutCounter> *timers = block_timers_.get();
     if (NULL == timers || timers->empty()) {
-        return timer_;
+        return ctx_data_->timer_;
     }
     return timers->back();
 }
@@ -347,7 +431,7 @@ Context::startTimer(int timeout) {
         timers = block_timers_.get();
     }
     if (timers->empty()) {
-        timers->push_back(TimeoutCounter(std::min(timeout, timer_.remained())));
+        timers->push_back(TimeoutCounter(std::min(timeout, ctx_data_->timer_.remained())));
     }
     else {
         timers->push_back(TimeoutCounter(std::min(timeout, timers->back().remained())));
@@ -365,7 +449,17 @@ Context::stopTimer() {
 }
 
 bool
-Context::ParamsMap::insert(const std::string &name, const boost::any &value) {
+Context::insertParam(const std::string &key, const boost::any &value) {
+    return ctx_data_->params_->insert(key, value);
+}
+
+bool
+Context::findParam(const std::string &key, boost::any &value) const {
+    return ctx_data_->params_->find(key, value);
+}
+
+bool
+ParamsMap::insert(const std::string &name, const boost::any &value) {
     boost::mutex::scoped_lock sl(mutex_);
     iterator it = params_.find(name);
     if (params_.end() != it) {
@@ -376,7 +470,7 @@ Context::ParamsMap::insert(const std::string &name, const boost::any &value) {
 }
 
 bool
-Context::ParamsMap::find(const std::string &name, boost::any &value) const {
+ParamsMap::find(const std::string &name, boost::any &value) const {
     boost::mutex::scoped_lock sl(mutex_);
     iterator it = params_.find(name);
     if (params_.end() == it) {
@@ -393,7 +487,7 @@ ContextStopper::~ContextStopper() {
     if (ctx_->isRoot()) {
         ExtensionList::instance()->stopContext(ctx_.get());
     }
-    else if (ctx_->hasError() || !ctx_->runtime_errors_.empty()) {
+    else if (ctx_->hasError() || !ctx_->ctx_data_->runtime_errors_.empty()) {
         ctx_->rootContext()->setError();
     }
     

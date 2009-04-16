@@ -29,7 +29,7 @@ public:
     }
 
     virtual std::string fullName(const std::string &name) const = 0;
-    virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc) = 0;
+    virtual void applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) = 0;
 
     virtual std::string createTagKey(const Context *ctx) const;
     
@@ -41,7 +41,7 @@ protected:
     bool xsltParamNode(const xmlNodePtr node) const;
 
     void parseXsltParamNode(const xmlNodePtr node, ParamFactory *pf);
-    void applyStylesheet(boost::shared_ptr<Stylesheet> sh, Context *ctx, XmlDocHelper &doc, bool need_copy);
+    void applyStylesheet(boost::shared_ptr<Stylesheet> sh, boost::shared_ptr<Context> ctx, XmlDocHelper &doc, bool need_copy);
 
 private:
     std::string xslt_name_;

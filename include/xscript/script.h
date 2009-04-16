@@ -73,7 +73,7 @@ public:
 
     virtual void removeUnusedNodes(const XmlDocHelper &helper);
     virtual XmlDocHelper invoke(boost::shared_ptr<Context> ctx);
-    virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc);
+    virtual void applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc);
 
     virtual std::string createTagKey(const Context *ctx) const;
     virtual std::string info(const Context *ctx) const;

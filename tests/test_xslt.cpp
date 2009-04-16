@@ -101,7 +101,7 @@ XsltTest::testFile(const std::string &name) {
     CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(true, script->forceStylesheet());
-    script->applyStylesheet(ctx.get(), doc);
+    script->applyStylesheet(ctx, doc);
 
     CPPUNIT_ASSERT_EQUAL(std::string("success"),
                          XmlUtils::xpathValue(doc.get(), "/result/status"));
@@ -127,7 +127,7 @@ XsltTest::testMist() {
     CPPUNIT_ASSERT_EQUAL(std::string("2"), state->asString("c"));
 
     CPPUNIT_ASSERT_EQUAL(true, script->forceStylesheet());
-    script->applyStylesheet(ctx.get(), doc);
+    script->applyStylesheet(ctx, doc);
 
     CPPUNIT_ASSERT_EQUAL(std::string("1"), state->asString("a"));
     CPPUNIT_ASSERT_EQUAL(std::string("1"), state->asString("b"));

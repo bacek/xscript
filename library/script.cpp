@@ -192,7 +192,7 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
 }
 
 void
-Script::applyStylesheet(Context *ctx, XmlDocHelper &doc) {    
+Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {    
     std::string xslt = ctx->xsltName();
     if (xslt.empty()) {
         return;
@@ -206,7 +206,7 @@ Script::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
     ctx->createDocumentWriter(stylesheet);
     Object::applyStylesheet(stylesheet, ctx, doc, false);
     
-    OperationMode::instance()->processMainXsltError(ctx, this, stylesheet.get());
+    OperationMode::instance()->processMainXsltError(ctx.get(), this, stylesheet.get());
 }
 
 boost::shared_ptr<Script>

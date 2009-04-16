@@ -129,7 +129,7 @@ Block::fullName(const std::string &name) const {
 }
 
 InvokeResult
-Block::invoke(Context *ctx) {
+Block::invoke(boost::shared_ptr<Context> ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     if (ctx->stopped()) {
         log()->error("Context already stopped. Cannot invoke block. Owner: %s. Block: %s. Method: %s",
@@ -137,7 +137,7 @@ Block::invoke(Context *ctx) {
         return InvokeResult(fakeResult(), false);
     }
 
-    if (!checkGuard(ctx)) {
+    if (!checkGuard(ctx.get())) {
         log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
             owner()->name().c_str(), name(), method_.c_str());
         return InvokeResult(fakeResult(), false);
@@ -145,16 +145,16 @@ Block::invoke(Context *ctx) {
 
     InvokeResult result;
     try {
-        BlockTimerStarter starter(ctx, this);
+        BlockTimerStarter starter(ctx.get(), this);
         result = invokeInternal(ctx);
         if (result.success) {
-            postInvoke(ctx, result.doc);
+            postInvoke(ctx.get(), result.doc);
         }
     }
     catch (const CriticalInvokeError &e) {
         std::string full_error;
         result = errorResult(e.what(), e.info(), full_error);        
-        OperationMode::instance()->assignBlockError(ctx, this, full_error);
+        OperationMode::instance()->assignBlockError(ctx.get(), this, full_error);
     }
     catch (const SkipResultInvokeError &e) {
         log()->info("%s", errorMessage(e.what(), e.info()).c_str());
@@ -175,12 +175,12 @@ Block::invoke(Context *ctx) {
 }
 
 InvokeResult
-Block::invokeInternal(Context *ctx) {
+Block::invokeInternal(boost::shared_ptr<Context> ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
     // Check validators for each param before calling it.
     for (std::vector<Param*>::const_iterator i = params_.begin(); i != params_.end(); ++i) {
-        (*i)->checkValidator(ctx);
+        (*i)->checkValidator(ctx.get());
     }
 
     boost::any a;
@@ -205,7 +205,7 @@ Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
 }
 
 XmlDocHelper
-Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
+Block::processResponse(boost::shared_ptr<Context> ctx, XmlDocHelper doc, boost::any &a) {
     if (NULL == doc.get()) {
         throw InvokeError("null response document");
     }
@@ -225,17 +225,17 @@ Block::processResponse(Context *ctx, XmlDocHelper doc, boost::any &a) {
         applyStylesheet(ctx, doc);
     }
 
-    postCall(ctx, doc, a);
+    postCall(ctx.get(), doc, a);
 
     if (need_perblock || xsltName().empty()) {
-        evalXPath(ctx, doc);
+        evalXPath(ctx.get(), doc);
     }
 
     return doc;
 }
 
 void
-Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
+Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
     if (!xsltName().empty()) {
         const TimeoutCounter &timer = ctx->timer();
         if (timer.expired()) {
@@ -253,7 +253,7 @@ Block::applyStylesheet(Context *ctx, XmlDocHelper &doc) {
         XmlUtils::throwUnless(NULL != doc.get());
         log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
 
-        OperationMode::instance()->processPerblockXsltError(ctx, this);
+        OperationMode::instance()->processPerblockXsltError(ctx.get(), this);
     }
 }
 
@@ -489,7 +489,7 @@ Block::postInvoke(Context *, const XmlDocHelper &) {
 
 void
 Block::callInternal(boost::shared_ptr<Context> ctx, unsigned int slot) {
-    ctx->result(slot, invoke(ctx.get()));
+    ctx->result(slot, invoke(ctx));
 }
 
 void

@@ -248,7 +248,7 @@ XmlUtils::reportXsltError(const std::string &error, xsltTransformContextPtr tctx
     Context *ctx = NULL;
     if (NULL != tctx) {
         try {
-            ctx = Stylesheet::getContext(tctx);
+            ctx = Stylesheet::getContext(tctx).get();
             ctx->assignRuntimeError(Stylesheet::getBlock(tctx), error);
         }
         catch(const std::exception &e) {

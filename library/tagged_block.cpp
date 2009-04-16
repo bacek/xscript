@@ -69,7 +69,7 @@ TaggedBlock::cacheTime(time_t cache_time) {
 }
 
 InvokeResult
-TaggedBlock::invokeInternal(Context *ctx) {
+TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx) {
 
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
@@ -81,7 +81,7 @@ TaggedBlock::invokeInternal(Context *ctx) {
         return Block::invokeInternal(ctx);
     }
     
-    if (!Policy::instance()->allowCaching(ctx, this)) {
+    if (!Policy::instance()->allowCaching(ctx.get(), this)) {
         return Block::invokeInternal(ctx);
     }
 
@@ -89,7 +89,7 @@ TaggedBlock::invokeInternal(Context *ctx) {
     XmlDocHelper doc(NULL);
     Tag tag;
     try {
-        have_cached_doc = DocCache::instance()->loadDoc(ctx, this, tag, doc);
+        have_cached_doc = DocCache::instance()->loadDoc(ctx.get(), this, tag, doc);
     }
     catch (const std::exception &e) {
         log()->error("caught exception while fetching cached doc: %s", e.what());
@@ -108,7 +108,7 @@ TaggedBlock::invokeInternal(Context *ctx) {
         }
     }
 
-    evalXPath(ctx, doc);
+    evalXPath(ctx.get(), doc);
     return InvokeResult(doc, true);
 }
 

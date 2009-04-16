@@ -95,7 +95,7 @@ Object::parseXsltParamNode(const xmlNodePtr node, ParamFactory *pf) {
 }
 
 void
-Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh, Context *ctx, XmlDocHelper &doc, bool need_copy) {
+Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh, boost::shared_ptr<Context> ctx, XmlDocHelper &doc, bool need_copy) {
 
     assert(NULL != doc.get());
     if (need_copy) {

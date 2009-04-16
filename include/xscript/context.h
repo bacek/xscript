@@ -18,14 +18,15 @@
 
 namespace xscript {
 
+class AuthContext;
 class Block;
-class State;
-class Script;
+struct ContextData;
+class DocumentWriter;
 class Request;
 class Response;
+class Script;
+class State;
 class Stylesheet;
-class AuthContext;
-class DocumentWriter;
 
 /**
  * Class for storing Context during single page processing.
@@ -39,7 +40,8 @@ public:
             const boost::shared_ptr<RequestData> &data);
     virtual ~Context();
 
-    boost::shared_ptr<Context> createChildContext(const boost::shared_ptr<Script> &script);
+    static boost::shared_ptr<Context> createChildContext(
+            const boost::shared_ptr<Script> &script, const boost::shared_ptr<Context> &ctx);
     
     void wait(int millis);
     void expect(unsigned int count);
@@ -50,25 +52,11 @@ public:
     boost::xtime delay(int millis) const;
     InvokeResult result(unsigned int n) const;
 
-    inline const boost::shared_ptr<RequestData>& requestData() const {
-        return request_data_;
-    }
-
-    inline Request* request() const {
-        return request_data_->request();
-    }
-
-    inline Response* response() const {
-        return request_data_->response();
-    }
-
-    inline State* state() const {
-        return request_data_->state();
-    }
-
-    inline const boost::shared_ptr<Script>& script() const {
-        return script_;
-    }
+    const boost::shared_ptr<RequestData>& requestData() const;
+    Request* request() const;
+    Response* response() const;
+    State* state() const;
+    const boost::shared_ptr<Script>& script() const;
 
     Context* parentContext() const;
     Context* rootContext() const;
@@ -77,9 +65,7 @@ public:
     std::string xsltName() const;
     void xsltName(const std::string &value);
 
-    inline const boost::shared_ptr<AuthContext>& authContext() const {
-        return auth_;
-    }
+    const boost::shared_ptr<AuthContext>& authContext() const;
 
     void authContext(const boost::shared_ptr<AuthContext> &auth);
 
@@ -117,54 +103,18 @@ public:
     friend class ContextStopper;
 
 private:
-    Context(const boost::shared_ptr<Script> &script, Context *ctx);
+    Context(const boost::shared_ptr<Script> &script, const boost::shared_ptr<Context> &ctx);
     void init();
     void stop();
-    
-    inline void flag(unsigned int type, bool value) {
-        flags_ = value ? (flags_ | type) : (flags_ &= ~type);
-    }
+    void flag(unsigned int type, bool value);
+    bool insertParam(const std::string &key, const boost::any &value);
+    bool findParam(const std::string &key, boost::any &value) const;
 
 private:
-    
-    class ParamsMap {
-    public:
-        typedef std::map<std::string, boost::any> MapType;
-        typedef MapType::const_iterator iterator;
-        
-        bool insert(const std::string &key, const boost::any &value);
-        bool find(const std::string &key, boost::any &value) const;
-    private:
-        mutable boost::mutex mutex_;
-        MapType params_;
-    };
+    ContextData *ctx_data_;
 
-private:
-    volatile bool stopped_;
-    boost::shared_ptr<RequestData> request_data_;
-    Context* parent_context_;
-    std::string xslt_name_;
-    std::vector<InvokeResult> results_;
-    std::list<xmlNodePtr> clear_node_list_;
-
-    boost::condition condition_;
-    boost::shared_ptr<Script> script_;
-
-    boost::shared_ptr<AuthContext> auth_;
-    std::auto_ptr<DocumentWriter> writer_;
-    
-    std::string key_;
-
-    unsigned int flags_;
-
-    std::map<const Block*, std::string> runtime_errors_;
     static boost::thread_specific_ptr<std::list<TimeoutCounter> > block_timers_;
-    TimeoutCounter timer_;
-
-    boost::shared_ptr<ParamsMap> params_;
     
-    mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_;
-
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
     static const unsigned int FLAG_NO_XSLT_PORT = 1 << 1;
     static const unsigned int FLAG_HAS_ERROR = 1 << 2;
@@ -181,7 +131,7 @@ private:
 template<typename T> inline T
 Context::param(const std::string &name) const {
     boost::any value;
-    if (params_->find(name, value)) {
+    if (findParam(name, value)) {
         return boost::any_cast<T>(value);
     }
     else {
@@ -191,7 +141,7 @@ Context::param(const std::string &name) const {
 
 template<typename T> inline void
 Context::param(const std::string &name, const T &t) {
-    if (!params_->insert(name, boost::any(t))) {
+    if (!insertParam(name, boost::any(t))) {
         throw std::invalid_argument(std::string("duplicate param: ").append(name));
     }
 }
@@ -199,12 +149,12 @@ Context::param(const std::string &name, const T &t) {
 template<typename T> inline T
 Context::param(const std::string &name, const boost::function<T ()> &creator) {
     boost::any value;
-    if (params_->find(name, value)) {
+    if (findParam(name, value)) {
         return boost::any_cast<T>(value);
     }
     else {
         T t = creator();
-        params_->insert(name, boost::any(t));
+        insertParam(name, boost::any(t));
         return t;
     }
 }

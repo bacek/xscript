@@ -46,9 +46,9 @@ public:
         return have_output_info_;
     }
 
-    XmlDocHelper apply(Object *obj, Context *ctx, const XmlDocHelper &doc);
+    XmlDocHelper apply(Object *obj, boost::shared_ptr<Context> ctx, const XmlDocHelper &doc);
 
-    static Context* getContext(xsltTransformContextPtr tctx);
+    static boost::shared_ptr<Context> getContext(xsltTransformContextPtr tctx);
     static Stylesheet* getStylesheet(xsltTransformContextPtr tctx);
     static const Block* getBlock(xsltTransformContextPtr tctx);
     static boost::shared_ptr<Stylesheet> create(const std::string &name);
@@ -71,7 +71,7 @@ protected:
 
     void appendXsltParams(const std::vector<Param*>& params, const Context *ctx, xsltTransformContextPtr tctx);
 
-    static void attachContextData(xsltTransformContextPtr tctx, Context *ctx, Stylesheet *stylesheet, const Block *block);
+    static void attachContextData(xsltTransformContextPtr tctx, boost::shared_ptr<Context> ctx, Stylesheet *stylesheet, const Block *block);
     static boost::shared_ptr<Stylesheet> createWithParse(const std::string &name);
 
 private:

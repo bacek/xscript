@@ -155,7 +155,7 @@ LuaSharedContext create_lua(Context *ctx) {
 }
 
 XmlDocHelper
-LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
+LuaBlock::call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::exception) {
 
     log()->entering(BOOST_CURRENT_FUNCTION);    
     
@@ -170,7 +170,7 @@ LuaBlock::call(Context *ctx, boost::any &) throw (std::exception) {
     }
     
     // Try to fetch previously created lua interpret. If failed - create new one.
-    boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx);
+    boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx.get());
 
     LuaSharedContext lua_context = ctx->param(
                                        std::string("xscript.lua"),

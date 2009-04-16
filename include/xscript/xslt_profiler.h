@@ -16,7 +16,7 @@ public:
     virtual ~XsltProfiler();
 
     virtual void insertProfileDoc(const std::string& name, xmlDocPtr doc);
-    virtual void dumpProfileInfo(Context* ctx);
+    virtual void dumpProfileInfo(boost::shared_ptr<Context> ctx);
 };
 
 } // namespace xscript

@@ -80,7 +80,7 @@ FileBlock::isTest() const {
 }
 
 XmlDocHelper
-FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
+FileBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) {
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
     const std::vector<Param*> &p = params();
@@ -89,7 +89,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
         throwBadArityError();
     }
     
-    std::string filename = concatParams(ctx, 0, size - 1);
+    std::string filename = concatParams(ctx.get(), 0, size - 1);
     if (filename.empty()) {
         if (isTest()) {
             return testFileDoc(false, filename);
@@ -144,7 +144,7 @@ FileBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
 }
 
 XmlDocHelper
-FileBlock::invokeMethod(const std::string &file_name, Context *ctx) {
+FileBlock::invokeMethod(const std::string &file_name, boost::shared_ptr<Context> ctx) {
     try {
         return (this->*method_)(file_name, ctx);
     }
@@ -158,7 +158,7 @@ FileBlock::invokeMethod(const std::string &file_name, Context *ctx) {
 }
 
 XmlDocHelper
-FileBlock::loadFile(const std::string &file_name, Context *ctx) {
+FileBlock::loadFile(const std::string &file_name, boost::shared_ptr<Context> ctx) {
     (void)ctx;
     log()->debug("%s: loading file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
@@ -187,12 +187,12 @@ FileBlock::loadFile(const std::string &file_name, Context *ctx) {
 }
 
 XmlDocHelper
-FileBlock::invokeFile(const std::string &file_name, Context *ctx) {
+FileBlock::invokeFile(const std::string &file_name, boost::shared_ptr<Context> ctx) {
     log()->debug("%s: invoking file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
     PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
 
-    Context* tmp_ctx = ctx;
+    Context* tmp_ctx = ctx.get();
     unsigned int depth = 0;
     while (tmp_ctx) {
         if (file_name == tmp_ctx->script()->name()) {
@@ -208,7 +208,7 @@ FileBlock::invokeFile(const std::string &file_name, Context *ctx) {
     }
 
     boost::shared_ptr<Script> script = Script::create(file_name);
-    boost::shared_ptr<Context> local_ctx = ctx->createChildContext(script);
+    boost::shared_ptr<Context> local_ctx = Context::createChildContext(script, ctx);
 
     if (threaded() || ctx->forceNoThreaded()) {
         local_ctx->forceNoThreaded(true);

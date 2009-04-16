@@ -75,6 +75,9 @@ VirtualHostData::checkVariable(const Request* request, const std::string& var) c
 
     if (hasVariable(request, var)) {
         std::string value = VirtualHostData::instance()->getVariable(request, var);
+        if (value.empty()) {
+            return false;
+        }
         try {
             if (strncasecmp("yes", value.c_str(), sizeof("yes")) == 0 ||
                 strncasecmp("true", value.c_str(), sizeof("true")) == 0 ||

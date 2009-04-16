@@ -1,3 +1,10 @@
+xscript (5.61-0) unstable; urgency=low
+
+  * pass context shared pointer to Block::call
+  * move context content to separate structure
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 16 Apr 2009 11:12:29 +0400
+
 xscript (5.60-2) unstable; urgency=low
 
   * applying stylesheet fixed in xscript-proc

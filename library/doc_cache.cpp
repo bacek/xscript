@@ -23,7 +23,7 @@ public:
             : Block(ext, owner, node), doc_cache_(doc_cache) {
     }
 
-    XmlDocHelper call(Context *, boost::any &) throw (std::exception) {
+    XmlDocHelper call(boost::shared_ptr<Context>, boost::any &) throw (std::exception) {
         return doc_cache_.createReport();
     }
 private:

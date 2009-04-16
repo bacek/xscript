@@ -57,7 +57,7 @@ public:
             : Block(ext, owner, node), builder_(builder) {
     }
 
-    XmlDocHelper call(Context *, boost::any &) throw (std::exception) {
+    XmlDocHelper call(boost::shared_ptr<Context>, boost::any &) throw (std::exception) {
         return builder_.createReport();
     }
 private:

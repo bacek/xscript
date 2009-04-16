@@ -128,7 +128,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
             }
             
             if (script->forceStylesheet() && needApplyMainStylesheet(ctx->request())) {
-                script->applyStylesheet(ctx.get(), doc);
+                script->applyStylesheet(ctx, doc);
                 if (request_data->response()->isBinary()) {
                     return;
                 }
@@ -142,7 +142,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
             }
         }
         
-        XsltProfiler::instance()->dumpProfileInfo(ctx.get());
+        XsltProfiler::instance()->dumpProfileInfo(ctx);
     }
     catch (const std::exception &e) {
         log()->error("%s: exception caught: %s. Owner: %s",

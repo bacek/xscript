@@ -48,14 +48,14 @@
 
 namespace xscript {
 
-struct ContextData {
-    ContextData();
-    Context *ctx;
+struct ContextDataHelper {
+    ContextDataHelper();
+    boost::shared_ptr<Context> ctx;
     Stylesheet *stylesheet;
     const Block *block;
 };
 
-ContextData::ContextData() : ctx(NULL), stylesheet(NULL), block(NULL) {
+ContextDataHelper::ContextDataHelper() : stylesheet(NULL), block(NULL) {
 }
 
 
@@ -88,10 +88,10 @@ Stylesheet::name() const {
 }
 
 XmlDocHelper
-Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
+Stylesheet::apply(Object *obj, boost::shared_ptr<Context> ctx, const XmlDocHelper &doc) {
 
     log()->entering(BOOST_CURRENT_FUNCTION);
-
+    
     XsltTransformContextHelper tctx(xsltNewTransformContext(stylesheet_.get(), doc.get()));
     XmlUtils::throwUnless(NULL != tctx.get());
 
@@ -108,7 +108,7 @@ Stylesheet::apply(Object *obj, Context *ctx, const XmlDocHelper &doc) {
     }
 
     if (NULL != obj) {
-        appendXsltParams(obj->xsltParams(), ctx, tctx.get());
+        appendXsltParams(obj->xsltParams(), ctx.get(), tctx.get());
     }
 
     internal::Profiler profiler("Total apply time");
@@ -356,31 +356,31 @@ Stylesheet::detectContentType(const XmlDocHelper &doc) const {
 }
 
 void
-Stylesheet::attachContextData(xsltTransformContextPtr tctx, Context *ctx, Stylesheet *stylesheet, const Block *block) {
-    ContextData* data = static_cast<ContextData*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
+Stylesheet::attachContextData(xsltTransformContextPtr tctx, boost::shared_ptr<Context> ctx, Stylesheet *stylesheet, const Block *block) {
+    ContextDataHelper* data = static_cast<ContextDataHelper*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
     XmlUtils::throwUnless(NULL != data);
     data->ctx = ctx;
     data->stylesheet = stylesheet;
     data->block = block;
 }
 
-Context*
+boost::shared_ptr<Context>
 Stylesheet::getContext(xsltTransformContextPtr tctx) {
-    ContextData* data = static_cast<ContextData*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
+    ContextDataHelper* data = static_cast<ContextDataHelper*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
     XmlUtils::throwUnless(NULL != data);
     return data->ctx;
 }
 
 Stylesheet*
 Stylesheet::getStylesheet(xsltTransformContextPtr tctx) {
-    ContextData* data = static_cast<ContextData*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
+    ContextDataHelper* data = static_cast<ContextDataHelper*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
     XmlUtils::throwUnless(NULL != data);
     return data->stylesheet;
 }
 
 const Block*
 Stylesheet::getBlock(xsltTransformContextPtr tctx) {
-    ContextData* data = static_cast<ContextData*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
+    ContextDataHelper* data = static_cast<ContextDataHelper*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
     XmlUtils::throwUnless(NULL != data);
     return data->block;
 }
@@ -437,7 +437,7 @@ XsltInitalizer::XsltInitalizer()  {
 void*
 XsltInitalizer::ExtraDataInit(xsltTransformContextPtr, const xmlChar*) {
 
-    void* data = new ContextData();
+    void* data = new ContextDataHelper();
     log()->debug("%s, data is: %p", BOOST_CURRENT_FUNCTION, data);
     return data;
 }
@@ -446,7 +446,7 @@ void
 XsltInitalizer::ExtraDataShutdown(xsltTransformContextPtr, const xmlChar*, void* data) {
 
     log()->debug("%s, data is: %p", BOOST_CURRENT_FUNCTION, data);
-    delete static_cast<ContextData*>(data);
+    delete static_cast<ContextDataHelper*>(data);
 }
 
 } // namespace xscript

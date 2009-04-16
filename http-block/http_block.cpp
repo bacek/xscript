@@ -91,8 +91,8 @@ HttpBlock::postParse() {
 }
 
 XmlDocHelper
-HttpBlock::retryCall(Context *ctx, boost::any &a) throw (std::exception) {
-    return (this->*method_)(ctx, a);
+HttpBlock::retryCall(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) {
+    return (this->*method_)(ctx.get(), a);
 }
 
 void

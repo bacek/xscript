@@ -70,9 +70,9 @@ public:
     virtual void parse();
     virtual std::string fullName(const std::string &name) const;
 
-    virtual InvokeResult invoke(Context *ctx);
+    virtual InvokeResult invoke(boost::shared_ptr<Context> ctx);
     virtual void invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
-    virtual void applyStylesheet(Context *ctx, XmlDocHelper &doc);
+    virtual void applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc);
 
     InvokeResult errorResult(const char *error) const;
     InvokeResult errorResult(const char *error, const InvokeError::InfoMapType &error_info) const;
@@ -91,10 +91,10 @@ public:
 protected:
     class XPathExpr;
 
-    virtual InvokeResult invokeInternal(Context *ctx);
+    virtual InvokeResult invokeInternal(boost::shared_ptr<Context> ctx);
     virtual void postParse();
-    virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception) = 0;
-    virtual XmlDocHelper processResponse(Context *ctx, XmlDocHelper doc, boost::any &a);
+    virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) = 0;
+    virtual XmlDocHelper processResponse(boost::shared_ptr<Context> ctx, XmlDocHelper doc, boost::any &a);
     virtual void property(const char *name, const char *value);
     virtual void postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a);
     virtual void postInvoke(Context *ctx, const XmlDocHelper &doc);

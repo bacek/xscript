@@ -73,12 +73,12 @@ MistBlock::postParse() {
 }
 
 XmlDocHelper
-MistBlock::call(Context *ctx, boost::any &) throw (std::exception) {
+MistBlock::call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::exception) {
 
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
 
-    xmlDocSetRootElement(doc.get(), (this->*method_)(ctx));
+    xmlDocSetRootElement(doc.get(), (this->*method_)(ctx.get()));
     return doc;
 }
 

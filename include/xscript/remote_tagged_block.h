@@ -13,7 +13,7 @@ public:
     RemoteTaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~RemoteTaggedBlock();
 
-    virtual XmlDocHelper call(Context *ctx, boost::any &a) throw (std::exception);
+    virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception);
     
     int remoteTimeout() const;
     void remoteTimeout(int timeout);
@@ -25,7 +25,7 @@ public:
 
 protected:
     virtual void property(const char *name, const char *value);
-    virtual XmlDocHelper retryCall(Context *ctx, boost::any &a) throw (std::exception) = 0;
+    virtual XmlDocHelper retryCall(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) = 0;
     virtual void postParse();
 
 private:

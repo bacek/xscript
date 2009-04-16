@@ -76,7 +76,7 @@ RemoteTaggedBlock::retryCount() const {
 }
 
 XmlDocHelper
-RemoteTaggedBlock::call(Context *ctx, boost::any &a) throw (std::exception) {
+RemoteTaggedBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) {
     for(int rcount = retryCount(); rcount >= 0; --rcount) {
         try {
             return retryCall(ctx, a);
