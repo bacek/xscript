@@ -20,7 +20,6 @@ namespace xscript {
 
 class AuthContext;
 class Block;
-struct ContextData;
 class DocumentWriter;
 class Request;
 class Response;
@@ -105,19 +104,14 @@ public:
 private:
     Context(const boost::shared_ptr<Script> &script, const boost::shared_ptr<Context> &ctx);
     void init();
-    void stop();
-    void flag(unsigned int type, bool value);
     bool insertParam(const std::string &key, const boost::any &value);
     bool findParam(const std::string &key, boost::any &value) const;
 
 private:
+    struct ContextData;
     ContextData *ctx_data_;
 
     static boost::thread_specific_ptr<std::list<TimeoutCounter> > block_timers_;
-    
-    static const unsigned int FLAG_FORCE_NO_THREADED = 1;
-    static const unsigned int FLAG_NO_XSLT_PORT = 1 << 1;
-    static const unsigned int FLAG_HAS_ERROR = 1 << 2;
 };
 
 class ContextStopper {

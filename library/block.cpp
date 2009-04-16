@@ -35,21 +35,78 @@
 
 namespace xscript {
 
-Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
+struct Block::BlockData {
+    BlockData(const Extension *ext, Xml *owner, xmlNodePtr node) :
         extension_(ext), owner_(owner), node_(node), is_guard_not_(false)
+    {}
+    
+    ~BlockData() {
+        std::for_each(params_.begin(), params_.end(), boost::checked_deleter<Param>());
+    }
+    
+    const Extension *extension_;
+    Xml *owner_;
+    xmlNodePtr node_;
+    std::vector<Param*> params_;
+    std::vector<XPathExpr> xpath_;
+    std::string id_, guard_, method_;
+    bool is_guard_not_;
+    std::string xpointer_expr_;
+};
+
+Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
+    data_(new BlockData(ext, owner, node))
 {
-    assert(node_);
-    assert(owner_);
+    assert(node);
+    assert(owner);
 }
 
 Block::~Block() {
-    std::for_each(params_.begin(), params_.end(), boost::checked_deleter<Param>());
+    delete data_;
+}
+
+Xml*
+Block::owner() const {
+    return data_->owner_;
+}
+
+xmlNodePtr
+Block::node() const {
+    return data_->node_;
+}
+
+const std::string&
+Block::id() const {
+    return data_->id_;
+}
+
+const std::string&
+Block::guard() const {
+    return data_->guard_;
+}
+
+const std::string&
+Block::method() const {
+    return data_->method_;
+}
+
+const std::string&
+Block::xpointerExpr() const {
+    return data_->xpointer_expr_;
+}
+
+const char*
+Block::name() const {
+    return data_->extension_->name();
 }
 
 const Param*
 Block::param(const std::string &id, bool throw_error) const {
     try {
-        for (std::vector<Param*>::const_iterator i = params_.begin(), end = params_.end(); i != end; ++i) {
+        for(std::vector<Param*>::const_iterator i = data_->params_.begin(), end = data_->params_.end();
+            i != end;
+            ++i) {
+            
             if ((*i)->id() == id) {
                 return (*i);
             }
@@ -65,6 +122,16 @@ Block::param(const std::string &id, bool throw_error) const {
         log()->error("%s, caught exception: %s", owner()->name().c_str(), e.what());
         throw;
     }
+}
+
+const Param*
+Block::param(unsigned int n) const {
+    return data_->params_.at(n);
+}
+
+const std::vector<Param*>&
+Block::params() const {
+    return data_->params_;
 }
 
 bool
@@ -83,7 +150,7 @@ Block::tagged() const {
 
 bool
 Block::xpointer(Context* ctx) const {
-    if (xpointer_expr_.empty()) {
+    if (data_->xpointer_expr_.empty()) {
         return false;
     }
     return !ctx->noXsltPort();
@@ -92,11 +159,11 @@ Block::xpointer(Context* ctx) const {
 void
 Block::parse() {
     try {
-        XmlUtils::visitAttributes(node_->properties,
+        XmlUtils::visitAttributes(data_->node_->properties,
             boost::bind(&Block::property, this, _1, _2));
 
         ParamFactory *pf = ParamFactory::instance();
-        for (xmlNodePtr node = node_->children; NULL != node; node = node->next) {
+        for (xmlNodePtr node = data_->node_->children; NULL != node; node = node->next) {
             if (node->name) {
                 if (xpathNode(node)) {
                     parseXPathNode(node);
@@ -133,13 +200,13 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     if (ctx->stopped()) {
         log()->error("Context already stopped. Cannot invoke block. Owner: %s. Block: %s. Method: %s",
-            owner()->name().c_str(), name(), method_.c_str());
+            owner()->name().c_str(), name(), data_->method_.c_str());
         return InvokeResult(fakeResult(), false);
     }
 
     if (!checkGuard(ctx.get())) {
         log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
-            owner()->name().c_str(), name(), method_.c_str());
+            owner()->name().c_str(), name(), data_->method_.c_str());
         return InvokeResult(fakeResult(), false);
     }
 
@@ -179,7 +246,9 @@ Block::invokeInternal(boost::shared_ptr<Context> ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
     // Check validators for each param before calling it.
-    for (std::vector<Param*>::const_iterator i = params_.begin(); i != params_.end(); ++i) {
+    for(std::vector<Param*>::const_iterator i = data_->params_.begin();
+        i != data_->params_.end();
+        ++i) {
         (*i)->checkValidator(ctx.get());
     }
 
@@ -355,8 +424,8 @@ Block::throwBadArityError() const {
 
 bool
 Block::checkGuard(Context *ctx) const {
-    if (!guard_.empty()) {
-        return is_guard_not_ ^ ctx->state()->is(guard_);
+    if (!data_->guard_.empty()) {
+        return data_->is_guard_not_ ^ ctx->state()->is(data_->guard_);
     }
     return true;
 }
@@ -367,7 +436,10 @@ Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
     XmlXPathContextHelper xctx(xmlXPathNewContext(doc.get()));
     XmlUtils::throwUnless(NULL != xctx.get());
 
-    for (std::vector<XPathExpr>::const_iterator iter = xpath_.begin(), end = xpath_.end(); iter != end; ++iter) {
+    for(std::vector<XPathExpr>::const_iterator iter = data_->xpath_.begin(), end = data_->xpath_.end();
+        iter != end;
+        ++iter) {
+        
         const XPathExpr::NamespaceListType& ns_list = iter->namespaces();
         for (XPathExpr::NamespaceListType::const_iterator it_ns = ns_list.begin(); it_ns != ns_list.end(); ++it_ns) {
             xmlXPathRegisterNs(xctx.get(), (const xmlChar *)it_ns->first.c_str(), (const xmlChar *)it_ns->second.c_str());
@@ -431,45 +503,45 @@ Block::property(const char *name, const char *value) {
     log()->debug("setting %s=%s", name, value);
 
     if (strncasecmp(name, "id", sizeof("id")) == 0) {
-        if (!id_.empty()) {
+        if (!data_->id_.empty()) {
             throw std::runtime_error("duplicated id in block");
         }
-        id_.assign(value);
+        data_->id_.assign(value);
     }
     else if (strncasecmp(name, "guard", sizeof("guard")) == 0) {
-        if (!guard_.empty()) {
+        if (!data_->guard_.empty()) {
             throw std::runtime_error("duplicated guard in block");
         }
         if (*value == '\0') {
             throw std::runtime_error("empty guard");
         }
-        guard_.assign(value);
+        data_->guard_.assign(value);
     }
     else if (strncasecmp(name, "guard-not", sizeof("guard-not")) == 0) {
-        if (!guard_.empty()) {
+        if (!data_->guard_.empty()) {
             throw std::runtime_error("duplicated guard in block");
         }
         if (*value == '\0') {
             throw std::runtime_error("empty guard-not");
         }
-        guard_.assign(value);
-        is_guard_not_ = true;
+        data_->guard_.assign(value);
+        data_->is_guard_not_ = true;
     }
     else if (strncasecmp(name, "method", sizeof("method")) == 0) {
-        if (!method_.empty()) {
+        if (!data_->method_.empty()) {
             throw std::runtime_error("duplicated method in block");
         }
-        method_.assign(value);
+        data_->method_.assign(value);
     }
     else if (strncasecmp(name, "xslt", sizeof("xslt")) == 0) {
         xsltName(value);
     }
     else if (strncasecmp(name, "xpointer", sizeof("xpointer")) == 0) {
         if (strncasecmp(value, "xpointer(", sizeof("xpointer(") - 1) == 0) {
-            xpointer_expr_.assign(value, sizeof("xpointer(") - 1, strlen(value) - sizeof("xpointer("));
+            data_->xpointer_expr_.assign(value, sizeof("xpointer(") - 1, strlen(value) - sizeof("xpointer("));
         }
         else {
-            xpointer_expr_.assign(value);
+            data_->xpointer_expr_.assign(value);
         }
     }
     else {
@@ -519,10 +591,10 @@ Block::parseXPathNode(const xmlNodePtr node) {
         if (!delim || !*delim) {
             delim = " ";
         }
-        xpath_.push_back(XPathExpr(expr, result, delim));
+        data_->xpath_.push_back(XPathExpr(expr, result, delim));
         xmlNs* ns = node->nsDef;
         while (ns) {
-            xpath_.back().addNamespace((const char*)ns->prefix, (const char*)ns->href);
+            data_->xpath_.back().addNamespace((const char*)ns->prefix, (const char*)ns->href);
             ns = ns->next;
         }
     }
@@ -536,8 +608,18 @@ Block::parseParamNode(const xmlNodePtr node, ParamFactory *pf) {
 
 void
 Block::processParam(std::auto_ptr<Param> p) {
-	params_.push_back(p.get());
+    data_->params_.push_back(p.get());
 	p.release();
+}
+
+Logger*
+Block::log() const {
+    return data_->extension_->getLogger();
+}
+
+const std::vector<Block::XPathExpr>&
+Block::xpath() const {
+    return data_->xpath_;
 }
 
 void

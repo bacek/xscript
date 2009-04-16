@@ -22,33 +22,13 @@ public:
     Block(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~Block();
 
-    inline Xml* owner() const {
-        return owner_;
-    }
-
-    inline xmlNodePtr node() const {
-        return node_;
-    }
-
-    inline const std::string& id() const {
-        return id_;
-    }
-
-    inline const std::string& guard() const {
-        return guard_;
-    }
-
-    inline const std::string& method() const {
-        return method_;
-    }
-
-    inline const std::string& xpointerExpr() const {
-        return xpointer_expr_;
-    }
-
-    const char* name() const {
-        return extension_->name();
-    }
+    Xml* owner() const;
+    xmlNodePtr node() const;
+    const std::string& id() const;
+    const std::string& guard() const;
+    const std::string& method() const;
+    const std::string& xpointerExpr() const;
+    const char* name() const;
 
     virtual bool threaded() const;
     virtual void threaded(bool value);
@@ -57,15 +37,9 @@ public:
 
     bool xpointer(Context* ctx) const;
 
-    inline const Param* param(unsigned int n) const {
-        return params_.at(n);
-    }
-
+    const Param* param(unsigned int n) const;
     const Param* param(const std::string &id, bool throw_error = true) const;
-
-    inline const std::vector<Param*>& params() const {
-        return params_;
-    }
+    const std::vector<Param*>& params() const;
 
     virtual void parse();
     virtual std::string fullName(const std::string &name) const;
@@ -81,9 +55,7 @@ public:
 
     void throwBadArityError() const;
 
-    Logger * log() const {
-        return extension_->getLogger();
-    }
+    Logger * log() const;
 
     virtual void startTimer(Context *ctx);
     virtual void stopTimer(Context *ctx);
@@ -114,21 +86,13 @@ protected:
     void parseParamNode(const xmlNodePtr node, ParamFactory *pf);
     virtual void processParam(std::auto_ptr<Param> p);
 
-    inline const std::vector<XPathExpr>& xpath() const {
-        return xpath_;
-    }
+    const std::vector<XPathExpr>& xpath() const;
     
     virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const; 
     
 private:
-    const Extension *extension_;
-    Xml *owner_;
-    xmlNodePtr node_;
-    std::vector<Param*> params_;
-    std::vector<XPathExpr> xpath_;
-    std::string id_, guard_, method_;
-    bool is_guard_not_;
-    std::string xpointer_expr_;
+    struct BlockData;
+    BlockData *data_;
 
 protected:
     class XPathExpr {

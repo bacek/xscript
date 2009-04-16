@@ -1,3 +1,9 @@
+xscript (5.61-1) unstable; urgency=low
+
+  * move block content to separate structure
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 16 Apr 2009 13:14:48 +0400
+
 xscript (5.61-0) unstable; urgency=low
 
   * pass context shared pointer to Block::call
