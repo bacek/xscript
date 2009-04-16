@@ -109,6 +109,7 @@ private:
 
 private:
     struct ContextData;
+    friend class ContextData;
     ContextData *ctx_data_;
 
     static boost::thread_specific_ptr<std::list<TimeoutCounter> > block_timers_;

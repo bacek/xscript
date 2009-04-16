@@ -45,8 +45,6 @@ private:
 };
 
 struct Context::ContextData {
-    friend class Context;
-    
     ContextData(const boost::shared_ptr<Script> &script,
                 const boost::shared_ptr<RequestData> &data) :
         stopped_(false), script_(script), request_data_(data),
