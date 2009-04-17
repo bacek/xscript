@@ -6,6 +6,8 @@
     <xslt-param id="test-xslt" type="string">1</xslt-param>
     <xslt-param id="strparam" type="string">1</xslt-param>
   </xscript>
+
+
   <x:mist>
     <method>set_state_long</method>
     <param type="string" id="testkey">val-1</param>
@@ -41,4 +43,16 @@
     <param type="string">val-4</param>
     <param type="statearg">result_expr</param>
   </x:mist>
+
+  <x:mist method="dump_state">
+    <xpath expr="boolean(/*[name() = 'state_dump'])" result="test-xpath-bool-true"/>
+    <xpath expr="boolean(/*[name() != 'state_dump'])" result="test-xpath-bool-false"/>
+    <xpath expr="boolean(/*[name() != 'test'])" result="test-xpath-bool-true2"/>
+    <xpath expr="count(/*[name()])" result="test-xpath-number1"/>
+    <xpath expr="count(/state/*[name()])" result="test-xpath-number0"/>
+    <xpath expr="count(/state_dump/param[@name])" result="test-xpath-number4"/>
+    <xpath expr="count(/state_dump/param[@type = 'String'])" result="test-xpath-number3"/>
+    <xpath expr="string(/state_dump/param[@name = 'val-4'])" result="test-xpath-string"/>
+  </x:mist>
+
 </page>

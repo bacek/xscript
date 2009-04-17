@@ -145,6 +145,15 @@ InvokeTest::testEvalXPath() {
     CPPUNIT_ASSERT(state->has("result_expr"));
     CPPUNIT_ASSERT_EQUAL(std::string("string"), state->asString("delim_expr"));
     CPPUNIT_ASSERT_EQUAL(std::string("string"), state->asString("result_expr"));
+
+    CPPUNIT_ASSERT(state->is("test-xpath-bool-true"));
+    CPPUNIT_ASSERT(state->is("test-xpath-bool-true2"));
+    CPPUNIT_ASSERT(!state->is("test-xpath-bool-false"));
+    CPPUNIT_ASSERT_EQUAL(std::string("0"), state->asString("test-xpath-number0"));
+    CPPUNIT_ASSERT_EQUAL(std::string("1"), state->asString("test-xpath-number1"));
+    CPPUNIT_ASSERT_EQUAL(std::string("3"), state->asString("test-xpath-number3"));
+    CPPUNIT_ASSERT_EQUAL(std::string("4"), state->asString("test-xpath-number4"));
+    CPPUNIT_ASSERT_EQUAL(std::string("string"), state->asString("test-xpath-string"));
 }
 
 void
