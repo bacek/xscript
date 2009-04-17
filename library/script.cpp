@@ -557,7 +557,27 @@ Script::useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const
     XmlUtils::throwUnless(NULL != context.get());
     XmlXPathObjectHelper xpathObj(xmlXPathEvalExpression(xpath, context.get()));
     XmlUtils::throwUnless(NULL != xpathObj.get());
-    xmlNodeSetPtr nodeset = xpathObj.get()->nodesetval;
+
+    if (XPATH_BOOLEAN == xpathObj->type) {
+        const char *str = 0 != xpathObj->boolval ? "1" : "0";
+        xmlNodePtr text_node = xmlNewText((const xmlChar *)str);
+        xmlReplaceNode(newnode, text_node);
+        return;
+    }
+    if (XPATH_NUMBER == xpathObj->type) {
+        char str[30];
+        sprintf("%f", str, xpathObj->floatval);
+        xmlNodePtr text_node = xmlNewText((const xmlChar *)&str[0]);
+        xmlReplaceNode(newnode, text_node);
+        return;
+    }
+    if (XPATH_STRING == xpathObj->type) {
+        xmlNodePtr text_node = xmlNewText((const xmlChar *)xpathObj->stringval);
+        xmlReplaceNode(newnode, text_node);
+        return;
+    }
+
+    xmlNodeSetPtr nodeset = xpathObj->nodesetval;
     if (NULL == nodeset || 0 == nodeset->nodeNr) {
         xmlUnlinkNode(newnode);
         return;

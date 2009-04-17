@@ -435,6 +435,8 @@ Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
 
     XmlXPathContextHelper xctx(xmlXPathNewContext(doc.get()));
     XmlUtils::throwUnless(NULL != xctx.get());
+    State *state = ctx->state();
+    assert(NULL != state);
 
     for(std::vector<XPathExpr>::const_iterator iter = data_->xpath_.begin(), end = data_->xpath_.end();
         iter != end;
@@ -447,7 +449,23 @@ Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
         XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*)iter->expression().c_str(), xctx.get()));
         XmlUtils::throwUnless(NULL != object.get());
 
-        if (NULL != object->nodesetval && 0 != object->nodesetval->nodeNr) {
+        //log()->debug("%s, xpath: %s type=%d bool=%d float=%f str='%s'",
+        //    BOOST_CURRENT_FUNCTION, iter->expression().c_str(), object->type, object->boolval, object->floatval,
+        //    NULL !=object->stringval ? (const char *)object->stringval: "");
+
+        if (XPATH_BOOLEAN == object->type) {
+                state->checkName(iter->result());
+                state->setBool(iter->result(), 0 != object->boolval);
+        }
+        else if (XPATH_NUMBER == object->type) {
+                state->checkName(iter->result());
+                state->setDouble(iter->result(), object->floatval);
+        }
+        else if (XPATH_STRING == object->type) {
+                state->checkName(iter->result());
+                state->setString(iter->result(), (const char *)object->stringval);
+        }
+        else if(NULL != object->nodesetval && 0 != object->nodesetval->nodeNr) {
             std::string val;
             for (int i = 0; i < object->nodesetval->nodeNr; ++i) {
                 xmlNodePtr node = object->nodesetval->nodeTab[i];
@@ -458,7 +476,6 @@ Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
             }
 
             if (!val.empty()) {
-                State* state = ctx->state();
                 state->checkName(iter->result());
                 state->setString(iter->result(), val);
             }
