@@ -1,3 +1,9 @@
+xscript (5.61-5) unstable; urgency=low
+
+  * fixed stupid bug in xpointer
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 17 Apr 2009 18:17:25 +0400
+
 xscript (5.61-4) unstable; urgency=low
 
   * xpath fixed

@@ -566,8 +566,9 @@ Script::useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const
         return;
     }
     if (XPATH_NUMBER == xpathObj->type) {
-        char str[30];
-        sprintf("%f", str, xpathObj->floatval);
+        char str[40];
+        snprintf(str, sizeof(str) - 1, "%f", xpathObj->floatval);
+        str[sizeof(str) - 1] = '\0';
         xmlNodePtr text_node = xmlNewText((const xmlChar *)&str[0]);
         xmlReplaceNode(newnode, text_node);
         return;
