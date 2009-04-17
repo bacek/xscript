@@ -114,7 +114,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
         ctx->authContext(auth);
 
         bool loaded = false;
-        bool cachable = script->cachable(NULL);
+        bool cachable = script->cachable(ctx.get(), false);
         if (cachable) {
             loaded = processCachedDoc(ctx.get(), script.get());
         }
@@ -134,7 +134,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
                 }
             }
             
-            if (cachable && script->cachable(ctx.get())) {
+            if (cachable && script->cachable(ctx.get(), true)) {
                 sendResponseCached(ctx.get(), script.get(), doc);
             }
             else {

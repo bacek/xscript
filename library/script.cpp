@@ -49,6 +49,7 @@
 namespace xscript {
 
 static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
+const std::string Script::GET_METHOD = "GET";
 
 Script::Script(const std::string &name) :
     Xml(), doc_(NULL), name_(name), flags_(FLAG_FORCE_STYLESHEET),
@@ -730,8 +731,12 @@ Script::info(const Context *ctx) const {
 }
 
 bool
-Script::cachable(const Context *ctx) const {
-
+Script::cachable(const Context *ctx, bool for_save) const {
+    
+    if (ctx->request()->getRequestMethod() != GET_METHOD) {
+        return false;
+    }
+    
     if (binaryPage()) {
         return false;
     }
@@ -740,7 +745,7 @@ Script::cachable(const Context *ctx) const {
         return false;
     }
     
-    if (ctx) {
+    if (for_save) {
         if (ctx->hasError() || ctx->xsltChanged(this) || !ctx->response()->isStatusOK()) {
             return false;
         }

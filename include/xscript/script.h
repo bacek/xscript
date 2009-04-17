@@ -77,7 +77,7 @@ public:
 
     virtual std::string createTagKey(const Context *ctx) const;
     virtual std::string info(const Context *ctx) const;
-    virtual bool cachable(const Context *ctx) const;
+    virtual bool cachable(const Context *ctx, bool for_save) const;
     
     void addExpiresHeader(const Context *ctx) const;
 
@@ -148,8 +148,9 @@ protected:
 
     static const unsigned int FLAG_THREADED = 1;
     static const unsigned int FLAG_FORCE_STYLESHEET = 1 << 1;
-
     static const unsigned int FLAG_BINARY_PAGE = 1 << 2;
+    
+    static const std::string GET_METHOD;
 private:
     friend class ScriptFactory;
 

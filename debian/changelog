@@ -1,3 +1,10 @@
+xscript (5.61-4) unstable; urgency=low
+
+  * xpath fixed
+  * use page cache for GET method only
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 17 Apr 2009 17:40:35 +0400
+
 xscript (5.61-3) unstable; urgency=low
 
   * make Context friend to ContextData
