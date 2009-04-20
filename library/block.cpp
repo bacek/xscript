@@ -447,7 +447,12 @@ Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
             xmlXPathRegisterNs(xctx.get(), (const xmlChar *)it_ns->first.c_str(), (const xmlChar *)it_ns->second.c_str());
         }
         XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*)iter->expression().c_str(), xctx.get()));
-        XmlUtils::throwUnless(NULL != object.get());
+        try {
+            XmlUtils::throwUnless(NULL != object.get());
+        }
+        catch(const std::exception &e) {
+            throw InvokeError(e.what(), "xpath", iter->expression());
+        }
 
         //log()->debug("%s, xpath: %s type=%d bool=%d float=%f str='%s'",
         //    BOOST_CURRENT_FUNCTION, iter->expression().c_str(), object->type, object->boolval, object->floatval,
