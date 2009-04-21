@@ -667,11 +667,6 @@ Block::log() const {
     return data_->extension_->getLogger();
 }
 
-const std::vector<Block::XPathExpr>&
-Block::xpath() const {
-    return data_->xpath_;
-}
-
 void
 Block::startTimer(Context *ctx) {
     (void)ctx;
