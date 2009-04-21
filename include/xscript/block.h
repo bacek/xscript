@@ -6,6 +6,7 @@
 #include <vector>
 #include <exception>
 #include <boost/any.hpp>
+
 #include <xscript/object.h>
 #include <xscript/xml_helpers.h>
 #include <xscript/extension.h>
@@ -14,6 +15,7 @@
 
 namespace xscript {
 
+class Context;
 class Xml;
 class ParamFactory;
 
@@ -97,41 +99,23 @@ private:
 protected:
     class XPathExpr {
     public:
-        XPathExpr(const char* expression, const char* result, const char* delimeter) :
-                expression_(expression ? expression : ""),
-                result_(result ? result : ""),
-                delimeter_(delimeter ? delimeter : "") {}
-        ~XPathExpr() {}
+        XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type);
+        ~XPathExpr();
 
         typedef std::list<std::pair<std::string, std::string> > NamespaceListType;
 
-        const std::string& expression() const {
-            return expression_;
-        }
-
-        const std::string& result() const {
-            return result_;
-        }
-
-        const std::string& delimeter() const {
-            return delimeter_;
-        }
-
-        const NamespaceListType& namespaces() const {
-            return namespaces_;
-        }
-
-        void addNamespace(const char* prefix, const char* uri) {
-            if (prefix && uri) {
-                namespaces_.push_back(std::make_pair(std::string(prefix), std::string(uri)));
-            }
-        }
+        std::string expression(Context *ctx) const;
+        const std::string& result() const;
+        const std::string& delimeter() const;
+        const NamespaceListType& namespaces() const;
+        void addNamespace(const char* prefix, const char* uri);
 
     private:
         std::string expression_;
         std::string result_;
         std::string delimeter_;
         NamespaceListType namespaces_;
+        bool from_state_;
     };
 };
 

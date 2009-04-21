@@ -441,17 +441,23 @@ Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
     for(std::vector<XPathExpr>::const_iterator iter = data_->xpath_.begin(), end = data_->xpath_.end();
         iter != end;
         ++iter) {
+
+        std::string expr = iter->expression(ctx);
+        if (expr.empty()) {
+            continue;
+        }
         
         const XPathExpr::NamespaceListType& ns_list = iter->namespaces();
         for (XPathExpr::NamespaceListType::const_iterator it_ns = ns_list.begin(); it_ns != ns_list.end(); ++it_ns) {
             xmlXPathRegisterNs(xctx.get(), (const xmlChar *)it_ns->first.c_str(), (const xmlChar *)it_ns->second.c_str());
         }
-        XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*)iter->expression().c_str(), xctx.get()));
+
+        XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*)expr.c_str(), xctx.get()));
         try {
             XmlUtils::throwUnless(NULL != object.get());
         }
         catch(const std::exception &e) {
-            throw InvokeError(e.what(), "xpath", iter->expression());
+            throw InvokeError(e.what(), "xpath", expr);
         }
 
         //log()->debug("%s, xpath: %s type=%d bool=%d float=%f str='%s'",
@@ -613,7 +619,8 @@ Block::parseXPathNode(const xmlNodePtr node) {
         if (!delim || !*delim) {
             delim = " ";
         }
-        data_->xpath_.push_back(XPathExpr(expr, result, delim));
+        const char *type = XmlUtils::attrValue(node, "type");
+        data_->xpath_.push_back(XPathExpr(expr, result, delim, type));
         xmlNs* ns = node->nsDef;
         while (ns) {
             data_->xpath_.back().addNamespace((const char*)ns->prefix, (const char*)ns->href);
@@ -670,6 +677,52 @@ Block::concatParams(const Context *ctx, unsigned int first, unsigned int last) c
     }
     
     return result;
+}
+
+Block::XPathExpr::XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type) :
+    expression_(expression ? expression : ""), result_(result ? result : ""),
+    delimeter_(delimeter ? delimeter : ""), from_state_(false)
+{
+    if (type && strcasecmp(type, "statearg") == 0) {
+        from_state_ = true;
+    }
+}
+
+Block::XPathExpr::~XPathExpr()
+{}
+
+std::string
+Block::XPathExpr::expression(Context *ctx) const {
+    if (!from_state_) {
+        return expression_;
+    }
+    State *state = ctx->state();
+    if (state->has(expression_)) {
+        return state->asString(expression_);
+    }
+    return StringUtils::EMPTY_STRING;;
+}
+
+const std::string&
+Block::XPathExpr::result() const {
+    return result_;
+}
+
+const std::string&
+Block::XPathExpr::delimeter() const {
+    return delimeter_;
+}
+
+const Block::XPathExpr::NamespaceListType&
+Block::XPathExpr::namespaces() const {
+    return namespaces_;
+}
+
+void
+Block::XPathExpr::addNamespace(const char* prefix, const char* uri) {
+    if (prefix && uri) {
+        namespaces_.push_back(std::make_pair(std::string(prefix), std::string(uri)));
+    }
 }
 
 } // namespace xscript
