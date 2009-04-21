@@ -35,26 +35,7 @@
 
 namespace xscript {
 
-struct Block::BlockData {
-    BlockData(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        extension_(ext), owner_(owner), node_(node), is_guard_not_(false)
-    {}
-    
-    ~BlockData() {
-        std::for_each(params_.begin(), params_.end(), boost::checked_deleter<Param>());
-    }
-    
-    const Extension *extension_;
-    Xml *owner_;
-    xmlNodePtr node_;
-    std::vector<Param*> params_;
-    std::vector<XPathExpr> xpath_;
-    std::string id_, guard_, method_;
-    bool is_guard_not_;
-    std::string xpointer_expr_;
-};
-
-class Block::XPathExpr {
+class XPathExpr {
 public:
     XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type);
     ~XPathExpr();
@@ -73,6 +54,40 @@ private:
     std::string delimeter_;
     NamespaceListType namespaces_;
     bool from_state_;
+};
+
+class Guard {
+public:
+    Guard(const char *expr, const char *type, bool is_not);
+    bool check(Context *ctx);
+private:
+    typedef bool (Guard::*GuardMethod)(Context *ctx);
+    bool processStateArg(Context *ctx);
+    bool processQueryArg(Context *ctx);
+private:
+
+    std::string guard_;
+    bool not_;
+    GuardMethod method_;
+};
+
+struct Block::BlockData {
+    BlockData(const Extension *ext, Xml *owner, xmlNodePtr node) :
+        extension_(ext), owner_(owner), node_(node)
+    {}
+    
+    ~BlockData() {
+        std::for_each(params_.begin(), params_.end(), boost::checked_deleter<Param>());
+    }
+    
+    const Extension *extension_;
+    Xml *owner_;
+    xmlNodePtr node_;
+    std::vector<Param*> params_;
+    std::vector<XPathExpr> xpath_;
+    std::vector<Guard> guards_;
+    std::string id_, method_;
+    std::string xpointer_expr_;
 };
 
 Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
@@ -99,11 +114,6 @@ Block::node() const {
 const std::string&
 Block::id() const {
     return data_->id_;
-}
-
-const std::string&
-Block::guard() const {
-    return data_->guard_;
 }
 
 const std::string&
@@ -194,6 +204,12 @@ Block::parse() {
                 }
                 else if (xsltParamNode(node)) {
                     parseXsltParamNode(node, pf);
+                }
+                else if (guardNode(node)) {
+                    parseGuardNode(node, false);
+                }
+                else if (guardNotNode(node)) {
+                    parseGuardNode(node, true);
                 }
                 else if (XML_ELEMENT_NODE == node->type) {
                     const char *value = XmlUtils::value(node);
@@ -445,8 +461,12 @@ Block::throwBadArityError() const {
 
 bool
 Block::checkGuard(Context *ctx) const {
-    if (!data_->guard_.empty()) {
-        return data_->is_guard_not_ ^ ctx->state()->is(data_->guard_);
+    for(std::vector<Guard>::iterator it = data_->guards_.begin();
+        it != data_->guards_.end();
+        ++it) {
+        if (!it->check(ctx)) {
+            return false;
+        }
     }
     return true;
 }
@@ -558,23 +578,16 @@ Block::property(const char *name, const char *value) {
         data_->id_.assign(value);
     }
     else if (strncasecmp(name, "guard", sizeof("guard")) == 0) {
-        if (!data_->guard_.empty()) {
-            throw std::runtime_error("duplicated guard in block");
-        }
         if (*value == '\0') {
             throw std::runtime_error("empty guard");
         }
-        data_->guard_.assign(value);
+        data_->guards_.push_back(Guard(value, NULL, false));
     }
     else if (strncasecmp(name, "guard-not", sizeof("guard-not")) == 0) {
-        if (!data_->guard_.empty()) {
-            throw std::runtime_error("duplicated guard in block");
-        }
         if (*value == '\0') {
             throw std::runtime_error("empty guard-not");
         }
-        data_->guard_.assign(value);
-        data_->is_guard_not_ = true;
+        data_->guards_.push_back(Guard(value, NULL, true));
     }
     else if (strncasecmp(name, "method", sizeof("method")) == 0) {
         if (!data_->method_.empty()) {
@@ -631,6 +644,16 @@ Block::paramNode(const xmlNodePtr node) const {
     return (xmlStrncasecmp(node->name, (const xmlChar*) "param", sizeof("param")) == 0);
 }
 
+bool
+Block::guardNode(const xmlNodePtr node) const {
+    return xmlStrncasecmp(node->name, (const xmlChar*) "guard", sizeof("guard")) == 0;
+}
+
+bool
+Block::guardNotNode(const xmlNodePtr node) const {
+    return xmlStrncasecmp(node->name, (const xmlChar*) "guard-not", sizeof("guard-not")) == 0;
+}
+
 void
 Block::parseXPathNode(const xmlNodePtr node) {
     const char *expr = XmlUtils::attrValue(node, "expr");
@@ -647,6 +670,15 @@ Block::parseXPathNode(const xmlNodePtr node) {
             data_->xpath_.back().addNamespace((const char*)ns->prefix, (const char*)ns->href);
             ns = ns->next;
         }
+    }
+}
+
+void
+Block::parseGuardNode(const xmlNodePtr node, bool is_not) {
+    const char *value = XmlUtils::value(node);
+    if (value && *value) {
+        const char *type = XmlUtils::attrValue(node, "type");
+        data_->guards_.push_back(Guard(value, type, is_not));
     }
 }
 
@@ -695,20 +727,54 @@ Block::concatParams(const Context *ctx, unsigned int first, unsigned int last) c
     return result;
 }
 
-Block::XPathExpr::XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type) :
+Guard::Guard(const char *expr, const char *type, bool is_not) :
+    guard_(expr ? expr : ""), not_(is_not), method_(NULL)
+{
+    if (type && strncasecmp(type, "queryarg", sizeof("queryarg")) == 0) {
+        method_ = &Guard::processQueryArg;
+    }
+    else {
+        method_ = &Guard::processStateArg;
+    }
+}
+
+bool
+Guard::check(Context *ctx) {
+    return (this->*method_)(ctx);
+}
+
+bool
+Guard::processStateArg(Context *ctx) {
+    if (!guard_.empty()) {
+        return not_ ^ ctx->state()->is(guard_);
+    }
+    return true;
+}
+
+bool
+Guard::processQueryArg(Context *ctx) {
+    if (guard_.empty()) {
+        return true;
+    }
+    const std::string &value = ctx->request()->getArg(guard_);
+    bool is = value.empty() ? false : value != "0";
+    return not_ ^ is;
+}
+
+XPathExpr::XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type) :
     expression_(expression ? expression : ""), result_(result ? result : ""),
     delimeter_(delimeter ? delimeter : ""), from_state_(false)
 {
-    if (type && strcasecmp(type, "statearg") == 0) {
+    if (type && strncasecmp(type, "statearg", sizeof("statearg")) == 0) {
         from_state_ = true;
     }
 }
 
-Block::XPathExpr::~XPathExpr()
+XPathExpr::~XPathExpr()
 {}
 
 std::string
-Block::XPathExpr::expression(Context *ctx) const {
+XPathExpr::expression(Context *ctx) const {
     if (!from_state_) {
         return expression_;
     }
@@ -720,22 +786,22 @@ Block::XPathExpr::expression(Context *ctx) const {
 }
 
 const std::string&
-Block::XPathExpr::result() const {
+XPathExpr::result() const {
     return result_;
 }
 
 const std::string&
-Block::XPathExpr::delimeter() const {
+XPathExpr::delimeter() const {
     return delimeter_;
 }
 
-const Block::XPathExpr::NamespaceListType&
-Block::XPathExpr::namespaces() const {
+const XPathExpr::NamespaceListType&
+XPathExpr::namespaces() const {
     return namespaces_;
 }
 
 void
-Block::XPathExpr::addNamespace(const char* prefix, const char* uri) {
+XPathExpr::addNamespace(const char* prefix, const char* uri) {
     if (prefix && uri) {
         namespaces_.push_back(std::make_pair(std::string(prefix), std::string(uri)));
     }

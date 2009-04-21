@@ -27,7 +27,6 @@ public:
     Xml* owner() const;
     xmlNodePtr node() const;
     const std::string& id() const;
-    const std::string& guard() const;
     const std::string& method() const;
     const std::string& xpointerExpr() const;
     const char* name() const;
@@ -63,8 +62,6 @@ public:
     virtual void stopTimer(Context *ctx);
     
 protected:
-    class XPathExpr;
-
     virtual InvokeResult invokeInternal(boost::shared_ptr<Context> ctx);
     virtual void postParse();
     virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) = 0;
@@ -82,9 +79,12 @@ protected:
     XmlDocHelper fakeResult() const;
 
     bool xpathNode(const xmlNodePtr node) const;
+    bool guardNode(const xmlNodePtr node) const;
+    bool guardNotNode(const xmlNodePtr node) const;
     bool paramNode(const xmlNodePtr node) const;
 
     void parseXPathNode(const xmlNodePtr node);
+    void parseGuardNode(const xmlNodePtr node, bool is_not);
     void parseParamNode(const xmlNodePtr node, ParamFactory *pf);
     virtual void processParam(std::auto_ptr<Param> p);
     
