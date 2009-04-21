@@ -95,28 +95,6 @@ protected:
 private:
     struct BlockData;
     BlockData *data_;
-
-protected:
-    class XPathExpr {
-    public:
-        XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type);
-        ~XPathExpr();
-
-        typedef std::list<std::pair<std::string, std::string> > NamespaceListType;
-
-        std::string expression(Context *ctx) const;
-        const std::string& result() const;
-        const std::string& delimeter() const;
-        const NamespaceListType& namespaces() const;
-        void addNamespace(const char* prefix, const char* uri);
-
-    private:
-        std::string expression_;
-        std::string result_;
-        std::string delimeter_;
-        NamespaceListType namespaces_;
-        bool from_state_;
-    };
 };
 
 struct BlockTimerStarter {

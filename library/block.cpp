@@ -54,6 +54,27 @@ struct Block::BlockData {
     std::string xpointer_expr_;
 };
 
+class Block::XPathExpr {
+public:
+    XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type);
+    ~XPathExpr();
+
+    typedef std::list<std::pair<std::string, std::string> > NamespaceListType;
+
+    std::string expression(Context *ctx) const;
+    const std::string& result() const;
+    const std::string& delimeter() const;
+    const NamespaceListType& namespaces() const;
+    void addNamespace(const char* prefix, const char* uri);
+
+private:
+    std::string expression_;
+    std::string result_;
+    std::string delimeter_;
+    NamespaceListType namespaces_;
+    bool from_state_;
+};
+
 Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
     data_(new BlockData(ext, owner, node))
 {
@@ -185,7 +206,7 @@ Block::parse() {
         postParse();
     }
     catch(const std::exception &e) {
-        log()->error("%s, parse failed for '%s': %s", name(), owner()->name().c_str(), e.what());;
+        log()->error("%s, parse failed for '%s': %s", name(), owner()->name().c_str(), e.what());
         throw;
     }
 }
@@ -700,7 +721,7 @@ Block::XPathExpr::expression(Context *ctx) const {
     if (state->has(expression_)) {
         return state->asString(expression_);
     }
-    return StringUtils::EMPTY_STRING;;
+    return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
