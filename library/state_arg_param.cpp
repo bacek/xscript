@@ -58,6 +58,9 @@ StateArgParam::create(Object *owner, xmlNodePtr node) {
 
 bool
 StateArgParam::is(const Context *ctx, const std::string &name) {
+    if (name.empty()) {
+        return true;
+    }
     return ctx->state()->is(name);
 }
 

@@ -5,9 +5,6 @@
 
 #include "xscript/functors.h"
 
-#include "internal/hash.h"
-#include "internal/hashmap.h"
-
 #ifndef HAVE_HASHMAP
 #include <map>
 #endif
@@ -17,12 +14,7 @@ namespace xscript {
 class Context;
 
 typedef bool (*GuardCheckerMethod)(const Context *, const std::string&);
-
-#ifndef HAVE_HASHMAP
 typedef std::map<std::string, GuardCheckerMethod, StringCILess> GuardCheckerMethodMap;
-#else
-typedef details::hash_map<std::string, GuardCheckerMethod, StringCIHash> GuardCheckerMethodMap;
-#endif
 
 class GuardChecker : private boost::noncopyable {
 public:
@@ -35,7 +27,7 @@ public:
     }
     
     void registerMethod(const char *name, GuardCheckerMethod method);
-    GuardCheckerMethod method(const char *name);
+    GuardCheckerMethod method(const std::string &name) const;
 
 private:
     GuardCheckerMethodMap methods_;

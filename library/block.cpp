@@ -66,7 +66,10 @@ private:
     std::string guard_;
     bool not_;
     GuardCheckerMethod method_;
+    static const std::string STATE_ARG_PARAM_NAME;
 };
+
+const std::string Guard::STATE_ARG_PARAM_NAME = "statearg";
 
 struct Block::BlockData {
     BlockData(const Extension *ext, Xml *owner, xmlNodePtr node) :
@@ -673,8 +676,8 @@ Block::parseXPathNode(const xmlNodePtr node) {
 void
 Block::parseGuardNode(const xmlNodePtr node, bool is_not) {
     const char *value = XmlUtils::value(node);
-    if (value && *value) {
-        const char *type = XmlUtils::attrValue(node, "type");
+    const char *type = XmlUtils::attrValue(node, "type");
+    if (value || type) {
         data_->guards_.push_back(Guard(value, type, is_not));
     }
 }
@@ -727,7 +730,7 @@ Block::concatParams(const Context *ctx, unsigned int first, unsigned int last) c
 Guard::Guard(const char *expr, const char *type, bool is_not) :
     guard_(expr ? expr : ""),
     not_(is_not),
-    method_(GuardChecker::instance()->method(type ? type : "statearg"))
+    method_(GuardChecker::instance()->method(type ? type : STATE_ARG_PARAM_NAME))
 {
     if (NULL == method_) {
         std::stringstream stream;
@@ -737,11 +740,7 @@ Guard::Guard(const char *expr, const char *type, bool is_not) :
 }
 
 bool
-Guard::check(const Context *ctx) {    
-    if (guard_.empty()) {
-        return true;
-    }
-    
+Guard::check(const Context *ctx) {
     return not_ ^ (*method_)(ctx, guard_);
 }
 

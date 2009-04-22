@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include <cassert>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -38,8 +39,8 @@ GuardChecker::registerMethod(const char *name, GuardCheckerMethod method) {
 }
 
 GuardCheckerMethod
-GuardChecker::method(const char *name) {
-    GuardCheckerMethodMap::iterator i = methods_.find(name);
+GuardChecker::method(const std::string &name) const {
+    GuardCheckerMethodMap::const_iterator i = methods_.find(name);
     if (methods_.end() == i) {
         return NULL;
     }
