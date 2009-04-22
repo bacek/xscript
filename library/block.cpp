@@ -69,7 +69,7 @@ private:
     static const std::string STATE_ARG_PARAM_NAME;
 };
 
-const std::string Guard::STATE_ARG_PARAM_NAME = "statearg";
+const std::string Guard::STATE_ARG_PARAM_NAME = "StateArg";
 
 struct Block::BlockData {
     BlockData(const Extension *ext, Xml *owner, xmlNodePtr node) :
@@ -677,9 +677,7 @@ void
 Block::parseGuardNode(const xmlNodePtr node, bool is_not) {
     const char *value = XmlUtils::value(node);
     const char *type = XmlUtils::attrValue(node, "type");
-    if (value || type) {
-        data_->guards_.push_back(Guard(value, type, is_not));
-    }
+    data_->guards_.push_back(Guard(value, type, is_not));
 }
 
 void
@@ -730,20 +728,25 @@ Block::concatParams(const Context *ctx, unsigned int first, unsigned int last) c
 Guard::Guard(const char *expr, const char *type, bool is_not) :
     guard_(expr ? expr : ""),
     not_(is_not),
-    method_(NULL)
-{
-    type = type ? type : STATE_ARG_PARAM_NAME.c_str();
-    method_ = GuardChecker::instance()->method(type);
-    
+    method_(GuardChecker::instance()->method(type ? type : STATE_ARG_PARAM_NAME))
+{   
     if (NULL == method_) {
         std::stringstream stream;
-        stream << "Incorrect guard type. Guard: " << guard_ << ". Type: " << type; 
+        stream << "Incorrect guard type. Type: ";
+        if (type) {
+            stream << type;
+        }
+        stream << ". Guard: " << guard_;
         throw std::runtime_error(stream.str());
     }
     
-    if (!GuardChecker::instance()->allowed(type, guard_.empty())) {
+    if (!GuardChecker::instance()->allowed(type ? type : STATE_ARG_PARAM_NAME.c_str(), guard_.empty())) {
         std::stringstream stream;
-        stream << "This guard is not allowed. Guard: " << guard_ << ". Type: " << type; 
+        stream << "Guard is not allowed. Type: ";
+        if (type) {
+            stream << type;
+        }
+        stream << ". Guard: " << guard_;
         throw std::runtime_error(stream.str());
     }
 }

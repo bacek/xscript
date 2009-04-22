@@ -1,3 +1,9 @@
+xscript (5.61-9) unstable; urgency=low
+
+  * empty guards deprecated
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 22 Apr 2009 16:07:38 +0400
+
 xscript (5.61-8) unstable; urgency=low
 
   * guard list and guard types added
