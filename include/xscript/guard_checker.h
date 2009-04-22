@@ -13,8 +13,8 @@ namespace xscript {
 
 class Context;
 
-typedef bool (*GuardCheckerMethod)(const Context *, const std::string&);
-typedef std::map<std::string, GuardCheckerMethod, StringCILess> GuardCheckerMethodMap;
+typedef bool (*GuardCheckerMethod)(const Context*, const std::string&);
+typedef std::map<std::string, std::pair<GuardCheckerMethod, bool>, StringCILess> GuardCheckerMethodMap;
 
 class GuardChecker : private boost::noncopyable {
 public:
@@ -26,8 +26,9 @@ public:
         return &checker;
     }
     
-    void registerMethod(const char *name, GuardCheckerMethod method);
-    GuardCheckerMethod method(const std::string &name) const;
+    void registerMethod(const char *type, GuardCheckerMethod method, bool allow_empty);
+    GuardCheckerMethod method(const std::string &type) const;
+    bool allowed(const char *type, bool is_empty) const;
 
 private:
     GuardCheckerMethodMap methods_;
@@ -35,7 +36,7 @@ private:
 
 class GuardCheckerRegisterer : private boost::noncopyable {
 public:
-    GuardCheckerRegisterer(const char *name, GuardCheckerMethod method);
+    GuardCheckerRegisterer(const char *type, GuardCheckerMethod method, bool allow_empty);
 };
             
 } // namespace xscript

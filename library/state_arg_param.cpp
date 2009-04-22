@@ -65,6 +65,6 @@ StateArgParam::is(const Context *ctx, const std::string &name) {
 }
 
 static CreatorRegisterer reg_("statearg", &StateArgParam::create);
-static GuardCheckerRegisterer reg2_("statearg", &StateArgParam::is);
+static GuardCheckerRegisterer reg2_("statearg", &StateArgParam::is, false);
 
 } // namespace xscript

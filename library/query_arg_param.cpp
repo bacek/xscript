@@ -58,6 +58,6 @@ QueryArgParam::is(const Context *ctx, const std::string &name) {
 }
 
 static CreatorRegisterer reg_("queryarg", &QueryArgParam::create);
-static GuardCheckerRegisterer reg2_("queryarg", &QueryArgParam::is);
+static GuardCheckerRegisterer reg2_("queryarg", &QueryArgParam::is, false);
 
 } // namespace xscript

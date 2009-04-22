@@ -58,6 +58,6 @@ HeaderParam::is(const Context *ctx, const std::string &name) {
 }
 
 static CreatorRegisterer reg_("httpheader", &HeaderParam::create);
-static GuardCheckerRegisterer reg2_("httpheader", &HeaderParam::is);
+static GuardCheckerRegisterer reg2_("httpheader", &HeaderParam::is, false);
 
 } // namespace xscript

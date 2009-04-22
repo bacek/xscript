@@ -20,15 +20,15 @@ GuardChecker::~GuardChecker() {
 }
 
 void
-GuardChecker::registerMethod(const char *name, GuardCheckerMethod method) {
+GuardChecker::registerMethod(const char *type, GuardCheckerMethod method, bool allow_empty) {
     try {
-        GuardCheckerMethodMap::iterator i = methods_.find(name);
+        GuardCheckerMethodMap::iterator i = methods_.find(type);
         if (methods_.end() == i) {
-            methods_.insert(std::make_pair(name, method));
+            methods_.insert(std::make_pair(type, std::make_pair(method, allow_empty)));
         }
         else {
             std::stringstream stream;
-            stream << "duplicate param: " << name;
+            stream << "duplicate param: " << type;
             throw std::invalid_argument(stream.str());
         }
     }
@@ -39,17 +39,28 @@ GuardChecker::registerMethod(const char *name, GuardCheckerMethod method) {
 }
 
 GuardCheckerMethod
-GuardChecker::method(const std::string &name) const {
-    GuardCheckerMethodMap::const_iterator i = methods_.find(name);
+GuardChecker::method(const std::string &type) const {
+    GuardCheckerMethodMap::const_iterator i = methods_.find(type);
     if (methods_.end() == i) {
         return NULL;
     }
-    return i->second;
+    return i->second.first;
 }
 
-GuardCheckerRegisterer::GuardCheckerRegisterer(const char *name, GuardCheckerMethod method) {
-    assert(name);
-    GuardChecker::instance()->registerMethod(name, method);
+bool
+GuardChecker::allowed(const char *type, bool is_empty) const {
+    GuardCheckerMethodMap::const_iterator i = methods_.find(type);
+    if (methods_.end() == i) {
+        return false;
+    }
+    return is_empty ? i->second.second : true;
+}
+
+GuardCheckerRegisterer::GuardCheckerRegisterer(const char *type,
+                                               GuardCheckerMethod method,
+                                               bool allow_empty) {
+    assert(type);
+    GuardChecker::instance()->registerMethod(type, method, allow_empty);
 }
 
 } // namespace xscript

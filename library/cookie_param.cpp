@@ -57,6 +57,6 @@ CookieParam::is(const Context *ctx, const std::string &name) {
 }
 
 static CreatorRegisterer reg_("cookie", &CookieParam::create);
-static GuardCheckerRegisterer reg2_("cookie", &CookieParam::is);
+static GuardCheckerRegisterer reg2_("cookie", &CookieParam::is, false);
 
 } // namespace xscript
