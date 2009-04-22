@@ -1,4 +1,6 @@
 #include "settings.h"
+
+#include "xscript/guard_checker.h"
 #include "xscript/param.h"
 #include "xscript/request.h"
 #include "xscript/context.h"
@@ -18,6 +20,7 @@ public:
     virtual std::string asString(const Context *ctx) const;
 
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
+    static bool is(const Context *ctx, const std::string &name);
 };
 
 HeaderParam::HeaderParam(Object *owner, xmlNodePtr node) :
@@ -46,6 +49,12 @@ HeaderParam::create(Object *owner, xmlNodePtr node) {
     return std::auto_ptr<Param>(new HeaderParam(owner, node));
 }
 
+bool
+HeaderParam::is(const Context *ctx, const std::string &name) {
+    return !ctx->request()->getHeader(name).empty();
+}
+
 static CreatorRegisterer reg_("httpheader", &HeaderParam::create);
+static GuardCheckerRegisterer reg2_("httpheader", &HeaderParam::is);
 
 } // namespace xscript

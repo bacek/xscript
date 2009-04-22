@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "xscript/guard_checker.h"
 #include "xscript/param.h"
 #include "xscript/request.h"
 #include "xscript/context.h"
@@ -18,6 +19,7 @@ public:
     virtual std::string asString(const Context *ctx) const;
 
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
+    static bool is(const Context *ctx, const std::string &name);
 };
 
 CookieParam::CookieParam(Object *owner, xmlNodePtr node) :
@@ -46,6 +48,12 @@ CookieParam::create(Object *owner, xmlNodePtr node) {
     return std::auto_ptr<Param>(new CookieParam(owner, node));
 }
 
+bool
+CookieParam::is(const Context *ctx, const std::string &name) {
+    return !ctx->request()->getCookie(name).empty();
+}
+
 static CreatorRegisterer reg_("cookie", &CookieParam::create);
+static GuardCheckerRegisterer reg2_("cookie", &CookieParam::is);
 
 } // namespace xscript

@@ -14,20 +14,21 @@
 #include <libxml/xpath.h>
 #include <libxml/xpathInternals.h>
 
-#include "xscript/xml.h"
-#include "xscript/xml_util.h"
-#include "xscript/state.h"
-#include "xscript/param.h"
+#include "internal/param_factory.h"
 #include "xscript/block.h"
+#include "xscript/context.h"
+#include "xscript/guard_checker.h"
 #include "xscript/logger.h"
 #include "xscript/object.h"
 #include "xscript/operation_mode.h"
-#include "xscript/context.h"
-#include "xscript/vhost_data.h"
+#include "xscript/param.h"
+#include "xscript/profiler.h"
+#include "xscript/state.h"
 #include "xscript/stylesheet.h"
 #include "xscript/thread_pool.h"
-#include "xscript/profiler.h"
-#include "internal/param_factory.h"
+#include "xscript/vhost_data.h"
+#include "xscript/xml.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -59,16 +60,12 @@ private:
 class Guard {
 public:
     Guard(const char *expr, const char *type, bool is_not);
-    bool check(Context *ctx);
-private:
-    typedef bool (Guard::*GuardMethod)(Context *ctx);
-    bool processStateArg(Context *ctx);
-    bool processQueryArg(Context *ctx);
-private:
+    bool check(const Context *ctx);
 
+private:
     std::string guard_;
     bool not_;
-    GuardMethod method_;
+    GuardCheckerMethod method_;
 };
 
 struct Block::BlockData {
@@ -728,37 +725,24 @@ Block::concatParams(const Context *ctx, unsigned int first, unsigned int last) c
 }
 
 Guard::Guard(const char *expr, const char *type, bool is_not) :
-    guard_(expr ? expr : ""), not_(is_not), method_(NULL)
+    guard_(expr ? expr : ""),
+    not_(is_not),
+    method_(GuardChecker::instance()->method(type ? type : "statearg"))
 {
-    if (type && strncasecmp(type, "queryarg", sizeof("queryarg")) == 0) {
-        method_ = &Guard::processQueryArg;
-    }
-    else {
-        method_ = &Guard::processStateArg;
+    if (NULL == method_) {
+        std::stringstream stream;
+        stream << "Incorrect guard type. Guard: " << guard_ << ". Type: " << type; 
+        throw std::runtime_error(stream.str());
     }
 }
 
 bool
-Guard::check(Context *ctx) {
-    return (this->*method_)(ctx);
-}
-
-bool
-Guard::processStateArg(Context *ctx) {
-    if (!guard_.empty()) {
-        return not_ ^ ctx->state()->is(guard_);
-    }
-    return true;
-}
-
-bool
-Guard::processQueryArg(Context *ctx) {
+Guard::check(const Context *ctx) {    
     if (guard_.empty()) {
         return true;
     }
-    const std::string &value = ctx->request()->getArg(guard_);
-    bool is = value.empty() ? false : value != "0";
-    return not_ ^ is;
+    
+    return not_ ^ (*method_)(ctx, guard_);
 }
 
 XPathExpr::XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type) :

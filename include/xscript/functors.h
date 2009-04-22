@@ -1,5 +1,5 @@
-#ifndef _XSCRIPT_SERVER_FUNCTORS_H_
-#define _XSCRIPT_SERVER_FUNCTORS_H_
+#ifndef _XSCRIPT_FUNCTORS_H_
+#define _XSCRIPT_FUNCTORS_H_
 
 #include <string>
 #include <cctype>
@@ -70,4 +70,4 @@ typedef CILess<std::string> StringCILess;
 
 } // namespace xscript
 
-#endif // _XSCRIPT_SERVER_FUNCTORS_H_
+#endif // _XSCRIPT_FUNCTORS_H_
