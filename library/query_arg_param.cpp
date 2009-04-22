@@ -51,9 +51,6 @@ QueryArgParam::create(Object *owner, xmlNodePtr node) {
 
 bool
 QueryArgParam::is(const Context *ctx, const std::string &name) {
-    if (name.empty()) {
-        return true;
-    }
     return !ctx->request()->getArg(name).empty();
 }
 

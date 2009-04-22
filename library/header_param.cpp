@@ -51,9 +51,6 @@ HeaderParam::create(Object *owner, xmlNodePtr node) {
 
 bool
 HeaderParam::is(const Context *ctx, const std::string &name) {
-    if (name.empty()) {
-        return true;
-    }
     return !ctx->request()->getHeader(name).empty();
 }
 

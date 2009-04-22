@@ -50,9 +50,6 @@ CookieParam::create(Object *owner, xmlNodePtr node) {
 
 bool
 CookieParam::is(const Context *ctx, const std::string &name) {
-    if (name.empty()) {
-        return true;
-    }
     return !ctx->request()->getCookie(name).empty();
 }
 
