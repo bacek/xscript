@@ -271,7 +271,7 @@ XmlConfig::checkVariableName(const std::string &name) const {
     int size = name.size();
     for (int i = 1; i < size; ++i) {
         char character = name[i];
-        if (!isalnum(character) && character != '-') {
+        if (!isalnum(character) && character != '-' && character != '_') {
             return false;
         }
     }
