@@ -776,11 +776,7 @@ XPathExpr::expression(Context *ctx) const {
     if (!from_state_) {
         return expression_;
     }
-    State *state = ctx->state();
-    if (state->has(expression_)) {
-        return state->asString(expression_);
-    }
-    return StringUtils::EMPTY_STRING;
+    return ctx->state()->asString(expression_, StringUtils::EMPTY_STRING);
 }
 
 const std::string&

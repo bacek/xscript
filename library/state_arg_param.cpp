@@ -3,6 +3,7 @@
 #include "xscript/context.h"
 #include "xscript/guard_checker.h"
 #include "xscript/param.h"
+#include "xscript/string_utils.h"
 #include "xscript/state.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -39,11 +40,7 @@ StateArgParam::type() const {
 
 std::string
 StateArgParam::asString(const Context *ctx) const {
-    State* state = ctx->state();
-    if (state->has(value())) {
-        return state->asString(value());
-    }
-    return defaultValue();
+    return ctx->state()->asString(value(), defaultValue());
 }
 
 void
@@ -61,7 +58,7 @@ StateArgParam::is(const Context *ctx, const std::string &name, const std::string
     if (value.empty()) {
         return ctx->state()->is(name);
     }
-    return ctx->state()->asString(name) == value;
+    return ctx->state()->asString(name, StringUtils::EMPTY_STRING) == value;
 }
 
 static CreatorRegisterer reg_("statearg", &StateArgParam::create);

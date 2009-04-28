@@ -100,6 +100,16 @@ StateImpl::find(const std::string &name) const {
     }
 }
 
+std::string
+StateImpl::asString(const std::string &name, const std::string &default_value) const {
+    boost::mutex::scoped_lock sl(mutex_);
+    StateValueMap::const_iterator i = values_.find(name);
+    if (values_.end() != i) {
+        return i->second.value();
+    }
+    return default_value;
+}
+
 bool
 StateImpl::is(const std::string &name) const {
     boost::mutex::scoped_lock sl(mutex_);

@@ -105,6 +105,11 @@ State::asString(const std::string &name) const {
     return impl_->asString(name);
 }
 
+std::string
+State::asString(const std::string &name, const std::string &default_value) const {
+    return impl_->asString(name, default_value);
+}
+
 void
 State::setString(const std::string &name, const std::string &value) {
     impl_->setString(name, value);

@@ -44,6 +44,7 @@ public:
     void setDouble(const std::string &name, double value);
 
     std::string asString(const std::string &name) const;
+    std::string asString(const std::string &name, const std::string &default_value) const;
     void setString(const std::string &name, const std::string &value);
 
     template<typename Type> Type as(const std::string &name) const;

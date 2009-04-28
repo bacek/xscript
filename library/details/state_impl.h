@@ -94,6 +94,8 @@ public:
         return find(name).value();
     }
 
+    std::string asString(const std::string &name, const std::string &default_value) const;
+    
     inline void setString(const std::string &name, const std::string &value) {
         boost::mutex::scoped_lock sl(mutex_);
         set(name, StateValue::TYPE_STRING, value);

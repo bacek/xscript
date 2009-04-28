@@ -83,13 +83,8 @@ luaStateGet(lua_State *lua) {
         State* s = luaReadStack<State>(lua, "xscript.state", 1);
         std::string key = luaReadStack<std::string>(lua, 2);
         log()->debug("luaStateGet: %s", key.c_str());
-        if (s->has(key)) {
-            std::string value = s->asString(key);
-            lua_pushstring(lua, value.c_str());
-        }
-        else {
-            lua_pushstring(lua, "");
-        }
+        
+        lua_pushstring(lua, s->asString(key, "").c_str());
         return 1;
     }
     catch (const LuaError &e) {
