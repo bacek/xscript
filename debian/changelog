@@ -1,3 +1,9 @@
+xscript (5.61-11) unstable; urgency=low
+
+  * CDATA processing in block's xpath added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 28 Apr 2009 16:51:59 +0400
+
 xscript (5.61-10) unstable; urgency=low
 
   * value added to guard
