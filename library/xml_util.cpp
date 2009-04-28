@@ -186,7 +186,7 @@ XmlUtils::escape(const Range &range) {
             dest.append("&quot;");
             break;
         case '\'':
-            dest.append("&apos;");
+            dest.append("&#39;");
             break;
         case '&':
             dest.append("&amp;");
