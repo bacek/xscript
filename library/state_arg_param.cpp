@@ -22,7 +22,7 @@ public:
     virtual void add(const Context *ctx, ArgList &al) const;
     
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
-    static bool is(const Context *ctx, const std::string &name);
+    static bool is(const Context *ctx, const std::string &name, const std::string &value);
 };
 
 StateArgParam::StateArgParam(Object *owner, xmlNodePtr node) :
@@ -57,8 +57,11 @@ StateArgParam::create(Object *owner, xmlNodePtr node) {
 }
 
 bool
-StateArgParam::is(const Context *ctx, const std::string &name) {
-    return ctx->state()->is(name);
+StateArgParam::is(const Context *ctx, const std::string &name, const std::string &value) {
+    if (value.empty()) {
+        return ctx->state()->is(name);
+    }
+    return ctx->state()->asString(name) == value;
 }
 
 static CreatorRegisterer reg_("statearg", &StateArgParam::create);

@@ -59,11 +59,12 @@ private:
 
 class Guard {
 public:
-    Guard(const char *expr, const char *type, bool is_not);
+    Guard(const char *expr, const char *type, const char *value, bool is_not);
     bool check(const Context *ctx);
 
 private:
     std::string guard_;
+    std::string value_;
     bool not_;
     GuardCheckerMethod method_;
     static const std::string STATE_ARG_PARAM_NAME;
@@ -545,7 +546,7 @@ Block::appendNodeValue(xmlNodePtr node, std::string &val) const {
     else if (XML_ATTRIBUTE_NODE == node->type) {
         nodeval = XmlUtils::value((xmlAttrPtr) node);
     }
-    else if (XML_TEXT_NODE ==node->type && node->content) {
+    else if (XML_TEXT_NODE == node->type && node->content) {
         nodeval = (const char*) node->content;
     }
     if (nodeval && strlen(nodeval)) {
@@ -581,13 +582,13 @@ Block::property(const char *name, const char *value) {
         if (*value == '\0') {
             throw std::runtime_error("empty guard");
         }
-        data_->guards_.push_back(Guard(value, NULL, false));
+        data_->guards_.push_back(Guard(value, NULL, NULL, false));
     }
     else if (strncasecmp(name, "guard-not", sizeof("guard-not")) == 0) {
         if (*value == '\0') {
             throw std::runtime_error("empty guard-not");
         }
-        data_->guards_.push_back(Guard(value, NULL, true));
+        data_->guards_.push_back(Guard(value, NULL, NULL, true));
     }
     else if (strncasecmp(name, "method", sizeof("method")) == 0) {
         if (!data_->method_.empty()) {
@@ -675,9 +676,10 @@ Block::parseXPathNode(const xmlNodePtr node) {
 
 void
 Block::parseGuardNode(const xmlNodePtr node, bool is_not) {
-    const char *value = XmlUtils::value(node);
+    const char *guard = XmlUtils::value(node);
     const char *type = XmlUtils::attrValue(node, "type");
-    data_->guards_.push_back(Guard(value, type, is_not));
+    const char *value = XmlUtils::attrValue(node, "value");
+    data_->guards_.push_back(Guard(guard, type, value, is_not));
 }
 
 void
@@ -725,8 +727,9 @@ Block::concatParams(const Context *ctx, unsigned int first, unsigned int last) c
     return result;
 }
 
-Guard::Guard(const char *expr, const char *type, bool is_not) :
+Guard::Guard(const char *expr, const char *type, const char *value, bool is_not) :
     guard_(expr ? expr : ""),
+    value_(value ? value : ""),
     not_(is_not),
     method_(GuardChecker::instance()->method(type ? type : STATE_ARG_PARAM_NAME))
 {   
@@ -753,7 +756,7 @@ Guard::Guard(const char *expr, const char *type, bool is_not) :
 
 bool
 Guard::check(const Context *ctx) {
-    return not_ ^ (*method_)(ctx, guard_);
+    return not_ ^ (*method_)(ctx, guard_, value_);
 }
 
 XPathExpr::XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type) :

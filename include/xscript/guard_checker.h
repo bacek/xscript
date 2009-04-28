@@ -13,7 +13,7 @@ namespace xscript {
 
 class Context;
 
-typedef bool (*GuardCheckerMethod)(const Context*, const std::string&);
+typedef bool (*GuardCheckerMethod)(const Context*, const std::string&, const std::string&);
 typedef std::map<std::string, std::pair<GuardCheckerMethod, bool>, StringCILess> GuardCheckerMethodMap;
 
 class GuardChecker : private boost::noncopyable {

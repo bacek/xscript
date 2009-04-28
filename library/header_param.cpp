@@ -20,7 +20,7 @@ public:
     virtual std::string asString(const Context *ctx) const;
 
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
-    static bool is(const Context *ctx, const std::string &name);
+    static bool is(const Context *ctx, const std::string &name, const std::string &value);
 };
 
 HeaderParam::HeaderParam(Object *owner, xmlNodePtr node) :
@@ -50,8 +50,11 @@ HeaderParam::create(Object *owner, xmlNodePtr node) {
 }
 
 bool
-HeaderParam::is(const Context *ctx, const std::string &name) {
-    return !ctx->request()->getHeader(name).empty();
+HeaderParam::is(const Context *ctx, const std::string &name, const std::string &value) {
+    if (value.empty()) {
+        return !ctx->request()->getHeader(name).empty();
+    }
+    return ctx->request()->getHeader(name) == value;
 }
 
 static CreatorRegisterer reg_("httpheader", &HeaderParam::create);

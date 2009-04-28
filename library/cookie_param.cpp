@@ -19,7 +19,7 @@ public:
     virtual std::string asString(const Context *ctx) const;
 
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
-    static bool is(const Context *ctx, const std::string &name);
+    static bool is(const Context *ctx, const std::string &name, const std::string &value);
 };
 
 CookieParam::CookieParam(Object *owner, xmlNodePtr node) :
@@ -49,8 +49,11 @@ CookieParam::create(Object *owner, xmlNodePtr node) {
 }
 
 bool
-CookieParam::is(const Context *ctx, const std::string &name) {
-    return !ctx->request()->getCookie(name).empty();
+CookieParam::is(const Context *ctx, const std::string &name, const std::string &value) {
+    if (value.empty()) {
+        return !ctx->request()->getCookie(name).empty();
+    }
+    return ctx->request()->getCookie(name) == value;
 }
 
 static CreatorRegisterer reg_("cookie", &CookieParam::create);
