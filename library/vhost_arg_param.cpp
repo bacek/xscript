@@ -35,7 +35,6 @@ VHostArgParam::type() const {
 
 std::string
 VHostArgParam::asString(const Context *ctx) const {
-    (void)ctx;
     const std::string &param_name = value();
     std::string result;
     if (strncasecmp(param_name.c_str(), "noxslt-port", sizeof("noxslt-port")) == 0) {
@@ -47,7 +46,11 @@ VHostArgParam::asString(const Context *ctx) const {
                 VirtualHostData::instance()->getServer()->alternatePort());
     }
     else {
-        throw std::runtime_error(std::string("Unknown virtual host arg: ") + param_name);
+        if (strncmp(param_name.c_str(), "XSCRIPT_", sizeof("XSCRIPT_") - 1) != 0) {
+            throw std::runtime_error(
+                "Environment variable without XSCRIPT prefix is not allowed in VHostArg: " + param_name);
+        }
+        result = VirtualHostData::instance()->getVariable(ctx->request(), param_name);
     }
     
     return result.empty() ? defaultValue() : result;
