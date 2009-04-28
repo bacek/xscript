@@ -1,3 +1,10 @@
+xscript (5.61-10) unstable; urgency=low
+
+  * value added to guard
+  * apos entity fixed in xml escaping
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 28 Apr 2009 12:24:33 +0400
+
 xscript (5.61-9) unstable; urgency=low
 
   * empty guards deprecated
