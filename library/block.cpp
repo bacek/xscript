@@ -542,6 +542,12 @@ Block::appendNodeValue(xmlNodePtr node, std::string &val) const {
     const char *nodeval = "";
     if (XML_ELEMENT_NODE == node->type) {
         nodeval = XmlUtils::value(node);
+        if (NULL == nodeval) {
+            xmlNodePtr child = node->children;
+            if (child && XML_CDATA_SECTION_NODE == child->type) {
+                nodeval = (const char*)child->content;
+            }
+        }
     }
     else if (XML_ATTRIBUTE_NODE == node->type) {
         nodeval = XmlUtils::value((xmlAttrPtr) node);
