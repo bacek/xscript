@@ -100,15 +100,20 @@ HttpHelper::appendHeaders(const Request* req, bool proxy, const Tag* tag) {
         return;
     }
 
-    std::vector<std::string> headers;
-    Policy::instance()->getProxyHttpHeaders(req, headers);
-
-    for(std::vector<std::string>::iterator it = headers.begin();
-        it != headers.end();
-        ++it) {
-        headers_helper_.append(it->c_str());
+    if (proxy) {    
+        std::vector<std::string> headers;
+        Policy::instance()->getProxyHttpHeaders(req, headers);
+    
+        for(std::vector<std::string>::iterator it = headers.begin();
+            it != headers.end();
+            ++it) {
+            headers_helper_.append(it->c_str());
+        }
     }
 
+    std::string ip_header = std::string("X-REAL-IP: ") + req->getRealIP();
+    headers_helper_.append(ip_header.c_str());
+    
     headers_helper_.append("Expect:");
     headers_helper_.append("Connection: close");
 
