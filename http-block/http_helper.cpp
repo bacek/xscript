@@ -110,9 +110,10 @@ HttpHelper::appendHeaders(const Request* req, bool proxy, const Tag* tag) {
             headers_helper_.append(it->c_str());
         }
     }
-
-    std::string ip_header = std::string("X-REAL-IP: ") + req->getRealIP();
-    headers_helper_.append(ip_header.c_str());
+    else {
+        std::string ip_header = std::string("X-REAL-IP: ") + req->getRealIP();
+        headers_helper_.append(ip_header.c_str());
+    }
     
     headers_helper_.append("Expect:");
     headers_helper_.append("Connection: close");
