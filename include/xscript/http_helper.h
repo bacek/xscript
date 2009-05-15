@@ -39,7 +39,7 @@ public:
 
     static void init();
 
-    void appendHeaders(const Request* req, bool proxy, const Tag* tag);
+    void appendHeaders(const std::vector<std::string> &headers, time_t modified_since);
     void postData(const void* data, long size);
 
     long perform();
@@ -58,14 +58,12 @@ public:
 
     Tag createTag() const;
 
-    bool isXml() const;
-
+    bool isXml() const; 
 protected:
     void detectContentType();
     void check(CURLcode code) const;
     static size_t curlWrite(void *ptr, size_t size, size_t nmemb, void *arg);
     static size_t curlHeaders(void *ptr, size_t size, size_t nmemb, void *arg);
-    void processStatusError(const std::string& error_msg) const;
 
 private:
     HttpHelper(const HttpHelper &);

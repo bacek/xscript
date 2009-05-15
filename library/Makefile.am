@@ -14,11 +14,9 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	vhost_data.cpp protocol_arg_param.cpp \
 	logger_factory.cpp syslog_logger.cpp file_logger.cpp server.cpp \
 	control_extension.cpp operation_mode.cpp \
-	thread_pool.cpp script_cache.cpp \
-	stylesheet_cache.cpp \
-	stat_builder.cpp hostname_param.cpp \
-	status_info.cpp protocol.cpp \
-	memory_statistic.cpp \
+	thread_pool.cpp script_cache.cpp stylesheet_cache.cpp \
+	stat_builder.cpp hostname_param.cpp status_info.cpp memory_statistic.cpp \
+	protocol.cpp http_helper.cpp \
 	doc_cache.cpp doc_cache_strategy.cpp \
 	profiler.cpp xslt_profiler.cpp \
 	average_counter_factory.cpp \
@@ -40,7 +38,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	validator_factory.cpp validator.cpp validator_exception.cpp \
 	string_utils.cpp refresher.cpp vhost_arg_param.cpp guard_checker.cpp
 
-libxscript_la_LDFLAGS = @VERSION_INFO@
+libxscript_la_LDFLAGS = @VERSION_INFO@ -lcurl
 
 libxscript_la_LIBADD = -lpthread @LTLIBICONV@ -lboost_thread -lboost_filesystem
 

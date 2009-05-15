@@ -16,16 +16,17 @@
 #include <libxml/HTMLparser.h>
 
 #include "http_block.h"
-#include "http_helper.h"
 
 #include "xscript/context.h"
+#include "xscript/http_helper.h"
 #include "xscript/logger.h"
 #include "xscript/param.h"
+#include "xscript/policy.h"
 #include "xscript/profiler.h"
 #include "xscript/request.h"
 #include "xscript/state.h"
-#include "xscript/util.h"
 #include "xscript/string_utils.h"
+#include "xscript/util.h"
 #include "xscript/writer.h"
 #include "xscript/xml.h"
 #include "xscript/xml_util.h"
@@ -164,12 +165,10 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
         
     const Tag *tag = boost::any_cast<Tag>(&a);
     HttpHelper helper(url, timeout);
-    helper.appendHeaders(ctx->request(), proxy_, tag);
-
-    helper.perform();
-    log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
     
-    helper.checkStatus();
+    appendHeaders(helper, ctx->request(), tag);
+    httpCall(helper);
+    checkStatus(helper);
     
     createTagInfo(helper, a);
     const Tag *result_tag = boost::any_cast<Tag>(&a);
@@ -203,16 +202,14 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
     checkTimeout(timer, url);
 
     HttpHelper helper(url, timeout);
-    helper.appendHeaders(ctx->request(), proxy_, NULL);
-
-    helper.perform();
-    log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
+    
+    appendHeaders(helper, ctx->request(), NULL);
+    httpCall(helper);
 
     long status = helper.status();
     if (status != 200) {
-        RetryInvokeError error("Incorrect http status");
+        RetryInvokeError error("Incorrect http status", "url", url);
         error.add("status", boost::lexical_cast<std::string>(status));
-        error.addEscaped("url", url);
         throw error;
     }
 
@@ -257,14 +254,14 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
     HttpHelper helper(url, timeout);
     
     const Tag *tag = boost::any_cast<Tag>(&a);
-    helper.appendHeaders(ctx->request(), proxy_, tag);
+    
+    appendHeaders(helper, ctx->request(), tag);
+
     std::string body = p[size-1]->asString(ctx);
     helper.postData(body.data(), body.size());
 
-    helper.perform();
-    log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
-    
-    helper.checkStatus();
+    httpCall(helper);
+    checkStatus(helper);
 
     createTagInfo(helper, a);
     const Tag *result_tag = boost::any_cast<Tag>(&a);
@@ -300,16 +297,16 @@ HttpBlock::postByRequest(Context *ctx, boost::any &a) {
     int timeout = std::min(timer.remained(), remoteTimeout());
     checkTimeout(timer, url);
     
-    HttpHelper helper(url, timeout);        
-    helper.appendHeaders(ctx->request(), proxy_, NULL);
+    HttpHelper helper(url, timeout);
+    
+    appendHeaders(helper, ctx->request(), NULL);
 
     std::pair<const char*, std::streamsize> body = ctx->request()->requestBody();
     helper.postData(body.first, body.second);
 
-    helper.perform();
-    log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
+    httpCall(helper);
+    checkStatus(helper);
     
-    helper.checkStatus();
     return response(helper);
 }
 
@@ -348,12 +345,11 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
     checkTimeout(timer, url);
 
     HttpHelper helper(url, timeout);
-    helper.appendHeaders(ctx->request(), proxy_, NULL);
-
-    helper.perform();
-    log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
-
-    helper.checkStatus();
+    
+    appendHeaders(helper, ctx->request(), NULL);
+    httpCall(helper);
+    checkStatus(helper);
+    
     return response(helper);
 }
 
@@ -383,13 +379,48 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
     checkTimeout(timer, url);
     
     HttpHelper helper(url, timeout);
-    helper.appendHeaders(ctx->request(), proxy_, NULL);
-
-    helper.perform();
-    log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
-
-    helper.checkStatus();
+    
+    appendHeaders(helper, ctx->request(), NULL);
+    httpCall(helper);
+    checkStatus(helper);
+    
     return response(helper);
+}
+
+void
+HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, const Tag *tag) const {
+    std::vector<std::string> headers;
+    bool real_ip = false;
+    const std::string& ip_header_name = Policy::instance()->realIPHeaderName();
+    if (proxy_) {    
+        if (request->countHeaders() > 0) {
+            std::vector<std::string> names;
+            request->headerNames(names);
+            Policy* policy = Policy::instance();
+            for (std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
+                const std::string& name = *i;
+                const std::string& value = request->getHeader(name);
+                if (policy->isSkippedProxyHeader(name)) {
+                    log()->debug("%s, skipped %s: %s", BOOST_CURRENT_FUNCTION, name.c_str(), value.c_str());
+                }
+                else {
+                    if (!real_ip && strcasecmp(ip_header_name.c_str(), name.c_str()) == 0) {
+                        real_ip = true;
+                    }
+                    headers.push_back(name);
+                    headers.back().append(": ").append(value);
+                }
+            }
+        }
+        
+    }
+    
+    if (!real_ip && !ip_header_name.empty()) {
+        headers.push_back(ip_header_name);
+        headers.back().append(": ").append(request->getRealIP());
+    }
+    
+    helper.appendHeaders(headers, tag ? tag->last_modified : Tag::UNDEFINED_TIME);
 }
 
 XmlDocHelper
@@ -433,6 +464,29 @@ HttpBlock::checkTimeout(const TimeoutCounter &timer, const std::string &url) {
     InvokeError error("block is timed out", "url", url);
     error.add("timeout", boost::lexical_cast<std::string>(timer.timeout()));
     throw error;
+}
+
+void
+HttpBlock::checkStatus(const HttpHelper &helper) {
+    try {
+        helper.checkStatus();
+    }
+    catch(const std::runtime_error &e) {
+        RetryInvokeError error(e.what(), "url", helper.url());
+        error.add("status", boost::lexical_cast<std::string>(helper.status()));
+        throw error;
+    }
+}
+
+void
+HttpBlock::httpCall(HttpHelper &helper) {
+    try {
+        helper.perform();
+    }
+    catch(const std::runtime_error &e) {
+        throw RetryInvokeError(e.what(), "url", helper.url());
+    }
+    log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
 }
 
 void
@@ -496,7 +550,17 @@ HttpExtension::createBlock(Xml *owner, xmlNodePtr node) {
 void
 HttpExtension::init(const Config *config) {
     (void)config;
-    HttpHelper::init();
+    try {
+        HttpHelper::init();
+    }
+    catch (const std::exception &e) {
+        std::string error_msg("HttpExtension construction: caught exception: ");
+        error_msg += e.what();
+        terminate(1, error_msg.c_str(), true);
+    }
+    catch (...) {
+        terminate(1, "HttpExtension construction: caught unknown exception", true);
+    }
 }
 
 HttpMethodRegistrator::HttpMethodRegistrator() {

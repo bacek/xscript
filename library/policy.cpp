@@ -37,26 +37,6 @@ Policy::Policy() {
 Policy::~Policy() {
 }
 
-void
-Policy::getProxyHttpHeaders(const Request *req, std::vector<std::string> &headers) const {
-    headers.clear();
-    if (req->countHeaders() > 0) {
-        std::vector<std::string> names;
-        req->headerNames(names);
-        for (std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
-            const std::string& name = *i;
-            const std::string& value = req->getHeader(name);
-            if (isSkippedProxyHeader(name)) {
-                log()->debug("%s, skipped %s: %s", BOOST_CURRENT_FUNCTION, name.c_str(), value.c_str());
-            }
-            else {
-                headers.push_back(name);
-                headers.back().append(": ").append(value);
-            }
-        }
-    }
-}
-
 std::string
 Policy::getPathByScheme(const Request *request, const std::string &url) const {
 
@@ -133,6 +113,11 @@ bool
 Policy::allowCachingCookie(const char *name) const {
     (void)name;
     return false;
+}
+
+const std::string&
+Policy::realIPHeaderName() const {
+    return StringUtils::EMPTY_STRING;
 }
 
 const ProxyHeadersHelper::StrSize

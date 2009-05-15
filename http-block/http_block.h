@@ -51,6 +51,7 @@ protected:
     XmlDocHelper getBinaryPage(Context *ctx, boost::any &a);
 
     XmlDocHelper response(const HttpHelper &h) const;
+    void appendHeaders(HttpHelper &helper, const Request *request, const Tag *tag) const;
     void createTagInfo(const HttpHelper &h, boost::any &a) const;
 
     static void registerMethod(const char *name, HttpMethod method);
@@ -58,7 +59,10 @@ protected:
 private:
     HttpBlock(const HttpBlock &);
     HttpBlock& operator = (const HttpBlock &);
+    
     void checkTimeout(const TimeoutCounter &timer, const std::string &url);
+    void checkStatus(const HttpHelper &helper);
+    void httpCall(HttpHelper &helper);
 
     friend class HttpMethodRegistrator;
 

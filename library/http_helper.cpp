@@ -10,7 +10,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/current_function.hpp>
 
-#include "http_helper.h"
+#include "xscript/http_helper.h"
 #include "xscript/policy.h"
 #include "xscript/util.h"
 #include "xscript/string_utils.h"
@@ -52,7 +52,6 @@ HeadersHelper::clear() {
     }
 }
 
-
 boost::once_flag HttpHelper::init_flag_ = BOOST_ONCE_INIT;
 
 HttpHelper::HttpHelper(const std::string &url, long timeout) :
@@ -93,37 +92,49 @@ HttpHelper::init() {
 }
 
 void
-HttpHelper::appendHeaders(const Request* req, bool proxy, const Tag* tag) {
-    log()->debug("%s, url:%s proxy:%d", BOOST_CURRENT_FUNCTION, url_.c_str(), proxy ? 1 : 0);
+HttpHelper::appendHeaders(const std::vector<std::string> &headers, time_t modified_since) {
 
-    if (NULL == req) {
-        return;
+    bool expect = false;
+    bool connection = false;
+    bool if_modified_since = false;
+    for(std::vector<std::string>::const_iterator it = headers.begin();
+        it != headers.end();
+        ++it) {
+        headers_helper_.append(it->c_str());
+        if (!expect &&
+            strncasecmp(it->c_str(), "Expect:", sizeof("Expect:") - 1) == 0) {
+            expect = true;
+        }
+        else if (!connection &&
+                 strncasecmp(it->c_str(), "Connection:", sizeof("Connection:") - 1) == 0) {
+            connection = true;
+        }
+        else if (!if_modified_since &&
+                 strncasecmp(it->c_str(), "If-Modified-Since:", sizeof("If-Modified-Since:") - 1) == 0) {
+            if_modified_since = true;
+        }
     }
 
-    if (proxy) {    
-        std::vector<std::string> headers;
-        Policy::instance()->getProxyHttpHeaders(req, headers);
+    if (expect) {
+        headers_helper_.append("Expect:");
+    }
     
-        for(std::vector<std::string>::iterator it = headers.begin();
-            it != headers.end();
-            ++it) {
-            headers_helper_.append(it->c_str());
+    if (connection) {
+        headers_helper_.append("Connection: close");
+    }
+    
+    if (if_modified_since) {
+        if (modified_since != Tag::UNDEFINED_TIME) {
+            std::string header = "If-Modified-Since: ";
+            header += HttpDateUtils::format(modified_since);
+            headers_helper_.append(header.c_str());
+            sent_modified_since_ = true;
         }
     }
     else {
-        std::string ip_header = std::string("X-REAL-IP: ") + req->getRealIP();
-        headers_helper_.append(ip_header.c_str());
-    }
-    
-    headers_helper_.append("Expect:");
-    headers_helper_.append("Connection: close");
-
-    if (NULL != tag && tag->last_modified != Tag::UNDEFINED_TIME) {
-        std::string header = "If-Modified-Since: ";
-        header += HttpDateUtils::format(tag->last_modified);
-        headers_helper_.append(header.c_str());
         sent_modified_since_ = true;
     }
+
     setopt(CURLOPT_HTTPHEADER, headers_helper_.get());
 }
 
@@ -188,23 +199,14 @@ HttpHelper::checkStatus() const {
     if (status_ >= 400) {
         std::stringstream stream;
         stream << "server responded " << status_;
-        processStatusError(stream.str());
+        throw std::runtime_error(stream.str());
     }
     else if (0 == status_ && 0 == content_->size()) {
-        processStatusError("empty local content: possibly not performed");
+        throw std::runtime_error("empty local content: possibly not performed");
     }
     else if (304 == status_ && !sent_modified_since_) {
-        processStatusError("server responded not-modified but if-modified-since was not sent");
+        throw std::runtime_error("server responded not-modified but if-modified-since was not sent");
     }
-}
-
-void
-HttpHelper::processStatusError(const std::string& error_msg) const {
-    std::string status = boost::lexical_cast<std::string>(status_);
-    RetryInvokeError error(error_msg);
-    error.add("status", status);
-    error.addEscaped("url", url());
-    throw error;
 }
 
 Tag
@@ -263,8 +265,7 @@ HttpHelper::detectContentType() {
 void
 HttpHelper::check(CURLcode code) const {
     if (CURLE_OK != code) {
-        std::string error_msg(curl_easy_strerror(code));
-        throw RetryInvokeError(error_msg, "url", url());
+        throw std::runtime_error(curl_easy_strerror(code));
     }
 }
 
@@ -316,23 +317,13 @@ HttpHelper::curlHeaders(void *ptr, size_t size, size_t nmemb, void *arg) {
 
 void
 HttpHelper::initEnvironment() {
-    try {
-        if (atexit(&destroyEnvironment) != 0) {
-            std::stringstream stream;
-            StringUtils::report("curl init failed: ", errno, stream);
-            throw std::runtime_error(stream.str());
-        }
-        if (CURLE_OK != curl_global_init(CURL_GLOBAL_ALL)) {
-            throw std::runtime_error("libcurl init failed");
-        }
+    if (atexit(&destroyEnvironment) != 0) {
+        std::stringstream stream;
+        StringUtils::report("curl init failed: ", errno, stream);
+        throw std::runtime_error(stream.str());
     }
-    catch (const std::exception &e) {
-        std::string error_msg("HttpExtension construction: caught exception: ");
-        error_msg += e.what();
-        terminate(1, error_msg.c_str(), true);
-    }
-    catch (...) {
-        terminate(1, "HttpExtension construction: caught unknown exception", true);
+    if (CURLE_OK != curl_global_init(CURL_GLOBAL_ALL)) {
+        throw std::runtime_error("libcurl init failed");
     }
 }
 
