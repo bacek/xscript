@@ -120,6 +120,12 @@ Policy::realIPHeaderName() const {
     return StringUtils::EMPTY_STRING;
 }
 
+bool
+Policy::isErrorDoc(xmlDocPtr doc) const {
+    (void)doc;
+    return false;
+}
+
 const ProxyHeadersHelper::StrSize
 ProxyHeadersHelper::skipped_headers[] = {
     { "host", sizeof("host") },

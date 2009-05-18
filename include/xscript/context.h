@@ -84,8 +84,8 @@ public:
     void forceNoThreaded(bool value);
     bool noXsltPort() const;
     void noXsltPort(bool value);
-    bool hasError() const;
-    void setError();
+    bool noCache() const;
+    void setNoCache();
     std::string getRuntimeError(const Block *block) const;
     void assignRuntimeError(const Block *block, const std::string &error_message);
 

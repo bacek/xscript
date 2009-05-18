@@ -65,9 +65,9 @@ protected:
     virtual InvokeResult invokeInternal(boost::shared_ptr<Context> ctx);
     virtual void postParse();
     virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) = 0;
-    virtual XmlDocHelper processResponse(boost::shared_ptr<Context> ctx, XmlDocHelper doc, boost::any &a);
+    virtual InvokeResult processResponse(boost::shared_ptr<Context> ctx, XmlDocHelper doc, boost::any &a);
     virtual void property(const char *name, const char *value);
-    virtual void postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a);
+    virtual void postCall(Context *ctx, const InvokeResult &result, const boost::any &a);
     virtual void postInvoke(Context *ctx, const XmlDocHelper &doc);
     virtual void callInternal(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);

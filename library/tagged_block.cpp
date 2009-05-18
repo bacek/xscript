@@ -104,19 +104,19 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx) {
         boost::any a(tag);
         XmlDocHelper newdoc = call(ctx, a);
         if (NULL != newdoc.get()) {
-            return InvokeResult(processResponse(ctx, newdoc, a), true);
+            return processResponse(ctx, newdoc, a);
         }
     }
 
     evalXPath(ctx.get(), doc);
-    return InvokeResult(doc, true);
+    return InvokeResult(doc, InvokeResult::SUCCESS);
 }
 
 void
-TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a) {
+TaggedBlock::postCall(Context *ctx, const InvokeResult &result, const boost::any &a) {
 
     log()->debug("%s, tagged: %d", BOOST_CURRENT_FUNCTION, static_cast<int>(tagged()));
-    if (!tagged()) {
+    if (!tagged() || result.type < InvokeResult::SUCCESS) {
         return;
     }
 
@@ -127,15 +127,19 @@ TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a
     if (!Policy::instance()->allowCaching(ctx, this)) {
         return;
     }
-
+    
     time_t now = time(NULL);
     Tag tag = boost::any_cast<Tag>(a);
     DocCache *cache = DocCache::instance();
 
     bool can_store = false;
     if (CACHE_TIME_UNDEFINED != cache_time_) {
-        if (cache_time_ >= cache->minimalCacheTime()) {
-            tag.expire_time = now + cache_time_;
+        time_t cache_time = cache_time_;
+        if (Tag::UNDEFINED_TIME != tag.expire_time) {
+            cache_time = std::min(cache_time_, tag.expire_time - now);
+        }
+        if (cache_time >= cache->minimalCacheTime()) {
+            tag.expire_time = now + cache_time;
             can_store = true;
         }
     }
@@ -147,7 +151,7 @@ TaggedBlock::postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a
     }
 
     if (can_store) {
-        cache->saveDoc(ctx, this, tag, doc);
+        cache->saveDoc(ctx, this, tag, result.doc);
     }
 }
 

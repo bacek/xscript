@@ -513,7 +513,7 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
             xmlNodePtr result_doc_root_node = xmlDocGetRootElement(doc);
             if (result_doc_root_node) {
                 const Block *block = blocks_[count];
-                if (block->xpointer(ctx) && result.success) {
+                if (block->xpointer(ctx) && result.type > InvokeResult::ERROR) {
                     const std::string &expression = block->xpointerExpr();
                     if ("/.." == expression) {
                         xmlUnlinkNode(newnode);
@@ -747,7 +747,7 @@ Script::cachable(const Context *ctx, bool for_save) const {
     }
     
     if (for_save) {
-        if (ctx->hasError() || ctx->xsltChanged(this) || !ctx->response()->isStatusOK()) {
+        if (ctx->noCache() || ctx->xsltChanged(this) || !ctx->response()->isStatusOK()) {
             return false;
         }
         

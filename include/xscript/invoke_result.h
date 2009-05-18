@@ -6,15 +6,21 @@
 namespace xscript {
 
 struct InvokeResult {
+    enum Type {
+        ERROR  = 1,
+        NO_CACHE = 2,
+        SUCCESS  = 3,
+    };
+    
     InvokeResult() :
-        doc(), success(false) {
+        doc(), type(ERROR) {
     }
-    InvokeResult(XmlDocHelper document, bool result) :
-        doc(document), success(result) {
+    InvokeResult(XmlDocHelper document, Type result) :
+        doc(document), type(result) {
     }
 
     XmlDocHelper doc;
-    bool success;
+    Type type;
 };
 
 } // namespace xscript

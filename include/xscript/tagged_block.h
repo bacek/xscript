@@ -34,7 +34,7 @@ public:
 protected:
     virtual void processParam(std::auto_ptr<Param> p);
     virtual InvokeResult invokeInternal(boost::shared_ptr<Context> ctx);
-    virtual void postCall(Context *ctx, const XmlDocHelper &doc, const boost::any &a);
+    virtual void postCall(Context *ctx, const InvokeResult &result, const boost::any &a);
     virtual void postParse();
     virtual void property(const char *name, const char *value);
     bool propertyInternal(const char *name, const char *value);

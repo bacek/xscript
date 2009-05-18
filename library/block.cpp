@@ -22,6 +22,7 @@
 #include "xscript/object.h"
 #include "xscript/operation_mode.h"
 #include "xscript/param.h"
+#include "xscript/policy.h"
 #include "xscript/profiler.h"
 #include "xscript/state.h"
 #include "xscript/stylesheet.h"
@@ -239,20 +240,20 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     if (ctx->stopped()) {
         log()->error("Context already stopped. Cannot invoke block. Owner: %s. Block: %s. Method: %s",
             owner()->name().c_str(), name(), data_->method_.c_str());
-        return InvokeResult(fakeResult(), false);
+        return InvokeResult(fakeResult(), InvokeResult::ERROR);
     }
 
     if (!checkGuard(ctx.get())) {
         log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
             owner()->name().c_str(), name(), data_->method_.c_str());
-        return InvokeResult(fakeResult(), false);
+        return InvokeResult(fakeResult(), InvokeResult::ERROR);
     }
 
     InvokeResult result;
     try {
         BlockTimerStarter starter(ctx.get(), this);
         result = invokeInternal(ctx);
-        if (result.success) {
+        if (result.type > InvokeResult::ERROR) {
             postInvoke(ctx.get(), result.doc);
         }
     }
@@ -263,7 +264,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     }
     catch (const SkipResultInvokeError &e) {
         log()->info("%s", errorMessage(e.what(), e.info()).c_str());
-        result = InvokeResult(fakeResult(), false);
+        result = InvokeResult(fakeResult(), InvokeResult::ERROR);
     }
     catch (const InvokeError &e) {
         result = errorResult(e.what(), e.info());
@@ -272,8 +273,8 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
         result = errorResult(e.what());
     }
     
-    if (!result.success) {
-        ctx->rootContext()->setError();
+    if (result.type < InvokeResult::SUCCESS) {
+        ctx->rootContext()->setNoCache();
     }
     
     return result;
@@ -297,7 +298,7 @@ Block::invokeInternal(boost::shared_ptr<Context> ctx) {
         return errorResult("got empty document");
     }
 
-    return InvokeResult(processResponse(ctx, doc, a), true);
+    return processResponse(ctx, doc, a);
 }
 
 void
@@ -311,14 +312,13 @@ Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
     }
 }
 
-XmlDocHelper
+InvokeResult
 Block::processResponse(boost::shared_ptr<Context> ctx, XmlDocHelper doc, boost::any &a) {
     if (NULL == doc.get()) {
         throw InvokeError("null response document");
     }
 
     if (NULL == xmlDocGetRootElement(doc.get())) {
-        log()->error("%s, got document with no root", BOOST_CURRENT_FUNCTION);
         throw InvokeError("got document with no root");
     }
 
@@ -326,19 +326,26 @@ Block::processResponse(boost::shared_ptr<Context> ctx, XmlDocHelper doc, boost::
         throw InvokeError("context is already stopped, cannot process response");
     }
 
+    bool is_error_doc = Policy::instance()->isErrorDoc(doc.get());
+    
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
     bool need_perblock = !ctx->noXsltPort();
     if (need_perblock) {
         applyStylesheet(ctx, doc);
     }
 
-    postCall(ctx.get(), doc, a);
+    InvokeResult::Type type =
+        is_error_doc ? InvokeResult::NO_CACHE : InvokeResult::SUCCESS;
+    
+    InvokeResult result(doc, type);
+    
+    postCall(ctx.get(), result, a);
 
     if (need_perblock || xsltName().empty()) {
-        evalXPath(ctx.get(), doc);
+        evalXPath(ctx.get(), result.doc);
     }
 
-    return doc;
+    return result;
 }
 
 void
@@ -415,7 +422,7 @@ Block::errorResult(const char *error, const InvokeError::InfoMapType &error_info
     full_error.assign(stream.str());
     log()->error("%s", full_error.c_str());
 
-    return InvokeResult(doc, false);
+    return InvokeResult(doc, InvokeResult::ERROR);
 }
 
 std::string
@@ -621,7 +628,7 @@ Block::property(const char *name, const char *value) {
 }
 
 void
-Block::postCall(Context *, const XmlDocHelper &, const boost::any &) {
+Block::postCall(Context *, const InvokeResult &, const boost::any &) {
 }
 
 void

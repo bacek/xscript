@@ -57,7 +57,6 @@ struct Context::ContextData {
         stopped_(false), script_(script), request_data_(ctx->requestData()), parent_context_(ctx),
         xslt_name_(script->xsltName()), auth_(ctx->authContext()), flags_(0),
         params_(ctx->ctx_data_->params_)
-        
     {
         timer_.reset(ctx->timer().remained());
     }
@@ -123,7 +122,7 @@ struct Context::ContextData {
     
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
     static const unsigned int FLAG_NO_XSLT_PORT = 1 << 1;
-    static const unsigned int FLAG_HAS_ERROR = 1 << 2;
+    static const unsigned int FLAG_NO_CACHE = 1 << 2;
 };
 
 Context::Context(const boost::shared_ptr<Script> &script,
@@ -356,13 +355,13 @@ Context::noXsltPort(bool value) {
 }
 
 bool
-Context::hasError() const {
-    return ctx_data_->flag(ContextData::FLAG_HAS_ERROR);
+Context::noCache() const {
+    return ctx_data_->flag(ContextData::FLAG_NO_CACHE);
 }
 
 void
-Context::setError() {
-    ctx_data_->flag(ContextData::FLAG_HAS_ERROR, true);
+Context::setNoCache() {
+    ctx_data_->flag(ContextData::FLAG_NO_CACHE, true);
 }
 
 std::string
@@ -499,8 +498,8 @@ ContextStopper::~ContextStopper() {
     if (ctx_->isRoot()) {
         ExtensionList::instance()->stopContext(ctx_.get());
     }
-    else if (ctx_->hasError() || !ctx_->ctx_data_->runtime_errors_.empty()) {
-        ctx_->rootContext()->setError();
+    else if (ctx_->noCache() || !ctx_->ctx_data_->runtime_errors_.empty()) {
+        ctx_->rootContext()->setNoCache();
     }
     
     ctx_->ctx_data_->stopped_ = true;

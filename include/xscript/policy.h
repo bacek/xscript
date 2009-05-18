@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <libxml/tree.h>
+
 #include "xscript/component.h"
 #include "xscript/functors.h"
 
@@ -31,6 +33,7 @@ public:
     virtual bool allowCachingCookie(const char *name) const;
     virtual bool isSkippedProxyHeader(const std::string &header) const;
     
+    virtual bool isErrorDoc(xmlDocPtr doc) const;
 private:
     static const std::string UTF8_ENCODING;
 };
