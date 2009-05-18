@@ -29,46 +29,22 @@ class Script : public virtual Object, public Xml {
 public:
     virtual ~Script();
 
-    inline bool threaded() const {
-        return flags_ & FLAG_THREADED;
-    }
-
-    inline bool forceStylesheet() const {
-        return flags_ & FLAG_FORCE_STYLESHEET;
-    }
-
-    inline bool binaryPage() const {
-        return flags_ & FLAG_BINARY_PAGE;
-    }
-
-    inline unsigned int expireTimeDelta() const {
-        return expire_time_delta_;
-    }
-
-    inline time_t cacheTime() const {
-        return cache_time_;
-    }
+    bool threaded() const;
+    bool forceStylesheet() const;
+    bool binaryPage() const;
+    unsigned int expireTimeDelta() const;
+    time_t cacheTime() const;
     
     bool allowMethod(const std::string& value) const;
-
-    inline const Block* block(unsigned int n) const {
-        return blocks_.at(n);
-    }
-
+    
+    const Block* block(unsigned int n) const;
     const Block* block(const std::string &id, bool throw_error = true) const;
-
-    unsigned int blocksNumber() const {
-        return blocks_.size();
-    }
+    unsigned int blocksNumber() const;
 
     const std::string& header(const std::string &name) const;
-
-    inline const std::map<std::string, std::string>& headers() const {
-        return headers_;
-    }
+    const std::map<std::string, std::string>& headers() const;
 
     virtual const std::string& name() const;
-
     virtual std::string fullName(const std::string &name) const;
 
     virtual void removeUnusedNodes(const XmlDocHelper &helper);
@@ -90,31 +66,15 @@ public:
 protected:
     Script(const std::string &name);
 
-    inline void threaded(bool value) {
-        flag(FLAG_THREADED, value);
-    }
-
-    inline void forceStylesheet(bool value) {
-        flag(FLAG_FORCE_STYLESHEET, value);
-    }
-
-    inline void expireTimeDelta(unsigned int value) {
-        expire_time_delta_ = value;
-    }
-
-    inline void cacheTime(time_t value) {
-        cache_time_ = value;
-    }    
-    
-    inline void binaryPage(bool value) {
-        flag(FLAG_BINARY_PAGE, value);
-    }
-
-    inline void flag(unsigned int type, bool value) {
-        flags_ = value ? (flags_ | type) : (flags_ &= ~type);
-    }
+    void threaded(bool value);
+    void forceStylesheet(bool value);
+    void expireTimeDelta(unsigned int value);
+    void cacheTime(time_t value);
+    void binaryPage(bool value);
+    void flag(unsigned int type, bool value);
 
     void allowMethods(const char *value);
+    void extensionProperty(const char *prop, const char *value);
 
     void parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes);
     void parseHeadersNode(xmlNodePtr node);
@@ -128,9 +88,7 @@ protected:
     int countTimeout() const;
     void addHeaders(Context *ctx) const;
 
-    inline const std::vector<Block*>& blocks() const {
-        return blocks_;
-    }
+    const std::vector<Block*>& blocks() const;
 
     XmlDocHelper fetchResults(Context *ctx) const;
     void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsigned int &count, unsigned int &xscript_count) const;
@@ -146,25 +104,13 @@ protected:
     
     static boost::shared_ptr<Script> createWithParse(const std::string &name, const std::string &xml);
 
-    static const unsigned int FLAG_THREADED = 1;
-    static const unsigned int FLAG_FORCE_STYLESHEET = 1 << 1;
-    static const unsigned int FLAG_BINARY_PAGE = 1 << 2;
-    
-    static const std::string GET_METHOD;
 private:
     friend class ScriptFactory;
-
-private:
-    XmlDocHelper doc_;
-    std::vector<Block*> blocks_;
-    std::string name_;
-    unsigned int flags_;
-    unsigned int expire_time_delta_;
-    time_t cache_time_;
-    std::set<xmlNodePtr> xscript_node_set_;
-    std::map<std::string, std::string> headers_;
-    std::vector<std::string> allow_methods_;
-    std::map<std::string, std::string, StringCILess> extension_properties_;
+    
+    class ScriptData;
+    ScriptData *data_;
+    
+    static const std::string GET_METHOD;
 };
 
 } // namespace xscript
