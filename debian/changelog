@@ -1,3 +1,9 @@
+xscript (5.62-1) unstable; urgency=low
+
+  * applying stylesheet fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 18 May 2009 19:35:56 +0400
+
 xscript (5.62-0) unstable; urgency=low
 
   * move HttpHelper to the core

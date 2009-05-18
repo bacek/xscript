@@ -388,7 +388,7 @@ Script::forceStylesheet(bool value) {
 
 void
 Script::expireTimeDelta(unsigned int value) {
-    data_->forceStylesheet(value);
+    data_->expireTimeDelta(value);
 }
 
 void
