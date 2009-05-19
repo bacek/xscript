@@ -115,15 +115,15 @@ HttpHelper::appendHeaders(const std::vector<std::string> &headers, time_t modifi
         }
     }
 
-    if (expect) {
+    if (!expect) {
         headers_helper_.append("Expect:");
     }
     
-    if (connection) {
+    if (!connection) {
         headers_helper_.append("Connection: close");
     }
     
-    if (if_modified_since) {
+    if (!if_modified_since) {
         if (modified_since != Tag::UNDEFINED_TIME) {
             std::string header = "If-Modified-Since: ";
             header += HttpDateUtils::format(modified_since);

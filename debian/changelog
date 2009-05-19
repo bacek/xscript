@@ -1,3 +1,9 @@
+xscript (5.62-2) unstable; urgency=low
+
+  * HttpHelper fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 19 May 2009 10:37:14 +0400
+
 xscript (5.62-1) unstable; urgency=low
 
   * applying stylesheet fixed

@@ -392,27 +392,27 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, const Tag *
     std::vector<std::string> headers;
     bool real_ip = false;
     const std::string& ip_header_name = Policy::instance()->realIPHeaderName();
-    if (proxy_) {    
-        if (request->countHeaders() > 0) {
-            std::vector<std::string> names;
-            request->headerNames(names);
-            Policy* policy = Policy::instance();
-            for (std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
-                const std::string& name = *i;
-                const std::string& value = request->getHeader(name);
-                if (policy->isSkippedProxyHeader(name)) {
-                    log()->debug("%s, skipped %s: %s", BOOST_CURRENT_FUNCTION, name.c_str(), value.c_str());
+    if (proxy_ && request->countHeaders() > 0) {    
+        std::vector<std::string> names;
+        request->headerNames(names);
+        Policy* policy = Policy::instance();
+        for (std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
+            const std::string& name = *i;
+            if (name.empty()) {
+                continue;
+            }
+            const std::string& value = request->getHeader(name);
+            if (policy->isSkippedProxyHeader(name)) {
+                log()->debug("%s, skipped %s: %s", BOOST_CURRENT_FUNCTION, name.c_str(), value.c_str());
+            }
+            else {
+                if (!real_ip && strcasecmp(ip_header_name.c_str(), name.c_str()) == 0) {
+                    real_ip = true;
                 }
-                else {
-                    if (!real_ip && strcasecmp(ip_header_name.c_str(), name.c_str()) == 0) {
-                        real_ip = true;
-                    }
-                    headers.push_back(name);
-                    headers.back().append(": ").append(value);
-                }
+                headers.push_back(name);
+                headers.back().append(": ").append(value);
             }
         }
-        
     }
     
     if (!real_ip && !ip_header_name.empty()) {
