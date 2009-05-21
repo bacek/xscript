@@ -44,6 +44,11 @@ TaggedBlock::tagged() const {
 
 void
 TaggedBlock::tagged(bool tagged) {
+    if (tagged &&
+        CACHE_TIME_UNDEFINED != cache_time_ &&
+        cache_time_ < DocCache::instance()->minimalCacheTime()) {
+        tagged = false;
+    }
     cacheLevel(FLAG_TAGGED, tagged);
 }
 
@@ -116,7 +121,7 @@ void
 TaggedBlock::postCall(Context *ctx, const InvokeResult &result, const boost::any &a) {
 
     log()->debug("%s, tagged: %d", BOOST_CURRENT_FUNCTION, static_cast<int>(tagged()));
-    if (!tagged() || result.type < InvokeResult::SUCCESS) {
+    if (!tagged() || !result.success()) {
         return;
     }
 
@@ -165,22 +170,18 @@ TaggedBlock::processParam(std::auto_ptr<Param> p) {
     if (haveTagParam()) {
         throw std::runtime_error("duplicated tag param");
     }
-    tagged(true);
     tag_position_ = params().size();
     
     const std::string& v = p->value();
     if (!v.empty()) {
         cacheTime(boost::lexical_cast<time_t>(v));
     }
+    
+    tagged(true);
 }
 
 void
 TaggedBlock::postParse() {
-    if (tagged()) {
-        if ((CACHE_TIME_UNDEFINED != cache_time_) && (cache_time_ < DocCache::instance()->minimalCacheTime())) {
-            tagged(false);
-        }
-    }
 }
 
 void

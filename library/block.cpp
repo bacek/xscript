@@ -253,7 +253,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     try {
         BlockTimerStarter starter(ctx.get(), this);
         result = invokeInternal(ctx);
-        if (result.type > InvokeResult::ERROR) {
+        if (!result.error()) {
             postInvoke(ctx.get(), result.doc);
         }
     }
@@ -273,7 +273,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
         result = errorResult(e.what());
     }
     
-    if (result.type < InvokeResult::SUCCESS) {
+    if (!result.success()) {
         ctx->rootContext()->setNoCache();
     }
     

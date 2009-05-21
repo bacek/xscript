@@ -76,9 +76,9 @@ DocCacheBase::addStrategy(DocCacheStrategy* strategy, const std::string& name) {
 
 time_t
 DocCacheBase::minimalCacheTime() const {
-    // FIXME.Do we actually need this in public part? Better to embed logick
+    // FIXME.Do we actually need this in public part? Better to embed logic
     // of minimalCacheTime into saveDoc.
-    return 0;
+    return 5;
 }
 
 bool

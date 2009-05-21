@@ -19,6 +19,18 @@ struct InvokeResult {
         doc(document), type(result) {
     }
 
+    bool success() const {
+        return type == SUCCESS;
+    }
+    
+    bool error() const {
+        return type == ERROR;
+    }
+    
+    bool nocache() const {
+        return type == NO_CACHE;
+    }
+    
     XmlDocHelper doc;
     Type type;
 };

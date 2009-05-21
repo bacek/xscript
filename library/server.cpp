@@ -249,7 +249,7 @@ Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc)
     xmlAddChild(root, headers_node);
     headers_node_helper.release();
     
-    if (script->cacheTime() > PageCache::instance()->minimalCacheTime()) {
+    if (script->cacheTime() >= PageCache::instance()->minimalCacheTime()) {
         try {
             Tag tag;
             tag.expire_time = time(NULL) + script->cacheTime();

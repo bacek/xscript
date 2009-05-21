@@ -38,6 +38,11 @@ TaggedCacheUsageCounterImpl::createReport() const {
             break;
         }
         
+        if ((*it)->calls() < 2) {
+            --count;
+            continue;
+        }
+        
         xmlNodePtr line = xmlNewChild(root.get(), NULL, (const xmlChar*)"element", NULL);
         
         xmlSetProp(line, (const xmlChar*)"hit-ratio",
