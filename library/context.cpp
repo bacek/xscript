@@ -53,10 +53,11 @@ struct Context::ContextData {
     {}
     
     ContextData(const boost::shared_ptr<Script> &script,
-                const boost::shared_ptr<Context> &ctx) :
+                const boost::shared_ptr<Context> &ctx,
+                const boost::shared_ptr<ParamsMap> &params) :
         stopped_(false), script_(script), request_data_(ctx->requestData()), parent_context_(ctx),
         xslt_name_(script->xsltName()), auth_(ctx->authContext()), flags_(0),
-        params_(ctx->ctx_data_->params_)
+        params_(params)
     {
         timer_.reset(ctx->timer().remained());
     }
@@ -138,7 +139,7 @@ Context::Context(const boost::shared_ptr<Script> &script,
 {
     assert(script.get());
     assert(ctx.get());
-    ctx_data_ = new ContextData(script, ctx);
+    ctx_data_ = new ContextData(script, ctx, ctx->ctx_data_->params_);
     init();
 }
 
