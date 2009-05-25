@@ -27,7 +27,7 @@ public:
 protected:
     struct RecordInfo {
             RecordInfo();
-            RecordInfo(const std::string &info);
+            RecordInfo(const std::string &key, const std::string &info);
             
             boost::uint64_t calls();
             double hitRatio();
@@ -35,6 +35,7 @@ protected:
             
             boost::uint64_t hits_;
             boost::uint64_t misses_;
+            std::string key_;
             std::string info_;
             time_t last_call_time_;
             std::map<std::string, boost::uint64_t> owners_;
@@ -71,22 +72,22 @@ class TaggedCacheScriptUsageCounterImpl : public TaggedCacheUsageCounterImpl {
 public:
     TaggedCacheScriptUsageCounterImpl(const std::string &name);
     
-    void fetchedHit(const Context *ctx, const Object *obj);
-    void fetchedMiss(const Context *ctx, const Object *obj);
+    void fetchedHit(const Context *ctx, const Object *obj, const std::auto_ptr<TagKey> &key);
+    void fetchedMiss(const Context *ctx, const Object *obj, const std::auto_ptr<TagKey> &key);
     
 private:
-    void fetched(const Context *ctx, const Script *script, bool is_hit);
+    void fetched(const Context *ctx, const Script *script, const std::auto_ptr<TagKey> &key, bool is_hit);
 };
 
 class TaggedCacheBlockUsageCounterImpl : public TaggedCacheUsageCounterImpl {
 public:
     TaggedCacheBlockUsageCounterImpl(const std::string &name);
     
-    void fetchedHit(const Context *ctx, const Object *obj);
-    void fetchedMiss(const Context *ctx, const Object *obj);
+    void fetchedHit(const Context *ctx, const Object *obj, const std::auto_ptr<TagKey> &key);
+    void fetchedMiss(const Context *ctx, const Object *obj, const std::auto_ptr<TagKey> &key);
     
 private:
-    void fetched(const Context *ctx, const TaggedBlock *block, bool is_hit);
+    void fetched(const Context *ctx, const TaggedBlock *block, const std::auto_ptr<TagKey> &key, bool is_hit);
 };
 
 }

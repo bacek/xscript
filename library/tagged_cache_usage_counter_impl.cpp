@@ -106,8 +106,8 @@ TaggedCacheUsageCounterImpl::RecordInfo::RecordInfo() :
     hits_(0), misses_(0), last_call_time_(0)
 {}
 
-TaggedCacheUsageCounterImpl::RecordInfo::RecordInfo(const std::string &info) :
-    hits_(0), misses_(0), info_(info), last_call_time_(0)
+TaggedCacheUsageCounterImpl::RecordInfo::RecordInfo(const std::string &key, const std::string &info) :
+    hits_(0), misses_(0), key_(key), info_(info), last_call_time_(0)
 {}
 
 boost::uint64_t
@@ -128,7 +128,7 @@ TaggedCacheUsageCounterImpl::RecordInfo::isGoodHitRatio() {
 
 bool
 TaggedCacheUsageCounterImpl::RecordComparator::operator() (RecordInfoPtr r1, RecordInfoPtr r2) const {
-    return r1->info_ < r2->info_;
+    return r1->key_ < r2->key_;
 }        
 
 bool
@@ -147,29 +147,35 @@ TaggedCacheScriptUsageCounterImpl::TaggedCacheScriptUsageCounterImpl(const std::
 {}
 
 void
-TaggedCacheScriptUsageCounterImpl::fetchedHit(const Context *ctx, const Object *obj) {
+TaggedCacheScriptUsageCounterImpl::fetchedHit(const Context *ctx,
+                                              const Object *obj,
+                                              const std::auto_ptr<TagKey> &key) {
     const Script *script = dynamic_cast<const Script*>(obj);
     if (NULL == script) {
         return;
     }
     boost::mutex::scoped_lock lock(mtx_);
-    fetched(ctx, script, true);
+    fetched(ctx, script, key, true);
 }
 
 void
-TaggedCacheScriptUsageCounterImpl::fetchedMiss(const Context *ctx, const Object *obj) {
+TaggedCacheScriptUsageCounterImpl::fetchedMiss(const Context *ctx,
+                                               const Object *obj,
+                                               const std::auto_ptr<TagKey> &key) {
     const Script *script = dynamic_cast<const Script*>(obj);
     if (NULL == script) {
         return;
     }
     boost::mutex::scoped_lock lock(mtx_);
-    fetched(ctx, script, false);
+    fetched(ctx, script, key, false);
 }
 
 void
-TaggedCacheScriptUsageCounterImpl::fetched(const Context *ctx, const Script *script, bool is_hit) {
-    (void)ctx;
-    RecordInfoPtr record(new RecordInfo(script->info(ctx)));
+TaggedCacheScriptUsageCounterImpl::fetched(const Context *ctx,
+                                           const Script *script,
+                                           const std::auto_ptr<TagKey> &key,
+                                           bool is_hit) {
+    RecordInfoPtr record(new RecordInfo(key->asString(), script->info(ctx)));
     RecordIterator it = records_.find(record);
     if (it != records_.end()) {
         record = *it;
@@ -194,28 +200,35 @@ TaggedCacheBlockUsageCounterImpl::TaggedCacheBlockUsageCounterImpl(const std::st
 {}
 
 void
-TaggedCacheBlockUsageCounterImpl::fetchedHit(const Context *ctx, const Object *obj) {
+TaggedCacheBlockUsageCounterImpl::fetchedHit(const Context *ctx,
+                                             const Object *obj,
+                                             const std::auto_ptr<TagKey> &key) {
     const TaggedBlock *block = dynamic_cast<const TaggedBlock*>(obj);
     if (NULL == block) {
         return;
     }
     boost::mutex::scoped_lock lock(mtx_);
-    fetched(ctx, block, true);
+    fetched(ctx, block, key, true);
 }
 
 void
-TaggedCacheBlockUsageCounterImpl::fetchedMiss(const Context *ctx, const Object *obj) {
+TaggedCacheBlockUsageCounterImpl::fetchedMiss(const Context *ctx,
+                                              const Object *obj,
+                                              const std::auto_ptr<TagKey> &key) {
     const TaggedBlock *block = dynamic_cast<const TaggedBlock*>(obj);
     if (NULL == block) {
         return;
     }
     boost::mutex::scoped_lock lock(mtx_);
-    fetched(ctx, block, false);
+    fetched(ctx, block, key, false);
 }
 
 void
-TaggedCacheBlockUsageCounterImpl::fetched(const Context *ctx, const TaggedBlock *block, bool is_hit) {
-    RecordInfoPtr record(new RecordInfo(block->info(ctx)));
+TaggedCacheBlockUsageCounterImpl::fetched(const Context *ctx,
+                                          const TaggedBlock *block,
+                                          const std::auto_ptr<TagKey> &key,
+                                          bool is_hit) {
+    RecordInfoPtr record(new RecordInfo(key->asString(), block->info(ctx)));
     RecordIterator it = records_.find(record);
     if (it != records_.end()) {
         record = *it;

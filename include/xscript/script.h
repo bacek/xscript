@@ -106,6 +106,7 @@ protected:
     virtual void property(const char *name, const char *value);
 
     bool cacheTimeUndefined() const;
+    std::string cachedUrl(const Context *ctx) const;
     
     virtual void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const;
     

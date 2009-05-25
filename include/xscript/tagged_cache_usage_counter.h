@@ -11,11 +11,12 @@ namespace xscript {
 
 class Context;
 class Object;
+class TagKey;
 
 class TaggedCacheUsageCounter : public CounterBase {
 public:
-    virtual void fetchedHit(const Context *ctx, const Object *obj) = 0;
-    virtual void fetchedMiss(const Context *ctx, const Object *obj) = 0;
+    virtual void fetchedHit(const Context *ctx, const Object *obj, const std::auto_ptr<TagKey> &key) = 0;
+    virtual void fetchedMiss(const Context *ctx, const Object *obj, const std::auto_ptr<TagKey> &key) = 0;
 };
 
 class TaggedCacheUsageCounterFactory : public Component<TaggedCacheUsageCounterFactory> {

@@ -98,11 +98,11 @@ DocCacheBase::loadDoc(const Context *ctx, const Object *obj, Tag &tag, XmlDocHel
         std::pair<bool, uint64_t> res = profile(f);
         
         if (res.first) {
-            i->second->usageCounter_->fetchedHit(ctx, obj);
+            i->second->usageCounter_->fetchedHit(ctx, obj, key);
             i->second->hitCounter_->add(res.second);
         }
         else {
-            i->second->usageCounter_->fetchedMiss(ctx, obj);
+            i->second->usageCounter_->fetchedMiss(ctx, obj, key);
             i->second->missCounter_->add(res.second);
         }
         

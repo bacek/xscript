@@ -1041,8 +1041,7 @@ Script::cacheTimeUndefined() const {
 }
 
 std::string
-Script::createTagKey(const Context *ctx) const {
-    
+Script::cachedUrl(const Context *ctx) const {
     std::string key(ctx->request()->getOriginalUrl());
     if (!cacheAllQuery()) {
         std::string::size_type pos = key.rfind('?');
@@ -1077,8 +1076,13 @@ Script::createTagKey(const Context *ctx) const {
             }
         }
     }
+    return key;
+}
+
+std::string
+Script::createTagKey(const Context *ctx) const {
     
-    
+    std::string key = cachedUrl(ctx);
     key.push_back('|');
 
     const TimeMapType& modified_info = modifiedInfo();
@@ -1133,7 +1137,7 @@ Script::createTagKey(const Context *ctx) const {
 std::string
 Script::info(const Context *ctx) const {
     std::string info("Original url: ");
-    info.append(ctx->request()->getOriginalUrl());
+    info.append(cachedUrl(ctx));
     info.append(" | Filename: ");
     info.append(name());
     if (!cacheTimeUndefined()) {
