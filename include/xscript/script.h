@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include <boost/cstdint.hpp>
 #include <boost/thread/mutex.hpp>
 
 #include <xscript/functors.h>
@@ -34,6 +35,7 @@ public:
     bool binaryPage() const;
     unsigned int expireTimeDelta() const;
     time_t cacheTime() const;
+    boost::int32_t pageRandomMax() const;
     
     bool allowMethod(const std::string& value) const;
     
@@ -70,6 +72,7 @@ protected:
     void forceStylesheet(bool value);
     void expireTimeDelta(unsigned int value);
     void cacheTime(time_t value);
+    void pageRandomMax(boost::int32_t value);
     void binaryPage(bool value);
     void flag(unsigned int type, bool value);
 

@@ -61,6 +61,7 @@ public:
     bool binaryPage() const;
     unsigned int expireTimeDelta() const;
     time_t cacheTime() const;
+    boost::int32_t pageRandomMax() const;
     bool cacheTimeUndefined() const;
     bool allowMethod(const std::string& value) const;
     const std::string& name() const;
@@ -85,6 +86,7 @@ public:
     void forceStylesheet(bool value);
     void expireTimeDelta(unsigned int value);
     void cacheTime(time_t value);
+    void pageRandomMax(boost::int32_t value);
     void binaryPage(bool value);
     void allowMethods(const char *value);
     void flag(unsigned int type, bool value);
@@ -95,6 +97,7 @@ public:
     unsigned int flags_;
     unsigned int expire_time_delta_;
     time_t cache_time_;
+    boost::int32_t page_random_max_;
     std::set<xmlNodePtr> xscript_node_set_;
     std::map<std::string, std::string> headers_;
     std::vector<std::string> allow_methods_;
@@ -107,7 +110,7 @@ public:
 
 Script::ScriptData::ScriptData(const std::string &name) :
     doc_(NULL), name_(name), flags_(FLAG_FORCE_STYLESHEET),
-    expire_time_delta_(300), cache_time_(CACHE_TIME_UNDEFINED) {
+    expire_time_delta_(300), cache_time_(CACHE_TIME_UNDEFINED), page_random_max_(0) {
 }
 
 Script::ScriptData::~ScriptData() {
@@ -137,6 +140,11 @@ Script::ScriptData::expireTimeDelta() const {
 time_t
 Script::ScriptData::cacheTime() const {
     return cache_time_;
+}
+
+boost::int32_t
+Script::ScriptData::pageRandomMax() const {
+    return page_random_max_;
 }
 
 bool
@@ -225,7 +233,20 @@ Script::ScriptData::expireTimeDelta(unsigned int value) {
 void
 Script::ScriptData::cacheTime(time_t value) {
     cache_time_ = value;
-}    
+}
+
+void
+Script::ScriptData::pageRandomMax(boost::int32_t value) {
+    if (value < 0) {
+        throw std::runtime_error("negative page random max is not allowed");
+    }
+    
+    if (value > RAND_MAX) {
+        throw std::runtime_error("page random max exceeded maximum allowed value");
+    }
+    
+    page_random_max_ = value;
+}
 
 void
 Script::ScriptData::binaryPage(bool value) {
@@ -341,6 +362,11 @@ Script::cacheTime() const {
     return data_->cacheTime();
 }
 
+boost::int32_t
+Script::pageRandomMax() const {
+    return data_->pageRandomMax();
+}
+
 bool
 Script::allowMethod(const std::string& value) const {
     return data_->allowMethod(value);
@@ -395,6 +421,11 @@ void
 Script::cacheTime(time_t value) {
     data_->cacheTime(value);
 }    
+
+void
+Script::pageRandomMax(boost::int32_t value) {
+    return data_->pageRandomMax(value);
+}
 
 void
 Script::binaryPage(bool value) {
@@ -931,6 +962,9 @@ Script::property(const char *prop, const char *value) {
     else if (strncasecmp(prop, "binary-page", sizeof("binary-page")) == 0) {
         binaryPage(strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
+    else if (strncasecmp(prop, "page-random-max", sizeof("page-random-max")) == 0) {
+        pageRandomMax(boost::lexical_cast<boost::int32_t>(value));
+    }
     else if (ExtensionList::instance()->checkScriptProperty(prop, value)) {
         extensionProperty(prop, value);
     }
@@ -1021,6 +1055,11 @@ Script::info(const Context *ctx) const {
     if (!cacheTimeUndefined()) {
         info.append(" | Cache-time: ");
         info.append(boost::lexical_cast<std::string>(cacheTime()));
+    }
+    
+    const std::string& ctx_key = ctx->key();
+    if (!ctx_key.empty()) {
+        info.append(" | Page key: ").append(ctx_key);
     }
     
     return info;

@@ -48,7 +48,7 @@ struct Context::ContextData {
     ContextData(const boost::shared_ptr<Script> &script,
                 const boost::shared_ptr<RequestData> &data) :
         stopped_(false), script_(script), request_data_(data),
-        xslt_name_(script->xsltName()), flags_(0),
+        xslt_name_(script->xsltName()), flags_(0), page_random_(-1),
         params_(boost::shared_ptr<ParamsMap>(new ParamsMap())) 
     {}
     
@@ -56,7 +56,7 @@ struct Context::ContextData {
                 const boost::shared_ptr<Context> &ctx,
                 const boost::shared_ptr<ParamsMap> &params) :
         stopped_(false), script_(script), request_data_(ctx->requestData()), parent_context_(ctx),
-        xslt_name_(script->xsltName()), auth_(ctx->authContext()), flags_(0),
+        xslt_name_(script->xsltName()), auth_(ctx->authContext()), flags_(0), page_random_(-1),
         params_(params)
     {
         timer_.reset(ctx->timer().remained());
@@ -97,6 +97,14 @@ struct Context::ContextData {
         runtime_errors_[block].assign(error_message);
     }
     
+    boost::int32_t pageRandom() {
+        if (page_random_ < 0) {
+            boost::int32_t random_max = script_->pageRandomMax();
+            page_random_ = random_max > 0 ? random() % (random_max + 1) : 0;
+        }
+        return page_random_;
+    }
+    
     volatile bool stopped_;
     boost::shared_ptr<Script> script_;
     boost::shared_ptr<RequestData> request_data_;
@@ -113,6 +121,8 @@ struct Context::ContextData {
     std::string key_;
 
     unsigned int flags_;
+    
+    boost::int32_t page_random_;
 
     std::map<const Block*, std::string> runtime_errors_;
     TimeoutCounter timer_;
@@ -156,6 +166,7 @@ void
 Context::init() {
     if (isRoot()) {
         ExtensionList::instance()->initContext(this);
+        appendKey(boost::lexical_cast<std::string>(pageRandom()));
     }
     const Server *server = VirtualHostData::instance()->getServer();
     if (NULL != server) {
@@ -416,6 +427,21 @@ Context::key() const {
 void
 Context::key(const std::string &key) {
     ctx_data_->key_ = key;
+}
+
+void
+Context::appendKey(const std::string &value) {
+    std::string key_str = key();
+    if (!key_str.empty()) {
+        key_str.push_back('|');
+    }
+    key_str.append(value);
+    key(key_str);
+}
+
+boost::int32_t
+Context::pageRandom() const {
+    return ctx_data_->pageRandom();
 }
 
 const TimeoutCounter&

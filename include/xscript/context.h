@@ -98,6 +98,9 @@ public:
     
     const std::string& key() const;
     void key(const std::string &key);
+    void appendKey(const std::string &value);
+    
+    boost::int32_t pageRandom() const;
 
     friend class ContextStopper;
 

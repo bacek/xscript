@@ -19,24 +19,18 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	protocol.cpp http_helper.cpp \
 	doc_cache.cpp doc_cache_strategy.cpp \
 	profiler.cpp xslt_profiler.cpp \
-	average_counter_factory.cpp \
-	simple_counter_factory.cpp \
-	cache_counter_factory.cpp \
-	cache_usage_counter_factory.cpp \
+	average_counter_factory.cpp simple_counter_factory.cpp \
+	cache_counter_factory.cpp cache_usage_counter_factory.cpp \
 	tagged_cache_usage_counter_factory.cpp \
-	average_counter_impl.cpp \
-	simple_counter_impl.cpp \
-	cache_counter_impl.cpp \
-	cache_usage_counter_impl.cpp \
-	tagged_cache_usage_counter_impl.cpp \
-	dummy_average_counter.cpp \
-	dummy_simple_counter.cpp \
-	dummy_cache_counter.cpp \
-	dummy_cache_usage_counter.cpp \
+	average_counter_impl.cpp simple_counter_impl.cpp cache_counter_impl.cpp \
+	cache_usage_counter_impl.cpp tagged_cache_usage_counter_impl.cpp \
+	dummy_average_counter.cpp dummy_simple_counter.cpp \
+	dummy_cache_counter.cpp dummy_cache_usage_counter.cpp \
 	dummy_tagged_cache_usage_counter.cpp \
 	default_request_response.cpp \
 	validator_factory.cpp validator.cpp validator_exception.cpp \
-	string_utils.cpp refresher.cpp vhost_arg_param.cpp guard_checker.cpp
+	string_utils.cpp refresher.cpp vhost_arg_param.cpp guard_checker.cpp \
+	page_random_param.cpp
 
 libxscript_la_LDFLAGS = @VERSION_INFO@ -lcurl
 
