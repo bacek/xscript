@@ -72,22 +72,22 @@ class TaggedCacheScriptUsageCounterImpl : public TaggedCacheUsageCounterImpl {
 public:
     TaggedCacheScriptUsageCounterImpl(const std::string &name);
     
-    void fetchedHit(const Context *ctx, const Object *obj, const std::auto_ptr<TagKey> &key);
-    void fetchedMiss(const Context *ctx, const Object *obj, const std::auto_ptr<TagKey> &key);
+    void fetchedHit(const Context *ctx, const Object *obj, const TagKey *key);
+    void fetchedMiss(const Context *ctx, const Object *obj, const TagKey *key);
     
 private:
-    void fetched(const Context *ctx, const Script *script, const std::auto_ptr<TagKey> &key, bool is_hit);
+    void fetched(const Context *ctx, const Script *script, const TagKey *key, bool is_hit);
 };
 
 class TaggedCacheBlockUsageCounterImpl : public TaggedCacheUsageCounterImpl {
 public:
     TaggedCacheBlockUsageCounterImpl(const std::string &name);
     
-    void fetchedHit(const Context *ctx, const Object *obj, const std::auto_ptr<TagKey> &key);
-    void fetchedMiss(const Context *ctx, const Object *obj, const std::auto_ptr<TagKey> &key);
+    void fetchedHit(const Context *ctx, const Object *obj, const TagKey *key);
+    void fetchedMiss(const Context *ctx, const Object *obj, const TagKey *key);
     
 private:
-    void fetched(const Context *ctx, const TaggedBlock *block, const std::auto_ptr<TagKey> &key, bool is_hit);
+    void fetched(const Context *ctx, const TaggedBlock *block, const TagKey *key, bool is_hit);
 };
 
 }

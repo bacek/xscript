@@ -10,7 +10,7 @@ namespace xscript {
 void
 DummyTaggedCacheUsageCounter::fetchedHit(const Context *ctx,
                                          const Object *obj,
-                                         const std::auto_ptr<TagKey> &key) {
+                                         const TagKey *key) {
     (void)ctx;
     (void)obj;
     (void)key;
@@ -19,7 +19,7 @@ DummyTaggedCacheUsageCounter::fetchedHit(const Context *ctx,
 void
 DummyTaggedCacheUsageCounter::fetchedMiss(const Context *ctx,
                                           const Object *obj,
-                                          const std::auto_ptr<TagKey> &key) {
+                                          const TagKey *key) {
     (void)ctx;
     (void)obj;
     (void)key;

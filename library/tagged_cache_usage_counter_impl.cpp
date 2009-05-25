@@ -149,7 +149,7 @@ TaggedCacheScriptUsageCounterImpl::TaggedCacheScriptUsageCounterImpl(const std::
 void
 TaggedCacheScriptUsageCounterImpl::fetchedHit(const Context *ctx,
                                               const Object *obj,
-                                              const std::auto_ptr<TagKey> &key) {
+                                              const TagKey *key) {
     const Script *script = dynamic_cast<const Script*>(obj);
     if (NULL == script) {
         return;
@@ -161,7 +161,7 @@ TaggedCacheScriptUsageCounterImpl::fetchedHit(const Context *ctx,
 void
 TaggedCacheScriptUsageCounterImpl::fetchedMiss(const Context *ctx,
                                                const Object *obj,
-                                               const std::auto_ptr<TagKey> &key) {
+                                               const TagKey *key) {
     const Script *script = dynamic_cast<const Script*>(obj);
     if (NULL == script) {
         return;
@@ -173,7 +173,7 @@ TaggedCacheScriptUsageCounterImpl::fetchedMiss(const Context *ctx,
 void
 TaggedCacheScriptUsageCounterImpl::fetched(const Context *ctx,
                                            const Script *script,
-                                           const std::auto_ptr<TagKey> &key,
+                                           const TagKey *key,
                                            bool is_hit) {
     RecordInfoPtr record(new RecordInfo(key->asString(), script->info(ctx)));
     RecordIterator it = records_.find(record);
@@ -202,7 +202,7 @@ TaggedCacheBlockUsageCounterImpl::TaggedCacheBlockUsageCounterImpl(const std::st
 void
 TaggedCacheBlockUsageCounterImpl::fetchedHit(const Context *ctx,
                                              const Object *obj,
-                                             const std::auto_ptr<TagKey> &key) {
+                                             const TagKey *key) {
     const TaggedBlock *block = dynamic_cast<const TaggedBlock*>(obj);
     if (NULL == block) {
         return;
@@ -214,7 +214,7 @@ TaggedCacheBlockUsageCounterImpl::fetchedHit(const Context *ctx,
 void
 TaggedCacheBlockUsageCounterImpl::fetchedMiss(const Context *ctx,
                                               const Object *obj,
-                                              const std::auto_ptr<TagKey> &key) {
+                                              const TagKey *key) {
     const TaggedBlock *block = dynamic_cast<const TaggedBlock*>(obj);
     if (NULL == block) {
         return;
@@ -226,7 +226,7 @@ TaggedCacheBlockUsageCounterImpl::fetchedMiss(const Context *ctx,
 void
 TaggedCacheBlockUsageCounterImpl::fetched(const Context *ctx,
                                           const TaggedBlock *block,
-                                          const std::auto_ptr<TagKey> &key,
+                                          const TagKey *key,
                                           bool is_hit) {
     RecordInfoPtr record(new RecordInfo(key->asString(), block->info(ctx)));
     RecordIterator it = records_.find(record);
