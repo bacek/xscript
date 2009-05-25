@@ -1,3 +1,10 @@
+xscript (5.62-5) unstable; urgency=low
+
+  * PageRandom param added
+  * Page cache depends on query params
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 25 May 2009 13:23:00 +0400
+
 xscript (5.62-4) unstable; urgency=low
 
   * fix tag caching with zero cache time

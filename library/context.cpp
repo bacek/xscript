@@ -100,7 +100,13 @@ struct Context::ContextData {
     boost::int32_t pageRandom() {
         if (page_random_ < 0) {
             boost::int32_t random_max = script_->pageRandomMax();
-            page_random_ = random_max > 0 ? random() % (random_max + 1) : 0;
+            boost::int32_t rand = random();
+            if (random_max > 0) {
+                page_random_ = random_max < RAND_MAX ? rand % (random_max + 1) : rand;
+            }
+            else {
+                page_random_ = 0;
+            }
         }
         return page_random_;
     }

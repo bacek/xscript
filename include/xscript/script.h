@@ -39,6 +39,9 @@ public:
     
     bool allowMethod(const std::string& value) const;
     
+    bool cacheAllQuery() const;
+    bool cacheQueryParam(const std::string &value) const;
+    
     const Block* block(unsigned int n) const;
     const Block* block(const std::string &id, bool throw_error = true) const;
     unsigned int blocksNumber() const;
@@ -77,6 +80,7 @@ protected:
     void flag(unsigned int type, bool value);
 
     void allowMethods(const char *value);
+    void cacheQuery(const char *value);
     void extensionProperty(const char *prop, const char *value);
 
     void parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes);

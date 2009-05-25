@@ -64,6 +64,8 @@ public:
     boost::int32_t pageRandomMax() const;
     bool cacheTimeUndefined() const;
     bool allowMethod(const std::string& value) const;
+    bool cacheAllQuery() const;
+    bool cacheQueryParam(const std::string &value) const;
     const std::string& name() const;
     
     const std::string& header(const std::string &name) const;
@@ -89,6 +91,7 @@ public:
     void pageRandomMax(boost::int32_t value);
     void binaryPage(bool value);
     void allowMethods(const char *value);
+    void cacheQuery(const char *value);
     void flag(unsigned int type, bool value);
     
     XmlDocHelper doc_;
@@ -101,6 +104,7 @@ public:
     std::set<xmlNodePtr> xscript_node_set_;
     std::map<std::string, std::string> headers_;
     std::vector<std::string> allow_methods_;
+    std::set<std::string> cache_query_;
     std::map<std::string, std::string, StringCILess> extension_properties_;
     
     static const unsigned int FLAG_THREADED = 1;
@@ -154,6 +158,20 @@ Script::ScriptData::allowMethod(const std::string& value) const {
         return false;
     }
 
+    return true;
+}
+
+bool
+Script::ScriptData::cacheAllQuery() const {
+    return cache_query_.empty();
+}
+
+bool
+Script::ScriptData::cacheQueryParam(const std::string &value) const {
+    if (!cache_query_.empty() &&
+        cache_query_.find(value) == cache_query_.end()) {
+        return false;
+    }
     return true;
 }
 
@@ -318,7 +336,7 @@ Script::ScriptData::allowMethods(const char *value) {
     typedef boost::char_separator<char> Separator;
     typedef boost::tokenizer<Separator> Tokenizer;
     std::string method_list(value);
-    Tokenizer tok(method_list, Separator(" "));
+    Tokenizer tok(method_list, Separator(", "));
     for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
         allow_methods_.push_back(*it);
         std::vector<std::string>::reverse_iterator method = allow_methods_.rbegin();
@@ -327,7 +345,20 @@ Script::ScriptData::allowMethods(const char *value) {
     }
 }
 
-
+void
+Script::ScriptData::cacheQuery(const char *value) {
+    cache_query_.clear();
+    typedef boost::char_separator<char> Separator;
+    typedef boost::tokenizer<Separator> Tokenizer;
+    std::string param_list(value);
+    Tokenizer tok(param_list, Separator(" "));
+    for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
+        cache_query_.insert(*it);
+    }
+    if (cache_query_.empty()) {
+        cache_query_.insert(StringUtils::EMPTY_STRING);
+    }
+}
 
 Script::Script(const std::string &name) :
     Xml(), data_(new ScriptData(name))
@@ -370,6 +401,16 @@ Script::pageRandomMax() const {
 bool
 Script::allowMethod(const std::string& value) const {
     return data_->allowMethod(value);
+}
+
+bool
+Script::cacheAllQuery() const {
+    return data_->cacheAllQuery();
+}
+
+bool
+Script::cacheQueryParam(const std::string &value) const {
+    return data_->cacheQueryParam(value);
 }
 
 unsigned int
@@ -435,6 +476,11 @@ Script::binaryPage(bool value) {
 void
 Script::allowMethods(const char *value) {
     data_->allowMethods(value);
+}
+
+void
+Script::cacheQuery(const char *value) {
+    data_->cacheQuery(value);
 }
 
 void
@@ -965,6 +1011,9 @@ Script::property(const char *prop, const char *value) {
     else if (strncasecmp(prop, "page-random-max", sizeof("page-random-max")) == 0) {
         pageRandomMax(boost::lexical_cast<boost::int32_t>(value));
     }
+    else if (strncasecmp(prop, "cache-query", sizeof("cache-query")) == 0) {
+        cacheQuery(value);
+    }
     else if (ExtensionList::instance()->checkScriptProperty(prop, value)) {
         extensionProperty(prop, value);
     }
@@ -993,8 +1042,43 @@ Script::cacheTimeUndefined() const {
 
 std::string
 Script::createTagKey(const Context *ctx) const {
-   
+    
     std::string key(ctx->request()->getOriginalUrl());
+    if (!cacheAllQuery()) {
+        std::string::size_type pos = key.rfind('?');
+        if (std::string::npos != pos) {
+            key.erase(pos);
+        }
+        
+        Request *request = ctx->request();
+        
+        std::vector<std::string> names;
+        request->argNames(names);
+        
+        bool first_param = true;
+        for (std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
+            std::string name = *i;
+            std::vector<std::string> values;
+            if (name.empty() || !cacheQueryParam(name)) {
+                continue;
+            }
+            request->getArg(name, values);
+            for (std::vector<std::string>::const_iterator it = values.begin(), end = values.end(); it != end; ++it) {
+                if (first_param) {
+                    key.push_back('?');
+                    first_param = false;
+                }
+                else {
+                    key.push_back('&');
+                }
+                key.append(name);
+                key.push_back('=');
+                key.append(*it);
+            }
+        }
+    }
+    
+    
     key.push_back('|');
 
     const TimeMapType& modified_info = modifiedInfo();
