@@ -1,3 +1,9 @@
+xscript (5.62-8) unstable; urgency=low
+
+  * libcurl3-dev added to libxscript-dev depends
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 26 May 2009 12:52:25 +0400
+
 xscript (5.62-7) unstable; urgency=low
 
   * tagged cache statistics fixed
