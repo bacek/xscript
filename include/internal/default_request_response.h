@@ -90,7 +90,7 @@ public:
     virtual void sendHeaders();
     virtual bool suppressBody() const;
 
-    void attach(std::istream *is, char *env[]);
+    virtual void attach(std::istream *is, char *env[]);
     virtual void detach();
 
     virtual bool isBinary() const;

@@ -123,7 +123,7 @@ public:
     virtual std::pair<const char*, std::streamsize> requestBody() const;
     virtual bool suppressBody() const;
 
-    void attach(std::istream *is, char *env[]);
+    virtual void attach(std::istream *is, char *env[]);
     virtual bool normalizeHeader(const std::string &name, const Range &value, std::string &result);
 
 protected:
