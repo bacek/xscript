@@ -81,6 +81,7 @@ protected:
 
     void allowMethods(const char *value);
     void cacheQuery(const char *value);
+    void cacheCookies(const char *value);
     void extensionProperty(const char *prop, const char *value);
 
     void parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes);

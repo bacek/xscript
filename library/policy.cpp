@@ -110,7 +110,13 @@ Policy::allowCaching(const Context *ctx, const TaggedBlock *block) const {
 }
 
 bool
-Policy::allowCachingCookie(const char *name) const {
+Policy::allowCachingInputCookie(const char *name) const {
+    (void)name;
+    return true;
+}
+
+bool
+Policy::allowCachingOutputCookie(const char *name) const {
     (void)name;
     return false;
 }

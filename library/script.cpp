@@ -77,6 +77,7 @@ public:
     Block* block(unsigned int n) const;
     Block* block(const std::string &id, bool throw_error) const;
     std::vector<Block*>& blocks() const;
+    std::set<std::string>& cacheCookies() const;
     
     void addBlock(Block *block);
     void addXscriptNode(xmlNodePtr node);
@@ -92,6 +93,7 @@ public:
     void binaryPage(bool value);
     void allowMethods(const char *value);
     void cacheQuery(const char *value);
+    void cacheCookies(const char *value);
     void flag(unsigned int type, bool value);
     
     XmlDocHelper doc_;
@@ -105,6 +107,7 @@ public:
     std::map<std::string, std::string> headers_;
     std::vector<std::string> allow_methods_;
     std::set<std::string> cache_query_;
+    std::set<std::string> cache_cookies_;
     std::map<std::string, std::string, StringCILess> extension_properties_;
     
     static const unsigned int FLAG_THREADED = 1;
@@ -209,6 +212,11 @@ Script::ScriptData::block(const std::string &id, bool throw_error) const {
 std::vector<Block*>&
 Script::ScriptData::blocks() const {
     return const_cast<std::vector<Block*>&>(blocks_);
+}
+
+std::set<std::string>&
+Script::ScriptData::cacheCookies() const {
+    return const_cast<std::set<std::string>&>(cache_cookies_);
 }
 
 const std::string&
@@ -360,6 +368,24 @@ Script::ScriptData::cacheQuery(const char *value) {
     }
 }
 
+void
+Script::ScriptData::cacheCookies(const char *value) {
+    cache_cookies_.clear();
+    typedef boost::char_separator<char> Separator;
+    typedef boost::tokenizer<Separator> Tokenizer;
+    std::string param_list(value);
+    Tokenizer tok(param_list, Separator(", "));
+    Policy *policy = Policy::instance();
+    for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
+        if (!policy->allowCachingInputCookie(it->c_str())) {
+            std::stringstream ss;
+            ss << "Cookie " << *it << " is not allowed in cache-cookies";
+            throw std::runtime_error(ss.str());
+        }
+        cache_cookies_.insert(*it);
+    }
+}
+
 Script::Script(const std::string &name) :
     Xml(), data_(new ScriptData(name))
 {}
@@ -481,6 +507,11 @@ Script::allowMethods(const char *value) {
 void
 Script::cacheQuery(const char *value) {
     data_->cacheQuery(value);
+}
+
+void
+Script::cacheCookies(const char *value) {
+    data_->cacheCookies(value);
 }
 
 void
@@ -1014,6 +1045,9 @@ Script::property(const char *prop, const char *value) {
     else if (strncasecmp(prop, "cache-query", sizeof("cache-query")) == 0) {
         cacheQuery(value);
     }
+    else if (strncasecmp(prop, "cache-cookies", sizeof("cache-cookies")) == 0) {
+        cacheCookies(value);
+    }
     else if (ExtensionList::instance()->checkScriptProperty(prop, value)) {
         extensionProperty(prop, value);
     }
@@ -1125,6 +1159,18 @@ Script::createTagKey(const Context *ctx) const {
         }            
     }
     
+    std::set<std::string> &cache_cookies = data_->cacheCookies();
+    for(std::set<std::string>::iterator it = cache_cookies.begin();
+        it != cache_cookies.end();
+        ++it) {
+        if (ctx->request()->hasCookie(*it)) {
+            key.push_back('|');
+            key.append(*it);
+            key.push_back(':');
+            key.append(ctx->request()->getCookie(*it));
+        }
+    }
+    
     const std::string &ctx_key = ctx->key();
     if (!ctx_key.empty()) {
         key.push_back('|');
@@ -1156,11 +1202,8 @@ Script::info(const Context *ctx) const {
 bool
 Script::cachable(const Context *ctx, bool for_save) const {
     
-    if (ctx->request()->getRequestMethod() != GET_METHOD) {
-        return false;
-    }
-    
-    if (binaryPage()) {
+    if (ctx->noCache() || binaryPage() ||
+        ctx->request()->getRequestMethod() != GET_METHOD) {
         return false;
     }
     
@@ -1169,14 +1212,14 @@ Script::cachable(const Context *ctx, bool for_save) const {
     }
     
     if (for_save) {
-        if (ctx->noCache() || ctx->xsltChanged(this) || !ctx->response()->isStatusOK()) {
+        if (ctx->xsltChanged(this) || !ctx->response()->isStatusOK()) {
             return false;
         }
         
         const CookieSet &cookies = ctx->response()->outCookies();       
         Policy *policy = Policy::instance();
         for(CookieSet::const_iterator it = cookies.begin(); it != cookies.end(); ++it) {
-            if (!policy->allowCachingCookie(it->name().c_str())) {
+            if (!policy->allowCachingOutputCookie(it->name().c_str())) {
                 return false;
             }
         }

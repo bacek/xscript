@@ -30,7 +30,8 @@ public:
     virtual void useDefaultSanitizer() const;
     virtual void processCacheLevel(TaggedBlock *block, const std::string &no_cache) const;
     virtual bool allowCaching(const Context *ctx, const TaggedBlock *block) const;
-    virtual bool allowCachingCookie(const char *name) const;
+    virtual bool allowCachingInputCookie(const char *name) const;
+    virtual bool allowCachingOutputCookie(const char *name) const;
     virtual bool isSkippedProxyHeader(const std::string &header) const;
     
     virtual bool isErrorDoc(xmlDocPtr doc) const;
