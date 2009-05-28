@@ -1163,12 +1163,16 @@ Script::createTagKey(const Context *ctx) const {
     for(std::set<std::string>::iterator it = cache_cookies.begin();
         it != cache_cookies.end();
         ++it) {
-        if (ctx->request()->hasCookie(*it)) {
-            key.push_back('|');
-            key.append(*it);
-            key.push_back(':');
-            key.append(ctx->request()->getCookie(*it));
+        
+        std::string cookie = getCacheCookie(ctx, *it);
+        if (cookie.empty()) {
+            continue;
         }
+
+        key.push_back('|');
+        key.append(*it);
+        key.push_back(':');
+        key.append(cookie);
     }
     
     const std::string &ctx_key = ctx->key();
@@ -1178,6 +1182,12 @@ Script::createTagKey(const Context *ctx) const {
     }
     
     return key;
+}
+
+std::string
+Script::getCacheCookie(const Context *ctx, const std::string &cookie) const {   
+    return ctx->request()->hasCookie(cookie) ?
+        ctx->request()->getCookie(cookie) : StringUtils::EMPTY_STRING;
 }
 
 std::string

@@ -110,6 +110,7 @@ protected:
     std::string cachedUrl(const Context *ctx) const;
     
     virtual void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const;
+    virtual std::string getCacheCookie(const Context *ctx, const std::string &cookie) const;
     
     static boost::shared_ptr<Script> createWithParse(const std::string &name, const std::string &xml);
 
