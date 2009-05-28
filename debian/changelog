@@ -1,3 +1,9 @@
+xscript (5.63-2) unstable; urgency=low
+
+  * cookie caching updated
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 28 May 2009 13:43:19 +0400
+
 xscript (5.63-1) unstable; urgency=low
 
   * cookie added to tag key for page cache
