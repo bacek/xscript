@@ -42,6 +42,11 @@ void AverageCounterImpl::remove(uint64_t value) {
     total_ -= value;
 }
 
+boost::uint64_t
+AverageCounterImpl::count() const {
+    return count_;
+}
+
 XmlNodeHelper AverageCounterImpl::createReport() const {
     XmlNodeHelper line(xmlNewNode(0, (const xmlChar*) name_.c_str()));
 

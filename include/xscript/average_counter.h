@@ -25,6 +25,8 @@ public:
      * Remove single measure.
      */
     virtual void remove(boost::uint64_t value) = 0;
+    
+    virtual boost::uint64_t count() const = 0;
 };
 
 class AverageCounterFactory : public Component<AverageCounterFactory> {

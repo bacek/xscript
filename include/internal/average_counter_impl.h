@@ -24,6 +24,8 @@ public:
      */
     virtual void remove(boost::uint64_t value);
 
+    virtual boost::uint64_t count() const;
+    
     virtual XmlNodeHelper createReport() const;
 
 protected:

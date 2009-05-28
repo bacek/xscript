@@ -22,6 +22,11 @@ void DummyAverageCounter::remove(uint64_t value) {
     (void)value;
 }
 
+boost::uint64_t
+DummyAverageCounter::count() const {
+    return 0;
+}
+
 XmlNodeHelper DummyAverageCounter::createReport() const {
     return XmlNodeHelper(xmlNewNode(0, (const xmlChar*) "dummy"));
 }

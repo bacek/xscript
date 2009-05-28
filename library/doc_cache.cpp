@@ -170,6 +170,13 @@ DocCacheBase::createReport() const {
          ++s) {
         XmlDocHelper report = s->second->statBuilder_->createReport();
         XmlNodeHelper node(xmlCopyNode(xmlDocGetRootElement(report.get()), 1));
+        boost::uint64_t hits = s->second->hitCounter_->count();
+        boost::uint64_t misses = s->second->missCounter_->count();
+        if (hits > 0 || misses > 0) {
+            double hit_ratio = (double)hits/((double)hits + (double)misses);
+            xmlNewProp(node.get(), (const xmlChar*)"hit-ratio",
+                (const xmlChar*)boost::lexical_cast<std::string>(hit_ratio).c_str());
+        }
         xmlAddChild(root, node.get());
         node.release();
     }
