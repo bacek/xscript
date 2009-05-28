@@ -1,3 +1,9 @@
+xscript (5.63-4) unstable; urgency=low
+
+  * added return value to lua state setters
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 28 May 2009 19:36:33 +0400
+
 xscript (5.63-3) unstable; urgency=low
 
   * added overall hit-ratio info to tagged cache statistics

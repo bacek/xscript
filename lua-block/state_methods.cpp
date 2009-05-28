@@ -109,7 +109,8 @@ luaStateSet(lua_State *lua) {
         Type value = luaReadStack<Type>(lua, 3);
         log()->debug("luaStateSet: %s", key.c_str());
         s->set(key, value);
-        return 0;
+        luaPushStack(lua, value);
+        return 1;
     }
     catch (const LuaError &e) {
         return e.translate(lua);

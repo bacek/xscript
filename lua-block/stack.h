@@ -110,8 +110,28 @@ inline void luaPushStack(lua_State* lua, bool b) {
 }
 
 template<>
-inline void luaPushStack(lua_State* lua, std::streamsize s) {
-    lua_pushnumber(lua, s);
+inline void luaPushStack(lua_State* lua, boost::int32_t n) {
+    lua_pushnumber(lua, n);
+}
+
+template<>
+inline void luaPushStack(lua_State* lua, boost::uint32_t n) {
+    lua_pushnumber(lua, n);
+}
+
+template<>
+inline void luaPushStack(lua_State* lua, boost::int64_t n) {
+    lua_pushnumber(lua, n);
+}
+
+template<>
+inline void luaPushStack(lua_State* lua, boost::uint64_t n) {
+    lua_pushnumber(lua, n);
+}
+
+template<>
+inline void luaPushStack(lua_State* lua, double n) {
+    lua_pushnumber(lua, n);
 }
 
 } // namespace xscript
