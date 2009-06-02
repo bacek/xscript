@@ -225,7 +225,9 @@ Server::sendResponse(Context *ctx, XmlDocHelper doc) {
 }
 
 void
-Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc) {
+Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc) {    
+    addHeaders(ctx);
+    
     XmlNodeHelper headers_node_helper(xmlNewNode(NULL, (const xmlChar*)"headers"));
     xmlNodePtr headers_node = headers_node_helper.get();
     try {
@@ -318,11 +320,15 @@ Server::findScript(const std::string &name) {
 }
 
 void
-Server::sendHeaders(Context *ctx) {
+Server::addHeaders(Context *ctx) {
     DocumentWriter* writer = ctx->documentWriter();
     assert(NULL != writer);
-
     writer->addHeaders(ctx->response());
+}
+
+void
+Server::sendHeaders(Context *ctx) {
+    addHeaders(ctx);
     ctx->response()->sendHeaders();
 }
 

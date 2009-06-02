@@ -36,6 +36,7 @@ protected:
                                
     virtual boost::shared_ptr<Script> getScript(const std::string &name, Request *request);
     static std::pair<std::string, bool> findScript(const std::string &name);
+    void addHeaders(Context *ctx);
     void sendHeaders(Context *ctx);
 
     virtual Context* createContext(
