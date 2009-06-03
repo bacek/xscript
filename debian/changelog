@@ -1,3 +1,9 @@
+xscript (5.63-6) unstable; urgency=low
+
+  * fixed page caching for html output
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 03 Jun 2009 12:09:06 +0400
+
 xscript (5.63-5) unstable; urgency=low
 
   * Content-type fixed for cached docs

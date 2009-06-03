@@ -35,6 +35,7 @@
 #include "xscript/server.h"
 #include "xscript/state.h"
 #include "xscript/string_utils.h"
+#include "xscript/stylesheet.h"
 #include "xscript/tag.h"
 #include "xscript/xml_util.h"
 #include "xscript/vhost_data.h"
@@ -195,6 +196,12 @@ Server::processCachedDoc(Context *ctx, const Script *script) {
         return false;
     }
     
+    std::string xslt = ctx->xsltName();
+    if (!xslt.empty()) {
+        boost::shared_ptr<Stylesheet> stylesheet(Stylesheet::create(xslt));   
+        ctx->createDocumentWriter(stylesheet);
+    }
+
     script->addExpiresHeader(ctx);
     sendResponse(ctx, doc);
     
