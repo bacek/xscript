@@ -38,7 +38,10 @@ HttpUserParam::type() const {
 
 std::string
 HttpUserParam::asString(const Context *ctx) const {
-    return ctx->request()->getRemoteUser();
+    if (NULL == ctx)
+        return "";
+    else
+        return ctx->request()->getRemoteUser();
 }
 
 void

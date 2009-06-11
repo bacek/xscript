@@ -40,7 +40,10 @@ StateArgParam::type() const {
 
 std::string
 StateArgParam::asString(const Context *ctx) const {
-    return ctx->state()->asString(value(), defaultValue());
+    if (NULL == ctx)
+        return "";
+    else
+        return ctx->state()->asString(value(), defaultValue());
 }
 
 void
