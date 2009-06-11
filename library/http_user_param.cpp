@@ -1,9 +1,10 @@
 #include "settings.h"
 
 #include "xscript/args.h"
+#include "xscript/context.h"
 #include "xscript/param.h"
 #include "xscript/request.h"
-#include "xscript/context.h"
+#include "xscript/string_utils.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -38,10 +39,7 @@ HttpUserParam::type() const {
 
 std::string
 HttpUserParam::asString(const Context *ctx) const {
-    if (NULL == ctx)
-        return "";
-    else
-        return ctx->request()->getRemoteUser();
+    return ctx ? ctx->request()->getRemoteUser() : StringUtils::EMPTY_STRING;
 }
 
 void
