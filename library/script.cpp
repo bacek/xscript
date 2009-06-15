@@ -1031,16 +1031,34 @@ Script::property(const char *prop, const char *value) {
         forceStylesheet(strncasecmp(value, "yes", sizeof("yes")) != 0);
     }
     else if (strncasecmp(prop, "http-expire-time-delta", sizeof("http-expire-time-delta")) == 0) {
-        expireTimeDelta(boost::lexical_cast<unsigned int>(value));
+        try {
+            expireTimeDelta(boost::lexical_cast<unsigned int>(value));
+        }
+        catch(const boost::bad_lexical_cast &e) {
+            throw std::runtime_error(
+                std::string("cannot parse http-expire-time-delta value: ") + value);
+        }
     }
     else if (strncasecmp(prop, "cache-time", sizeof("cache-time")) == 0) {
-        cacheTime(boost::lexical_cast<time_t>(value));
+        try {
+            cacheTime(boost::lexical_cast<time_t>(value));
+        }
+        catch(const boost::bad_lexical_cast &e) {
+            throw std::runtime_error(
+                std::string("cannot parse cache-time value: ") + value);
+        }
     }
     else if (strncasecmp(prop, "binary-page", sizeof("binary-page")) == 0) {
         binaryPage(strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
     else if (strncasecmp(prop, "page-random-max", sizeof("page-random-max")) == 0) {
-        pageRandomMax(boost::lexical_cast<boost::int32_t>(value));
+        try {
+            pageRandomMax(boost::lexical_cast<boost::int32_t>(value));
+        }
+        catch(const boost::bad_lexical_cast &e) {
+            throw std::runtime_error(
+                std::string("cannot parse page-random-max value: ") + value);
+        }
     }
     else if (strncasecmp(prop, "cache-query", sizeof("cache-query")) == 0) {
         cacheQuery(value);

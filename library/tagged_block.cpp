@@ -174,7 +174,13 @@ TaggedBlock::processParam(std::auto_ptr<Param> p) {
     
     const std::string& v = p->value();
     if (!v.empty()) {
-        cacheTime(boost::lexical_cast<time_t>(v));
+        try {
+            cacheTime(boost::lexical_cast<time_t>(v));
+        }
+        catch(const boost::bad_lexical_cast &e) {
+            throw std::runtime_error(
+                std::string("cannot parse tag param value: ") + v);
+        }            
     }
     
     tagged(true);
@@ -202,7 +208,13 @@ TaggedBlock::propertyInternal(const char *name, const char *value) {
         }
         
         if (strncasecmp(value, "yes", sizeof("yes")) != 0) {
-            cache_time_ = boost::lexical_cast<time_t>(value); 
+            try {
+                cache_time_ = boost::lexical_cast<time_t>(value);
+            }
+            catch(const boost::bad_lexical_cast &e) {
+                throw std::runtime_error(
+                    std::string("cannot parse tag value: ") + value);
+            }
         }
         tagged(true);
     }

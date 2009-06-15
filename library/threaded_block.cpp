@@ -50,7 +50,13 @@ ThreadedBlock::property(const char *name, const char *value) {
         threaded_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
     else if (strncasecmp(name, "timeout", sizeof("timeout")) == 0) {
-        timeout_ = boost::lexical_cast<int>(value);
+        try {
+            timeout_ = boost::lexical_cast<int>(value);
+        }
+        catch(const boost::bad_lexical_cast &e) {
+            throw std::runtime_error(
+                std::string("cannot parse timeout value") + value);
+        }
     }
     else if (strncasecmp(name, "elapsed-time", sizeof("elapsed-time")) == 0) {
         check_elapsed_time_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);

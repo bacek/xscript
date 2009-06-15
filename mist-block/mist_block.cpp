@@ -360,7 +360,7 @@ MistBlock::setStateDomain(Context *ctx) {
         try {
             level = boost::lexical_cast<boost::int32_t>(level_str);
         }
-            catch (const boost::bad_lexical_cast &) {
+        catch (const boost::bad_lexical_cast &) {
         }
     }
 
@@ -881,7 +881,7 @@ MistBlock::setStatus(Context *ctx) {
         status = boost::lexical_cast<boost::int32_t>(val);
     }
     catch (const boost::bad_lexical_cast &e) {
-        throw std::runtime_error("unknown status");
+        throw std::runtime_error("unknown status: " + val);
     }
 
     ctx->response()->setStatus(status);

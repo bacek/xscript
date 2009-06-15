@@ -27,10 +27,22 @@ RemoteTaggedBlock::~RemoteTaggedBlock() {
 void
 RemoteTaggedBlock::property(const char *name, const char *value) {
     if (strncasecmp(name, "remote-timeout", sizeof("remote-timeout")) == 0) {
-        remote_timeout_ = boost::lexical_cast<int>(value);
+        try {
+            remote_timeout_ = boost::lexical_cast<int>(value);
+        }
+        catch(const boost::bad_lexical_cast &e) {
+            throw std::runtime_error(
+                std::string("cannot parse remote-timeout value: ") + value);
+        }
     }
     else if (strncasecmp(name, "retry-count", sizeof("retry-count")) == 0) {
-        retry_count_ = boost::lexical_cast<unsigned int>(value);
+        try {
+            retry_count_ = boost::lexical_cast<unsigned int>(value);
+        }
+        catch(const boost::bad_lexical_cast &e) {
+            throw std::runtime_error(
+                std::string("cannot parse retry-count value: ") + value);
+        }
     }
     else if (!TaggedBlock::propertyInternal(name, value)) {
         ThreadedBlock::property(name, value);
