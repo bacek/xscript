@@ -26,7 +26,8 @@ public:
                         const std::vector<std::string> &headers,
                         const std::vector<std::string> &vars,
                         std::ostream *data_stream,
-                        std::ostream *error_stream);
+                        std::ostream *error_stream,
+                        bool need_output);
     const std::string& xml() const;
 
 private:
@@ -45,6 +46,7 @@ private:
     std::ostream *error_stream_;
     std::string docroot_;
     std::string xml_;
+    bool need_output_;
 };
 
 } // namespace xscript

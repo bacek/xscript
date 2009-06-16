@@ -26,7 +26,8 @@ ProcServer::ProcServer(Config *config,
                        const std::string &url,
                        const std::multimap<std::string, std::string> &args) :
     Server(config), url_(url),
-    apply_main_stylesheet_(true), apply_perblock_stylesheet_(true), use_remote_call_(true) {
+    apply_main_stylesheet_(true), apply_perblock_stylesheet_(true),
+    use_remote_call_(true), need_output_(true) {
 
     root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");
 
@@ -49,6 +50,9 @@ ProcServer::ProcServer(Config *config,
         }
         else if (it->first == "dont-use-remote-call") {
             use_remote_call_ = false;
+        }
+        else if (it->first == "noout") {
+            need_output_ = false;
         }
         else if (it->first == "profile" || it->first == "norman") {
             profile_it = it;
@@ -135,7 +139,8 @@ ProcServer::run() {
                                 headers,
                                 vars,
                                 &std::cout,
-                                &std::cerr);
+                                &std::cerr,
+                                need_output_);
         attach_success = true;
         
         boost::shared_ptr<RequestData> data(

@@ -25,7 +25,7 @@ private:
     std::string root_;
     std::string url_;
     std::string stylesheet_;
-    bool apply_main_stylesheet_, apply_perblock_stylesheet_, use_remote_call_;
+    bool apply_main_stylesheet_, apply_perblock_stylesheet_, use_remote_call_, need_output_;
     std::map<std::string, std::string> headers_;
 };
 

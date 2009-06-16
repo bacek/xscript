@@ -67,7 +67,7 @@ OfflineServer::renderBuffer(const std::string &url,
     
     bool attach_success = false;
     try {
-        offline_request->attach(url, xml, body, header_list, var_list, &buffer, &buffer);        
+        offline_request->attach(url, xml, body, header_list, var_list, &buffer, &buffer, true);        
         attach_success = true;
         
         boost::shared_ptr<RequestData> data(

@@ -20,7 +20,7 @@
 namespace xscript {
 
 OfflineRequest::OfflineRequest(const std::string &docroot) :
-    data_stream_(NULL), error_stream_(NULL), docroot_(docroot) {
+    data_stream_(NULL), error_stream_(NULL), docroot_(docroot), need_output_(true) {
 }
 
 OfflineRequest::~OfflineRequest() {
@@ -28,7 +28,9 @@ OfflineRequest::~OfflineRequest() {
 
 void
 OfflineRequest::writeBuffer(const char *buf, std::streamsize size) {
-    data_stream_->write(buf, size);
+    if (need_output_) {
+        data_stream_->write(buf, size);
+    }
 }
 
 void
@@ -38,7 +40,9 @@ OfflineRequest::writeError(unsigned short status, const std::string &message) {
 
 void
 OfflineRequest::writeByWriter(const BinaryWriter *writer) {
-    writer->write(data_stream_);
+    if (need_output_) {
+        writer->write(data_stream_);
+    }
 }
 
 void
@@ -114,11 +118,13 @@ OfflineRequest::attach(const std::string &uri,
                        const std::vector<std::string> &headers,
                        const std::vector<std::string> &vars,
                        std::ostream *data_stream,
-                       std::ostream *error_stream) {
+                       std::ostream *error_stream,
+                       bool need_output) {
     
     data_stream_ = data_stream; 
     error_stream_ = error_stream;
     xml_ = xml;
+    need_output_ = need_output;
     
     if (uri.empty()) {
         throw std::runtime_error("Cannot process empty uri");
