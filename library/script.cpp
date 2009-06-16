@@ -1230,17 +1230,34 @@ Script::info(const Context *ctx) const {
 bool
 Script::cachable(const Context *ctx, bool for_save) const {
     
-    if (ctx->noCache() || binaryPage() ||
-        ctx->request()->getRequestMethod() != GET_METHOD) {
+    if (ctx->noCache()) {
+        log()->info("Cannot cache script. Context is not cachable. %d", for_save);
+        return false;
+    }
+        
+    if (binaryPage()) {
+        log()->info("Cannot cache script. Binary content. %d", for_save);
+        return false;
+    }
+    
+    if (ctx->request()->getRequestMethod() != GET_METHOD) {
+        log()->info("Cannot cache script. Not GET method. %d", for_save);
         return false;
     }
     
     if (cacheTimeUndefined() || cacheTime() < DocCache::instance()->minimalCacheTime()) {
+        log()->info("Cannot cache script. Too low cache time or undefined. %d", for_save);
         return false;
     }
     
     if (for_save) {
-        if (ctx->xsltChanged(this) || !ctx->response()->isStatusOK()) {
+        if (ctx->xsltChanged(this)) {
+            log()->info("Cannot cache script. Main stylesheet changed. %d", for_save);
+            return false;
+        }
+            
+        if (!ctx->response()->isStatusOK()) {
+            log()->info("Cannot cache script. Status is not OK. %d", for_save);
             return false;
         }
         
@@ -1248,11 +1265,13 @@ Script::cachable(const Context *ctx, bool for_save) const {
         Policy *policy = Policy::instance();
         for(CookieSet::const_iterator it = cookies.begin(); it != cookies.end(); ++it) {
             if (!policy->allowCachingOutputCookie(it->name().c_str())) {
+                log()->info("Cannot cache script. Output cookie %s is not allowed. %d", it->name().c_str(), for_save);
                 return false;
             }
         }
     }
     
+    log()->info("Script is cachable. %d", for_save);
     return true;
 }
 

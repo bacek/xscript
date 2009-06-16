@@ -1,3 +1,10 @@
+xscript (5.63-8) unstable; urgency=low
+
+  * parsing error diagnostics fixed
+  * added logs to Script::cachable
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 16 Jun 2009 11:07:47 +0400
+
 xscript (5.63-7) unstable; urgency=low
 
   * params return empty string with null context
