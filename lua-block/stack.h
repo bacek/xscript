@@ -2,6 +2,7 @@
 #define _XSCRIPT_LUA_EXTRACT_H_
 
 #include <map>
+#include <memory>
 #include <string>
 #include <sstream>
 #include <boost/cstdint.hpp>

@@ -25,6 +25,7 @@ protected:
 
 private:
     const char *code_;
+    static const std::string XSCRIPT_LUA;
 };
 
 class LuaExtension : public Extension {

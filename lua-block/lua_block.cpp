@@ -51,6 +51,8 @@ struct LuaState {
 
 typedef boost::shared_ptr<LuaState> LuaSharedContext;
 
+const std::string LuaBlock::XSCRIPT_LUA = "xscript.lua";
+
 LuaBlock::LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), code_(NULL) {
 }
@@ -172,10 +174,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::excepti
     // Try to fetch previously created lua interpret. If failed - create new one.
     boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx.get());
 
-    LuaSharedContext lua_context = ctx->param(
-                                       std::string("xscript.lua"),
-                                       creator
-                                   );
+    LuaSharedContext lua_context = ctx->param(XSCRIPT_LUA, creator);
     lua_State * lua = lua_context->lua.get();
 
     // Lock interpreter during processing.
