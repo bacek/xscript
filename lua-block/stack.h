@@ -1,6 +1,7 @@
 #ifndef _XSCRIPT_LUA_EXTRACT_H_
 #define _XSCRIPT_LUA_EXTRACT_H_
 
+#include <map>
 #include <string>
 #include <sstream>
 #include <boost/cstdint.hpp>
@@ -132,6 +133,19 @@ inline void luaPushStack(lua_State* lua, boost::uint64_t n) {
 template<>
 inline void luaPushStack(lua_State* lua, double n) {
     lua_pushnumber(lua, n);
+}
+
+template<>
+inline void luaPushStack(lua_State* lua, std::auto_ptr<std::map<std::string, std::string> > args) {
+    lua_newtable(lua);
+    int table = lua_gettop(lua);
+    for(std::map<std::string, std::string>::const_iterator it = args->begin();
+        it != args->end();
+        ++it) {
+        lua_pushstring(lua, it->first.c_str());
+        lua_pushstring(lua, it->second.c_str());
+        lua_settable(lua, table);
+    }
 }
 
 } // namespace xscript

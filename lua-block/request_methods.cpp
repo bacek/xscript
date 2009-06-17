@@ -92,6 +92,22 @@ luaRequestGetArg(lua_State *lua) throw () {
     return call_method(lua, &Request::getArg);
 }
 
+static std::auto_ptr<std::map<std::string, std::string> >
+get_args(Request *request) {
+    std::auto_ptr<std::map<std::string, std::string> > args(new std::map<std::string, std::string>);
+    std::vector<std::string> names;
+    request->argNames(names);
+    for(std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
+        args->insert(std::make_pair(*i, request->getArg(*i)));
+    }
+    return args;
+}
+
+extern "C" int
+luaRequestGetArgs(lua_State *lua) throw () {
+    return lua_request_method<1>::invoke(lua, get_args);
+}
+
 extern "C" int
 luaRequestGetHeader(lua_State *lua) throw () {
     return call_method(lua, &Request::getHeader);
@@ -215,6 +231,7 @@ luaRequestGetOriginalUrl(lua_State *lua) throw () {
 
 static const struct luaL_reg requestlib [] = {
     {"getArg",        luaRequestGetArg},
+    {"getArgs",       luaRequestGetArgs},
     {"getHeader",     luaRequestGetHeader},
     {"getCookie",     luaRequestGetCookie},
     {"hasArg",        luaRequestHasArg},
