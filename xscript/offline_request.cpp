@@ -126,12 +126,12 @@ OfflineRequest::attach(const std::string &uri,
         throw std::runtime_error("Cannot process empty uri");
     }
     
-    std::string processed_url = Policy::instance()->getPathByScheme(this, uri);
-    
     std::vector<std::string> env;
     processVariables(vars, env);
     processHeaders(headers, body.size(), env);
-      
+
+    std::string processed_url = Policy::instance()->getPathByScheme(this, uri);
+    
     size_t query_pos = processed_url.rfind('?');
     if (query_pos != std::string::npos) {
         std::string query = processed_url.substr(query_pos + 1);
@@ -140,9 +140,9 @@ OfflineRequest::attach(const std::string &uri,
         }
         processed_url.erase(query_pos);
     }
-     
+    
     size_t pos = processed_url.find("://");
-    if (pos == std::string::npos) {
+    if (std::string::npos == pos) {
         if (processed_url[0] != '/') {
             processed_url = docroot_ + "/" + processed_url;
         }
@@ -160,29 +160,35 @@ OfflineRequest::attach(const std::string &uri,
         
         pos += 3;
         size_t base_pos = processed_url.find('/', pos);
-        std::string full_host = processed_url.substr(pos, base_pos - pos);
-
-        unsigned short port_int;
-        size_t port_pos = full_host.find(':');
-        if (port_pos == std::string::npos) {
-            port_int = 80;
+        
+        std::string full_host;
+        unsigned short port_int = 80;
+        if (std::string::npos == base_pos) {
+            processed_url.erase(0, pos);
         }
         else {
-            std::string port = full_host.substr(port_pos + 1);
-            try {
-                port_int = boost::lexical_cast<unsigned short>(port);
+            full_host = processed_url.substr(pos, base_pos - pos);
+    
+            size_t port_pos = full_host.find(':');
+            if (std::string::npos != port_pos) {
+                std::string port = full_host.substr(port_pos + 1);
+                try {
+                    port_int = boost::lexical_cast<unsigned short>(port);
+                }
+                catch(const boost::bad_lexical_cast &e) {
+                    throw std::runtime_error("Cannot parse port: " + port);
+                }
             }
-            catch(const boost::bad_lexical_cast &e) {
-                throw std::runtime_error("Cannot parse port: " + port);
+            
+            if (!full_host.empty()) {
+                env.push_back(std::string("SERVER_NAME=").append(full_host));
+                env.push_back(std::string("SERVER_PORT=").append(boost::lexical_cast<std::string>(port_int)));
+                env.push_back(std::string("HTTP_HOST=").append(full_host));
             }
+            processed_url.erase(0, base_pos);
         }
-        
-        if (!full_host.empty()) {
-            env.push_back(std::string("SERVER_NAME=").append(full_host));
-            env.push_back(std::string("SERVER_PORT=").append(boost::lexical_cast<std::string>(port_int)));
-            env.push_back(std::string("HTTP_HOST=").append(full_host));
-        }
-        processed_url = docroot_ + "/" + processed_url.substr(base_pos);
+
+        processed_url = docroot_ + "/" + processed_url;
     }
 
     std::string script_file_name = FileUtils::normalize(processed_url);
@@ -208,6 +214,11 @@ OfflineRequest::attach(const std::string &uri,
 
     std::stringstream stream(body);  
     DefaultRequestResponse::attach(&stream, env_vars);
+}
+
+const std::string&
+OfflineRequest::getDocumentRoot() const {
+    return docroot_;
 }
 
 bool

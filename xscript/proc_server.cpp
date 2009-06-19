@@ -30,8 +30,7 @@ ProcServer::ProcServer(Config *config,
     use_remote_call_(true), need_output_(true) {
 
     root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");
-
-    bool root_set_flag = false;
+    
     std::multimap<std::string, std::string>::const_iterator profile_it = args.end();
     for (std::multimap<std::string, std::string>::const_iterator it = args.begin(); it != args.end(); ++it) {
         if (it->first == "header") {
@@ -59,7 +58,6 @@ ProcServer::ProcServer(Config *config,
         }
         else if (it->first == "root-dir" || it->first == "docroot") {
             root_ = it->second;
-            root_set_flag = true;
         }
         else if (it->first == "stylesheet") {
             stylesheet_ = it->second;
@@ -84,7 +82,7 @@ ProcServer::ProcServer(Config *config,
         (void)reg2;
     }
     
-    if (!root_set_flag && !url_.empty() && url_[0] != '/' &&
+    if (!url_.empty() && url_[0] != '/' &&
          url_.find("://") == std::string::npos) {
         
         int max_path_size = 8192;

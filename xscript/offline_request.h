@@ -28,6 +28,8 @@ public:
                         std::ostream *data_stream,
                         std::ostream *error_stream,
                         bool need_output);
+    
+    virtual const std::string& getDocumentRoot() const;
     virtual bool suppressBody() const;
     const std::string& xml() const;
 
