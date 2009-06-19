@@ -92,7 +92,7 @@ RemoteTaggedBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (st
     for(int rcount = retryCount(); rcount >= 0; --rcount) {
         try {
             if (ctx->stopBlocks()) {
-                throw InvokeError("block is stopped");
+                throw SkipResultInvokeError("block is stopped");
             }
             return retryCall(ctx, a);
         }
