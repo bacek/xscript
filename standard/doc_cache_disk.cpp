@@ -9,7 +9,6 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
-#include <sys/stat.h>
 #include <libxml/xmlIO.h>
 
 #include "xscript/tag.h"
@@ -271,17 +270,11 @@ DocCacheDisk::createKey(const Context *ctx, const Object *obj) const {
 
 void
 DocCacheDisk::makeDir(const std::string &name) {
-    int res = mkdir(name.c_str(), 0777);
-    if (-1 == res && EEXIST != errno) {
-        std::stringstream stream;
-        StringUtils::report("failed to create dir: ", errno, stream);
-        throw std::runtime_error(stream.str());
-    }
+    FileUtils::makeDir(name, 0777);
 }
 
 void
 DocCacheDisk::createDir(const std::string &path) {
-
     std::string::size_type pos = 0;
     while (true) {
         pos = path.find('/', pos + 1);

@@ -48,11 +48,20 @@ FileLogger::FileLogger(Logger::LogLevel level, const Config * config, const std:
     }
 
     std::string crash = config->as<std::string>(key + "/crash-on-errors", "");
-    if (crash == "no")
+    if (crash == "no") {
         crash_ = false;
+    }
 
+    std::string::size_type pos = 0;
+    while (true) {
+        pos = filename_.find('/', pos + 1);
+        if (std::string::npos == pos) {
+            break;
+        }
+        FileUtils::makeDir(filename_.substr(0, pos), openMode_ | S_IXUSR | S_IXGRP | S_IXOTH);
+    }
+    
     openFile();
-
 }
 
 FileLogger::~FileLogger() {
@@ -60,15 +69,17 @@ FileLogger::~FileLogger() {
     queueCondition_.notify_one();
     writingThread_.join();
 
-    if (fd_ != -1)
+    if (fd_ != -1) {
         close(fd_);
+    }
 }
 
 void FileLogger::openFile() {
     boost::mutex::scoped_lock fdLock(fdMutex_);
 
-    if (fd_ != -1)
+    if (fd_ != -1) {
         close(fd_);
+    }
     fd_ = open(filename_.c_str(), O_WRONLY | O_CREAT | O_APPEND, openMode_);
     if (fd_ == -1) {
         if (crash_) {

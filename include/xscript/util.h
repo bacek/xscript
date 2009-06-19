@@ -111,6 +111,7 @@ public:
     static std::string normalize(const std::string &filepath);
     static bool fileExists(const std::string &name);
     static time_t modified(const std::string &name);
+    static void makeDir(const std::string &name, mode_t mode);
 
 private:
     FileUtils();

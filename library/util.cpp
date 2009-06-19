@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <iostream>
 
+#include <sys/stat.h>
+
 #include <boost/crc.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/current_function.hpp>
@@ -231,6 +233,17 @@ FileUtils::modified(const std::string &name) {
     namespace fs = boost::filesystem;
     fs::path path(name);
     return fs::last_write_time(path);
+}
+
+void
+FileUtils::makeDir(const std::string &name, mode_t mode) {
+    int res = mkdir(name.c_str(), mode);
+    if (-1 == res && EEXIST != errno) {
+        std::stringstream stream;
+        StringUtils::report("failed to create dir: ", errno, stream);
+        stream << " " << name;
+        throw std::runtime_error(stream.str());
+    }
 }
 
 const int TimeoutCounter::UNLIMITED_TIME = std::numeric_limits<int>::max();
