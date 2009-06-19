@@ -142,7 +142,7 @@ LuaSharedContext create_lua(Context *ctx) {
     lua_State * lua = lua_context->lua.get();
     luaL_openlibs(lua);
 
-    setupXScript(lua, &(lua_context->buffer));
+    setupXScript(lua, &(lua_context->buffer), ctx);
 
     Request *request = ctx->request();
 

@@ -91,6 +91,9 @@ XmlDocHelper
 RemoteTaggedBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) {
     for(int rcount = retryCount(); rcount >= 0; --rcount) {
         try {
+            if (ctx->stopBlocks()) {
+                throw InvokeError("block is stopped");
+            }
             return retryCall(ctx, a);
         }
         catch(const RetryInvokeError &e) {
@@ -102,6 +105,11 @@ RemoteTaggedBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (st
         }
     }
     throw std::runtime_error("Incorrect retry count parameter value");
+}
+
+int
+RemoteTaggedBlock::remainedTime(Context *ctx) const {
+    return std::min(ThreadedBlock::remainedTime(ctx), remoteTimeout());
 }
 
 } // namespace xscript

@@ -36,7 +36,7 @@ DocPool::getMemoryCounter() const {
 
 bool
 DocPool::loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc) {
-    std::string keyStr = key.asString();
+    const std::string &keyStr = key.asString();
     DocPool::LoadResult res = loadDocImpl(keyStr, tag, doc);
 
     switch (res) {
@@ -101,7 +101,7 @@ DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocHelper &doc) {
 
 bool
 DocPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocHelper &doc) {
-    std::string keyStr = key.asString();
+    const std::string &keyStr = key.asString();
     DocPool::SaveResult res = saveDocImpl(keyStr, tag, doc);
     switch (res) {
     case DocPool::SAVE_STORED:

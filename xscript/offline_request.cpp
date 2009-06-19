@@ -28,9 +28,7 @@ OfflineRequest::~OfflineRequest() {
 
 void
 OfflineRequest::writeBuffer(const char *buf, std::streamsize size) {
-    if (need_output_) {
-        data_stream_->write(buf, size);
-    }
+    data_stream_->write(buf, size);
 }
 
 void
@@ -40,9 +38,7 @@ OfflineRequest::writeError(unsigned short status, const std::string &message) {
 
 void
 OfflineRequest::writeByWriter(const BinaryWriter *writer) {
-    if (need_output_) {
-        writer->write(data_stream_);
-    }
+    writer->write(data_stream_);
 }
 
 void
@@ -212,6 +208,11 @@ OfflineRequest::attach(const std::string &uri,
 
     std::stringstream stream(body);  
     DefaultRequestResponse::attach(&stream, env_vars);
+}
+
+bool
+OfflineRequest::suppressBody() const {
+    return need_output_ ? DefaultRequestResponse::suppressBody() : true;
 }
 
 const std::string&

@@ -140,6 +140,9 @@ struct Context::ContextData {
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
     static const unsigned int FLAG_NO_XSLT_PORT = 1 << 1;
     static const unsigned int FLAG_NO_CACHE = 1 << 2;
+    static const unsigned int SUPPRESS_BODY = 1 << 3;
+    static const unsigned int SKIP_NEXT_BLOCKS = 1 << 4;
+    static const unsigned int STOP_BLOCKS = 1 << 5;
 };
 
 Context::Context(const boost::shared_ptr<Script> &script,
@@ -181,7 +184,8 @@ Context::init() {
 }
 
 boost::shared_ptr<Context>
-Context::createChildContext(const boost::shared_ptr<Script> &script, const boost::shared_ptr<Context> &ctx) {
+Context::createChildContext(const boost::shared_ptr<Script> &script,
+                            const boost::shared_ptr<Context> &ctx) {
     return boost::shared_ptr<Context>(new Context(script, ctx));
 }
 
@@ -223,11 +227,18 @@ Context::wait(int millis) {
     boost::xtime xt = delay(millis);
     boost::mutex::scoped_lock sl(ctx_data_->results_mutex_);
     bool timedout = !ctx_data_->condition_.timed_wait(sl, xt, boost::bind(&Context::resultsReady, this));
-
+    
+    const char* error = NULL;
     if (timedout) {
+        error = "timed out";
+    }
+    else if (stopBlocks()) {
+        error = "stopped";
+    }
+    if (error) {
         for (std::vector<xmlDocPtr>::size_type i = 0; i < ctx_data_->results_.size(); ++i) {
             if (NULL == ctx_data_->results_[i].doc.get()) {
-                ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult("timed out");
+                ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult(error);
             }
         }
     }
@@ -269,6 +280,9 @@ Context::result(unsigned int n, InvokeResult result) {
 bool
 Context::resultsReady() const {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
+    if (stopBlocks()) {
+        return true;
+    }
     for (std::vector<InvokeResult>::const_iterator i = ctx_data_->results_.begin(),
             end = ctx_data_->results_.end(); i != end; ++i) {
         if (NULL == i->doc.get()) {
@@ -380,6 +394,36 @@ Context::noCache() const {
 void
 Context::setNoCache() {
     ctx_data_->flag(ContextData::FLAG_NO_CACHE, true);
+}
+
+bool
+Context::suppressBody() const {
+    return request()->suppressBody() || ctx_data_->flag(ContextData::SUPPRESS_BODY);
+}
+
+void
+Context::suppressBody(bool value) {
+    ctx_data_->flag(ContextData::SUPPRESS_BODY, value);
+}
+
+bool
+Context::skipNextBlocks() const {
+    return ctx_data_->flag(ContextData::SKIP_NEXT_BLOCKS);
+}
+
+void
+Context::skipNextBlocks(bool value) {
+    ctx_data_->flag(ContextData::SKIP_NEXT_BLOCKS, value);
+}
+
+bool
+Context::stopBlocks() const {
+    return ctx_data_->flag(ContextData::STOP_BLOCKS);
+}
+
+void
+Context::stopBlocks(bool value) {
+    ctx_data_->flag(ContextData::STOP_BLOCKS, value);
 }
 
 std::string

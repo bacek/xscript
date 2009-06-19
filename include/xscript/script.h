@@ -93,7 +93,6 @@ protected:
     void parseStylesheetNode(const xmlNodePtr node);
     void useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const;
 
-    int countTimeout() const;
     void addHeaders(Context *ctx) const;
 
     const std::vector<Block*>& blocks() const;

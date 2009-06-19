@@ -5,7 +5,9 @@
 
 namespace xscript {
 
-void setupXScript(lua_State * lua, std::string * buf);
+class Context;
+
+void setupXScript(lua_State * lua, std::string * buf, Context *ctx);
 
 } // namespace xscript
 

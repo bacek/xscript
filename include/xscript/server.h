@@ -39,8 +39,8 @@ protected:
     void addHeaders(Context *ctx);
     void sendHeaders(Context *ctx);
 
-    virtual Context* createContext(
-        const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData> &request_data);
+    virtual Context* createContext(const boost::shared_ptr<Script> &script,
+                                   const boost::shared_ptr<RequestData> &request_data);
 
 protected:
     Config *config_;

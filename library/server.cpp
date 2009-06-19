@@ -211,29 +211,35 @@ Server::processCachedDoc(Context *ctx, const Script *script) {
 void
 Server::sendResponse(Context *ctx, XmlDocHelper doc) {
     sendHeaders(ctx);
-    if (!ctx->request()->suppressBody()) {
-        xmlCharEncodingHandlerPtr encoder = NULL;
-        const std::string &encoding = ctx->documentWriter()->outputEncoding();
-        if (!encoding.empty()) {
-            encoder = xmlFindCharEncodingHandler(encoding.c_str());
-        }
+    if (ctx->suppressBody()) {
+        return;
+    } 
 
-        xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(writeFunc, closeFunc, ctx, encoder);
-        XmlUtils::throwUnless(NULL != buf);
-        
-        try {
-            ctx->documentWriter()->write(ctx->response(), doc, buf);
-        }
-        catch(const std::exception &e) {
-            xmlOutputBufferClose(buf);
-            throw e;
-        }
+    xmlCharEncodingHandlerPtr encoder = NULL;
+    const std::string &encoding = ctx->documentWriter()->outputEncoding();
+    if (!encoding.empty()) {
+        encoder = xmlFindCharEncodingHandler(encoding.c_str());
+    }
+
+    xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(writeFunc, closeFunc, ctx, encoder);
+    XmlUtils::throwUnless(NULL != buf);
+    
+    try {
+        ctx->documentWriter()->write(ctx->response(), doc, buf);
+    }
+    catch(const std::exception &e) {
+        xmlOutputBufferClose(buf);
+        throw e;
     }
 }
 
 void
 Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc) {    
     addHeaders(ctx);
+    if (script->cacheTime() < PageCache::instance()->minimalCacheTime()) {
+        sendResponse(ctx, doc);
+        return;
+    }
     
     XmlNodeHelper headers_node_helper(xmlNewNode(NULL, (const xmlChar*)"headers"));
     xmlNodePtr headers_node = headers_node_helper.get();
@@ -257,18 +263,16 @@ Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc)
     xmlNodePtr root = xmlDocGetRootElement(doc.get());
     xmlAddChild(root, headers_node);
     headers_node_helper.release();
-    
-    if (script->cacheTime() >= PageCache::instance()->minimalCacheTime()) {
-        try {
-            Tag tag;
-            tag.expire_time = time(NULL) + script->cacheTime();
-            PageCache::instance()->saveDoc(ctx, script, tag, doc);
-        }
-        catch(const std::exception &e) {
-            log()->error("Error in saving page to cache: %s", e.what());
-        }
-    }
 
+    try {
+        Tag tag;
+        tag.expire_time = time(NULL) + script->cacheTime();
+        PageCache::instance()->saveDoc(ctx, script, tag, doc);
+    }
+    catch(const std::exception &e) {
+        log()->error("Error in saving page to cache: %s", e.what());
+    }
+    
     xmlUnlinkNode(headers_node);
     xmlFreeNode(headers_node);
     
@@ -299,8 +303,8 @@ Server::needApplyPerblockStylesheet(Request *request) const {
 }
 
 Context*
-Server::createContext(
-    const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData> &request_data) {
+Server::createContext(const boost::shared_ptr<Script> &script,
+                      const boost::shared_ptr<RequestData> &request_data) {
     return new Context(script, request_data);
 }
 

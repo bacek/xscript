@@ -22,6 +22,7 @@ public:
 protected:
     virtual void property(const char *name, const char *value);
     virtual void postInvoke(Context *ctx, const XmlDocHelper &doc);
+    virtual int remainedTime(Context *ctx) const;
 
 private:
     bool threaded_;

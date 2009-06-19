@@ -158,13 +158,9 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
         }
         return doc;
     }
-
-    const TimeoutCounter &timer = ctx->timer();
-    int timeout = std::min(timer.remained(), remoteTimeout());
-    checkTimeout(timer, url);
-        
+    
     const Tag *tag = boost::any_cast<Tag>(&a);
-    HttpHelper helper(url, timeout);
+    HttpHelper helper(url, getTimeout(ctx, url));
     
     appendHeaders(helper, ctx->request(), tag);
     httpCall(helper);
@@ -196,12 +192,8 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
     
     std::string url = concatParams(ctx, 0, size - 1);
     PROFILER(log(), "getBinaryPage: " + url);
-
-    const TimeoutCounter &timer = ctx->timer();
-    int timeout = std::min(timer.remained(), remoteTimeout());
-    checkTimeout(timer, url);
-
-    HttpHelper helper(url, timeout);
+    
+    HttpHelper helper(url, getTimeout(ctx, url));
     
     appendHeaders(helper, ctx->request(), NULL);
     httpCall(helper);
@@ -246,12 +238,8 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
     }
     
     std::string url = concatParams(ctx, 0, size - 2);
-
-    const TimeoutCounter &timer = ctx->timer();
-    int timeout = std::min(timer.remained(), remoteTimeout());
-    checkTimeout(timer, url);
     
-    HttpHelper helper(url, timeout);
+    HttpHelper helper(url, getTimeout(ctx, url));
     
     const Tag *tag = boost::any_cast<Tag>(&a);
     
@@ -292,12 +280,8 @@ HttpBlock::postByRequest(Context *ctx, boost::any &a) {
         url.append(1, url.find('?') != std::string::npos ? '&' : '?');
         url.append(query);
     }
-
-    const TimeoutCounter &timer = ctx->timer();
-    int timeout = std::min(timer.remained(), remoteTimeout());
-    checkTimeout(timer, url);
     
-    HttpHelper helper(url, timeout);
+    HttpHelper helper(url, getTimeout(ctx, url));
     
     appendHeaders(helper, ctx->request(), NULL);
 
@@ -339,12 +323,8 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
         url.append(state->asString(name));
         has_query = true;
     }
-
-    const TimeoutCounter &timer = ctx->timer();    
-    int timeout = std::min(timer.remained(), remoteTimeout());
-    checkTimeout(timer, url);
-
-    HttpHelper helper(url, timeout);
+    
+    HttpHelper helper(url, getTimeout(ctx, url));
     
     appendHeaders(helper, ctx->request(), NULL);
     httpCall(helper);
@@ -373,12 +353,8 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
         url.append(1, url.find('?') != std::string::npos ? '&' : '?');
         url.append(query);
     }
-
-    const TimeoutCounter &timer = ctx->timer();
-    int timeout = std::min(timer.remained(), remoteTimeout());
-    checkTimeout(timer, url);
     
-    HttpHelper helper(url, timeout);
+    HttpHelper helper(url, getTimeout(ctx, url));
     
     appendHeaders(helper, ctx->request(), NULL);
     httpCall(helper);
@@ -456,13 +432,15 @@ HttpBlock::createTagInfo(const HttpHelper &helper, boost::any &a) const {
     a = boost::any(tag);
 }
 
-void
-HttpBlock::checkTimeout(const TimeoutCounter &timer, const std::string &url) {
-    if (timer.remained() > 0) {
-        return;
+int
+HttpBlock::getTimeout(Context *ctx, const std::string &url) {
+    int timeout = remainedTime(ctx);
+    if (timeout > 0) {
+        return timeout;
     }
+    
     InvokeError error("block is timed out", "url", url);
-    error.add("timeout", boost::lexical_cast<std::string>(timer.timeout()));
+    error.add("timeout", boost::lexical_cast<std::string>(ctx->timer().timeout()));
     throw error;
 }
 

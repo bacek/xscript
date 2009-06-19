@@ -240,13 +240,13 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     if (ctx->stopped()) {
         log()->error("Context already stopped. Cannot invoke block. Owner: %s. Block: %s. Method: %s",
             owner()->name().c_str(), name(), data_->method_.c_str());
-        return InvokeResult(fakeResult(), InvokeResult::ERROR);
+        return fakeResult();
     }
 
     if (!checkGuard(ctx.get())) {
         log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
             owner()->name().c_str(), name(), data_->method_.c_str());
-        return InvokeResult(fakeResult(), InvokeResult::ERROR);
+        return fakeResult();
     }
 
     InvokeResult result;
@@ -264,7 +264,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     }
     catch (const SkipResultInvokeError &e) {
         log()->info("%s", errorMessage(e.what(), e.info()).c_str());
-        result = InvokeResult(fakeResult(), InvokeResult::ERROR);
+        result = fakeResult();
     }
     catch (const InvokeError &e) {
         result = errorResult(e.what(), e.info());
@@ -462,6 +462,11 @@ Block::errorResult(const char *error) const {
     return errorResult(error, InvokeError::InfoMapType());
 }
 
+InvokeResult
+Block::fakeResult() const {
+    return InvokeResult(fakeDoc(), InvokeResult::ERROR);
+}
+
 void
 Block::throwBadArityError() const {
     throw CriticalInvokeError("bad arity");
@@ -568,7 +573,7 @@ Block::appendNodeValue(xmlNodePtr node, std::string &val) const {
 }
 
 XmlDocHelper
-Block::fakeResult() const {
+Block::fakeDoc() const {
 
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));

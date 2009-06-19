@@ -22,6 +22,19 @@
 
 namespace xscript {
 
+static Context* getContext(lua_State *lua) {
+    lua_getglobal(lua, "xscript");
+    lua_getfield(lua, -1, "_ctx");
+
+    pointer<Context> *p = (pointer<Context>*)lua_touserdata(lua, -1);
+    assert(p);
+    Context* ctx = p->ptr;
+
+    lua_pop(lua, 2);
+    
+    return ctx;
+}
+
 static int luaPrint (lua_State *lua) {
     try {
         int n = lua_gettop(lua);  /* number of arguments */
@@ -190,8 +203,99 @@ luaXmlEscape(lua_State *lua) {
     return 0;
 }
 
+static int
+luaAttachStylesheet(lua_State *lua) {   
+    try {              
+        luaCheckStackSize(lua, 1);
+        std::string xslt = luaReadStack<std::string>(lua, 1);
+        
+        Context *ctx = getContext(lua);
+        if (NULL == ctx) {
+            throw std::runtime_error("Undefined context");
+        }
+        ctx->rootContext()->xsltName(xslt);
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:attachStylesheet]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
+static int
+luaDropStylesheet(lua_State *lua) {   
+    try {              
+        luaCheckStackSize(lua, 0);
+        
+        Context *ctx = getContext(lua);
+        if (NULL == ctx) {
+            throw std::runtime_error("Undefined context");
+        }
+        ctx->rootContext()->xsltName(StringUtils::EMPTY_STRING);
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:dropStylesheet]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
+static int
+luaSuppressBody(lua_State *lua) {   
+    try {              
+        luaCheckStackSize(lua, 0);
+        
+        Context *ctx = getContext(lua);
+        if (NULL == ctx) {
+            throw std::runtime_error("Undefined context");
+        }
+        ctx->rootContext()->suppressBody(true);
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:suppressBody]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
+static int
+luaSkipNextBlocks(lua_State *lua) {   
+    try {              
+        luaCheckStackSize(lua, 0);
+        
+        Context *ctx = getContext(lua);
+        if (NULL == ctx) {
+            throw std::runtime_error("Undefined context");
+        }
+        ctx->rootContext()->skipNextBlocks(true);
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:skipNextBlocks]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
+static int
+luaStopBlocks(lua_State *lua) {   
+    try {              
+        luaCheckStackSize(lua, 0);
+        
+        Context *ctx = getContext(lua);
+        if (NULL == ctx) {
+            throw std::runtime_error("Undefined context");
+        }
+        ctx->rootContext()->stopBlocks(true);
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:stopBlocks]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
 void
-setupXScript(lua_State *lua, std::string * buf) {
+setupXScript(lua_State *lua, std::string * buf, Context *ctx) {
     log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 
     lua_newtable(lua);
@@ -210,6 +314,13 @@ setupXScript(lua_State *lua, std::string * buf) {
     // Assign it to '_buf'
     lua_setfield(lua, -2, "_buf");
 
+    pointer<Context> *pctx = (pointer<Context> *)lua_newuserdata(lua, sizeof(pointer<Context>));
+    pctx->ptr = ctx;
+
+    // Our userdata is on top of stack.
+    // Assign it to '_ctx'
+    lua_setfield(lua, -2, "_ctx");
+    
     // Setup urlencode and urldecode
     lua_pushcfunction(lua, &luaUrlEncode);
     lua_setfield(lua, -2, "urlencode");
@@ -225,7 +336,22 @@ setupXScript(lua_State *lua, std::string * buf) {
 
     lua_pushcfunction(lua, &luaXmlEscape);
     lua_setfield(lua, -2, "xmlescape");
+    
+    lua_pushcfunction(lua, &luaAttachStylesheet);
+    lua_setfield(lua, -2, "attachStylesheet");
+    
+    lua_pushcfunction(lua, &luaDropStylesheet);
+    lua_setfield(lua, -2, "dropStylesheet");
+    
+    lua_pushcfunction(lua, &luaSuppressBody);
+    lua_setfield(lua, -2, "suppressBody");
 
+    lua_pushcfunction(lua, &luaSkipNextBlocks);
+    lua_setfield(lua, -2, "skipNextBlocks");
+    
+    lua_pushcfunction(lua, &luaStopBlocks);
+    lua_setfield(lua, -2, "stopBlocks");
+    
     lua_pop(lua, 2); // pop _G and xscript
 
     log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));

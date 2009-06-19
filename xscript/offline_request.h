@@ -28,6 +28,7 @@ public:
                         std::ostream *data_stream,
                         std::ostream *error_stream,
                         bool need_output);
+    virtual bool suppressBody() const;
     const std::string& xml() const;
 
 private:

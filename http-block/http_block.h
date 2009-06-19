@@ -60,7 +60,7 @@ private:
     HttpBlock(const HttpBlock &);
     HttpBlock& operator = (const HttpBlock &);
     
-    void checkTimeout(const TimeoutCounter &timer, const std::string &url);
+    int getTimeout(Context *ctx, const std::string &url);
     void checkStatus(const HttpHelper &helper);
     void httpCall(HttpHelper &helper);
 

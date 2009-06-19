@@ -93,4 +93,9 @@ ThreadedBlock::stopTimer(Context *ctx) {
     ctx->stopTimer();
 }
 
+int
+ThreadedBlock::remainedTime(Context *ctx) const {
+    return ctx->timer().remained();
+}
+
 } // namespace xscript

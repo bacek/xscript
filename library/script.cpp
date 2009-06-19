@@ -605,18 +605,32 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
     PROFILER(log(), "invoke script " + name());
 
     unsigned int count = 0;
-    int to = countTimeout();
+    int timeout = 0;
     
     std::vector<Block*> &blocks = data_->blocks();
     ctx->expect(blocks.size());
     
+    bool stop = false;
     for(std::vector<Block*>::iterator it = blocks.begin();
         it != blocks.end();
         ++it, ++count) {
+        if (!stop && (ctx->skipNextBlocks() || ctx->stopBlocks())) {
+            stop = true;
+        }
+        if (stop) {
+            ctx->result(count, (*it)->fakeResult());
+            continue;
+        }
+        
         (*it)->invokeCheckThreaded(ctx, count);
+        
+        const ThreadedBlock *tb = dynamic_cast<const ThreadedBlock*>(*it);
+        if (tb && tb->threaded()) {
+            timeout = std::max(timeout, tb->timeout());
+        }
     }
 
-    ctx->wait(to);
+    ctx->wait(timeout);
     log()->debug("%s, finished to wait", BOOST_CURRENT_FUNCTION);
     
     OperationMode::instance()->processScriptError(ctx.get(), this);
@@ -849,23 +863,6 @@ Script::parseStylesheetNode(const xmlNodePtr node) {
         }
     }
     throw std::runtime_error("can not parse stylesheet node");
-}
-
-int
-Script::countTimeout() const {
-    int timeout = 0;
-    std::vector<Block*> &blocks = data_->blocks();
-    for(std::vector<Block*>::iterator it = blocks.begin();
-        it != blocks.end();
-        ++it) {
-        const ThreadedBlock *tb = dynamic_cast<const ThreadedBlock*>(*it);
-        log()->debug("%s, is block threaded: %d", BOOST_CURRENT_FUNCTION, static_cast<int>(NULL != tb));
-        if (tb && tb->threaded()) {
-            log()->debug("%s, got threaded block timeout: %d", BOOST_CURRENT_FUNCTION, tb->timeout());
-            timeout = std::max(timeout, tb->timeout());
-        }
-    }
-    return timeout;
 }
 
 void

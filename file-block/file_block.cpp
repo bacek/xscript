@@ -98,11 +98,10 @@ FileBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::excep
             throw InvokeError("empty path");
     }
     std::string file = fullName(filename);
-
-    const TimeoutCounter &timer = ctx->timer();
-    if (timer.expired()) {
+    
+    if (remainedTime(ctx.get()) <= 0) {
         InvokeError error("block is timed out", "file", file);
-        error.add("timeout", boost::lexical_cast<std::string>(timer.timeout()));
+        error.add("timeout", boost::lexical_cast<std::string>(ctx->timer().timeout()));
         throw error;
     }
 

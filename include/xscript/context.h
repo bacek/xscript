@@ -86,6 +86,12 @@ public:
     void noXsltPort(bool value);
     bool noCache() const;
     void setNoCache();
+    bool suppressBody() const;
+    void suppressBody(bool value);
+    bool skipNextBlocks() const;
+    void skipNextBlocks(bool value);
+    bool stopBlocks() const;
+    void stopBlocks(bool value);
     std::string getRuntimeError(const Block *block) const;
     void assignRuntimeError(const Block *block, const std::string &error_message);
 

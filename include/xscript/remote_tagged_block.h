@@ -27,6 +27,7 @@ protected:
     virtual void property(const char *name, const char *value);
     virtual XmlDocHelper retryCall(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) = 0;
     virtual void postParse();
+    virtual int remainedTime(Context *ctx) const;
 
 private:
     int remote_timeout_;

@@ -89,7 +89,6 @@ luaReadStack<std::string>(lua_State *lua, int index) {
 }
 
 
-
 template<typename Type>
 void luaPushStack(lua_State* lua, Type t) {
     // We should specify how to push value

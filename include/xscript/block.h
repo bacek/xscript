@@ -54,6 +54,8 @@ public:
     InvokeResult errorResult(const char *error, const InvokeError::InfoMapType &error_info, std::string &full_error) const;
     std::string errorMessage(const char *error, const InvokeError::InfoMapType &error_info) const;
 
+    InvokeResult fakeResult() const;
+    
     void throwBadArityError() const;
 
     Logger * log() const;
@@ -76,7 +78,7 @@ protected:
     void evalXPath(Context *ctx, const XmlDocHelper &doc) const;
     void appendNodeValue(xmlNodePtr node, std::string &val) const;
 
-    XmlDocHelper fakeResult() const;
+    XmlDocHelper fakeDoc() const;
 
     bool xpathNode(const xmlNodePtr node) const;
     bool guardNode(const xmlNodePtr node) const;
