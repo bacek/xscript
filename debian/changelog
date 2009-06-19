@@ -1,3 +1,10 @@
+xscript (5.63-9) unstable; urgency=low
+
+  * added execution control methods to lua
+  * noout flag added to xscript-proc
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 19 Jun 2009 12:21:37 +0400
+
 xscript (5.63-8) unstable; urgency=low
 
   * parsing error diagnostics fixed
