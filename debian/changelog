@@ -1,3 +1,9 @@
+xscript (5.6-10) unstable; urgency=low
+
+  * fixed lua stopBlocks and skipNextBlocks
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 19 Jun 2009 12:36:16 +0400
+
 xscript (5.63-9) unstable; urgency=low
 
   * added execution control methods to lua

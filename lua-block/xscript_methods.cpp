@@ -267,7 +267,7 @@ luaSkipNextBlocks(lua_State *lua) {
         if (NULL == ctx) {
             throw std::runtime_error("Undefined context");
         }
-        ctx->rootContext()->skipNextBlocks(true);
+        ctx->skipNextBlocks(true);
     }
     catch (const std::exception &e) {
         log()->error("caught exception in [xscript:skipNextBlocks]: %s", e.what());
@@ -285,7 +285,7 @@ luaStopBlocks(lua_State *lua) {
         if (NULL == ctx) {
             throw std::runtime_error("Undefined context");
         }
-        ctx->rootContext()->stopBlocks(true);
+        ctx->stopBlocks(true);
     }
     catch (const std::exception &e) {
         log()->error("caught exception in [xscript:stopBlocks]: %s", e.what());
