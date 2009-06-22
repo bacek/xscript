@@ -303,9 +303,11 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
                                     std::string(url ? url : "");
                 if (id) {
                     error.append(". ID: ").append(id);
-                }
-                if (error_info) {
-                    error_info->insert(std::make_pair(fileName, error));
+                }                
+                Xml::TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
+                if (NULL != modified_info) {
+                    boost::filesystem::path path(fileName);
+                    modified_info->insert(std::make_pair(path.native_file_string(), 0));
                 }
                 log()->error("%s", error.c_str());
                 return NULL;

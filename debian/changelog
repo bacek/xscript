@@ -1,3 +1,9 @@
+xscript (5.63-13) unstable; urgency=low
+
+  * xi:fallback restored
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 22 Jun 2009 19:15:35 +0400
+
 xscript (5.63-12) unstable; urgency=low
 
   * mist xslt extension added
