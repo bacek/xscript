@@ -24,6 +24,7 @@
 #include "xscript/state.h"
 #include "xscript/stylesheet.h"
 #include "xscript/util.h"
+#include "xscript/state_setter.h"
 #include "xscript/string_utils.h"
 #include "xscript/xml_util.h"
 #include "xscript/xml_helpers.h"
@@ -1439,6 +1440,70 @@ xscriptXsltXmlEscape(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltMist(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:mist");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (3 != nargs) {
+        XmlUtils::reportXsltError("xscript:mist: bad param count", ctxt);
+        return;
+    }
+
+    const char* method = params.str(0);
+    if (NULL == method || '\0' == method) {
+        XmlUtils::reportXsltError("xscript:mist: bad parameter method", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    const char* name = params.str(1);
+    if (NULL == name) {
+        XmlUtils::reportXsltError("xscript:mist: bad parameter name", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+    
+    const char* value = params.str(2);
+    if (NULL == value) {
+        XmlUtils::reportXsltError("xscript:mist: bad parameter value", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+    
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        State* state = Stylesheet::getContext(tctx)->state();
+        std::string res = StateSetter::set(state, method, name, value);
+        if (!res.empty()) {
+            valuePush(ctxt, xmlXPathNewCString(res.c_str()));
+        }
+        else {
+            xmlXPathReturnEmptyNodeSet(ctxt);
+        }
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:mist: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:mist: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
 xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
     (void)comp;
     if (tctx == NULL) {
@@ -1593,6 +1658,8 @@ XsltExtensions::XsltExtensions() {
     XsltFunctionRegisterer("libexslt-version", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLibexsltVersion);
     
     XsltFunctionRegisterer("xmlescape", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltXmlEscape);
+    
+    XsltFunctionRegisterer("mist", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltMist);
 }
 
 } // namespace xscript

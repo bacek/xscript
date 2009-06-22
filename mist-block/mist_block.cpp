@@ -17,17 +17,18 @@
 #include "state_node.h"
 #include "state_prefix_node.h"
 
-#include "xscript/util.h"
-#include "xscript/string_utils.h"
-#include "xscript/xml.h"
-#include "xscript/xml_util.h"
-#include "xscript/state.h"
-#include "xscript/param.h"
-#include "xscript/logger.h"
 #include "xscript/context.h"
 #include "xscript/encoder.h"
-#include "xscript/response.h"
+#include "xscript/logger.h"
+#include "xscript/param.h"
 #include "xscript/profiler.h"
+#include "xscript/response.h"
+#include "xscript/state.h"
+#include "xscript/state_setter.h"
+#include "xscript/string_utils.h"
+#include "xscript/util.h"
+#include "xscript/xml.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -91,20 +92,12 @@ MistBlock::setStateLong(Context *ctx) {
     if (2 != p.size()) {
         throwBadArityError();
     }
-    State* state = ctx->state();
-    std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
-    boost::int32_t value = 0;
-    try {
-        value = boost::lexical_cast<boost::int32_t>(val);
-    }
-    catch (const boost::bad_lexical_cast &e) {
-        value = 0;
-    }
+    
+    std::string name = p[0]->asString(ctx);
+    std::string value = p[1]->asString(ctx);
+    std::string res = StateSetter::set(ctx->state(), StateSetter::SET_LONG, name, value);
 
-    state->checkName(n);
-    state->setLong(n, value);
-
-    StateNode node("long", n.c_str(), boost::lexical_cast<std::string>(value).c_str());
+    StateNode node("long", name.c_str(), res.c_str());
     return node.releaseNode();
 }
 
@@ -118,13 +111,11 @@ MistBlock::setStateString(Context *ctx) {
         throwBadArityError();
     }
 
-    State* state = ctx->state();
-    std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
+    std::string name = p[0]->asString(ctx);
+    std::string value = p[1]->asString(ctx);
+    std::string res = StateSetter::set(ctx->state(), StateSetter::SET_STRING, name, value);
 
-    state->checkName(n);
-    state->setString(n, val);
-
-    StateNode node("string", n.c_str(), XmlUtils::escape(val).c_str());
+    StateNode node("string", name.c_str(), XmlUtils::escape(res).c_str());
     return node.releaseNode();
 }
 
@@ -137,20 +128,12 @@ MistBlock::setStateDouble(Context *ctx) {
     if (2 != p.size()) {
         throwBadArityError();
     }
-    State* state = ctx->state();
-    std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
-    double value = 0.0;
-    try {
-        value = boost::lexical_cast<double>(val);
-    }
-    catch (const boost::bad_lexical_cast &e) {
-        value = 0.0;
-    }
+    
+    std::string name = p[0]->asString(ctx);
+    std::string value = p[1]->asString(ctx);
+    std::string res = StateSetter::set(ctx->state(), StateSetter::SET_DOUBLE, name, value);
 
-    state->checkName(n);
-    state->setDouble(n, value);
-
-    StateNode node("double", n.c_str(), boost::lexical_cast<std::string>(value).c_str());
+    StateNode node("double", name.c_str(), res.c_str());
     return node.releaseNode();
 }
 
@@ -163,20 +146,12 @@ MistBlock::setStateLongLong(Context *ctx) {
     if (2 != p.size()) {
         throwBadArityError();
     }
-    State* state = ctx->state();
-    std::string n = p[0]->asString(ctx), val = p[1]->asString(ctx);
-    boost::int64_t value = 0;
-    try {
-        value = boost::lexical_cast<boost::int64_t>(val);
-    }
-    catch (const boost::bad_lexical_cast &e) {
-        value = 0;
-    }
-
-    state->checkName(n);
-    state->setLongLong(n, value);
-
-    StateNode node("longlong", n.c_str(), boost::lexical_cast<std::string>(value).c_str());
+    
+    std::string name = p[0]->asString(ctx);
+    std::string value = p[1]->asString(ctx);
+    std::string res = StateSetter::set(ctx->state(), StateSetter::SET_LONGLONG, name, value);
+    
+    StateNode node("longlong", name.c_str(), value.c_str());
     return node.releaseNode();
 }
 
