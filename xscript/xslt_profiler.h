@@ -11,7 +11,7 @@ namespace xscript {
 class OfflineXsltProfiler : public XsltProfiler {
 public:
     OfflineXsltProfiler();
-    OfflineXsltProfiler(const std::string& xslt_path, bool text_mode);
+    OfflineXsltProfiler(const std::string& xslt_path);
     virtual ~OfflineXsltProfiler();
 
     virtual void insertProfileDoc(const std::string& name, xmlDocPtr doc);
@@ -20,7 +20,6 @@ public:
 private:
     boost::mutex mutex_;
     std::string xslt_path_;
-    bool text_mode_;
     std::multimap<std::string, xmlDocPtr> docs_;
 };
 

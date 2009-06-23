@@ -27,11 +27,12 @@ namespace xscript {
 extern "C" int closeProfileFunc(void *ctx);
 extern "C" int writeProfileFunc(void *ctx, const char *data, int len);
 
-OfflineXsltProfiler::OfflineXsltProfiler() :
-    text_mode_(false) {}
+OfflineXsltProfiler::OfflineXsltProfiler()
+{}
 
-OfflineXsltProfiler::OfflineXsltProfiler(const std::string& xslt_path, bool text_mode) :
-    xslt_path_(xslt_path), text_mode_(text_mode) {}
+OfflineXsltProfiler::OfflineXsltProfiler(const std::string& xslt_path) :
+    xslt_path_(xslt_path)
+{}
 
 OfflineXsltProfiler::~OfflineXsltProfiler() {
     for (std::multimap<std::string, xmlDocPtr>::const_iterator it = docs_.begin();
@@ -55,7 +56,7 @@ OfflineXsltProfiler::dumpProfileInfo(boost::shared_ptr<Context> ctx) {
 
     boost::shared_ptr<Stylesheet> stylesheet(static_cast<Stylesheet*>(NULL));
 
-    if (text_mode_) {
+    if (!xslt_path_.empty()) {
         namespace fs = boost::filesystem;
         fs::path path(xslt_path_);
         if (fs::exists(path) && !fs::is_directory(path)) {

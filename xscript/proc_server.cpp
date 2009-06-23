@@ -75,10 +75,13 @@ ProcServer::ProcServer(Config *config,
             throw std::runtime_error(std::string("Unknown value of profile argument: ") + profile_it->second);
         }
 
-        std::string xslt_path = config->as<std::string>("/xscript/offline/xslt-profile-path",
-            "/usr/share/xscript-proc/profile.xsl");
+        std::string xslt_path;
+        if (text_mode) {
+            xslt_path = config->as<std::string>("/xscript/offline/xslt-profile-path",
+                    "/usr/share/xscript-proc/profile.xsl");
+        }
 
-        ComponentImplRegisterer<XsltProfiler> reg2(new OfflineXsltProfiler(xslt_path, text_mode));
+        ComponentImplRegisterer<XsltProfiler> reg2(new OfflineXsltProfiler(xslt_path));
         (void)reg2;
     }
     
