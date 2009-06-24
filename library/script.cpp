@@ -702,6 +702,7 @@ Script::createWithParse(const std::string &name, const std::string &xml) {
 void
 Script::parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes) {
     ExtensionList* elist = ExtensionList::instance();
+       
     while (NULL != node) {
         if (XML_PI_NODE == node->type) {
             if (xmlStrncasecmp(node->name, (const xmlChar*) "xml-stylesheet", sizeof("xml-stylesheet")) == 0) {
@@ -742,7 +743,6 @@ Script::parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes) {
             if (NULL != ext) {
                 log()->debug("%s, creating block %s", name().c_str(), ext->name());
                 std::auto_ptr<Block> b = ext->createBlock(this, node);
-
                 assert(b.get());
 
                 data_->addBlock(b.get());

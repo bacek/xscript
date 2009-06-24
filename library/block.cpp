@@ -24,6 +24,7 @@
 #include "xscript/param.h"
 #include "xscript/policy.h"
 #include "xscript/profiler.h"
+#include "xscript/script.h"
 #include "xscript/state.h"
 #include "xscript/stylesheet.h"
 #include "xscript/thread_pool.h"
@@ -90,6 +91,7 @@ struct Block::BlockData {
     std::vector<Guard> guards_;
     std::string id_, method_;
     std::string xpointer_expr_;
+    std::string base_;
 };
 
 Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
@@ -190,8 +192,25 @@ Block::xpointer(Context* ctx) const {
 }
 
 void
+Block::detectBase() {
+    if (NULL == dynamic_cast<Script*>(owner())) {
+        data_->base_ = owner()->name();
+    }
+    else {
+        data_->base_ = (const char*)xmlNodeGetBase(data_->node_->doc, data_->node_);
+    }
+    
+    std::string::size_type pos = data_->base_.find_last_of('/');
+    if (pos != std::string::npos) {
+        data_->base_.erase(pos + 1);
+    }
+}
+
+void
 Block::parse() {
-    try {
+    try {       
+        detectBase();
+        
         XmlUtils::visitAttributes(data_->node_->properties,
             boost::bind(&Block::property, this, _1, _2));
 
@@ -231,12 +250,17 @@ Block::parse() {
 
 std::string
 Block::fullName(const std::string &name) const {
-    return owner()->fullName(name);
+    if (strncasecmp(name.c_str(), "xmlbase://", sizeof("xmlbase://") - 1) != 0) {
+        return owner()->fullName(name);
+    }
+    std::string name_tmp = data_->base_ + name.substr(sizeof("xmlbase://") - 1);
+    return owner()->fullName(name_tmp);
 }
 
 InvokeResult
 Block::invoke(boost::shared_ptr<Context> ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
+
     if (ctx->stopped()) {
         log()->error("Context already stopped. Cannot invoke block. Owner: %s. Block: %s. Method: %s",
             owner()->name().c_str(), name(), data_->method_.c_str());

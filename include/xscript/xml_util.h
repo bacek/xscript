@@ -56,7 +56,7 @@ public:
         xmlAttrPtr attr = xmlHasProp(node, (const xmlChar*) name);
         return attr ? value(attr) : NULL;
     }
-
+    
     static bool xpathExists(xmlDocPtr doc, const std::string &path);
     static std::string xpathValue(xmlDocPtr doc, const std::string &path, const std::string &defval = "");
     
