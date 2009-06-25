@@ -814,7 +814,7 @@ MistBlock::attachStylesheet(Context *ctx) {
     }
 
     std::string name = p[0]->asString(ctx);
-    ctx->rootContext()->xsltName(name);
+    ctx->rootContext()->xsltName(fullName(name));
 
     XmlNode node("stylesheet");
     node.setType("attach");

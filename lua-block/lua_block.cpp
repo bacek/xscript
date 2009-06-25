@@ -137,12 +137,12 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
     log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 }
 
-LuaSharedContext create_lua(Context *ctx) {
+LuaSharedContext create_lua(Context *ctx, Block *block) {
     LuaSharedContext lua_context(new LuaState(luaL_newstate()));
     lua_State * lua = lua_context->lua.get();
     luaL_openlibs(lua);
 
-    setupXScript(lua, &(lua_context->buffer), ctx);
+    setupXScript(lua, &(lua_context->buffer), ctx, block);
 
     Request *request = ctx->request();
 
@@ -172,7 +172,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::excepti
     }
     
     // Try to fetch previously created lua interpret. If failed - create new one.
-    boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx.get());
+    boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx.get(), this);
 
     LuaSharedContext lua_context = ctx->param(XSCRIPT_LUA, creator);
     lua_State * lua = lua_context->lua.get();

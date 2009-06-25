@@ -4,6 +4,7 @@
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
 
+#include "xscript/block.h"
 #include "xscript/logger.h"
 #include "xscript/request.h"
 #include "xscript/encoder.h"
@@ -33,6 +34,19 @@ static Context* getContext(lua_State *lua) {
     lua_pop(lua, 2);
     
     return ctx;
+}
+
+static Block* getBlock(lua_State *lua) {
+    lua_getglobal(lua, "xscript");
+    lua_getfield(lua, -1, "_block");
+
+    pointer<Block> *p = (pointer<Block>*)lua_touserdata(lua, -1);
+    assert(p);
+    Block* block = p->ptr;
+
+    lua_pop(lua, 2);
+    
+    return block;
 }
 
 static int luaPrint (lua_State *lua) {
@@ -213,6 +227,7 @@ luaAttachStylesheet(lua_State *lua) {
         if (NULL == ctx) {
             throw std::runtime_error("Undefined context");
         }
+        xslt = getBlock(lua)->fullName(xslt);
         ctx->rootContext()->xsltName(xslt);
     }
     catch (const std::exception &e) {
@@ -295,7 +310,7 @@ luaStopBlocks(lua_State *lua) {
 }
 
 void
-setupXScript(lua_State *lua, std::string * buf, Context *ctx) {
+setupXScript(lua_State *lua, std::string * buf, Context *ctx, Block *block) {
     log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 
     lua_newtable(lua);
@@ -320,6 +335,13 @@ setupXScript(lua_State *lua, std::string * buf, Context *ctx) {
     // Our userdata is on top of stack.
     // Assign it to '_ctx'
     lua_setfield(lua, -2, "_ctx");
+
+    pointer<Block> *pblock = (pointer<Block> *)lua_newuserdata(lua, sizeof(pointer<Block>));
+    pblock->ptr = block;
+
+    // Our userdata is on top of stack.
+    // Assign it to '_block'
+    lua_setfield(lua, -2, "_block");
     
     // Setup urlencode and urldecode
     lua_pushcfunction(lua, &luaUrlEncode);
