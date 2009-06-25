@@ -197,7 +197,8 @@ Block::detectBase() {
         data_->base_ = owner()->name();
     }
     else {
-        data_->base_ = (const char*)xmlNodeGetBase(data_->node_->doc, data_->node_);
+        XmlCharHelper base(xmlNodeGetBase(data_->node_->doc, data_->node_));
+        data_->base_ = (const char*)base.get();
     }
     
     std::string::size_type pos = data_->base_.find_last_of('/');

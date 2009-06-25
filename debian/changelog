@@ -1,3 +1,9 @@
+xscript (5.63-16) unstable; urgency=low
+
+  * memory leak fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 25 Jun 2009 13:04:13 +0400
+
 xscript (5.63-15) unstable; urgency=low
 
   * fixed xmlbase in attachStylesheet
