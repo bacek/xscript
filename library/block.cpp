@@ -193,13 +193,9 @@ Block::xpointer(Context* ctx) const {
 
 void
 Block::detectBase() {
-    if (NULL == dynamic_cast<Script*>(owner())) {
-        data_->base_ = owner()->name();
-    }
-    else {
-        XmlCharHelper base(xmlNodeGetBase(data_->node_->doc, data_->node_));
-        data_->base_ = (const char*)base.get();
-    }
+
+    XmlCharHelper base(xmlNodeGetBase(data_->node_->doc, data_->node_));
+    data_->base_ = (const char*)base.get();
     
     std::string::size_type pos = data_->base_.find_last_of('/');
     if (pos != std::string::npos) {
