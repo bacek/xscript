@@ -106,7 +106,7 @@ HttpBlock::property(const char *name, const char *value) {
     else if (strncasecmp(name, "encoding", sizeof("encoding")) == 0) {
         charset_ = value;
     }
-    if (strncasecmp(name, "print-error-body", sizeof("print-error-body")) == 0) {
+    else if (strncasecmp(name, "print-error-body", sizeof("print-error-body")) == 0) {
         print_error_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
     else {
