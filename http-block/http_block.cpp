@@ -62,7 +62,8 @@ private:
 MethodMap HttpBlock::methods_;
 
 HttpBlock::HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        Block(ext, owner, node), RemoteTaggedBlock(ext, owner, node), proxy_(false), method_(NULL) {
+        Block(ext, owner, node), RemoteTaggedBlock(ext, owner, node),
+        proxy_(false), print_error_(false), method_(NULL) {
 }
 
 HttpBlock::~HttpBlock() {
@@ -104,6 +105,9 @@ HttpBlock::property(const char *name, const char *value) {
     }
     else if (strncasecmp(name, "encoding", sizeof("encoding")) == 0) {
         charset_ = value;
+    }
+    if (strncasecmp(name, "print-error-body", sizeof("print-error-body")) == 0) {
+        print_error_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
     else {
         RemoteTaggedBlock::property(name, value);
@@ -450,6 +454,20 @@ HttpBlock::checkStatus(const HttpHelper &helper) {
         helper.checkStatus();
     }
     catch(const std::runtime_error &e) {
+        if (print_error_ && helper.content()->size() > 0) {
+            XmlDocHelper doc = response(helper);
+            if (NULL != doc.get()) {
+                xmlNodePtr root_node = xmlDocGetRootElement(doc.get());
+                if (root_node) {
+                    XmlNodeHelper result_node(xmlCopyNode(root_node, 1));
+                    RetryInvokeError error(e.what(), result_node);
+                    error.addEscaped("url", helper.url());
+                    error.add("status", boost::lexical_cast<std::string>(helper.status()));
+                    throw error;
+                }
+            }
+        }
+        
         RetryInvokeError error(e.what(), "url", helper.url());
         error.add("status", boost::lexical_cast<std::string>(helper.status()));
         throw error;

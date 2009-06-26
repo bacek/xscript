@@ -21,7 +21,7 @@ namespace xscript {
 
 class UnboundRuntimeError : public std::exception {
 public:
-    UnboundRuntimeError(const std::string& error) : error_(error) {}
+    UnboundRuntimeError(const std::string &error) : error_(error) {}
     virtual ~UnboundRuntimeError() throw () {}
     virtual const char* what() const throw () {
         return error_.c_str();
@@ -31,24 +31,12 @@ private:
     std::string error_;
 };
 
-class XmlNodeRuntimeError : public std::runtime_error {
-public:
-    XmlNodeRuntimeError(const std::string& error) : std::runtime_error(error) {}
-    XmlNodeRuntimeError(const std::string& error, XmlNodeHelper node) : std::runtime_error(error), node_(node) {}
-    virtual ~XmlNodeRuntimeError() throw () {}
-    virtual xmlNodePtr what_node() const throw() {
-        return node_.get();
-    }
-
-private:
-    XmlNodeHelper node_;
-};
-
 class InvokeError : public UnboundRuntimeError {
 public:
     typedef std::vector<std::pair<std::string, std::string> > InfoMapType;
 
-    InvokeError(const std::string &error) : UnboundRuntimeError(error) {}
+    InvokeError(const std::string &error);
+    InvokeError(const std::string &error, XmlNodeHelper node);
     InvokeError(const std::string &error, const std::string &name, const std::string &value);
 
     void add(const std::string &name, const std::string &value);
@@ -59,13 +47,19 @@ public:
     virtual const InfoMapType& info() const throw() {
         return info_;
     }
+    virtual XmlNodeHelper what_node() const throw() {
+        return node_;
+    }
 private:
     InfoMapType info_;
+    XmlNodeHelper node_;
 };
 
 class CriticalInvokeError : public InvokeError {
 public:
     CriticalInvokeError(const std::string &error) : InvokeError(error) {}
+    CriticalInvokeError(const std::string &error, XmlNodeHelper node) :
+        InvokeError(error, node) {}
     CriticalInvokeError(const std::string &error, const std::string &name, const std::string &value) :
         InvokeError(error, name, value) {}
 };

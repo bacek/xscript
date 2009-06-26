@@ -37,6 +37,8 @@ private:
 class RetryInvokeError : public InvokeError {
 public:
     RetryInvokeError(const std::string &error) : InvokeError(error) {}
+    RetryInvokeError(const std::string &error, XmlNodeHelper node) :
+        InvokeError(error, node) {}
     RetryInvokeError(const std::string &error, const std::string &name, const std::string &value) :
         InvokeError(error, name, value) {}
 };

@@ -240,7 +240,6 @@ HttpHelper::detectContentType() {
 
     std::multimap<std::string, std::string>::const_iterator i = headers_.find("content-type");
     if (headers_.end() != i) {
-
         const std::string &type = i->second;
         typedef boost::char_separator<char> Separator;
         typedef boost::tokenizer<Separator> Tokenizer;
@@ -248,7 +247,13 @@ HttpHelper::detectContentType() {
         Tokenizer tok(type, Separator(" ;"));
         for (Tokenizer::iterator i = tok.begin(), end = tok.end(); i != end; ++i) {
             if (content_type_.empty()) {
-                content_type_.assign(*i);
+                std::string::size_type pos = i->find_first_of(',');
+                if (pos == std::string::npos) {
+                    content_type_.assign(*i);
+                }
+                else {
+                    content_type_.assign(i->begin(), i->begin() + pos);
+                }
             }
             else if (i->find("charset=") == 0) {
                 charset_.assign(i->substr(sizeof("charset=") - 1));
@@ -340,23 +345,23 @@ HttpHelper::isXml() const {
         return false;
     }
 
-    if (0 == strncasecmp(content_type.c_str(), "text/", sizeof("text/") -1)) {
-        ++pos;
+    ++pos;
+    if (0 == strncasecmp(content_type.c_str(), "text/", sizeof("text/") - 1)) {
+        return 0 == strcasecmp(content_type.c_str() + pos, "xml") ||
+               0 == strcasecmp(content_type.c_str() + pos, "xml-external-parsed-entity");
     }
-    else if (0 == strncasecmp(content_type.c_str(), "application/", sizeof("application/") -1)) {
+    else if (0 == strncasecmp(content_type.c_str(), "application/", sizeof("application/") - 1)) {
         std::string::size_type pos_plus = content_type.rfind('+');
         if (pos_plus == std::string::npos) {
-            ++pos;
+            return 0 == strcasecmp(content_type.c_str() + pos, "xml") ||
+                   0 == strcasecmp(content_type.c_str() + pos, "xml-external-parsed-entity") ||
+                   0 == strcasecmp(content_type.c_str() + pos, "xml-dtd");
         }
-        else {
-            pos = pos_plus + 1;
-        }
+        ++pos_plus;
+        return 0 == strcasecmp(content_type.c_str() + pos_plus, "xml");
     }
-    else {
-        return false;
-    }
-
-    return (0 == strcasecmp(content_type.c_str() + pos, "xml"));
+    
+    return false;
 }
 
 } // namespace xscript

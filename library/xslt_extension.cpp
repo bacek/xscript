@@ -1545,7 +1545,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
             }
         }
         catch (const InvokeError &e) {
-            result = block->errorResult(e.what(), e.info());
+            result = block->errorResult(e.what(), e.info(), e.what_node());
         }
         catch (const std::exception &e) {
             result = block->errorResult(e.what());

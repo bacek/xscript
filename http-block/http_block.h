@@ -68,6 +68,7 @@ private:
 
 private:
     bool proxy_;
+    bool print_error_;
     HttpMethod method_;
     std::string charset_;
     static MethodMap methods_;

@@ -50,10 +50,9 @@ public:
     virtual void applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc);
 
     InvokeResult errorResult(const char *error) const;
-    InvokeResult errorResult(const char *error, const InvokeError::InfoMapType &error_info) const;
-    InvokeResult errorResult(const char *error, const InvokeError::InfoMapType &error_info, std::string &full_error) const;
-    std::string errorMessage(const char *error, const InvokeError::InfoMapType &error_info) const;
-
+    InvokeResult errorResult(const char *error,
+                             const InvokeError::InfoMapType &error_info,
+                             XmlNodeHelper node) const;
     InvokeResult fakeResult() const;
     
     void throwBadArityError() const;
@@ -93,6 +92,13 @@ protected:
     virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const;
     
     void detectBase();
+    
+    InvokeResult errorResult(const char *error,
+                             const InvokeError::InfoMapType &error_info,
+                             XmlNodeHelper node,
+                             std::string &full_error) const;
+    std::string errorMessage(const char *error,
+                             const InvokeError::InfoMapType &error_info) const;
     
 private:
     struct BlockData;

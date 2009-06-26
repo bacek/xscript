@@ -309,13 +309,21 @@ TimeoutCounter::expired() const {
     return remained() <= 0;
 }
 
-void terminate(int status, const char* message, bool write_log) {
+void
+terminate(int status, const char* message, bool write_log) {
     std::cerr << "Xscript is terminating: " << message << std::endl;
     if (write_log) {
         log()->crit("Xscript is terminating: %s", message);
     }
     exit(status);
 }
+
+InvokeError::InvokeError(const std::string &error) : UnboundRuntimeError(error)
+{}
+
+InvokeError::InvokeError(const std::string &error, XmlNodeHelper node) :
+    UnboundRuntimeError(error), node_(node)
+{}
 
 InvokeError::InvokeError(const std::string &error, const std::string &name, const std::string &value) :
     UnboundRuntimeError(error) {
