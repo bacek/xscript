@@ -1,3 +1,10 @@
+xscript (5.63-20) unstable; urgency=low
+
+  * lua:getArgs fixed
+  * check base on null
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 29 Jun 2009 16:33:33 +0400
+
 xscript (5.63-19) unstable; urgency=low
 
   * http block fixed

@@ -193,10 +193,12 @@ Block::xpointer(Context* ctx) const {
 
 void
 Block::detectBase() {
-
     XmlCharHelper base(xmlNodeGetBase(data_->node_->doc, data_->node_));
-    data_->base_ = (const char*)base.get();
+    if (NULL == base.get()) {
+        return;
+    }
     
+    data_->base_ = (const char*)base.get();
     std::string::size_type pos = data_->base_.find_last_of('/');
     if (pos != std::string::npos) {
         data_->base_.erase(pos + 1);

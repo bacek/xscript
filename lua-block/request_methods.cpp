@@ -92,20 +92,17 @@ luaRequestGetArg(lua_State *lua) throw () {
     return call_method(lua, &Request::getArg);
 }
 
-static std::auto_ptr<std::map<std::string, std::string> >
-get_args(Request *request) {
-    std::auto_ptr<std::map<std::string, std::string> > args(new std::map<std::string, std::string>);
+static std::auto_ptr<std::vector<std::string> >
+get_args(Request *request, const std::string &name) {
+    std::auto_ptr<std::vector<std::string> > args(new std::vector<std::string>);
     std::vector<std::string> names;
-    request->argNames(names);
-    for(std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
-        args->insert(std::make_pair(*i, request->getArg(*i)));
-    }
+    request->getArg(name, *args);
     return args;
 }
 
 extern "C" int
 luaRequestGetArgs(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, get_args);
+    return lua_request_method<2>::invoke(lua, get_args);
 }
 
 extern "C" int
