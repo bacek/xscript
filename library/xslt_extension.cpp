@@ -17,6 +17,7 @@
 #include "xscript/context.h"
 #include "xscript/encoder.h"
 #include "xscript/logger.h"
+#include "xscript/mist_worker.h"
 #include "xscript/protocol.h"
 #include "xscript/range.h"
 #include "xscript/response.h"
@@ -1449,32 +1450,13 @@ xscriptXsltMist(xmlXPathParserContextPtr ctxt, int nargs) {
 
     XsltParamFetcher params(ctxt, nargs);
 
-    if (3 != nargs) {
-        XmlUtils::reportXsltError("xscript:mist: bad param count", ctxt);
-        return;
-    }
-
     const char* method = params.str(0);
     if (NULL == method || '\0' == method) {
         XmlUtils::reportXsltError("xscript:mist: bad parameter method", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
-
-    const char* name = params.str(1);
-    if (NULL == name) {
-        XmlUtils::reportXsltError("xscript:mist: bad parameter name", ctxt);
-        xmlXPathReturnEmptyNodeSet(ctxt);
-        return;
-    }
-    
-    const char* value = params.str(2);
-    if (NULL == value) {
-        XmlUtils::reportXsltError("xscript:mist: bad parameter value", ctxt);
-        xmlXPathReturnEmptyNodeSet(ctxt);
-        return;
-    }
-    
+   
     xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
     if (NULL == tctx) {
         xmlXPathReturnEmptyNodeSet(ctxt);
@@ -1482,15 +1464,36 @@ xscriptXsltMist(xmlXPathParserContextPtr ctxt, int nargs) {
     }
 
     try {
-        State* state = Stylesheet::getContext(tctx)->state();
-        std::string res = StateSetter::set(state, method, name, value);
-        if (!res.empty()) {
-            valuePush(ctxt, xmlXPathNewCString(res.c_str()));
+        boost::shared_ptr<Context> ctx = Stylesheet::getContext(tctx);
+        Stylesheet* style = Stylesheet::getStylesheet(tctx);
+        const Block* block = Stylesheet::getBlock(tctx);
+        
+        std::auto_ptr<MistWorker> worker = MistWorker::create(method);
+        
+        std::map<unsigned int, std::string> overrides;
+        if (strncasecmp(worker->methodName().c_str(), "attach_stylesheet", sizeof("attach_stylesheet") - 1) == 0 ||
+            strncasecmp(worker->methodName().c_str(), "attachStylesheet", sizeof("attachStylesheet") - 1) == 0) {
+            if (params.size() > 1) {
+                const char* xslt_name = params.str(1);
+                if (NULL != xslt_name) {
+                    std::string name = block ? block->fullName(xslt_name) : style->fullName(xslt_name);
+                    overrides.insert(std::make_pair(0, name));
+                }
+            }
         }
-        else {
-            xmlXPathReturnEmptyNodeSet(ctxt);
-        }
+        
+        XmlNodeHelper node = worker->run(ctx.get(), params, overrides);
+
+        XmlNodeSetHelper ret(xmlXPathNodeSetCreate(NULL));
+        xmlXPathNodeSetAdd(ret.get(), node.get());
+        ctx->addNode(node.release());
+
+        xmlXPathReturnNodeSet(ctxt, ret.release());
     }
+    catch (const std::invalid_argument &e) {
+        XmlUtils::reportXsltError("xscript:xmlescape: bad param count", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }  
     catch (const std::exception &e) {
         XmlUtils::reportXsltError("xscript:mist: caught exception: " + std::string(e.what()), ctxt);
         ctxt->error = XPATH_EXPR_ERROR;

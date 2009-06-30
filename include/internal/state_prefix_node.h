@@ -4,7 +4,7 @@
 #include <cassert>
 #include <string>
 
-#include "state_node.h"
+#include "internal/state_node.h"
 #include "xscript/state.h"
 
 namespace xscript {

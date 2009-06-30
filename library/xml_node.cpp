@@ -2,7 +2,8 @@
 
 #include <libxml/xmlstring.h>
 
-#include "xml_node.h"
+#include "internal/xml_node.h"
+
 #include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
