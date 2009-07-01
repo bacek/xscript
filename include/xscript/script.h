@@ -60,6 +60,9 @@ public:
     virtual std::string info(const Context *ctx) const;
     virtual bool cachable(const Context *ctx, bool for_save) const;
     
+    bool cacheTimeUndefined() const;
+    bool expireTimeDeltaUndefined() const;
+    
     void addExpiresHeader(const Context *ctx) const;
 
     const std::string& extensionProperty(const std::string &name) const;
@@ -104,8 +107,7 @@ protected:
     virtual void parse(const std::string &xml);
     virtual void postParse();
     virtual void property(const char *name, const char *value);
-
-    bool cacheTimeUndefined() const;
+    
     std::string cachedUrl(const Context *ctx) const;
     
     virtual void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const;

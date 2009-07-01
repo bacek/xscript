@@ -64,6 +64,9 @@ public:
     std::string xsltName() const;
     void xsltName(const std::string &value);
 
+    unsigned int expireTimeDelta() const;
+    void expireTimeDelta(unsigned int value);
+    
     const boost::shared_ptr<AuthContext>& authContext() const;
 
     void authContext(const boost::shared_ptr<AuthContext> &auth);

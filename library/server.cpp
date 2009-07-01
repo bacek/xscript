@@ -164,32 +164,55 @@ Server::processCachedDoc(Context *ctx, const Script *script) {
         xmlNodePtr root = xmlDocGetRootElement(doc.get());
         XmlUtils::throwUnless(NULL != root);
            
-        xmlNodePtr headers_node = root->last;
-        if (NULL == headers_node) {
-            throw std::runtime_error("Incorrect cache document structure: headers node is absent");
+        xmlNodePtr cache_data_node = root->last;
+        if (NULL == cache_data_node) {
+            throw std::runtime_error("Incorrect cache document structure: cache-data node is absent");
         }
-          
-        if (strcmp((const char*)(headers_node->name), "headers") != 0) {
+
+        if (strcmp((const char*)(cache_data_node->name), "cache-data") != 0) {
             throw std::runtime_error(
-                std::string("Unexpected tag in cached document: ") + (const char*)(headers_node->name));
+                std::string("Unexpected tag in cached document: ") + (const char*)(cache_data_node->name));
         }
         
-        xmlNodePtr node = headers_node->children;
-        while(node) {
+        xmlNodePtr node = cache_data_node->children;
+        while (node) {
             const char *name = (const char*)(node->name);
-            if (strcmp(name, "header") == 0) {
-                ctx->response()->setHeader(XmlUtils::attrValue(node, "name"),
-                                           XmlUtils::value(node));
+            if (strcmp(name, "headers") == 0) {
+                xmlNodePtr header_node = node->children;
+                while(header_node) {
+                    const char *name = (const char*)(header_node->name);
+                    if (strcmp(name, "header") == 0) {
+                        ctx->response()->setHeader(XmlUtils::attrValue(header_node, "name"),
+                                                   XmlUtils::value(header_node));
+                    }
+                    else {
+                        throw std::runtime_error(std::string("Unexpected tag in cached document: ") + name);
+                    }
+                    header_node = header_node->next;
+                }
+            }
+            else if (strcmp(name, "context-data") == 0) {
+                xmlNodePtr context_node = node->children;
+                while(context_node) {
+                    const char *name = (const char*)(context_node->name);
+                    if (strcmp(name, "expire-time-delta") == 0) {
+                        ctx->expireTimeDelta(
+                            boost::lexical_cast<unsigned int>(XmlUtils::value(context_node)));
+                    }
+                    else {
+                        throw std::runtime_error(std::string("Unexpected tag in cached document: ") + name);
+                    }
+                    context_node = context_node->next;
+                }
             }
             else {
                 throw std::runtime_error(std::string("Unexpected tag in cached document: ") + name);
             }
-     
             node = node->next;
         }
-        
-        xmlUnlinkNode(headers_node);
-        xmlFreeNode(headers_node);
+               
+        xmlUnlinkNode(cache_data_node);
+        xmlFreeNode(cache_data_node);
     }
     catch(const std::exception &e) {
         log()->error("Error in loading cached page: %s", e.what());
@@ -240,9 +263,9 @@ Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc)
         sendResponse(ctx, doc);
         return;
     }
-    
-    XmlNodeHelper headers_node_helper(xmlNewNode(NULL, (const xmlChar*)"headers"));
-    xmlNodePtr headers_node = headers_node_helper.get();
+       
+    XmlNodeHelper headers_node(xmlNewNode(NULL, (const xmlChar*)"headers"));
+    XmlNodeHelper context_data_node(xmlNewNode(NULL, (const xmlChar*)"context-data"));
     try {
         const HeaderMap& headers = ctx->response()->outHeaders();
         for(HeaderMap::const_iterator h = headers.begin(); h != headers.end(); ++h) {
@@ -250,9 +273,13 @@ Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc)
                 continue;
             }
             xmlNodePtr header = xmlNewChild(
-                headers_node, NULL, (const xmlChar*)"header", (const xmlChar*)h->second.c_str());
+                headers_node.get(), NULL, (const xmlChar*)"header", (const xmlChar*)h->second.c_str());
             xmlSetProp(header, (const xmlChar*)"name", (const xmlChar*)h->first.c_str());
         }
+        
+        xmlNewChild(context_data_node.get(), NULL,
+                    (const xmlChar*)"expire-time-delta",
+                    (const xmlChar*)boost::lexical_cast<std::string>(ctx->expireTimeDelta()).c_str());
     }
     catch(const std::exception &e) {
         log()->error("Error in collecting headers for cache: %s", e.what());
@@ -260,9 +287,15 @@ Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc)
         return;
     }
         
+    XmlNodeHelper cache_data_node(xmlNewNode(NULL, (const xmlChar*)"cache-data"));
+    xmlAddChild(cache_data_node.get(), headers_node.get());
+    headers_node.release();
+    xmlAddChild(cache_data_node.get(), context_data_node.get());
+    context_data_node.release();
+    
     xmlNodePtr root = xmlDocGetRootElement(doc.get());
-    xmlAddChild(root, headers_node);
-    headers_node_helper.release();
+    xmlAddChild(root, cache_data_node.get());
+    xmlNodePtr cache_node = cache_data_node.release();
 
     try {
         Tag tag;
@@ -273,8 +306,8 @@ Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc)
         log()->error("Error in saving page to cache: %s", e.what());
     }
     
-    xmlUnlinkNode(headers_node);
-    xmlFreeNode(headers_node);
+    xmlUnlinkNode(cache_node);
+    xmlFreeNode(cache_node);
     
     sendResponse(ctx, doc);
 }

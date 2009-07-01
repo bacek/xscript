@@ -50,7 +50,10 @@ struct Context::ContextData {
         stopped_(false), script_(script), request_data_(data),
         xslt_name_(script->xsltName()), flags_(0), page_random_(-1),
         params_(boost::shared_ptr<ParamsMap>(new ParamsMap())) 
-    {}
+    {
+        expire_time_delta_ = script->expireTimeDeltaUndefined() ?
+                300 : script->expireTimeDelta();
+    }
     
     ContextData(const boost::shared_ptr<Script> &script,
                 const boost::shared_ptr<Context> &ctx,
@@ -59,6 +62,13 @@ struct Context::ContextData {
         xslt_name_(script->xsltName()), auth_(ctx->authContext()), flags_(0), page_random_(-1),
         params_(params)
     {
+        if (script->expireTimeDeltaUndefined()) {
+            expire_time_delta_ = 300;
+        }
+        else {
+            expire_time_delta_ = script->expireTimeDelta();
+            ctx->expireTimeDelta(expire_time_delta_);
+        }
         timer_.reset(ctx->timer().remained());
     }
     
@@ -127,7 +137,7 @@ struct Context::ContextData {
     std::string key_;
 
     unsigned int flags_;
-    
+    unsigned int expire_time_delta_;
     boost::int32_t page_random_;
 
     std::map<const Block*, std::string> runtime_errors_;
@@ -337,6 +347,18 @@ Context::xsltName(const std::string &value) {
     else {
         ctx_data_->xslt_name_ = ctx_data_->script_->fullName(value);
     }
+}
+
+unsigned int
+Context::expireTimeDelta() const {
+    boost::mutex::scoped_lock sl(ctx_data_->attr_mutex_);
+    return ctx_data_->expire_time_delta_;
+}
+
+void
+Context::expireTimeDelta(unsigned int value) {
+    boost::mutex::scoped_lock sl(ctx_data_->attr_mutex_);
+    ctx_data_->expire_time_delta_ = value;
 }
 
 void

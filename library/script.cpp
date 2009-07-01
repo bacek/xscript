@@ -49,6 +49,7 @@
 namespace xscript {
 
 static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
+static const unsigned int EXPIRE_TIME_DELTA_UNDEFINED = std::numeric_limits<unsigned int>::max();
 const std::string Script::GET_METHOD = "GET";
 
 class Script::ScriptData {
@@ -63,6 +64,7 @@ public:
     time_t cacheTime() const;
     boost::int32_t pageRandomMax() const;
     bool cacheTimeUndefined() const;
+    bool expireTimeDeltaUndefined() const;
     bool allowMethod(const std::string& value) const;
     bool cacheAllQuery() const;
     bool cacheQueryParam(const std::string &value) const;
@@ -117,7 +119,8 @@ public:
 
 Script::ScriptData::ScriptData(const std::string &name) :
     doc_(NULL), name_(name), flags_(FLAG_FORCE_STYLESHEET),
-    expire_time_delta_(300), cache_time_(CACHE_TIME_UNDEFINED), page_random_max_(0) {
+    expire_time_delta_(EXPIRE_TIME_DELTA_UNDEFINED),
+    cache_time_(CACHE_TIME_UNDEFINED), page_random_max_(0) {
 }
 
 Script::ScriptData::~ScriptData() {
@@ -326,6 +329,11 @@ Script::ScriptData::extensionProperty(const std::string &name) const {
 bool
 Script::ScriptData::cacheTimeUndefined() const {
     return cache_time_ == CACHE_TIME_UNDEFINED;
+}
+
+bool
+Script::ScriptData::expireTimeDeltaUndefined() const {
+    return expire_time_delta_ == EXPIRE_TIME_DELTA_UNDEFINED;
 }
 
 std::set<xmlNodePtr>&
@@ -878,7 +886,7 @@ Script::addHeaders(Context *ctx) const {
 void
 Script::addExpiresHeader(const Context *ctx) const {
     ctx->response()->setHeader(
-            "Expires", HttpDateUtils::format(time(NULL) + expireTimeDelta()));
+            "Expires", HttpDateUtils::format(time(NULL) + ctx->expireTimeDelta()));
 }
 
 XmlDocHelper
@@ -1087,6 +1095,11 @@ Script::extensionProperty(const std::string &name) const {
 bool
 Script::cacheTimeUndefined() const {
     return data_->cacheTimeUndefined();
+}
+
+bool
+Script::expireTimeDeltaUndefined() const {
+    return data_->expireTimeDeltaUndefined();
 }
 
 std::string
