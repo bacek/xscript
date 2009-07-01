@@ -2,7 +2,7 @@
 
 #include <libxml/xmlstring.h>
 
-#include "internal/xml_node.h"
+#include "xml_node.h"
 
 #include "xscript/xml_util.h"
 

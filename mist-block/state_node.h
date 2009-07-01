@@ -1,7 +1,7 @@
 #ifndef _XSCRIPT_MIST_STATE_NODE_H_
 #define _XSCRIPT_MIST_STATE_NODE_H_
 
-#include "internal/xml_node.h"
+#include "xml_node.h"
 
 namespace xscript {
 

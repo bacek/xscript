@@ -3,12 +3,12 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
-#include <internal/state_node.h>
-#include <internal/state_prefix_node.h>
+#include "mist_worker.h"
+#include "state_node.h"
+#include "state_prefix_node.h"
 
 #include <xscript/context.h>
 #include <xscript/encoder.h>
-#include <xscript/mist_worker.h>
 #include <xscript/param.h>
 #include <xscript/state.h>
 #include <xscript/string_utils.h>
@@ -78,8 +78,8 @@ MistWorker::run(Context *ctx,
                 const XsltParamFetcher &params,
                 const std::map<unsigned int, std::string> &overrides) {
     std::vector<std::string> str_params;
-    int size = params.size() - 1;
-    str_params.reserve(size);
+    int size = params.size();
+    str_params.reserve(size - 1);
     
     unsigned int last = 1;
     for(std::map<unsigned int, std::string>::const_iterator it = overrides.begin();
@@ -94,6 +94,7 @@ MistWorker::run(Context *ctx,
     for(int i = last; i < size; ++i) {
         str_params.push_back(params.str(i));
     }
+    
     return method_(ctx, str_params);
 }
 
@@ -664,6 +665,8 @@ MistWorker::dumpState(Context *ctx, const std::vector<std::string> &params) {
     if (!params.empty()) {
         throw std::invalid_argument("bad arity");
     }
+    
+    log()->error("AAAAAAAA");
     
     XmlNode node("state_dump");
 

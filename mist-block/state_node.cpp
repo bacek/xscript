@@ -1,5 +1,5 @@
 #include "settings.h"
-#include "internal/state_node.h"
+#include "state_node.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

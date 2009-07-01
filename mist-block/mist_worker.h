@@ -7,6 +7,7 @@
 #include <boost/noncopyable.hpp>
 
 #include <xscript/functors.h>
+#include <xscript/xml_helpers.h>
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

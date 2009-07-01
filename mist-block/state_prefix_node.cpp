@@ -9,8 +9,8 @@
 #include "xscript/util.h"
 #include "xscript/string_utils.h"
 
-#include "internal/state_param_node.h"
-#include "internal/state_prefix_node.h"
+#include "state_param_node.h"
+#include "state_prefix_node.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

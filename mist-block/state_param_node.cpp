@@ -1,6 +1,6 @@
 #include "settings.h"
-#include "internal/xml_node.h"
-#include "internal/state_param_node.h"
+#include "xml_node.h"
+#include "state_param_node.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

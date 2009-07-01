@@ -5,7 +5,8 @@
 
 #include "xscript/block.h"
 #include "xscript/extension.h"
-#include "xscript/mist_worker.h"
+
+#include "mist_worker.h"
 
 namespace xscript {
 
