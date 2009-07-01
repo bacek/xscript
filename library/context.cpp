@@ -67,7 +67,7 @@ struct Context::ContextData {
         }
         else {
             expire_time_delta_ = script->expireTimeDelta();
-            ctx->expireTimeDelta(expire_time_delta_);
+            ctx->rootContext()->expireTimeDelta(expire_time_delta_);
         }
         timer_.reset(ctx->timer().remained());
     }

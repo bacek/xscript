@@ -1,3 +1,10 @@
+xscript (5.63-21) unstable; urgency=low
+
+  * mist extension extended
+  * http-expire-time-delta fixed in child context
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 01 Jul 2009 14:39:21 +0400
+
 xscript (5.63-20) unstable; urgency=low
 
   * lua:getArgs fixed
