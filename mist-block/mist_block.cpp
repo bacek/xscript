@@ -37,8 +37,7 @@ MistBlock::call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::except
     XmlUtils::throwUnless(NULL != doc.get());
     
     std::map<unsigned int, std::string> overrides;
-    if (strncasecmp(worker_->methodName().c_str(), "attach_stylesheet", sizeof("attach_stylesheet") - 1) == 0 ||
-        strncasecmp(worker_->methodName().c_str(), "attachStylesheet", sizeof("attachStylesheet") - 1) == 0) {
+    if (worker_->isAttachStylesheet()) {
         const std::vector<Param*> &p = params();
         if (!p.empty()) {
             overrides.insert(std::make_pair(0, fullName(p[0]->asString(ctx.get()))));

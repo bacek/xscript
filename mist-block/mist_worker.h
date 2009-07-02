@@ -34,6 +34,7 @@ public:
                       const std::map<unsigned int, std::string> &overrides = EMPTY_OVERRIDES_);
     
     const std::string& methodName() const;
+    bool isAttachStylesheet() const;
 
 private:
     friend class MistWorkerMethodRegistrator;

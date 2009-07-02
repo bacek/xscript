@@ -1,3 +1,9 @@
+xscript (5.63-22) unstable; urgency=low
+
+  * x:set-state-string added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 02 Jul 2009 14:45:35 +0400
+
 xscript (5.63-21) unstable; urgency=low
 
   * mist extension extended

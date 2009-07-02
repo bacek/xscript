@@ -48,24 +48,21 @@ xscriptXsltMist(xmlXPathParserContextPtr ctxt, int nargs) {
     }
 
     try {
-        boost::shared_ptr<Context> ctx = Stylesheet::getContext(tctx);
-        Stylesheet* style = Stylesheet::getStylesheet(tctx);
-        const Block* block = Stylesheet::getBlock(tctx);
-        
         std::auto_ptr<MistWorker> worker = MistWorker::create(method);
-        
         std::map<unsigned int, std::string> overrides;
-        if (strncasecmp(worker->methodName().c_str(), "attach_stylesheet", sizeof("attach_stylesheet") - 1) == 0 ||
-            strncasecmp(worker->methodName().c_str(), "attachStylesheet", sizeof("attachStylesheet") - 1) == 0) {
+        if (worker->isAttachStylesheet()) {
             if (params.size() > 1) {
                 const char* xslt_name = params.str(1);
                 if (NULL != xslt_name) {
+                    Stylesheet* style = Stylesheet::getStylesheet(tctx);
+                    const Block* block = Stylesheet::getBlock(tctx);
                     std::string name = block ? block->fullName(xslt_name) : style->fullName(xslt_name);
                     overrides.insert(std::make_pair(0, name));
                 }
             }
         }
-        
+
+        boost::shared_ptr<Context> ctx = Stylesheet::getContext(tctx);
         XmlNodeHelper node = worker->run(ctx.get(), params, overrides);
 
         XmlNodeSetHelper ret(xmlXPathNodeSetCreate(NULL));
@@ -90,9 +87,46 @@ xscriptXsltMist(xmlXPathParserContextPtr ctxt, int nargs) {
     }
 }
 
+extern "C" void
+xscriptXsltSetStateString(xmlXPathParserContextPtr ctxt, int nargs) {
+    
+    log()->entering("xscript:set-state-string");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+    
+    try {
+        std::auto_ptr<MistWorker> worker = MistWorker::create("set_state_string");
+        std::map<unsigned int, std::string> overrides;
+        if (params.size() > 1) {
+            overrides.insert(std::make_pair(0, params.str(0)));
+            overrides.insert(std::make_pair(1, params.str(1)));
+        }
+        worker->run(Stylesheet::getContext(tctx).get(), params, overrides);
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:set-state-string: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:set-state-string: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+    }
+    
+    xmlXPathReturnEmptyNodeSet(ctxt);
+}
 
 MistXsltExtensions::MistXsltExtensions() {
     XsltFunctionRegisterer("mist", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltMist);
+    XsltFunctionRegisterer("set-state-string", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSetStateString);
 }
 
 } // namespace xscript

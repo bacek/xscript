@@ -52,7 +52,7 @@ struct Context::ContextData {
         params_(boost::shared_ptr<ParamsMap>(new ParamsMap())) 
     {
         expire_time_delta_ = script->expireTimeDeltaUndefined() ?
-                300 : script->expireTimeDelta();
+                DEFAULT_EXPIRE_TIME_DELTA : script->expireTimeDelta();
     }
     
     ContextData(const boost::shared_ptr<Script> &script,
@@ -63,7 +63,7 @@ struct Context::ContextData {
         params_(params)
     {
         if (script->expireTimeDeltaUndefined()) {
-            expire_time_delta_ = 300;
+            expire_time_delta_ = DEFAULT_EXPIRE_TIME_DELTA;
         }
         else {
             expire_time_delta_ = script->expireTimeDelta();
@@ -153,6 +153,8 @@ struct Context::ContextData {
     static const unsigned int SUPPRESS_BODY = 1 << 3;
     static const unsigned int SKIP_NEXT_BLOCKS = 1 << 4;
     static const unsigned int STOP_BLOCKS = 1 << 5;
+    
+    static const unsigned int DEFAULT_EXPIRE_TIME_DELTA = 300; 
 };
 
 Context::Context(const boost::shared_ptr<Script> &script,

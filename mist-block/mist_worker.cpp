@@ -48,6 +48,12 @@ MistWorker::methodName() const {
     return method_name_;
 }
 
+bool
+MistWorker::isAttachStylesheet() const {
+    return strncasecmp(method_name_.c_str(), "attach_stylesheet", sizeof("attach_stylesheet") - 1) == 0 ||
+           strncasecmp(method_name_.c_str(), "attachStylesheet", sizeof("attachStylesheet") - 1) == 0;
+}
+
 XmlNodeHelper
 MistWorker::run(Context *ctx,
                 const std::vector<Param*> &params,
@@ -123,6 +129,7 @@ XmlNodeHelper
 MistWorker::setStateString(Context *ctx, const std::vector<std::string> &params) {
     State* state = ctx->state();
     if (2 != params.size()) {
+        log()->error("Params: %d", params.size());
         throw std::invalid_argument("bad arity");
     }
     const std::string &name = params[0];
@@ -665,8 +672,6 @@ MistWorker::dumpState(Context *ctx, const std::vector<std::string> &params) {
     if (!params.empty()) {
         throw std::invalid_argument("bad arity");
     }
-    
-    log()->error("AAAAAAAA");
     
     XmlNode node("state_dump");
 
