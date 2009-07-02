@@ -1439,6 +1439,58 @@ xscriptXsltXmlEscape(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltSetStateString(xmlXPathParserContextPtr ctxt, int nargs) {
+    
+    log()->entering("xscript:set-state-string");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (nargs != 2) {
+        XmlUtils::reportXsltError("xscript:set-state-string: bad param count", ctxt);
+        return;
+    }
+    
+    const char* name = params.str(0);
+    if (NULL == name || '\0' == name) {
+        XmlUtils::reportXsltError("xscript:set-state-string: bad parameter name", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+    
+    const char* value = params.str(1);
+    if (NULL == value) {
+        XmlUtils::reportXsltError("xscript:set-state-string: bad parameter value", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+    
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+    
+    try {
+        State* state = Stylesheet::getContext(tctx)->state();
+        state->checkName(name);
+        state->setString(name, value);
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:set-state-string: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:set-state-string: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+    }
+    
+    xmlXPathReturnEmptyNodeSet(ctxt);
+}
+
+extern "C" void
 xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
     (void)comp;
     if (tctx == NULL) {
@@ -1593,6 +1645,7 @@ XsltExtensions::XsltExtensions() {
     XsltFunctionRegisterer("libexslt-version", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltLibexsltVersion);
     
     XsltFunctionRegisterer("xmlescape", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltXmlEscape);
+    XsltFunctionRegisterer("set-state-string", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSetStateString);
 }
 
 } // namespace xscript

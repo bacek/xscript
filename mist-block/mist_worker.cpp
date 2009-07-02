@@ -129,7 +129,6 @@ XmlNodeHelper
 MistWorker::setStateString(Context *ctx, const std::vector<std::string> &params) {
     State* state = ctx->state();
     if (2 != params.size()) {
-        log()->error("Params: %d", params.size());
         throw std::invalid_argument("bad arity");
     }
     const std::string &name = params[0];

@@ -87,46 +87,8 @@ xscriptXsltMist(xmlXPathParserContextPtr ctxt, int nargs) {
     }
 }
 
-extern "C" void
-xscriptXsltSetStateString(xmlXPathParserContextPtr ctxt, int nargs) {
-    
-    log()->entering("xscript:set-state-string");
-    if (ctxt == NULL) {
-        return;
-    }
-
-    XsltParamFetcher params(ctxt, nargs);
-
-    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
-    if (NULL == tctx) {
-        xmlXPathReturnEmptyNodeSet(ctxt);
-        return;
-    }
-    
-    try {
-        std::auto_ptr<MistWorker> worker = MistWorker::create("set_state_string");
-        std::map<unsigned int, std::string> overrides;
-        if (params.size() > 1) {
-            overrides.insert(std::make_pair(0, params.str(0)));
-            overrides.insert(std::make_pair(1, params.str(1)));
-        }
-        worker->run(Stylesheet::getContext(tctx).get(), params, overrides);
-    }
-    catch (const std::exception &e) {
-        XmlUtils::reportXsltError("xscript:set-state-string: caught exception: " + std::string(e.what()), ctxt);
-        ctxt->error = XPATH_EXPR_ERROR;
-    }
-    catch (...) {
-        XmlUtils::reportXsltError("xscript:set-state-string: caught unknown exception", ctxt);
-        ctxt->error = XPATH_EXPR_ERROR;
-    }
-    
-    xmlXPathReturnEmptyNodeSet(ctxt);
-}
-
 MistXsltExtensions::MistXsltExtensions() {
     XsltFunctionRegisterer("mist", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltMist);
-    XsltFunctionRegisterer("set-state-string", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSetStateString);
 }
 
 } // namespace xscript
