@@ -1,8 +1,8 @@
 xscript (5.63-24) unstable; urgency=low
 
-  * noxslt-port and alternate-port requests are not cachable
+  * noxslt-port and alternate-port requests are not cachable  
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 06 Jul 2009 16:01:23 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 06 Jul 2009 16:06:30 +0400
 
 xscript (5.63-23) unstable; urgency=low
 
