@@ -128,7 +128,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
                 return;
             }
             
-            if (script->forceStylesheet() && needApplyMainStylesheet(ctx->request())) {
+            if (script->forceStylesheet() && ctx->noMainXsltPort()) {
                 script->applyStylesheet(ctx, doc);
                 if (request_data->response()->isBinary()) {
                     return;

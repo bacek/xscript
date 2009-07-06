@@ -87,6 +87,8 @@ public:
     void forceNoThreaded(bool value);
     bool noXsltPort() const;
     void noXsltPort(bool value);
+    bool noMainXsltPort() const;
+    void noMainXsltPort(bool value);
     bool noCache() const;
     void setNoCache();
     bool suppressBody() const;

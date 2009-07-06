@@ -149,10 +149,11 @@ struct Context::ContextData {
     
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
     static const unsigned int FLAG_NO_XSLT_PORT = 1 << 1;
-    static const unsigned int FLAG_NO_CACHE = 1 << 2;
-    static const unsigned int SUPPRESS_BODY = 1 << 3;
-    static const unsigned int SKIP_NEXT_BLOCKS = 1 << 4;
-    static const unsigned int STOP_BLOCKS = 1 << 5;
+    static const unsigned int FLAG_NO_MAIN_XSLT_PORT = 1 << 2;
+    static const unsigned int FLAG_NO_CACHE = 1 << 3;
+    static const unsigned int SUPPRESS_BODY = 1 << 4;
+    static const unsigned int SKIP_NEXT_BLOCKS = 1 << 5;
+    static const unsigned int STOP_BLOCKS = 1 << 6;
     
     static const unsigned int DEFAULT_EXPIRE_TIME_DELTA = 300; 
 };
@@ -192,6 +193,7 @@ Context::init() {
     const Server *server = VirtualHostData::instance()->getServer();
     if (NULL != server) {
         noXsltPort(!server->needApplyPerblockStylesheet(request()));
+        noMainXsltPort(!server->needApplyMainStylesheet(request()));
     }
 }
 
@@ -408,6 +410,16 @@ Context::noXsltPort() const {
 void
 Context::noXsltPort(bool value) {
     ctx_data_->flag(ContextData::FLAG_NO_XSLT_PORT, value);
+}
+
+bool
+Context::noMainXsltPort() const {
+    return ctx_data_->flag(ContextData::FLAG_NO_MAIN_XSLT_PORT);
+}
+
+void
+Context::noMainXsltPort(bool value) {
+    ctx_data_->flag(ContextData::FLAG_NO_MAIN_XSLT_PORT, value);
 }
 
 bool

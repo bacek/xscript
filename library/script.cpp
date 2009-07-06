@@ -1250,6 +1250,11 @@ Script::cachable(const Context *ctx, bool for_save) const {
         return false;
     }
     
+    if (ctx->noMainXsltPort()) {
+        log()->info("Cannot cache script. Alternate or noxslt port. %d", for_save);
+        return false;
+    }
+    
     if (ctx->request()->getRequestMethod() != GET_METHOD) {
         log()->info("Cannot cache script. Not GET method. %d", for_save);
         return false;
