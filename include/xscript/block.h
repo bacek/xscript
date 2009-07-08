@@ -72,7 +72,8 @@ protected:
     virtual void postInvoke(Context *ctx, const XmlDocHelper &doc);
     virtual void callInternal(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
-
+    
+    bool doApplyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc);
     bool checkGuard(Context *ctx) const;
     void evalXPath(Context *ctx, const XmlDocHelper &doc) const;
     void appendNodeValue(xmlNodePtr node, std::string &val) const;

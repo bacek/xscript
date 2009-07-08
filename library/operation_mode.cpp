@@ -50,13 +50,11 @@ OperationMode::assignBlockError(Context *ctx, const Block *block, const std::str
 
 void
 OperationMode::processPerblockXsltError(const Context *ctx, const Block *block) {
-    if (XmlUtils::hasXMLError()) {
-        ctx->rootContext()->setNoCache();
-        std::string postfix = "Script: " + block->owner()->name() +
-            ". Block: name: " + block->name() + ", id: " + block->id() +
-            ", method: " + block->method() + ". Perblock stylesheet: " + block->xsltName();
-        XmlUtils::printXMLError(postfix);
-    }
+    (void)ctx;
+    std::string postfix = "Script: " + block->owner()->name() +
+        ". Block: name: " + block->name() + ", id: " + block->id() +
+        ", method: " + block->method() + ". Perblock stylesheet: " + block->xsltName();
+    XmlUtils::printXMLError(postfix);
 }
 
 void

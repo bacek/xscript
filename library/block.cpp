@@ -353,12 +353,13 @@ Block::processResponse(boost::shared_ptr<Context> ctx, XmlDocHelper doc, boost::
     
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
     bool need_perblock = !ctx->noXsltPort();
+    bool success = true;
     if (need_perblock) {
-        applyStylesheet(ctx, doc);
+        success = doApplyStylesheet(ctx, doc);
     }
 
-    InvokeResult::Type type =
-        is_error_doc ? InvokeResult::NO_CACHE : InvokeResult::SUCCESS;
+    InvokeResult::Type type = !is_error_doc && success ?
+            InvokeResult::SUCCESS : InvokeResult::NO_CACHE;
     
     InvokeResult result(doc, type);
     
@@ -371,27 +372,40 @@ Block::processResponse(boost::shared_ptr<Context> ctx, XmlDocHelper doc, boost::
     return result;
 }
 
+bool
+Block::doApplyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
+    if (xsltName().empty()) {
+        return true;
+    }
+    
+    const TimeoutCounter &timer = ctx->timer();
+    if (timer.expired()) {
+        throw InvokeError("block is timed out", "timeout",
+            boost::lexical_cast<std::string>(timer.timeout()));
+    }
+    boost::shared_ptr<Stylesheet> sh = Stylesheet::create(xsltName());
+    {
+        PROFILER(log(), std::string("per-block-xslt: '") + xsltName() +
+                "' block: '" + name() + "' block-id: '" + id() +
+                "' method: '" + method() + "' owner: '" + owner()->name() + "'");
+        Object::applyStylesheet(sh, ctx, doc, true);
+    }
+
+    XmlUtils::throwUnless(NULL != doc.get());
+    log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
+    
+    if (XmlUtils::hasXMLError()) {
+        ctx->rootContext()->setNoCache();
+        OperationMode::instance()->processPerblockXsltError(ctx.get(), this);
+        return false;
+    }
+
+    return true;
+}
+
 void
 Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
-    if (!xsltName().empty()) {
-        const TimeoutCounter &timer = ctx->timer();
-        if (timer.expired()) {
-            throw InvokeError("block is timed out", "timeout",
-                boost::lexical_cast<std::string>(timer.timeout()));
-        }
-        boost::shared_ptr<Stylesheet> sh = Stylesheet::create(xsltName());
-        {
-            PROFILER(log(), std::string("per-block-xslt: '") + xsltName() +
-                    "' block: '" + name() + "' block-id: '" + id() +
-                    "' method: '" + method() + "' owner: '" + owner()->name() + "'");
-            Object::applyStylesheet(sh, ctx, doc, true);
-        }
-
-        XmlUtils::throwUnless(NULL != doc.get());
-        log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
-
-        OperationMode::instance()->processPerblockXsltError(ctx.get(), this);
-    }
+    doApplyStylesheet(ctx, doc);
 }
 
 InvokeResult

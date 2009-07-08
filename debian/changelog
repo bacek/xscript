@@ -1,3 +1,9 @@
+xscript (5.63-25) unstable; urgency=low
+
+  * forbid block caching in case of non-critical xslt errors
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 08 Jul 2009 12:56:44 +0400
+
 xscript (5.63-24) unstable; urgency=low
 
   * noxslt-port and alternate-port requests are not cachable  
