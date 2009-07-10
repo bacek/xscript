@@ -1,3 +1,9 @@
+xscript (5.63-26) unstable; urgency=low
+
+  * use script info in tag key for file::Invoke
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 10 Jul 2009 14:51:08 +0400
+
 xscript (5.63-25) unstable; urgency=low
 
   * forbid block caching in case of non-critical xslt errors
