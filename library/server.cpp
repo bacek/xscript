@@ -88,7 +88,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
         PROFILER(log(), "overall time for " + script_name);
         log()->info("requested file: %s", script_name.c_str());
 
-        boost::shared_ptr<Script> script = getScript(script_name, request_data->request());
+        boost::shared_ptr<Script> script = getScript(request_data->request());
         if (NULL == script.get()) {
             OperationMode::instance()->sendError(request_data->response(), 404,
                                                  script_name + " not found");
@@ -313,14 +313,11 @@ Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc)
 }
 
 boost::shared_ptr<Script>
-Server::getScript(const std::string &script_name, Request *request) {
-    (void)request;
-    
-    std::pair<std::string, bool> name = findScript(script_name);
+Server::getScript(Request *request) {
+    std::pair<std::string, bool> name = findScript(request->getScriptFilename());
     if (!name.second) {
         return boost::shared_ptr<Script>();
     }
-
     return Script::create(name.first);
 }
 

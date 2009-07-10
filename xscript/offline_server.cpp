@@ -96,7 +96,7 @@ OfflineServer::renderFile(const std::string &file,
 }
 
 boost::shared_ptr<Script>
-OfflineServer::getScript(const std::string &script_name, Request *request) {
+OfflineServer::getScript(Request *request) {
     
     OfflineRequest *offline_request = dynamic_cast<OfflineRequest*>(request);
     if (NULL == offline_request) {
@@ -105,10 +105,10 @@ OfflineServer::getScript(const std::string &script_name, Request *request) {
     
     const std::string& xml = offline_request->xml();
     if (xml.empty()) {
-        return Server::getScript(script_name, request);
+        return Server::getScript(request);
     }
     
-    return Script::create(script_name, xml);
+    return Script::create(request->getScriptFilename(), xml);
 }
 
 }

@@ -26,7 +26,7 @@ public:
     virtual bool useXsltProfiler() const;
     
 protected:
-    boost::shared_ptr<Script> getScript(const std::string &script_name, Request *request);
+    boost::shared_ptr<Script> getScript(Request *request);
     std::string root_;
 };
 
