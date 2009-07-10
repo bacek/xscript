@@ -1142,7 +1142,7 @@ Script::cachedUrl(const Context *ctx) const {
 }
 
 std::string
-Script::createTagKey(const Context *ctx) const {
+Script::createTagKey(const Context *ctx, bool check_xslt) const {
     
     std::string key = cachedUrl(ctx);
     key.push_back('|');
@@ -1155,16 +1155,18 @@ Script::createTagKey(const Context *ctx) const {
         key.push_back('|');
     }
     
-    const std::string &xslt = xsltName();
-    if (!xslt.empty()) {
-        namespace fs = boost::filesystem;
-        fs::path path(xslt);
-        if (fs::exists(path) && !fs::is_directory(path)) {
-            key.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
-            key.push_back('|');
-        }
-        else {
-            throw std::runtime_error("Cannot stat stylesheet " + xslt);
+    if (check_xslt) {
+        const std::string &xslt = xsltName();
+        if (!xslt.empty()) {
+            namespace fs = boost::filesystem;
+            fs::path path(xslt);
+            if (fs::exists(path) && !fs::is_directory(path)) {
+                key.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
+                key.push_back('|');
+            }
+            else {
+                throw std::runtime_error("Cannot stat stylesheet " + xslt);
+            }
         }
     }
     
@@ -1213,6 +1215,11 @@ Script::createTagKey(const Context *ctx) const {
 }
 
 std::string
+Script::createTagKey(const Context *ctx) const {
+    return createTagKey(ctx, true);
+}
+
+std::string
 Script::getCacheCookie(const Context *ctx, const std::string &cookie) const {   
     return ctx->request()->hasCookie(cookie) ?
         ctx->request()->getCookie(cookie) : StringUtils::EMPTY_STRING;
@@ -1240,39 +1247,38 @@ Script::info(const Context *ctx) const {
 bool
 Script::cachable(const Context *ctx, bool for_save) const {
     
+    if (cacheTimeUndefined() || cacheTime() < DocCache::instance()->minimalCacheTime()) {
+        return false;
+    }
+    
     if (ctx->noCache()) {
-        log()->info("Cannot cache script. Context is not cachable. %d", for_save);
+        log()->debug("Cannot cache script. Context is not cachable");
         return false;
     }
         
     if (binaryPage()) {
-        log()->info("Cannot cache script. Binary content. %d", for_save);
+        log()->debug("Cannot cache script. Binary content");
         return false;
     }
     
     if (ctx->noMainXsltPort()) {
-        log()->info("Cannot cache script. Alternate or noxslt port. %d", for_save);
+        log()->debug("Cannot cache script. Alternate or noxslt port");
         return false;
     }
     
     if (ctx->request()->getRequestMethod() != GET_METHOD) {
-        log()->info("Cannot cache script. Not GET method. %d", for_save);
-        return false;
-    }
-    
-    if (cacheTimeUndefined() || cacheTime() < DocCache::instance()->minimalCacheTime()) {
-        log()->info("Cannot cache script. Too low cache time or undefined. %d", for_save);
+        log()->debug("Cannot cache script. Not GET method");
         return false;
     }
     
     if (for_save) {
         if (ctx->xsltChanged(this)) {
-            log()->info("Cannot cache script. Main stylesheet changed. %d", for_save);
+            log()->debug("Cannot cache script. Main stylesheet changed");
             return false;
         }
             
         if (!ctx->response()->isStatusOK()) {
-            log()->info("Cannot cache script. Status is not OK. %d", for_save);
+            log()->debug("Cannot cache script. Status is not OK");
             return false;
         }
         
@@ -1280,13 +1286,13 @@ Script::cachable(const Context *ctx, bool for_save) const {
         Policy *policy = Policy::instance();
         for(CookieSet::const_iterator it = cookies.begin(); it != cookies.end(); ++it) {
             if (!policy->allowCachingOutputCookie(it->name().c_str())) {
-                log()->info("Cannot cache script. Output cookie %s is not allowed. %d", it->name().c_str(), for_save);
+                log()->debug("Cannot cache script. Output cookie %s is not allowed", it->name().c_str());
                 return false;
             }
         }
     }
     
-    log()->info("Script is cachable. %d", for_save);
+    log()->debug("Script is cachable");
     return true;
 }
 

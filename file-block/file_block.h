@@ -26,7 +26,8 @@ public:
     FileBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~FileBlock();
 
-protected:
+    std::string createTagKey(const Context *ctx) const;
+private:
     virtual void postParse();
     virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception); 
 
@@ -45,14 +46,20 @@ protected:
     
     XmlDocHelper testFileDoc(bool result, const std::string &file);
     
+    std::string fileName(const Context *ctx) const;
+    
     virtual void property(const char *name, const char *value);
     
     bool isTest() const;
+    bool isInvoke() const;
 
 private:
     Method method_;
     bool processXInclude_;
     bool ignore_not_existed_;
+    
+    static std::string INVOKE_FILENAME_PARAMNAME;
+    static std::string INVOKE_SCRIPT_PARAMNAME;
 };
 
 

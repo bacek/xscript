@@ -28,6 +28,9 @@
 
 namespace xscript {
 
+std::string FileBlock::INVOKE_FILENAME_PARAMNAME = "FILE_INVOKE_FILENAME_PARAMNAME";
+std::string FileBlock::INVOKE_SCRIPT_PARAMNAME = "FILE_INVOKE_SCRIPT_PARAMNAME";
+
 namespace fs = boost::filesystem;
 
 FileBlock::FileBlock(const Extension *ext, Xml *owner, xmlNodePtr node)
@@ -79,6 +82,11 @@ FileBlock::isTest() const {
     return NULL == method_;
 }
 
+bool
+FileBlock::isInvoke() const {
+    return &FileBlock::invokeFile == method_;
+}
+
 XmlDocHelper
 FileBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) {
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
@@ -89,15 +97,18 @@ FileBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::excep
         throwBadArityError();
     }
     
-    std::string filename = concatParams(ctx.get(), 0, size - 1);
-    if (filename.empty()) {
+    boost::function<std::string()> filename_creator = boost::bind(&FileBlock::fileName, this, ctx.get());
+    std::string file = isInvoke() ?
+            ctx->param(INVOKE_FILENAME_PARAMNAME, filename_creator) :
+            filename_creator();
+
+    if (file.empty()) {
         if (isTest()) {
-            return testFileDoc(false, filename);
+            return testFileDoc(false, file);
         }
         ignore_not_existed_ ? throw SkipResultInvokeError("empty path") :
             throw InvokeError("empty path");
     }
-    std::string file = fullName(filename);
     
     if (remainedTime(ctx.get()) <= 0) {
         InvokeError error("block is timed out", "file", file);
@@ -206,7 +217,12 @@ FileBlock::invokeFile(const std::string &file_name, boost::shared_ptr<Context> c
         tmp_ctx = tmp_ctx->parentContext();
     }
 
-    boost::shared_ptr<Script> script = Script::create(file_name);
+    boost::function<boost::shared_ptr<Script>()> script_creator = boost::bind(&Script::create, file_name);
+    boost::shared_ptr<Script> script = ctx->param(INVOKE_SCRIPT_PARAMNAME, script_creator);
+    
+    if (NULL == script.get()) {
+        throw InvokeError("Cannot create script", "file", file_name);
+    }
     boost::shared_ptr<Context> local_ctx = Context::createChildContext(script, ctx);
 
     if (threaded() || ctx->forceNoThreaded()) {
@@ -237,6 +253,46 @@ FileBlock::testFileDoc(bool result, const std::string &file) {
     xmlDocSetRootElement(doc.get(), node.release());
     return doc;
 }
+
+std::string
+FileBlock::fileName(const Context *ctx) const {
+    std::string filename = concatParams(ctx, 0, params().size() - 1);
+    return filename.empty() ? filename : fullName(filename);
+}
+
+std::string
+FileBlock::createTagKey(const Context *ctx) const {
+    std::string key = TaggedBlock::createTagKey(ctx);
+    if (!isInvoke()) {
+        return key;
+    }
     
+    const std::vector<Param*> &p = params();
+    if (p.empty()) {
+        return key;
+    }
+    
+    boost::function<std::string()> filename_creator =
+        boost::bind(&FileBlock::fileName, this, ctx);
+    std::string filename =
+        const_cast<Context*>(ctx)->param(INVOKE_FILENAME_PARAMNAME, filename_creator);
+
+    if (filename.empty()) {
+        return key;
+    }
+    
+    boost::function<boost::shared_ptr<Script>()> script_creator =
+        boost::bind(&Script::create, filename);
+    boost::shared_ptr<Script> script =
+        const_cast<Context*>(ctx)->param(INVOKE_SCRIPT_PARAMNAME, script_creator);
+        
+    if (NULL == script.get()) {
+        return key;
+    }
+    
+    key.append(". Script: ").append(script->createTagKey(ctx, false));
+    return key;
+}
+
 }
 
