@@ -314,6 +314,11 @@ TaggedBlock::info(const Context *ctx) const {
 
 std::string
 TaggedBlock::createTagKey(const Context *ctx) const {
+    return processMainKey(ctx) + processParamsKey(ctx);
+}
+
+std::string
+TaggedBlock::processMainKey(const Context *ctx) const {
     std::string key;
     
     const std::string& xslt = xsltName();
@@ -335,16 +340,22 @@ TaggedBlock::createTagKey(const Context *ctx) const {
     key.push_back('|');
     key.append(canonicalMethod(ctx));
     
-    const std::vector<Param*> &block_params = params();
-    for (unsigned int i = 0, n = block_params.size(); i < n; ++i) {
-        key.append(1, ':').append(block_params[i]->asString(ctx));
-    }
     const std::vector<Param*> &xslt_params = xsltParams();
     for (unsigned int i = 0, n = xslt_params.size(); i < n; ++i) {
         key.append(1, ':').append(xslt_params[i]->id());
         key.append(1, ':').append(xslt_params[i]->asString(ctx));
     }
     
+    return key;
+}
+
+std::string
+TaggedBlock::processParamsKey(const Context *ctx) const {
+    std::string key;
+    const std::vector<Param*> &block_params = params();
+    for (unsigned int i = 0, n = block_params.size(); i < n; ++i) {
+        key.append(1, ':').append(block_params[i]->asString(ctx));
+    }
     return key;
 }
 

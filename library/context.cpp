@@ -163,6 +163,8 @@ Context::Context(const boost::shared_ptr<Script> &script,
 {
     assert(script.get());
     ctx_data_ = new ContextData(script, data);
+    ExtensionList::instance()->initContext(this);
+    appendKey(boost::lexical_cast<std::string>(pageRandom()));
     init();
 }
 
@@ -186,10 +188,6 @@ Context::~Context() {
 
 void
 Context::init() {
-    if (isRoot()) {
-        ExtensionList::instance()->initContext(this);
-        appendKey(boost::lexical_cast<std::string>(pageRandom()));
-    }
     const Server *server = VirtualHostData::instance()->getServer();
     if (NULL != server) {
         noXsltPort(!server->needApplyPerblockStylesheet(request()));

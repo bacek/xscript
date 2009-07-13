@@ -41,6 +41,9 @@ protected:
     int tagPosition() const;
     bool haveTagParam() const;
     bool cacheTimeUndefined() const;
+    
+    std::string processMainKey(const Context *ctx) const;
+    std::string processParamsKey(const Context *ctx) const;
 
 private:
     std::string canonical_method_;

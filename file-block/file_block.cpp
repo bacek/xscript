@@ -262,25 +262,23 @@ FileBlock::fileName(const Context *ctx) const {
 
 std::string
 FileBlock::createTagKey(const Context *ctx) const {
-    std::string key = TaggedBlock::createTagKey(ctx);
-    if (!isInvoke()) {
-        return key;
-    }
     
-    const std::vector<Param*> &p = params();
-    if (p.empty()) {
-        return key;
-    }
-    
+    std::string key = processMainKey(ctx);
     boost::function<std::string()> filename_creator =
         boost::bind(&FileBlock::fileName, this, ctx);
     std::string filename =
-        const_cast<Context*>(ctx)->param(INVOKE_FILENAME_PARAMNAME, filename_creator);
-
+        const_cast<Context*>(ctx)->param(INVOKE_FILENAME_PARAMNAME, filename_creator);  
+        
     if (filename.empty()) {
         return key;
     }
-    
+
+    key.append(1, ':').append(filename);
+
+    if (!isInvoke()) {
+        return key;
+    }
+
     boost::function<boost::shared_ptr<Script>()> script_creator =
         boost::bind(&Script::create, filename);
     boost::shared_ptr<Script> script =
