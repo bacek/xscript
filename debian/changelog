@@ -1,3 +1,9 @@
+xscript (5.63-27) unstable; urgency=low
+
+  * fix tagged key calculation for file block
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 13 Jul 2009 14:52:46 +0400
+
 xscript (5.63-26) unstable; urgency=low
 
   * use script info in tag key for file::Invoke
