@@ -57,7 +57,7 @@ public:
     virtual void applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc);
 
     virtual std::string createTagKey(const Context *ctx) const;
-    std::string createTagKey(const Context *ctx, bool check_xslt) const;
+    std::string createTagKey(const Context *ctx, bool page_cache) const;
     virtual std::string info(const Context *ctx) const;
     virtual bool cachable(const Context *ctx, bool for_save) const;
     

@@ -1142,11 +1142,11 @@ Script::cachedUrl(const Context *ctx) const {
 }
 
 std::string
-Script::createTagKey(const Context *ctx, bool check_xslt) const {
+Script::createTagKey(const Context *ctx, bool page_cache) const {
     
-    std::string key = cachedUrl(ctx);
+    std::string key = page_cache ? cachedUrl(ctx) : name();
     key.push_back('|');
-
+    
     const TimeMapType& modified_info = modifiedInfo();
     for(TimeMapType::const_iterator it = modified_info.begin();
         it != modified_info.end();
@@ -1155,7 +1155,7 @@ Script::createTagKey(const Context *ctx, bool check_xslt) const {
         key.push_back('|');
     }
     
-    if (check_xslt) {
+    if (page_cache) {
         const std::string &xslt = xsltName();
         if (!xslt.empty()) {
             namespace fs = boost::filesystem;
@@ -1189,20 +1189,22 @@ Script::createTagKey(const Context *ctx, bool check_xslt) const {
         }            
     }
     
-    std::set<std::string> &cache_cookies = data_->cacheCookies();
-    for(std::set<std::string>::iterator it = cache_cookies.begin();
-        it != cache_cookies.end();
-        ++it) {
-        
-        std::string cookie = getCacheCookie(ctx, *it);
-        if (cookie.empty()) {
-            continue;
+    if (page_cache) {
+        std::set<std::string> &cache_cookies = data_->cacheCookies();
+        for(std::set<std::string>::iterator it = cache_cookies.begin();
+            it != cache_cookies.end();
+            ++it) {
+            
+            std::string cookie = getCacheCookie(ctx, *it);
+            if (cookie.empty()) {
+                continue;
+            }
+    
+            key.push_back('|');
+            key.append(*it);
+            key.push_back(':');
+            key.append(cookie);
         }
-
-        key.push_back('|');
-        key.append(*it);
-        key.push_back(':');
-        key.append(cookie);
     }
     
     const std::string &ctx_key = ctx->key();

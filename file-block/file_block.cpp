@@ -28,8 +28,8 @@
 
 namespace xscript {
 
-std::string FileBlock::INVOKE_FILENAME_PARAMNAME = "FILE_INVOKE_FILENAME_PARAMNAME";
-std::string FileBlock::INVOKE_SCRIPT_PARAMNAME = "FILE_INVOKE_SCRIPT_PARAMNAME";
+const std::string FileBlock::FILENAME_PARAMNAME = "FILEBLOCK_FILENAME_PARAMNAME";
+const std::string FileBlock::INVOKE_SCRIPT_PARAMNAME = "FILEBLOCK_INVOKE_SCRIPT_PARAMNAME";
 
 namespace fs = boost::filesystem;
 
@@ -97,10 +97,15 @@ FileBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::excep
         throwBadArityError();
     }
     
+    std::string file;
     boost::function<std::string()> filename_creator = boost::bind(&FileBlock::fileName, this, ctx.get());
-    std::string file = isInvoke() ?
-            ctx->param(INVOKE_FILENAME_PARAMNAME, filename_creator) :
-            filename_creator();
+    if (isInvoke() && tagged()) {
+        std::string param_name = FILENAME_PARAMNAME + boost::lexical_cast<std::string>(this);
+        file = ctx->param(param_name, filename_creator);
+    }
+    else {
+        file = filename_creator();
+    }
 
     if (file.empty()) {
         if (isTest()) {
@@ -217,8 +222,15 @@ FileBlock::invokeFile(const std::string &file_name, boost::shared_ptr<Context> c
         tmp_ctx = tmp_ctx->parentContext();
     }
 
+    boost::shared_ptr<Script> script;
     boost::function<boost::shared_ptr<Script>()> script_creator = boost::bind(&Script::create, file_name);
-    boost::shared_ptr<Script> script = ctx->param(INVOKE_SCRIPT_PARAMNAME, script_creator);
+    if (tagged()) {
+        std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
+        script = ctx->param(script_param_name, script_creator);
+    }
+    else {
+        script = script_creator();
+    }
     
     if (NULL == script.get()) {
         throw InvokeError("Cannot create script", "file", file_name);
@@ -266,9 +278,10 @@ FileBlock::createTagKey(const Context *ctx) const {
     std::string key = processMainKey(ctx);
     boost::function<std::string()> filename_creator =
         boost::bind(&FileBlock::fileName, this, ctx);
+    std::string param_name = FILENAME_PARAMNAME + boost::lexical_cast<std::string>(this);
     std::string filename =
-        const_cast<Context*>(ctx)->param(INVOKE_FILENAME_PARAMNAME, filename_creator);  
-        
+        const_cast<Context*>(ctx)->param(param_name, filename_creator);  
+
     if (filename.empty()) {
         return key;
     }
@@ -281,13 +294,14 @@ FileBlock::createTagKey(const Context *ctx) const {
 
     boost::function<boost::shared_ptr<Script>()> script_creator =
         boost::bind(&Script::create, filename);
+    std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
     boost::shared_ptr<Script> script =
-        const_cast<Context*>(ctx)->param(INVOKE_SCRIPT_PARAMNAME, script_creator);
+        const_cast<Context*>(ctx)->param(script_param_name, script_creator);
         
     if (NULL == script.get()) {
         return key;
     }
-    
+
     key.append(". Script: ").append(script->createTagKey(ctx, false));
     return key;
 }

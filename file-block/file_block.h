@@ -58,8 +58,8 @@ private:
     bool processXInclude_;
     bool ignore_not_existed_;
     
-    static std::string INVOKE_FILENAME_PARAMNAME;
-    static std::string INVOKE_SCRIPT_PARAMNAME;
+    static const std::string FILENAME_PARAMNAME;
+    static const std::string INVOKE_SCRIPT_PARAMNAME;
 };
 
 
