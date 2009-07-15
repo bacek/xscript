@@ -35,6 +35,7 @@ public:
     static void resetReporter();
     static void throwUnless(bool value);
     static bool hasXMLError();
+    static std::string getXMLError();
     static void printXMLError(const std::string& postfix);
 
     static void reportXsltError(const std::string &error, xmlXPathParserContextPtr ctxt);

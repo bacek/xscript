@@ -662,6 +662,10 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
     ctx->createDocumentWriter(stylesheet);
     Object::applyStylesheet(stylesheet, ctx, doc, false);
     
+    if (XmlUtils::hasXMLError()) {
+        ctx->rootContext()->setNoCache();
+    }
+		    
     OperationMode::instance()->processMainXsltError(ctx.get(), this, stylesheet.get());
 }
 

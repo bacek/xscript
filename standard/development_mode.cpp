@@ -9,6 +9,7 @@
 #include "xscript/stylesheet.h"
 #include "xscript/util.h"
 #include "xscript/vhost_data.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -63,10 +64,15 @@ void
 DevelopmentMode::processPerblockXsltError(const Context *ctx, const Block *block) {
     std::string result = ctx->getRuntimeError(block);
     if (!result.empty()) {
-        throw CriticalInvokeError(result.c_str(), "xslt", block->xsltName());
+        throw CriticalInvokeError(result, "xslt", block->xsltName());
     }
-    OperationMode::processPerblockXsltError(ctx, block);
+        
+    std::string error = XmlUtils::getXMLError();
+    if (!error.empty()) {
+        throw InvokeError(error, "xslt", block->xsltName());
+    }
 }
+
 
 void
 DevelopmentMode::processScriptError(const Context *ctx, const Script *script) {
@@ -93,7 +99,13 @@ DevelopmentMode::processMainXsltError(const Context *ctx, const Script *script, 
         stream << result << ". Script: " << script->name() << ". Main stylesheet: " << style->name(); 
         throw InvokeError(stream.str());
     }
-    OperationMode::processMainXsltError(ctx, script, style);
+				        
+    std::string error = XmlUtils::getXMLError();
+    if (!error.empty()) {
+        std::stringstream stream;
+        stream << error << ". Script: " << script->name() << ". Main stylesheet: " << style->name();
+        throw InvokeError(stream.str());
+    }
 }
 
 void

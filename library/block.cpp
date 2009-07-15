@@ -393,14 +393,16 @@ Block::doApplyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
 
     XmlUtils::throwUnless(NULL != doc.get());
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
-    
+        
+    bool result = true;
     if (XmlUtils::hasXMLError()) {
         ctx->rootContext()->setNoCache();
-        OperationMode::instance()->processPerblockXsltError(ctx.get(), this);
-        return false;
+        result = false;
     }
-
-    return true;
+		        
+    OperationMode::instance()->processPerblockXsltError(ctx.get(), this);
+				    
+    return result;
 }
 
 void

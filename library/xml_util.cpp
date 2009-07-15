@@ -160,6 +160,16 @@ XmlUtils::printXMLError(const std::string& postfix) {
 }
 
 std::string
+XmlUtils::getXMLError() {
+    if (XmlErrorReporter::reporter()->hasError()) {
+        std::string error = XmlErrorReporter::reporter()->message();
+        resetReporter();
+        return error;
+    }
+    return StringUtils::EMPTY_STRING;
+}
+
+std::string
 XmlUtils::escape(const Range &range) {
 
     std::string dest;
