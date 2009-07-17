@@ -2,7 +2,6 @@
 
 #include <cstring>
 #include <limits>
-#include <sstream>
 #include <iterator>
 #include <stdexcept>
 
@@ -90,14 +89,10 @@ StateImpl::copy(const std::string &src, const std::string &dest) {
 const StateValue&
 StateImpl::find(const std::string &name) const {
     StateValueMap::const_iterator i = values_.find(name);
-    if (values_.end() != i) {
-        return i->second;
+    if (values_.end() == i) {
+        throw std::invalid_argument("nonexistent state param " + name);
     }
-    else {
-        std::stringstream stream;
-        stream << "nonexistent state param " << name;
-        throw std::invalid_argument(stream.str());
-    }
+    return i->second;
 }
 
 std::string
