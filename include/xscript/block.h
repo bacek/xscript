@@ -49,10 +49,10 @@ public:
     virtual void invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual void applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc);
 
+    InvokeResult infoResult(const char *error) const;
     InvokeResult errorResult(const char *error) const;
-    InvokeResult errorResult(const char *error,
-                             const InvokeError::InfoMapType &error_info,
-                             XmlNodeHelper node) const;
+    InvokeResult errorResult(const InvokeError &error) const;
+ 
     InvokeResult fakeResult() const;
     
     void throwBadArityError() const;
@@ -94,13 +94,10 @@ protected:
     
     void detectBase();
     
-    InvokeResult errorResult(const char *error,
-                             const InvokeError::InfoMapType &error_info,
-                             XmlNodeHelper node,
-                             std::string &full_error) const;
-    std::string errorMessage(const char *error,
-                             const InvokeError::InfoMapType &error_info) const;
-    
+    InvokeResult errorResult(const InvokeError &error, std::string &full_error) const;
+    InvokeResult errorResult(const InvokeError &error, const char *tag_name, std::string &full_error) const;
+    std::string errorMessage(const InvokeError &error) const;
+
 private:
     struct BlockData;
     BlockData *data_;

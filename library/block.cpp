@@ -92,7 +92,13 @@ struct Block::BlockData {
     std::string id_, method_;
     std::string xpointer_expr_;
     std::string base_;
+    
+    static const std::string XSCRIPT_INVOKE_FAILED;
+    static const std::string XSCRIPT_INVOKE_INFO;
 };
+
+const std::string Block::BlockData::XSCRIPT_INVOKE_FAILED = "xscript_invoke_failed";
+const std::string Block::BlockData::XSCRIPT_INVOKE_INFO = "xscript_invoke_info";
 
 Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
     data_(new BlockData(ext, owner, node))
@@ -282,15 +288,15 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     }
     catch (const CriticalInvokeError &e) {
         std::string full_error;
-        result = errorResult(e.what(), e.info(), e.what_node(), full_error);        
+        result = errorResult(e, full_error);        
         OperationMode::instance()->assignBlockError(ctx.get(), this, full_error);
     }
     catch (const SkipResultInvokeError &e) {
-        log()->info("%s", errorMessage(e.what(), e.info()).c_str());
+        log()->info("%s", errorMessage(e).c_str());
         result = fakeResult();
     }
     catch (const InvokeError &e) {
-        result = errorResult(e.what(), e.info(), e.what_node());
+        result = errorResult(e);
     }
     catch (const std::exception &e) {
         result = errorResult(e.what());
@@ -411,31 +417,45 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
 }
 
 InvokeResult
-Block::errorResult(const char *error,
-                   const InvokeError::InfoMapType &error_info,
-                   XmlNodeHelper node) const {
+Block::infoResult(const char *error) const {
     std::string full_error;
-    return errorResult(error, error_info, node, full_error);
+    InvokeError invoke_error(error);
+    return errorResult(invoke_error, BlockData::XSCRIPT_INVOKE_INFO.c_str(), full_error);
 }
 
 InvokeResult
-Block::errorResult(const char *error,
-                   const InvokeError::InfoMapType &error_info,
-                   XmlNodeHelper node,
+Block::errorResult(const char *error) const {
+    std::string full_error;
+    InvokeError invoke_error(error);
+    return errorResult(invoke_error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error);
+}
+
+InvokeResult
+Block::errorResult(const InvokeError &error) const {
+    std::string full_error;
+    return errorResult(error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error);
+}
+
+InvokeResult
+Block::errorResult(const InvokeError &error, std::string &full_error) const {
+    return errorResult(error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error);
+}
+
+InvokeResult
+Block::errorResult(const InvokeError &error,
+                   const char *tag_name,
                    std::string &full_error) const {
 
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
 
-    XmlNodeHelper main_node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"xscript_invoke_failed", NULL));
+    XmlNodeHelper main_node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)tag_name, NULL));
     XmlUtils::throwUnless(NULL != main_node.get());
 
     std::stringstream stream;
     stream << "Caught invocation error" << ": ";
-    if (error != NULL) {
-        xmlNewProp(main_node.get(), (const xmlChar*)"error", (const xmlChar*)error);
-        stream << error << ". ";
-    }
+    xmlNewProp(main_node.get(), (const xmlChar*)"error", (const xmlChar*)error.what());
+    stream << error.what() << ". ";
 
     xmlNewProp(main_node.get(), (const xmlChar*)"block", (const xmlChar*)name());
     stream << "block: " << name() << ". ";
@@ -450,8 +470,9 @@ Block::errorResult(const char *error,
         stream << "id: " << id() << ". ";
     }
 
-    for(InvokeError::InfoMapType::const_iterator it = error_info.begin();
-        it != error_info.end();
+    const InvokeError::InfoMapType& info = error.info();
+    for(InvokeError::InfoMapType::const_iterator it = info.begin();
+        it != info.end();
         ++it) {
         if (!it->second.empty()) {
             xmlNewProp(main_node.get(), (const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str());
@@ -461,6 +482,7 @@ Block::errorResult(const char *error,
 
     stream << "owner: " << owner()->name() << ".";
 
+    XmlNodeHelper node = error.what_node();
     if (node.get()) {
         xmlAddChild(main_node.get(), node.release());
     }
@@ -474,13 +496,10 @@ Block::errorResult(const char *error,
 }
 
 std::string
-Block::errorMessage(const char *error, const InvokeError::InfoMapType &error_info) const {
+Block::errorMessage(const InvokeError &error) const {
 
     std::stringstream stream;
-    stream << "Caught invocation error" << ": ";
-    if (error != NULL) {
-        stream << error << ". ";
-    }
+    stream << "Caught invocation error" << ": " << error.what() << ". ";
 
     stream << "block: " << name() << ". ";
 
@@ -492,8 +511,9 @@ Block::errorMessage(const char *error, const InvokeError::InfoMapType &error_inf
         stream << "id: " << id() << ". ";
     }
 
-    for(InvokeError::InfoMapType::const_iterator it = error_info.begin();
-        it != error_info.end();
+    const InvokeError::InfoMapType& info = error.info();
+    for(InvokeError::InfoMapType::const_iterator it = info.begin();
+        it != info.end();
         ++it) {
         if (!it->second.empty()) {
             stream << it->first << ": " << it->second << ". ";
@@ -503,11 +523,6 @@ Block::errorMessage(const char *error, const InvokeError::InfoMapType &error_inf
     stream << "owner: " << owner()->name() << ".";
 
     return stream.str();
-}
-
-InvokeResult
-Block::errorResult(const char *error) const {
-    return errorResult(error, InvokeError::InfoMapType(), XmlNodeHelper());
 }
 
 InvokeResult

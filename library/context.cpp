@@ -240,17 +240,16 @@ Context::wait(int millis) {
     boost::mutex::scoped_lock sl(ctx_data_->results_mutex_);
     bool timedout = !ctx_data_->condition_.timed_wait(sl, xt, boost::bind(&Context::resultsReady, this));
     
-    const char* error = NULL;
-    if (timedout) {
-        error = "timed out";
-    }
-    else if (stopBlocks()) {
-        error = "stopped";
-    }
-    if (error) {
+    bool save_result = timedout || stopBlocks();
+    if (save_result) {
         for (std::vector<xmlDocPtr>::size_type i = 0; i < ctx_data_->results_.size(); ++i) {
             if (NULL == ctx_data_->results_[i].doc.get()) {
-                ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult(error);
+                if (timedout) {
+                    ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult("timed out");
+                }
+                else {
+                    ctx_data_->results_[i] = ctx_data_->script_->block(i)->infoResult("stopped");
+                }
             }
         }
     }

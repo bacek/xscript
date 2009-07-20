@@ -1532,7 +1532,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
             }
         }
         catch (const InvokeError &e) {
-            result = block->errorResult(e.what(), e.info(), e.what_node());
+            result = block->errorResult(e);
         }
         catch (const std::exception &e) {
             result = block->errorResult(e.what());
