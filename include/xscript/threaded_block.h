@@ -25,10 +25,8 @@ protected:
     virtual int remainedTime(Context *ctx) const;
 
 private:
-    bool threaded_;
-    int timeout_;
-    bool check_elapsed_time_;
-    static const std::string SHOW_ELAPSED_TIME;
+    struct ThreadedBlockData;
+    ThreadedBlockData *trb_data_;
 };
 
 } // namespace xscript

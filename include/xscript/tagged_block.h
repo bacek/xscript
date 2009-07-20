@@ -46,12 +46,8 @@ protected:
     std::string processParamsKey(const Context *ctx) const;
 
 private:
-    std::string canonical_method_;
-    unsigned char cache_level_;
-    time_t cache_time_;
-    int tag_position_;
-    
-    static const unsigned char FLAG_TAGGED = 1;
+    struct TaggedBlockData;
+    TaggedBlockData *tb_data_;
 };
 
 } // namespace xscript

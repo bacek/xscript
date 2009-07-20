@@ -14,10 +14,24 @@
 
 namespace xscript {
 
-const std::string ThreadedBlock::SHOW_ELAPSED_TIME("SHOW_ELAPSED_TIME");
+struct ThreadedBlock::ThreadedBlockData {
+    ThreadedBlockData() : threaded_(false), timeout_(0), check_elapsed_time_(false)
+    {}
+    
+    ~ThreadedBlockData() {
+    }
+    
+    bool threaded_;
+    int timeout_;
+    bool check_elapsed_time_;
+    
+    static const std::string SHOW_ELAPSED_TIME;
+};
+
+const std::string ThreadedBlock::ThreadedBlockData::SHOW_ELAPSED_TIME = "SHOW_ELAPSED_TIME";
 
 ThreadedBlock::ThreadedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        Block(ext, owner, node), threaded_(false), timeout_(0), check_elapsed_time_(false) {
+        Block(ext, owner, node), trb_data_(new ThreadedBlockData()) {
 }
 
 ThreadedBlock::~ThreadedBlock() {
@@ -26,7 +40,7 @@ ThreadedBlock::~ThreadedBlock() {
 int
 ThreadedBlock::timeout() const {
 // FIXME: Change hard-coded 5000 to configurable defaults.
-    return timeout_ > 0 ? timeout_ : 5000;
+    return trb_data_->timeout_ > 0 ? trb_data_->timeout_ : 5000;
 }
 
 int
@@ -36,22 +50,22 @@ ThreadedBlock::invokeTimeout() const {
 
 bool
 ThreadedBlock::threaded() const {
-    return threaded_;
+    return trb_data_->threaded_;
 }
 
 void
 ThreadedBlock::threaded(bool value) {
-    threaded_ = value;
+    trb_data_->threaded_ = value;
 }
 
 void
 ThreadedBlock::property(const char *name, const char *value) {
     if (strncasecmp(name, "threaded", sizeof("threaded")) == 0) {
-        threaded_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
+        trb_data_->threaded_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
     else if (strncasecmp(name, "timeout", sizeof("timeout")) == 0) {
         try {
-            timeout_ = boost::lexical_cast<int>(value);
+            trb_data_->timeout_ = boost::lexical_cast<int>(value);
         }
         catch(const boost::bad_lexical_cast &e) {
             throw std::runtime_error(
@@ -59,7 +73,7 @@ ThreadedBlock::property(const char *name, const char *value) {
         }
     }
     else if (strncasecmp(name, "elapsed-time", sizeof("elapsed-time")) == 0) {
-        check_elapsed_time_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
+        trb_data_->check_elapsed_time_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
     else {
         Block::property(name, value);
@@ -69,8 +83,8 @@ ThreadedBlock::property(const char *name, const char *value) {
 void
 ThreadedBlock::postInvoke(Context *ctx, const XmlDocHelper &doc) {
     
-    bool show_elapsed_time = check_elapsed_time_ ? check_elapsed_time_ :
-        OperationMode::checkDevelopmentVariable(ctx->request(), SHOW_ELAPSED_TIME);
+    bool show_elapsed_time = trb_data_->check_elapsed_time_ ? trb_data_->check_elapsed_time_ :
+        OperationMode::checkDevelopmentVariable(ctx->request(), ThreadedBlockData::SHOW_ELAPSED_TIME);
        
     if (!show_elapsed_time || tagged()) {
         return;

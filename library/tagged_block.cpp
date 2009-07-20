@@ -23,54 +23,70 @@ namespace xscript {
 
 static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
 
+struct TaggedBlock::TaggedBlockData {
+    TaggedBlockData() : cache_level_(0), cache_time_(CACHE_TIME_UNDEFINED), tag_position_(-1)
+    {}
+    
+    ~TaggedBlockData() {
+    }
+    
+    std::string canonical_method_;
+    unsigned char cache_level_;
+    time_t cache_time_;
+    int tag_position_;
+    
+    static const unsigned char FLAG_TAGGED = 1;
+};
+
 TaggedBlock::TaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        Block(ext, owner, node), canonical_method_(),
-        cache_level_(0), cache_time_(CACHE_TIME_UNDEFINED), tag_position_(-1) {
+        Block(ext, owner, node), tb_data_(new TaggedBlockData()) {
 }
 
 TaggedBlock::~TaggedBlock() {
+    delete tb_data_;
 }
 
 std::string
 TaggedBlock::canonicalMethod(const Context *ctx) const {
     (void)ctx;
-    return canonical_method_;
+    return tb_data_->canonical_method_;
 }
 
 bool
 TaggedBlock::tagged() const {
-    return cacheLevel(FLAG_TAGGED);
+    return cacheLevel(TaggedBlockData::FLAG_TAGGED);
 }
 
 void
 TaggedBlock::tagged(bool tagged) {
     if (tagged &&
-        CACHE_TIME_UNDEFINED != cache_time_ &&
-        cache_time_ < DocCache::instance()->minimalCacheTime()) {
+        CACHE_TIME_UNDEFINED != tb_data_->cache_time_ &&
+        tb_data_->cache_time_ < DocCache::instance()->minimalCacheTime()) {
         tagged = false;
     }
-    cacheLevel(FLAG_TAGGED, tagged);
+    cacheLevel(TaggedBlockData::FLAG_TAGGED, tagged);
 }
 
 void
 TaggedBlock::cacheLevel(unsigned char type, bool value) {
-    cache_level_ = value ? (cache_level_ | type) : (cache_level_ &= ~type);
+    tb_data_->cache_level_ = value ?
+        (tb_data_->cache_level_ | type) : (tb_data_->cache_level_ &= ~type);
 }
 
 bool
 TaggedBlock::cacheLevel(unsigned char type) const {
-    return cache_level_ & type;
+    return tb_data_->cache_level_ & type;
 }
 
 time_t
 TaggedBlock::cacheTime() const {
-    return cache_time_;
+    return tb_data_->cache_time_;
 }
 
 void
 TaggedBlock::cacheTime(time_t cache_time) {
     log()->debug("%s, cache_time: %lu", BOOST_CURRENT_FUNCTION, static_cast<unsigned long>(cache_time));
-    cache_time_ = cache_time;
+    tb_data_->cache_time_ = cache_time;
 }
 
 InvokeResult
@@ -138,9 +154,9 @@ TaggedBlock::postCall(Context *ctx, const InvokeResult &result, const boost::any
     DocCache *cache = DocCache::instance();
 
     bool can_store = false;
-    if (CACHE_TIME_UNDEFINED != cache_time_) {
-        if (cache_time_ >= cache->minimalCacheTime()) {
-            tag.expire_time = now + cache_time_;
+    if (CACHE_TIME_UNDEFINED != tb_data_->cache_time_) {
+        if (tb_data_->cache_time_ >= cache->minimalCacheTime()) {
+            tag.expire_time = now + tb_data_->cache_time_;
             can_store = true;
         }
     }
@@ -166,7 +182,7 @@ TaggedBlock::processParam(std::auto_ptr<Param> p) {
     if (haveTagParam()) {
         throw std::runtime_error("duplicated tag param");
     }
-    tag_position_ = params().size();
+    tb_data_->tag_position_ = params().size();
     
     const std::string& v = p->value();
     if (!v.empty()) {
@@ -205,7 +221,7 @@ TaggedBlock::propertyInternal(const char *name, const char *value) {
         
         if (strncasecmp(value, "yes", sizeof("yes")) != 0) {
             try {
-                cache_time_ = boost::lexical_cast<time_t>(value);
+                tb_data_->cache_time_ = boost::lexical_cast<time_t>(value);
             }
             catch(const boost::bad_lexical_cast &e) {
                 throw std::runtime_error(
@@ -223,13 +239,13 @@ TaggedBlock::propertyInternal(const char *name, const char *value) {
 
 void
 TaggedBlock::createCanonicalMethod(const char *prefix) {
-    canonical_method_.clear();
+    tb_data_->canonical_method_.clear();
     if (tagged()) {
-        canonical_method_.append(prefix);
+        tb_data_->canonical_method_.append(prefix);
         const std::string &m = method();
         for (const char *str = m.c_str(); *str; ++str) {
             if (*str != '_' && *str != '-') {
-                canonical_method_.append(1, tolower(*str));
+                tb_data_->canonical_method_.append(1, tolower(*str));
             }
         }
     }
@@ -237,17 +253,17 @@ TaggedBlock::createCanonicalMethod(const char *prefix) {
 
 int
 TaggedBlock::tagPosition() const {
-    return tag_position_;
+    return tb_data_->tag_position_;
 }
 
 bool
 TaggedBlock::haveTagParam() const {
-    return tag_position_ >= 0;
+    return tb_data_->tag_position_ >= 0;
 }
 
 bool
 TaggedBlock::cacheTimeUndefined() const {
-    return cache_time_ == CACHE_TIME_UNDEFINED;
+    return tb_data_->cache_time_ == CACHE_TIME_UNDEFINED;
 }
 
 std::string
