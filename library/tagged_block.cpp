@@ -139,12 +139,8 @@ TaggedBlock::postCall(Context *ctx, const InvokeResult &result, const boost::any
 
     bool can_store = false;
     if (CACHE_TIME_UNDEFINED != cache_time_) {
-        time_t cache_time = cache_time_;
-        if (Tag::UNDEFINED_TIME != tag.expire_time) {
-            cache_time = tag.expire_time < now ? 0 : std::min(cache_time_, tag.expire_time - now);
-        }
-        if (cache_time >= cache->minimalCacheTime()) {
-            tag.expire_time = now + cache_time;
+        if (cache_time_ >= cache->minimalCacheTime()) {
+            tag.expire_time = now + cache_time_;
             can_store = true;
         }
     }
