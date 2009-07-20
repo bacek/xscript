@@ -79,7 +79,7 @@ RemoteTaggedBlock::postParse() {
     ThreadedBlock::postParse();
     TaggedBlock::postParse();
 
-    OperationMode::instance()->checkRemoteTimeout(this);
+    OperationMode::checkRemoteTimeout(this);
 }
 
 unsigned int

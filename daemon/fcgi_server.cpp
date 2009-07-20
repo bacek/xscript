@@ -153,7 +153,7 @@ FCGIServer::handle() {
                 }
                 catch (const std::exception &e) {
                     if (!attach_success) {
-                        OperationMode::instance()->sendError(server_request, 400, e.what());
+                        OperationMode::sendError(server_request, 400, e.what());
                     }
                     throw;
                 }

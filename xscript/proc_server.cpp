@@ -151,7 +151,7 @@ ProcServer::run() {
     }
     catch (const std::exception &e) {
         if (!attach_success) {
-            OperationMode::instance()->sendError(offline_request, 400, e.what());
+            OperationMode::sendError(offline_request, 400, e.what());
         }
         else {
             std::cout.flush();

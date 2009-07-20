@@ -77,10 +77,10 @@ OfflineServer::renderBuffer(const std::string &url,
     }
     catch (const std::exception &e) {
         if (!attach_success) {
-            OperationMode::instance()->sendError(offline_request, 400, e.what());
+            OperationMode::sendError(offline_request, 400, e.what());
         }
         else {
-            OperationMode::instance()->sendError(offline_request, 500, e.what());
+            OperationMode::sendError(offline_request, 500, e.what());
         }
     }
     

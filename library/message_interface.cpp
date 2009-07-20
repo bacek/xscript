@@ -12,7 +12,12 @@
 
 namespace xscript {
 
-MessageParams::MessageParams()
+MessageParams::MessageParams() :
+    size_(0), params_(NULL)
+{}
+
+MessageParams::MessageParams(unsigned int size, MessageParamBase** params) :
+    size_(size), params_(params)
 {}
 
 MessageParams::~MessageParams()
@@ -20,7 +25,7 @@ MessageParams::~MessageParams()
 
 unsigned int
 MessageParams::size() const {
-    return params_.size();
+    return size_;
 }
 
 MessageResultBase::MessageResultBase()
@@ -34,6 +39,13 @@ MessageHandler::MessageHandler()
 
 MessageHandler::~MessageHandler()
 {}
+
+int
+MessageHandler::process(const MessageParams &params, MessageResultBase &result) {
+    (void)params;
+    (void)result;
+    return -1;
+}
 
 MessageProcessor::MessageProcessor()
 {}

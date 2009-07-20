@@ -58,9 +58,6 @@ Config::startup() {
     CacheStrategyCollector::instance()->init(this);
     log()->debug("doc and page cache started");
     
-    Policy::instance()->init(this);
-    log()->debug("policy started");
-
     StatusInfo::instance()->init(this);
     log()->debug("status info started");
 

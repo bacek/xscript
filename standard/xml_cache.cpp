@@ -314,7 +314,7 @@ void
 XmlCache::erase(const std::string &name) {
     StringSet::const_iterator i = denied_.find(name);
     if (denied_.end() == i) {
-        std::string cache_name = Policy::instance()->getKey(NULL, name);
+        std::string cache_name = Policy::getKey(NULL, name);
         findStorage(name)->erase(cache_name);
     }
 }
@@ -326,7 +326,7 @@ XmlCache::init(const char *name, const Config *config) {
     int bucksize = config->as<int>(std::string("/xscript/").append(name).append("/bucket-size"), 200);
 
     time_t delay = 0;
-    if (OperationMode::instance()->isProduction()) {
+    if (OperationMode::isProduction()) {
         delay = config->as<time_t>(std::string("/xscript/").append(name).append("/refresh-delay"), 5);
     }
 
@@ -356,7 +356,7 @@ XmlCache::fetchXml(const std::string &name) {
     if (denied_.end() != i) {
         return boost::shared_ptr<Xml>();
     }
-    std::string cache_name = Policy::instance()->getKey(NULL, name);
+    std::string cache_name = Policy::getKey(NULL, name);
     return findStorage(name)->fetch(cache_name);
 }
 
@@ -366,7 +366,7 @@ XmlCache::storeXml(const std::string &name, const boost::shared_ptr<Xml> &xml) {
     assert(NULL != xml.get());
     StringSet::const_iterator i = denied_.find(name);
     if (denied_.end() == i) {
-        std::string cache_name = Policy::instance()->getKey(NULL, name);
+        std::string cache_name = Policy::getKey(NULL, name);
         findStorage(name)->store(cache_name, xml);
     }
 }

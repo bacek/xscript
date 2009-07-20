@@ -383,9 +383,8 @@ Script::ScriptData::cacheCookies(const char *value) {
     typedef boost::tokenizer<Separator> Tokenizer;
     std::string param_list(value);
     Tokenizer tok(param_list, Separator(", "));
-    Policy *policy = Policy::instance();
     for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
-        if (!policy->allowCachingInputCookie(it->c_str())) {
+        if (!Policy::allowCachingInputCookie(it->c_str())) {
             std::stringstream ss;
             ss << "Cookie " << *it << " is not allowed in cache-cookies";
             throw std::runtime_error(ss.str());
@@ -641,7 +640,7 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
     ctx->wait(timeout);
     log()->debug("%s, finished to wait", BOOST_CURRENT_FUNCTION);
     
-    OperationMode::instance()->processScriptError(ctx.get(), this);
+    OperationMode::processScriptError(ctx.get(), this);
     
     addHeaders(ctx.get());
     return fetchResults(ctx.get());
@@ -666,7 +665,7 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
         ctx->rootContext()->setNoCache();
     }
 		    
-    OperationMode::instance()->processMainXsltError(ctx.get(), this, stylesheet.get());
+    OperationMode::processMainXsltError(ctx.get(), this, stylesheet.get());
 }
 
 boost::shared_ptr<Script>
@@ -1289,9 +1288,8 @@ Script::cachable(const Context *ctx, bool for_save) const {
         }
         
         const CookieSet &cookies = ctx->response()->outCookies();       
-        Policy *policy = Policy::instance();
         for(CookieSet::const_iterator it = cookies.begin(); it != cookies.end(); ++it) {
-            if (!policy->allowCachingOutputCookie(it->name().c_str())) {
+            if (!Policy::allowCachingOutputCookie(it->name().c_str())) {
                 log()->debug("Cannot cache script. Output cookie %s is not allowed", it->name().c_str());
                 return false;
             }

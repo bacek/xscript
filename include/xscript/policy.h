@@ -6,7 +6,6 @@
 
 #include <libxml/tree.h>
 
-#include "xscript/component.h"
 #include "xscript/functors.h"
 
 namespace xscript {
@@ -15,27 +14,37 @@ class Context;
 class Request;
 class TaggedBlock;
 
-class Policy: public virtual Component<Policy> {
+class Policy {
 public:
-    Policy();
-    virtual ~Policy();
+    static const std::string& realIPHeaderName();
+    static std::string getPathByScheme(const Request *request, const std::string &url);
+    static std::string getRootByScheme(const Request *request, const std::string &url);
 
-    virtual const std::string& realIPHeaderName() const;
-    virtual std::string getPathByScheme(const Request *request, const std::string &url) const;
-    virtual std::string getRootByScheme(const Request *request, const std::string &url) const;
+    static std::string getKey(const Request* request, const std::string& name);
+    static std::string getOutputEncoding(const Request* request);
 
-    virtual std::string getKey(const Request* request, const std::string& name) const;
-    virtual std::string getOutputEncoding(const Request* request) const;
-
-    virtual void useDefaultSanitizer() const;
-    virtual void processCacheLevel(TaggedBlock *block, const std::string &no_cache) const;
-    virtual bool allowCaching(const Context *ctx, const TaggedBlock *block) const;
-    virtual bool allowCachingInputCookie(const char *name) const;
-    virtual bool allowCachingOutputCookie(const char *name) const;
-    virtual bool isSkippedProxyHeader(const std::string &header) const;
+    static void useDefaultSanitizer();
+    static void processCacheLevel(TaggedBlock *block, const std::string &no_cache);
+    static bool allowCaching(const Context *ctx, const TaggedBlock *block);
+    static bool allowCachingInputCookie(const char *name);
+    static bool allowCachingOutputCookie(const char *name);
+    static bool isSkippedProxyHeader(const std::string &header);
     
-    virtual bool isErrorDoc(xmlDocPtr doc) const;
-private:
+    static bool isErrorDoc(xmlDocPtr doc);
+    
+    static const std::string REAL_IP_HEADER_NAME_METHOD;
+    static const std::string GET_PATH_BY_SCHEME_METHOD;
+    static const std::string GET_ROOT_BY_SCHEME_METHOD;
+    static const std::string GET_KEY_METHOD;
+    static const std::string GET_OUTPUT_ENCODING_METHOD;
+    static const std::string USE_DEFAULT_SANITIZER_METHOD;
+    static const std::string PROCESS_CACHE_LEVEL_METHOD;
+    static const std::string ALLOW_CACHING_METHOD;
+    static const std::string ALLOW_CACHING_INPUT_COOKIE_METHOD;
+    static const std::string ALLOW_CACHING_OUTPUT_COOKIE_METHOD;
+    static const std::string IS_SKIPPED_PROXY_HEADER_METHOD;
+    static const std::string IS_ERROR_DOC_METHOD;
+    
     static const std::string UTF8_ENCODING;
 };
 

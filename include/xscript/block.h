@@ -93,12 +93,13 @@ protected:
     virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const;
     
     void detectBase();
-    
-    InvokeResult errorResult(const InvokeError &error, std::string &full_error) const;
-    InvokeResult errorResult(const InvokeError &error, const char *tag_name, std::string &full_error) const;
-    std::string errorMessage(const InvokeError &error) const;
 
+    InvokeResult errorResult(const InvokeError &error, std::string &full_error) const;
+    std::string errorMessage(const InvokeError &error) const;
+    
 private:
+    InvokeResult errorResult(const InvokeError &error, const char *tag_name, std::string &full_error) const;
+    
     struct BlockData;
     BlockData *data_;
 };

@@ -144,7 +144,7 @@ Stylesheet::appendXsltParams(const std::vector<Param*>& params, const Context *c
         const std::string &id = param->id();
         std::pair<ParamSetType::iterator, bool> result = unique_params.insert(id);
         if (result.second == false) {
-            OperationMode::instance()->processError(std::string("duplicated xslt-param: ") + id);
+            OperationMode::processError(std::string("duplicated xslt-param: ") + id);
         }
         else {
             std::string value = param->asString(ctx);
@@ -310,7 +310,7 @@ void
 Stylesheet::detectOutputEncoding(const XsltStylesheetHelper &sh) {
     (void)sh;
     if (NULL == stylesheet_->encoding) {
-        output_encoding_.assign(Policy::instance()->getOutputEncoding(NULL));
+        output_encoding_.assign(Policy::getOutputEncoding(NULL));
         stylesheet_->encoding = xmlStrdup((const xmlChar*)(output_encoding_.c_str()));
     }
     else {

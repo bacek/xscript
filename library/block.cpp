@@ -289,7 +289,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     catch (const CriticalInvokeError &e) {
         std::string full_error;
         result = errorResult(e, full_error);        
-        OperationMode::instance()->assignBlockError(ctx.get(), this, full_error);
+        OperationMode::assignBlockError(ctx.get(), this, full_error);
     }
     catch (const SkipResultInvokeError &e) {
         log()->info("%s", errorMessage(e).c_str());
@@ -355,7 +355,7 @@ Block::processResponse(boost::shared_ptr<Context> ctx, XmlDocHelper doc, boost::
         throw InvokeError("context is already stopped, cannot process response");
     }
 
-    bool is_error_doc = Policy::instance()->isErrorDoc(doc.get());
+    bool is_error_doc = Policy::isErrorDoc(doc.get());
     
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
     bool need_perblock = !ctx->noXsltPort();
@@ -406,7 +406,7 @@ Block::doApplyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
         result = false;
     }
 		        
-    OperationMode::instance()->processPerblockXsltError(ctx.get(), this);
+    OperationMode::processPerblockXsltError(ctx.get(), this);
 				    
     return result;
 }

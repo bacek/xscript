@@ -90,14 +90,14 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
 
         boost::shared_ptr<Script> script = getScript(request_data->request());
         if (NULL == script.get()) {
-            OperationMode::instance()->sendError(request_data->response(), 404,
-                                                 script_name + " not found");
+            OperationMode::sendError(request_data->response(), 404,
+                                     script_name + " not found");
             return;  
         }
 
         if (!script->allowMethod(request_data->request()->getRequestMethod())) {
-            OperationMode::instance()->sendError(request_data->response(), 405,
-                                                 request_data->request()->getRequestMethod() + " not allowed");
+            OperationMode::sendError(request_data->response(), 405,
+                                     request_data->request()->getRequestMethod() + " not allowed");
             return;
         }
 
@@ -148,7 +148,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
     catch (const std::exception &e) {
         log()->error("%s: exception caught: %s. Owner: %s",
             BOOST_CURRENT_FUNCTION, e.what(), script_name.c_str());
-        OperationMode::instance()->sendError(request_data->response(), 500, e.what());
+        OperationMode::sendError(request_data->response(), 500, e.what());
     }
 }
 

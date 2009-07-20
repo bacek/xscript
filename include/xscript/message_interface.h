@@ -3,6 +3,7 @@
 
 #include <list>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -33,17 +34,13 @@ private:
 class MessageParams {
 public:
     MessageParams();
+    MessageParams(unsigned int size, MessageParamBase** params);
     ~MessageParams();
     
     template <typename Type>
-    void addParam(MessageParam<Type>* param) {
-        params_.push_back(param);
-    }
-    
-    template <typename Type>
     Type* getParam(unsigned int n) const {
-        if (n >= params_.size()) {
-            return NULL;
+        if (n >= size_) {
+            throw std::invalid_argument("Argument is not found");
         }
         MessageParam<Type>* casted_param = dynamic_cast<MessageParam<Type>*>(params_[n]);
         return casted_param ? casted_param->value() : NULL;
@@ -51,13 +48,35 @@ public:
     
     unsigned int size() const;
 private:
-    std::vector<MessageParamBase*> params_;
+    unsigned int size_;
+    MessageParamBase** params_;
 };
+
+template <typename Type>
+class MessageResult;
 
 class MessageResultBase {
 public:
     MessageResultBase();
     virtual ~MessageResultBase();
+        
+    template <typename Type>
+    Type& get() const {
+        MessageResult<Type>* res = dynamic_cast<MessageResult<Type>*>(this);
+        if (NULL == res) {
+            throw std::invalid_argument("Cannot cast to result type");
+        }
+        return res->get();
+    }
+    
+    template <typename Type>
+    void set(const Type &value) {
+        MessageResult<Type>* res = dynamic_cast<MessageResult<Type>*>(this);
+        if (NULL == res) {
+            throw std::invalid_argument("Cannot cast to result type");
+        }
+        res->set(value);
+    }
 };
 
 template <typename Type>
@@ -84,7 +103,7 @@ public:
     MessageHandler();
     virtual ~MessageHandler();
 
-    virtual int process(const MessageParams &params, MessageResultBase &result) = 0;
+    virtual int process(const MessageParams &params, MessageResultBase &result);
 };
 
 class MessageProcessor {

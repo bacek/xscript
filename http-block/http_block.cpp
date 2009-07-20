@@ -371,18 +371,17 @@ void
 HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, const Tag *tag) const {
     std::vector<std::string> headers;
     bool real_ip = false;
-    const std::string& ip_header_name = Policy::instance()->realIPHeaderName();
+    const std::string& ip_header_name = Policy::realIPHeaderName();
     if (proxy_ && request->countHeaders() > 0) {    
         std::vector<std::string> names;
         request->headerNames(names);
-        Policy* policy = Policy::instance();
         for (std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
             const std::string& name = *i;
             if (name.empty()) {
                 continue;
             }
             const std::string& value = request->getHeader(name);
-            if (policy->isSkippedProxyHeader(name)) {
+            if (Policy::isSkippedProxyHeader(name)) {
                 log()->debug("%s, skipped %s: %s", BOOST_CURRENT_FUNCTION, name.c_str(), value.c_str());
             }
             else {

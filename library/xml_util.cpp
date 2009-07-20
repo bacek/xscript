@@ -302,7 +302,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
             return NULL;
         }
 
-        std::string fileName = Policy::instance()->getPathByScheme(NULL, url);
+        std::string fileName = Policy::getPathByScheme(NULL, url);
         if (fileName != url) {
             log()->info("entityResolver: url changed %s", fileName.c_str());
         }

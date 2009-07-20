@@ -130,7 +130,7 @@ OfflineRequest::attach(const std::string &uri,
     processVariables(vars, env);
     processHeaders(headers, body.size(), env);
 
-    std::string processed_url = Policy::instance()->getPathByScheme(this, uri);
+    std::string processed_url = Policy::getPathByScheme(this, uri);
     
     size_t query_pos = processed_url.rfind('?');
     if (query_pos != std::string::npos) {

@@ -70,7 +70,7 @@ void
 ThreadedBlock::postInvoke(Context *ctx, const XmlDocHelper &doc) {
     
     bool show_elapsed_time = check_elapsed_time_ ? check_elapsed_time_ :
-        OperationMode::instance()->checkDevelopmentVariable(ctx->request(), SHOW_ELAPSED_TIME);
+        OperationMode::checkDevelopmentVariable(ctx->request(), SHOW_ELAPSED_TIME);
        
     if (!show_elapsed_time || tagged()) {
         return;

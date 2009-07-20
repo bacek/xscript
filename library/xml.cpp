@@ -30,7 +30,7 @@ Xml::filePath(const std::string &object) const {
         return object;
     }
 
-    std::string transformed = Policy::instance()->getPathByScheme(NULL, object);
+    std::string transformed = Policy::getPathByScheme(NULL, object);
     if (transformed.empty()) {
         throw std::runtime_error("Empty relative path");
     }

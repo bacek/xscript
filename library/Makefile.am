@@ -30,7 +30,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	default_request_response.cpp \
 	validator_factory.cpp validator.cpp validator_exception.cpp \
 	string_utils.cpp refresher.cpp vhost_arg_param.cpp guard_checker.cpp \
-	page_random_param.cpp
+	page_random_param.cpp message_interface.cpp
 
 libxscript_la_LDFLAGS = @VERSION_INFO@ -lcurl
 

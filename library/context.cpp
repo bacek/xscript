@@ -371,7 +371,7 @@ DocumentWriter*
 Context::documentWriter() {
     if (NULL == ctx_data_->writer_.get()) {
         ctx_data_->writer_ = std::auto_ptr<DocumentWriter>(
-            new XmlWriter(Policy::instance()->getOutputEncoding(request())));
+            new XmlWriter(Policy::getOutputEncoding(request())));
     }
 
     return ctx_data_->writer_.get();
