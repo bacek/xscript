@@ -30,8 +30,8 @@ protected:
     virtual int remainedTime(Context *ctx) const;
 
 private:
-    int remote_timeout_;
-    unsigned int retry_count_;
+    struct RemoteTaggedBlockData;
+    RemoteTaggedBlockData *rtb_data_;
 };
 
 class RetryInvokeError : public InvokeError {

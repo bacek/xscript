@@ -16,19 +16,31 @@
 
 namespace xscript {
 
+struct RemoteTaggedBlock::RemoteTaggedBlockData {
+    RemoteTaggedBlockData() : remote_timeout_(0), retry_count_(0)
+    {}
+    
+    ~RemoteTaggedBlockData() {
+    }
+    
+    int remote_timeout_;
+    unsigned int retry_count_;
+};
+
 RemoteTaggedBlock::RemoteTaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node), retry_count_(0) {
-    setDefaultRemoteTimeout();
-}
+        Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node),
+        rtb_data_(new RemoteTaggedBlockData())
+{}
 
 RemoteTaggedBlock::~RemoteTaggedBlock() {
+    delete rtb_data_;
 }
 
 void
 RemoteTaggedBlock::property(const char *name, const char *value) {
     if (strncasecmp(name, "remote-timeout", sizeof("remote-timeout")) == 0) {
         try {
-            remote_timeout_ = boost::lexical_cast<int>(value);
+            rtb_data_->remote_timeout_ = boost::lexical_cast<int>(value);
         }
         catch(const boost::bad_lexical_cast &e) {
             throw std::runtime_error(
@@ -37,7 +49,7 @@ RemoteTaggedBlock::property(const char *name, const char *value) {
     }
     else if (strncasecmp(name, "retry-count", sizeof("retry-count")) == 0) {
         try {
-            retry_count_ = boost::lexical_cast<unsigned int>(value);
+            rtb_data_->retry_count_ = boost::lexical_cast<unsigned int>(value);
         }
         catch(const boost::bad_lexical_cast &e) {
             throw std::runtime_error(
@@ -51,12 +63,12 @@ RemoteTaggedBlock::property(const char *name, const char *value) {
 
 int
 RemoteTaggedBlock::remoteTimeout() const {
-    return remote_timeout_ > 0 ? remote_timeout_ : timeout();
+    return rtb_data_->remote_timeout_ > 0 ? rtb_data_->remote_timeout_ : timeout();
 }
 
 void
 RemoteTaggedBlock::remoteTimeout(int timeout) {
-    remote_timeout_ = timeout;
+    rtb_data_->remote_timeout_ = timeout;
 }
 
 int
@@ -66,12 +78,12 @@ RemoteTaggedBlock::invokeTimeout() const {
 
 bool
 RemoteTaggedBlock::isDefaultRemoteTimeout() const {
-    return remote_timeout_ == 0;
+    return rtb_data_->remote_timeout_ == 0;
 }
 
 void
 RemoteTaggedBlock::setDefaultRemoteTimeout() {
-    remote_timeout_ = 0;
+    rtb_data_->remote_timeout_ = 0;
 }
 
 void
@@ -84,7 +96,7 @@ RemoteTaggedBlock::postParse() {
 
 unsigned int
 RemoteTaggedBlock::retryCount() const {
-    return retry_count_;
+    return rtb_data_->retry_count_;
 }
 
 XmlDocHelper
