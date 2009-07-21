@@ -239,7 +239,7 @@ class RealIPHeaderNameHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(&StringUtils::EMPTY_STRING);
-        return -1;
+        return 0;
     }
 };
 
@@ -265,7 +265,7 @@ class GetPathBySchemeHandler : public MessageHandler {
             result.set(*url);
         }
         
-        return -1;
+        return 0;
     }
 };
 
@@ -289,7 +289,7 @@ class GetRootBySchemeHandler : public MessageHandler {
             result.set(StringUtils::EMPTY_STRING);
         }
         
-        return -1;
+        return 0;
     }
 };
 
@@ -297,7 +297,7 @@ class GetKeyHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         const std::string* name = params.getParam<const std::string>(1);
         result.set(*name);
-        return -1;
+        return 0;
     }
 };
 
@@ -305,7 +305,7 @@ class GetOutputEncodingHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(Policy::UTF8_ENCODING);
-        return -1;
+        return 0;
     }
 };
 
@@ -313,7 +313,7 @@ class IsSkippedProxyHeaderHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         const std::string* header = params.getParam<const std::string>(0);
         result.set(ProxyHeadersHelper::skipped(header->c_str()));
-        return -1;
+        return 0;
     }
 };
 
@@ -321,7 +321,7 @@ class AllowCachingHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(true);
-        return -1;
+        return 0;
     }
 };
 
@@ -329,7 +329,7 @@ class AllowCachingInputCookieHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(true);
-        return -1;
+        return 0;
     }
 };
 
@@ -337,7 +337,7 @@ class AllowCachingOutputCookieHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(false);
-        return -1;
+        return 0;
     }
 };
 
@@ -345,7 +345,7 @@ class IsErrorDocHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(false);
-        return -1;
+        return 0;
     }
 };
 

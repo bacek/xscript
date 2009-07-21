@@ -185,7 +185,7 @@ class ProcessErrorHandler : public MessageHandler {
         (void)result;
         const std::string* message = params.getParam<const std::string>(0);
         log()->warn("%s", message->c_str());
-        return -1;
+        return 0;
     }
 };
 
@@ -195,7 +195,7 @@ class SendErrorHandler : public MessageHandler {
         Response* response = params.getParam<Response>(0);
         unsigned short* status = params.getParam<unsigned short>(1);
         response->sendError(*status, StringUtils::EMPTY_STRING);
-        return -1;
+        return 0;
     }
 };
 
@@ -203,7 +203,7 @@ class IsProductionHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(true);
-        return -1;
+        return 0;
     }
 };
 
@@ -217,7 +217,7 @@ class ProcessPerblockXsltErrorHandler : public MessageHandler {
                 ", method: " + block->method() + ". Perblock stylesheet: " + block->xsltName();
             XmlUtils::printXMLError(postfix);
         }
-        return -1;
+        return 0;
     }
 };
 
@@ -230,7 +230,7 @@ class ProcessMainXsltErrorHandler : public MessageHandler {
             std::string postfix = "Script: " + script->name() + ". Main stylesheet: " + style->name();
             XmlUtils::printXMLError(postfix);
         }
-        return -1;
+        return 0;
     }
 };
 
@@ -251,7 +251,7 @@ class CollectErrorHandler : public MessageHandler {
         }
         
         log()->error("%s", stream.str().c_str());  
-        return -1;
+        return 0;
     }
 };
 
@@ -259,7 +259,7 @@ class CheckDevelopmentVariableHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(false);
-        return -1;
+        return 0;
     }
 };
 
@@ -275,7 +275,7 @@ class CheckRemoteTimeoutHandler : public MessageHandler {
             log()->warn("remote timeout setup is prohibited for non-tagged blocks or when tag cache time is nil: %s",
                     block->owner()->name().c_str());
         }
-        return -1;
+        return 0;
     }
 };
 

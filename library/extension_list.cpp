@@ -100,6 +100,10 @@ ExtensionList::accepts(Extension *ext, const char *name, const char *ref, bool a
     const char *ename = (const char*) ext->name();
     const char *extref = (const char*) ext->nsref();
 
+    if (NULL == ename || NULL == extref) {
+        return false;
+    }
+    
     if (strncasecmp(ename, name, strlen(ename) + 1) != 0) {
         return false;
     }

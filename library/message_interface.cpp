@@ -44,7 +44,7 @@ int
 MessageHandler::process(const MessageParams &params, MessageResultBase &result) {
     (void)params;
     (void)result;
-    return -1;
+    return 0;
 }
 
 MessageProcessor::MessageProcessor()

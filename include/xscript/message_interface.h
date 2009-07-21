@@ -61,7 +61,7 @@ public:
     virtual ~MessageResultBase();
         
     template <typename Type>
-    Type& get() const {
+    Type& get() {
         MessageResult<Type>* res = dynamic_cast<MessageResult<Type>*>(this);
         if (NULL == res) {
             throw std::invalid_argument("Cannot cast to result type");
