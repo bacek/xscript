@@ -27,9 +27,20 @@ ServerRequest::~ServerRequest() {
 
 void
 ServerRequest::attach(std::istream *is, std::ostream *os, char *env[]) {
-    stream_ = os;
-    DefaultRequestResponse::attach(is, env);
-    stream_->exceptions(std::ios::badbit);
+    try {
+        stream_ = os;
+        DefaultRequestResponse::attach(is, env);
+        stream_->exceptions(std::ios::badbit);
+    }
+    catch(const BadRequestError &e) {
+        throw;
+    }
+    catch(const std::exception &e) {
+        throw BadRequestError(e.what());
+    }
+    catch(...) {
+        throw BadRequestError("Unknown error");
+    }
 }
 
 void

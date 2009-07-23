@@ -131,8 +131,7 @@ ProcServer::run() {
 
     boost::shared_ptr<RequestResponse> request(new OfflineRequest(root_));
     OfflineRequest* offline_request = dynamic_cast<OfflineRequest*>(request.get());
-    
-    bool attach_success = false;
+
     try {        
         offline_request->attach(url_,
                                 StringUtils::EMPTY_STRING,
@@ -142,22 +141,17 @@ ProcServer::run() {
                                 &std::cout,
                                 &std::cerr,
                                 need_output_);
-        attach_success = true;
         
         boost::shared_ptr<RequestData> data(
             new RequestData(request, boost::shared_ptr<State>(new State())));
 
         handleRequest(data);
     }
+    catch (const BadRequestError &e) {
+        OperationMode::sendError(offline_request, 400, e.what());
+    }
     catch (const std::exception &e) {
-        if (!attach_success) {
-            OperationMode::sendError(offline_request, 400, e.what());
-        }
-        else {
-            std::cout.flush();
-            std::cerr.flush();
-            throw;
-        }
+        std::cerr << e.what() << std::endl;
     }
     
     std::cout.flush();

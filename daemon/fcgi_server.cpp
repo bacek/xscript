@@ -141,20 +141,16 @@ FCGIServer::handle() {
                 ServerRequest *server_request = dynamic_cast<ServerRequest*>(request.get());
                 RequestDetacher request_detacher(server_request);
 
-                bool attach_success = false;
                 try {
                     server_request->attach(&is, &os, req.envp);
-                    attach_success = true;
 
                     boost::shared_ptr<RequestData> data(
                         new RequestData(request, boost::shared_ptr<State>(new State())));
 
                     handleRequest(data);
                 }
-                catch (const std::exception &e) {
-                    if (!attach_success) {
-                        OperationMode::sendError(server_request, 400, e.what());
-                    }
+                catch (const BadRequestError &e) {
+                    OperationMode::sendError(server_request, 400, e.what());
                     throw;
                 }
             }

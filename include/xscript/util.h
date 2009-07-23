@@ -31,6 +31,12 @@ private:
     std::string error_;
 };
 
+class BadRequestError : public UnboundRuntimeError {
+public:
+    BadRequestError(const std::string &error) : UnboundRuntimeError(error) {}
+};
+
+
 class InvokeError : public UnboundRuntimeError {
 public:
     typedef std::vector<std::pair<std::string, std::string> > InfoMapType;
