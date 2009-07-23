@@ -5,6 +5,8 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 
 #include <xscript/logger.h>
 #include <xscript/policy.h>
@@ -108,6 +110,46 @@ OfflineRequest::processVariables(const std::vector<std::string> &vars,
 }
 
 void
+OfflineRequest::processPathInfo(const std::string &path,
+                                std::vector<std::string> &env) {
+    
+    namespace fs = boost::filesystem;
+    
+    std::string path_info;
+    std::string path_real(FileUtils::normalize(path));
+    std::string::size_type pos = 0;
+    while((pos = path_real.find('/', pos + 1)) != std::string::npos) {
+        std::string local_path = path_real.substr(0, pos);
+        fs::path fs_path(local_path);
+        if (!fs::exists(fs_path)) {
+            break;
+        }
+        if (!fs::is_directory(fs_path)) {
+            path_info = path_real.substr(pos);
+            path_real = local_path;
+            break;
+        }
+    }
+    
+    std::string script_name;
+    size_t size = docroot_.size();
+    if (size <= path_real.size() &&
+        strncmp(docroot_.c_str(), path_real.c_str(), size) == 0) {
+        script_name = path_real.substr(size);
+    }
+    else {
+        script_name = path_real;
+    }
+
+    env.push_back(std::string("SCRIPT_NAME=").append(script_name));
+    env.push_back(std::string("SCRIPT_FILENAME=").append(path_real));
+    env.push_back(std::string("PATH_INFO=").append(path_info));
+    if (!path_info.empty()) {
+        env.push_back(std::string("PATH_TRANSLATED=").append(docroot_).append(path_info));
+    }   
+}
+
+void
 OfflineRequest::attach(const std::string &uri,
                        const std::string &xml,
                        const std::string &body,
@@ -190,21 +232,8 @@ OfflineRequest::attach(const std::string &uri,
     
             processed_url = docroot_ + "/" + processed_url;
         }
-    
-        std::string script_file_name = FileUtils::normalize(processed_url);
-        std::string script_name;
-        
-        size_t size = docroot_.size();
-        if (size <= script_file_name.size() &&
-            strncmp(docroot_.c_str(), processed_url.c_str(), size) == 0) {
-            script_name = script_file_name.substr(size);
-        }
-        else {
-            script_name = script_file_name;
-        }
-    
-        env.push_back(std::string("SCRIPT_NAME=").append(script_name));
-        env.push_back(std::string("SCRIPT_FILENAME=").append(script_file_name));
+
+        processPathInfo(processed_url, env);
         
         char* env_vars[env.size() + 1];
         env_vars[env.size()] = NULL;
