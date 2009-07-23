@@ -1,3 +1,10 @@
+xscript (5.64-1) unstable; urgency=low
+
+  * path_info processing added to offline request parsing
+  * bad request exception handling added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 23 Jul 2009 13:52:54 +0400
+
 xscript (5.64-0) unstable; urgency=low
 
   * message interface added
