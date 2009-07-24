@@ -1,3 +1,9 @@
+xscript (5.64-3) unstable; urgency=low
+
+  * error checking added to message interface
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 24 Jul 2009 16:42:19 +0400
+
 xscript (5.64-2) unstable; urgency=low
 
   * ProcessPerblockXsltError fixed in development mode
