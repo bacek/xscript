@@ -1,3 +1,9 @@
+xscript (5.64-2) unstable; urgency=low
+
+  * ProcessPerblockXsltError fixed in development mode
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 24 Jul 2009 12:39:18 +0400
+
 xscript (5.64-1) unstable; urgency=low
 
   * path_info processing added to offline request parsing
