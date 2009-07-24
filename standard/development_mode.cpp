@@ -64,7 +64,7 @@ class AssignBlockErrorHandler : public MessageHandler {
 class ProcessPerblockXsltErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        const Context* ctx = params.getParam<Context>(0);
+        const Context* ctx = params.getParam<const Context>(0);
         const Block* block = params.getParam<const Block>(1);
         std::string res = ctx->getRuntimeError(block);
         if (!res.empty()) {
