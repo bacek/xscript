@@ -452,9 +452,8 @@ Block::errorResult(const InvokeError &error,
     XmlNodeHelper main_node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)tag_name, NULL));
     XmlUtils::throwUnless(NULL != main_node.get());
 
-    std::stringstream stream;
-    stream << "Caught invocation error" << ": ";
     xmlNewProp(main_node.get(), (const xmlChar*)"error", (const xmlChar*)error.what());
+    std::stringstream stream;
     stream << error.what() << ". ";
 
     xmlNewProp(main_node.get(), (const xmlChar*)"block", (const xmlChar*)name());
@@ -499,9 +498,7 @@ std::string
 Block::errorMessage(const InvokeError &error) const {
 
     std::stringstream stream;
-    stream << "Caught invocation error" << ": " << error.what() << ". ";
-
-    stream << "block: " << name() << ". ";
+    stream << error.what() << ". " << "block: " << name() << ". ";
 
     if (!method().empty()) {
         stream << "method: " << method() << ". ";
@@ -705,7 +702,15 @@ Block::postInvoke(Context *, const XmlDocHelper &) {
 
 void
 Block::callInternal(boost::shared_ptr<Context> ctx, unsigned int slot) {
-    ctx->result(slot, invoke(ctx));
+    try {
+        ctx->result(slot, invoke(ctx));
+    }
+    catch(const std::exception &e) {
+        log()->error("exception caught in block call: %s", e.what());
+    }
+    catch(...) {
+        log()->error("unknown exception caught in block call");
+    }
 }
 
 void

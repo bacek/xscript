@@ -79,15 +79,21 @@ MessageProcessor::process(const std::string &key,
                           MessageResultBase &result) {
     std::map<std::string, HandlerList>::iterator it = handlers_.find(key);
     if (handlers_.end() == it) {
-        throw std::runtime_error("MessageProcessor: no handler");
+        throw MessageError("Message interface error. Cannot find handler: " + key);
     }
     
-    HandlerList& handlers = it->second; 
-    for(HandlerList::iterator hit = handlers.begin(); hit != handlers.end(); ++hit) {
-        if ((*hit)->process(params, result) < 0) {
-            break;
+    try {
+        HandlerList& handlers = it->second; 
+        for(HandlerList::iterator hit = handlers.begin(); hit != handlers.end(); ++hit) {
+            if ((*hit)->process(params, result) < 0) {
+                break;
+            }
         }
     }
+    catch(const MessageError &e) {
+        throw MessageError(std::string(e.what()) + ". Method: " + key);
+    }
+    
 }
 
 } // namespace xscript

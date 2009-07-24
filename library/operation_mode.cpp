@@ -130,8 +130,8 @@ OperationMode::processMainXsltError(const Context *ctx, const Script *script, co
     
     MessageParams params(3, param_list);
     MessageResultBase result;
-  
-    MessageProcessor::instance()->process(PROCESS_SCRIPT_ERROR_METHOD, params, result);
+    
+    MessageProcessor::instance()->process(PROCESS_MAIN_XSLT_ERROR_METHOD, params, result);
 }
 
 void

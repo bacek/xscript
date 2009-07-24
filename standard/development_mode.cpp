@@ -64,7 +64,7 @@ class AssignBlockErrorHandler : public MessageHandler {
 class ProcessPerblockXsltErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        const Context* ctx = params.getParam<const Context>(0);
+        const Context* ctx = params.getParam<Context>(0);
         const Block* block = params.getParam<const Block>(1);
         std::string res = ctx->getRuntimeError(block);
         if (!res.empty()) {
@@ -112,9 +112,9 @@ class ProcessMainXsltErrorHandler : public MessageHandler {
         const Stylesheet* style = params.getParam<const Stylesheet>(2);
         
         std::string res = ctx->getRuntimeError(NULL);
-        if (!res.empty()) {
+        if (!res.empty()) {            
             std::stringstream stream;
-            stream << res << ". Script: " << script->name() << ". Main stylesheet: " << style->name(); 
+            stream << res << ". Script: " << script->name() << ". Main stylesheet: " << style->name();
             throw InvokeError(stream.str());
         }
         std::string error = XmlUtils::getXMLError();
