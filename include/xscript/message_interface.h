@@ -23,6 +23,21 @@ public:
     MessageParamError(const std::string &error, unsigned int n);
 };
 
+class ArgumentNotFoundError : public MessageParamError {
+public:
+    ArgumentNotFoundError(unsigned int n);
+};
+
+class ArgumentCastError : public MessageParamError {
+public:
+    ArgumentCastError(unsigned int n);
+};
+
+class ResultCastError : public MessageError {
+public:
+    ResultCastError();
+};
+
 class MessageParamBase {
 public:
     virtual ~MessageParamBase() {}
@@ -52,13 +67,13 @@ public:
     template <typename Type>
     Type* getParam(unsigned int n) const {
         if (n >= size_) {
-            throw MessageParamError("Argument not found", n);
+            throw ArgumentNotFoundError(n);
         }
         if (strcmp(typeid(*(params_[n])).name(), typeid(MessageParam<Type>).name()) == 0) {
             MessageParam<Type>* casted_param = static_cast<MessageParam<Type>*>(params_[n]);
             return casted_param->value();
         }
-        throw MessageParamError("Cannot cast argument", n);
+        throw ArgumentCastError(n);
     }
     
     unsigned int size() const;
@@ -81,7 +96,7 @@ public:
             MessageResult<Type>* res = static_cast<MessageResult<Type>*>(this);
             return res->get();
         }
-        throw MessageError("Cannot cast result");
+        throw ResultCastError();
     }
     
     template <typename Type>
@@ -90,7 +105,7 @@ public:
             MessageResult<Type>* res = static_cast<MessageResult<Type>*>(this);
             return res->set(value);
         }
-        throw MessageError("Cannot cast result");
+        throw ResultCastError();
     }
 };
 
