@@ -1,8 +1,14 @@
+xscript (5.64-5) unstable; urgency=low
+
+  * Message interface fixed for offline mode
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 28 Jul 2009 13:43:10 +0400
+
 xscript (5.64-4) unstable; urgency=low
 
   * ProcessPerblockXsltError fixed
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 24 Jul 2009 16:59:36 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 27 Jul 2009 14:58:03 +0400
 
 xscript (5.64-3) unstable; urgency=low
 

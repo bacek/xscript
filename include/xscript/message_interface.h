@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "xscript/util.h"
@@ -16,12 +15,17 @@ namespace xscript {
 
 class MessageError : public CriticalInvokeError {
 public:
-    MessageError(const std::string &error) : CriticalInvokeError(error) {}
+    MessageError(const std::string &error);
+};
+
+class MessageParamError : public MessageError {
+public:
+    MessageParamError(const std::string &error, unsigned int n);
 };
 
 class MessageParamBase {
 public:
-    virtual ~MessageParamBase() {};
+    virtual ~MessageParamBase() {}
 protected:
     MessageParamBase() {}
 };
@@ -48,15 +52,13 @@ public:
     template <typename Type>
     Type* getParam(unsigned int n) const {
         if (n >= size_) {
-            throw MessageError("Message interface error. Argument not found: " + boost::lexical_cast<std::string>(n));
+            throw MessageParamError("Argument not found", n);
         }
-        try {
-            MessageParam<Type>& casted_param = dynamic_cast<MessageParam<Type>&>(*(params_[n]));
-            return casted_param.value();
+        if (strcmp(typeid(*(params_[n])).name(), typeid(MessageParam<Type>).name()) == 0) {
+            MessageParam<Type>* casted_param = static_cast<MessageParam<Type>*>(params_[n]);
+            return casted_param->value();
         }
-        catch(std::bad_cast) {
-            throw MessageError("Message interface error. Cannot cast argument: " + boost::lexical_cast<std::string>(n));
-        }
+        throw MessageParamError("Cannot cast argument", n);
     }
     
     unsigned int size() const;
@@ -75,24 +77,20 @@ public:
         
     template <typename Type>
     Type& get() {
-        try {
-            MessageResult<Type>& res = dynamic_cast<MessageResult<Type>&>(*this);
-            return res.get();
+        if (strcmp(typeid(*this).name(), typeid(MessageResult<Type>).name()) == 0) {
+            MessageResult<Type>* res = static_cast<MessageResult<Type>*>(this);
+            return res->get();
         }
-        catch(std::bad_cast) {
-            throw MessageError("Message interface error. Cannot cast result");
-        }
+        throw MessageError("Cannot cast result");
     }
     
     template <typename Type>
     void set(const Type &value) {
-        try {
-            MessageResult<Type>& res = dynamic_cast<MessageResult<Type>&>(*this);
-            res.set(value);
+        if (strcmp(typeid(*this).name(), typeid(MessageResult<Type>).name()) == 0) {
+            MessageResult<Type>* res = static_cast<MessageResult<Type>*>(this);
+            return res->set(value);
         }
-        catch(std::bad_cast) {
-            throw MessageError("Message interface error. Cannot cast result");
-        }
+        throw MessageError("Cannot cast result");
     }
 };
 

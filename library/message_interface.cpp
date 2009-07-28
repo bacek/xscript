@@ -12,13 +12,27 @@
 
 namespace xscript {
 
+MessageError::MessageError(const std::string &error) :
+    CriticalInvokeError("Message interface error. " + error)
+{}
+
+MessageParamError::MessageParamError(const std::string &error, unsigned int n) :
+    MessageError(error + ": " + boost::lexical_cast<std::string>(n))
+{}
+
 MessageParams::MessageParams() :
     size_(0), params_(NULL)
 {}
 
 MessageParams::MessageParams(unsigned int size, MessageParamBase** params) :
     size_(size), params_(params)
-{}
+{
+    for(unsigned int i = 0; i < size; ++i) {
+        if (NULL == params[i]) {
+            throw MessageParamError("Null param", i);
+        }
+    }
+}
 
 MessageParams::~MessageParams()
 {}
