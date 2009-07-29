@@ -570,7 +570,7 @@ Script::parse(const std::string &xml) {
         }
 
         XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT) >= 0);
-        
+
         TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
         TimeMapType fake;
         modified_info ? swapModifiedInfo(*modified_info) : swapModifiedInfo(fake);
@@ -579,6 +579,8 @@ Script::parse(const std::string &xml) {
         if (!error.empty()) {
             throw UnboundRuntimeError(error);
         }
+        
+        OperationMode::processXmlError(name());
     }
 
     std::vector<xmlNodePtr> xscript_nodes;

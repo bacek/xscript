@@ -23,6 +23,7 @@ public:
     static void processPerblockXsltError(const Context *ctx, const Block *block);
     static void processScriptError(const Context *ctx, const Script *script);
     static void processMainXsltError(const Context *ctx, const Script *script, const Stylesheet *style);
+    static void processXmlError(const std::string &filename);
     static void collectError(const InvokeError &error, InvokeError &full_error);
     static bool checkDevelopmentVariable(const Request* request, const std::string &var);
     static void checkRemoteTimeout(RemoteTaggedBlock *block);
@@ -34,6 +35,7 @@ public:
     static const std::string PROCESS_PERBLOCK_XSLT_ERROR_METHOD;
     static const std::string PROCESS_SCRIPT_ERROR_METHOD;
     static const std::string PROCESS_MAIN_XSLT_ERROR_METHOD;
+    static const std::string PROCESS_XML_ERROR_METHOD;
     static const std::string COLLECT_ERROR_METHOD;
     static const std::string CHECK_DEVELOPMENT_VARIABLE_METHOD;
     static const std::string CHECK_REMOTE_TIMEOUT_METHOD;

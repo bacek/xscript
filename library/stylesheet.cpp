@@ -201,6 +201,8 @@ Stylesheet::parse() {
         if (!error.empty()) {
             throw UnboundRuntimeError(error);
         }
+        
+        OperationMode::processXmlError(name());
     }
 
     parseStylesheet(stylesheet_.get());

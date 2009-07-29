@@ -60,15 +60,13 @@ public:
     void report(const char *format, ...);
     void report(const char *format, va_list args);
 
-    bool hasError() const {
-        return error_;
-    }
+    bool hasError() const;
 
     static XmlErrorReporter* reporter();
-
+    
 private:
-    bool error_;
     std::string message_;
+    bool error_;
 
     static boost::thread_specific_ptr<XmlErrorReporter> reporter_;
     static const std::string UNKNOWN_XML_ERROR;
@@ -307,7 +305,16 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
             log()->info("entityResolver: url changed %s", fileName.c_str());
         }
         try {
+            XmlErrorReporter *reporter = XmlErrorReporter::reporter();
+            bool had_error = reporter->hasError();
             xmlParserInputPtr ret = default_loader_(fileName.c_str(), id, ctxt);
+            if (!had_error && reporter->hasError()) {
+                const std::string &message = reporter->message();
+                if (std::string::npos != message.find("failed to load external entity") &&
+                    std::string::npos == message.find("no fallback was found")) {
+                    reporter->reset();
+                }
+            }
             if (ret == NULL) {
                 std::string error = std::string("Cannot resolve external entity: ") +
                                     std::string(url ? url : "");
@@ -458,13 +465,18 @@ XmlErrorReporter::XmlErrorReporter() : error_(false)
 
 void
 XmlErrorReporter::reset() {
-    error_ = false;
     message_.clear();
+    error_ = false;
 }
 
 const std::string&
 XmlErrorReporter::message() const {
-    return error_ ? message_ : UNKNOWN_XML_ERROR;
+    return message_.empty() ? UNKNOWN_XML_ERROR : message_;
+}
+
+bool
+XmlErrorReporter::hasError() const {
+    return error_;
 }
 
 void

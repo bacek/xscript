@@ -28,6 +28,7 @@ const std::string OperationMode::ASSIGN_BLOCK_ERROR_METHOD = "OPERATION_MODE_ASS
 const std::string OperationMode::PROCESS_PERBLOCK_XSLT_ERROR_METHOD = "OPERATION_MODE_PROCESS_PERBLOCK_XSLT_ERROR";
 const std::string OperationMode::PROCESS_SCRIPT_ERROR_METHOD = "OPERATION_MODE_PROCESS_SCRIPT_ERROR";
 const std::string OperationMode::PROCESS_MAIN_XSLT_ERROR_METHOD = "OPERATION_MODE_PROCESS_MAIN_XSLT_ERROR";
+const std::string OperationMode::PROCESS_XML_ERROR_METHOD = "OPERATION_MODE_PROCESS_XML_ERROR";
 const std::string OperationMode::COLLECT_ERROR_METHOD = "OPERATION_MODE_COLLECT_ERROR";
 const std::string OperationMode::CHECK_DEVELOPMENT_VARIABLE_METHOD = "OPERATION_MODE_CHECK_DEVELOPMENT_VARIABLE";
 const std::string OperationMode::CHECK_REMOTE_TIMEOUT_METHOD = "OPERATION_MODE_CHECK_REMOTE_TIMEOUT";
@@ -135,6 +136,19 @@ OperationMode::processMainXsltError(const Context *ctx, const Script *script, co
 }
 
 void
+OperationMode::processXmlError(const std::string &filename) {
+    MessageParam<const std::string> filename_param(&filename);
+    
+    MessageParamBase* param_list[1];
+    param_list[0] = &filename_param;
+    
+    MessageParams params(1, param_list);
+    MessageResultBase result;
+    
+    MessageProcessor::instance()->process(PROCESS_XML_ERROR_METHOD, params, result);
+}
+
+void
 OperationMode::collectError(const InvokeError &error, InvokeError &full_error) {  
     MessageParam<const InvokeError> error_param(&error);
     MessageParam<InvokeError> full_error_param(&full_error);
@@ -234,6 +248,18 @@ class ProcessMainXsltErrorHandler : public MessageHandler {
     }
 };
 
+class ProcessXmlErrorHandler : public MessageHandler {
+    int process(const MessageParams &params, MessageResultBase &result) {
+        (void)result;
+        if (XmlUtils::hasXMLError()) {
+            const std::string* filename = params.getParam<const std::string>(0);
+            std::string postfix = "File: " + *filename;
+            XmlUtils::printXMLError(postfix);
+        }
+        return 0;
+    }
+};
+
 class CollectErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
@@ -295,6 +321,8 @@ struct HandlerRegisterer {
                 boost::shared_ptr<MessageHandler>(new MessageHandler()));
         MessageProcessor::instance()->registerBack(OperationMode::PROCESS_MAIN_XSLT_ERROR_METHOD,
                 boost::shared_ptr<MessageHandler>(new ProcessMainXsltErrorHandler()));
+        MessageProcessor::instance()->registerBack(OperationMode::PROCESS_XML_ERROR_METHOD,
+                boost::shared_ptr<MessageHandler>(new ProcessXmlErrorHandler()));
         MessageProcessor::instance()->registerBack(OperationMode::COLLECT_ERROR_METHOD,
                 boost::shared_ptr<MessageHandler>(new CollectErrorHandler()));
         MessageProcessor::instance()->registerBack(OperationMode::CHECK_DEVELOPMENT_VARIABLE_METHOD,

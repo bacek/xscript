@@ -1,3 +1,9 @@
+xscript (5.64-6) unstable; urgency=low
+
+  * suppress entity resolving error in case of fallback
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 29 Jul 2009 12:36:11 +0400
+
 xscript (5.64-5) unstable; urgency=low
 
   * Message interface fixed for offline mode

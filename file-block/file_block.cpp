@@ -197,6 +197,9 @@ FileBlock::loadFile(const std::string &file_name, boost::shared_ptr<Context> ctx
         if (!error.empty()) {
             throw InvokeError(error);
         }
+        
+        OperationMode::processXmlError(file_name);
+        
         return doc;
     }
 }

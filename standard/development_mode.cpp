@@ -70,9 +70,11 @@ class ProcessPerblockXsltErrorHandler : public MessageHandler {
         if (!res.empty()) {
             throw CriticalInvokeError(res, "xslt", block->xsltName());
         }
-        std::string error = XmlUtils::getXMLError();
-        if (!error.empty()) {
-            throw InvokeError(error, "xslt", block->xsltName());
+        if (XmlUtils::hasXMLError()) {
+            std::string error = XmlUtils::getXMLError();
+            if (!error.empty()) {
+                throw InvokeError(error, "xslt", block->xsltName());
+            }
         }
         return -1;
     }
@@ -117,11 +119,30 @@ class ProcessMainXsltErrorHandler : public MessageHandler {
             stream << res << ". Script: " << script->name() << ". Main stylesheet: " << style->name();
             throw InvokeError(stream.str());
         }
-        std::string error = XmlUtils::getXMLError();
-        if (!error.empty()) {
-            std::stringstream stream;
-            stream << error << ". Script: " << script->name() << ". Main stylesheet: " << style->name();
-            throw InvokeError(stream.str());
+        if (XmlUtils::hasXMLError()) {
+            std::string error = XmlUtils::getXMLError();
+            if (!error.empty()) {
+                std::stringstream stream;
+                stream << error << ". Script: " << script->name() << ". Main stylesheet: " << style->name();
+                throw InvokeError(stream.str());
+            }
+        }
+        
+        return -1;
+    }
+};
+
+class ProcessXmlErrorHandler : public MessageHandler {
+    int process(const MessageParams &params, MessageResultBase &result) {
+        (void)result;
+        if (XmlUtils::hasXMLError()) {
+            std::string error = XmlUtils::getXMLError();
+            if (!error.empty()) {
+                const std::string* filename = params.getParam<const std::string>(0);
+                std::stringstream stream;
+                stream << error << ". File: " << *filename;
+                throw UnboundRuntimeError(error);
+            }
         }
         
         return -1;
@@ -184,6 +205,8 @@ struct HandlerRegisterer {
                 boost::shared_ptr<MessageHandler>(new ProcessScriptErrorHandler()));
         MessageProcessor::instance()->registerFront(OperationMode::PROCESS_MAIN_XSLT_ERROR_METHOD,
                 boost::shared_ptr<MessageHandler>(new ProcessMainXsltErrorHandler()));
+        MessageProcessor::instance()->registerFront(OperationMode::PROCESS_XML_ERROR_METHOD,
+                boost::shared_ptr<MessageHandler>(new ProcessXmlErrorHandler()));
         MessageProcessor::instance()->registerFront(OperationMode::COLLECT_ERROR_METHOD,
                 boost::shared_ptr<MessageHandler>(new CollectErrorHandler()));
         MessageProcessor::instance()->registerFront(OperationMode::CHECK_DEVELOPMENT_VARIABLE_METHOD,
