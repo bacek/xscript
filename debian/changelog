@@ -1,3 +1,10 @@
+xscript (5.65-0) unstable; urgency=low
+
+  * message interface changed
+  * constant method added to Param
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 30 Jul 2009 12:13:07 +0400
+
 xscript (5.64-6) unstable; urgency=low
 
   * suppress entity resolving error in case of fallback
