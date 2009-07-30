@@ -27,6 +27,7 @@ public:
     virtual ~SimpleParam();
 
     virtual const char* type() const;
+    virtual bool constant() const;
     T typedValue() const;
     virtual std::string asString(const Context *ctx) const;
     virtual void add(const Context *ctx, ArgList &al) const;
@@ -40,6 +41,11 @@ Param::Param(Object * /* owner */, xmlNodePtr node) :
 }
 
 Param::~Param() {
+}
+
+bool
+Param::constant() const {
+    return false;
 }
 
 void
@@ -87,6 +93,11 @@ SimpleParam<T>::SimpleParam(Object *owner, xmlNodePtr node) :
 
 template<typename T>
 SimpleParam<T>::~SimpleParam() {
+}
+
+template<typename T> bool
+SimpleParam<T>::constant() const {
+    return true;
 }
 
 template<typename T> const char*

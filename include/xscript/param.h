@@ -30,6 +30,8 @@ public:
 
     virtual const char* type() const = 0;
     virtual const std::string& value() const;
+    
+    virtual bool constant() const;
 
     virtual std::string asString(const Context *ctx) const = 0;
     virtual void add(const Context *ctx, ArgList &al) const = 0;

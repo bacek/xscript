@@ -1,9 +1,5 @@
 #include "settings.h"
 
-#include <stdexcept>
-
-#include <iostream>
-
 #include "xscript/message_interface.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -11,26 +7,6 @@
 #endif
 
 namespace xscript {
-
-MessageError::MessageError(const std::string &error) :
-    CriticalInvokeError("Message interface error. " + error)
-{}
-
-MessageParamError::MessageParamError(const std::string &error, unsigned int n) :
-    MessageError(error + ": " + boost::lexical_cast<std::string>(n))
-{}
-
-ArgumentNotFoundError::ArgumentNotFoundError(unsigned int n) :
-    MessageParamError("Argument not found", n)
-{}
-
-ArgumentCastError::ArgumentCastError(unsigned int n) :
-    MessageParamError("Cannot cast argument", n)
-{}
-
-ResultCastError::ResultCastError() :
-    MessageError("Cannot cast result")
-{}
 
 MessageParams::MessageParams() :
     size_(0), params_(NULL)

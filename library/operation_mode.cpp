@@ -197,8 +197,8 @@ namespace OperationModeHandlers {
 class ProcessErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        const std::string* message = params.getParam<const std::string>(0);
-        log()->warn("%s", message->c_str());
+        const std::string& message = params.get<const std::string>(0);
+        log()->warn("%s", message.c_str());
         return 0;
     }
 };
@@ -206,9 +206,9 @@ class ProcessErrorHandler : public MessageHandler {
 class SendErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        Response* response = params.getParam<Response>(0);
-        unsigned short* status = params.getParam<unsigned short>(1);
-        response->sendError(*status, StringUtils::EMPTY_STRING);
+        Response* response = params.getPtr<Response>(0);
+        unsigned short status = params.get<unsigned short>(1);
+        response->sendError(status, StringUtils::EMPTY_STRING);
         return 0;
     }
 };
@@ -224,7 +224,7 @@ class IsProductionHandler : public MessageHandler {
 class ProcessPerblockXsltErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        const Block* block = params.getParam<const Block>(1);
+        const Block* block = params.getPtr<const Block>(1);
         if (XmlUtils::hasXMLError()) {
             std::string postfix = "Script: " + block->owner()->name() +
                 ". Block: name: " + block->name() + ", id: " + block->id() +
@@ -238,8 +238,8 @@ class ProcessPerblockXsltErrorHandler : public MessageHandler {
 class ProcessMainXsltErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        const Script* script = params.getParam<const Script>(1);
-        const Stylesheet* style = params.getParam<const Stylesheet>(2);
+        const Script* script = params.getPtr<const Script>(1);
+        const Stylesheet* style = params.getPtr<const Stylesheet>(2);
         if (XmlUtils::hasXMLError()) {
             std::string postfix = "Script: " + script->name() + ". Main stylesheet: " + style->name();
             XmlUtils::printXMLError(postfix);
@@ -252,8 +252,8 @@ class ProcessXmlErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         if (XmlUtils::hasXMLError()) {
-            const std::string* filename = params.getParam<const std::string>(0);
-            std::string postfix = "File: " + *filename;
+            const std::string& filename = params.get<const std::string>(0);
+            std::string postfix = "File: " + filename;
             XmlUtils::printXMLError(postfix);
         }
         return 0;
@@ -263,13 +263,13 @@ class ProcessXmlErrorHandler : public MessageHandler {
 class CollectErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        const InvokeError* error = params.getParam<const InvokeError>(0);
-        InvokeError* full_error = params.getParam<InvokeError>(1);
+        const InvokeError& error = params.get<const InvokeError>(0);
+        InvokeError& full_error = params.get<InvokeError>(1);
         
         std::stringstream stream;
-        stream << error->what() << ": " << full_error->what_info() << "";
+        stream << error.what() << ": " << full_error.what_info() << "";
         
-        const InvokeError::InfoMapType& info = error->info();
+        const InvokeError::InfoMapType& info = error.info();
         for(InvokeError::InfoMapType::const_iterator it = info.begin();
             it != info.end();
             ++it) {
@@ -292,7 +292,7 @@ class CheckDevelopmentVariableHandler : public MessageHandler {
 class CheckRemoteTimeoutHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        RemoteTaggedBlock* block = params.getParam<RemoteTaggedBlock>(0);
+        RemoteTaggedBlock* block = params.getPtr<RemoteTaggedBlock>(0);
         if (block->retryCount() == 0 &&
             !block->tagged() &&
             !block->isDefaultRemoteTimeout()) {

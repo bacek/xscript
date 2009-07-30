@@ -245,24 +245,24 @@ class RealIPHeaderNameHandler : public MessageHandler {
 
 class GetPathBySchemeHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
-        const Request* request = params.getParam<const Request>(0);
-        const std::string* url = params.getParam<const std::string>(1);
+        const Request* request = params.getPtr<const Request>(0);
+        const std::string& url = params.get<const std::string>(1);
 
         const char file_scheme[] = "file://";
         const char root_scheme[] = "docroot://";
         
-        if (strncasecmp(url->c_str(), file_scheme, sizeof(file_scheme) - 1) == 0) {
-            result.set(url->substr(sizeof(file_scheme) - 1));
+        if (strncasecmp(url.c_str(), file_scheme, sizeof(file_scheme) - 1) == 0) {
+            result.set(url.substr(sizeof(file_scheme) - 1));
         }
-        else if (strncasecmp(url->c_str(), root_scheme, sizeof(root_scheme) - 1) == 0) {
+        else if (strncasecmp(url.c_str(), root_scheme, sizeof(root_scheme) - 1) == 0) {
             std::string::size_type pos = sizeof(root_scheme) - 1;
-            if ('/' != (*url)[pos]) {
+            if ('/' != url[pos]) {
                 --pos;
             }
-            result.set(VirtualHostData::instance()->getDocumentRoot(request) + (url->c_str() + pos));
+            result.set(VirtualHostData::instance()->getDocumentRoot(request) + (url.c_str() + pos));
         }
         else {
-            result.set(*url);
+            result.set(url);
         }
         
         return 0;
@@ -271,18 +271,18 @@ class GetPathBySchemeHandler : public MessageHandler {
 
 class GetRootBySchemeHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
-        const Request* request = params.getParam<const Request>(0);
-        const std::string* url = params.getParam<const std::string>(1);
+        const Request* request = params.getPtr<const Request>(0);
+        const std::string& url = params.get<const std::string>(1);
 
         const char file_scheme[] = "file://";
         const char root_scheme[] = "docroot://";
         const char http_scheme[] = "http://";
         const char https_scheme[] = "https://";
 
-        if ((strncasecmp(url->c_str(), file_scheme, sizeof(file_scheme) - 1) == 0) ||
-            (strncasecmp(url->c_str(), root_scheme, sizeof(root_scheme) - 1) == 0) ||
-            (strncasecmp(url->c_str(), http_scheme, sizeof(http_scheme) - 1) == 0) ||
-            (strncasecmp(url->c_str(), https_scheme, sizeof(https_scheme) - 1) == 0)) {
+        if ((strncasecmp(url.c_str(), file_scheme, sizeof(file_scheme) - 1) == 0) ||
+            (strncasecmp(url.c_str(), root_scheme, sizeof(root_scheme) - 1) == 0) ||
+            (strncasecmp(url.c_str(), http_scheme, sizeof(http_scheme) - 1) == 0) ||
+            (strncasecmp(url.c_str(), https_scheme, sizeof(https_scheme) - 1) == 0)) {
             result.set(VirtualHostData::instance()->getDocumentRoot(request));
         }
         else {
@@ -295,8 +295,8 @@ class GetRootBySchemeHandler : public MessageHandler {
 
 class GetKeyHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
-        const std::string* name = params.getParam<const std::string>(1);
-        result.set(*name);
+        const std::string& name = params.get<const std::string>(1);
+        result.set(name);
         return 0;
     }
 };
@@ -311,8 +311,8 @@ class GetOutputEncodingHandler : public MessageHandler {
 
 class IsSkippedProxyHeaderHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
-        const std::string* header = params.getParam<const std::string>(0);
-        result.set(ProxyHeadersHelper::skipped(header->c_str()));
+        const std::string& header = params.get<const std::string>(0);
+        result.set(ProxyHeadersHelper::skipped(header.c_str()));
         return 0;
     }
 };

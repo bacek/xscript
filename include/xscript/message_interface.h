@@ -9,34 +9,9 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "xscript/util.h"
+#include "xscript/message_errors.h"
 
 namespace xscript {
-
-class MessageError : public CriticalInvokeError {
-public:
-    MessageError(const std::string &error);
-};
-
-class MessageParamError : public MessageError {
-public:
-    MessageParamError(const std::string &error, unsigned int n);
-};
-
-class ArgumentNotFoundError : public MessageParamError {
-public:
-    ArgumentNotFoundError(unsigned int n);
-};
-
-class ArgumentCastError : public MessageParamError {
-public:
-    ArgumentCastError(unsigned int n);
-};
-
-class ResultCastError : public MessageError {
-public:
-    ResultCastError();
-};
 
 class MessageParamBase {
 public:
@@ -65,15 +40,24 @@ public:
     ~MessageParams();
     
     template <typename Type>
-    Type* getParam(unsigned int n) const {
+    Type* getPtr(unsigned int n) const {
         if (n >= size_) {
-            throw ArgumentNotFoundError(n);
+            throw MessageParamNotFoundError(n);
         }
         if (strcmp(typeid(*(params_[n])).name(), typeid(MessageParam<Type>).name()) == 0) {
             MessageParam<Type>* casted_param = static_cast<MessageParam<Type>*>(params_[n]);
             return casted_param->value();
         }
-        throw ArgumentCastError(n);
+        throw MessageParamCastError(n);
+    }
+    
+    template <typename Type>
+    Type& get(unsigned int n) const {
+        Type* param = getPtr<Type>(n);
+        if (NULL == param) {
+            throw MessageParamNilError(n);
+        }
+        return *param;
     }
     
     unsigned int size() const;
@@ -96,7 +80,7 @@ public:
             MessageResult<Type>* res = static_cast<MessageResult<Type>*>(this);
             return res->get();
         }
-        throw ResultCastError();
+        throw MessageResultCastError();
     }
     
     template <typename Type>
@@ -105,7 +89,7 @@ public:
             MessageResult<Type>* res = static_cast<MessageResult<Type>*>(this);
             return res->set(value);
         }
-        throw ResultCastError();
+        throw MessageResultCastError();
     }
 };
 

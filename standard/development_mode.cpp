@@ -25,19 +25,19 @@ namespace DevelopmentModeHandlers {
 class ProcessErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        const std::string* message = params.getParam<const std::string>(0);
-        log()->error("%s", message->c_str());
-        throw UnboundRuntimeError(*message);
+        const std::string& message = params.get<const std::string>(0);
+        log()->error("%s", message.c_str());
+        throw UnboundRuntimeError(message);
     }
 };
 
 class SendErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        Response* response = params.getParam<Response>(0);
-        unsigned short* status = params.getParam<unsigned short>(1);
-        const std::string *message = params.getParam<const std::string>(2);
-        response->sendError(*status, *message);
+        Response* response = params.getPtr<Response>(0);
+        unsigned short status = params.get<unsigned short>(1);
+        const std::string& message = params.get<const std::string>(2);
+        response->sendError(status, message);
         return -1;
     }
 };
@@ -53,10 +53,10 @@ class IsProductionHandler : public MessageHandler {
 class AssignBlockErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        Context* ctx = params.getParam<Context>(0);
-        const Block* block = params.getParam<const Block>(1);
-        const std::string *error = params.getParam<const std::string>(2);
-        ctx->assignRuntimeError(block, *error);
+        Context* ctx = params.getPtr<Context>(0);
+        const Block* block = params.getPtr<const Block>(1);
+        const std::string& error = params.get<const std::string>(2);
+        ctx->assignRuntimeError(block, error);
         return -1;
     }
 };
@@ -64,8 +64,8 @@ class AssignBlockErrorHandler : public MessageHandler {
 class ProcessPerblockXsltErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        const Context* ctx = params.getParam<const Context>(0);
-        const Block* block = params.getParam<const Block>(1);
+        const Context* ctx = params.getPtr<const Context>(0);
+        const Block* block = params.getPtr<const Block>(1);
         std::string res = ctx->getRuntimeError(block);
         if (!res.empty()) {
             throw CriticalInvokeError(res, "xslt", block->xsltName());
@@ -84,8 +84,8 @@ class ProcessScriptErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         
-        const Context* ctx = params.getParam<const Context>(0);
-        const Script* script = params.getParam<const Script>(1);
+        const Context* ctx = params.getPtr<const Context>(0);
+        const Script* script = params.getPtr<const Script>(1);
         
         std::string res;
         unsigned int size = script->blocksNumber();
@@ -109,9 +109,9 @@ class ProcessMainXsltErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         
-        const Context* ctx = params.getParam<const Context>(0);
-        const Script* script = params.getParam<const Script>(1);
-        const Stylesheet* style = params.getParam<const Stylesheet>(2);
+        const Context* ctx = params.getPtr<const Context>(0);
+        const Script* script = params.getPtr<const Script>(1);
+        const Stylesheet* style = params.getPtr<const Stylesheet>(2);
         
         std::string res = ctx->getRuntimeError(NULL);
         if (!res.empty()) {            
@@ -138,9 +138,9 @@ class ProcessXmlErrorHandler : public MessageHandler {
         if (XmlUtils::hasXMLError()) {
             std::string error = XmlUtils::getXMLError();
             if (!error.empty()) {
-                const std::string* filename = params.getParam<const std::string>(0);
+                const std::string& filename = params.get<const std::string>(0);
                 std::stringstream stream;
-                stream << error << ". File: " << *filename;
+                stream << error << ". File: " << filename;
                 throw UnboundRuntimeError(error);
             }
         }
@@ -152,14 +152,14 @@ class ProcessXmlErrorHandler : public MessageHandler {
 class CollectErrorHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        const InvokeError* error = params.getParam<const InvokeError>(0);
-        InvokeError* full_error = params.getParam<InvokeError>(1);
+        const InvokeError& error = params.get<const InvokeError>(0);
+        InvokeError& full_error = params.get<InvokeError>(1);
         
-        const InvokeError::InfoMapType& info = error->info();
+        const InvokeError::InfoMapType& info = error.info();
         for(InvokeError::InfoMapType::const_iterator it = info.begin();
             it != info.end();
             ++it) {
-            full_error->add(it->first, it->second);        
+            full_error.add(it->first, it->second);        
         } 
  
         return -1;
@@ -168,9 +168,9 @@ class CollectErrorHandler : public MessageHandler {
 
 class CheckDevelopmentVariableHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
-        const Request* request = params.getParam<const Request>(0);
-        const std::string* var = params.getParam<const std::string>(1);
-        result.set(VirtualHostData::instance()->checkVariable(request, *var));
+        const Request* request = params.getPtr<const Request>(0);
+        const std::string& var = params.get<const std::string>(1);
+        result.set(VirtualHostData::instance()->checkVariable(request, var));
         return -1;
     }
 };
@@ -178,7 +178,7 @@ class CheckDevelopmentVariableHandler : public MessageHandler {
 class CheckRemoteTimeoutHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
-        RemoteTaggedBlock* block = params.getParam<RemoteTaggedBlock>(0);
+        RemoteTaggedBlock* block = params.getPtr<RemoteTaggedBlock>(0);
         if (block->retryCount() == 0 &&
             !block->tagged() &&
             !block->isDefaultRemoteTimeout()) {

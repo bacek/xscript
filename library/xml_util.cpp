@@ -326,7 +326,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
                     boost::filesystem::path path(fileName);
                     modified_info->insert(std::make_pair(path.native_file_string(), 0));
                 }
-                log()->error("%s", error.c_str());
+                log()->warn("%s", error.c_str());
                 return NULL;
             }
             
