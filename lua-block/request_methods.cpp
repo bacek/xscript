@@ -42,7 +42,7 @@ struct lua_request_method<1> {
     }
 };
 
-template<> 
+template<>
 struct lua_request_method<2> {
     template<typename Func>
     static int invoke(lua_State *lua, Func func) {
@@ -100,9 +100,25 @@ get_args(Request *request, const std::string &name) {
     return args;
 }
 
+
+static std::auto_ptr<std::map<std::string, std::string> > 
+get_args_all(Request *request) { 
+    std::auto_ptr<std::map<std::string, std::string> > args(new std::map<std::string, std::string>); 
+    std::vector<std::string> names; 
+    request->argNames(names); 
+    for(std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) { 
+        args->insert(std::make_pair(*i, request->getArg(*i))); 
+    } 
+    return args; 
+} 
+
+
 extern "C" int
 luaRequestGetArgs(lua_State *lua) throw () {
-    return lua_request_method<2>::invoke(lua, get_args);
+    if (lua_gettop(lua) == 2) {
+        return lua_request_method<2>::invoke(lua, get_args);
+    }
+    return lua_request_method<1>::invoke(lua, get_args_all);
 }
 
 extern "C" int

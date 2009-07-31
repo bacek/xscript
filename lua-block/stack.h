@@ -1,6 +1,7 @@
 #ifndef _XSCRIPT_LUA_EXTRACT_H_
 #define _XSCRIPT_LUA_EXTRACT_H_
 
+#include <map>
 #include <memory>
 #include <string>
 #include <sstream>
@@ -145,6 +146,19 @@ inline void luaPushStack(lua_State* lua, std::auto_ptr<std::vector<std::string> 
     for(int i = 0; i < size; ++i) {
         lua_pushstring(lua, (*args)[i].c_str());
         lua_rawseti(lua, table, i + 1);
+    }
+}
+
+template<>
+inline void luaPushStack(lua_State* lua, std::auto_ptr<std::map<std::string, std::string> > args) {
+    lua_newtable(lua);
+    int table = lua_gettop(lua);
+    for(std::map<std::string, std::string>::const_iterator it = args->begin();
+        it != args->end();
+        ++it) {
+        lua_pushstring(lua, it->first.c_str());
+        lua_pushstring(lua, it->second.c_str());
+        lua_settable(lua, table);
     }
 }
 
