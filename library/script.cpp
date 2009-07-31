@@ -924,7 +924,6 @@ Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
             throw std::runtime_error(std::string("internal error in node ") + (char*)node->name);
         }
         xmlNodePtr next = newnode->next;
-        log()->debug("%s, blocks found: %d, %u", BOOST_CURRENT_FUNCTION, blocks_num, count);
         if (count < blocks_num && block(count)->node() == node) {
             InvokeResult result = ctx->result(count);
             xmlDocPtr doc = result.doc.get();
