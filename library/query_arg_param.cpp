@@ -37,9 +37,11 @@ QueryArgParam::type() const {
 
 std::string
 QueryArgParam::asString(const Context *ctx) const {
-    Request *req = ctx->request();
-    if (req->hasArg(value())) {
-        return req->getArg(value());
+    if (NULL != ctx) {
+        Request *req = ctx->request();
+        if (req->hasArg(value())) {
+            return req->getArg(value());
+        }
     }
     return defaultValue();
 }
