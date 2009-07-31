@@ -37,7 +37,7 @@ HeaderParam::type() const {
 
 std::string
 HeaderParam::asString(const Context *ctx) const {
-    if (NULL !+ ctx) {
+    if (NULL != ctx) {
         Request *req = ctx->request();
         if (req->hasHeader(value())) {
             return req->getHeader(value());
