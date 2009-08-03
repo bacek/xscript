@@ -9,13 +9,13 @@ namespace xscript {
 
 class StateParamNode {
 public:
-    StateParamNode(xmlNodePtr parent, const char* name);
+    StateParamNode(xmlNodePtr parent, const char *name);
     virtual ~StateParamNode();
 
-    void createSubNode(const char* val) const;
-    void createSubNodes(const std::vector<std::string>& v) const;
+    void createSubNode(const char *val) const;
+    void createSubNodes(const std::vector<std::string> &v) const;
 
-    static bool checkName(const char* name);
+    static bool checkName(const char *name);
 
 private:
     StateParamNode(const StateParamNode &);

@@ -8,7 +8,7 @@
 
 namespace xscript {
 
-StateParamNode::StateParamNode(xmlNodePtr parent, const char* name)
+StateParamNode::StateParamNode(xmlNodePtr parent, const char *name)
         : parent_(parent)
         , name_(name)
         , is_valid_name_(checkName(name)) {
@@ -18,7 +18,7 @@ StateParamNode::~StateParamNode() {
 }
 
 void
-StateParamNode::createSubNode(const char* val) const {
+StateParamNode::createSubNode(const char *val) const {
     XmlChildNode child_param(parent_, "param", val);
     child_param.setProperty("name", name_);
 
@@ -28,28 +28,27 @@ StateParamNode::createSubNode(const char* val) const {
 }
 
 void
-StateParamNode::createSubNodes(const std::vector<std::string>& v) const {
+StateParamNode::createSubNodes(const std::vector<std::string> &v) const {
     for (std::vector<std::string>::const_iterator i = v.begin(), end = v.end(); i != end; ++i) {
         createSubNode(i->c_str());
     }
 }
 
 bool
-StateParamNode::checkName(const char* name) {
-    if ( !*name ) {
+StateParamNode::checkName(const char *name) {
+    if (!*name) {
         return false;
     }
 
-    //std::string s(name);
-    //return s.find_first_not_of(
-    //	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_") == std::string::npos;
-    do {
-        if (!isalnum(*name) && *name != '_') {
+    if (!isalpha(*name) && *name != '_') {
+        return false;
+    }
+    
+    while(*(++name)) {
+        if (!isalnum(*name) && *name != '_' && *name != '.' && *name != '-') {
             return false;
         }
-        ++name;
     }
-    while (*name);
     return true;
 }
 
