@@ -39,7 +39,6 @@
  */
 
 
-//#include "config.h"
 #include "pcre++.h"
 
 using namespace std;
@@ -51,7 +50,7 @@ using namespace pcrepp;
 Pcre::Pcre(const string& expression) {
   _have_paren    = false;
   _expression   = expression;
-  _flags        = PCRE_UTF8;
+  _flags        = PCRE_UTF8; // Yandex fix
   case_t = global_t = false;
   zero();
   Compile(0);
@@ -60,7 +59,7 @@ Pcre::Pcre(const string& expression) {
 Pcre::Pcre(const string& expression, const string& flags) {
   _have_paren    = false;
   _expression   = expression;
-  unsigned int FLAG = PCRE_UTF8;
+  unsigned int FLAG = PCRE_UTF8; // Yandex fix
 
   for(unsigned int flag=0; flag<flags.length(); flag++) {
     switch(flags[flag]) {

@@ -1,5 +1,3 @@
-// #include "config.h"
-
 #include <libxslt/xsltutils.h>
 #include <libxslt/extensions.h>
 #include <libxml/xpathInternals.h>

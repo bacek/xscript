@@ -39,7 +39,6 @@
  */
 
 
-// #include "config.h"
 #include "pcre++.h"
 
 using namespace std;

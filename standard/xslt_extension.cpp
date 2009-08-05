@@ -1,5 +1,3 @@
-// #include "config.h"
-
 #include <fstream>
 
 #include <xscript/context.h>
