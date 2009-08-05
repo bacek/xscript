@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="x-toupper.xsl"?>
+<tests url="test.xml" name="x:toupper">
+    <test>
+        <source>Hello World</source>
+        <result>HELLO WORLD</result>
+    </test>
+    <test>
+        <source>АбРаКаДаБрА</source>
+        <result>АБРАКАДАБРА</result>
+    </test>
+    <test>
+        <source>йцукенг ё</source>
+        <result>ЙЦУКЕНГ Ё</result>
+    </test>
+</tests>

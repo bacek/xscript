@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="x-tolower.xsl"?>
+<tests url="test.xml" name="x:tolower">
+    <test>
+        <source>Hello World</source>
+        <result>hello world</result>
+    </test>
+    <test>
+        <source>АбРаКаДаБрА</source>
+        <result>абракадабра</result>
+    </test>
+    <test>
+        <source>ЙЦУКЕНГ Ё</source>
+        <result>йцукенг ё</result>
+    </test>
+</tests>

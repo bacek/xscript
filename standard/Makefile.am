@@ -1,3 +1,7 @@
+if HAVE_PCRE
+SUBDIRS = pcre
+endif
+
 pkglib_LTLIBRARIES = \
 	xscript-thrpool.la \
 	xscript-xmlcache.la \
@@ -6,6 +10,10 @@ pkglib_LTLIBRARIES = \
 	xscript-statistics.la \
 	xscript-development.la \
 	xscript-validators.la
+
+if HAVE_XSLT_STANDARD
+pkglib_LTLIBRARIES += xscript-xslt.la
+endif
 
 xscript_thrpool_la_SOURCES = thread_pool.cpp
 
@@ -52,6 +60,19 @@ endif
 xscript_validators_la_LIBADD = ../library/libxscript.la
 xscript_validators_la_LDFLAGS = -module
 
+if HAVE_XSLT_STANDARD
+xscript_xslt_la_LIBADD = ../library/libxscript.la
+xscript_xslt_la_LDFLAGS = -module
+xscript_xslt_la_SOURCES = ""
+if HAVE_PCRE
+xscript_xslt_la_SOURCES += xslt_regex_extension.cpp
+xscript_xslt_la_LIBADD += pcre/libpcre.la
+endif
+if HAVE_GLIB
+xscript_xslt_la_SOURCES += xslt_extension.cpp
+endif
+endif
+
 if HAVE_MEMCACHE
 pkglib_LTLIBRARIES += xscript-memcached.la
 xscript_memcached_la_SOURCES = doc_cache_memcached.cpp tag_key_memory.cpp
@@ -80,14 +101,18 @@ libtest_la_LDFLAGS = -static
 
 noinst_HEADERS = doc_pool.h range_validator.h
 
-test_SOURCES = test_main.cpp \
-			   doc_pool_test.cpp \
-			   range_validator_test.cpp
+test_SOURCES = test_main.cpp doc_pool_test.cpp range_validator_test.cpp
 if HAVE_PCRE
-test_SOURCES += regex_validator_test.cpp
+test_SOURCES += regex_validator_test.cpp regex_xslt_extension_test.cpp
+endif
+if HAVE_GLIB
+test_SOURCES += xslt_extension_test.cpp
 endif
 
 test_LDADD = ../library/libxscript.la libtest.la
+if HAVE_XSLT_STANDARD
+test_LDADD += xscript-xslt.la
+endif
 test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic
 
 if HAVE_MEMCACHE
