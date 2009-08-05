@@ -4,4 +4,6 @@ libpcre_la_SOURCES = libpcre++_get.cpp libpcre++_pcre++.cpp libpcre++_replace.cp
 
 libpcre_la_LDFLAGS = -static
 
+AM_CXXFLAGS = -fPIC
+
 noinst_HEADERS = pcre++.h
