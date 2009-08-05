@@ -85,7 +85,8 @@ AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_pl
 AM_CXXFLAGS = -W -Wall -fexceptions -frtti -fPIC -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_filesystem @yandex_platform_LIBS@ @VERSION_INFO@
 
-EXTRA_DIST = test.conf
+EXTRA_DIST = test.conf badregexp.xml badregexp.xsl http-local-tagged.xml include.xml regexp.xml regexp.xsl \
+	x-tolower.xml x-tolower.xsl x-toupper.xml x-toupper.xsl x-tests.xsl
 
 if HAVE_TESTS
 
@@ -111,6 +112,9 @@ endif
 
 test_LDADD = ../library/libxscript.la libtest.la
 if HAVE_XSLT_STANDARD
+if HAVE_PCRE
+test_LDADD += pcre/libpcre.la
+endif
 test_LDADD += xscript-xslt.la
 endif
 test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic
@@ -121,3 +125,5 @@ test_LDFLAGS += -lmemcache
 endif
 
 endif
+
+CLEANFILES = default.log
