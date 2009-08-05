@@ -7,10 +7,6 @@
    <xsl:template match="/">
      <result>
        <status>
-<!--
-          <xsl:value-of select="re:replace('XXX', '', 'A(.*)A', 'BASome textAB')"/>
-	  <xsl:value-of select="re:match('A(.*)A', 'ASome textA')"/>
--->
 	  <xsl:value-of select="re:test('ABCD', 'AB')"/>
        </status>
      </result>

@@ -13,42 +13,42 @@
 
 class XsltExtensionTest : public CppUnit::TestFixture {
 public:
-	void testToLower();
-	void testToUpper();
+    void testToLower();
+    void testToUpper();
 
 private:
-	CPPUNIT_TEST_SUITE(XsltExtensionTest);
-	CPPUNIT_TEST(testToLower);
-	CPPUNIT_TEST(testToUpper);
-	CPPUNIT_TEST_SUITE_END();
+    CPPUNIT_TEST_SUITE(XsltExtensionTest);
+    CPPUNIT_TEST(testToLower);
+    CPPUNIT_TEST(testToUpper);
+    CPPUNIT_TEST_SUITE_END();
 };
 
 void
 XsltExtensionTest::testToLower() {
 
-	using namespace xscript;
+    using namespace xscript;
     boost::shared_ptr<RequestData> data(new RequestData());
-	boost::shared_ptr<Script> script = Script::create("x-tolower.xml");
-	boost::shared_ptr<Context> ctx(new Context(script, data));
-	ContextStopper ctx_stopper(ctx);
-	XmlDocHelper doc(script->invoke(ctx));
-	CPPUNIT_ASSERT(NULL != doc.get());
-	script->applyStylesheet(ctx, doc);
-	CPPUNIT_ASSERT_EQUAL(std::string("success"), XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
+    boost::shared_ptr<Script> script = Script::create("x-tolower.xml");
+    boost::shared_ptr<Context> ctx(new Context(script, data));
+    ContextStopper ctx_stopper(ctx);
+    XmlDocHelper doc(script->invoke(ctx));
+    CPPUNIT_ASSERT(NULL != doc.get());
+    script->applyStylesheet(ctx, doc);
+    CPPUNIT_ASSERT_EQUAL(std::string("success"), XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
 }
 
 void
 XsltExtensionTest::testToUpper() {
 
-	using namespace xscript;
+    using namespace xscript;
     boost::shared_ptr<RequestData> data(new RequestData());
-	boost::shared_ptr<Script> script = Script::create("x-toupper.xml");
-	boost::shared_ptr<Context> ctx(new Context(script, data));
-	ContextStopper ctx_stopper(ctx);
-	XmlDocHelper doc(script->invoke(ctx));
-	CPPUNIT_ASSERT(NULL != doc.get());
-	script->applyStylesheet(ctx, doc);
-	CPPUNIT_ASSERT_EQUAL(std::string("success"), XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
+    boost::shared_ptr<Script> script = Script::create("x-toupper.xml");
+    boost::shared_ptr<Context> ctx(new Context(script, data));
+    ContextStopper ctx_stopper(ctx);
+    XmlDocHelper doc(script->invoke(ctx));
+    CPPUNIT_ASSERT(NULL != doc.get());
+    script->applyStylesheet(ctx, doc);
+    CPPUNIT_ASSERT_EQUAL(std::string("success"), XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
 }
 
 CPPUNIT_TEST_SUITE_REGISTRATION(XsltExtensionTest);

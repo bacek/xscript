@@ -1,11 +1,11 @@
 #include <fstream>
 
-#include <xscript/context.h>
-#include <xscript/logger.h>
-#include <xscript/script.h>
-#include <xscript/stylesheet.h>
-#include <xscript/xml_util.h>
-#include <xscript/xslt_extension.h>
+#include "xscript/context.h"
+#include "xscript/logger.h"
+#include "xscript/script.h"
+#include "xscript/stylesheet.h"
+#include "xscript/xml_util.h"
+#include "xscript/xslt_extension.h"
 
 #include <libxml/xpathInternals.h>
 #include <libxslt/xsltutils.h>
@@ -17,11 +17,9 @@
 #include <dmalloc.h>
 #endif
 
-namespace xscript
-{
+namespace xscript {
 
-class StandardXsltExtensions
-{
+class StandardXsltExtensions {
 public:
     StandardXsltExtensions();
 };
@@ -29,8 +27,7 @@ public:
 static StandardXsltExtensions standardXsltExtensions;
 
 extern "C" void
-xscriptXsltToLower(xmlXPathParserContextPtr ctxt, int nargs)
-{
+xscriptXsltToLower(xmlXPathParserContextPtr ctxt, int nargs) {
     log()->entering("xscript:tolower");
     if (NULL == ctxt) {
         return;
@@ -67,8 +64,7 @@ xscriptXsltToLower(xmlXPathParserContextPtr ctxt, int nargs)
 }
 
 extern "C" void
-xscriptXsltToUpper(xmlXPathParserContextPtr ctxt, int nargs)
-{
+xscriptXsltToUpper(xmlXPathParserContextPtr ctxt, int nargs) {
     log()->entering("xscript:toupper");
     if (NULL == ctxt) {
         return;

@@ -41,7 +41,6 @@
 
 #include "pcre++.h"
 
-using namespace std;
 using namespace pcrepp;
 
 /*
@@ -50,73 +49,70 @@ using namespace pcrepp;
  */
 
 
-vector<string>* Pcre::get_sub_strings() const {
-  if(resultset != NULL)
-    return resultset;
-  else
-    return NULL;
+std::vector<std::string>*
+Pcre::get_sub_strings() const {
+    return resultset ? resultset : NULL;
 }
 
-string Pcre::get_match(int pos) const {
-  if(pos >= 0 && pos < num_matches) {
-    vector<string>::iterator P = resultset->begin() + pos;
-    return *P;
-  }
-  else {
+std::string
+Pcre::get_match(int pos) const {
+    if (pos >= 0 && pos < num_matches) {
+        std::vector<std::string>::iterator p = resultset->begin() + pos;
+        return *p;
+    }
     throw exception("Pcre::get_match(int): out of range");
-  }
 }
 
-string Pcre::get_match(int pos) {
+std::string
+Pcre::get_match(int pos) {
 	return static_cast<const Pcre*>(this)->get_match(pos);
 }
 
-int Pcre::get_match_start() const {
-  if (sub_vec)
-    return sub_vec[0];
-  else
+int
+Pcre::get_match_start() const {
+    if (sub_vec) {
+        return sub_vec[0];
+    }
     return -1;
 }
 
-int Pcre::get_match_end() const {
-  if (sub_vec)
-    return sub_vec[1] - 1;
-  else
+int
+Pcre::get_match_end() const {
+    if (sub_vec) {
+        return sub_vec[1] - 1;
+    }
     return -1;
 }
 
-int Pcre::get_match_start(int pos) const {
-  if(pos >= 0 && pos <= num_matches) {
+int
+Pcre::get_match_start(int pos) const {
+    if (pos >= 0 && pos <= num_matches) {
     /*
      * sub_vec[0] and [1] is the start/end of the entire string.
      */
-    return sub_vec[ (++pos) * 2 ];
-  }
-  else {
-    throw exception("Pcre::get_match_start(int): out of range");
-  }  
+        return sub_vec[(++pos) * 2];
+    }
+    throw exception("Pcre::get_match_start(int): out of range");  
 }
 
-int Pcre::get_match_end(int pos) const {
-  if(pos >= 0 && pos <= num_matches) {
+int
+Pcre::get_match_end(int pos) const {
+    if(pos >= 0 && pos <= num_matches) {
     /*
      * the end offset of a subpattern points to
      * the first offset of the next substring,
      * therefore -1
      */
-    return sub_vec[ ((++pos) * 2) + 1 ] - 1;
-  }
-  else {
+        return sub_vec[((++pos) * 2) + 1] - 1;
+    }
     throw exception("Pcre::get_match_end(int): out of range");
-  }
 }
 
-size_t Pcre::get_match_length(int pos) const {
-  if(pos >= 0 && pos < num_matches) {
-    vector<string>::iterator P = resultset->begin() + pos;
-    return P->length();
-  }
-  else {
+size_t
+Pcre::get_match_length(int pos) const {
+    if(pos >= 0 && pos < num_matches) {
+        std::vector<std::string>::iterator p = resultset->begin() + pos;
+        return p->length();
+    }
     throw exception("Pcre::get_match_length(int): out of range");
-  }
 }
