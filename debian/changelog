@@ -1,3 +1,9 @@
+xscript (5.66-0) unstable; urgency=low
+
+  * xscript-xslt module added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 06 Aug 2009 10:42:23 +0400
+
 xscript (5.65-1) unstable; urgency=low
 
   * getArgs() added to lua request
