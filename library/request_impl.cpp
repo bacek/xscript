@@ -248,13 +248,14 @@ RequestImpl::setArg(const std::string &name, const std::string &value) {
 void
 RequestImpl::argNames(std::vector<std::string> &v) const {
     std::set<std::string> names;
+    v.clear();
+    v.reserve(args_.size());
     for (std::vector<StringUtils::NamedValue>::const_iterator i = args_.begin(), end = args_.end(); i != end; ++i) {
-        names.insert(i->first);
+        std::pair<std::set<std::string>::iterator, bool> result = names.insert(i->first);
+        if (result.second) {
+            v.push_back(i->first);
+        }
     }
-    std::vector<std::string> tmp;
-    tmp.reserve(names.size());
-    std::copy(names.begin(), names.end(), std::back_inserter(tmp));
-    v.swap(tmp);
 }
 
 unsigned int
