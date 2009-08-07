@@ -89,12 +89,20 @@ ThreadedBlock::postInvoke(Context *ctx, const XmlDocHelper &doc) {
     if (!show_elapsed_time || tagged()) {
         return;
     }
+    
     xmlNodePtr node = xmlDocGetRootElement(doc.get());
     if (NULL == node) {
         return;
     }
+    
+    const xmlChar* elapsed_attr = (const xmlChar*)"elapsed-time";
     std::string elapsed = boost::lexical_cast<std::string>(0.001*ctx->timer().elapsed());
-    xmlNewProp(node, (const xmlChar*)"elapsed-time", (const xmlChar*)elapsed.c_str());
+    if (xmlHasProp(node, elapsed_attr) &&
+        xmlUnsetProp(node, elapsed_attr) < 0) {
+        log()->error("Cannot unset elapsed-time attribute");
+        return;
+    }
+    xmlNewProp(node, elapsed_attr, (const xmlChar*)elapsed.c_str());
 }
 
 void
