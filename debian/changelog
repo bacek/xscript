@@ -1,3 +1,9 @@
+xscript (5.66-2) unstable; urgency=low
+
+  * depends fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 07 Aug 2009 16:13:24 +0400
+
 xscript (5.66-1) unstable; urgency=low
 
   * argNames ordering removed
