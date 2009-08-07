@@ -1,3 +1,9 @@
+xscript (5.66-3) unstable; urgency=low
+
+  * elapsed-time duplication fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 07 Aug 2009 18:19:30 +0400
+
 xscript (5.66-2) unstable; urgency=low
 
   * version up
