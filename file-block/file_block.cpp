@@ -79,7 +79,7 @@ FileBlock::postParse() {
 
 bool
 FileBlock::isTest() const {
-    return NULL == method_;
+    return !method_;
 }
 
 bool

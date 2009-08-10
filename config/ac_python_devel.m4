@@ -230,9 +230,9 @@ $ac_distutils_result])
 	AC_MSG_CHECKING([consistency of all components of python development environment])
 	AC_LANG_PUSH([C])
 	# save current global flags
-	AC_PREV_LIBS="$LIBS"
+	prev_LIBS="$LIBS"
 	LIBS="$LIBS $ac_save_LIBS $PYTHON_LDFLAGS"
-	AC_PREV_CPPFLAGS="$CPPFLAGS"
+	prev_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$CPPFLAGS $ac_save_CPPFLAGS $PYTHON_CPPFLAGS"
 	AC_TRY_LINK([
 		#include <Python.h>
@@ -242,8 +242,8 @@ $ac_distutils_result])
 
 	AC_MSG_RESULT([$pythonexists])
 
-	CPPFLAGS="$AC_PREV_CPPFLAGS"
-	LIBS="$AC_PREV_LIBS"
+	CPPFLAGS="$prev_CPPFLAGS"
+	LIBS="$prev_LIBS"
 
         if test ! "$pythonexists" = "yes"; then
 	   AC_MSG_ERROR([

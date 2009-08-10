@@ -19,7 +19,10 @@
 
 int
 main(int argc, char *argv[]) {
-    try {       
+    (void)argc;
+    (void argv;
+
+    try {
         CppUnit::TextUi::TestRunner r;
         r.addTest(CppUnit::TestFactoryRegistry::getRegistry().makeTest());
         return r.run("", false) ? EXIT_SUCCESS : EXIT_FAILURE;

@@ -20,6 +20,9 @@ using xscript::Config;
 
 int
 main(int argc, char *argv[]) {
+    (void)argc;
+    (void)argv;
+
     try {
         std::auto_ptr<Config> config =  Config::create("test.conf");
         config->startup();
