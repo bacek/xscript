@@ -1,3 +1,10 @@
+xscript (5.67-0) unstable; urgency=low
+
+  * HttpHelper refactoring
+  * args method added to Request
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 24 Aug 2009 16:22:33 +0400
+
 xscript (5.66-3) unstable; urgency=low
 
   * elapsed-time duplication fixed
