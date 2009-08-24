@@ -12,7 +12,6 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/exception.hpp>
 
-#include <libxml/tree.h>
 #include <libxml/parser.h>
 #include <libxml/xmlerror.h>
 
@@ -24,6 +23,7 @@
 #include <libexslt/exsltconfig.h>
 
 #include "internal/algorithm.h"
+#include "xscript/context.h"
 #include "xscript/encoder.h"
 #include "xscript/logger.h"
 #include "xscript/policy.h"
@@ -44,11 +44,28 @@ namespace xscript {
 
 static const Range ESCAPE_PATTERN = createRange("&'\"<>");
 const char * const XmlUtils::XSCRIPT_NAMESPACE = "http://www.yandex.ru/xscript";
-xmlExternalEntityLoader XmlUtils::default_loader_ = NULL;
-XmlDocHelper XmlUtils::fake_doc_(XmlUtils::createFakeDoc());
+xmlExternalEntityLoader external_entity_default_loader_ = NULL;
 
-boost::thread_specific_ptr<Xml::TimeMapType> XmlInfoCollector::modified_info_;
-boost::thread_specific_ptr<XmlInfoCollector::ErrorMapType> XmlInfoCollector::error_info_;
+boost::thread_specific_ptr<Xml::TimeMapType> xml_info_collector_modified_info_;
+boost::thread_specific_ptr<XmlInfoCollector::ErrorMapType> xml_info_collector_error_info_;
+
+
+
+
+XmlDocHelper
+XmlUtilCreateFakeDoc() {
+    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+    if (NULL != doc.get()) {
+        XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"fake", NULL));
+        if (node.get() != NULL) {
+            xmlDocSetRootElement(doc.get(), node.release());
+        }
+    }
+    return doc;
+}
+
+XmlDocHelper xml_fake_doc_(XmlUtilCreateFakeDoc());
+
 
 class XmlErrorReporter {
 public:
@@ -115,7 +132,7 @@ XmlUtils::init(const Config *config) {
 
     if(xml_loader != XmlUtils::entityResolver) {
         xmlSetExternalEntityLoader(XmlUtils::entityResolver);
-        default_loader_ = xml_loader;
+        external_entity_default_loader_ = xml_loader;
     }
 }
 
@@ -280,7 +297,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
 
     try {
         XmlInfoCollector::ErrorMapType* error_info = XmlInfoCollector::getErrorInfo();
-        if (default_loader_ == NULL) {
+        if (external_entity_default_loader_ == NULL) {
             std::string error = std::string("Default entity loader not set. URL: ") +
                                             std::string(url ? url : "");
             if (id) {
@@ -307,7 +324,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
         try {
             XmlErrorReporter *reporter = XmlErrorReporter::reporter();
             bool had_error = reporter->hasError();
-            xmlParserInputPtr ret = default_loader_(fileName.c_str(), id, ctxt);
+            xmlParserInputPtr ret = external_entity_default_loader_(fileName.c_str(), id, ctxt);
             if (!had_error && reporter->hasError()) {
                 const std::string &message = reporter->message();
                 if (std::string::npos != message.find("failed to load external entity") &&
@@ -393,19 +410,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
 
 xmlDocPtr
 XmlUtils::fakeXml() {
-    return fake_doc_.get();
-}
-
-xmlDocPtr
-XmlUtils::createFakeDoc() {
-    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
-    if (NULL != doc.get()) {
-        XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"fake", NULL));
-        if (node.get() != NULL) {
-            xmlDocSetRootElement(doc.get(), node.release());
-        }
-    }
-    return doc.release();
+    return xml_fake_doc_.get();
 }
 
 XmlInfoCollector::XmlInfoCollector() {
@@ -414,28 +419,28 @@ XmlInfoCollector::XmlInfoCollector() {
 void
 XmlInfoCollector::ready(bool flag) {
     if (flag) {
-        modified_info_.reset(new Xml::TimeMapType());
-        error_info_.reset(new ErrorMapType());
+        xml_info_collector_modified_info_.reset(new Xml::TimeMapType());
+        xml_info_collector_error_info_.reset(new ErrorMapType());
     }
     else {
-        modified_info_.reset(NULL);
-        error_info_.reset(NULL);
+        xml_info_collector_modified_info_.reset(NULL);
+        xml_info_collector_error_info_.reset(NULL);
     }
 }
 
 Xml::TimeMapType*
 XmlInfoCollector::getModifiedInfo() {
-    return modified_info_.get();
+    return xml_info_collector_modified_info_.get();
 }
 
 XmlInfoCollector::ErrorMapType*
 XmlInfoCollector::getErrorInfo() {
-    return error_info_.get();
+    return xml_info_collector_error_info_.get();
 }
 
 std::string
 XmlInfoCollector::getError() {
-    ErrorMapType *info = error_info_.get();
+    ErrorMapType *info = xml_info_collector_error_info_.get();
     if (info == NULL) {
         return StringUtils::EMPTY_STRING;
     }

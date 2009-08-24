@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include "xscript/context.h"
 #include "xscript/block.h"
 #include "xscript/logger.h"
 #include "xscript/stylesheet.h"

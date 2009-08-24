@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include <boost/thread/mutex.hpp>
 #include <boost/shared_ptr.hpp>
 #include <xscript/component.h>
 #include <xscript/stat_builder.h>

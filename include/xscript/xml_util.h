@@ -1,28 +1,20 @@
 #ifndef _XSCRIPT_XML_UTIL_H_
 #define _XSCRIPT_XML_UTIL_H_
 
-#include <sys/time.h>
-#include <ctime>
 #include <string>
-#include <vector>
-#include <iosfwd>
-#include <stdexcept>
 
-#include <boost/cstdint.hpp>
-#include <boost/thread/tss.hpp>
 #include <boost/utility.hpp>
 
-#include <xscript/config.h>
-#include <xscript/context.h>
 #include <xscript/range.h>
 #include <xscript/xml.h>
-#include <xscript/xml_helpers.h>
 
 #include <libxml/tree.h>
+#include <libxslt/transform.h>
 
 namespace xscript {
 
 class Encoder;
+class Config;
 
 class XmlUtils : private boost::noncopyable {
 public:
@@ -62,15 +54,8 @@ public:
     static std::string xpathValue(xmlDocPtr doc, const std::string &path, const std::string &defval = "");
     
     static xmlDocPtr fakeXml();
-private:
-    static xmlDocPtr createFakeDoc();
-    
-public:
-    static const char * const XSCRIPT_NAMESPACE;
 
-private:
-    static xmlExternalEntityLoader default_loader_;
-    static XmlDocHelper fake_doc_;
+    static const char * const XSCRIPT_NAMESPACE;
 };
 
 class XmlInfoCollector {
@@ -89,10 +74,6 @@ public:
         Starter();
         ~Starter();
     };
-
-private:
-    static boost::thread_specific_ptr<Xml::TimeMapType> modified_info_;
-    static boost::thread_specific_ptr<ErrorMapType> error_info_;
 };
 
 template<typename Cont> inline std::string
@@ -116,16 +97,17 @@ XmlUtils::value(NodePtr node) {
 
 template<typename Visitor> inline void
 XmlUtils::visitAttributes(xmlAttrPtr attr, Visitor visitor) {
-    std::size_t len = strlen(XSCRIPT_NAMESPACE) + 1;
-    while (attr) {
+    for ( ; attr; attr = attr->next ) {
+        if (!attr->name) {
+    	    continue;
+        }
         xmlNsPtr ns = attr->ns;
-        if (NULL == ns || xmlStrncmp(ns->href, (const xmlChar*) XSCRIPT_NAMESPACE, len) == 0) {
-            const char *name = (const char*) attr->name, *val = value(attr);
-            if (name && val) {
-                visitor(name, val);
+        if (NULL == ns || !strcmp((const char*) ns->href, XSCRIPT_NAMESPACE)) {
+            const char *val = value(attr);
+            if (val) {
+                visitor((const char*) attr->name, val);
             }
         }
-        attr = attr->next;
     }
 }
 

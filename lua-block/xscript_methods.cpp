@@ -4,6 +4,7 @@
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
 
+#include "xscript/context.h"
 #include "xscript/block.h"
 #include "xscript/logger.h"
 #include "xscript/request.h"
