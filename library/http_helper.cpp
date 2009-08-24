@@ -62,6 +62,17 @@ private:
 
 class HttpHelper::HelperData {
 public:
+
+    template<typename T> void
+    setopt(CURLoption opt, T t) {
+        check(curl_easy_setopt(curl_, opt, t));
+    }
+
+    template<typename T> void
+    getinfo(CURLINFO info, T *t) {
+        check(curl_easy_getinfo(curl_, info, t));
+    }
+
     HelperData(const std::string &url, long timeout) :
         curl_(NULL), status_(0), url_(url), content_(new std::string),
         sent_modified_since_(false) {
@@ -93,15 +104,11 @@ public:
             curl_easy_cleanup(curl_);
         }
     }
-    
-    template<typename T> void
-    setopt(CURLoption opt, T t) {
-        check(curl_easy_setopt(curl_, opt, t));
-    }
 
-    template<typename T> void
-    getinfo(CURLINFO info, T *t) {
-        check(curl_easy_getinfo(curl_, info, t));
+   void check(CURLcode code) const {
+        if (CURLE_OK != code) {
+            throw std::runtime_error(curl_easy_strerror(code));
+        }
     }
     
     void appendHeaders(const std::vector<std::string> &headers, time_t modified_since) {
@@ -193,11 +200,7 @@ public:
         }
     }
     
-    void check(CURLcode code) const {
-        if (CURLE_OK != code) {
-            throw std::runtime_error(curl_easy_strerror(code));
-        }
-    }
+ 
     
     static size_t curlWrite(void *ptr, size_t size, size_t nmemb, void *arg) {
         try {
