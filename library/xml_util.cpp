@@ -3,8 +3,6 @@
 #include <cctype>
 #include <cstdarg>
 #include <cassert>
-#include <stdexcept>
-#include <iostream>
 
 #include <boost/thread/tss.hpp>
 #include <boost/current_function.hpp>
@@ -44,12 +42,10 @@ namespace xscript {
 
 static const Range ESCAPE_PATTERN = createRange("&'\"<>");
 const char * const XmlUtils::XSCRIPT_NAMESPACE = "http://www.yandex.ru/xscript";
-xmlExternalEntityLoader external_entity_default_loader_ = NULL;
+static xmlExternalEntityLoader external_entity_default_loader_ = NULL;
 
-boost::thread_specific_ptr<Xml::TimeMapType> xml_info_collector_modified_info_;
-boost::thread_specific_ptr<XmlInfoCollector::ErrorMapType> xml_info_collector_error_info_;
-
-
+static boost::thread_specific_ptr<Xml::TimeMapType> xml_info_collector_modified_info_;
+static boost::thread_specific_ptr<XmlInfoCollector::ErrorMapType> xml_info_collector_error_info_;
 
 
 XmlDocHelper
@@ -64,7 +60,7 @@ XmlUtilCreateFakeDoc() {
     return doc;
 }
 
-XmlDocHelper xml_fake_doc_(XmlUtilCreateFakeDoc());
+static XmlDocHelper xml_fake_doc_(XmlUtilCreateFakeDoc());
 
 
 class XmlErrorReporter {

@@ -94,35 +94,24 @@ StateRequestNode::StateRequestNode(const std::string& prefix, State* state) :
 void
 StateRequestNode::build(const Request* req, bool urlencode, Encoder* encoder) {
     if (NULL != req && req->countArgs() > 0) {
-        std::vector<std::string> names;
-        req->argNames(names);
-        for (std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
-            std::string name = *i;
-
-            std::vector<std::string> values;
-            req->getArg(name, values);
-            assert(values.size() > 0);
-
+        
+        const std::vector<StringUtils::NamedValue>& args = req->args();
+        for(std::vector<StringUtils::NamedValue>::const_iterator it = args.begin();
+            it != args.end();
+            ++it) {
+            std::string name = it->first;
+            std::string value = it->second;
             if (encoder) {
-                for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) {
-                    *it = encoder->encode(*it);
-                }
                 name = encoder->encode(name);
+                value = encoder->encode(value);
             }
-
+            
             if (urlencode) {
-                for (std::vector<std::string>::iterator it = values.begin(); it != values.end(); ++it) {
-                    *it = StringUtils::urlencode(*it);
-                }
                 name = StringUtils::urlencode(name);
+                value = StringUtils::urlencode(value);
             }
-
-            if (values.size() == 1) {
-                setParameter(name.c_str(), values[0]);
-            }
-            else {
-                setParameters(name.c_str(), values);
-            }
+            
+            setParameter(name.c_str(), value);
         }
     }
 }
