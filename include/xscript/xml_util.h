@@ -105,7 +105,8 @@ XmlUtils::visitAttributes(xmlAttrPtr attr, Visitor visitor) {
         if (NULL == ns || !strcmp((const char*) ns->href, XSCRIPT_NAMESPACE)) {
             const char *val = value(attr);
             if (val) {
-                visitor((const char*) attr->name, val);
+                const char *name = (const char*) attr->name;
+                visitor(name, val);
             }
         }
     }
