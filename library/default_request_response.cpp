@@ -147,6 +147,11 @@ DefaultRequestResponse::argNames(std::vector<std::string> &v) const {
     impl_->argNames(v);
 }
 
+const std::vector<StringUtils::NamedValue>&
+DefaultRequestResponse::args() const {
+    return impl_->args();
+}
+
 void
 DefaultRequestResponse::setArg(const std::string &name, const std::string &value) {
     impl_->setArg(name, value);

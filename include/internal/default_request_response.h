@@ -49,6 +49,7 @@ public:
     virtual const std::string& getArg(const std::string &name) const;
     virtual void getArg(const std::string &name, std::vector<std::string> &v) const;
     virtual void argNames(std::vector<std::string> &v) const;
+    virtual const std::vector<StringUtils::NamedValue>& args() const;
     virtual void setArg(const std::string &name, const std::string &value);
 
     virtual unsigned int countHeaders() const;

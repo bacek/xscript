@@ -16,6 +16,7 @@
 #endif
 
 #include "xscript/functors.h"
+#include "xscript/string_utils.h"
 
 //#include <libxml/tree.h>
 
@@ -73,6 +74,7 @@ public:
     virtual const std::string& getArg(const std::string &name) const = 0;
     virtual void getArg(const std::string &name, std::vector<std::string> &v) const = 0;
     virtual void argNames(std::vector<std::string> &v) const = 0;
+    virtual const std::vector<StringUtils::NamedValue>& args() const = 0;
 
     virtual unsigned int countHeaders() const = 0;
     virtual bool hasHeader(const std::string &name) const = 0;

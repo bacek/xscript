@@ -258,6 +258,11 @@ RequestImpl::argNames(std::vector<std::string> &v) const {
     }
 }
 
+const std::vector<StringUtils::NamedValue>&
+RequestImpl::args() const {
+    return args_;
+}
+
 unsigned int
 RequestImpl::countHeaders() const {
     boost::mutex::scoped_lock lock(mutex_);
