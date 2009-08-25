@@ -33,9 +33,8 @@
 #include "xscript/profiler.h"
 #include "xscript/response.h"
 #include "xscript/script.h"
-#include "xscript/script_cache.h"
-#include "xscript/script_factory.h"
 #include "xscript/stylesheet.h"
+#include "xscript/stylesheet_factory.h"
 #include "xscript/threaded_block.h"
 #include "xscript/xml_util.h"
 
@@ -655,7 +654,7 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
         return;
     }
     
-    boost::shared_ptr<Stylesheet> stylesheet(Stylesheet::create(xslt));
+    boost::shared_ptr<Stylesheet> stylesheet(StylesheetFactory::createStylesheet(xslt));
     
     PROFILER(log(), "apply stylesheet " + name());
     log()->info("applying stylesheet to %s", name().c_str());
@@ -668,48 +667,6 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
     }
 		    
     OperationMode::processMainXsltError(ctx.get(), this, stylesheet.get());
-}
-
-boost::shared_ptr<Script>
-Script::create(const std::string &name) {
-    return Script::create(name, StringUtils::EMPTY_STRING);
-}
-
-boost::shared_ptr<Script>
-Script::create(const std::string &name, const std::string &xml) {
-
-    if (!xml.empty()) {
-        return createWithParse(name, xml);
-    }
-    
-    ScriptCache *cache = ScriptCache::instance();
-    boost::shared_ptr<Script> script = cache->fetch(name);
-    if (NULL != script.get()) {
-        return script;
-    }
-  
-    boost::mutex *mutex = cache->getMutex(name);
-    if (NULL == mutex) {
-        return createWithParse(name, xml);
-    }
-    
-    boost::mutex::scoped_lock lock(*mutex);
-    script = cache->fetch(name);
-    if (NULL != script.get()) {
-        return script;
-    }
-
-    return createWithParse(name, xml);
-}
-
-boost::shared_ptr<Script>
-Script::createWithParse(const std::string &name, const std::string &xml) {
-    boost::shared_ptr<Script> script = ScriptFactory::instance()->create(name);
-    script->parse(xml);
-    if (xml.empty()) {
-        ScriptCache::instance()->store(name, script);
-    }
-    return script;
 }
 
 void

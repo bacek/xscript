@@ -1,9 +1,10 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "xscript/script.h"
 #include "xscript/context.h"
 #include "xscript/request_data.h"
+#include "xscript/script.h"
+#include "xscript/script_factory.h"
 #include "xscript/xml_util.h"
 #include "xscript/xml_helpers.h"
 
@@ -28,7 +29,7 @@ XsltExtensionTest::testToLower() {
 
     using namespace xscript;
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("x-tolower.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("x-tolower.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
     XmlDocHelper doc(script->invoke(ctx));
@@ -42,7 +43,7 @@ XsltExtensionTest::testToUpper() {
 
     using namespace xscript;
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("x-toupper.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("x-toupper.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
     XmlDocHelper doc(script->invoke(ctx));

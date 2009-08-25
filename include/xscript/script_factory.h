@@ -14,7 +14,12 @@ public:
     ScriptFactory();
     virtual ~ScriptFactory();
 
+    static boost::shared_ptr<Script> createScript(const std::string &name);
+    static boost::shared_ptr<Script> createScript(const std::string &name, const std::string &xml);
+    
+protected:
     virtual boost::shared_ptr<Script> create(const std::string &name);
+    static boost::shared_ptr<Script> createWithParse(const std::string &name, const std::string &xml);
 };
 
 } // namespace xscript

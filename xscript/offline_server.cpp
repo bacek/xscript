@@ -9,6 +9,7 @@
 #include "xscript/operation_mode.h"
 #include "xscript/request_data.h"
 #include "xscript/script.h"
+#include "xscript/script_factory.h"
 #include "xscript/state.h"
 #include "xscript/xml_util.h"
 
@@ -104,7 +105,7 @@ OfflineServer::getScript(Request *request) {
         return Server::getScript(request);
     }
     
-    return Script::create(request->getScriptFilename(), xml);
+    return ScriptFactory::createScript(request->getScriptFilename(), xml);
 }
 
 }

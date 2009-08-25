@@ -7,20 +7,23 @@
 #include <boost/current_function.hpp>
 #include <boost/filesystem/path.hpp>
 
+#include <libxml/xinclude.h>
+
 #include <xscript/context.h>
-#include <xscript/operation_mode.h>
 #include <xscript/logger.h>
-#include <xscript/request_data.h>
-#include <xscript/script.h>
-#include <xscript/util.h>
-#include <xscript/xml.h>
+#include <xscript/operation_mode.h>
 #include <xscript/param.h>
 #include <xscript/profiler.h>
+#include <xscript/request_data.h>
+#include <xscript/script.h>
+#include <xscript/script_factory.h>
+#include <xscript/string_utils.h>
+#include <xscript/util.h>
+#include <xscript/xml.h>
 #include <xscript/xml_util.h>
-#include <libxml/xinclude.h>
+
 #include "file_block.h"
 #include "file_extension.h"
-#include <xscript/string_utils.h>
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -226,7 +229,7 @@ FileBlock::invokeFile(const std::string &file_name, boost::shared_ptr<Context> c
     }
 
     boost::shared_ptr<Script> script;
-    boost::function<boost::shared_ptr<Script>()> script_creator = boost::bind(&Script::create, file_name);
+    boost::function<boost::shared_ptr<Script>()> script_creator = boost::bind(&ScriptFactory::createScript, file_name);
     if (tagged()) {
         std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
         script = ctx->param(script_param_name, script_creator);
@@ -296,7 +299,7 @@ FileBlock::createTagKey(const Context *ctx) const {
     }
 
     boost::function<boost::shared_ptr<Script>()> script_creator =
-        boost::bind(&Script::create, filename);
+        boost::bind(&ScriptFactory::createScript, filename);
     std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
     boost::shared_ptr<Script> script =
         const_cast<Context*>(ctx)->param(script_param_name, script_creator);

@@ -32,7 +32,6 @@
 #include "xscript/profiler.h"
 #include "xscript/server.h"
 #include "xscript/stylesheet.h"
-#include "xscript/stylesheet_cache.h"
 #include "xscript/stylesheet_factory.h"
 #include "xscript/xml_util.h"
 #include "xscript/xslt_profiler.h"
@@ -385,39 +384,6 @@ Stylesheet::getBlock(xsltTransformContextPtr tctx) {
     ContextDataHelper* data = static_cast<ContextDataHelper*>(xsltGetExtData(tctx, (const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE));
     XmlUtils::throwUnless(NULL != data);
     return data->block;
-}
-
-boost::shared_ptr<Stylesheet>
-Stylesheet::create(const std::string &name) {
-
-    log()->debug("%s creating stylesheet %s", BOOST_CURRENT_FUNCTION, name.c_str());
-
-    StylesheetCache *cache = StylesheetCache::instance();
-    boost::shared_ptr<Stylesheet> stylesheet = cache->fetch(name);
-    if (NULL != stylesheet.get()) {
-        return stylesheet;
-    }
-
-    boost::mutex *mutex = cache->getMutex(name);
-    if (NULL == mutex) {
-        return createWithParse(name);
-    }
-
-    boost::mutex::scoped_lock lock(*mutex);
-    stylesheet = cache->fetch(name);
-    if (NULL != stylesheet.get()) {
-        return stylesheet;
-    }
-
-    return createWithParse(name);
-}
-
-boost::shared_ptr<Stylesheet>
-Stylesheet::createWithParse(const std::string &name) {
-    boost::shared_ptr<Stylesheet> stylesheet = StylesheetFactory::instance()->create(name);
-    stylesheet->parse();
-    StylesheetCache::instance()->store(name, stylesheet);
-    return stylesheet;
 }
 
 Block*

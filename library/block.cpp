@@ -27,6 +27,7 @@
 #include "xscript/script.h"
 #include "xscript/state.h"
 #include "xscript/stylesheet.h"
+#include "xscript/stylesheet_factory.h"
 #include "xscript/thread_pool.h"
 #include "xscript/vhost_data.h"
 #include "xscript/xml.h"
@@ -389,7 +390,7 @@ Block::doApplyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
         throw InvokeError("block is timed out", "timeout",
             boost::lexical_cast<std::string>(timer.timeout()));
     }
-    boost::shared_ptr<Stylesheet> sh = Stylesheet::create(xsltName());
+    boost::shared_ptr<Stylesheet> sh = StylesheetFactory::createStylesheet(xsltName());
     {
         PROFILER(log(), std::string("per-block-xslt: '") + xsltName() +
                 "' block: '" + name() + "' block-id: '" + id() +

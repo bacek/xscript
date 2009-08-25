@@ -3,10 +3,11 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "xscript/state.h"
-#include "xscript/script.h"
 #include "xscript/context.h"
 #include "xscript/request_data.h"
+#include "xscript/script.h"
+#include "xscript/script_factory.h"
+#include "xscript/state.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -55,7 +56,7 @@ MistTest::testDrop() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("mist-drop.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-drop.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -74,7 +75,7 @@ MistTest::testTypes() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("mist-types.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-types.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -98,7 +99,7 @@ MistTest::testDate() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("mist-date.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-date.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -124,7 +125,7 @@ MistTest::testSplit() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("mist-split.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-split.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -145,7 +146,7 @@ MistTest::testEscape() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("mist-escape.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-escape.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -166,7 +167,7 @@ MistTest::testStylesheet() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("mist-style.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-style.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -185,7 +186,7 @@ MistTest::testDefined() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("mist-defined.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-defined.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -203,7 +204,7 @@ MistTest::testDomain() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("mist-domain.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-domain.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -229,7 +230,7 @@ MistTest::testKeys() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("mist-keys.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-keys.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -246,5 +247,5 @@ void
 MistTest::testBadMethod() {
 
     using namespace xscript;
-    boost::shared_ptr<Script> script = Script::create("mist-badmethod.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-badmethod.xml");
 }

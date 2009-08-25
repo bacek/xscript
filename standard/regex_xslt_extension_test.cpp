@@ -3,9 +3,10 @@
 
 #include <iostream>
 
-#include "xscript/script.h"
 #include "xscript/context.h"
 #include "xscript/request_data.h"
+#include "xscript/script.h"
+#include "xscript/script_factory.h"
 #include "xscript/xml_util.h"
 #include "xscript/xml_helpers.h"
 
@@ -30,7 +31,7 @@ RegexXsltExtensionTest::testRegexp() {
 
 	using namespace xscript;
     boost::shared_ptr<RequestData> data(new RequestData());
-	boost::shared_ptr<Script> script = Script::create("regexp.xml");
+	boost::shared_ptr<Script> script = ScriptFactory::createScript("regexp.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, data));
 	ContextStopper ctx_stopper(ctx);
 	XmlDocHelper doc(script->invoke(ctx));
@@ -44,7 +45,7 @@ RegexXsltExtensionTest::testBadRegexp() {
 
 	using namespace xscript;
     boost::shared_ptr<RequestData> data(new RequestData());
-	boost::shared_ptr<Script> script = Script::create("badregexp.xml");
+	boost::shared_ptr<Script> script = ScriptFactory::createScript("badregexp.xml");
 	boost::shared_ptr<Context> ctx(new Context(script, data));
 	ContextStopper ctx_stopper(ctx);
 	XmlDocHelper doc(script->invoke(ctx));

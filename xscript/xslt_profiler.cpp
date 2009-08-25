@@ -13,8 +13,9 @@
 #include "xscript/logger.h"
 #include "xscript/request.h"
 #include "xscript/stylesheet.h"
-#include "xscript/xml_util.h"
+#include "xscript/stylesheet_factory.h"
 #include "xscript/writer.h"
+#include "xscript/xml_util.h"
 
 #include "xslt_profiler.h"
 
@@ -60,7 +61,7 @@ OfflineXsltProfiler::dumpProfileInfo(boost::shared_ptr<Context> ctx) {
         namespace fs = boost::filesystem;
         fs::path path(xslt_path_);
         if (fs::exists(path) && !fs::is_directory(path)) {
-            stylesheet = Stylesheet::create(xslt_path_);
+            stylesheet = StylesheetFactory::createStylesheet(xslt_path_);
         }
         else {
             std::cout << "Cannot find profile stylesheet " << xslt_path_ << ". Use default xml output." << std::endl;

@@ -5,6 +5,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "xscript/script.h"
+#include "xscript/script_factory.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -39,7 +40,7 @@ void
 ScriptTest::testScript() {
 
     using namespace xscript;
-    boost::shared_ptr<Script> script = Script::create("script.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("script.xml");
 
     CPPUNIT_ASSERT_EQUAL(std::string("script.xml"), script->name());
     CPPUNIT_ASSERT_EQUAL(std::string("script.xsl"), script->xsltName());
@@ -63,14 +64,14 @@ void
 ScriptTest::testMalformed() {
 
     using namespace xscript;
-    boost::shared_ptr<Script> script = Script::create("malformed.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("malformed.xml");
 }
 
 void
 ScriptTest::testBadHeader() {
 
     using namespace xscript;
-    boost::shared_ptr<Script> script = Script::create("script.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("script.xml");
     script->header("X-Custom-Header");
 }
 
@@ -78,27 +79,27 @@ void
 ScriptTest::testBadInclude() {
 
     using namespace xscript;
-    boost::shared_ptr<Script> script = Script::create("badinclude.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("badinclude.xml");
 }
 
 void
 ScriptTest::testNonexistent() {
 
     using namespace xscript;
-    boost::shared_ptr<Script> script = Script::create("nonexistent.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("nonexistent.xml");
 }
 
 void
 ScriptTest::testBadBlockId() {
 
     using namespace xscript;
-    boost::shared_ptr<Script> script = Script::create("script.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("script.xml");
     script->block("nonexistent-id");
 }
 
 void
 ScriptTest::testBadBlockIndex() {
     using namespace xscript;
-    boost::shared_ptr<Script> script = Script::create("script.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("script.xml");
     script->block(256);
 }

@@ -3,12 +3,13 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "xscript/xml_util.h"
-#include "xscript/state.h"
-#include "xscript/script.h"
 #include "xscript/context.h"
-#include "xscript/stylesheet.h"
 #include "xscript/request_data.h"
+#include "xscript/script.h"
+#include "xscript/script_factory.h"
+#include "xscript/state.h"
+#include "xscript/stylesheet.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -93,7 +94,7 @@ XsltTest::testFile(const std::string &name) {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create(name);
+    boost::shared_ptr<Script> script = ScriptFactory::createScript(name);
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -113,7 +114,7 @@ XsltTest::testMist() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("mist-extension.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-extension.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 

@@ -3,12 +3,13 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "xscript/xml_util.h"
-#include "xscript/state.h"
-#include "xscript/script.h"
-#include "xscript/request.h"
 #include "xscript/context.h"
+#include "xscript/request.h"
 #include "xscript/request_data.h"
+#include "xscript/script.h"
+#include "xscript/script_factory.h"
+#include "xscript/state.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -53,7 +54,7 @@ InvokeTest::testInvoke() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("invoke.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("invoke.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -67,7 +68,7 @@ InvokeTest::testParams() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("params.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("params.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -87,7 +88,7 @@ InvokeTest::testHttpBlockParams() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("http-block-params.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("http-block-params.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -104,7 +105,7 @@ InvokeTest::testNoBlocks() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("noblocks.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("noblocks.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -118,7 +119,7 @@ InvokeTest::testEmptyCDATA() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("empty-cdata.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("empty-cdata.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -132,7 +133,7 @@ InvokeTest::testEvalXPath() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("invoke.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("invoke.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -162,7 +163,7 @@ InvokeTest::testCheckGuard() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("invoke.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("invoke.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -182,7 +183,7 @@ InvokeTest::testStylesheet() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("xslt.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("xslt.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -199,7 +200,7 @@ InvokeTest::testRemoveStylesheet() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("invoke.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("invoke.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 

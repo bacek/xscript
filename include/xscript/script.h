@@ -67,10 +67,6 @@ public:
     void addExpiresHeader(const Context *ctx) const;
 
     const std::string& extensionProperty(const std::string &name) const;
-    
-    // TODO: remove this method. It should be in ScriptFactory.
-    static boost::shared_ptr<Script> create(const std::string &name);
-    static boost::shared_ptr<Script> create(const std::string &name, const std::string &xml);
 
 protected:
     Script(const std::string &name);
@@ -113,8 +109,6 @@ protected:
     
     virtual void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const;
     virtual std::string getCacheCookie(const Context *ctx, const std::string &cookie) const;
-    
-    static boost::shared_ptr<Script> createWithParse(const std::string &name, const std::string &xml);
 
 private:
     friend class ScriptFactory;

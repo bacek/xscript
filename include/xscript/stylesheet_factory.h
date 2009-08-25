@@ -14,7 +14,11 @@ public:
     StylesheetFactory();
     virtual ~StylesheetFactory();
 
+    static boost::shared_ptr<Stylesheet> createStylesheet(const std::string &name);
+    
+protected:    
     virtual boost::shared_ptr<Stylesheet> create(const std::string &name);
+    static boost::shared_ptr<Stylesheet> createWithParse(const std::string &name);
 };
 
 } // namespace xscript

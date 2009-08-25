@@ -3,10 +3,11 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "xscript/xml_util.h"
-#include "xscript/script.h"
 #include "xscript/context.h"
 #include "xscript/request_data.h"
+#include "xscript/script.h"
+#include "xscript/script_factory.h"
+#include "xscript/xml_util.h"
 
 #include "../file-block/file_block.h"
 #include "../file-block/file_extension.h"
@@ -42,7 +43,7 @@ CPPUNIT_REGISTRY_ADD("file", "xscript");
 
 void
 FileTest::testUnknowMethod() {
-    boost::shared_ptr<Script> script = Script::create("./file-unknownMethod.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("./file-unknownMethod.xml");
 }
 
 
@@ -50,7 +51,7 @@ void
 FileTest::testLoad() {
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("./file-load.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("./file-load.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -63,7 +64,7 @@ void
 FileTest::testInclude() {
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("./file-include.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("./file-include.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -84,7 +85,7 @@ FileTest::testTag() {
     xmlNodePtr tagNode = xmlNewChild(blockNode.get(), 0, (const xmlChar*) "param", 0);
     xmlNewProp(tagNode, (const xmlChar*) "type", (const xmlChar*) "Tag");
 
-    boost::shared_ptr<Script> script = Script::create("./file-load.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("./file-load.xml");
 
     FileBlock fileBlock(FileExtension::instance(), script.get(), blockNode.get());
     */

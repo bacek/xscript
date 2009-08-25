@@ -4,6 +4,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "xscript/stylesheet.h"
+#include "xscript/stylesheet_factory.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -37,14 +38,14 @@ void
 StylesheetTest::testInvalid() {
 
     using namespace xscript;
-    boost::shared_ptr<Stylesheet> sh = Stylesheet::create("malformed.xsl");
+    boost::shared_ptr<Stylesheet> sh = StylesheetFactory::createStylesheet("malformed.xsl");
 }
 
 void
 StylesheetTest::testNonexistent() {
 
     using namespace xscript;
-    boost::shared_ptr<Stylesheet> sh = Stylesheet::create("nonexistent.xsl");
+    boost::shared_ptr<Stylesheet> sh = StylesheetFactory::createStylesheet("nonexistent.xsl");
 }
 
 void
@@ -52,19 +53,19 @@ StylesheetTest::testContentType() {
 
     using namespace xscript;
 
-    boost::shared_ptr<Stylesheet> sh = Stylesheet::create("stylesheet.xsl");
+    boost::shared_ptr<Stylesheet> sh = StylesheetFactory::createStylesheet("stylesheet.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("text/html"), sh->contentType());
 
-    boost::shared_ptr<Stylesheet> xmlout = Stylesheet::create("xmlout.xsl");
+    boost::shared_ptr<Stylesheet> xmlout = StylesheetFactory::createStylesheet("xmlout.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("text/xml"), xmlout->contentType());
 
-    boost::shared_ptr<Stylesheet> htmlout = Stylesheet::create("htmlout.xsl");
+    boost::shared_ptr<Stylesheet> htmlout = StylesheetFactory::createStylesheet("htmlout.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("text/html"), htmlout->contentType());
 
-    boost::shared_ptr<Stylesheet> textout = Stylesheet::create("textout.xsl");
+    boost::shared_ptr<Stylesheet> textout = StylesheetFactory::createStylesheet("textout.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("text/plain"), textout->contentType());
 
-    boost::shared_ptr<Stylesheet> custom = Stylesheet::create("custom.xsl");
+    boost::shared_ptr<Stylesheet> custom = StylesheetFactory::createStylesheet("custom.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("image/swg"), custom->contentType());
 }
 
@@ -73,19 +74,19 @@ StylesheetTest::testOutputMethod() {
 
     using namespace xscript;
 
-    boost::shared_ptr<Stylesheet> sh = Stylesheet::create("stylesheet.xsl");
+    boost::shared_ptr<Stylesheet> sh = StylesheetFactory::createStylesheet("stylesheet.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("html"), sh->outputMethod());
 
-    boost::shared_ptr<Stylesheet> xmlout = Stylesheet::create("xmlout.xsl");
+    boost::shared_ptr<Stylesheet> xmlout = StylesheetFactory::createStylesheet("xmlout.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("xml"), xmlout->outputMethod());
 
-    boost::shared_ptr<Stylesheet> htmlout = Stylesheet::create("htmlout.xsl");
+    boost::shared_ptr<Stylesheet> htmlout = StylesheetFactory::createStylesheet("htmlout.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("html"), htmlout->outputMethod());
 
-    boost::shared_ptr<Stylesheet> textout = Stylesheet::create("textout.xsl");
+    boost::shared_ptr<Stylesheet> textout = StylesheetFactory::createStylesheet("textout.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("text"), textout->outputMethod());
 
-    boost::shared_ptr<Stylesheet> custom = Stylesheet::create("custom.xsl");
+    boost::shared_ptr<Stylesheet> custom = StylesheetFactory::createStylesheet("custom.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("xml"), custom->outputMethod());
 }
 
@@ -94,18 +95,18 @@ StylesheetTest::testOutputEncoding() {
 
     using namespace xscript;
 
-    boost::shared_ptr<Stylesheet> sh = Stylesheet::create("stylesheet.xsl");
+    boost::shared_ptr<Stylesheet> sh = StylesheetFactory::createStylesheet("stylesheet.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("utf-8"), sh->outputEncoding());
 
-    boost::shared_ptr<Stylesheet> xmlout = Stylesheet::create("xmlout.xsl");
+    boost::shared_ptr<Stylesheet> xmlout = StylesheetFactory::createStylesheet("xmlout.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("utf-8"), xmlout->outputEncoding());
 
-    boost::shared_ptr<Stylesheet> htmlout = Stylesheet::create("htmlout.xsl");
+    boost::shared_ptr<Stylesheet> htmlout = StylesheetFactory::createStylesheet("htmlout.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("koi8-r"), htmlout->outputEncoding());
 
-    boost::shared_ptr<Stylesheet> textout = Stylesheet::create("textout.xsl");
+    boost::shared_ptr<Stylesheet> textout = StylesheetFactory::createStylesheet("textout.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("windows-1251"), textout->outputEncoding());
 
-    boost::shared_ptr<Stylesheet> custom = Stylesheet::create("custom.xsl");
+    boost::shared_ptr<Stylesheet> custom = StylesheetFactory::createStylesheet("custom.xsl");
     CPPUNIT_ASSERT_EQUAL(std::string("utf-8"), custom->outputEncoding());
 }

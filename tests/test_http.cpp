@@ -3,10 +3,11 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "xscript/xml_util.h"
-#include "xscript/script.h"
 #include "xscript/context.h"
 #include "xscript/request_data.h"
+#include "xscript/script.h"
+#include "xscript/script_factory.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -46,7 +47,7 @@ HttpTest::testGet() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("http-get.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("http-get.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -60,7 +61,7 @@ HttpTest::testGetLocal() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("http-local.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("http-local.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -76,7 +77,7 @@ HttpTest::testSanitized() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("http-sanitized.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("http-sanitized.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
@@ -90,7 +91,7 @@ HttpTest::testZeroTimeout() {
     using namespace xscript;
 
     boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = Script::create("http-timeout.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("http-timeout.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 

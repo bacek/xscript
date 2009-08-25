@@ -4,11 +4,13 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "xscript/xml.h"
 #include "xscript/script.h"
-#include "xscript/stylesheet.h"
 #include "xscript/script_cache.h"
+#include "xscript/script_factory.h"
+#include "xscript/stylesheet.h"
 #include "xscript/stylesheet_cache.h"
+#include "xscript/stylesheet_factory.h"
+#include "xscript/xml.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -46,7 +48,7 @@ XmlCacheTest::testErase() {
     ScriptCache *factory = ScriptCache::instance();
     factory->clear();
 
-    Script::create("script.xml");
+    ScriptFactory::createScript("script.xml");
     script = factory->fetch("script.xml");
     CPPUNIT_ASSERT(NULL != script.get());
 
@@ -63,7 +65,7 @@ XmlCacheTest::testDenied() {
     ScriptCache *factory = ScriptCache::instance();
     factory->clear();
 
-    Script::create("noblocks.xml");
+    ScriptFactory::createScript("noblocks.xml");
     boost::shared_ptr<Script> script = factory->fetch("noblocks.xml");
     CPPUNIT_ASSERT(NULL == script.get());
 }
@@ -76,7 +78,7 @@ XmlCacheTest::testExpired() {
     ScriptCache *factory = ScriptCache::instance();
     factory->clear();
 
-    Script::create("script.xml");
+    ScriptFactory::createScript("script.xml");
     boost::shared_ptr<Script> script = factory->fetch("script.xml");
     CPPUNIT_ASSERT(NULL != script.get());
 
@@ -100,7 +102,7 @@ XmlCacheTest::testStoreScript() {
     ScriptCache *factory = ScriptCache::instance();
     factory->clear();
 
-    boost::shared_ptr<Script> script = Script::create("script.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("script.xml");
     boost::shared_ptr<Script> target = factory->fetch("script.xml");
     CPPUNIT_ASSERT(NULL != target.get());
 }
@@ -113,7 +115,7 @@ XmlCacheTest::testStoreStylesheet() {
     StylesheetCache *factory = StylesheetCache::instance();
     factory->clear();
 
-    boost::shared_ptr<Stylesheet> stylesheet = Stylesheet::create("stylesheet.xsl");
+    boost::shared_ptr<Stylesheet> stylesheet = StylesheetFactory::createStylesheet("stylesheet.xsl");
     boost::shared_ptr<Stylesheet> target = factory->fetch("stylesheet.xsl");
     CPPUNIT_ASSERT(NULL != target.get());
 }

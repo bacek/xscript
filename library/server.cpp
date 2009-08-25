@@ -32,10 +32,12 @@
 #include "xscript/request_data.h"
 #include "xscript/response.h"
 #include "xscript/script.h"
+#include "xscript/script_factory.h"
 #include "xscript/server.h"
 #include "xscript/state.h"
 #include "xscript/string_utils.h"
 #include "xscript/stylesheet.h"
+#include "xscript/stylesheet_factory.h"
 #include "xscript/tag.h"
 #include "xscript/xml_util.h"
 #include "xscript/vhost_data.h"
@@ -221,7 +223,7 @@ Server::processCachedDoc(Context *ctx, const Script *script) {
     
     std::string xslt = ctx->xsltName();
     if (!xslt.empty()) {
-        boost::shared_ptr<Stylesheet> stylesheet(Stylesheet::create(xslt));   
+        boost::shared_ptr<Stylesheet> stylesheet(StylesheetFactory::createStylesheet(xslt));   
         ctx->createDocumentWriter(stylesheet);
     }
 
@@ -318,7 +320,7 @@ Server::getScript(Request *request) {
     if (!name.second) {
         return boost::shared_ptr<Script>();
     }
-    return Script::create(name.first);
+    return ScriptFactory::createScript(name.first);
 }
 
 bool
