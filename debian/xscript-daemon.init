@@ -30,6 +30,7 @@ case "$1" in
 	sleep 1
 	if ! ls $XSCRIPT_PID 2> /dev/null; then
 	    echo "Xscript not started. See logs in /var/log/$THIS"
+	    exit 1
 	fi;
         ;;
     stop)
@@ -42,7 +43,6 @@ case "$1" in
 		kill -9 $start_pid
 	    fi
 	    exit
-	continue
 	fi
 	
 	#Kill fastcgistart
@@ -63,7 +63,7 @@ case "$1" in
 	    if [ $C -eq 1 ]; then
 		echo " Cannot stop xscript"
 		rm $PID_DIR/xscript.pid  >/dev/null
-		exit
+		exit 1
 	    fi
 	done
 	
@@ -73,7 +73,7 @@ case "$1" in
     restart)
 	$0 stop $@
 	$0 start $@
-	RETVAL=$?
+	exit $?
 	;;
 
     *)
