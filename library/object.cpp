@@ -6,6 +6,7 @@
 #include <boost/checked_delete.hpp>
 #include <boost/current_function.hpp>
 
+#include "xscript/exception.h"
 #include "xscript/logger.h"
 #include "xscript/object.h"
 #include "xscript/param.h"

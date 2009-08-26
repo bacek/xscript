@@ -4,11 +4,12 @@
 #include <iostream>
 
 #include "xscript/context.h"
+#include "xscript/exception.h"
 #include "xscript/request_data.h"
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
-#include "xscript/xml_util.h"
 #include "xscript/xml_helpers.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

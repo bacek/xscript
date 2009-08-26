@@ -1,5 +1,7 @@
 #include "settings.h"
 
+#include <boost/lexical_cast.hpp>
+
 #include "xscript/message_errors.h"
 
 #ifdef HAVE_DMALLOC_H

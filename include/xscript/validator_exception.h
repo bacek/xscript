@@ -1,7 +1,7 @@
 #ifndef _XSCRIPT_VALIDATOR_EXCEPTION_H_
 #define _XSCRIPT_VALIDATOR_EXCEPTION_H_
 
-#include <xscript/util.h>
+#include <xscript/exception.h>
 
 namespace xscript
 {

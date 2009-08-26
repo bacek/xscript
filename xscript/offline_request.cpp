@@ -8,9 +8,10 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
-#include <xscript/logger.h>
-#include <xscript/policy.h>
-#include <xscript/util.h>
+#include "xscript/exception.h"
+#include "xscript/logger.h"
+#include "xscript/policy.h"
+
 #include <internal/algorithm.h>
 
 #include "offline_request.h"

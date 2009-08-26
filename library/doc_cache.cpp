@@ -1,7 +1,8 @@
 #include "settings.h"
 
-#include <boost/current_function.hpp>
 #include <boost/bind.hpp>
+#include <boost/current_function.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "xscript/control_extension.h"
 #include "xscript/doc_cache.h"

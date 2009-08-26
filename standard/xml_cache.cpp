@@ -22,6 +22,7 @@
 #include "xscript/stylesheet.h"
 #include "xscript/script_cache.h"
 #include "xscript/stylesheet_cache.h"
+#include "xscript/util.h"
 #include "xscript/xml.h"
 
 #include "internal/hash.h"

@@ -4,14 +4,18 @@
 #include <iostream>
 #include <iterator>
 #include <algorithm>
+
 #include <boost/lexical_cast.hpp>
 
-#include "server_request.h"
-#include "internal/parser.h"
-#include "xscript/range.h"
-#include "xscript/logger.h"
 #include "xscript/encoder.h"
+#include "xscript/exception.h"
+#include "xscript/logger.h"
+#include "xscript/range.h"
 #include "xscript/xml_util.h"
+
+#include "internal/parser.h"
+
+#include "server_request.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

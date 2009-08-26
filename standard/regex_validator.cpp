@@ -1,9 +1,13 @@
 #include "settings.h"
 
 #include <iostream>
-#include "regex_validator.h"
+
+#include <boost/lexical_cast.hpp>
+
 #include "xscript/param.h"
 #include "xscript/xml_util.h"
+
+#include "regex_validator.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -56,7 +60,10 @@ RegexValidator::RegexValidator(xmlNodePtr node)
                       &compile_error, &error_offset, NULL);
   
     if (re_ == NULL)
-        throw std::runtime_error(std::string("Regex '") + pattern + "' compilation failed: " + compile_error + " at " + boost::lexical_cast<std::string>(error_offset));
+        throw std::runtime_error(
+                std::string("Regex '") + pattern +
+                "' compilation failed: " + compile_error +
+                " at " + boost::lexical_cast<std::string>(error_offset));
     
     bzero((void*)&re_extra_, sizeof(re_extra_));
 

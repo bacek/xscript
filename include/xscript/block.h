@@ -1,17 +1,18 @@
 #ifndef _XSCRIPT_BLOCK_H_
 #define _XSCRIPT_BLOCK_H_
 
-#include <map>
-#include <list>
-#include <vector>
 #include <exception>
+#include <list>
+#include <map>
+#include <vector>
+
 #include <boost/any.hpp>
 
+#include <xscript/exception.h>
+#include <xscript/extension.h>
+#include <xscript/invoke_result.h>
 #include <xscript/object.h>
 #include <xscript/xml_helpers.h>
-#include <xscript/extension.h>
-#include <xscript/util.h>
-#include <xscript/invoke_result.h>
 
 namespace xscript {
 

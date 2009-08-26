@@ -8,6 +8,7 @@
 
 #include "xscript/config.h"
 #include "xscript/context.h"
+#include "xscript/exception.h"
 #include "xscript/operation_mode.h"
 #include "xscript/request_data.h"
 #include "xscript/state.h"
