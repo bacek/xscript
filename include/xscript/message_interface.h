@@ -1,6 +1,7 @@
 #ifndef _XSCRIPT_MESSAGE_INTERFACE_H_
 #define _XSCRIPT_MESSAGE_INTERFACE_H_
 
+#include <cstring>
 #include <list>
 #include <map>
 #include <stdexcept>
