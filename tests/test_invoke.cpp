@@ -25,7 +25,6 @@ public:
     void testEvalXPath();
     void testCheckGuard();
     void testStylesheet();
-    void testRemoveStylesheet();
 
 private:
     CPPUNIT_TEST_SUITE(InvokeTest);
@@ -37,7 +36,6 @@ private:
     CPPUNIT_TEST(testEvalXPath);
     CPPUNIT_TEST(testCheckGuard);
     CPPUNIT_TEST(testStylesheet);
-    CPPUNIT_TEST(testRemoveStylesheet);
     CPPUNIT_TEST_SUITE_END();
 };
 
@@ -192,20 +190,4 @@ InvokeTest::testStylesheet() {
 
     CPPUNIT_ASSERT_EQUAL(std::string("long"),
                          XmlUtils::xpathValue(doc.get(), "/page/state-results/type", "failed"));
-}
-
-void
-InvokeTest::testRemoveStylesheet() {
-
-    using namespace xscript;
-
-    boost::shared_ptr<RequestData> data(new RequestData());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("invoke.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
-    ContextStopper ctx_stopper(ctx);
-
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
-
-    script->removeUnusedNodes(doc);
 }

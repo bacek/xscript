@@ -4,28 +4,28 @@
 #include <ctime>
 #include <map>
 #include <string>
+
 #include <boost/noncopyable.hpp>
 
 namespace xscript {
 
 class Xml : private boost::noncopyable {
 public:
-    Xml();
+    Xml(const std::string &name);
     virtual ~Xml();
 
-    virtual void parse() = 0;
-    virtual const std::string& name() const = 0;
-    virtual std::string fullName(const std::string &name) const;
+    const std::string& name() const;
+    std::string fullName(const std::string &name) const;
 
     typedef std::map<std::string, time_t> TimeMapType;
-    virtual const TimeMapType& modifiedInfo() const;
+    const TimeMapType& modifiedInfo() const;
 
 protected:
-    virtual void swapModifiedInfo(TimeMapType &info);
-    virtual std::string filePath(const std::string &name) const;
+    void swapModifiedInfo(TimeMapType &info);
 
 private:
-    TimeMapType modified_info_;
+    class XmlData;
+    XmlData *data_;
 };
 
 } // namespace xscript

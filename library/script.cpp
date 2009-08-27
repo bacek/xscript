@@ -28,6 +28,7 @@
 #include "xscript/doc_cache.h"
 #include "xscript/extension.h"
 #include "xscript/logger.h"
+#include "xscript/message_interface.h"
 #include "xscript/operation_mode.h"
 #include "xscript/policy.h"
 #include "xscript/profiler.h"
@@ -49,11 +50,13 @@ namespace xscript {
 
 static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
 static const unsigned int EXPIRE_TIME_DELTA_UNDEFINED = std::numeric_limits<unsigned int>::max();
-const std::string Script::GET_METHOD = "GET";
+static const std::string GET_METHOD = "GET";
+
+const std::string Script::PARSE_XSCRIPT_NODE_METHOD = "SCRIPT_PARSE_XSCRIPT_NODE";
 
 class Script::ScriptData {
-public:
-    ScriptData(const std::string &name);
+public:  
+    ScriptData(Script *owner);
     ~ScriptData();
     
     bool threaded() const;
@@ -64,12 +67,10 @@ public:
     boost::int32_t pageRandomMax() const;
     bool cacheTimeUndefined() const;
     bool expireTimeDeltaUndefined() const;
-    bool allowMethod(const std::string& value) const;
+    bool allowMethod(const std::string &value) const;
     bool cacheAllQuery() const;
     bool cacheQueryParam(const std::string &value) const;
-    const std::string& name() const;
     
-    const std::string& header(const std::string &name) const;
     const std::map<std::string, std::string>& headers() const;
     const std::string& extensionProperty(const std::string &name) const;
     std::set<xmlNodePtr>& xscriptNodes() const;
@@ -77,7 +78,7 @@ public:
     unsigned int blocksNumber() const;
     Block* block(unsigned int n) const;
     Block* block(const std::string &id, bool throw_error) const;
-    std::vector<Block*>& blocks() const;
+    std::vector<Block*>& blocks();
     std::set<std::string>& cacheCookies() const;
     
     void addBlock(Block *block);
@@ -97,9 +98,27 @@ public:
     void cacheCookies(const char *value);
     void flag(unsigned int type, bool value);
     
+    void parseNode(xmlNodePtr node, std::vector<xmlNodePtr> &xscript_nodes);
+    void parseStylesheetNode(const xmlNodePtr node);
+    void parseHeadersNode(xmlNodePtr node);
+    void parseXScriptNodes(std::vector<xmlNodePtr> &xscript_nodes);
+    void parseBlocks();
+    void buildXScriptNodeSet(std::vector<xmlNodePtr> &xscript_nodes);
+    void useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const;
+    void addHeaders(Context *ctx);
+    XmlDocHelper fetchResults(Context *ctx) const;
+    void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
+                        unsigned int &count, unsigned int &xscript_count) const;
+    std::string cachedUrl(const Context *ctx) const;
+    void parseXScriptNode(const xmlNodePtr node); 
+    
+    class ParseXScriptNodeHandler : public MessageHandler {
+        int process(const MessageParams &params, MessageResultBase &result);
+    };
+      
+    Script *owner_;
     XmlDocHelper doc_;
     std::vector<Block*> blocks_;
-    std::string name_;
     unsigned int flags_;
     unsigned int expire_time_delta_;
     time_t cache_time_;
@@ -116,8 +135,8 @@ public:
     static const unsigned int FLAG_BINARY_PAGE = 1 << 2;
 };
 
-Script::ScriptData::ScriptData(const std::string &name) :
-    doc_(NULL), name_(name), flags_(FLAG_FORCE_STYLESHEET),
+Script::ScriptData::ScriptData(Script *owner) :
+    owner_(owner), doc_(NULL), flags_(FLAG_FORCE_STYLESHEET),
     expire_time_delta_(EXPIRE_TIME_DELTA_UNDEFINED),
     cache_time_(CACHE_TIME_UNDEFINED), page_random_max_(0) {
 }
@@ -157,12 +176,11 @@ Script::ScriptData::pageRandomMax() const {
 }
 
 bool
-Script::ScriptData::allowMethod(const std::string& value) const {
+Script::ScriptData::allowMethod(const std::string &value) const {
     if (!allow_methods_.empty() &&
         std::find(allow_methods_.begin(), allow_methods_.end(), value) == allow_methods_.end()) {
         return false;
     }
-
     return true;
 }
 
@@ -206,36 +224,19 @@ Script::ScriptData::block(const std::string &id, bool throw_error) const {
         return NULL;
     }
     catch (const std::exception &e) {
-        log()->error("%s, %s, caught exception: %s", BOOST_CURRENT_FUNCTION, name().c_str(), e.what());
+        log()->error("%s, %s, caught exception: %s", BOOST_CURRENT_FUNCTION, owner_->name().c_str(), e.what());
         throw;
     }
 }
 
 std::vector<Block*>&
-Script::ScriptData::blocks() const {
-    return const_cast<std::vector<Block*>&>(blocks_);
+Script::ScriptData::blocks() {
+    return blocks_;
 }
 
 std::set<std::string>&
 Script::ScriptData::cacheCookies() const {
     return const_cast<std::set<std::string>&>(cache_cookies_);
-}
-
-const std::string&
-Script::ScriptData::header(const std::string &name) const {
-    try {
-        std::map<std::string, std::string>::const_iterator i = headers_.find(name);
-        if (headers_.end() == i) {
-            std::stringstream stream;
-            stream << "requested nonexistent header: " << name;
-            throw std::invalid_argument(stream.str());
-        }
-        return i->second;
-    }
-    catch (const std::exception &e) {
-        log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
-        throw;
-    }
 }
 
 const std::map<std::string, std::string>&
@@ -340,11 +341,6 @@ Script::ScriptData::xscriptNodes() const {
     return const_cast<std::set<xmlNodePtr>&>(xscript_node_set_);
 }
 
-const std::string&
-Script::ScriptData::name() const {
-    return name_;
-}
-
 void
 Script::ScriptData::allowMethods(const char *value) {
     allow_methods_.clear();
@@ -392,17 +388,382 @@ Script::ScriptData::cacheCookies(const char *value) {
     }
 }
 
+void
+Script::ScriptData::parseNode(xmlNodePtr node, std::vector<xmlNodePtr> &xscript_nodes) {
+    ExtensionList* elist = ExtensionList::instance();
+       
+    while (NULL != node) {
+        if (XML_PI_NODE == node->type) {
+            if (xmlStrncasecmp(node->name, (const xmlChar*) "xml-stylesheet", sizeof("xml-stylesheet")) == 0) {
+                if (owner_->xsltName().empty()) {
+                    log()->debug("%s, parse stylesheet", owner_->name().c_str());
+                    parseStylesheetNode(node);
+                }
+                else {
+                    log()->debug("%s, skip stylesheet", owner_->name().c_str());
+                }
+                xmlNodePtr snode = node;
+                node = node->next;
+                xmlUnlinkNode(snode);
+                xmlFreeNode(snode);
+            }
+            else {
+                node = node->next;
+            }
+            continue;
+        }
+        if (XML_ELEMENT_NODE == node->type) {
+            if (xmlStrncasecmp(node->name, (const xmlChar*) "xscript", sizeof("xscript")) == 0) {
+                xscript_nodes.push_back(node);
+                node = node->next;
+                continue;
+            }
+            if (node->ns && node->ns->href &&
+                xmlStrEqual(node->name, XINCLUDE_NODE) &&
+                (xmlStrEqual(node->ns->href, XINCLUDE_NS) || xmlStrEqual(node->ns->href, XINCLUDE_OLD_NS))) {
+                const char *href = XmlUtils::attrValue(node, "href");
+                if (NULL != href) {
+                    throw UnboundRuntimeError(
+                        std::string("Cannot include file: ") + href +
+                            ". Check include file for syntax error");
+                }
+            }            
+            Extension *ext = elist->extension(node, true);
+            if (NULL != ext) {
+                log()->debug("%s, creating block %s", owner_->name().c_str(), ext->name());
+                std::auto_ptr<Block> b = ext->createBlock(owner_, node);
+                assert(b.get());
+
+                addBlock(b.get());
+                b.release();
+                node = node->next;
+                continue;
+            }
+        }
+        if (node->children) {
+            parseNode(node->children, xscript_nodes);
+        }
+        node = node->next;
+    }
+}
+
+void
+Script::ScriptData::parseStylesheetNode(const xmlNodePtr node) {
+    if (node->content) {
+        const xmlChar* href = xmlStrstr(node->content, (const xmlChar*) "href=");
+        if (NULL != href) {
+            href += sizeof("href=") - 1;
+            const xmlChar* begin = xmlStrchr(href, '"');
+            if (NULL != begin) {
+                begin += 1;
+                const xmlChar* end = xmlStrchr(begin, '"');
+                if (NULL != end) {
+                    if (begin == end) {
+                        throw std::runtime_error("empty href in stylesheet node");
+                    }
+                    owner_->xsltName(std::string((const char*) begin, (const char*) end));
+                    return;
+                }
+            }
+        }
+    }
+    throw std::runtime_error("can not parse stylesheet node");
+}
+
+void
+Script::ScriptData::parseHeadersNode(xmlNodePtr node) {
+    while (node) {
+        if (node->name &&
+            xmlStrncasecmp(node->name, (const xmlChar*) "header", sizeof("header")) == 0) {
+            const char *name = XmlUtils::attrValue(node, "name"), *value = XmlUtils::attrValue(node, "value");
+            if (name && value) {
+                addHeader(name, value);
+            }
+        }
+        node = node->next;
+    }
+}
+
+void
+Script::ScriptData::parseXScriptNodes(std::vector<xmlNodePtr> &xscript_nodes) {
+
+    log()->debug("parsing xscript nodes");
+
+    for(std::vector<xmlNodePtr>::reverse_iterator i = xscript_nodes.rbegin(), end = xscript_nodes.rend();
+        i != end;
+        ++i) {
+        parseXScriptNode(*i);
+    }
+}
+
+void
+Script::ScriptData::parseBlocks() {
+    
+    log()->debug("parsing blocks");
+
+    bool is_threaded = threaded();
+    std::vector<Block*> &block_vec = blocks();
+    for(std::vector<Block*>::iterator it = block_vec.begin();
+        it != block_vec.end();
+        ++it) {
+        Block *block = *it;
+        assert(block);
+        block->threaded(is_threaded);
+        block->parse();
+    }
+}
+
+void
+Script::ScriptData::buildXScriptNodeSet(std::vector<xmlNodePtr>& xscript_nodes) {
+
+    log()->debug("build xscript node set");
+
+    for(std::vector<xmlNodePtr>::iterator i = xscript_nodes.begin(), end = xscript_nodes.end();
+        i != end;
+        ++i) {
+        addXscriptNode(*i);
+    }
+    xscript_nodes.clear();
+}
+
+void
+Script::ScriptData::useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const {
+    XmlXPathContextHelper context(xmlXPathNewContext(doc));
+    XmlUtils::throwUnless(NULL != context.get());
+    XmlXPathObjectHelper xpathObj(xmlXPathEvalExpression(xpath, context.get()));
+    XmlUtils::throwUnless(NULL != xpathObj.get());
+
+    if (XPATH_BOOLEAN == xpathObj->type) {
+        const char *str = 0 != xpathObj->boolval ? "1" : "0";
+        xmlNodePtr text_node = xmlNewText((const xmlChar *)str);
+        xmlReplaceNode(newnode, text_node);
+        return;
+    }
+    if (XPATH_NUMBER == xpathObj->type) {
+        char str[40];
+        snprintf(str, sizeof(str) - 1, "%f", xpathObj->floatval);
+        str[sizeof(str) - 1] = '\0';
+        xmlNodePtr text_node = xmlNewText((const xmlChar *)&str[0]);
+        xmlReplaceNode(newnode, text_node);
+        return;
+    }
+    if (XPATH_STRING == xpathObj->type) {
+        xmlNodePtr text_node = xmlNewText((const xmlChar *)xpathObj->stringval);
+        xmlReplaceNode(newnode, text_node);
+        return;
+    }
+
+    xmlNodeSetPtr nodeset = xpathObj->nodesetval;
+    if (NULL == nodeset || 0 == nodeset->nodeNr) {
+        xmlUnlinkNode(newnode);
+        return;
+    }
+    
+    xmlNodePtr current_node = nodeset->nodeTab[0];    
+    if (XML_ATTRIBUTE_NODE == current_node->type) {
+        current_node = current_node->children;
+    }    
+    xmlNodePtr last_input_node = xmlCopyNode(current_node, 1);         
+    xmlReplaceNode(newnode, last_input_node);
+    for (int i = 1; i < nodeset->nodeNr; ++i) {
+        xmlNodePtr current_node = nodeset->nodeTab[i];    
+        if (XML_ATTRIBUTE_NODE == current_node->type) {
+            current_node = current_node->children;
+        }                
+        xmlNodePtr insert_node = xmlCopyNode(current_node, 1);         
+        xmlAddNextSibling(last_input_node, insert_node);
+        last_input_node = insert_node;
+    }
+}
+
+void
+Script::ScriptData::addHeaders(Context *ctx) {
+    Response *response = ctx->response();
+    if (NULL == response) { // request can be null only when running tests
+        return;
+    }
+    owner_->addExpiresHeader(ctx);
+    setHeaders(response);
+}
+
+XmlDocHelper
+Script::ScriptData::fetchResults(Context *ctx) const {
+
+    XmlDocHelper newdoc(xmlCopyDoc(doc_.get(), 1));
+    XmlUtils::throwUnless(NULL != newdoc.get());
+
+    unsigned int count = 0, xscript_count = 0;
+
+    xmlNodePtr node = xmlDocGetRootElement(doc_.get());
+    assert(node);
+    
+    xmlNodePtr newnode = xmlDocGetRootElement(newdoc.get());
+    assert(newnode);
+    
+    fetchRecursive(ctx, node, newnode, count, xscript_count);
+    return newdoc;
+}
+
+void
+Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
+                                   unsigned int &count, unsigned int &xscript_count) const {
+
+    const std::set<xmlNodePtr>& xscript_node_set = xscriptNodes();
+    unsigned int blocks_num = blocksNumber();
+    
+    while (node && count + xscript_count != blocks_num + xscript_node_set.size()) {
+        if (newnode == NULL) {
+            throw std::runtime_error(std::string("internal error in node ") + (char*)node->name);
+        }
+        xmlNodePtr next = newnode->next;
+        if (count < blocks_num && block(count)->node() == node) {
+            InvokeResult result = ctx->result(count);
+            xmlDocPtr doc = result.doc.get();
+            assert(doc);
+
+            xmlNodePtr result_doc_root_node = xmlDocGetRootElement(doc);
+            if (result_doc_root_node) {
+                const Block *blck = block(count);
+                if (blck->xpointer(ctx) && !result.error()) {
+                    const std::string &expression = blck->xpointerExpr();
+                    if ("/.." == expression) {
+                        xmlUnlinkNode(newnode);
+                    }
+                    else {
+                        try {
+                            useXpointerExpr(doc, newnode, (xmlChar *)expression.c_str());
+                        }
+                        catch (std::exception &e) {
+                            std::string message = "XPointer error with expression " + expression + " : ";
+                            message.append(e.what());
+                            throw std::runtime_error(message);
+                        }
+                    }
+                }
+                else {
+                    xmlReplaceNode(newnode, xmlCopyNode(result_doc_root_node, 1));
+                }
+            }
+            else {
+                xmlUnlinkNode(newnode);
+            }
+            xmlFreeNode(newnode);
+            count++;
+        }
+        else if (xscript_node_set.find(node) != xscript_node_set.end() ) {
+            owner_->replaceXScriptNode(node, newnode, ctx);
+            xscript_count++;
+        }
+        else if (node->children) {
+            fetchRecursive(ctx, node->children, newnode->children, count, xscript_count);
+        }
+
+        node = node->next;
+        newnode = next;
+    }
+}
+
+std::string
+Script::ScriptData::cachedUrl(const Context *ctx) const {
+    std::string key(ctx->request()->getOriginalUrl());
+    if (!cacheAllQuery()) {
+        std::string::size_type pos = key.rfind('?');
+        if (std::string::npos != pos) {
+            key.erase(pos);
+        }
+        
+        Request *request = ctx->request();
+        std::vector<std::string> names;
+        request->argNames(names);
+        
+        bool first_param = true;
+        for(std::vector<std::string>::const_iterator i = names.begin(), end = names.end();
+            i != end;
+            ++i) {
+            std::string name = *i;
+            std::vector<std::string> values;
+            if (name.empty() || !cacheQueryParam(name)) {
+                continue;
+            }
+            request->getArg(name, values);
+            for(std::vector<std::string>::const_iterator it = values.begin(), end = values.end();
+                it != end;
+                ++it) {
+                if (first_param) {
+                    key.push_back('?');
+                    first_param = false;
+                }
+                else {
+                    key.push_back('&');
+                }
+                key.append(name);
+                key.push_back('=');
+                key.append(*it);
+            }
+        }
+    }
+    return key;
+}
+
+void
+Script::ScriptData::parseXScriptNode(const xmlNodePtr node) {
+    MessageParam<Script> script_param(owner_);
+    MessageParam<const xmlNodePtr> node_param(&node);
+    
+    MessageParamBase* param_list[2];
+    param_list[0] = &script_param;
+    param_list[1] = &node_param;
+    
+    MessageParams params(2, param_list);
+    MessageResult<std::string> result;
+  
+    MessageProcessor::instance()->process(PARSE_XSCRIPT_NODE_METHOD, params, result);
+}
+
+int
+Script::ScriptData::ParseXScriptNodeHandler::process(const MessageParams &params,
+                                                     MessageResultBase &result) {
+    (void)result;
+    
+    Script* script = params.getPtr<Script>(0);
+    const xmlNodePtr node = params.get<const xmlNodePtr>(1);
+    
+    log()->debug("parsing xscript node");
+
+    XmlUtils::visitAttributes(node->properties,
+                              boost::bind(&Script::property, script, _1, _2));
+
+    xmlNodePtr child = node->children;
+    ParamFactory *pf = ParamFactory::instance();
+
+    for( ; child; child = child->next) {
+        if (child->name &&
+            xmlStrncasecmp(child->name, (const xmlChar*) "add-headers", sizeof("add-headers")) == 0) {
+            script->data_->parseHeadersNode(child->children);
+            continue;
+        }
+        else if (script->xsltParamNode(child)) {
+            log()->debug("parsing xslt-param node from script");
+            script->parseXsltParamNode(child, pf);
+            continue;
+        }
+        else if (XML_ELEMENT_NODE == child->type) {
+            const char *name = (const char *) child->name, *value = XmlUtils::value(child);
+            if (name && value) {
+                script->property(name, value);
+            }
+            continue;
+        }
+    }
+    return 0;
+}
+
 Script::Script(const std::string &name) :
-    Xml(), data_(new ScriptData(name))
+    Xml(name), data_(new ScriptData(this))
 {}
 
 Script::~Script() {
     delete data_;
-}
-
-bool
-Script::threaded() const {
-    return data_->threaded();
 }
 
 bool
@@ -431,18 +792,8 @@ Script::pageRandomMax() const {
 }
 
 bool
-Script::allowMethod(const std::string& value) const {
+Script::allowMethod(const std::string &value) const {
     return data_->allowMethod(value);
-}
-
-bool
-Script::cacheAllQuery() const {
-    return data_->cacheAllQuery();
-}
-
-bool
-Script::cacheQueryParam(const std::string &value) const {
-    return data_->cacheQueryParam(value);
 }
 
 unsigned int
@@ -460,79 +811,9 @@ Script::block(const std::string &id, bool throw_error) const {
     return data_->block(id, throw_error);
 }
 
-const std::vector<Block*>&
-Script::blocks() const {
-    return data_->blocks();
-}
-
-const std::string&
-Script::header(const std::string &name) const {
-    return data_->header(name);
-}
-
 const std::map<std::string, std::string>&
 Script::headers() const {
     return data_->headers();
-}
-
-void
-Script::threaded(bool value) {
-    data_->threaded(value);
-}
-
-void
-Script::forceStylesheet(bool value) {
-    data_->forceStylesheet(value);
-}
-
-void
-Script::expireTimeDelta(unsigned int value) {
-    data_->expireTimeDelta(value);
-}
-
-void
-Script::cacheTime(time_t value) {
-    data_->cacheTime(value);
-}    
-
-void
-Script::pageRandomMax(boost::int32_t value) {
-    return data_->pageRandomMax(value);
-}
-
-void
-Script::binaryPage(bool value) {
-    data_->binaryPage(value);
-}
-
-void
-Script::allowMethods(const char *value) {
-    data_->allowMethods(value);
-}
-
-void
-Script::cacheQuery(const char *value) {
-    data_->cacheQuery(value);
-}
-
-void
-Script::cacheCookies(const char *value) {
-    data_->cacheCookies(value);
-}
-
-void
-Script::flag(unsigned int type, bool value) {
-    data_->flag(type, value);
-}
-
-void
-Script::extensionProperty(const char *prop, const char *value) {
-    data_->extensionProperty(prop, value);
-}
-
-void
-Script::parse() {
-    parse(StringUtils::EMPTY_STRING);
 }
 
 void
@@ -583,27 +864,17 @@ Script::parse(const std::string &xml) {
     }
 
     std::vector<xmlNodePtr> xscript_nodes;
-    parseNode(doc->children, xscript_nodes);
-    parseXScriptNodes(xscript_nodes);
-    parseBlocks();
-    buildXScriptNodeSet(xscript_nodes);
+    data_->parseNode(doc->children, xscript_nodes);
+    data_->parseXScriptNodes(xscript_nodes);
+    data_->parseBlocks();
+    data_->buildXScriptNodeSet(xscript_nodes);
     postParse();
     data_->doc_ = doc;
-}
-
-const std::string&
-Script::name() const {
-    return data_->name();
 }
 
 std::string
 Script::fullName(const std::string &name) const {
     return Xml::fullName(name);
-}
-
-void
-Script::removeUnusedNodes(const XmlDocHelper &doc) {
-    (void)doc;
 }
 
 XmlDocHelper
@@ -643,8 +914,8 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
     
     OperationMode::processScriptError(ctx.get(), this);
     
-    addHeaders(ctx.get());
-    return fetchResults(ctx.get());
+    data_->addHeaders(ctx.get());
+    return data_->fetchResults(ctx.get());
 }
 
 void
@@ -670,313 +941,11 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
 }
 
 void
-Script::parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes) {
-    ExtensionList* elist = ExtensionList::instance();
-       
-    while (NULL != node) {
-        if (XML_PI_NODE == node->type) {
-            if (xmlStrncasecmp(node->name, (const xmlChar*) "xml-stylesheet", sizeof("xml-stylesheet")) == 0) {
-                if (xsltName().empty()) {
-                    log()->debug("%s, parse stylesheet", name().c_str());
-                    parseStylesheetNode(node);
-                }
-                else {
-                    log()->debug("%s, skip stylesheet", name().c_str());
-                }
-                xmlNodePtr snode = node;
-                node = node->next;
-                xmlUnlinkNode(snode);
-                xmlFreeNode(snode);
-            }
-            else {
-                node = node->next;
-            }
-            continue;
-        }
-        if (XML_ELEMENT_NODE == node->type) {
-            if (xmlStrncasecmp(node->name, (const xmlChar*) "xscript", sizeof("xscript")) == 0) {
-                xscript_nodes.push_back(node);
-                node = node->next;
-                continue;
-            }
-            if (node->ns && node->ns->href &&
-                xmlStrEqual(node->name, XINCLUDE_NODE) &&
-                (xmlStrEqual(node->ns->href, XINCLUDE_NS) || xmlStrEqual(node->ns->href, XINCLUDE_OLD_NS))) {
-                const char *href = XmlUtils::attrValue(node, "href");
-                if (NULL != href) {
-                    throw UnboundRuntimeError(
-                        std::string("Cannot include file: ") + href +
-                            ". Check include file for syntax error");
-                }
-            }            
-            Extension *ext = elist->extension(node, true);
-            if (NULL != ext) {
-                log()->debug("%s, creating block %s", name().c_str(), ext->name());
-                std::auto_ptr<Block> b = ext->createBlock(this, node);
-                assert(b.get());
-
-                data_->addBlock(b.get());
-                b.release();
-                node = node->next;
-                continue;
-            }
-        }
-        if (node->children) {
-            parseNode(node->children, xscript_nodes);
-        }
-        node = node->next;
-    }
-}
-
-void
-Script::parseXScriptNode(const xmlNodePtr node) {
-
-    log()->debug("parsing xscript node");
-
-    XmlUtils::visitAttributes(node->properties,
-                              boost::bind(&Script::property, this, _1, _2));
-
-    xmlNodePtr child = node->children;
-    ParamFactory *pf = ParamFactory::instance();
-
-    for ( ; child; child = child->next) {
-        if (child->name &&
-            xmlStrncasecmp(child->name, (const xmlChar*) "add-headers", sizeof("add-headers")) == 0) {
-            parseHeadersNode(child->children);
-            continue;
-        }
-        else if (xsltParamNode(child)) {
-            log()->debug("parsing xslt-param node from script");
-            parseXsltParamNode(child, pf);
-            continue;
-        }
-        else if (XML_ELEMENT_NODE == child->type) {
-            const char *name = (const char *) child->name, *value = XmlUtils::value(child);
-            if (name && value) {
-                property(name, value);
-            }
-            continue;
-        }
-    }
-}
-
-void
-Script::parseXScriptNodes(std::vector<xmlNodePtr>& xscript_nodes) {
-
-    log()->debug("parsing xscript nodes");
-
-    for (std::vector<xmlNodePtr>::reverse_iterator i = xscript_nodes.rbegin(), end = xscript_nodes.rend(); i != end; ++i) {
-        parseXScriptNode(*i);
-    }
-}
-
-void
-Script::parseBlocks() {
-    
-    log()->debug("parsing blocks");
-
-    bool is_threaded = threaded();
-    std::vector<Block*> &blocks = data_->blocks();
-    for(std::vector<Block*>::iterator it = blocks.begin();
-        it != blocks.end();
-        ++it) {
-        Block *block = *it;
-        assert(block);
-        block->threaded(is_threaded);
-        block->parse();
-    }
-}
-
-void
-Script::buildXScriptNodeSet(std::vector<xmlNodePtr>& xscript_nodes) {
-
-    log()->debug("build xscript node set");
-
-    for (std::vector<xmlNodePtr>::iterator i = xscript_nodes.begin(), end = xscript_nodes.end(); i != end; ++i) {
-        data_->addXscriptNode(*i);
-    }
-    xscript_nodes.clear();
-}
-
-void
-Script::parseHeadersNode(xmlNodePtr node) {
-    while (node) {
-        if (node->name &&
-            xmlStrncasecmp(node->name, (const xmlChar*) "header", sizeof("header")) == 0) {
-            const char *name = XmlUtils::attrValue(node, "name"), *value = XmlUtils::attrValue(node, "value");
-            if (name && value) {
-                data_->addHeader(name, value);
-            }
-        }
-        node = node->next;
-    }
-}
-
-void
-Script::parseStylesheetNode(const xmlNodePtr node) {
-    if (node->content) {
-        const xmlChar* href = xmlStrstr(node->content, (const xmlChar*) "href=");
-        if (NULL != href) {
-            href += sizeof("href=") - 1;
-            const xmlChar* begin = xmlStrchr(href, '"');
-            if (NULL != begin) {
-                begin += 1;
-                const xmlChar* end = xmlStrchr(begin, '"');
-                if (NULL != end) {
-                    if (begin == end) {
-                        throw std::runtime_error("empty href in stylesheet node");
-                    }
-                    xsltName(std::string((const char*) begin, (const char*) end));
-                    return;
-                }
-            }
-        }
-    }
-    throw std::runtime_error("can not parse stylesheet node");
-}
-
-void
-Script::addHeaders(Context *ctx) const {
-    Response *response = ctx->response();
-    if (NULL == response) { // request can be null only when running tests
-        return;
-    }
-    addExpiresHeader(ctx);
-    data_->setHeaders(response);
-}
-
-void
 Script::addExpiresHeader(const Context *ctx) const {
     ctx->response()->setHeader(
             "Expires", HttpDateUtils::format(time(NULL) + ctx->expireTimeDelta()));
 }
 
-XmlDocHelper
-Script::fetchResults(Context *ctx) const {
-
-    XmlDocHelper newdoc(xmlCopyDoc(data_->doc_.get(), 1));
-    XmlUtils::throwUnless(NULL != newdoc.get());
-
-    unsigned int count = 0, xscript_count = 0;
-
-    xmlNodePtr node = xmlDocGetRootElement(data_->doc_.get());
-    assert(node);
-    
-    xmlNodePtr newnode = xmlDocGetRootElement(newdoc.get());
-    assert(newnode);
-    
-    fetchRecursive(ctx, node, newnode, count, xscript_count);
-    return newdoc;
-}
-
-void
-Script::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
-                       unsigned int &count, unsigned int &xscript_count) const {
-
-    const std::set<xmlNodePtr>& xscript_node_set = data_->xscriptNodes();
-    unsigned int blocks_num = blocksNumber();
-    
-    while (node && count + xscript_count != blocks_num + xscript_node_set.size()) {
-        if (newnode == NULL) {
-            throw std::runtime_error(std::string("internal error in node ") + (char*)node->name);
-        }
-        xmlNodePtr next = newnode->next;
-        if (count < blocks_num && block(count)->node() == node) {
-            InvokeResult result = ctx->result(count);
-            xmlDocPtr doc = result.doc.get();
-            assert(doc);
-
-            xmlNodePtr result_doc_root_node = xmlDocGetRootElement(doc);
-            if (result_doc_root_node) {
-                const Block *blck = block(count);
-                if (blck->xpointer(ctx) && !result.error()) {
-                    const std::string &expression = blck->xpointerExpr();
-                    if ("/.." == expression) {
-                        xmlUnlinkNode(newnode);
-                    }
-                    else {
-                        try {
-                            useXpointerExpr(doc, newnode, (xmlChar *)expression.c_str());
-                        }
-                        catch (std::exception &e) {
-                            std::string message = "XPointer error with expression " + expression + " : ";
-                            message.append(e.what());
-                            throw std::runtime_error(message);
-                        }
-                    }
-                }
-                else {
-                    xmlReplaceNode(newnode, xmlCopyNode(result_doc_root_node, 1));
-                }
-            }
-            else {
-                xmlUnlinkNode(newnode);
-            }
-            xmlFreeNode(newnode);
-            count++;
-        }
-        else if (xscript_node_set.find(node) != xscript_node_set.end() ) {
-            replaceXScriptNode(node, newnode, ctx);
-            xscript_count++;
-        }
-        else if (node->children) {
-            fetchRecursive(ctx, node->children, newnode->children, count, xscript_count);
-        }
-
-        node = node->next;
-        newnode = next;
-    }
-}
-
-void
-Script::useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const {
-    XmlXPathContextHelper context(xmlXPathNewContext(doc));
-    XmlUtils::throwUnless(NULL != context.get());
-    XmlXPathObjectHelper xpathObj(xmlXPathEvalExpression(xpath, context.get()));
-    XmlUtils::throwUnless(NULL != xpathObj.get());
-
-    if (XPATH_BOOLEAN == xpathObj->type) {
-        const char *str = 0 != xpathObj->boolval ? "1" : "0";
-        xmlNodePtr text_node = xmlNewText((const xmlChar *)str);
-        xmlReplaceNode(newnode, text_node);
-        return;
-    }
-    if (XPATH_NUMBER == xpathObj->type) {
-        char str[40];
-        snprintf(str, sizeof(str) - 1, "%f", xpathObj->floatval);
-        str[sizeof(str) - 1] = '\0';
-        xmlNodePtr text_node = xmlNewText((const xmlChar *)&str[0]);
-        xmlReplaceNode(newnode, text_node);
-        return;
-    }
-    if (XPATH_STRING == xpathObj->type) {
-        xmlNodePtr text_node = xmlNewText((const xmlChar *)xpathObj->stringval);
-        xmlReplaceNode(newnode, text_node);
-        return;
-    }
-
-    xmlNodeSetPtr nodeset = xpathObj->nodesetval;
-    if (NULL == nodeset || 0 == nodeset->nodeNr) {
-        xmlUnlinkNode(newnode);
-        return;
-    }
-    
-    xmlNodePtr current_node = nodeset->nodeTab[0];    
-    if (XML_ATTRIBUTE_NODE == current_node->type) {
-        current_node = current_node->children;
-    }    
-    xmlNodePtr last_input_node = xmlCopyNode(current_node, 1);         
-    xmlReplaceNode(newnode, last_input_node);
-    for (int i = 1; i < nodeset->nodeNr; ++i) {
-        xmlNodePtr current_node = nodeset->nodeTab[i];    
-        if (XML_ATTRIBUTE_NODE == current_node->type) {
-            current_node = current_node->children;
-        }                
-        xmlNodePtr insert_node = xmlCopyNode(current_node, 1);         
-        xmlAddNextSibling(last_input_node, insert_node);
-        last_input_node = insert_node;
-    }
-}
 
 void
 Script::postParse() {
@@ -988,17 +957,17 @@ Script::property(const char *prop, const char *value) {
     log()->debug("%s, setting property: %s=%s", name().c_str(), prop, value);
 
     if (strncasecmp(prop, "all-threaded", sizeof("all-threaded")) == 0) {
-        threaded(strncasecmp(value, "yes", sizeof("yes")) == 0);
+        data_->threaded(strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
     else if (strncasecmp(prop, "allow-methods", sizeof("allow-methods")) == 0) {
-        allowMethods(value);
+        data_->allowMethods(value);
     }
     else if (strncasecmp(prop, "xslt-dont-apply", sizeof("xslt-dont-apply")) == 0) {
-        forceStylesheet(strncasecmp(value, "yes", sizeof("yes")) != 0);
+        data_->forceStylesheet(strncasecmp(value, "yes", sizeof("yes")) != 0);
     }
     else if (strncasecmp(prop, "http-expire-time-delta", sizeof("http-expire-time-delta")) == 0) {
         try {
-            expireTimeDelta(boost::lexical_cast<unsigned int>(value));
+            data_->expireTimeDelta(boost::lexical_cast<unsigned int>(value));
         }
         catch(const boost::bad_lexical_cast &e) {
             throw std::runtime_error(
@@ -1007,7 +976,7 @@ Script::property(const char *prop, const char *value) {
     }
     else if (strncasecmp(prop, "cache-time", sizeof("cache-time")) == 0) {
         try {
-            cacheTime(boost::lexical_cast<time_t>(value));
+            data_->cacheTime(boost::lexical_cast<time_t>(value));
         }
         catch(const boost::bad_lexical_cast &e) {
             throw std::runtime_error(
@@ -1015,11 +984,11 @@ Script::property(const char *prop, const char *value) {
         }
     }
     else if (strncasecmp(prop, "binary-page", sizeof("binary-page")) == 0) {
-        binaryPage(strncasecmp(value, "yes", sizeof("yes")) == 0);
+        data_->binaryPage(strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
     else if (strncasecmp(prop, "page-random-max", sizeof("page-random-max")) == 0) {
         try {
-            pageRandomMax(boost::lexical_cast<boost::int32_t>(value));
+            data_->pageRandomMax(boost::lexical_cast<boost::int32_t>(value));
         }
         catch(const boost::bad_lexical_cast &e) {
             throw std::runtime_error(
@@ -1027,13 +996,13 @@ Script::property(const char *prop, const char *value) {
         }
     }
     else if (strncasecmp(prop, "cache-query", sizeof("cache-query")) == 0) {
-        cacheQuery(value);
+        data_->cacheQuery(value);
     }
     else if (strncasecmp(prop, "cache-cookies", sizeof("cache-cookies")) == 0) {
-        cacheCookies(value);
+        data_->cacheCookies(value);
     }
     else if (ExtensionList::instance()->checkScriptProperty(prop, value)) {
-        extensionProperty(prop, value);
+        data_->extensionProperty(prop, value);
     }
     else {
         throw std::runtime_error(std::string("invalid script property: ").append(prop));
@@ -1054,58 +1023,16 @@ Script::extensionProperty(const std::string &name) const {
 }
 
 bool
-Script::cacheTimeUndefined() const {
-    return data_->cacheTimeUndefined();
-}
-
-bool
 Script::expireTimeDeltaUndefined() const {
     return data_->expireTimeDeltaUndefined();
 }
 
-std::string
-Script::cachedUrl(const Context *ctx) const {
-    std::string key(ctx->request()->getOriginalUrl());
-    if (!cacheAllQuery()) {
-        std::string::size_type pos = key.rfind('?');
-        if (std::string::npos != pos) {
-            key.erase(pos);
-        }
-        
-        Request *request = ctx->request();
-        
-        std::vector<std::string> names;
-        request->argNames(names);
-        
-        bool first_param = true;
-        for (std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
-            std::string name = *i;
-            std::vector<std::string> values;
-            if (name.empty() || !cacheQueryParam(name)) {
-                continue;
-            }
-            request->getArg(name, values);
-            for (std::vector<std::string>::const_iterator it = values.begin(), end = values.end(); it != end; ++it) {
-                if (first_param) {
-                    key.push_back('?');
-                    first_param = false;
-                }
-                else {
-                    key.push_back('&');
-                }
-                key.append(name);
-                key.push_back('=');
-                key.append(*it);
-            }
-        }
-    }
-    return key;
-}
+
 
 std::string
 Script::createTagKey(const Context *ctx, bool page_cache) const {
     
-    std::string key = page_cache ? cachedUrl(ctx) : name();
+    std::string key = page_cache ? data_->cachedUrl(ctx) : name();
     key.push_back('|');
     
     const TimeMapType& modified_info = modifiedInfo();
@@ -1191,10 +1118,10 @@ Script::getCacheCookie(const Context *ctx, const std::string &cookie) const {
 std::string
 Script::info(const Context *ctx) const {
     std::string info("Original url: ");
-    info.append(cachedUrl(ctx));
+    info.append(data_->cachedUrl(ctx));
     info.append(" | Filename: ");
     info.append(name());
-    if (!cacheTimeUndefined()) {
+    if (!data_->cacheTimeUndefined()) {
         info.append(" | Cache-time: ");
         info.append(boost::lexical_cast<std::string>(cacheTime()));
     }
@@ -1210,7 +1137,7 @@ Script::info(const Context *ctx) const {
 bool
 Script::cachable(const Context *ctx, bool for_save) const {
     
-    if (cacheTimeUndefined() || cacheTime() < DocCache::instance()->minimalCacheTime()) {
+    if (data_->cacheTimeUndefined() || cacheTime() < DocCache::instance()->minimalCacheTime()) {
         return false;
     }
     
@@ -1257,5 +1184,15 @@ Script::cachable(const Context *ctx, bool for_save) const {
     log()->debug("Script is cachable");
     return true;
 }
+
+class ScriptHandlerRegisterer {
+public:
+    ScriptHandlerRegisterer() {
+        MessageProcessor::instance()->registerBack(Script::PARSE_XSCRIPT_NODE_METHOD,
+            boost::shared_ptr<MessageHandler>(new Script::ScriptData::ParseXScriptNodeHandler()));
+    }
+};
+
+static ScriptHandlerRegisterer reg_script_handlers;
 
 } // namespace xscript

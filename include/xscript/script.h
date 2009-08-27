@@ -19,6 +19,7 @@ namespace xscript {
 class Block;
 class Context;
 class ScriptFactory;
+class ScriptHandlerRegisterer;
 
 /**
  * Parsed script.
@@ -26,97 +27,56 @@ class ScriptFactory;
  * Stores parse blocks, assosiated stylesheet and various processing flags.
  * Created by ScriptFactory (for caching purposes).
  */
+
 class Script : public virtual Object, public Xml {
 public:
     virtual ~Script();
 
-    bool threaded() const;
     bool forceStylesheet() const;
     bool binaryPage() const;
     unsigned int expireTimeDelta() const;
+    bool expireTimeDeltaUndefined() const;
+    
     time_t cacheTime() const;
     boost::int32_t pageRandomMax() const;
-    
     bool allowMethod(const std::string& value) const;
-    
-    bool cacheAllQuery() const;
-    bool cacheQueryParam(const std::string &value) const;
-    
     const Block* block(unsigned int n) const;
     const Block* block(const std::string &id, bool throw_error = true) const;
     unsigned int blocksNumber() const;
 
-    const std::string& header(const std::string &name) const;
     const std::map<std::string, std::string>& headers() const;
-
-    virtual const std::string& name() const;
-    virtual std::string fullName(const std::string &name) const;
-
-    virtual void removeUnusedNodes(const XmlDocHelper &helper);
+    const std::string& extensionProperty(const std::string &name) const;
+    
     virtual XmlDocHelper invoke(boost::shared_ptr<Context> ctx);
     virtual void applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc);
-
+    
+    virtual std::string fullName(const std::string &name) const;
     virtual std::string createTagKey(const Context *ctx) const;
     std::string createTagKey(const Context *ctx, bool page_cache) const;
     virtual std::string info(const Context *ctx) const;
     virtual bool cachable(const Context *ctx, bool for_save) const;
     
-    bool cacheTimeUndefined() const;
-    bool expireTimeDeltaUndefined() const;
-    
     void addExpiresHeader(const Context *ctx) const;
 
-    const std::string& extensionProperty(const std::string &name) const;
-
 protected:
+    static const std::string PARSE_XSCRIPT_NODE_METHOD;
+    
     Script(const std::string &name);
 
-    void threaded(bool value);
-    void forceStylesheet(bool value);
-    void expireTimeDelta(unsigned int value);
-    void cacheTime(time_t value);
-    void pageRandomMax(boost::int32_t value);
-    void binaryPage(bool value);
-    void flag(unsigned int type, bool value);
-
-    void allowMethods(const char *value);
-    void cacheQuery(const char *value);
-    void cacheCookies(const char *value);
-    void extensionProperty(const char *prop, const char *value);
-
-    void parseNode(xmlNodePtr node, std::vector<xmlNodePtr>& xscript_nodes);
-    void parseHeadersNode(xmlNodePtr node);
-    virtual void parseXScriptNode(const xmlNodePtr node);
-    void parseXScriptNodes(std::vector<xmlNodePtr>& xscript_nodes);
-    void parseBlocks();
-    void buildXScriptNodeSet(std::vector<xmlNodePtr>& xscript_nodes);
-    void parseStylesheetNode(const xmlNodePtr node);
-    void useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const;
-
-    void addHeaders(Context *ctx) const;
-
-    const std::vector<Block*>& blocks() const;
-
-    XmlDocHelper fetchResults(Context *ctx) const;
-    void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode, unsigned int &count, unsigned int &xscript_count) const;
-
-    virtual void parse();
-    virtual void parse(const std::string &xml);
+    void parse(const std::string &xml);
+    
     virtual void postParse();
     virtual void property(const char *name, const char *value);
     
-    std::string cachedUrl(const Context *ctx) const;
-    
     virtual void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const;
     virtual std::string getCacheCookie(const Context *ctx, const std::string &cookie) const;
-
+    
 private:
     friend class ScriptFactory;
+    friend class ScriptHandlerRegisterer;
     
     class ScriptData;
     ScriptData *data_;
-    
-    static const std::string GET_METHOD;
 };
 
 } // namespace xscript

@@ -142,7 +142,7 @@ Policy::getOutputEncoding(const Request* request) {
 void
 Policy::useDefaultSanitizer() {
     MessageParams params;
-    MessageResultBase result;  
+    MessageResultBase result;
     MessageProcessor::instance()->process(USE_DEFAULT_SANITIZER_METHOD, params, result);
 }
 

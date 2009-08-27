@@ -2,7 +2,10 @@
 #define _XSCRIPT_STYLESHEET_CACHE_H_
 
 #include <string>
+
 #include <boost/shared_ptr.hpp>
+#include <boost/thread/mutex.hpp>
+
 #include <xscript/component.h>
 #include <xscript/stat_builder.h>
 

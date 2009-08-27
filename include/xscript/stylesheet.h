@@ -1,11 +1,7 @@
 #ifndef _XSCRIPT_STYLESHEET_H_
 #define _XSCRIPT_STYLESHEET_H_
 
-#include <map>
-#include <vector>
-
 #include <boost/shared_ptr.hpp>
-#include <boost/thread/mutex.hpp>
 
 #include <xscript/xml.h>
 #include <xscript/xml_helpers.h>
@@ -24,27 +20,12 @@ class StylesheetFactory;
 class Stylesheet : public Xml {
 public:
     virtual ~Stylesheet();
-    virtual const std::string& name() const;
 
-    inline xsltStylesheetPtr stylesheet() const {
-        return stylesheet_.get();
-    }
-
-    inline const std::string& contentType() const {
-        return content_type_;
-    }
-
-    inline const std::string& outputMethod() const {
-        return output_method_;
-    }
-
-    inline const std::string& outputEncoding() const {
-        return output_encoding_;
-    }
-
-    inline bool haveOutputInfo() const {
-        return have_output_info_;
-    }
+    xsltStylesheetPtr stylesheet() const;
+    const std::string& contentType() const;
+    const std::string& outputMethod() const;
+    const std::string& outputEncoding() const;
+    bool haveOutputInfo() const;
 
     XmlDocHelper apply(Object *obj, boost::shared_ptr<Context> ctx, const XmlDocHelper &doc);
 
@@ -57,30 +38,13 @@ public:
 protected:
     Stylesheet(const std::string &name);
 
-    virtual void parse();
-    void parseStylesheet(xsltStylesheetPtr style);
-    void parseNode(xmlNodePtr node);
-
-    void detectOutputMethod(const XsltStylesheetHelper &sh);
-    void detectOutputEncoding(const XsltStylesheetHelper &sh);
-    void detectOutputInfo(const XsltStylesheetHelper &sh);
-
-    void setupContentType(const char *type);
-    std::string detectContentType(const XmlDocHelper &doc) const;
-
-    void appendXsltParams(const std::vector<Param*>& params, const Context *ctx, xsltTransformContextPtr tctx);
-
-    static void attachContextData(xsltTransformContextPtr tctx, boost::shared_ptr<Context> ctx, Stylesheet *stylesheet, const Block *block);
+    void parse();
 
 private:
     friend class StylesheetFactory;
 
-private:
-    std::string name_;
-    XsltStylesheetHelper stylesheet_;
-    std::map<xmlNodePtr, Block*> blocks_;
-    std::string content_type_, output_method_, output_encoding_;
-    bool have_output_info_;
+    class StylesheetData;
+    StylesheetData *data_;
 };
 
 } // namespace xscript

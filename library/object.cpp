@@ -22,38 +22,26 @@
 
 namespace xscript {
 
-Object::Object() {
+class Object::ObjectData {
+public:
+    ObjectData();
+    ~ObjectData();
+    
+    void checkParam(Param *param);
+    
+    std::string xslt_name_;
+    std::vector<Param*> params_;
+};
+
+Object::ObjectData::ObjectData() {
 }
 
-Object::~Object() {
+Object::ObjectData::~ObjectData() {
     std::for_each(params_.begin(), params_.end(), boost::checked_deleter<Param>());
 }
 
 void
-Object::postParse() {
-}
-
-void
-Object::xsltName(const std::string &value) {
-    if (value.empty()) {
-        xslt_name_.erase();
-        return;
-    }
-
-    if (value[0] == '/') {
-        std::string full_name = VirtualHostData::instance()->getDocumentRoot(NULL) + value;
-        if (FileUtils::fileExists(full_name)) {
-            xslt_name_ = fullName(full_name);
-            return;
-        }
-        log()->warn("absolute path in stylesheet href: %s", value.c_str());
-    }
-
-    xslt_name_ = fullName(value);
-}
-
-void
-Object::checkParam(const Param *param) const {
+Object::ObjectData::checkParam(Param *param) {
     const std::string& id = param->id();
     if (id.empty()) {
         throw std::runtime_error("xsl param without id");
@@ -79,24 +67,69 @@ Object::checkParam(const Param *param) const {
             boost::lexical_cast<std::string>(i + 1) +
             std::string(" character in id: ") + id);
     }
+    
+    params_.push_back(param);
+}
+
+Object::Object() : data_(new ObjectData()) {
+}
+
+Object::~Object() {
+    delete data_;
+}
+
+const std::string&
+Object::xsltName() const {
+    return data_->xslt_name_;
+}
+
+const std::vector<Param*>&
+Object::xsltParams() const {
+    return data_->params_;
+}
+
+void
+Object::postParse() {
+}
+
+void
+Object::xsltName(const std::string &value) {
+    if (value.empty()) {
+        data_->xslt_name_.erase();
+        return;
+    }
+
+    if (value[0] == '/') {
+        std::string full_name = VirtualHostData::instance()->getDocumentRoot(NULL) + value;
+        if (FileUtils::fileExists(full_name)) {
+            data_->xslt_name_ = fullName(full_name);
+            return;
+        }
+        log()->warn("absolute path in stylesheet href: %s", value.c_str());
+    }
+
+    data_->xslt_name_ = fullName(value);
 }
 
 bool
 Object::xsltParamNode(const xmlNodePtr node) const {
-    return node->name && xmlStrncasecmp(node->name, (const xmlChar*) "xslt-param", sizeof("xslt-param")) == 0;
+    return node->name &&
+           xmlStrncasecmp(node->name, (const xmlChar*)"xslt-param", sizeof("xslt-param")) == 0;
 }
 
 void
 Object::parseXsltParamNode(const xmlNodePtr node, ParamFactory *pf) {
     std::auto_ptr<Param> p = pf->param(this, node);
     log()->debug("%s, creating param %s", BOOST_CURRENT_FUNCTION, p->id().c_str());
-    checkParam(p.get());
-    params_.push_back(p.get());
+    data_->checkParam(p.get());
     p.release();
 }
 
 void
-Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh, boost::shared_ptr<Context> ctx, XmlDocHelper &doc, bool need_copy) {
+Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh,
+                        boost::shared_ptr<Context> ctx,
+                        XmlDocHelper &doc,
+                        bool need_copy) {
 
     assert(NULL != doc.get());
     if (need_copy) {
