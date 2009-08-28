@@ -135,19 +135,19 @@ public:
     static const unsigned int FLAG_THREADED = 1;
     static const unsigned int FLAG_FORCE_STYLESHEET = 1 << 1;
     static const unsigned int FLAG_BINARY_PAGE = 1 << 2;
-    
-    class ParseXScriptNodeHandler : public MessageHandler {
+};
+
+class Script::ParseXScriptNodeHandler : public MessageHandler {
+    int process(const MessageParams &params, MessageResultBase &result);
+};
+class Script::ReplaceXScriptNodeHandler : public MessageHandler {
         int process(const MessageParams &params, MessageResultBase &result);
-    };
-    class ReplaceXScriptNodeHandler : public MessageHandler {
-            int process(const MessageParams &params, MessageResultBase &result);
-    };
-    class PropertyHandler : public MessageHandler {
-        int process(const MessageParams &params, MessageResultBase &result);
-    };
-    class CachableHandler : public MessageHandler {
-        int process(const MessageParams &params, MessageResultBase &result);
-    };
+};
+class Script::PropertyHandler : public MessageHandler {
+    int process(const MessageParams &params, MessageResultBase &result);
+};
+class Script::CachableHandler : public MessageHandler {
+    int process(const MessageParams &params, MessageResultBase &result);
 };
 
 Script::ScriptData::ScriptData(Script *owner) :
@@ -736,8 +736,8 @@ Script::ScriptData::parseXScriptNode(const xmlNodePtr node) {
 }
 
 int
-Script::ScriptData::ParseXScriptNodeHandler::process(const MessageParams &params,
-                                                     MessageResultBase &result) {
+Script::ParseXScriptNodeHandler::process(const MessageParams &params,
+                                         MessageResultBase &result) {
     (void)result;
     
     Script* script = params.getPtr<Script>(0);
@@ -793,8 +793,8 @@ Script::ScriptData::replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Cont
 }
 
 int
-Script::ScriptData::ReplaceXScriptNodeHandler::process(const MessageParams &params,
-                                                       MessageResultBase &result) {
+Script::ReplaceXScriptNodeHandler::process(const MessageParams &params,
+                                           MessageResultBase &result) {
     (void)result;
     xmlNodePtr newnode = params.get<xmlNodePtr>(2);
     xmlUnlinkNode(newnode);
@@ -820,8 +820,8 @@ Script::ScriptData::property(const char *prop, const char *value) {
 }
 
 int
-Script::ScriptData::PropertyHandler::process(const MessageParams &params,
-                                             MessageResultBase &result) {
+Script::PropertyHandler::process(const MessageParams &params,
+                                 MessageResultBase &result) {
     (void)result;
     
     Script* script = params.getPtr<Script>(0);
@@ -903,8 +903,8 @@ Script::ScriptData::cachable(const Context *ctx, bool for_save) {
 }
 
 int
-Script::ScriptData::CachableHandler::process(const MessageParams &params,
-                                             MessageResultBase &result) {
+Script::CachableHandler::process(const MessageParams &params,
+                                 MessageResultBase &result) {
     Script* script = params.getPtr<Script>(0);
     const Context* ctx = params.getPtr<const Context>(1);
     bool for_save = params.get<bool>(2);
@@ -1279,13 +1279,13 @@ class Script::HandlerRegisterer {
 public:
     HandlerRegisterer() {
         MessageProcessor::instance()->registerBack(PARSE_XSCRIPT_NODE_METHOD,
-            boost::shared_ptr<MessageHandler>(new ScriptData::ParseXScriptNodeHandler()));
+            boost::shared_ptr<MessageHandler>(new ParseXScriptNodeHandler()));
         MessageProcessor::instance()->registerBack(REPLACE_XSCRIPT_NODE_METHOD,
-            boost::shared_ptr<MessageHandler>(new ScriptData::ReplaceXScriptNodeHandler()));
+            boost::shared_ptr<MessageHandler>(new ReplaceXScriptNodeHandler()));
         MessageProcessor::instance()->registerBack(PROPERTY_METHOD,
-            boost::shared_ptr<MessageHandler>(new ScriptData::PropertyHandler()));
+            boost::shared_ptr<MessageHandler>(new PropertyHandler()));
         MessageProcessor::instance()->registerBack(CACHABLE_METHOD,
-            boost::shared_ptr<MessageHandler>(new ScriptData::CachableHandler()));
+            boost::shared_ptr<MessageHandler>(new CachableHandler()));
     }
 };
 
