@@ -84,7 +84,7 @@ MessageProcessor::process(const std::string &key,
                           MessageResultBase &result) {
     std::map<std::string, HandlerList>::iterator it = handlers_.find(key);
     if (handlers_.end() == it) {
-        throw MessageError("Message interface error. Cannot find handler: " + key);
+        throw MessageError("Cannot find handler: " + key);
     }
     
     try {
@@ -95,10 +95,10 @@ MessageProcessor::process(const std::string &key,
             }
         }
     }
-    catch(const MessageError &e) {
-        throw MessageError(std::string(e.what()) + ". Method: " + key);
+    catch(MessageError &e) {
+        e.append(". Method: " + key);
+        throw e;
     }
-    
 }
 
 } // namespace xscript

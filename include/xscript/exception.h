@@ -16,6 +16,9 @@ public:
     virtual const char* what() const throw () {
         return error_.c_str();
     }
+    void append(const std::string &str) {
+        error_.append(str);
+    }
 
 private:
     std::string error_;

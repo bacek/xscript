@@ -3,12 +3,13 @@
 
 #include <boost/current_function.hpp>
 
+#include "xscript/context.h"
 #include "xscript/logger.h"
 #include "xscript/message_interface.h"
 #include "xscript/policy.h"
 #include "xscript/request.h"
-#include "xscript/util.h"
 #include "xscript/string_utils.h"
+#include "xscript/util.h"
 #include "xscript/vhost_data.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -31,6 +32,7 @@ const std::string Policy::ALLOW_CACHING_INPUT_COOKIE_METHOD = "POLICY_ALLOW_CACH
 const std::string Policy::ALLOW_CACHING_OUTPUT_COOKIE_METHOD = "POLICY_ALLOW_CACHING_OUTPUT_COOKIE";
 const std::string Policy::IS_SKIPPED_PROXY_HEADER_METHOD = "POLICY_IS_SKIPPED_PROXY_HEADER";
 const std::string Policy::IS_ERROR_DOC_METHOD = "POLICY_IS_ERROR_DOC";
+const std::string Policy::GET_CACHE_COOKIE_METHOD = "POLICY_GET_CACHE_COOKIE";
 
 
 class ProxyHeadersHelper {
@@ -233,6 +235,22 @@ Policy::isErrorDoc(xmlDocPtr doc) {
     return result.get();
 }
 
+std::string
+Policy::getCacheCookie(const Context *ctx, const std::string &cookie) {
+    MessageParam<const Context> context_param(ctx);
+    MessageParam<const std::string> cookie_param(&cookie);
+    
+    MessageParamBase* param_list[2];
+    param_list[0] = &context_param;
+    param_list[0] = &cookie_param;
+    
+    MessageParams params(2, param_list);
+    MessageResult<std::string> result;
+  
+    MessageProcessor::instance()->process(GET_CACHE_COOKIE_METHOD, params, result);
+    return result.get();
+}
+
 namespace PolicyHandlers {
 
 class RealIPHeaderNameHandler : public MessageHandler {
@@ -349,6 +367,20 @@ class IsErrorDocHandler : public MessageHandler {
     }
 };
 
+class GetCacheCookieHandler : public MessageHandler {
+    int process(const MessageParams &params, MessageResultBase &result) {
+        const Context* ctx = params.getPtr<const Context>(0);
+        const std::string& cookie = params.get<const std::string>(1);
+        if (ctx->request()->hasCookie(cookie)) {
+            result.set(ctx->request()->getCookie(cookie));
+        }
+        else {
+            result.set(StringUtils::EMPTY_STRING);
+        }
+        return 0;
+    }
+};
+
 struct HandlerRegisterer {
     HandlerRegisterer() {
         MessageProcessor::instance()->registerBack(Policy::REAL_IP_HEADER_NAME_METHOD,
@@ -375,6 +407,8 @@ struct HandlerRegisterer {
                 boost::shared_ptr<MessageHandler>(new AllowCachingOutputCookieHandler()));
         MessageProcessor::instance()->registerBack(Policy::IS_ERROR_DOC_METHOD,
                 boost::shared_ptr<MessageHandler>(new IsErrorDocHandler()));
+        MessageProcessor::instance()->registerBack(Policy::GET_CACHE_COOKIE_METHOD,
+                boost::shared_ptr<MessageHandler>(new GetCacheCookieHandler()));
     }
 };
 

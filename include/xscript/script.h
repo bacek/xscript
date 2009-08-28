@@ -36,46 +36,46 @@ public:
     bool binaryPage() const;
     unsigned int expireTimeDelta() const;
     bool expireTimeDeltaUndefined() const;
-    
     time_t cacheTime() const;
     boost::int32_t pageRandomMax() const;
     bool allowMethod(const std::string& value) const;
     const Block* block(unsigned int n) const;
     const Block* block(const std::string &id, bool throw_error = true) const;
     unsigned int blocksNumber() const;
-
     const std::map<std::string, std::string>& headers() const;
     const std::string& extensionProperty(const std::string &name) const;
+    
+    std::string info(const Context *ctx) const;
+    bool cachable(const Context *ctx, bool for_save) const;
     
     virtual XmlDocHelper invoke(boost::shared_ptr<Context> ctx);
     virtual void applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc);
     
     virtual std::string fullName(const std::string &name) const;
+    
     virtual std::string createTagKey(const Context *ctx) const;
     std::string createTagKey(const Context *ctx, bool page_cache) const;
-    virtual std::string info(const Context *ctx) const;
-    virtual bool cachable(const Context *ctx, bool for_save) const;
     
     void addExpiresHeader(const Context *ctx) const;
 
+    class HandlerRegisterer;
 protected:
     static const std::string PARSE_XSCRIPT_NODE_METHOD;
+    static const std::string REPLACE_XSCRIPT_NODE_METHOD;
+    static const std::string PROPERTY_METHOD;
+    static const std::string CACHABLE_METHOD;
     
     Script(const std::string &name);
 
     void parse(const std::string &xml);
     
     virtual void postParse();
-    virtual void property(const char *name, const char *value);
-    
-    virtual void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const;
-    virtual std::string getCacheCookie(const Context *ctx, const std::string &cookie) const;
     
 private:
     friend class ScriptFactory;
-    friend class ScriptHandlerRegisterer;
     
     class ScriptData;
+    friend class ScriptData;
     ScriptData *data_;
 };
 

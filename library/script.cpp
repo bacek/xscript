@@ -53,6 +53,9 @@ static const unsigned int EXPIRE_TIME_DELTA_UNDEFINED = std::numeric_limits<unsi
 static const std::string GET_METHOD = "GET";
 
 const std::string Script::PARSE_XSCRIPT_NODE_METHOD = "SCRIPT_PARSE_XSCRIPT_NODE";
+const std::string Script::REPLACE_XSCRIPT_NODE_METHOD = "SCRIPT_REPLACE_XSCRIPT_NODE";
+const std::string Script::PROPERTY_METHOD = "SCRIPT_PROPERTY";
+const std::string Script::CACHABLE_METHOD = "SCRIPT_CACHABLE";
 
 class Script::ScriptData {
 public:  
@@ -110,12 +113,11 @@ public:
     void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
                         unsigned int &count, unsigned int &xscript_count) const;
     std::string cachedUrl(const Context *ctx) const;
-    void parseXScriptNode(const xmlNodePtr node); 
+    void parseXScriptNode(const xmlNodePtr node);
+    void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx);
+    void property(const char *name, const char *value);
+    bool cachable(const Context *ctx, bool for_save);
     
-    class ParseXScriptNodeHandler : public MessageHandler {
-        int process(const MessageParams &params, MessageResultBase &result);
-    };
-      
     Script *owner_;
     XmlDocHelper doc_;
     std::vector<Block*> blocks_;
@@ -133,6 +135,19 @@ public:
     static const unsigned int FLAG_THREADED = 1;
     static const unsigned int FLAG_FORCE_STYLESHEET = 1 << 1;
     static const unsigned int FLAG_BINARY_PAGE = 1 << 2;
+    
+    class ParseXScriptNodeHandler : public MessageHandler {
+        int process(const MessageParams &params, MessageResultBase &result);
+    };
+    class ReplaceXScriptNodeHandler : public MessageHandler {
+            int process(const MessageParams &params, MessageResultBase &result);
+    };
+    class PropertyHandler : public MessageHandler {
+        int process(const MessageParams &params, MessageResultBase &result);
+    };
+    class CachableHandler : public MessageHandler {
+        int process(const MessageParams &params, MessageResultBase &result);
+    };
 };
 
 Script::ScriptData::ScriptData(Script *owner) :
@@ -651,7 +666,7 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
             count++;
         }
         else if (xscript_node_set.find(node) != xscript_node_set.end() ) {
-            owner_->replaceXScriptNode(node, newnode, ctx);
+            owner_->data_->replaceXScriptNode(node, newnode, ctx);
             xscript_count++;
         }
         else if (node->children) {
@@ -715,7 +730,7 @@ Script::ScriptData::parseXScriptNode(const xmlNodePtr node) {
     param_list[1] = &node_param;
     
     MessageParams params(2, param_list);
-    MessageResult<std::string> result;
+    MessageResultBase result;
   
     MessageProcessor::instance()->process(PARSE_XSCRIPT_NODE_METHOD, params, result);
 }
@@ -731,7 +746,7 @@ Script::ScriptData::ParseXScriptNodeHandler::process(const MessageParams &params
     log()->debug("parsing xscript node");
 
     XmlUtils::visitAttributes(node->properties,
-                              boost::bind(&Script::property, script, _1, _2));
+                              boost::bind(&Script::ScriptData::property, script->data_, _1, _2));
 
     xmlNodePtr child = node->children;
     ParamFactory *pf = ParamFactory::instance();
@@ -750,11 +765,204 @@ Script::ScriptData::ParseXScriptNodeHandler::process(const MessageParams &params
         else if (XML_ELEMENT_NODE == child->type) {
             const char *name = (const char *) child->name, *value = XmlUtils::value(child);
             if (name && value) {
-                script->property(name, value);
+                script->data_->property(name, value);
             }
             continue;
         }
     }
+    return 0;
+}
+
+void
+Script::ScriptData::replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) {
+    MessageParam<Script> script_param(owner_);
+    MessageParam<xmlNodePtr> node_param(&node);
+    MessageParam<xmlNodePtr> newnode_param(&newnode);
+    MessageParam<Context> context_param(ctx);
+    
+    MessageParamBase* param_list[4];
+    param_list[0] = &script_param;
+    param_list[1] = &node_param;
+    param_list[2] = &newnode_param;
+    param_list[3] = &context_param;
+    
+    MessageParams params(4, param_list);
+    MessageResultBase result;
+  
+    MessageProcessor::instance()->process(REPLACE_XSCRIPT_NODE_METHOD, params, result);
+}
+
+int
+Script::ScriptData::ReplaceXScriptNodeHandler::process(const MessageParams &params,
+                                                       MessageResultBase &result) {
+    (void)result;
+    xmlNodePtr newnode = params.get<xmlNodePtr>(2);
+    xmlUnlinkNode(newnode);
+    xmlFreeNode(newnode);
+    return 0;
+}
+
+void
+Script::ScriptData::property(const char *prop, const char *value) {
+    MessageParam<Script> script_param(owner_);
+    MessageParam<const char> prop_param(prop);
+    MessageParam<const char> value_param(value);
+    
+    MessageParamBase* param_list[3];
+    param_list[0] = &script_param;
+    param_list[1] = &prop_param;
+    param_list[2] = &value_param;
+    
+    MessageParams params(3, param_list);
+    MessageResultBase result;
+  
+    MessageProcessor::instance()->process(PROPERTY_METHOD, params, result);
+}
+
+int
+Script::ScriptData::PropertyHandler::process(const MessageParams &params,
+                                             MessageResultBase &result) {
+    (void)result;
+    
+    Script* script = params.getPtr<Script>(0);
+    const char* prop = params.getPtr<const char>(1);
+    const char* value = params.getPtr<const char>(2);
+    
+    log()->debug("%s, setting property: %s=%s", script->name().c_str(), prop, value);
+
+    if (strncasecmp(prop, "all-threaded", sizeof("all-threaded")) == 0) {
+        script->data_->threaded(strncasecmp(value, "yes", sizeof("yes")) == 0);
+    }
+    else if (strncasecmp(prop, "allow-methods", sizeof("allow-methods")) == 0) {
+        script->data_->allowMethods(value);
+    }
+    else if (strncasecmp(prop, "xslt-dont-apply", sizeof("xslt-dont-apply")) == 0) {
+        script->data_->forceStylesheet(strncasecmp(value, "yes", sizeof("yes")) != 0);
+    }
+    else if (strncasecmp(prop, "http-expire-time-delta", sizeof("http-expire-time-delta")) == 0) {
+        try {
+            script->data_->expireTimeDelta(boost::lexical_cast<unsigned int>(value));
+        }
+        catch(const boost::bad_lexical_cast &e) {
+            throw std::runtime_error(
+                std::string("cannot parse http-expire-time-delta value: ") + value);
+        }
+    }
+    else if (strncasecmp(prop, "cache-time", sizeof("cache-time")) == 0) {
+        try {
+            script->data_->cacheTime(boost::lexical_cast<time_t>(value));
+        }
+        catch(const boost::bad_lexical_cast &e) {
+            throw std::runtime_error(
+                std::string("cannot parse cache-time value: ") + value);
+        }
+    }
+    else if (strncasecmp(prop, "binary-page", sizeof("binary-page")) == 0) {
+        script->data_->binaryPage(strncasecmp(value, "yes", sizeof("yes")) == 0);
+    }
+    else if (strncasecmp(prop, "page-random-max", sizeof("page-random-max")) == 0) {
+        try {
+            script->data_->pageRandomMax(boost::lexical_cast<boost::int32_t>(value));
+        }
+        catch(const boost::bad_lexical_cast &e) {
+            throw std::runtime_error(
+                std::string("cannot parse page-random-max value: ") + value);
+        }
+    }
+    else if (strncasecmp(prop, "cache-query", sizeof("cache-query")) == 0) {
+        script->data_->cacheQuery(value);
+    }
+    else if (strncasecmp(prop, "cache-cookies", sizeof("cache-cookies")) == 0) {
+        script->data_->cacheCookies(value);
+    }
+    else if (ExtensionList::instance()->checkScriptProperty(prop, value)) {
+        script->data_->extensionProperty(prop, value);
+    }
+    else {
+        throw std::runtime_error(std::string("invalid script property: ").append(prop));
+    }
+    return 0;
+}
+
+bool
+Script::ScriptData::cachable(const Context *ctx, bool for_save) {
+    MessageParam<Script> script_param(owner_);
+    MessageParam<const Context> context_param(ctx);
+    MessageParam<bool> for_save_param(&for_save);
+    
+    MessageParamBase* param_list[3];
+    param_list[0] = &script_param;
+    param_list[1] = &context_param;
+    param_list[2] = &for_save_param;
+    
+    MessageParams params(3, param_list);
+    MessageResult<bool> result;
+  
+    MessageProcessor::instance()->process(CACHABLE_METHOD, params, result);
+    return result.get();
+}
+
+int
+Script::ScriptData::CachableHandler::process(const MessageParams &params,
+                                             MessageResultBase &result) {
+    Script* script = params.getPtr<Script>(0);
+    const Context* ctx = params.getPtr<const Context>(1);
+    bool for_save = params.get<bool>(2);
+    
+    if (script->data_->cacheTimeUndefined() || script->cacheTime() < DocCache::instance()->minimalCacheTime()) {
+        result.set(false);
+        return 0;
+    }
+    
+    if (ctx->noCache()) {
+        log()->debug("Cannot cache script. Context is not cachable");
+        result.set(false);
+        return 0;
+    }
+        
+    if (script->binaryPage()) {
+        log()->debug("Cannot cache script. Binary content");
+        result.set(false);
+        return 0;
+    }
+    
+    if (ctx->noMainXsltPort()) {
+        log()->debug("Cannot cache script. Alternate or noxslt port");
+        result.set(false);
+        return 0;
+    }
+    
+    if (ctx->request()->getRequestMethod() != GET_METHOD) {
+        log()->debug("Cannot cache script. Not GET method");
+        result.set(false);
+        return 0;
+    }
+    
+    if (for_save) {
+        if (ctx->xsltChanged(script)) {
+            log()->debug("Cannot cache script. Main stylesheet changed");
+            result.set(false);
+            return 0;
+        }
+            
+        if (!ctx->response()->isStatusOK()) {
+            log()->debug("Cannot cache script. Status is not OK");
+            result.set(false);
+            return 0;
+        }
+        
+        const CookieSet &cookies = ctx->response()->outCookies();       
+        for(CookieSet::const_iterator it = cookies.begin(); it != cookies.end(); ++it) {
+            if (!Policy::allowCachingOutputCookie(it->name().c_str())) {
+                log()->debug("Cannot cache script. Output cookie %s is not allowed", it->name().c_str());
+                result.set(false);
+                return 0;
+            }
+        }
+    }
+    
+    log()->debug("Script is cachable");
+    result.set(true);
     return 0;
 }
 
@@ -951,72 +1159,6 @@ void
 Script::postParse() {
 }
 
-void
-Script::property(const char *prop, const char *value) {
-
-    log()->debug("%s, setting property: %s=%s", name().c_str(), prop, value);
-
-    if (strncasecmp(prop, "all-threaded", sizeof("all-threaded")) == 0) {
-        data_->threaded(strncasecmp(value, "yes", sizeof("yes")) == 0);
-    }
-    else if (strncasecmp(prop, "allow-methods", sizeof("allow-methods")) == 0) {
-        data_->allowMethods(value);
-    }
-    else if (strncasecmp(prop, "xslt-dont-apply", sizeof("xslt-dont-apply")) == 0) {
-        data_->forceStylesheet(strncasecmp(value, "yes", sizeof("yes")) != 0);
-    }
-    else if (strncasecmp(prop, "http-expire-time-delta", sizeof("http-expire-time-delta")) == 0) {
-        try {
-            data_->expireTimeDelta(boost::lexical_cast<unsigned int>(value));
-        }
-        catch(const boost::bad_lexical_cast &e) {
-            throw std::runtime_error(
-                std::string("cannot parse http-expire-time-delta value: ") + value);
-        }
-    }
-    else if (strncasecmp(prop, "cache-time", sizeof("cache-time")) == 0) {
-        try {
-            data_->cacheTime(boost::lexical_cast<time_t>(value));
-        }
-        catch(const boost::bad_lexical_cast &e) {
-            throw std::runtime_error(
-                std::string("cannot parse cache-time value: ") + value);
-        }
-    }
-    else if (strncasecmp(prop, "binary-page", sizeof("binary-page")) == 0) {
-        data_->binaryPage(strncasecmp(value, "yes", sizeof("yes")) == 0);
-    }
-    else if (strncasecmp(prop, "page-random-max", sizeof("page-random-max")) == 0) {
-        try {
-            data_->pageRandomMax(boost::lexical_cast<boost::int32_t>(value));
-        }
-        catch(const boost::bad_lexical_cast &e) {
-            throw std::runtime_error(
-                std::string("cannot parse page-random-max value: ") + value);
-        }
-    }
-    else if (strncasecmp(prop, "cache-query", sizeof("cache-query")) == 0) {
-        data_->cacheQuery(value);
-    }
-    else if (strncasecmp(prop, "cache-cookies", sizeof("cache-cookies")) == 0) {
-        data_->cacheCookies(value);
-    }
-    else if (ExtensionList::instance()->checkScriptProperty(prop, value)) {
-        data_->extensionProperty(prop, value);
-    }
-    else {
-        throw std::runtime_error(std::string("invalid script property: ").append(prop));
-    }
-}
-
-void
-Script::replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const {
-    (void)ctx;
-    (void)node;
-    xmlUnlinkNode(newnode);
-    xmlFreeNode(newnode);
-}
-
 const std::string&
 Script::extensionProperty(const std::string &name) const {
     return data_->extensionProperty(name);
@@ -1083,7 +1225,7 @@ Script::createTagKey(const Context *ctx, bool page_cache) const {
             it != cache_cookies.end();
             ++it) {
             
-            std::string cookie = getCacheCookie(ctx, *it);
+            std::string cookie = Policy::getCacheCookie(ctx, *it);
             if (cookie.empty()) {
                 continue;
             }
@@ -1110,12 +1252,6 @@ Script::createTagKey(const Context *ctx) const {
 }
 
 std::string
-Script::getCacheCookie(const Context *ctx, const std::string &cookie) const {   
-    return ctx->request()->hasCookie(cookie) ?
-        ctx->request()->getCookie(cookie) : StringUtils::EMPTY_STRING;
-}
-
-std::string
 Script::info(const Context *ctx) const {
     std::string info("Original url: ");
     info.append(data_->cachedUrl(ctx));
@@ -1136,63 +1272,23 @@ Script::info(const Context *ctx) const {
 
 bool
 Script::cachable(const Context *ctx, bool for_save) const {
-    
-    if (data_->cacheTimeUndefined() || cacheTime() < DocCache::instance()->minimalCacheTime()) {
-        return false;
-    }
-    
-    if (ctx->noCache()) {
-        log()->debug("Cannot cache script. Context is not cachable");
-        return false;
-    }
-        
-    if (binaryPage()) {
-        log()->debug("Cannot cache script. Binary content");
-        return false;
-    }
-    
-    if (ctx->noMainXsltPort()) {
-        log()->debug("Cannot cache script. Alternate or noxslt port");
-        return false;
-    }
-    
-    if (ctx->request()->getRequestMethod() != GET_METHOD) {
-        log()->debug("Cannot cache script. Not GET method");
-        return false;
-    }
-    
-    if (for_save) {
-        if (ctx->xsltChanged(this)) {
-            log()->debug("Cannot cache script. Main stylesheet changed");
-            return false;
-        }
-            
-        if (!ctx->response()->isStatusOK()) {
-            log()->debug("Cannot cache script. Status is not OK");
-            return false;
-        }
-        
-        const CookieSet &cookies = ctx->response()->outCookies();       
-        for(CookieSet::const_iterator it = cookies.begin(); it != cookies.end(); ++it) {
-            if (!Policy::allowCachingOutputCookie(it->name().c_str())) {
-                log()->debug("Cannot cache script. Output cookie %s is not allowed", it->name().c_str());
-                return false;
-            }
-        }
-    }
-    
-    log()->debug("Script is cachable");
-    return true;
+    return data_->cachable(ctx, for_save);
 }
 
-class ScriptHandlerRegisterer {
+class Script::HandlerRegisterer {
 public:
-    ScriptHandlerRegisterer() {
-        MessageProcessor::instance()->registerBack(Script::PARSE_XSCRIPT_NODE_METHOD,
-            boost::shared_ptr<MessageHandler>(new Script::ScriptData::ParseXScriptNodeHandler()));
+    HandlerRegisterer() {
+        MessageProcessor::instance()->registerBack(PARSE_XSCRIPT_NODE_METHOD,
+            boost::shared_ptr<MessageHandler>(new ScriptData::ParseXScriptNodeHandler()));
+        MessageProcessor::instance()->registerBack(REPLACE_XSCRIPT_NODE_METHOD,
+            boost::shared_ptr<MessageHandler>(new ScriptData::ReplaceXScriptNodeHandler()));
+        MessageProcessor::instance()->registerBack(PROPERTY_METHOD,
+            boost::shared_ptr<MessageHandler>(new ScriptData::PropertyHandler()));
+        MessageProcessor::instance()->registerBack(CACHABLE_METHOD,
+            boost::shared_ptr<MessageHandler>(new ScriptData::CachableHandler()));
     }
 };
 
-static ScriptHandlerRegisterer reg_script_handlers;
+static Script::HandlerRegisterer reg_script_handlers;
 
 } // namespace xscript
