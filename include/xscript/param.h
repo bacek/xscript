@@ -24,10 +24,7 @@ public:
 
     virtual void parse();
 
-    inline const std::string& id() const {
-        return id_;
-    }
-
+    const std::string& id() const;
     virtual const char* type() const = 0;
     virtual const std::string& value() const;
     
@@ -43,9 +40,8 @@ protected:
     virtual void property(const char *name, const char *value);
 
 private:
-    xmlNodePtr node_;
-    std::string id_, value_;
-    std::auto_ptr<Validator> validator_;
+    class ParamData;
+    ParamData *data_;
 };
 
 class ConvertedParam : public Param {
@@ -53,9 +49,7 @@ public:
     ConvertedParam(Object *owner, xmlNodePtr node);
     virtual ~ConvertedParam();
 
-    inline const std::string& as() const {
-        return as_;
-    }
+    const std::string& as() const;
 
     virtual void add(const Context *ctx, ArgList &al) const;
 
@@ -63,7 +57,8 @@ protected:
     virtual void property(const char *name, const char *value);
 
 private:
-    std::string as_;
+    class ConvertedParamData;
+    ConvertedParamData *converted_data_;
 };
 
 class TypedParam : public ConvertedParam {
@@ -71,9 +66,7 @@ public:
     TypedParam(Object *owner, xmlNodePtr node);
     virtual ~TypedParam();
 
-    inline const std::string& defaultValue() const {
-        return default_value_;
-    }
+    const std::string& defaultValue() const;
 
     virtual void add(const Context *ctx, ArgList &al) const;
     virtual const std::string& value() const;
@@ -82,7 +75,8 @@ protected:
     virtual void property(const char *name, const char *value);
 
 private:
-    std::string default_value_;
+    class TypedParamData;
+    TypedParamData *typed_data_;
 };
 
 typedef std::auto_ptr<Param> (*ParamCreator)(Object *owner, xmlNodePtr node);

@@ -35,12 +35,29 @@ public:
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
 };
 
+class Param::ParamData {
+public:
+    ParamData(xmlNodePtr node) : node_(node) {
+        assert(node_);
+    }
+    ~ParamData() {}
+    
+    xmlNodePtr node_;
+    std::string id_, value_;
+    std::auto_ptr<Validator> validator_;
+};
+
 Param::Param(Object * /* owner */, xmlNodePtr node) :
-        node_(node) {
-    assert(node_);
+    data_(new ParamData(node)) {
 }
 
 Param::~Param() {
+    delete data_;
+}
+
+const std::string&
+Param::id() const {
+    return data_->id_;
 }
 
 bool
@@ -51,26 +68,26 @@ Param::constant() const {
 void
 Param::parse() {
     // Create validator if any. Validators will remove used attributes.
-    validator_ = ValidatorFactory::instance()->createValidator(node_);
+    data_->validator_ = ValidatorFactory::instance()->createValidator(data_->node_);
 
-    XmlUtils::visitAttributes(node_->properties,
+    XmlUtils::visitAttributes(data_->node_->properties,
                               boost::bind(&Param::property, this, _1, _2));
 
-    xmlNodePtr c = node_->children;
+    xmlNodePtr c = data_->node_->children;
     if (c && xmlNodeIsText(c) && c->content) {
-        value_.assign((const char*) c->content);
+        data_->value_.assign((const char*) c->content);
     }
 }
 
 const std::string&
 Param::value() const {
-    return value_;
+    return data_->value_;
 }
 
 void
 Param::property(const char *name, const char *value) {
     if (strncasecmp(name, "id", sizeof("id")) == 0) {
-        id_.assign(value);
+        data_->id_.assign(value);
     }
     else if (strncasecmp(name, "type", sizeof("type")) != 0) {
         std::stringstream stream;
@@ -81,8 +98,8 @@ Param::property(const char *name, const char *value) {
 
 void
 Param::checkValidator(const Context *ctx) const {
-    if (validator_.get()) {
-        validator_->check(ctx, *this);
+    if (data_->validator_.get()) {
+        data_->validator_->check(ctx, *this);
     }
 };
 
@@ -195,15 +212,26 @@ SimpleParam<T>::create(Object *owner, xmlNodePtr node) {
     return std::auto_ptr<Param>(new SimpleParam<T>(owner, node));
 }
 
+class ConvertedParam::ConvertedParamData {
+public:
+    ConvertedParamData() {}
+    ~ConvertedParamData() {}
+    
+    std::string as_;
+};
 
 ConvertedParam::ConvertedParam(Object *owner, xmlNodePtr node) :
-        Param(owner, node) {
-
+        Param(owner, node), converted_data_(new ConvertedParamData()) {
 }
 
 ConvertedParam::~ConvertedParam() {
+    delete converted_data_;
 }
 
+const std::string&
+ConvertedParam::as() const {
+    return converted_data_->as_;
+}
 
 void
 ConvertedParam::add(const Context *ctx, ArgList &al) const {
@@ -213,24 +241,36 @@ ConvertedParam::add(const Context *ctx, ArgList &al) const {
 void
 ConvertedParam::property(const char *name, const char *value) {
     if (strncasecmp(name, "as", sizeof("as")) == 0) {
-        as_.assign(value);
+        converted_data_->as_.assign(value);
     }
     else Param::property(name, value);
 }
 
+class TypedParam::TypedParamData {
+public:
+    TypedParamData() {}
+    ~TypedParamData() {}
+    
+    std::string default_value_;
+};
 
 TypedParam::TypedParam(Object *owner, xmlNodePtr node) :
-        ConvertedParam(owner, node) {
-
+        ConvertedParam(owner, node), typed_data_(new TypedParamData()) {
 }
 
 TypedParam::~TypedParam() {
+    delete typed_data_;
+}
+
+const std::string&
+TypedParam::defaultValue() const {
+    return typed_data_->default_value_;
 }
 
 void
 TypedParam::property(const char *name, const char *value) {
     if (strncasecmp(name, "default", sizeof("default")) == 0) {
-        default_value_.assign(value);
+        typed_data_->default_value_.assign(value);
     }
     else ConvertedParam::property(name, value);
 }

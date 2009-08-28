@@ -141,7 +141,7 @@ class Script::ParseXScriptNodeHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result);
 };
 class Script::ReplaceXScriptNodeHandler : public MessageHandler {
-        int process(const MessageParams &params, MessageResultBase &result);
+    int process(const MessageParams &params, MessageResultBase &result);
 };
 class Script::PropertyHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result);
