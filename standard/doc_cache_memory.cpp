@@ -12,6 +12,7 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/thread/mutex.hpp>
 
+#include "xscript/average_counter.h"
 #include "xscript/cache_counter.h"
 #include "xscript/config.h"
 #include "xscript/doc_cache.h"
@@ -19,6 +20,7 @@
 #include "xscript/logger.h"
 #include "xscript/memory_statistic.h"
 #include "xscript/param.h"
+#include "xscript/stat_builder.h"
 #include "xscript/string_utils.h"
 #include "xscript/tag.h"
 #include "xscript/tagged_block.h"
