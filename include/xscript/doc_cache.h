@@ -36,6 +36,7 @@ protected:
     
 private:
     class DocCacheData;
+    friend class DocCacheData;
     DocCacheData *data_;
 };
 
