@@ -39,6 +39,8 @@ protected:
     
 private:
     class DocCacheData;
+    // workaround for woody
+    friend class DocCacheData;
     DocCacheData *data_;
 };
 
