@@ -2,19 +2,21 @@
 #define _XSCRIPT_CONTEXT_H_
 
 #include <map>
-#include <vector>
 #include <string>
 #include <stdexcept>
+#include <vector>
+
 #include <boost/any.hpp>
-#include <boost/thread.hpp>
-#include <boost/utility.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/utility.hpp>
+#include <boost/thread/xtime.hpp>
+
 #include <libxml/tree.h>
 
+#include "xscript/invoke_result.h"
 #include "xscript/request_data.h"
 #include "xscript/util.h"
-#include "xscript/invoke_result.h"
 
 namespace xscript {
 
@@ -124,8 +126,6 @@ private:
 private:
     struct ContextData;
     ContextData *ctx_data_;
-
-    static boost::thread_specific_ptr<std::list<TimeoutCounter> > block_timers_;
 };
 
 class ContextStopper {

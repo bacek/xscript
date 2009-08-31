@@ -5,8 +5,8 @@
 #include <algorithm>
 
 #include <boost/bind.hpp>
-#include <boost/thread/xtime.hpp>
 #include <boost/current_function.hpp>
+#include <boost/thread.hpp>
 
 #include "xscript/authorizer.h"
 #include "xscript/block.h"
@@ -29,8 +29,6 @@
 #endif
 
 namespace xscript {
-
-boost::thread_specific_ptr<std::list<TimeoutCounter> > Context::block_timers_;
 
 class ParamsMap {
 public:
@@ -145,6 +143,8 @@ struct Context::ContextData {
 
     boost::shared_ptr<ParamsMap> params_;
     
+    static boost::thread_specific_ptr<std::list<TimeoutCounter> > block_timers_;
+    
     mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_;
     
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
@@ -155,8 +155,10 @@ struct Context::ContextData {
     static const unsigned int SKIP_NEXT_BLOCKS = 1 << 5;
     static const unsigned int STOP_BLOCKS = 1 << 6;
     
-    static const unsigned int DEFAULT_EXPIRE_TIME_DELTA = 300; 
+    static const unsigned int DEFAULT_EXPIRE_TIME_DELTA = 300;
 };
+
+boost::thread_specific_ptr<std::list<TimeoutCounter> > Context::ContextData::block_timers_;
 
 Context::Context(const boost::shared_ptr<Script> &script,
                  const boost::shared_ptr<RequestData> &data) : ctx_data_(NULL)
@@ -529,7 +531,7 @@ Context::pageRandom() const {
 
 const TimeoutCounter&
 Context::timer() const {
-    std::list<TimeoutCounter> *timers = block_timers_.get();
+    std::list<TimeoutCounter> *timers = ContextData::block_timers_.get();
     if (NULL == timers || timers->empty()) {
         return ctx_data_->timer_;
     }
@@ -538,7 +540,7 @@ Context::timer() const {
 
 void
 Context::resetTimer() {
-    std::list<TimeoutCounter> *timers = block_timers_.get();
+    std::list<TimeoutCounter> *timers = ContextData::block_timers_.get();
     if (NULL != timers) {
         timers->clear();
     }
@@ -546,10 +548,10 @@ Context::resetTimer() {
 
 void
 Context::startTimer(int timeout) {
-    std::list<TimeoutCounter> *timers = block_timers_.get();
+    std::list<TimeoutCounter> *timers = ContextData::block_timers_.get();
     if (NULL == timers) {
-        block_timers_.reset(new std::list<TimeoutCounter>);
-        timers = block_timers_.get();
+        ContextData::block_timers_.reset(new std::list<TimeoutCounter>);
+        timers = ContextData::block_timers_.get();
     }
     if (timers->empty()) {
         timers->push_back(TimeoutCounter(std::min(timeout, ctx_data_->timer_.remained())));
@@ -561,7 +563,7 @@ Context::startTimer(int timeout) {
 
 void
 Context::stopTimer() {
-    std::list<TimeoutCounter> *timers = block_timers_.get();
+    std::list<TimeoutCounter> *timers = ContextData::block_timers_.get();
     if (NULL == timers || timers->empty()) {
         throw std::runtime_error("Cannot stop timer that is not exist");
     }
