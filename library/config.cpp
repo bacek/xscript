@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <stdexcept>
+
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
@@ -10,33 +11,46 @@
 #include <libxml/parser.h>
 #include <libxml/xinclude.h>
 
-#include "xscript/xml_util.h"
+#include "xscript/authorizer.h"
 #include "xscript/config.h"
+#include "xscript/control_extension.h"
+#include "xscript/doc_cache_strategy.h"
 #include "xscript/logger_factory.h"
 #include "xscript/logger.h"
+#include "xscript/policy.h"
 #include "xscript/sanitizer.h"
-#include "xscript/authorizer.h"
-#include "xscript/thread_pool.h"
-#include "xscript/vhost_data.h"
-#include "xscript/doc_cache_strategy.h"
 #include "xscript/script_cache.h"
 #include "xscript/script_factory.h"
+#include "xscript/status_info.h"
 #include "xscript/stylesheet_cache.h"
 #include "xscript/stylesheet_factory.h"
-#include "xscript/control_extension.h"
-#include "xscript/policy.h"
-#include "xscript/status_info.h"
+#include "xscript/thread_pool.h"
+#include "xscript/vhost_data.h"
+#include "xscript/xml_helpers.h"
+#include "xscript/xml_util.h"
 
 #include "details/xml_config.h"
 
-#include "internal/loader.h"
 #include "internal/extension_list.h"
+#include "internal/hash.h"
+#include "internal/hashmap.h"
+#include "internal/loader.h"
+
+#ifndef HAVE_HASHMAP
+#include <map>
+#endif
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
 
 namespace xscript {
+
+#ifndef HAVE_HASHMAP
+typedef std::map<std::string, std::string> VarMap;
+#else
+typedef details::hash_map<std::string, std::string, details::StringHash> VarMap;
+#endif
 
 Config::Config() {
 }
@@ -124,8 +138,21 @@ Config::create(int &argc, char *argv[], bool dont_check, HelpFunc func) {
     throw std::logic_error(stream.str());
 }
 
-XmlConfig::XmlConfig(const char *file) :
-        doc_(NULL) {
+class XmlConfig::XmlConfigData {
+public:
+    XmlConfigData(const char *file);
+    ~XmlConfigData();
+    
+    void findVariables(const XmlDocHelper &doc);
+    void resolveVariables(std::string &val) const;
+    const std::string& findVariable(const std::string &key) const;
+    bool checkVariableName(const std::string &name) const;
+    
+    VarMap vars_;
+    XmlDocHelper doc_;
+};
+
+XmlConfig::XmlConfigData::XmlConfigData(const char *file) : doc_(NULL) {
     namespace fs = boost::filesystem;
     fs::path path(file, fs::no_check);
     if (!fs::exists(path)) {
@@ -143,63 +170,11 @@ XmlConfig::XmlConfig(const char *file) :
     findVariables(doc_);
 }
 
-XmlConfig::~XmlConfig() {
-}
-
-std::string
-XmlConfig::value(const std::string &key) const {
-
-    std::string res;
-
-    XmlXPathContextHelper xctx(xmlXPathNewContext(doc_.get()));
-    XmlUtils::throwUnless(NULL != xctx.get());
-
-    XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*) key.c_str(), xctx.get()));
-    XmlUtils::throwUnless(NULL != object.get());
-
-    if (NULL != object->nodesetval && 0 != object->nodesetval->nodeNr) {
-
-        xmlNodeSetPtr ns = object->nodesetval;
-        XmlUtils::throwUnless(NULL != ns->nodeTab[0]);
-        const char *val = XmlUtils::value(ns->nodeTab[0]);
-        if (NULL != val) {
-            res.assign(val);
-        }
-    }
-    else {
-        std::stringstream stream;
-        stream << "nonexistent config param: " << key;
-        throw std::runtime_error(stream.str());
-    }
-    resolveVariables(res);
-    return res;
-}
+XmlConfig::XmlConfigData::~XmlConfigData()
+{}
 
 void
-XmlConfig::subKeys(const std::string &key, std::vector<std::string> &v) const {
-
-    XmlXPathContextHelper xctx(xmlXPathNewContext(doc_.get()));
-    XmlUtils::throwUnless(NULL != xctx.get());
-
-    XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*) key.c_str(), xctx.get()));
-    XmlUtils::throwUnless(NULL != object.get());
-
-    if (NULL != object->nodesetval && 0 != object->nodesetval->nodeNr) {
-
-        xmlNodeSetPtr ns = object->nodesetval;
-        v.reserve(ns->nodeNr);
-
-        for (int i = 0; i < ns->nodeNr; ++i) {
-            XmlUtils::throwUnless(NULL != ns->nodeTab[i]);
-            std::stringstream stream;
-            stream << key << "[" << (i + 1) << "]";
-            v.push_back(stream.str());
-        }
-    }
-}
-
-void
-XmlConfig::findVariables(const XmlDocHelper &doc) {
+XmlConfig::XmlConfigData::findVariables(const XmlDocHelper &doc) {
 
     XmlXPathContextHelper xctx(xmlXPathNewContext(doc.get()));
     XmlUtils::throwUnless(NULL != xctx.get());
@@ -225,7 +200,7 @@ XmlConfig::findVariables(const XmlDocHelper &doc) {
 }
 
 void
-XmlConfig::resolveVariables(std::string &val) const {
+XmlConfig::XmlConfigData::resolveVariables(std::string &val) const {
     size_t pos_begin = std::string::npos;
     while(true) {
         pos_begin = val.rfind("${", pos_begin);
@@ -244,7 +219,7 @@ XmlConfig::resolveVariables(std::string &val) const {
 }
 
 const std::string&
-XmlConfig::findVariable(const std::string &key) const {
+XmlConfig::XmlConfigData::findVariable(const std::string &key) const {
     VarMap::const_iterator i = vars_.find(key);
     if (vars_.end() != i) {
         return i->second;
@@ -255,7 +230,7 @@ XmlConfig::findVariable(const std::string &key) const {
 }
 
 bool
-XmlConfig::checkVariableName(const std::string &name) const {
+XmlConfig::XmlConfigData::checkVariableName(const std::string &name) const {
 
     if (name.empty()) {
         return false;
@@ -274,6 +249,65 @@ XmlConfig::checkVariableName(const std::string &name) const {
     }
 
     return true;
+}
+
+XmlConfig::XmlConfig(const char *file) : data_(new XmlConfigData(file))
+{}
+
+XmlConfig::~XmlConfig() {
+    delete data_;
+}
+
+std::string
+XmlConfig::value(const std::string &key) const {
+
+    std::string res;
+
+    XmlXPathContextHelper xctx(xmlXPathNewContext(data_->doc_.get()));
+    XmlUtils::throwUnless(NULL != xctx.get());
+
+    XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*) key.c_str(), xctx.get()));
+    XmlUtils::throwUnless(NULL != object.get());
+
+    if (NULL != object->nodesetval && 0 != object->nodesetval->nodeNr) {
+
+        xmlNodeSetPtr ns = object->nodesetval;
+        XmlUtils::throwUnless(NULL != ns->nodeTab[0]);
+        const char *val = XmlUtils::value(ns->nodeTab[0]);
+        if (NULL != val) {
+            res.assign(val);
+        }
+    }
+    else {
+        std::stringstream stream;
+        stream << "nonexistent config param: " << key;
+        throw std::runtime_error(stream.str());
+    }
+    data_->resolveVariables(res);
+    return res;
+}
+
+void
+XmlConfig::subKeys(const std::string &key, std::vector<std::string> &v) const {
+
+    XmlXPathContextHelper xctx(xmlXPathNewContext(data_->doc_.get()));
+    XmlUtils::throwUnless(NULL != xctx.get());
+
+    XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*) key.c_str(), xctx.get()));
+    XmlUtils::throwUnless(NULL != object.get());
+
+    if (NULL != object->nodesetval && 0 != object->nodesetval->nodeNr) {
+
+        xmlNodeSetPtr ns = object->nodesetval;
+        v.reserve(ns->nodeNr);
+
+        for (int i = 0; i < ns->nodeNr; ++i) {
+            XmlUtils::throwUnless(NULL != ns->nodeTab[i]);
+            std::stringstream stream;
+            stream << key << "[" << (i + 1) << "]";
+            v.push_back(stream.str());
+        }
+    }
 }
 
 } // namespace xscript
