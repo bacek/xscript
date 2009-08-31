@@ -3,10 +3,13 @@
 
 #include <string>
 
+#include <boost/shared_ptr.hpp>
+
 #include <xscript/xml_helpers.h>
 
 namespace xscript {
 
+class Config;
 class Context;
 class DocCacheStrategy;
 class Object;
@@ -36,7 +39,6 @@ protected:
     
 private:
     class DocCacheData;
-    friend class DocCacheData;
     DocCacheData *data_;
 };
 
