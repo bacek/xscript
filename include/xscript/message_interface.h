@@ -133,10 +133,6 @@ public:
     void process(const std::string &key, const MessageParams &params, MessageResultBase &result);
 private:
     MessageProcessor();
-    
-private:
-    typedef std::list<boost::shared_ptr<MessageHandler> > HandlerList;
-    std::map<std::string, HandlerList> handlers_;
 };
 
 } // namespace xscript

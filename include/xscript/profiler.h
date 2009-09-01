@@ -12,11 +12,8 @@ class Logger;
 /**
  * Calculate timeval delta in milliseconds
  */
-inline boost::uint64_t
-operator - (const timeval& endTime, const timeval &startTime) {
-    return (endTime.tv_sec - startTime.tv_sec) * 
-      static_cast<boost::uint64_t>(1000000) + endTime.tv_usec - startTime.tv_usec;
-};
+boost::uint64_t
+operator - (const timeval &endTime, const timeval &startTime);
 
 /**
  * Profile some function.
@@ -37,17 +34,8 @@ profile(const boost::function<Ret ()>& f) {
  * Specialisation of profile for functions returning void.
  * Return just passed time.
  */
-inline boost::uint64_t
-profile(const boost::function<void ()>& f) {
-    struct timeval startTime, endTime;
-    gettimeofday(&startTime, 0);
-
-    f();
-
-    gettimeofday(&endTime, 0);
-
-    return endTime - startTime;
-}
+boost::uint64_t
+profile(const boost::function<void ()>& f);
 
 /**
  * Scoped profiler.
@@ -59,10 +47,7 @@ public:
      * \param log   Logger to output to.
      * \param info  Info string appened to output.
      */
-    Profiler(Logger* log, const std::string& info)
-            : log_(log), info_(info) {
-        gettimeofday(&startTime_, 0);
-    }
+    Profiler(Logger* log, const std::string& info);
 
     /**
      * Destructor which output profiling info into log.

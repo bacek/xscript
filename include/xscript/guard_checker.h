@@ -3,35 +3,24 @@
 
 #include <string>
 
-#include "xscript/functors.h"
-
-#ifndef HAVE_HASHMAP
-#include <map>
-#endif
+#include <boost/noncopyable.hpp>
 
 namespace xscript {
 
 class Context;
 
 typedef bool (*GuardCheckerMethod)(const Context*, const std::string&, const std::string&);
-typedef std::map<std::string, std::pair<GuardCheckerMethod, bool>, StringCILess> GuardCheckerMethodMap;
 
 class GuardChecker : private boost::noncopyable {
 public:
     GuardChecker();
     virtual ~GuardChecker();
 
-    static GuardChecker* instance() {
-        static GuardChecker checker;
-        return &checker;
-    }
+    static GuardChecker* instance();
     
     void registerMethod(const char *type, GuardCheckerMethod method, bool allow_empty);
     GuardCheckerMethod method(const std::string &type) const;
     bool allowed(const char *type, bool is_empty) const;
-
-private:
-    GuardCheckerMethodMap methods_;
 };
 
 class GuardCheckerRegisterer : private boost::noncopyable {

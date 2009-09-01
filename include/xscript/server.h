@@ -22,7 +22,6 @@ public:
 
     virtual bool needApplyMainStylesheet(Request *request) const;
     virtual bool needApplyPerblockStylesheet(Request *request) const;
-    virtual std::streamsize maxBodyLength(Request *request) const;
     virtual unsigned short alternatePort() const;
     virtual unsigned short noXsltPort() const;
     virtual bool useXsltProfiler() const = 0;
@@ -42,16 +41,10 @@ protected:
     virtual Context* createContext(const boost::shared_ptr<Script> &script,
                                    const boost::shared_ptr<RequestData> &request_data);
 
-protected:
-    Config *config_;
-    unsigned short alternate_port_, noxslt_port_;
-
+    Config* config() const;
 private:
-    std::string hostname_;
-    std::streamsize max_body_length_;
-    
-    // todo: move to VirtualHostData
-    static const std::string MAX_BODY_LENGTH;
+    class ServerData;
+    ServerData *data_;
 };
 
 } // namespace xscript

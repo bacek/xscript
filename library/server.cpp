@@ -50,31 +50,40 @@
 
 namespace xscript {
 
-const std::string Server::MAX_BODY_LENGTH = "MAX_BODY_LENGTH";
-
 extern "C" int closeFunc(void *ctx);
 extern "C" int writeFunc(void *ctx, const char *data, int len);
 
-Server::Server(Config *config) :
-        config_(config) {
-    config_->startup();
-    
-    max_body_length_ = config_->as<std::streamsize>("/xscript/max-body-length",
-            std::numeric_limits<std::streamsize>::max());
+class Server::ServerData {
+public:
+    ServerData(Config *config) : config_(config) {
+        config_->startup();
 
-    alternate_port_ = config_->as<unsigned short>("/xscript/alternate-port", 8080);
-    noxslt_port_ = config_->as<unsigned short>("/xscript/noxslt-port", 8079);
-    
-    char buf[256];
-    int res = ::gethostname(buf, sizeof(buf));
-    if (0 == res) {
-        hostname_.assign(buf);
+        alternate_port_ = config_->as<unsigned short>("/xscript/alternate-port", 8080);
+        noxslt_port_ = config_->as<unsigned short>("/xscript/noxslt-port", 8079);
+        
+        char buf[256];
+        int res = ::gethostname(buf, sizeof(buf));
+        if (0 == res) {
+            hostname_.assign(buf);
+        }
     }
+    ~ServerData() {}
     
+    Config *config_;
+    unsigned short alternate_port_, noxslt_port_;
+    std::string hostname_;
+};
+
+Server::Server(Config *config) : data_(new ServerData(config)) {
     VirtualHostData::instance()->setServer(this);
 }
 
 Server::~Server() {
+}
+
+Config*
+Server::config() const {
+    return data_->config_;
 }
 
 void
@@ -326,12 +335,12 @@ Server::getScript(Request *request) {
 bool
 Server::needApplyMainStylesheet(Request *request) const {
     unsigned short port = request->getServerPort();
-    return (port != alternate_port_) && (port != noxslt_port_);
+    return (port != data_->alternate_port_) && (port != data_->noxslt_port_);
 }
 
 bool
 Server::needApplyPerblockStylesheet(Request *request) const {
-    return (request->getServerPort() != noxslt_port_);
+    return (request->getServerPort() != data_->noxslt_port_);
 }
 
 Context*
@@ -377,31 +386,17 @@ Server::sendHeaders(Context *ctx) {
 
 const std::string&
 Server::hostname() const {
-    return hostname_;
-}
-
-std::streamsize
-Server::maxBodyLength(Request *request) const {
-    std::string length = VirtualHostData::instance()->getVariable(request, MAX_BODY_LENGTH);
-    if (!length.empty()) {
-        try {
-            return boost::lexical_cast<std::streamsize>(length);
-        }
-        catch(const boost::bad_lexical_cast &e) {
-            log()->error("Cannot parse MAX_BODY_LENGTH environment variable: %s", length.c_str());
-        }
-    }
-    return max_body_length_;
+    return data_->hostname_;
 }
 
 unsigned short
 Server::alternatePort() const {
-    return alternate_port_;
+    return data_->alternate_port_;
 }
 
 unsigned short
 Server::noXsltPort() const {
-    return noxslt_port_;
+    return data_->noxslt_port_;
 }
 
 extern "C" int

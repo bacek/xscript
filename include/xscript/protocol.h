@@ -45,11 +45,6 @@ public:
 
 private:
     friend class ProtocolRegistrator;
-    
-    typedef boost::function<std::string (const Context*)> ProtocolMethod;
-    typedef std::map<std::string, ProtocolMethod, StringCILess> MethodMap;
-    
-    static MethodMap methods_;
 };
 
 } // namespace xscript

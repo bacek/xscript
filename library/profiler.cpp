@@ -9,6 +9,28 @@
 
 namespace xscript {
 
+boost::uint64_t
+operator - (const timeval &endTime, const timeval &startTime) {
+    return (endTime.tv_sec - startTime.tv_sec) * 
+      static_cast<boost::uint64_t>(1000000) + endTime.tv_usec - startTime.tv_usec;
+};
+
+boost::uint64_t
+profile(const boost::function<void ()>& f) {
+    struct timeval startTime, endTime;
+    gettimeofday(&startTime, 0);
+
+    f();
+
+    gettimeofday(&endTime, 0);
+
+    return endTime - startTime;
+}
+
+Profiler::Profiler(Logger* log, const std::string& info) : log_(log), info_(info) {
+    gettimeofday(&startTime_, 0);
+}
+
 Profiler::~Profiler() {
     timeval endTime;
     gettimeofday(&endTime, 0);

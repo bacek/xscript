@@ -8,6 +8,9 @@
 
 namespace xscript {
 
+typedef std::list<boost::shared_ptr<MessageHandler> > HandlerList;
+static std::map<std::string, HandlerList> handlers;
+
 MessageParams::MessageParams() :
     size_(0), params_(NULL)
 {}
@@ -67,29 +70,31 @@ MessageProcessor::instance() {
 void
 MessageProcessor::registerFront(const std::string &key,
                                 boost::shared_ptr<MessageHandler> handler) {
-    HandlerList& handlers = handlers_[key];
-    handlers.push_front(handler);
+    HandlerList& handler_list = handlers[key];
+    handler_list.push_front(handler);
 }
 
 void
 MessageProcessor::registerBack(const std::string &key,
                                boost::shared_ptr<MessageHandler> handler) {
-    HandlerList& handlers = handlers_[key];
-    handlers.push_back(handler);
+    HandlerList& handler_list = handlers[key];
+    handler_list.push_back(handler);
 }
 
 void
 MessageProcessor::process(const std::string &key,
                           const MessageParams &params,
                           MessageResultBase &result) {
-    std::map<std::string, HandlerList>::iterator it = handlers_.find(key);
-    if (handlers_.end() == it) {
+    std::map<std::string, HandlerList>::iterator it = handlers.find(key);
+    if (handlers.end() == it) {
         throw MessageError("Cannot find handler: " + key);
     }
     
     try {
-        HandlerList& handlers = it->second; 
-        for(HandlerList::iterator hit = handlers.begin(); hit != handlers.end(); ++hit) {
+        HandlerList& handler_list = it->second; 
+        for(HandlerList::iterator hit = handler_list.begin();
+            hit != handler_list.end();
+            ++hit) {
             if ((*hit)->process(params, result) < 0) {
                 break;
             }

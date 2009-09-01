@@ -86,7 +86,10 @@ static std::string getServerPort(const xscript::Context *ctx) {
 
 namespace xscript {
 
-Protocol::MethodMap Protocol::methods_;
+typedef boost::function<std::string (const Context*)> ProtocolMethod;
+typedef std::map<std::string, ProtocolMethod, StringCILess> MethodMap;
+    
+static MethodMap methods;
 
 const std::string Protocol::PATH = "path";
 const std::string Protocol::PATH_INFO = "pathinfo";
@@ -121,8 +124,8 @@ Protocol::~Protocol() {
 std::string
 Protocol::get(const Context *ctx, const char *name) {
     assert(ctx);
-    MethodMap::iterator it = methods_.find(name);
-    if (methods_.end() == it) {
+    MethodMap::iterator it = methods.find(name);
+    if (methods.end() == it) {
         throw std::runtime_error(std::string("Unknown protocol arg: ") + name);
     }
 
@@ -130,24 +133,24 @@ Protocol::get(const Context *ctx, const char *name) {
 }
 
 ProtocolRegistrator::ProtocolRegistrator() {
-    Protocol::methods_[Protocol::PATH] = &getPath;
-    Protocol::methods_[Protocol::PATH_INFO] = &getPathInfo;
-    Protocol::methods_[Protocol::REAL_PATH] = &getRealPath;
-    Protocol::methods_[Protocol::ORIGINAL_URI] = &getOriginalURI;
-    Protocol::methods_[Protocol::ORIGINAL_URL] = &getOriginalUrl;
-    Protocol::methods_[Protocol::QUERY] = &getQuery;
-    Protocol::methods_[Protocol::REMOTE_IP] = &getRemoteIP;
-    Protocol::methods_[Protocol::URI] = &getURI;
-    Protocol::methods_[Protocol::HOST] = &getHost;
-    Protocol::methods_[Protocol::ORIGINAL_HOST] = &getOriginalHost;
-    Protocol::methods_[Protocol::METHOD] = &getMethod;
-    Protocol::methods_[Protocol::SECURE] = &getSecure;
-    Protocol::methods_[Protocol::HTTP_USER] = &getHttpUser;
-    Protocol::methods_[Protocol::CONTENT_LENGTH] = &getContentLength;
-    Protocol::methods_[Protocol::CONTENT_ENCODING] = &getContentEncoding;
-    Protocol::methods_[Protocol::CONTENT_TYPE] = &getContentType;
-    Protocol::methods_[Protocol::BOT] = &getBot;
-    Protocol::methods_[Protocol::PORT] = &getServerPort;
+    methods[Protocol::PATH] = &getPath;
+    methods[Protocol::PATH_INFO] = &getPathInfo;
+    methods[Protocol::REAL_PATH] = &getRealPath;
+    methods[Protocol::ORIGINAL_URI] = &getOriginalURI;
+    methods[Protocol::ORIGINAL_URL] = &getOriginalUrl;
+    methods[Protocol::QUERY] = &getQuery;
+    methods[Protocol::REMOTE_IP] = &getRemoteIP;
+    methods[Protocol::URI] = &getURI;
+    methods[Protocol::HOST] = &getHost;
+    methods[Protocol::ORIGINAL_HOST] = &getOriginalHost;
+    methods[Protocol::METHOD] = &getMethod;
+    methods[Protocol::SECURE] = &getSecure;
+    methods[Protocol::HTTP_USER] = &getHttpUser;
+    methods[Protocol::CONTENT_LENGTH] = &getContentLength;
+    methods[Protocol::CONTENT_ENCODING] = &getContentEncoding;
+    methods[Protocol::CONTENT_TYPE] = &getContentType;
+    methods[Protocol::BOT] = &getBot;
+    methods[Protocol::PORT] = &getServerPort;
 }
 
 static ProtocolRegistrator reg_;

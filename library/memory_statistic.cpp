@@ -14,7 +14,11 @@ namespace xscript {
 
 static pthread_key_t key;
 static pthread_once_t key_once = PTHREAD_ONCE_INIT;
-bool MemoryStatisticRegisterer::statistic_enable_ = false;
+static bool statistic_enable = false;
+
+MemoryStatisticRegisterer::MemoryStatisticRegisterer() {
+    statistic_enable = true;
+}
 
 void
 updateAllocated(size_t size) {
@@ -25,7 +29,7 @@ updateAllocated(size_t size) {
 
 void*
 mallocCount(size_t size) {
-    if (MemoryStatisticRegisterer::statistic_enable_) {
+    if (statistic_enable) {
         updateAllocated(size);
     }
     return malloc(size);
@@ -43,7 +47,7 @@ freeCount(void *ptr) {
 
 char*
 strdupCount(const char *str) {
-    if (MemoryStatisticRegisterer::statistic_enable_) {
+    if (statistic_enable) {
         updateAllocated(strlen(str) + 1);
     }
     return strdup(str);
@@ -68,7 +72,7 @@ initAllocationStatistic() {
  */
 size_t
 getAllocatedMemory() {
-    if (MemoryStatisticRegisterer::statistic_enable_) {
+    if (statistic_enable) {
         return (size_t)pthread_getspecific(key);
     }
     return 0;

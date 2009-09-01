@@ -21,10 +21,7 @@ size_t getAllocatedMemory();
 
 class MemoryStatisticRegisterer {
 public:
-    MemoryStatisticRegisterer() {
-        statistic_enable_ = true;
-    }
-    static bool statistic_enable_;
+    MemoryStatisticRegisterer();
 };
 
 } // namespace xscript

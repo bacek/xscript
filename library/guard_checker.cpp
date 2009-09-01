@@ -5,7 +5,12 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "xscript/functors.h"
 #include "xscript/guard_checker.h"
+
+#ifndef HAVE_HASHMAP
+#include <map>
+#endif
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -13,18 +18,28 @@
 
 namespace xscript {
 
+typedef std::map<std::string, std::pair<GuardCheckerMethod, bool>, StringCILess> GuardCheckerMethodMap;
+
+static GuardCheckerMethodMap methods;
+
 GuardChecker::GuardChecker() {
 }
 
 GuardChecker::~GuardChecker() {
 }
 
+GuardChecker*
+GuardChecker::instance() {
+    static GuardChecker checker;
+    return &checker;
+}
+
 void
 GuardChecker::registerMethod(const char *type, GuardCheckerMethod method, bool allow_empty) {
     try {
-        GuardCheckerMethodMap::iterator i = methods_.find(type);
-        if (methods_.end() == i) {
-            methods_.insert(std::make_pair(type, std::make_pair(method, allow_empty)));
+        GuardCheckerMethodMap::iterator i = methods.find(type);
+        if (methods.end() == i) {
+            methods.insert(std::make_pair(type, std::make_pair(method, allow_empty)));
         }
         else {
             std::stringstream stream;
@@ -40,8 +55,8 @@ GuardChecker::registerMethod(const char *type, GuardCheckerMethod method, bool a
 
 GuardCheckerMethod
 GuardChecker::method(const std::string &type) const {
-    GuardCheckerMethodMap::const_iterator i = methods_.find(type);
-    if (methods_.end() == i) {
+    GuardCheckerMethodMap::const_iterator i = methods.find(type);
+    if (methods.end() == i) {
         return NULL;
     }
     return i->second.first;
@@ -49,8 +64,8 @@ GuardChecker::method(const std::string &type) const {
 
 bool
 GuardChecker::allowed(const char *type, bool is_empty) const {
-    GuardCheckerMethodMap::const_iterator i = methods_.find(type);
-    if (methods_.end() == i) {
+    GuardCheckerMethodMap::const_iterator i = methods.find(type);
+    if (methods.end() == i) {
         return false;
     }
     return is_empty ? i->second.second : true;

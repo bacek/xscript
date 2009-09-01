@@ -81,13 +81,15 @@ FCGIServer::useXsltProfiler() const {
 void
 FCGIServer::run() {
 
-    std::string socket = config_->as<std::string>("/xscript/endpoint/socket");
-    unsigned short backlog = config_->as<unsigned short>("/xscript/endpoint/backlog");
+    Config* conf = config();
+    
+    std::string socket = conf->as<std::string>("/xscript/endpoint/socket");
+    unsigned short backlog = conf->as<unsigned short>("/xscript/endpoint/backlog");
 
-    pid(config_->as<std::string>("/xscript/pidfile"));
+    pid(conf->as<std::string>("/xscript/pidfile"));
 
-    inbuf_size_ = config_->as<unsigned int>("/xscript/input-buffer", 4096);
-    outbuf_size_ = config_->as<unsigned int>("/xscript/output-buffer", 4096);
+    inbuf_size_ = conf->as<unsigned int>("/xscript/input-buffer", 4096);
+    outbuf_size_ = conf->as<unsigned int>("/xscript/output-buffer", 4096);
 
     if (!socket.empty()) {
         socket_ = FCGX_OpenSocket(socket.c_str(), backlog);
@@ -95,7 +97,7 @@ FCGIServer::run() {
     }
     else {
         std::stringstream stream;
-        stream << ':' << config_->as<unsigned short>("/xscript/endpoint/port");
+        stream << ':' << conf->as<unsigned short>("/xscript/endpoint/port");
         socket_ = FCGX_OpenSocket(stream.str().c_str(), backlog);
     }
 
@@ -104,7 +106,7 @@ FCGIServer::run() {
     }
 
     boost::function<void()> f = boost::bind(&FCGIServer::handle, this);
-    unsigned short pool_size = config_->as<unsigned short>("/xscript/fastcgi-workers");
+    unsigned short pool_size = conf->as<unsigned short>("/xscript/fastcgi-workers");
     workerCounter_->max(pool_size);
     for (unsigned short i = 0; i < pool_size; ++i) {
         create_thread(f);

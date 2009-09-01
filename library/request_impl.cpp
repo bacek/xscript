@@ -406,14 +406,6 @@ RequestImpl::attach(std::istream *is, char *env[]) {
     Parser::parse(this, env, enc.get());
 
     if (is && "POST" == getRequestMethod()) {
-        std::streamsize body_length = getContentLength();
-        std::streamsize max_body_length = VirtualHostData::instance()->getServer()->maxBodyLength(this);
-        if (body_length > max_body_length) {
-            std::stringstream stream;
-            stream << "Too large body. Length: " << body_length << ". Max allowed: " << max_body_length;
-            throw std::runtime_error(stream.str());
-        }
-        
         body_.resize(getContentLength());
         is->exceptions(std::ios::badbit);
         is->read(&body_[0], body_.size());
