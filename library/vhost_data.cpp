@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include "xscript/request.h"
 #include "xscript/string_utils.h"
 #include "xscript/util.h"
 #include "xscript/vhost_data.h"

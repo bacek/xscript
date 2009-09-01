@@ -1,3 +1,9 @@
+xscript (5.68-0) unstable; urgency=low
+
+  * public interface refactoring
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 01 Sep 2009 17:28:49 +0400
+
 xscript (5.67-3) unstable; urgency=low
 
   * refactoring

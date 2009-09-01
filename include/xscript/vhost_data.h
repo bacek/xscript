@@ -2,13 +2,13 @@
 #define _XSCRIPT_VHOST_DATA_H_
 
 #include <string>
-#include <boost/utility.hpp>
 
 #include <xscript/component.h>
-#include <xscript/request.h>
 #include <xscript/server.h>
 
 namespace xscript {
+
+class Request;
 
 class VirtualHostData : public Component<VirtualHostData> {
 public:
