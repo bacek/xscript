@@ -144,11 +144,9 @@ LuaSharedContext create_lua(Context *ctx, Block *block) {
 
     setupXScript(lua, &(lua_context->buffer), ctx, block);
 
-    Request *request = ctx->request();
-
-    setupUserdata(lua, request, "request", getRequestLib());
+    setupUserdata(lua, ctx->request(), "request", getRequestLib());
     setupUserdata(lua, ctx->state(), "state", getStateLib());
-    setupUserdata(lua, ctx->response(), "response", getResponseLib());
+    setupUserdata(lua, ctx, "response", getResponseLib());
 
     registerCookieMethods(lua);
     registerLoggerMethods(lua);
