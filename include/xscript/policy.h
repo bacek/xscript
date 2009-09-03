@@ -46,8 +46,6 @@ public:
     static const std::string IS_SKIPPED_PROXY_HEADER_METHOD;
     static const std::string IS_ERROR_DOC_METHOD;
     static const std::string GET_CACHE_COOKIE_METHOD;
-    
-    static const std::string UTF8_ENCODING;
 };
 
 } // namespace xscript

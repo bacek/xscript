@@ -18,7 +18,7 @@
 
 namespace xscript {
 
-const std::string Policy::UTF8_ENCODING = "utf-8";
+static std::string UTF8_ENCODING = "utf-8";
 
 const std::string Policy::REAL_IP_HEADER_NAME_METHOD = "POLICY_REAL_IP_HEADER_NAME";
 const std::string Policy::GET_PATH_BY_SCHEME_METHOD = "POLICY_GET_PATH_BY_SCHEME";
@@ -322,7 +322,7 @@ class GetKeyHandler : public MessageHandler {
 class GetOutputEncodingHandler : public MessageHandler {
     int process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
-        result.set(Policy::UTF8_ENCODING);
+        result.set(UTF8_ENCODING);
         return 0;
     }
 };
