@@ -1,3 +1,9 @@
+xscript (5.68-2) unstable; urgency=low
+
+  * memory leak fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 04 Sep 2009 10:53:13 +0400
+
 xscript (5.68-1) unstable; urgency=low
 
   * lua:setExpireTimeDelta added
