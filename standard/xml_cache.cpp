@@ -103,21 +103,17 @@ public:
     virtual void clear();
     virtual void erase(const std::string &name);
 
-    virtual void init(const char *name, const Config *config);
+    virtual void init(const Config *config, StatBuilder &statBuilder);
 
     virtual boost::shared_ptr<Xml> fetchXml(const std::string &name);
     virtual void storeXml(const std::string &name, const boost::shared_ptr<Xml> &xml);
 
 protected:
     XmlStorage* findStorage(const std::string &name) const;
-    void setStatBuilder(StatBuilder* statBuilder) {
-        statBuilder_ = statBuilder;
-    }
 
 private:
     StringSet denied_;
     std::vector<XmlStorage*> storages_;
-    StatBuilder* statBuilder_;
 
     class StorageContainerHolder {
     public:
@@ -298,7 +294,7 @@ XmlStorage::getCounter() const {
     return counter_.get();
 }
 
-XmlCache::XmlCache() : statBuilder_(NULL) {
+XmlCache::XmlCache() {
 }
 
 XmlCache::~XmlCache() {
@@ -321,8 +317,10 @@ XmlCache::erase(const std::string &name) {
 }
 
 void
-XmlCache::init(const char *name, const Config *config) {
+XmlCache::init(const Config *config, StatBuilder &statBuilder) {
 
+    const std::string& name = statBuilder.getName();
+    
     int buckets = config->as<int>(std::string("/xscript/").append(name).append("/buckets"), 10);
     int bucksize = config->as<int>(std::string("/xscript/").append(name).append("/bucket-size"), 200);
 
@@ -346,7 +344,7 @@ XmlCache::init(const char *name, const Config *config) {
     for (std::vector<XmlStorage*>::iterator it = storages_.begin();
         it != storages_.end();
         ++it) {
-        statBuilder_->addCounter((*it)->getCounter());
+        statBuilder.addCounter((*it)->getCounter());
     }
 }
 
@@ -404,8 +402,7 @@ StandardScriptCache::~StandardScriptCache() {
 
 void
 StandardScriptCache::init(const Config *config) {
-    XmlCache::setStatBuilder(&getStatBuilder());
-    XmlCache::init("script-cache", config);
+    XmlCache::init(config, statBuilder());
 }
 
 void
@@ -442,8 +439,7 @@ StandardStylesheetCache::~StandardStylesheetCache() {
 
 void
 StandardStylesheetCache::init(const Config *config) {
-    XmlCache::setStatBuilder(&getStatBuilder());
-    XmlCache::init("stylesheet-cache", config);
+    XmlCache::init(config, statBuilder());
 }
 
 void

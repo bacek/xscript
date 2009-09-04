@@ -8,6 +8,16 @@
 
 namespace xscript {
 
+StylesheetCache::StylesheetCache() : statBuilder_("stylesheet-cache") {
+    ControlExtension::Constructor f =
+        boost::bind(boost::mem_fn(&StatBuilder::createBlock), &statBuilder_, _1, _2, _3);
+    ControlExtension::registerConstructor("stylesheet-cache-stat", f);
+}
+
+StatBuilder&
+StylesheetCache::statBuilder() {
+    return statBuilder_;
+}
 
 void
 StylesheetCache::clear() {

@@ -36,20 +36,6 @@ public:
     std::vector<const CounterBase*> counters_;
 };
 
-StatBuilderHolder::StatBuilderHolder(const std::string& name) : statBuilder_(name) {
-    ControlExtension::Constructor f =
-        boost::bind(boost::mem_fn(&StatBuilder::createBlock), &statBuilder_, _1, _2, _3);
-    ControlExtension::registerConstructor(statBuilder_.getName() + "-stat", f);
-}
-
-StatBuilderHolder::~StatBuilderHolder()
-{}
-
-StatBuilder&
-StatBuilderHolder::getStatBuilder() {
-    return statBuilder_;
-}
-
 StatBuilder::StatBuilder(const std::string& name) :
     data_(new StatBuilderData(name))
 {}

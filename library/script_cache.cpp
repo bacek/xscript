@@ -8,6 +8,17 @@
 
 namespace xscript {
 
+ScriptCache::ScriptCache() : statBuilder_("script-cache") {
+    ControlExtension::Constructor f =
+        boost::bind(boost::mem_fn(&StatBuilder::createBlock), &statBuilder_, _1, _2, _3);
+    ControlExtension::registerConstructor("script-cache-stat", f);
+}
+
+StatBuilder&
+ScriptCache::statBuilder() {
+    return statBuilder_;
+}
+
 void
 ScriptCache::clear() {
 }

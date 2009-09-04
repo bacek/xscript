@@ -13,10 +13,9 @@ namespace xscript {
 
 class Stylesheet;
 
-class StylesheetCache : public Component<StylesheetCache>, public StatBuilderHolder {
+class StylesheetCache : public Component<StylesheetCache> {
 public:
-    StylesheetCache() : StatBuilderHolder("stylesheet-cache") {
-    }
+    StylesheetCache();
 
     virtual void clear();
     virtual void erase(const std::string &name);
@@ -24,6 +23,12 @@ public:
     virtual boost::shared_ptr<Stylesheet> fetch(const std::string &name);
     virtual void store(const std::string &name, const boost::shared_ptr<Stylesheet> &stylesheet);
     virtual boost::mutex* getMutex(const std::string &name);
+    
+protected:
+    StatBuilder& statBuilder();
+    
+private:
+    StatBuilder statBuilder_;
 };
 
 } // namespace xscript

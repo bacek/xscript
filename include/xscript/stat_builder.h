@@ -50,18 +50,6 @@ private:
     StatBuilderData *data_;
 };
 
-class StatBuilderHolder {
-public:
-    StatBuilderHolder(const std::string& name);
-    virtual ~StatBuilderHolder();
-
-protected:
-    StatBuilder& getStatBuilder();
-
-private:
-    StatBuilder statBuilder_;
-};
-
 } // namespace xscript
 
 #endif // _XSCRIPT_STAT_BUILDER_H_
