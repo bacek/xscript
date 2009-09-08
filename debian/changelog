@@ -1,3 +1,9 @@
+xscript (5.68-3) unstable; urgency=low
+
+  * page caching fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 08 Sep 2009 13:15:22 +0400
+
 xscript (5.68-2) unstable; urgency=low
 
   * memory leak fixed

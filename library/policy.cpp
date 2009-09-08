@@ -242,7 +242,7 @@ Policy::getCacheCookie(const Context *ctx, const std::string &cookie) {
     
     MessageParamBase* param_list[2];
     param_list[0] = &context_param;
-    param_list[0] = &cookie_param;
+    param_list[1] = &cookie_param;
     
     MessageParams params(2, param_list);
     MessageResult<std::string> result;
