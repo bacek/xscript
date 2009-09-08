@@ -34,6 +34,7 @@ void luaCheckNumber(lua_State *lua, int index);
 void luaCheckString(lua_State *lua, int index);
 void luaCheckBoolean(lua_State *lua, int index);
 void luaCheckStackSize(lua_State *lua, int index);
+int luaCheckStackSize(lua_State *lua, int index_min, int index_max);
 
 void* luaCheckUserData(lua_State *lua, const char *name, int index);
 

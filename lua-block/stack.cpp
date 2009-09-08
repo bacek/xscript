@@ -30,11 +30,18 @@ luaCheckBoolean(lua_State *lua, int index) {
     }
 }
 
-void
-luaCheckStackSize(lua_State *lua, int count) {
-    if (lua_gettop(lua) != count) {
+int
+luaCheckStackSize(lua_State *lua, int count_min, int count_max) {
+    int count = lua_gettop(lua);
+    if (count < count_min || count > count_max) {
         throw BadArgCount(count);
     }
+    return count;
+}
+
+void
+luaCheckStackSize(lua_State *lua, int count) {
+    luaCheckStackSize(lua, count, count);
 }
 
 void*

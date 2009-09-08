@@ -4,8 +4,9 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/current_function.hpp>
 
-#include "xscript/state.h"
 #include "xscript/logger.h"
+#include "xscript/state.h"
+#include "xscript/string_utils.h"
 
 #include "stack.h"
 #include "exception.h"
@@ -31,6 +32,7 @@ extern "C" {
     int luaStateSetString(lua_State *lua);
 
     int luaStateIs(lua_State *lua);
+    int luaStateDrop(lua_State *lua);
 }
 
 static const struct luaL_reg statelib [] = {
@@ -44,6 +46,7 @@ static const struct luaL_reg statelib [] = {
     {"setString",       luaStateSetString},
     {"setDouble",       luaStateSetDouble},
     {"is",              luaStateIs},
+    {"drop",            luaStateDrop},
     {NULL, NULL}
 };
 
@@ -69,7 +72,7 @@ luaStateHas(lua_State *lua) {
         return e.translate(lua);
     }
     catch (const std::exception &e) {
-        luaL_error(lua, "caught exception in state.get: %s", e.what());
+        luaL_error(lua, "caught exception in state.has: %s", e.what());
         return 0;
     }
 }
@@ -166,7 +169,7 @@ luaStateIs(lua_State *lua) {
 
         State* s = luaReadStack<State>(lua, "xscript.state", 1);
         std::string key = luaReadStack<std::string>(lua, 2);
-        log()->debug("luaStateHas: %s", key.c_str());
+        log()->debug("luaStateIs: %s", key.c_str());
         lua_pushboolean(lua, s->is(key));
         return 1;
     }
@@ -174,7 +177,28 @@ luaStateIs(lua_State *lua) {
         return e.translate(lua);
     }
     catch (const std::exception &e) {
-        luaL_error(lua, "caught exception in state.get: %s", e.what());
+        luaL_error(lua, "caught exception in state.is: %s", e.what());
+        return 0;
+    }
+}
+
+int
+luaStateDrop(lua_State *lua) {
+    log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+    try {
+        int count = luaCheckStackSize(lua, 1, 2);
+        State* state = luaReadStack<State>(lua, "xscript.state", 1);
+        std::string prefix = count == 2 ?
+            luaReadStack<std::string>(lua, 2) : StringUtils::EMPTY_STRING;
+        log()->debug("luaStateDrop: %s", prefix.c_str());
+        prefix.empty() ? state->clear() : state->erasePrefix(prefix);
+        return 0;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        luaL_error(lua, "caught exception in state.drop: %s", e.what());
         return 0;
     }
 }
