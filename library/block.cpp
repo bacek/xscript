@@ -273,14 +273,14 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
         return fakeResult();
     }
 
-    if (!checkGuard(ctx.get())) {
-        log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
-            owner()->name().c_str(), name(), data_->method_.c_str());
-        return fakeResult();
-    }
-
     InvokeResult result;
     try {
+        if (!checkGuard(ctx.get())) {
+            log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
+                owner()->name().c_str(), name(), data_->method_.c_str());
+            return fakeResult();
+        }
+        
         BlockTimerStarter starter(ctx.get(), this);
         result = invokeInternal(ctx);
         if (!result.error()) {
