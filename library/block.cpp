@@ -748,7 +748,7 @@ Block::parseXPathNode(const xmlNodePtr node) {
     const char *result = XmlUtils::attrValue(node, "result");
     if (expr && *expr && result && *result) {
         const char *delim = XmlUtils::attrValue(node, "delim");
-        if (!delim || !*delim) {
+        if (!delim) {
             delim = " ";
         }
         const char *type = XmlUtils::attrValue(node, "type");
