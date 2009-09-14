@@ -44,19 +44,17 @@ public:
     XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type);
     ~XPathExpr();
 
-    typedef std::list<std::pair<std::string, std::string> > NamespaceListType;
-
     std::string expression(Context *ctx) const;
     const std::string& result() const;
     const std::string& delimeter() const;
-    const NamespaceListType& namespaces() const;
+    const std::map<std::string, std::string>& namespaces() const;
     void addNamespace(const char* prefix, const char* uri);
 
 private:
     std::string expression_;
     std::string result_;
     std::string delimeter_;
-    NamespaceListType namespaces_;
+    std::map<std::string, std::string> namespaces_;
     bool from_state_;
 };
 
@@ -76,23 +74,23 @@ private:
 const std::string Guard::STATE_ARG_PARAM_NAME = "StateArg";
 
 struct Block::BlockData {
-    BlockData(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        extension_(ext), owner_(owner), node_(node)
-    {}
-    
-    ~BlockData() {
-        std::for_each(params_.begin(), params_.end(), boost::checked_deleter<Param>());
-    }
+    BlockData(const Extension *ext, Xml *owner, xmlNodePtr node, Block *block);
+    ~BlockData();
+    void parseNamespaces();
+    void property(const char *name, const char *value);
     
     const Extension *extension_;
     Xml *owner_;
     xmlNodePtr node_;
+    Block *block_;
     std::vector<Param*> params_;
     std::vector<XPathExpr> xpath_;
     std::vector<Guard> guards_;
     std::string id_, method_;
     std::string xpointer_expr_;
     std::string base_;
+    std::map<std::string, std::string> namespaces_;
+    bool disable_output_;
     
     static const std::string XSCRIPT_INVOKE_FAILED;
     static const std::string XSCRIPT_INVOKE_INFO;
@@ -101,8 +99,79 @@ struct Block::BlockData {
 const std::string Block::BlockData::XSCRIPT_INVOKE_FAILED = "xscript_invoke_failed";
 const std::string Block::BlockData::XSCRIPT_INVOKE_INFO = "xscript_invoke_info";
 
+Block::BlockData::BlockData(const Extension *ext, Xml *owner, xmlNodePtr node, Block *block) :
+    extension_(ext), owner_(owner), node_(node), block_(block), disable_output_(false)
+{}
+
+Block::BlockData::~BlockData() {
+    std::for_each(params_.begin(), params_.end(), boost::checked_deleter<Param>());
+}
+
+void
+Block::BlockData::parseNamespaces() {
+    xmlNs* ns = node_->nsDef;
+    while(ns) {
+        if (ns->prefix && ns->href) {
+            namespaces_.insert(std::make_pair(std::string((const char*)ns->prefix),
+                                              std::string((const char*)ns->href)));
+        }
+        ns = ns->next;
+    }
+}
+
+void
+Block::BlockData::property(const char *name, const char *value) {
+
+    block_->log()->debug("setting %s=%s", name, value);
+
+    if (strncasecmp(name, "id", sizeof("id")) == 0) {
+        if (!id_.empty()) {
+            throw std::runtime_error("duplicated id in block");
+        }
+        id_.assign(value);
+    }
+    else if (strncasecmp(name, "guard", sizeof("guard")) == 0) {
+        if (*value == '\0') {
+            throw std::runtime_error("empty guard");
+        }
+        guards_.push_back(Guard(value, NULL, NULL, false));
+    }
+    else if (strncasecmp(name, "guard-not", sizeof("guard-not")) == 0) {
+        if (*value == '\0') {
+            throw std::runtime_error("empty guard-not");
+        }
+        guards_.push_back(Guard(value, NULL, NULL, true));
+    }
+    else if (strncasecmp(name, "method", sizeof("method")) == 0) {
+        if (!method_.empty()) {
+            throw std::runtime_error("duplicated method in block");
+        }
+        method_.assign(value);
+    }
+    else if (strncasecmp(name, "xslt", sizeof("xslt")) == 0) {
+        block_->xsltName(value);
+    }
+    else if (strncasecmp(name, "xpointer", sizeof("xpointer")) == 0) {
+        if (strncasecmp(value, "xpointer(", sizeof("xpointer(") - 1) == 0) {
+            xpointer_expr_.assign(value, sizeof("xpointer(") - 1, strlen(value) - sizeof("xpointer("));
+        }
+        else {
+            xpointer_expr_.assign(value);
+        }
+        
+        if ("/.." == xpointer_expr_) {
+            disable_output_ = true;
+        }
+    }
+    else {
+        std::stringstream stream;
+        stream << "bad block attribute: " << name;
+        throw std::invalid_argument(stream.str());
+    }
+}
+
 Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
-    data_(new BlockData(ext, owner, node))
+    data_(new BlockData(ext, owner, node, this))
 {
     assert(node);
     assert(owner);
@@ -191,7 +260,12 @@ Block::tagged() const {
 }
 
 bool
-Block::xpointer(Context* ctx) const {
+Block::disableOutput() const {
+    return data_->disable_output_;
+}
+
+bool
+Block::xpointer(const Context* ctx) const {
     if (data_->xpointer_expr_.empty()) {
         return false;
     }
@@ -220,6 +294,8 @@ Block::parse() {
         XmlUtils::visitAttributes(data_->node_->properties,
             boost::bind(&Block::property, this, _1, _2));
 
+        data_->parseNamespaces();
+        
         ParamFactory *pf = ParamFactory::instance();
         for (xmlNodePtr node = data_->node_->children; NULL != node; node = node->next) {
             if (node->name) {
@@ -562,11 +638,26 @@ Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
             continue;
         }
         
-        const XPathExpr::NamespaceListType& ns_list = iter->namespaces();
-        for (XPathExpr::NamespaceListType::const_iterator it_ns = ns_list.begin(); it_ns != ns_list.end(); ++it_ns) {
-            xmlXPathRegisterNs(xctx.get(), (const xmlChar *)it_ns->first.c_str(), (const xmlChar *)it_ns->second.c_str());
+        const std::map<std::string, std::string>& ns_list = iter->namespaces();
+        for(std::map<std::string, std::string>::const_iterator it_ns = ns_list.begin();
+            it_ns != ns_list.end();
+            ++it_ns) {
+            xmlXPathRegisterNs(xctx.get(),
+                               (const xmlChar *)it_ns->first.c_str(),
+                               (const xmlChar *)it_ns->second.c_str());
         }
 
+        const std::map<std::string, std::string>& block_nslist = data_->namespaces_;
+        for(std::map<std::string, std::string>::const_iterator it_ns = block_nslist.begin();
+            it_ns != block_nslist.end();
+            ++it_ns) {
+            if (ns_list.end() == ns_list.find(it_ns->first)) {
+                xmlXPathRegisterNs(xctx.get(),
+                                   (const xmlChar *)it_ns->first.c_str(),
+                                   (const xmlChar *)it_ns->second.c_str());
+            }
+        }
+        
         XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*)expr.c_str(), xctx.get()));
         try {
             XmlUtils::throwUnless(NULL != object.get());
@@ -648,49 +739,7 @@ Block::postParse() {
 
 void
 Block::property(const char *name, const char *value) {
-
-    log()->debug("setting %s=%s", name, value);
-
-    if (strncasecmp(name, "id", sizeof("id")) == 0) {
-        if (!data_->id_.empty()) {
-            throw std::runtime_error("duplicated id in block");
-        }
-        data_->id_.assign(value);
-    }
-    else if (strncasecmp(name, "guard", sizeof("guard")) == 0) {
-        if (*value == '\0') {
-            throw std::runtime_error("empty guard");
-        }
-        data_->guards_.push_back(Guard(value, NULL, NULL, false));
-    }
-    else if (strncasecmp(name, "guard-not", sizeof("guard-not")) == 0) {
-        if (*value == '\0') {
-            throw std::runtime_error("empty guard-not");
-        }
-        data_->guards_.push_back(Guard(value, NULL, NULL, true));
-    }
-    else if (strncasecmp(name, "method", sizeof("method")) == 0) {
-        if (!data_->method_.empty()) {
-            throw std::runtime_error("duplicated method in block");
-        }
-        data_->method_.assign(value);
-    }
-    else if (strncasecmp(name, "xslt", sizeof("xslt")) == 0) {
-        xsltName(value);
-    }
-    else if (strncasecmp(name, "xpointer", sizeof("xpointer")) == 0) {
-        if (strncasecmp(value, "xpointer(", sizeof("xpointer(") - 1) == 0) {
-            data_->xpointer_expr_.assign(value, sizeof("xpointer(") - 1, strlen(value) - sizeof("xpointer("));
-        }
-        else {
-            data_->xpointer_expr_.assign(value);
-        }
-    }
-    else {
-        std::stringstream stream;
-        stream << "bad block attribute: " << name;
-        throw std::invalid_argument(stream.str());
-    }
+    data_->property(name, value);
 }
 
 void
@@ -814,6 +863,34 @@ Block::concatParams(const Context *ctx, unsigned int first, unsigned int last) c
     return result;
 }
 
+XmlXPathObjectHelper
+Block::evalXPointer(xmlDocPtr doc) const {
+    try {
+        XmlXPathContextHelper context(xmlXPathNewContext(doc));
+        XmlUtils::throwUnless(NULL != context.get());
+        
+        const std::map<std::string, std::string>& block_nslist = data_->namespaces_;
+        for(std::map<std::string, std::string>::const_iterator it_ns = block_nslist.begin();
+            it_ns != block_nslist.end();
+            ++it_ns) {
+            xmlXPathRegisterNs(context.get(),
+                               (const xmlChar *)it_ns->first.c_str(),
+                               (const xmlChar *)it_ns->second.c_str());
+        }
+        
+        XmlXPathObjectHelper xpointerObj(
+            xmlXPathEvalExpression((const xmlChar *)data_->xpointer_expr_.c_str(), context.get()));
+        XmlUtils::throwUnless(NULL != xpointerObj.get());
+        
+        return xpointerObj;
+    }
+    catch(const std::exception &e) {
+        std::string message = "XPointer error with expression " + data_->xpointer_expr_ + " : ";
+        message.append(e.what());
+        throw std::runtime_error(message);
+    }
+}
+
 Guard::Guard(const char *expr, const char *type, const char *value, bool is_not) :
     guard_(expr ? expr : ""),
     value_(value ? value : ""),
@@ -876,7 +953,7 @@ XPathExpr::delimeter() const {
     return delimeter_;
 }
 
-const XPathExpr::NamespaceListType&
+const std::map<std::string, std::string>&
 XPathExpr::namespaces() const {
     return namespaces_;
 }
@@ -884,7 +961,7 @@ XPathExpr::namespaces() const {
 void
 XPathExpr::addNamespace(const char* prefix, const char* uri) {
     if (prefix && uri) {
-        namespaces_.push_back(std::make_pair(std::string(prefix), std::string(uri)));
+        namespaces_.insert(std::make_pair(std::string(prefix), std::string(uri)));
     }
 }
 

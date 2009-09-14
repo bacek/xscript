@@ -107,11 +107,11 @@ public:
     void parseXScriptNodes(std::vector<xmlNodePtr> &xscript_nodes);
     void parseBlocks();
     void buildXScriptNodeSet(std::vector<xmlNodePtr> &xscript_nodes);
-    void useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const;
+    bool processXpointer(const Context *ctx, xmlDocPtr doc, xmlNodePtr newnode, unsigned int count) const;
     void addHeaders(Context *ctx);
-    XmlDocHelper fetchResults(Context *ctx) const;
+    XmlDocHelper fetchResults(Context *ctx);
     void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
-                        unsigned int &count, unsigned int &xscript_count) const;
+                        unsigned int &count, unsigned int &xscript_count);
     std::string cachedUrl(const Context *ctx) const;
     void parseXScriptNode(const xmlNodePtr node);
     void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx);
@@ -541,18 +541,28 @@ Script::ScriptData::buildXScriptNodeSet(std::vector<xmlNodePtr>& xscript_nodes) 
     xscript_nodes.clear();
 }
 
-void
-Script::ScriptData::useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *xpath) const {
-    XmlXPathContextHelper context(xmlXPathNewContext(doc));
-    XmlUtils::throwUnless(NULL != context.get());
-    XmlXPathObjectHelper xpathObj(xmlXPathEvalExpression(xpath, context.get()));
-    XmlUtils::throwUnless(NULL != xpathObj.get());
+bool
+Script::ScriptData::processXpointer(const Context *ctx,
+                                        xmlDocPtr doc,
+                                        xmlNodePtr newnode,
+                                        unsigned int count) const {
+    const Block *blck = block(count);
+    if (!blck->xpointer(ctx)) {
+        return false;
+    }
+    
+    if (blck->disableOutput()) {
+        xmlUnlinkNode(newnode);
+        return true;
+    } 
+    
+    XmlXPathObjectHelper xpathObj = blck->evalXPointer(doc);
 
     if (XPATH_BOOLEAN == xpathObj->type) {
         const char *str = 0 != xpathObj->boolval ? "1" : "0";
         xmlNodePtr text_node = xmlNewText((const xmlChar *)str);
         xmlReplaceNode(newnode, text_node);
-        return;
+        return true;
     }
     if (XPATH_NUMBER == xpathObj->type) {
         char str[40];
@@ -560,18 +570,18 @@ Script::ScriptData::useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *
         str[sizeof(str) - 1] = '\0';
         xmlNodePtr text_node = xmlNewText((const xmlChar *)&str[0]);
         xmlReplaceNode(newnode, text_node);
-        return;
+        return true;
     }
     if (XPATH_STRING == xpathObj->type) {
         xmlNodePtr text_node = xmlNewText((const xmlChar *)xpathObj->stringval);
         xmlReplaceNode(newnode, text_node);
-        return;
+        return true;
     }
 
     xmlNodeSetPtr nodeset = xpathObj->nodesetval;
     if (NULL == nodeset || 0 == nodeset->nodeNr) {
         xmlUnlinkNode(newnode);
-        return;
+        return true;
     }
     
     xmlNodePtr current_node = nodeset->nodeTab[0];    
@@ -589,6 +599,8 @@ Script::ScriptData::useXpointerExpr(xmlDocPtr doc, xmlNodePtr newnode, xmlChar *
         xmlAddNextSibling(last_input_node, insert_node);
         last_input_node = insert_node;
     }
+    
+    return true;
 }
 
 void
@@ -602,7 +614,7 @@ Script::ScriptData::addHeaders(Context *ctx) {
 }
 
 XmlDocHelper
-Script::ScriptData::fetchResults(Context *ctx) const {
+Script::ScriptData::fetchResults(Context *ctx) {
 
     XmlDocHelper newdoc(xmlCopyDoc(doc_.get(), 1));
     XmlUtils::throwUnless(NULL != newdoc.get());
@@ -621,7 +633,7 @@ Script::ScriptData::fetchResults(Context *ctx) const {
 
 void
 Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
-                                   unsigned int &count, unsigned int &xscript_count) const {
+                                   unsigned int &count, unsigned int &xscript_count) {
 
     const std::set<xmlNodePtr>& xscript_node_set = xscriptNodes();
     unsigned int blocks_num = blocksNumber();
@@ -638,24 +650,7 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
 
             xmlNodePtr result_doc_root_node = xmlDocGetRootElement(doc);
             if (result_doc_root_node) {
-                const Block *blck = block(count);
-                if (blck->xpointer(ctx) && !result.error()) {
-                    const std::string &expression = blck->xpointerExpr();
-                    if ("/.." == expression) {
-                        xmlUnlinkNode(newnode);
-                    }
-                    else {
-                        try {
-                            useXpointerExpr(doc, newnode, (xmlChar *)expression.c_str());
-                        }
-                        catch (std::exception &e) {
-                            std::string message = "XPointer error with expression " + expression + " : ";
-                            message.append(e.what());
-                            throw std::runtime_error(message);
-                        }
-                    }
-                }
-                else {
+                if (result.error() || !processXpointer(ctx, doc, newnode, count)) {
                     xmlReplaceNode(newnode, xmlCopyNode(result_doc_root_node, 1));
                 }
             }
@@ -666,7 +661,7 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
             count++;
         }
         else if (xscript_node_set.find(node) != xscript_node_set.end() ) {
-            owner_->data_->replaceXScriptNode(node, newnode, ctx);
+            replaceXScriptNode(node, newnode, ctx);
             xscript_count++;
         }
         else if (node->children) {

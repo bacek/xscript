@@ -36,8 +36,10 @@ public:
     virtual void threaded(bool value);
 
     virtual bool tagged() const;
-
-    bool xpointer(Context* ctx) const;
+    bool disableOutput() const;
+    
+    bool xpointer(const Context* ctx) const;
+    XmlXPathObjectHelper evalXPointer(xmlDocPtr doc) const;
 
     const Param* param(unsigned int n) const;
     const Param* param(const std::string &id, bool throw_error = true) const;
