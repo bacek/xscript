@@ -104,6 +104,7 @@ private:
     InvokeResult errorResult(const InvokeError &error, const char *tag_name, std::string &full_error) const;
     
     struct BlockData;
+    friend struct BlockData;
     BlockData *data_;
 };
 
