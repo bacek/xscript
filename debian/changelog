@@ -1,3 +1,9 @@
+xscript (5.68-6) unstable; urgency=low
+
+  * namespaces added to block
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 15 Sep 2009 11:05:53 +0400
+
 xscript (5.68-5) unstable; urgency=low
 
   * VHostArg and ProtocolArg added to Guard
