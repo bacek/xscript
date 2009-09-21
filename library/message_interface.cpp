@@ -9,7 +9,7 @@
 namespace xscript {
 
 typedef std::list<boost::shared_ptr<MessageHandler> > HandlerList;
-static std::map<std::string, HandlerList> handlers;
+static std::map<std::string, HandlerList> *handlers = NULL;
 
 MessageParams::MessageParams() :
     size_(0), params_(NULL)
@@ -55,11 +55,14 @@ MessageHandler::process(const MessageParams &params, MessageResultBase &result) 
     return 0;
 }
 
-MessageProcessor::MessageProcessor()
-{}
+MessageProcessor::MessageProcessor() {
+    handlers = new std::map<std::string, HandlerList>();
+}
 
-MessageProcessor::~MessageProcessor()
-{}
+MessageProcessor::~MessageProcessor() {
+    delete handlers;
+    handlers = NULL;
+}
 
 MessageProcessor*
 MessageProcessor::instance() {
@@ -70,14 +73,14 @@ MessageProcessor::instance() {
 void
 MessageProcessor::registerFront(const std::string &key,
                                 boost::shared_ptr<MessageHandler> handler) {
-    HandlerList& handler_list = handlers[key];
+    HandlerList& handler_list = (*handlers)[key];
     handler_list.push_front(handler);
 }
 
 void
 MessageProcessor::registerBack(const std::string &key,
                                boost::shared_ptr<MessageHandler> handler) {
-    HandlerList& handler_list = handlers[key];
+    HandlerList& handler_list = (*handlers)[key];
     handler_list.push_back(handler);
 }
 
@@ -85,8 +88,8 @@ void
 MessageProcessor::process(const std::string &key,
                           const MessageParams &params,
                           MessageResultBase &result) {
-    std::map<std::string, HandlerList>::iterator it = handlers.find(key);
-    if (handlers.end() == it) {
+    std::map<std::string, HandlerList>::iterator it = handlers->find(key);
+    if (handlers->end() == it) {
         throw MessageError("Cannot find handler: " + key);
     }
     
