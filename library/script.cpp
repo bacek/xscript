@@ -362,7 +362,7 @@ Script::ScriptData::allowMethods(const char *value) {
     typedef boost::char_separator<char> Separator;
     typedef boost::tokenizer<Separator> Tokenizer;
     std::string method_list(value);
-    Tokenizer tok(method_list, Separator(" "));
+    Tokenizer tok(method_list, Separator(", "));
     for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
         allow_methods_.push_back(*it);
         std::vector<std::string>::reverse_iterator method = allow_methods_.rbegin();
