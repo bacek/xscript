@@ -175,7 +175,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::excepti
     boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx.get(), this);
 
     Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(LUA_CONTEXT_MUTEX);
-    LuaSharedContext lua_context = ctx->param(XSCRIPT_LUA, creator, mutex);
+    LuaSharedContext lua_context = ctx->param(XSCRIPT_LUA, creator, *mutex);
     lua_State * lua = lua_context->lua.get();
 
     // Lock interpreter during processing.
