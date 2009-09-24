@@ -1,6 +1,7 @@
 #include "settings.h"
 
 #include "xscript/config.h"
+#include "xscript/context.h"
 #include "xscript/xml_util.h"
 
 #include "file_block.h"
@@ -13,6 +14,8 @@
 namespace xscript {
 
 unsigned int FileExtension::max_invoke_depth_;
+
+const std::string FileExtension::FILE_CONTEXT_MUTEX = "FILE_CONTEXT_MUTEX";
 
 FileExtension::FileExtension() {
 }
@@ -29,7 +32,8 @@ const char* FileExtension::nsref() const {
 }
 
 void FileExtension::initContext(Context *ctx) {
-    (void)ctx;
+    Context::MutexPtr context_mutex(new boost::mutex());
+    ctx->param(FILE_CONTEXT_MUTEX, context_mutex);
 }
 
 

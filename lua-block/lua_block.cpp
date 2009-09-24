@@ -30,6 +30,8 @@
 
 namespace xscript {
 
+static const std::string LUA_CONTEXT_MUTEX = "LUA_CONTEXT_MUTEX";
+
 template<>
 inline void ResourceHolderTraits<lua_State*>::destroy(lua_State *state) {
     lua_close(state);
@@ -172,7 +174,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::excepti
     // Try to fetch previously created lua interpret. If failed - create new one.
     boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx.get(), this);
 
-    static boost::mutex mutex;
+    Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(LUA_CONTEXT_MUTEX);
     LuaSharedContext lua_context = ctx->param(XSCRIPT_LUA, creator, mutex);
     lua_State * lua = lua_context->lua.get();
 
@@ -230,7 +232,8 @@ LuaExtension::nsref() const {
 
 void
 LuaExtension::initContext(Context *ctx) {
-    (void)ctx;
+    Context::MutexPtr context_mutex(new boost::mutex());
+    ctx->param(LUA_CONTEXT_MUTEX, context_mutex);
 }
 
 void

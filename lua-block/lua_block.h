@@ -42,7 +42,7 @@ public:
 
     virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);
     virtual void init(const Config *config);
-
+    
 private:
     LuaExtension(const LuaExtension &);
     LuaExtension& operator = (const LuaExtension &);
