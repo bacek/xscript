@@ -102,9 +102,10 @@ FileBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::excep
     
     std::string file;
     boost::function<std::string()> filename_creator = boost::bind(&FileBlock::fileName, this, ctx.get());
+    static boost::mutex mutex;
     if (isInvoke() && tagged()) {
         std::string param_name = FILENAME_PARAMNAME + boost::lexical_cast<std::string>(this);
-        file = ctx->param(param_name, filename_creator);
+        file = ctx->param(param_name, filename_creator, mutex);
     }
     else {
         file = filename_creator();
@@ -231,8 +232,9 @@ FileBlock::invokeFile(const std::string &file_name, boost::shared_ptr<Context> c
     boost::shared_ptr<Script> script;
     boost::function<boost::shared_ptr<Script>()> script_creator = boost::bind(&ScriptFactory::createScript, file_name);
     if (tagged()) {
+        static boost::mutex mutex;
         std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
-        script = ctx->param(script_param_name, script_creator);
+        script = ctx->param(script_param_name, script_creator, mutex);
     }
     else {
         script = script_creator();
@@ -284,9 +286,10 @@ FileBlock::createTagKey(const Context *ctx) const {
     std::string key = processMainKey(ctx);
     boost::function<std::string()> filename_creator =
         boost::bind(&FileBlock::fileName, this, ctx);
+    static boost::mutex mutex;
     std::string param_name = FILENAME_PARAMNAME + boost::lexical_cast<std::string>(this);
     std::string filename =
-        const_cast<Context*>(ctx)->param(param_name, filename_creator);  
+        const_cast<Context*>(ctx)->param(param_name, filename_creator, mutex);  
 
     if (filename.empty()) {
         return key;
@@ -300,9 +303,10 @@ FileBlock::createTagKey(const Context *ctx) const {
 
     boost::function<boost::shared_ptr<Script>()> script_creator =
         boost::bind(&ScriptFactory::createScript, filename);
+    static boost::mutex script_mutex;
     std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
     boost::shared_ptr<Script> script =
-        const_cast<Context*>(ctx)->param(script_param_name, script_creator);
+        const_cast<Context*>(ctx)->param(script_param_name, script_creator, script_mutex);
         
     if (NULL == script.get()) {
         return key;

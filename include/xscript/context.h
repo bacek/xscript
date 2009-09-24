@@ -10,6 +10,7 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/xtime.hpp>
 
 #include <libxml/tree.h>
@@ -81,7 +82,8 @@ public:
     template<typename T> void param(const std::string &name, const T &t);
 
     // Get or create param
-    template<typename T> T param(const std::string &name, const boost::function<T ()> &creator);
+    template<typename T> T param(
+        const std::string &name, const boost::function<T ()> &creator, boost::mutex &mutex);
 
     bool stopped() const;
 
@@ -155,8 +157,9 @@ Context::param(const std::string &name, const T &t) {
 }
 
 template<typename T> inline T
-Context::param(const std::string &name, const boost::function<T ()> &creator) {
+Context::param(const std::string &name, const boost::function<T ()> &creator, boost::mutex &mutex) {
     boost::any value;
+    boost::mutex::scoped_lock lock(mutex);
     if (findParam(name, value)) {
         return boost::any_cast<T>(value);
     }

@@ -1,3 +1,9 @@
+xscript (5.68-8) unstable; urgency=low
+
+  * mutex added to param creator
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 24 Sep 2009 16:38:21 +0400
+
 xscript (5.68-7) unstable; urgency=low
 
   * delimiter changed in allow methods
