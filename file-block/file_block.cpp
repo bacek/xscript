@@ -105,7 +105,7 @@ FileBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::excep
     if (isInvoke() && tagged()) {
         std::string param_name = FILENAME_PARAMNAME + boost::lexical_cast<std::string>(this);
         Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);
-        file = ctx->param(param_name, filename_creator, mutex);
+        file = ctx->param(param_name, filename_creator, *mutex);
     }
     else {
         file = filename_creator();
@@ -234,7 +234,7 @@ FileBlock::invokeFile(const std::string &file_name, boost::shared_ptr<Context> c
     if (tagged()) {
         std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
         Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);
-        script = ctx->param(script_param_name, script_creator, mutex);
+        script = ctx->param(script_param_name, script_creator, *mutex);
     }
     else {
         script = script_creator();
@@ -289,7 +289,7 @@ FileBlock::createTagKey(const Context *ctx) const {
     Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);
     std::string param_name = FILENAME_PARAMNAME + boost::lexical_cast<std::string>(this);
     std::string filename =
-        const_cast<Context*>(ctx)->param(param_name, filename_creator, mutex);  
+        const_cast<Context*>(ctx)->param(param_name, filename_creator, *mutex);  
 
     if (filename.empty()) {
         return key;
@@ -305,7 +305,7 @@ FileBlock::createTagKey(const Context *ctx) const {
         boost::bind(&ScriptFactory::createScript, filename);
     std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
     boost::shared_ptr<Script> script =
-        const_cast<Context*>(ctx)->param(script_param_name, script_creator, mutex);
+        const_cast<Context*>(ctx)->param(script_param_name, script_creator, *mutex);
         
     if (NULL == script.get()) {
         return key;
