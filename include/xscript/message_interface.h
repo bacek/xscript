@@ -7,6 +7,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <typeinfo>
 
 #include <boost/shared_ptr.hpp>
 
