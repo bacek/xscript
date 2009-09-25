@@ -96,9 +96,23 @@ LIBS="$LIBS $xml_LIBS $xslt_LIBS $exslt_LIBS $yandex_platform_LIBS -lcrypto"
 CPPFLAGS="$CPPFLAGS $xml_CFLAGS $xslt_CFLAGS $exslt_CFLAGS $yandex_platform_CFLABS"
 
 AC_CHECK_HEADER([pcre.h], [ac_have_pcre="yes"; LIBS="$LIBS -lpcre"], [ac_have_pcre="no"])
+AC_ARG_ENABLE(xslt-regex, 
+	AS_HELP_STRING(--enable-xslt-regex,enables regex xslt extensions compilation),
+	[
+		if test "f$enableval" = "fyes" && test "f$ac_have_pcre" = "fno" ; then
+			AC_MSG_ERROR([pcre not found])
+		fi
+	])
 AM_CONDITIONAL(HAVE_PCRE, [test "f$ac_have_pcre" = "fyes"])
 
 PKG_CHECK_MODULES(glib, [glib-2.0], [ac_have_glib="yes"], [ac_have_glib="no"])
+AC_ARG_ENABLE(xslt-glib, 
+	AS_HELP_STRING(--enable-xslt-glib,enables glib xslt extensions compilation),
+	[
+		if test "f$enableval" = "fyes" && test "f$ac_have_glib" = "fno" ; then
+			AC_MSG_ERROR([glib not found])
+		fi
+	])
 AM_CONDITIONAL(HAVE_GLIB, [test "f$ac_have_glib" = "fyes"])
 if test "f$ac_have_glib" = "fyes"; then
     LIBS="$LIBS $glib_LIBS"
