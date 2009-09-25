@@ -377,7 +377,7 @@ Script::ScriptData::cacheQuery(const char *value) {
     typedef boost::char_separator<char> Separator;
     typedef boost::tokenizer<Separator> Tokenizer;
     std::string param_list(value);
-    Tokenizer tok(param_list, Separator(" "));
+    Tokenizer tok(param_list, Separator(", "));
     for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
         cache_query_.insert(*it);
     }
