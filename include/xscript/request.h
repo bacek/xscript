@@ -5,6 +5,8 @@
 #include <set>
 #include <string>
 #include <vector>
+
+#include <boost/cstdint.hpp>
 #include <boost/utility.hpp>
 
 #if defined(HAVE_STLPORT_HASHMAP)
@@ -66,6 +68,7 @@ public:
     virtual std::string getOriginalUrl() const = 0;
 
     virtual std::streamsize getContentLength() const = 0;
+    boost::uint32_t getUContentLength() const;
     virtual const std::string& getContentType() const = 0;
     virtual const std::string& getContentEncoding() const = 0;
 

@@ -13,4 +13,9 @@ Request::Request() {
 Request::~Request() {
 }
 
+boost::uint32_t
+Request::getUContentLength() const {
+    return static_cast<boost::uint32_t>(getContentLength());
+}
+
 } // namespace xscript
