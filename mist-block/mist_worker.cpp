@@ -352,7 +352,8 @@ MistWorker::setStateByKeys(Context *ctx, const std::vector<std::string> &params)
     typedef boost::tokenizer<Separator> Tokenizer;
 
     Separator sep(",");
-    Tokenizer keytok(params[1], sep), valtok(params[2], sep);
+    Separator sep_keep(",", NULL, boost::keep_empty_tokens);
+    Tokenizer keytok(params[1], sep), valtok(params[2], sep_keep);
 
     Tokenizer::iterator ki = keytok.begin(), kend = keytok.end();
     Tokenizer::iterator vi = valtok.begin(), vend = valtok.end();
