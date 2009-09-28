@@ -1,3 +1,9 @@
+xscript (5.68-12) unstable; urgency=low
+
+  * xml validation added for query parameters
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 28 Sep 2009 13:00:49 +0400
+
 xscript (5.68-11) unstable; urgency=low
 
   * mist::set_state_by_keys fixed
