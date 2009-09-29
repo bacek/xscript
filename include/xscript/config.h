@@ -49,6 +49,12 @@ Config::as(const std::string &name, const T &defval) const {
     }
 }
 
+class ConfigParams {
+public:
+    void init(const Config *config);
+    static int defaultTimeout();
+};
+
 } // namespace xscript
 
 #endif // _XSCRIPT_CONFIG_H_

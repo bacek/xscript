@@ -39,8 +39,7 @@ ThreadedBlock::~ThreadedBlock() {
 
 int
 ThreadedBlock::timeout() const {
-// FIXME: Change hard-coded 5000 to configurable defaults.
-    return trb_data_->timeout_ > 0 ? trb_data_->timeout_ : 5000;
+    return trb_data_->timeout_ > 0 ? trb_data_->timeout_ : ConfigParams::defaultTimeout();
 }
 
 int

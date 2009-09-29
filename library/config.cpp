@@ -61,6 +61,8 @@ Config::~Config() {
 void
 Config::startup() {
 
+    ConfigParams::init(this);
+    
     LoggerFactory::instance()->init(this);
     log()->debug("logger factory started");
 
@@ -308,6 +310,18 @@ XmlConfig::subKeys(const std::string &key, std::vector<std::string> &v) const {
             v.push_back(stream.str());
         }
     }
+}
+
+static int default_timeout = 5000;
+
+void 
+ConfigParams::init(const Config *config) {
+    default_timeout = config->as<int>("/xscript/common/default-block-timeout", 5000);
+}
+
+int
+ConfigParams::defaultTimeout() {
+    return default_timeout;
 }
 
 } // namespace xscript
