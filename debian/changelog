@@ -1,8 +1,8 @@
-xscript (5.68-12) unstable; urgency=low
+xscript (5.68-13) unstable; urgency=low
 
-  * xml validation added for query parameters
+  * default timeout added to config
 
- -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 28 Sep 2009 13:00:49 +0400
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 29 Sep 2009 13:34:55 +0400
 
 xscript (5.68-11) unstable; urgency=low
 

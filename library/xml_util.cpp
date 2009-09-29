@@ -221,25 +221,6 @@ XmlUtils::escape(const Range &range) {
     return dest;
 }
 
-bool
-XmlUtils::validate(const std::string &data) {
-    const char* str = data.c_str();
-    const char* end = str + data.length();
-    while(str < end) {
-        const char* chunk_begin = str;
-        str = StringUtils::nextUTF8(str);
-        if (str - chunk_begin > 1) {
-            continue;
-        }
-        char ch = static_cast<unsigned char>(*chunk_begin);
-        if (ch > 0x1F || ch == 0x9 || ch == 0xA || ch == 0xD) {
-            continue;
-        }           
-        return false;
-    }
-    return true;
-}
-
 std::string
 XmlUtils::sanitize(const Range &range, const std::string &base_url, int line_limit) {
     return Sanitizer::instance()->sanitize(range, base_url, line_limit);

@@ -2,11 +2,9 @@
 #include <stdexcept>
 #include <memory>
 #include <algorithm>
-
-#include "xscript/algorithm.h"
-#include "xscript/encoder.h"
 #include "xscript/string_utils.h"
-#include "xscript/xml_util.h"
+#include "xscript/encoder.h"
+#include "xscript/algorithm.h"
 
 namespace xscript {
 
@@ -111,14 +109,8 @@ StringUtils::parse(const Range &range, std::vector<NamedValue> &v, Encoder *enco
             if (!xmlCheckUTF8((const xmlChar*) p.first.c_str())) {
                 encoder->encode(p.first).swap(p.first);
             }
-            if (!XmlUtils::validate(p.first)) {
-                throw std::runtime_error("Data is not allowed in query: " + p.first);
-            }
             if (!xmlCheckUTF8((const xmlChar*) p.second.c_str())) {
                 encoder->encode(p.second).swap(p.second);
-            }
-            if (!XmlUtils::validate(p.second)) {
-                throw std::runtime_error("Data is not allowed in query: " + p.second);
             }
             v.push_back(p);
         }
