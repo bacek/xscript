@@ -316,7 +316,7 @@ static int default_timeout = 5000;
 
 void 
 ConfigParams::init(const Config *config) {
-    default_timeout = config->as<int>("/xscript/common/default-block-timeout", 5000);
+    default_timeout = config->as<int>("/xscript/default-block-timeout", 5000);
 }
 
 int

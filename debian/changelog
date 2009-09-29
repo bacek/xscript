@@ -1,3 +1,9 @@
+xscript (5.68-14) unstable; urgency=low
+
+  * deafult block timeout path changed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 29 Sep 2009 14:13:16 +0400
+
 xscript (5.68-13) unstable; urgency=low
 
   * default timeout added to config
