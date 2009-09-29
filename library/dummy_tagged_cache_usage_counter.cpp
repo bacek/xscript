@@ -9,20 +9,16 @@ namespace xscript {
 
 void
 DummyTaggedCacheUsageCounter::fetchedHit(const Context *ctx,
-                                         const Object *obj,
-                                         const TagKey *key) {
+                                         const Object *obj) {
     (void)ctx;
     (void)obj;
-    (void)key;
 }
 
 void
 DummyTaggedCacheUsageCounter::fetchedMiss(const Context *ctx,
-                                          const Object *obj,
-                                          const TagKey *key) {
+                                          const Object *obj) {
     (void)ctx;
     (void)obj;
-    (void)key;
 }
 
 XmlNodeHelper

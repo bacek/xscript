@@ -1248,18 +1248,20 @@ Script::createTagKey(const Context *ctx) const {
 
 std::string
 Script::info(const Context *ctx) const {
-    std::string info("Original url: ");
-    info.append(data_->cachedUrl(ctx));
+    std::string info("Url: ");
+
+    std::string url(ctx->request()->getOriginalUrl());
+    std::string::size_type pos = url.rfind('?');
+    if (std::string::npos != pos) {
+        url.erase(pos);
+    }
+    
+    info.append(url);
     info.append(" | Filename: ");
     info.append(name());
     if (!data_->cacheTimeUndefined()) {
         info.append(" | Cache-time: ");
         info.append(boost::lexical_cast<std::string>(cacheTime()));
-    }
-    
-    const std::string& ctx_key = ctx->key();
-    if (!ctx_key.empty()) {
-        info.append(" | Page key: ").append(ctx_key);
     }
     
     return info;

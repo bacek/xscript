@@ -106,8 +106,8 @@ TaggedCacheUsageCounterImpl::RecordInfo::RecordInfo() :
     hits_(0), misses_(0), last_call_time_(0)
 {}
 
-TaggedCacheUsageCounterImpl::RecordInfo::RecordInfo(const std::string &key, const std::string &info) :
-    hits_(0), misses_(0), key_(key), info_(info), last_call_time_(0)
+TaggedCacheUsageCounterImpl::RecordInfo::RecordInfo(const std::string &info) :
+    hits_(0), misses_(0), info_(info), last_call_time_(0)
 {}
 
 boost::uint64_t
@@ -128,7 +128,7 @@ TaggedCacheUsageCounterImpl::RecordInfo::isGoodHitRatio() {
 
 bool
 TaggedCacheUsageCounterImpl::RecordComparator::operator() (RecordInfoPtr r1, RecordInfoPtr r2) const {
-    return r1->key_ < r2->key_;
+    return r1->info_ < r2->info_;
 }        
 
 bool
@@ -148,34 +148,31 @@ TaggedCacheScriptUsageCounterImpl::TaggedCacheScriptUsageCounterImpl(const std::
 
 void
 TaggedCacheScriptUsageCounterImpl::fetchedHit(const Context *ctx,
-                                              const Object *obj,
-                                              const TagKey *key) {
+                                              const Object *obj) {
     const Script *script = dynamic_cast<const Script*>(obj);
     if (NULL == script) {
         return;
     }
     boost::mutex::scoped_lock lock(mtx_);
-    fetched(ctx, script, key, true);
+    fetched(ctx, script, true);
 }
 
 void
 TaggedCacheScriptUsageCounterImpl::fetchedMiss(const Context *ctx,
-                                               const Object *obj,
-                                               const TagKey *key) {
+                                               const Object *obj) {
     const Script *script = dynamic_cast<const Script*>(obj);
     if (NULL == script) {
         return;
     }
     boost::mutex::scoped_lock lock(mtx_);
-    fetched(ctx, script, key, false);
+    fetched(ctx, script, false);
 }
 
 void
 TaggedCacheScriptUsageCounterImpl::fetched(const Context *ctx,
                                            const Script *script,
-                                           const TagKey *key,
                                            bool is_hit) {
-    RecordInfoPtr record(new RecordInfo(key->asString(), script->info(ctx)));
+    RecordInfoPtr record(new RecordInfo(script->info(ctx)));
     RecordIterator it = records_.find(record);
     if (it != records_.end()) {
         record = *it;
@@ -201,34 +198,31 @@ TaggedCacheBlockUsageCounterImpl::TaggedCacheBlockUsageCounterImpl(const std::st
 
 void
 TaggedCacheBlockUsageCounterImpl::fetchedHit(const Context *ctx,
-                                             const Object *obj,
-                                             const TagKey *key) {
+                                             const Object *obj) {
     const TaggedBlock *block = dynamic_cast<const TaggedBlock*>(obj);
     if (NULL == block) {
         return;
     }
     boost::mutex::scoped_lock lock(mtx_);
-    fetched(ctx, block, key, true);
+    fetched(ctx, block, true);
 }
 
 void
 TaggedCacheBlockUsageCounterImpl::fetchedMiss(const Context *ctx,
-                                              const Object *obj,
-                                              const TagKey *key) {
+                                              const Object *obj) {
     const TaggedBlock *block = dynamic_cast<const TaggedBlock*>(obj);
     if (NULL == block) {
         return;
     }
     boost::mutex::scoped_lock lock(mtx_);
-    fetched(ctx, block, key, false);
+    fetched(ctx, block, false);
 }
 
 void
 TaggedCacheBlockUsageCounterImpl::fetched(const Context *ctx,
                                           const TaggedBlock *block,
-                                          const TagKey *key,
                                           bool is_hit) {
-    RecordInfoPtr record(new RecordInfo(key->asString(), block->info(ctx)));
+    RecordInfoPtr record(new RecordInfo(block->info(ctx)));
     RecordIterator it = records_.find(record);
     if (it != records_.end()) {
         record = *it;
