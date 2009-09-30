@@ -448,6 +448,7 @@ Script::ScriptData::parseNode(xmlNodePtr node, std::vector<xmlNodePtr> &xscript_
                 }
                 else if (xmlStrEqual(node->name, XINCLUDE_FALLBACK)) {
                     node = node->next;
+                    continue;
                 }
             }
                         
