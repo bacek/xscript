@@ -55,6 +55,8 @@ public:
     
     static xmlDocPtr fakeXml();
 
+    static bool validate(const std::string &data);
+    
     static const char * const XSCRIPT_NAMESPACE;
 };
 
