@@ -230,7 +230,7 @@ DocCache::instance() {
 
 void
 DocCache::createUsageCounter(boost::shared_ptr<StatInfo> info) {
-    info->usageCounter_ = TaggedCacheUsageCounterFactory::instance()->createBlockCounter("usage");
+    info->usageCounter_ = TaggedCacheUsageCounterFactory::instance()->createBlockCounter("disgrace");
 }
 
 std::string
@@ -252,7 +252,7 @@ PageCache::instance() {
 
 void
 PageCache::createUsageCounter(boost::shared_ptr<StatInfo> info) {
-    info->usageCounter_ = TaggedCacheUsageCounterFactory::instance()->createScriptCounter("usage");
+    info->usageCounter_ = TaggedCacheUsageCounterFactory::instance()->createScriptCounter("disgrace");
 }
 
 std::string
