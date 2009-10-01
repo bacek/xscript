@@ -26,12 +26,19 @@ case "$1" in
 	    exit 1
 	fi
 	su $XSCRIPT_USER -c "/sbin/start-stop-daemon --start --background --verbose --name $THIS --exec /usr/bin/xscriptstart.sh $THIS"
-        echo "."
-	sleep 1
-	if ! ls $XSCRIPT_PID 2> /dev/null; then
-	    echo "Xscript not started. See logs in /var/log/$THIS"
-	    exit 1
-	fi;
+
+	for i in `seq 3 -1 1`; do
+            echo "."
+            sleep 1
+            if ls $XSCRIPT_PID 2> /dev/null; then
+                break
+            fi
+
+            if [ $i -eq 1 ]; then
+                echo "Xscript not started. See logs in /var/log/$THIS"
+                exit 1
+            fi
+        done
         ;;
     stop)
         echo "Stopping xscript: "
