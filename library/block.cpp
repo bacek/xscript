@@ -529,7 +529,7 @@ Block::errorResult(const InvokeError &error,
     XmlNodeHelper main_node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)tag_name, NULL));
     XmlUtils::throwUnless(NULL != main_node.get());
 
-    xmlNewProp(main_node.get(), (const xmlChar*)"error", (const xmlChar*)XmlUtils::escape(error.what()).c_str());
+    xmlNewProp(main_node.get(), (const xmlChar*)"error", (const xmlChar*)error.what());
     std::stringstream stream;
     stream << error.what() << ". ";
 
