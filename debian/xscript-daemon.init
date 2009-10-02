@@ -25,6 +25,8 @@ case "$1" in
 	    echo "$THIS is already running."
 	    exit 1
 	fi
+	
+	rm -f $XSCRIPT_PID
 	su $XSCRIPT_USER -c "/sbin/start-stop-daemon --start --background --verbose --name $THIS --exec /usr/bin/xscriptstart.sh $THIS"
 
 	for i in `seq 10 -1 1`; do
