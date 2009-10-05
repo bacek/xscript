@@ -118,7 +118,7 @@ memcacheCloseFunc(void *ctx) {
 
 bool 
 DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHelper &doc) {
-    log()->debug("saving doc");
+    log()->debug("saving doc in memcached");
   
     std::string mc_key = key->asString();
     std::string val;
@@ -140,10 +140,15 @@ DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHe
 
 bool 
 DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
-    log()->debug("loading doc");
+    log()->debug("loading doc in memcached");
 
     std::string mc_key = key->asString();
     char * mc_key2 = strdup(mc_key.c_str());
+    if (!mc_key2) {
+        log()->warn("Cannot copy key for memcached");
+        return false;
+    }
+    
     size_t vallen;
     char * val = static_cast<char*>(mc_aget2(mc_, mc_key2, mc_key.length(), &vallen));
     free(mc_key2);
@@ -163,6 +168,7 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
         val += sizeof(time_t);
         tag.expire_time = *((time_t*)(val));
         val += sizeof(time_t);
+        vallen -= 2*sizeof(time_t);
 
         doc = XmlDocHelper(xmlParseMemory(val, vallen));
         log()->debug("Parsed %p", doc.get());

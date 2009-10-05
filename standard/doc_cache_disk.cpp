@@ -182,7 +182,8 @@ DocCacheDisk::name() const {
 
 bool
 DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
-
+    log()->debug("loading doc in disk cache");
+    
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
     assert(NULL != dkey);
 
@@ -215,7 +216,8 @@ DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
 
 bool
 DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper &doc) {
-
+    log()->debug("saving doc in disk cache");
+    
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
     assert(NULL != dkey);
 

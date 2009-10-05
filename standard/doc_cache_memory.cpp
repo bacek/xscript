@@ -136,6 +136,7 @@ DocCacheMemory::name() const {
 
 bool
 DocCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
+    log()->debug("loading doc in memory cache");
     DocPool *mpool = pool(key);
     assert(NULL != mpool);
     return mpool->loadDoc(*key, tag, doc);
@@ -143,6 +144,7 @@ DocCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
 
 bool
 DocCacheMemory::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper &doc) {
+    log()->debug("saving doc in memory cache");
     DocPool *mpool = pool(key);
     assert(NULL != mpool);
     return mpool->saveDoc(*key, tag, doc);
