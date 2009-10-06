@@ -5,9 +5,12 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 THIS=`basename $0 | sed 's/-daemon$//g' | sed 's/^[SK][0123456789]*\([a-z]\)/\1/'`
 XSCRIPT_USER="www-data"
-XSCRIPT_PID="/var/run/$THIS/xscriptstart.pid"
+
 PID_DIR="/var/run/$THIS"
 LOG_DIR="/var/log/$THIS"
+
+XSCRIPT_STARTER_PID="$PID_DIR/xscriptstart.pid"
+XSCRIPT_DAEMON_PID="$PID_DIR/xscript.pid"
 
 RETVAL=0
 
@@ -20,19 +23,19 @@ case "$1" in
 	chown $XSCRIPT_USER $LOG_DIR
 	
 	echo "Starting xscript:"
-	if /sbin/start-stop-daemon --quiet --stop --signal 0 --pidfile $PID_DIR/xscript.pid 2>/dev/null 1>/dev/null
+	if /sbin/start-stop-daemon --quiet --stop --signal 0 --pidfile $XSCRIPT_DAEMON_PID 2>/dev/null 1>/dev/null
 	then
 	    echo "$THIS is already running."
 	    exit 1
 	fi
 	
-	rm -f $XSCRIPT_PID
+	rm -f $XSCRIPT_STARTER_PID
 	su $XSCRIPT_USER -c "/sbin/start-stop-daemon --start --background --verbose --name $THIS --exec /usr/bin/xscriptstart.sh $THIS"
 
 	for i in `seq 10 -1 1`; do
             echo -n "."
             sleep 1
-            if ls $XSCRIPT_PID 2> /dev/null; then
+            if ls $XSCRIPT_DAEMON_PID 2> /dev/null; then
                 break
             fi
             if [ $i -eq 1 ]; then
@@ -44,9 +47,9 @@ case "$1" in
         ;;
     stop)
         echo "Stopping xscript: "
-	if ! [ -s $PID_DIR/xscript.pid ]
+	if ! [ -s $XSCRIPT_DAEMON_PID ]
 	then
-	    echo Warning:$PID_DIR/xscript.pid not found
+	    echo Warning:$XSCRIPT_DAEMON_PID not found
 	    start_pid=`ps ax |egrep '/usr/bin/xscriptstart.sh '$THIS'$' |grep -v grep |awk '{ print  $1 }'`
 	    if [ "$start_pid" != "" ]; then
 		kill -9 $start_pid
@@ -55,29 +58,29 @@ case "$1" in
 	fi
 	
 	#Kill fastcgistart
-	/sbin/start-stop-daemon --quiet --stop --signal 0 --pidfile $PID_DIR/xscriptstart.pid 2>&1 >/dev/null
-	/sbin/start-stop-daemon --quiet --signal 15 --stop --pidfile $PID_DIR/xscriptstart.pid 2>&1 >/dev/null
-	/sbin/start-stop-daemon --quiet --signal 9 --stop --pidfile $PID_DIR/xscriptstart.pid 2>&1 >/dev/null
+	/sbin/start-stop-daemon --quiet --stop --signal 0 --pidfile $XSCRIPT_STARTER_PID 2>&1 >/dev/null
+	/sbin/start-stop-daemon --quiet --signal 15 --stop --pidfile $XSCRIPT_STARTER_PID 2>&1 >/dev/null
+	/sbin/start-stop-daemon --quiet --signal 9 --stop --pidfile $XSCRIPT_STARTER_PID 2>&1 >/dev/null
 	#Kill daemon
-	/sbin/start-stop-daemon --quiet --stop --signal 0 --pidfile $PID_DIR/xscript.pid 2>&1 >/dev/null
-	/sbin/start-stop-daemon --quiet --signal 15 --stop --pidfile $PID_DIR/xscript.pid 2>&1 >/dev/null
-	/sbin/start-stop-daemon --quiet --signal 2 --stop --pidfile $PID_DIR/xscript.pid 2>&1 >/dev/null
+	/sbin/start-stop-daemon --quiet --stop --signal 0 --pidfile $XSCRIPT_DAEMON_PID 2>&1 >/dev/null
+	/sbin/start-stop-daemon --quiet --signal 15 --stop --pidfile $XSCRIPT_DAEMON_PID 2>&1 >/dev/null
+	/sbin/start-stop-daemon --quiet --signal 2 --stop --pidfile $XSCRIPT_DAEMON_PID 2>&1 >/dev/null
 
 	for C in `seq 10 -1 1`; do
-	    ps `cat $PID_DIR/xscript.pid` >>/dev/null 2>&1 || break
+	    ps `cat $XSCRIPT_DAEMON_PID` >>/dev/null 2>&1 || break
 	    sleep 1
-	    ps `cat $PID_DIR/xscript.pid` >>/dev/null 2>&1 || break
+	    ps `cat $XSCRIPT_DAEMON_PID` >>/dev/null 2>&1 || break
 	    echo -n "$C "
-	    /sbin/start-stop-daemon --quiet --signal 9 --stop --pidfile $PID_DIR/xscript.pid 2>&1 >/dev/null
+	    /sbin/start-stop-daemon --quiet --signal 9 --stop --pidfile $XSCRIPT_DAEMON_PID 2>&1 >/dev/null
 	    if [ $C -eq 1 ]; then
 		echo " Cannot stop xscript"
-		rm $PID_DIR/xscript.pid  >/dev/null
+		rm $XSCRIPT_DAEMON_PID >/dev/null
 		exit 1
 	    fi
 	done
 	
 	#Rm pid files
-	rm $PID_DIR/xscript.pid  >/dev/null
+	rm $XSCRIPT_DAEMON_PID >/dev/null
         ;;
     restart)
 	$0 stop $@
