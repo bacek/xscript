@@ -30,6 +30,8 @@ case "$1" in
 	fi
 	
 	rm -f $XSCRIPT_STARTER_PID
+	rm -f $XSCRIPT_DAEMON_PID
+	
 	su $XSCRIPT_USER -c "/sbin/start-stop-daemon --start --background --verbose --name $THIS --exec /usr/bin/xscriptstart.sh $THIS"
 
 	for i in `seq 10 -1 1`; do
