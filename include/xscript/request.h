@@ -14,6 +14,8 @@
 
 namespace xscript {
 
+class RequestImpl;
+
 class Request : private boost::noncopyable {
 public:
     Request();
@@ -101,7 +103,6 @@ private:
     class OriginalHostHandler;
     friend class OriginalHostHandler;
     
-    class RequestImpl;
     friend class RequestImpl;
     RequestImpl *data_;
 };

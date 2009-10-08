@@ -12,7 +12,7 @@ namespace xscript {
 
 class File;
 
-class Request::RequestImpl {
+class RequestImpl {
 public:
     RequestImpl();
     ~RequestImpl();

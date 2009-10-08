@@ -51,7 +51,7 @@ Parser::getBoundary(const Range &range) {
 }
 
 void
-Parser::addCookie(Request::RequestImpl *req, const Range &range, Encoder *encoder) {
+Parser::addCookie(RequestImpl *req, const Range &range, Encoder *encoder) {
 
     Range part = trim(range), head, tail;
     split(part, '=', head, tail);
@@ -68,11 +68,11 @@ Parser::addCookie(Request::RequestImpl *req, const Range &range, Encoder *encode
 }
 
 void
-Parser::addHeader(Request::RequestImpl *req, const Range &key, const Range &value, Encoder *encoder) {
+Parser::addHeader(RequestImpl *req, const Range &key, const Range &value, Encoder *encoder) {
     std::string header = HttpUtils::normalizeInputHeaderName(key);
     
     Range checked_value = value;
-    if (strcmp(header.c_str(), Request::RequestImpl::HOST_KEY.c_str()) == 0) {
+    if (strcmp(header.c_str(), RequestImpl::HOST_KEY.c_str()) == 0) {
         checked_value = HttpUtils::checkHost(value);
     }
         
@@ -93,7 +93,7 @@ Parser::addHeader(Request::RequestImpl *req, const Range &key, const Range &valu
 }
 
 void
-Parser::parse(Request::RequestImpl *req, char *env[], Encoder *encoder) {
+Parser::parse(RequestImpl *req, char *env[], Encoder *encoder) {
     for (int i = 0; NULL != env[i]; ++i) {
         log()->debug("env[%d] = %s", i, env[i]);
         Range key, value;
@@ -111,7 +111,7 @@ Parser::parse(Request::RequestImpl *req, char *env[], Encoder *encoder) {
         else {
             std::string name(key.begin(), key.end());
             std::string query_value;
-            if (strcmp(name.c_str(), Request::RequestImpl::QUERY_STRING_KEY.c_str()) == 0) {
+            if (strcmp(name.c_str(), RequestImpl::QUERY_STRING_KEY.c_str()) == 0) {
                 query_value = HttpUtils::checkUrlEscaping(value);
                 value = createRange(query_value);
             }
@@ -129,7 +129,7 @@ Parser::parse(Request::RequestImpl *req, char *env[], Encoder *encoder) {
 }
 
 void
-Parser::parseCookies(Request::RequestImpl *req, const Range &range, Encoder *encoder) {
+Parser::parseCookies(RequestImpl *req, const Range &range, Encoder *encoder) {
     Range part = trim(range), head, tail;
     while (!part.empty()) {
         split(part, ';', head, tail);
@@ -163,7 +163,7 @@ Parser::parseLine(Range &line, std::map<Range, Range, RangeCILess> &m) {
 }
 
 void
-Parser::parsePart(Request::RequestImpl *req, Range &part, Encoder *encoder) {
+Parser::parsePart(RequestImpl *req, Range &part, Encoder *encoder) {
 
     Range headers, content, line, tail;
     std::map<Range, Range, RangeCILess> params;
@@ -199,7 +199,7 @@ Parser::parsePart(Request::RequestImpl *req, Range &part, Encoder *encoder) {
 }
 
 void
-Parser::parseMultipart(Request::RequestImpl *req, Range &data, const std::string &boundary, Encoder *encoder) {
+Parser::parseMultipart(RequestImpl *req, Range &data, const std::string &boundary, Encoder *encoder) {
     Range head, tail, bound = createRange(boundary);
     while (!data.empty()) {
         split(data, bound, head, tail);

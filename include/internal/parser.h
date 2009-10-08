@@ -18,15 +18,15 @@ class Parser : private boost::noncopyable {
 public:
     static std::string getBoundary(const Range &range);
 
-    static void addCookie(Request::RequestImpl *req, const Range &range, Encoder *encoder);
-    static void addHeader(Request::RequestImpl *req, const Range &key, const Range &value, Encoder *encoder);
+    static void addCookie(RequestImpl *req, const Range &range, Encoder *encoder);
+    static void addHeader(RequestImpl *req, const Range &key, const Range &value, Encoder *encoder);
 
-    static void parse(Request::RequestImpl *req, char *env[], Encoder *encoder);
-    static void parseCookies(Request::RequestImpl *req, const Range &range, Encoder *encoder);
+    static void parse(RequestImpl *req, char *env[], Encoder *encoder);
+    static void parseCookies(RequestImpl *req, const Range &range, Encoder *encoder);
 
-    static void parsePart(Request::RequestImpl *req, Range &part, Encoder *encoder);
+    static void parsePart(RequestImpl *req, Range &part, Encoder *encoder);
     static void parseLine(Range &line, std::map<Range, Range, RangeCILess> &m);
-    static void parseMultipart(Request::RequestImpl *req, Range &data, const std::string &boundary, Encoder *encoder);
+    static void parseMultipart(RequestImpl *req, Range &data, const std::string &boundary, Encoder *encoder);
 
     template<typename Map> static bool has(const Map &m, const std::string &key);
     template<typename Map> static void keys(const Map &m, std::vector<std::string> &v);
