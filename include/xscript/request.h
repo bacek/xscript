@@ -101,73 +101,10 @@ private:
     class OriginalHostHandler;
     friend class OriginalHostHandler;
     
-    class Request_Data;
-    friend class Request_Data;
-    Request_Data *data_;
+    class RequestImpl;
+    friend class RequestImpl;
+    RequestImpl *data_;
 };
-
-class Parser : private boost::noncopyable {
-public:
-    static const char* statusToString(short status);
-    static std::string getBoundary(const Range &range);
-
-    static void addCookie(Request *req, const Range &range, Encoder *encoder);
-    static void addHeader(Request *req, const Range &key, const Range &value, Encoder *encoder);
-
-    static void parse(Request *req, char *env[], Encoder *encoder);
-    static void parseCookies(Request *req, const Range &range, Encoder *encoder);
-
-    static void parsePart(Request *req, Range &part, Encoder *encoder);
-    static void parseLine(Range &line, std::map<Range, Range, RangeCILess> &m);
-    static void parseMultipart(Request *req, Range &data, const std::string &boundary, Encoder *encoder);
-
-    template<typename Map> static bool has(const Map &m, const std::string &key);
-    template<typename Map> static void keys(const Map &m, std::vector<std::string> &v);
-    template<typename Map> static const std::string& get(const Map &m, const std::string &key);
-
-    static bool normalizeHeader(const std::string &name, const Range &value, std::string &result);
-    static std::string checkUrlEscaping(const Range &range);
-    static Range checkHost(const Range &range);
-    
-    static std::string normalizeInputHeaderName(const Range &range);
-    static std::string normalizeOutputHeaderName(const std::string &name);
-    static std::string normalizeQuery(const Range &range);
-
-    static const Range RN_RANGE;
-    static const Range NAME_RANGE;
-    static const Range FILENAME_RANGE;
-
-    static const Range HEADER_RANGE;
-    static const Range COOKIE_RANGE;
-    static const Range EMPTY_LINE_RANGE;
-    static const Range CONTENT_TYPE_RANGE;
-    static const Range CONTENT_TYPE_MULTIPART_RANGE;
-    
-    static const std::string NORMALIZE_HEADER_METHOD;
-};
-
-template<typename Map> inline bool
-Parser::has(const Map &m, const std::string &key) {
-    return m.find(key) != m.end();
-}
-
-template<typename Map> inline void
-Parser::keys(const Map &m, std::vector<std::string> &v) {
-
-    std::vector<std::string> tmp;
-    tmp.reserve(m.size());
-
-    for (typename Map::const_iterator i = m.begin(), end = m.end(); i != end; ++i) {
-        tmp.push_back(i->first);
-    }
-    v.swap(tmp);
-}
-
-template<typename Map> inline const std::string&
-Parser::get(const Map &m, const std::string &key) {
-    typename Map::const_iterator i = m.find(key);
-    return (m.end() == i) ? StringUtils::EMPTY_STRING : i->second;
-}
 
 } // namespace xscript
 

@@ -9,6 +9,7 @@
 
 #include "xscript/encoder.h"
 #include "xscript/exception.h"
+#include "xscript/http_utils.h"
 #include "xscript/logger.h"
 #include "xscript/range.h"
 #include "xscript/xml_util.h"
@@ -37,7 +38,7 @@ ServerResponse::detach() {
 
 void
 ServerResponse::writeError(unsigned short status, const std::string &message) {
-    (*stream_) << "<html><body><h1>" << status << " " << Parser::statusToString(status) << "<br><br>"
+    (*stream_) << "<html><body><h1>" << status << " " << HttpUtils::statusToString(status) << "<br><br>"
     << XmlUtils::escape(createRange(message)) << "</h1></body></html>";
 }
 

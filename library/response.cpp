@@ -2,14 +2,17 @@
 
 #include <sstream>
 
+#include <boost/current_function.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/thread/mutex.hpp>
+
 #include "xscript/logger.h"
+#include "xscript/http_utils.h"
 #include "xscript/request.h"
 #include "xscript/response.h"
 #include "xscript/writer.h"
 
-#include <boost/current_function.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/thread/mutex.hpp>
+#include "internal/parser.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -52,7 +55,7 @@ Response::ResponseData::sendHeadersInternal() {
     std::stringstream stream;
     if (!headers_sent_) {
         log()->debug("%s, sending headers", BOOST_CURRENT_FUNCTION);
-        stream << status_ << " " << Parser::statusToString(status_);
+        stream << status_ << " " << HttpUtils::statusToString(status_);
         out_headers_["Status"] = stream.str();
         response_->writeHeaders();
         headers_sent_ = true;
@@ -127,7 +130,7 @@ Response::setHeader(const std::string &name, const std::string &value) {
     if (data_->headers_sent_) {
         throw std::runtime_error("headers already sent");
     }
-    std::string normalized_name = Parser::normalizeOutputHeaderName(name);
+    std::string normalized_name = HttpUtils::normalizeOutputHeaderName(name);
     std::string::size_type pos = value.find_first_of("\r\n");
     if (pos == std::string::npos) {
         data_->out_headers_[normalized_name] = value;

@@ -1,16 +1,19 @@
 #include "settings.h"
 
-#include "xscript/algorithm.h"
-#include "xscript/authorizer.h"
-#include "xscript/encoder.h"
-#include "xscript/exception.h"
-#include "xscript/logger.h"
-#include "xscript/message_interface.h"
-#include "xscript/response.h"
-#include "xscript/request.h"
+#include <map>
+#include <stdexcept>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/thread/mutex.hpp>
+
+#include "internal/parser.h"
+#include "internal/request_impl.h"
+
+#include "xscript/authorizer.h"
+#include "xscript/encoder.h"
+#include "xscript/functors.h"
+#include "xscript/message_interface.h"
+#include "xscript/range.h"
+#include "xscript/request.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -18,140 +21,12 @@
 
 namespace xscript {
 
-#if defined(HAVE_GNUCXX_HASHMAP)
-
-typedef __gnu_cxx::hash_map<std::string, std::string, StringCIHash> VarMap;
-
-#elif defined(HAVE_EXT_HASH_MAP) || defined(HAVE_STLPORT_HASHMAP)
-
-typedef std::hash_map<std::string, std::string, StringCIHash> VarMap;
-
-#else
-
-typedef std::map<std::string, std::string> VarMap;
-
-#endif
-
-class File {
-public:
-    File(const std::map<Range, Range, RangeCILess> &m, const Range &content);
-
-    const std::string& type() const;
-    const std::string& remoteName() const;
-
-    std::pair<const char*, std::streamsize> data() const;
-
-private:
-    std::string name_, type_;
-    std::pair<const char*, std::streamsize> data_;
-};
-
 const std::string Request::ATTACH_METHOD = "REQUEST_ATTACH";
 const std::string Request::REAL_IP_METHOD = "REQUEST_REAL_IP";
 const std::string Request::ORIGINAL_URI_METHOD = "REQUEST_ORIGINAL_URI";
 const std::string Request::ORIGINAL_HOST_METHOD = "REQUEST_ORIGINAL_HOST";
 
-
-
-class Request::Request_Data {
-public:
-    Request_Data();
-    ~Request_Data();
-    
-    mutable boost::mutex mutex_;
-    VarMap vars_, cookies_;
-    std::vector<char> body_;
-    HeaderMap headers_;
-    
-    std::map<std::string, File> files_;
-    std::vector<StringUtils::NamedValue> args_;
-    bool is_bot_;
-
-    static const std::string HEAD;
-    static const std::string HOST_KEY;
-    static const std::string CONTENT_TYPE_KEY;
-    static const std::string CONTENT_ENCODING_KEY;
-    static const std::string CONTENT_LENGTH_KEY;
-    
-    static const std::string HTTPS_KEY;
-    static const std::string SERVER_ADDR_KEY;
-    static const std::string SERVER_PORT_KEY;
-    
-    static const std::string PATH_INFO_KEY;
-    static const std::string PATH_TRANSLATED_KEY;
-    
-    static const std::string SCRIPT_NAME_KEY;
-    static const std::string SCRIPT_FILENAME_KEY;
-    static const std::string DOCUMENT_ROOT_KEY;
-    
-    static const std::string REMOTE_USER_KEY;
-    static const std::string REMOTE_ADDR_KEY;
-    
-    static const std::string QUERY_STRING_KEY;
-    static const std::string REQUEST_METHOD_KEY;
-};
-
-const std::string Request::Request_Data::HEAD("HEAD");
-const std::string Request::Request_Data::HOST_KEY("HOST");
-const std::string Request::Request_Data::CONTENT_TYPE_KEY("Content-Type");
-const std::string Request::Request_Data::CONTENT_ENCODING_KEY("Content-Encoding");
-const std::string Request::Request_Data::CONTENT_LENGTH_KEY("Content-Length");
-
-const std::string Request::Request_Data::HTTPS_KEY("HTTPS");
-const std::string Request::Request_Data::SERVER_ADDR_KEY("SERVER_ADDR");
-const std::string Request::Request_Data::SERVER_PORT_KEY("SERVER_PORT");
-
-const std::string Request::Request_Data::PATH_INFO_KEY("PATH_INFO");
-const std::string Request::Request_Data::PATH_TRANSLATED_KEY("PATH_TRANSLATED");
-
-const std::string Request::Request_Data::SCRIPT_NAME_KEY("SCRIPT_NAME");
-const std::string Request::Request_Data::SCRIPT_FILENAME_KEY("SCRIPT_FILENAME");
-const std::string Request::Request_Data::DOCUMENT_ROOT_KEY("DOCUMENT_ROOT");
-
-const std::string Request::Request_Data::REMOTE_USER_KEY("REMOTE_USER");
-const std::string Request::Request_Data::REMOTE_ADDR_KEY("REMOTE_ADDR");
-
-const std::string Request::Request_Data::QUERY_STRING_KEY("QUERY_STRING");
-const std::string Request::Request_Data::REQUEST_METHOD_KEY("REQUEST_METHOD");
-
-File::File(const std::map<Range, Range, RangeCILess> &m, const Range &content) :
-        data_(content.begin(), static_cast<std::streamsize>(content.size())) {
-    std::map<Range, Range, RangeCILess>::const_iterator i;
-    i = m.find(Parser::CONTENT_TYPE_MULTIPART_RANGE);
-    if (m.end() != i) {
-        type_.assign(i->second.begin(), i->second.end());
-    }
-    i = m.find(Parser::FILENAME_RANGE);
-    if (m.end() != i) {
-        name_.assign(i->second.begin(), i->second.end());
-    }
-    else {
-        throw std::runtime_error("uploaded file without name");
-    }
-}
-
-const std::string&
-File::type() const {
-    return type_;
-}
-
-const std::string&
-File::remoteName() const {
-    return name_;
-}
-
-std::pair<const char*, std::streamsize>
-File::data() const {
-    return data_;
-}
-
-Request::Request_Data::Request_Data() : is_bot_(false)
-{}
-
-Request::Request_Data::~Request_Data()
-{}
-
-Request::Request() : data_(new Request_Data()) {
+Request::Request() : data_(new RequestImpl()) {
 }
 
 Request::~Request() {
@@ -160,48 +35,48 @@ Request::~Request() {
 
 unsigned short
 Request::getServerPort() const {
-    const std::string &res = Parser::get(data_->vars_, Request_Data::SERVER_PORT_KEY);
+    const std::string &res = Parser::get(data_->vars_, RequestImpl::SERVER_PORT_KEY);
     return (!res.empty()) ? boost::lexical_cast<unsigned short>(res) : 80;
 }
 
 const std::string&
 Request::getServerAddr() const {
-    return Parser::get(data_->vars_, Request_Data::SERVER_ADDR_KEY);
+    return Parser::get(data_->vars_, RequestImpl::SERVER_ADDR_KEY);
 }
 
 const std::string&
 Request::getPathInfo() const {
-    return Parser::get(data_->vars_, Request_Data::PATH_INFO_KEY);
+    return Parser::get(data_->vars_, RequestImpl::PATH_INFO_KEY);
 }
 
 const std::string&
 Request::getPathTranslated() const {
-    return Parser::get(data_->vars_, Request_Data::PATH_TRANSLATED_KEY);
+    return Parser::get(data_->vars_, RequestImpl::PATH_TRANSLATED_KEY);
 }
 
 const std::string&
 Request::getScriptName() const {
-    return Parser::get(data_->vars_, Request_Data::SCRIPT_NAME_KEY);
+    return Parser::get(data_->vars_, RequestImpl::SCRIPT_NAME_KEY);
 }
 
 const std::string&
 Request::getScriptFilename() const {
-    return Parser::get(data_->vars_, Request_Data::SCRIPT_FILENAME_KEY);
+    return Parser::get(data_->vars_, RequestImpl::SCRIPT_FILENAME_KEY);
 }
 
 const std::string&
 Request::getDocumentRoot() const {
-    return Parser::get(data_->vars_, Request_Data::DOCUMENT_ROOT_KEY);
+    return Parser::get(data_->vars_, RequestImpl::DOCUMENT_ROOT_KEY);
 }
 
 const std::string&
 Request::getRemoteUser() const {
-    return Parser::get(data_->vars_, Request_Data::REMOTE_USER_KEY);
+    return Parser::get(data_->vars_, RequestImpl::REMOTE_USER_KEY);
 }
 
 const std::string&
 Request::getRemoteAddr() const {
-    return Parser::get(data_->vars_, Request_Data::REMOTE_ADDR_KEY);
+    return Parser::get(data_->vars_, RequestImpl::REMOTE_ADDR_KEY);
 }
 
 const std::string&
@@ -218,12 +93,12 @@ Request::getRealIP() const {
 
 const std::string&
 Request::getQueryString() const {
-    return Parser::get(data_->vars_, Request_Data::QUERY_STRING_KEY);
+    return Parser::get(data_->vars_, RequestImpl::QUERY_STRING_KEY);
 }
 
 const std::string&
 Request::getRequestMethod() const {
-    return Parser::get(data_->vars_, Request_Data::REQUEST_METHOD_KEY);
+    return Parser::get(data_->vars_, RequestImpl::REQUEST_METHOD_KEY);
 }
 
 std::string
@@ -261,7 +136,7 @@ Request::getOriginalUrl() const {
 
 const std::string&
 Request::getHost() const {
-    return getHeader(Request_Data::HOST_KEY);
+    return getHeader(RequestImpl::HOST_KEY);
 }
 
 const std::string&
@@ -278,7 +153,7 @@ Request::getOriginalHost() const {
 
 boost::uint32_t
 Request::getContentLength() const {
-    const std::string& length = getHeader(Request_Data::CONTENT_LENGTH_KEY);
+    const std::string& length = getHeader(RequestImpl::CONTENT_LENGTH_KEY);
     if (length.empty()) {
         return 0;
     }
@@ -292,12 +167,12 @@ Request::getContentLength() const {
 
 const std::string&
 Request::getContentType() const {
-    return getHeader(Request_Data::CONTENT_TYPE_KEY);
+    return getHeader(RequestImpl::CONTENT_TYPE_KEY);
 }
 
 const std::string&
 Request::getContentEncoding() const {
-    return getHeader(Request_Data::CONTENT_ENCODING_KEY);
+    return getHeader(RequestImpl::CONTENT_ENCODING_KEY);
 }
 
 unsigned int
@@ -475,7 +350,7 @@ Request::fileNames(std::vector<std::string> &v) const {
 
 bool
 Request::isSecure() const {
-    const std::string &val = Parser::get(data_->vars_, Request_Data::HTTPS_KEY);
+    const std::string &val = Parser::get(data_->vars_, RequestImpl::HTTPS_KEY);
     return !val.empty() && strncasecmp(val.c_str(), "on", sizeof("on")) == 0;
 }
 
@@ -491,7 +366,7 @@ Request::requestBody() const {
 
 bool
 Request::suppressBody() const {
-    return Request_Data::HEAD == getRequestMethod();
+    return RequestImpl::HEAD == getRequestMethod();
 }
 
 void
@@ -500,7 +375,7 @@ Request::addInputHeader(const std::string &name, const std::string &value) {
     Range value_range = createRange(value);
     std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
     boost::mutex::scoped_lock lock(data_->mutex_);
-    Parser::addHeader(this, key_range, value_range, enc.get());
+    Parser::addHeader(data_, key_range, value_range, enc.get());
 }
 
 void
@@ -531,375 +406,6 @@ Request::attach(std::istream *is, char *env[]) {
     }
 }
 
-const Range Parser::RN_RANGE = createRange("\r\n");
-const Range Parser::NAME_RANGE = createRange("name");
-const Range Parser::FILENAME_RANGE = createRange("filename");
-const Range Parser::HEADER_RANGE = createRange("HTTP_");
-const Range Parser::COOKIE_RANGE = createRange("HTTP_COOKIE");
-const Range Parser::EMPTY_LINE_RANGE = createRange("\r\n\r\n");
-const Range Parser::CONTENT_TYPE_RANGE = createRange("CONTENT_TYPE");
-const Range Parser::CONTENT_TYPE_MULTIPART_RANGE = createRange("Content-Type");
-
-const std::string Parser::NORMALIZE_HEADER_METHOD = "PARSER_NORMALIZE_HEADER_METHOD";
-
-const char*
-Parser::statusToString(short status) {
-
-    switch (status) {
-    case 200:
-        return "OK";
-    case 201:
-        return "Created";
-    case 202:
-        return "Accepted";
-    case 203:
-        return "Non-Authoritative Information";
-    case 204:
-        return "No Content";
-
-    case 301:
-        return "Moved Permanently";
-    case 302:
-        return "Found";
-    case 303:
-        return "See Other";
-    case 304:
-        return "Not Modified";
-
-    case 400:
-        return "Bad request";
-    case 401:
-        return "Unauthorized";
-    case 402:
-        return "Payment Required";
-    case 403:
-        return "Forbidden";
-    case 404:
-        return "Not Found";
-    case 405:
-        return "Method Not Allowed";
-
-    case 500:
-        return "Internal Server Error";
-    case 501:
-        return "Not Implemented";
-    case 502:
-        return "Bad Gateway";
-    case 503:
-        return "Service Unavailable";
-    case 504:
-        return "Gateway Timeout";
-    }
-    return "Unknown status";
-}
-
-std::string
-Parser::getBoundary(const Range &range) {
-
-    Range head, tail;
-    split(range, ';', head, tail);
-
-    tail = trim(tail);
-
-    if (strncasecmp("boundary", tail.begin(), sizeof("boundary") - 1) == 0) {
-        Range key, value;
-        split(tail, '=', key, value);
-        Range boundary = trim(value);
-
-        Range comma = createRange("\"");
-        if (startsWith(boundary, comma) && endsWith(boundary, comma)) {
-            return std::string("--").append(boundary.begin() + 1, boundary.end() - 1);
-        }
-
-        return std::string("--").append(boundary.begin(), boundary.end());
-    }
-    throw std::runtime_error("no boundary found");
-}
-
-void
-Parser::addCookie(Request *req, const Range &range, Encoder *encoder) {
-
-    Range part = trim(range), head, tail;
-    split(part, '=', head, tail);
-    if (!head.empty()) {
-        std::string key = StringUtils::urldecode(head), value = StringUtils::urldecode(tail);
-        if (!xmlCheckUTF8((const xmlChar*) key.c_str())) {
-            encoder->encode(key).swap(key);
-        }
-        if (!xmlCheckUTF8((const xmlChar*) value.c_str())) {
-            encoder->encode(value).swap(value);
-        }
-        req->data_->cookies_[key].swap(value);
-    }
-}
-
-void
-Parser::addHeader(Request *req, const Range &key, const Range &value, Encoder *encoder) {
-    std::string header = normalizeInputHeaderName(key);
-    
-    Range checked_value = value;
-    if (strcmp(header.c_str(), Request::Request_Data::HOST_KEY.c_str()) == 0) {
-        checked_value = checkHost(value);
-    }
-        
-    Range norm_value = checked_value;
-    std::string result;
-    if (normalizeHeader(header, checked_value, result)) {
-        norm_value = createRange(result);
-    }
-    
-    if (!xmlCheckUTF8((const xmlChar*) norm_value.begin())) {
-        encoder->encode(norm_value).swap(req->data_->headers_[header]);
-    }
-    else {
-        std::string &str = req->data_->headers_[header];
-        str.reserve(norm_value.size());
-        str.assign(norm_value.begin(), norm_value.end());
-    }
-}
-
-void
-Parser::parse(Request *req, char *env[], Encoder *encoder) {
-    for (int i = 0; NULL != env[i]; ++i) {
-        log()->debug("env[%d] = %s", i, env[i]);
-        Range key, value;
-        split(createRange(env[i]), '=', key, value);
-        if (COOKIE_RANGE == key) {
-            parseCookies(req, value, encoder);
-            addHeader(req, truncate(key, HEADER_RANGE.size(), 0), trim(value), encoder);
-        }
-        else if (CONTENT_TYPE_RANGE == key) {
-            addHeader(req, key, trim(value), encoder);
-        }
-        else if (startsWith(key, HEADER_RANGE)) { 
-            addHeader(req, truncate(key, HEADER_RANGE.size(), 0), trim(value), encoder);
-        }
-        else {
-            std::string name(key.begin(), key.end());
-            std::string query_value;
-            if (strcmp(name.c_str(), Request::Request_Data::QUERY_STRING_KEY.c_str()) == 0) {
-                query_value = checkUrlEscaping(value);
-                value = createRange(query_value);
-            }
-            
-            if (!xmlCheckUTF8((const xmlChar*) value.begin())) {
-                encoder->encode(value).swap(req->data_->vars_[name]);
-            }
-            else {
-                std::string &str = req->data_->vars_[name];
-                str.reserve(value.size());
-                str.assign(value.begin(), value.end());
-            }
-        }
-    }
-}
-
-void
-Parser::parseCookies(Request *req, const Range &range, Encoder *encoder) {
-    Range part = trim(range), head, tail;
-    while (!part.empty()) {
-        split(part, ';', head, tail);
-        addCookie(req, head, encoder);
-        part = trim(tail);
-    }
-}
-
-void
-Parser::parseLine(Range &line, std::map<Range, Range, RangeCILess> &m) {
-
-    Range head, tail, name, value;
-    while (!line.empty()) {
-        split(line, ';', head, tail);        
-        if (head.size() >= CONTENT_TYPE_MULTIPART_RANGE.size() &&
-            strncasecmp(head.begin(),
-                    CONTENT_TYPE_MULTIPART_RANGE.begin(),
-                    CONTENT_TYPE_MULTIPART_RANGE.size()) == 0) {
-            split(head, ':', name, value);
-            value = trim(value);
-        }
-        else {
-            split(head, '=', name, value);
-            if (NAME_RANGE == name || FILENAME_RANGE == name) {
-                value = truncate(value, 1, 1);
-            }
-        }
-        m.insert(std::make_pair(name, value));
-        line = trim(tail);
-    }
-}
-
-void
-Parser::parsePart(Request *req, Range &part, Encoder *encoder) {
-
-    Range headers, content, line, tail;
-    std::map<Range, Range, RangeCILess> params;
-
-    split(part, EMPTY_LINE_RANGE, headers, content);
-    while (!headers.empty()) {
-        split(headers, RN_RANGE, line, tail);
-        parseLine(line, params);
-        headers = tail;
-    }
-    std::map<Range, Range, RangeCILess>::iterator i = params.find(NAME_RANGE);
-    if (params.end() == i) {
-        return;
-    }
-
-    std::string name(i->second.begin(), i->second.end());
-    if (!xmlCheckUTF8((const xmlChar*) name.c_str())) {
-        encoder->encode(name).swap(name);
-    }
-
-    if (params.end() != params.find(FILENAME_RANGE)) {
-        req->data_->files_.insert(std::make_pair(name, File(params, content)));
-    }
-    else {
-        std::pair<std::string, std::string> p;
-        p.first.swap(name);
-        p.second.assign(content.begin(), content.end());
-        if (!xmlCheckUTF8((const xmlChar*) p.second.c_str())) {
-            encoder->encode(p.second).swap(p.second);
-        }
-        req->data_->args_.push_back(p);
-    }
-}
-
-void
-Parser::parseMultipart(Request *req, Range &data, const std::string &boundary, Encoder *encoder) {
-    Range head, tail, bound = createRange(boundary);
-    while (!data.empty()) {
-        split(data, bound, head, tail);
-        if (!head.empty()) {
-            head = truncate(head, 2, 2);
-        }
-        if (!head.empty()) {
-            parsePart(req, head, encoder);
-        }
-        data = tail;
-    }
-}
-
-std::string
-Parser::normalizeInputHeaderName(const Range &range) {
-
-    std::string res;
-    res.reserve(range.size());
-
-    Range part = range, head, tail;
-    while (!part.empty()) {
-        bool splitted = split(part, '_', head, tail);
-        res.append(head.begin(), head.end());
-        if (splitted) {
-            res.append(1, '-');
-        }
-        part = tail;
-    }
-    return res;
-}
-
-std::string
-Parser::normalizeOutputHeaderName(const std::string &name) {
-
-    std::string res;
-    Range range = trim(createRange(name)), head, tail;
-    res.reserve(range.size());
-
-    while (!range.empty()) {
-
-        split(range, '-', head, tail);
-        if (!head.empty()) {
-            res.append(1, toupper(*head.begin()));
-        }
-        if (head.size() > 1) {
-            res.append(head.begin() + 1, head.end());
-        }
-        range = trim(tail);
-        if (!range.empty()) {
-            res.append(1, '-');
-        }
-    }
-    return res;
-}
-
-std::string
-Parser::normalizeQuery(const Range &range) {
-    std::string result;
-    unsigned int length = range.size();
-    const char *query = range.begin();
-    for(unsigned int i = 0; i < length; ++i, ++query) {
-        if (static_cast<unsigned char>(*query) > 127) {
-            result.append(StringUtils::urlencode(Range(query, query + 1)));
-        }
-        else {
-            result.push_back(*query);
-        }
-    }
-    return result;
-}
-
-bool
-Parser::normalizeHeader(const std::string &name, const Range &value, std::string &result) {   
-    MessageParam<const std::string> name_param(&name);
-    MessageParam<const Range> value_param(&value);
-    MessageParam<std::string> result_param(&result);
-    
-    MessageParamBase* param_list[3];
-    param_list[0] = &name_param;
-    param_list[1] = &value_param;
-    param_list[2] = &result_param;
-    
-    MessageParams params(3, param_list);
-    MessageResult<bool> res;
-  
-    MessageProcessor::instance()->process(NORMALIZE_HEADER_METHOD, params, res);
-    return res.get();
-}
-
-std::string
-Parser::checkUrlEscaping(const Range &range) {
-    std::string result;
-    unsigned int length = range.size();
-    const char *value = range.begin();
-    for(unsigned int i = 0; i < length; ++i, ++value) {
-        if (static_cast<unsigned char>(*value) > 127) {
-            result.append(StringUtils::urlencode(Range(value, value + 1)));
-        }
-        else {
-            result.push_back(*value);
-        }
-    }
-    return result;
-}
-
-Range
-Parser::checkHost(const Range &range) {
-    Range host(range);
-    int length = range.size();
-    const char *end_pos = range.begin() + length - 1;
-    bool remove_port = false;
-    for (int i = 0; i < length; ++i) {
-        if (*(end_pos - i) == ':' && i + 1 != length) {
-            if (i == 2 && *(end_pos - 1) == '8' && *end_pos == '0') {
-                remove_port = true;
-            }
-            host = Range(range.begin(), end_pos - i);
-            break;
-        }
-    }
-     
-    for(const char *it = host.begin(); it != host.end(); ++it) {
-        if (*it == '/' || *it == ':') {
-            throw std::runtime_error("Incorrect host");
-        }
-    }
-    
-    if (remove_port) {
-        return host;
-    }
-    
-    return range;
-}
-
 class Request::AttachHandler : public MessageHandler {
     Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
@@ -908,7 +414,7 @@ class Request::AttachHandler : public MessageHandler {
         char** env = params.getPtr<char*>(2);
         
         std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
-        Parser::parse(request, env, enc.get());
+        Parser::parse(request->data_, env, enc.get());
 
         if (is && "POST" == request->getRequestMethod()) {
             request->data_->body_.resize(request->getContentLength());
@@ -923,7 +429,7 @@ class Request::AttachHandler : public MessageHandler {
             if (strncasecmp("multipart/form-data", type.c_str(), sizeof("multipart/form-data") - 1) == 0) {
                 Range body = createRange(request->data_->body_);
                 std::string boundary = Parser::getBoundary(createRange(type));
-                Parser::parseMultipart(request, body, boundary, enc.get());
+                Parser::parseMultipart(request->data_, body, boundary, enc.get());
             }
             else if (!request->data_->body_.empty()) {
                 StringUtils::parse(createRange(request->data_->body_), request->data_->args_, enc.get());
@@ -986,15 +492,6 @@ public:
     }
 };
 
-class ParserHandlerRegisterer {
-public:
-    ParserHandlerRegisterer() {
-        MessageProcessor::instance()->registerBack(Parser::NORMALIZE_HEADER_METHOD,
-            boost::shared_ptr<MessageHandler>(new NormalizeHeaderHandler()));
-    }
-};
-
 static Request::HandlerRegisterer reg_request_handlers;
-static ParserHandlerRegisterer reg_parser_handlers;
 
 } // namespace xscript
