@@ -19,7 +19,7 @@ public:
     
     friend class Parser;
     friend class Request;
-    friend class AttachHandler;
+    friend class Request::AttachHandler;
     
 private:
     mutable boost::mutex mutex_;
