@@ -211,7 +211,7 @@ luaRequestGetHTTPUser(lua_State *lua) throw () {
 
 extern "C" int
 luaRequestGetContentLength(lua_State *lua) throw () {
-    return call_method(lua, &Request::getUContentLength);
+    return call_method(lua, &Request::getContentLength);
 }
 
 

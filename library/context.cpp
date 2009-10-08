@@ -13,7 +13,6 @@
 #include "xscript/context.h"
 #include "xscript/logger.h"
 #include "xscript/policy.h"
-#include "xscript/request_data.h"
 #include "xscript/script.h"
 #include "xscript/server.h"
 #include "xscript/state.h"

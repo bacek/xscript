@@ -48,11 +48,11 @@ MessageHandler::MessageHandler()
 MessageHandler::~MessageHandler()
 {}
 
-int
+MessageHandler::Result
 MessageHandler::process(const MessageParams &params, MessageResultBase &result) {
     (void)params;
     (void)result;
-    return 0;
+    return CONTINUE;
 }
 
 MessageProcessor::MessageProcessor() {
@@ -98,7 +98,7 @@ MessageProcessor::process(const std::string &key,
         for(HandlerList::iterator hit = handler_list.begin();
             hit != handler_list.end();
             ++hit) {
-            if ((*hit)->process(params, result) < 0) {
+            if (MessageHandler::BREAK == (*hit)->process(params, result)) {
                 break;
             }
         }

@@ -413,7 +413,7 @@ writeFunc(void *ctx, const char *data, int len) {
     }
     Context *context = static_cast<Context*>(ctx);
     try {
-        return context->response()->write(data, len);
+        return context->response()->write(data, len, context->request());
     }
     catch (const std::exception &e) {
         log()->error("caught exception while writing result: %s %s",

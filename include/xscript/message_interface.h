@@ -116,10 +116,12 @@ private:
 
 class MessageHandler {
 public:
+    enum Result { BREAK = -1, CONTINUE = 0 };
+    
     MessageHandler();
     virtual ~MessageHandler();
 
-    virtual int process(const MessageParams &params, MessageResultBase &result);
+    virtual Result process(const MessageParams &params, MessageResultBase &result);
 };
 
 class MessageProcessor {

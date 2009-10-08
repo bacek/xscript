@@ -138,16 +138,16 @@ public:
 };
 
 class Script::ParseXScriptNodeHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result);
+    Result process(const MessageParams &params, MessageResultBase &result);
 };
 class Script::ReplaceXScriptNodeHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result);
+    Result process(const MessageParams &params, MessageResultBase &result);
 };
 class Script::PropertyHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result);
+    Result process(const MessageParams &params, MessageResultBase &result);
 };
 class Script::CachableHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result);
+    Result process(const MessageParams &params, MessageResultBase &result);
 };
 
 Script::ScriptData::ScriptData(Script *owner) :
@@ -739,7 +739,7 @@ Script::ScriptData::parseXScriptNode(const xmlNodePtr node) {
     MessageProcessor::instance()->process(PARSE_XSCRIPT_NODE_METHOD, params, result);
 }
 
-int
+MessageHandler::Result
 Script::ParseXScriptNodeHandler::process(const MessageParams &params,
                                          MessageResultBase &result) {
     (void)result;
@@ -774,7 +774,7 @@ Script::ParseXScriptNodeHandler::process(const MessageParams &params,
             continue;
         }
     }
-    return 0;
+    return CONTINUE;
 }
 
 void
@@ -796,14 +796,14 @@ Script::ScriptData::replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Cont
     MessageProcessor::instance()->process(REPLACE_XSCRIPT_NODE_METHOD, params, result);
 }
 
-int
+MessageHandler::Result
 Script::ReplaceXScriptNodeHandler::process(const MessageParams &params,
                                            MessageResultBase &result) {
     (void)result;
     xmlNodePtr newnode = params.get<xmlNodePtr>(2);
     xmlUnlinkNode(newnode);
     xmlFreeNode(newnode);
-    return 0;
+    return CONTINUE;
 }
 
 void
@@ -823,7 +823,7 @@ Script::ScriptData::property(const char *prop, const char *value) {
     MessageProcessor::instance()->process(PROPERTY_METHOD, params, result);
 }
 
-int
+MessageHandler::Result
 Script::PropertyHandler::process(const MessageParams &params,
                                  MessageResultBase &result) {
     (void)result;
@@ -885,7 +885,7 @@ Script::PropertyHandler::process(const MessageParams &params,
     else {
         throw std::runtime_error(std::string("invalid script property: ").append(prop));
     }
-    return 0;
+    return CONTINUE;
 }
 
 bool
@@ -906,7 +906,7 @@ Script::ScriptData::cachable(const Context *ctx, bool for_save) {
     return result.get();
 }
 
-int
+MessageHandler::Result
 Script::CachableHandler::process(const MessageParams &params,
                                  MessageResultBase &result) {
     Script* script = params.getPtr<Script>(0);
@@ -915,44 +915,44 @@ Script::CachableHandler::process(const MessageParams &params,
     
     if (script->data_->cacheTimeUndefined() || script->cacheTime() < DocCache::instance()->minimalCacheTime()) {
         result.set(false);
-        return 0;
+        return CONTINUE;
     }
     
     if (ctx->noCache()) {
         log()->debug("Cannot cache script. Context is not cachable");
         result.set(false);
-        return 0;
+        return CONTINUE;
     }
         
     if (script->binaryPage()) {
         log()->debug("Cannot cache script. Binary content");
         result.set(false);
-        return 0;
+        return CONTINUE;
     }
     
     if (ctx->noMainXsltPort()) {
         log()->debug("Cannot cache script. Alternate or noxslt port");
         result.set(false);
-        return 0;
+        return CONTINUE;
     }
     
     if (ctx->request()->getRequestMethod() != GET_METHOD) {
         log()->debug("Cannot cache script. Not GET method");
         result.set(false);
-        return 0;
+        return CONTINUE;
     }
     
     if (for_save) {
         if (ctx->xsltChanged(script)) {
             log()->debug("Cannot cache script. Main stylesheet changed");
             result.set(false);
-            return 0;
+            return CONTINUE;
         }
             
-        if (!ctx->response()->isStatusOK()) {
+        if (200 != ctx->response()->status()) {
             log()->debug("Cannot cache script. Status is not OK");
             result.set(false);
-            return 0;
+            return CONTINUE;
         }
         
         const CookieSet &cookies = ctx->response()->outCookies();       
@@ -960,14 +960,14 @@ Script::CachableHandler::process(const MessageParams &params,
             if (!Policy::allowCachingOutputCookie(it->name().c_str())) {
                 log()->debug("Cannot cache script. Output cookie %s is not allowed", it->name().c_str());
                 result.set(false);
-                return 0;
+                return CONTINUE;
             }
         }
     }
     
     log()->debug("Script is cachable");
     result.set(true);
-    return 0;
+    return CONTINUE;
 }
 
 Script::Script(const std::string &name) :

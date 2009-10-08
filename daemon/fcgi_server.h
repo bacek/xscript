@@ -13,7 +13,7 @@ namespace xscript {
 
 class Config;
 class Request;
-class ServerRequest;
+class ServerResponse;
 
 class FCGIServer : public Server, private boost::thread_group {
 public:
@@ -30,13 +30,13 @@ protected:
 private:
     class RequestAcceptor;
 
-    class RequestDetacher {
+    class ResponseDetacher {
     public:
-        explicit RequestDetacher(ServerRequest *req);
-        ~RequestDetacher();
+        explicit ResponseDetacher(ServerResponse *resp);
+        ~ResponseDetacher();
 
     private:
-        ServerRequest *req_;
+        ServerResponse *resp_;
     };
 
     int socket_;

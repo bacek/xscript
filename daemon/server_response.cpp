@@ -12,10 +12,9 @@
 #include "xscript/logger.h"
 #include "xscript/range.h"
 #include "xscript/xml_util.h"
+#include "xscript/writer.h"
 
-#include "internal/parser.h"
-
-#include "server_request.h"
+#include "server_response.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -23,49 +22,32 @@
 
 namespace xscript {
 
-ServerRequest::ServerRequest() : stream_(NULL) {
+ServerResponse::ServerResponse(std::ostream *stream) : stream_(stream) {
+    stream_->exceptions(std::ios::badbit);
 }
 
-ServerRequest::~ServerRequest() {
-}
-
-void
-ServerRequest::attach(std::istream *is, std::ostream *os, char *env[]) {
-    try {
-        stream_ = os;
-        DefaultRequestResponse::attach(is, env);
-        stream_->exceptions(std::ios::badbit);
-    }
-    catch(const BadRequestError &e) {
-        throw;
-    }
-    catch(const std::exception &e) {
-        throw BadRequestError(e.what());
-    }
-    catch(...) {
-        throw BadRequestError("Unknown error");
-    }
+ServerResponse::~ServerResponse() {
 }
 
 void
-ServerRequest::detach() {
-    DefaultRequestResponse::detach();
+ServerResponse::detach() {
+    Response::detach();
     (*stream_) << std::flush;
 }
 
 void
-ServerRequest::writeError(unsigned short status, const std::string &message) {
+ServerResponse::writeError(unsigned short status, const std::string &message) {
     (*stream_) << "<html><body><h1>" << status << " " << Parser::statusToString(status) << "<br><br>"
     << XmlUtils::escape(createRange(message)) << "</h1></body></html>";
 }
 
 void
-ServerRequest::writeBuffer(const char *buf, std::streamsize size) {
+ServerResponse::writeBuffer(const char *buf, std::streamsize size) {
     stream_->write(buf, size);
 }
 
 void
-ServerRequest::writeHeaders() {
+ServerResponse::writeHeaders() {
     const HeaderMap& headers = outHeaders();
     for (HeaderMap::const_iterator i = headers.begin(), end = headers.end(); i != end; ++i) {
         (*stream_) << i->first << ": " << i->second << "\r\n";
@@ -79,7 +61,7 @@ ServerRequest::writeHeaders() {
 }
 
 void
-ServerRequest::writeByWriter(const BinaryWriter *writer) {
+ServerResponse::writeByWriter(const BinaryWriter *writer) {
     writer->write(stream_);
 }
 

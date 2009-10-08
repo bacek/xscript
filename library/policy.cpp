@@ -254,15 +254,15 @@ Policy::getCacheCookie(const Context *ctx, const std::string &cookie) {
 namespace PolicyHandlers {
 
 class RealIPHeaderNameHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(&StringUtils::EMPTY_STRING);
-        return 0;
+        return CONTINUE;
     }
 };
 
 class GetPathBySchemeHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         const Request* request = params.getPtr<const Request>(0);
         const std::string& url = params.get<const std::string>(1);
 
@@ -283,12 +283,12 @@ class GetPathBySchemeHandler : public MessageHandler {
             result.set(url);
         }
         
-        return 0;
+        return CONTINUE;
     }
 };
 
 class GetRootBySchemeHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         const Request* request = params.getPtr<const Request>(0);
         const std::string& url = params.get<const std::string>(1);
 
@@ -307,68 +307,68 @@ class GetRootBySchemeHandler : public MessageHandler {
             result.set(StringUtils::EMPTY_STRING);
         }
         
-        return 0;
+        return CONTINUE;
     }
 };
 
 class GetKeyHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         const std::string& name = params.get<const std::string>(1);
         result.set(name);
-        return 0;
+        return CONTINUE;
     }
 };
 
 class GetOutputEncodingHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(UTF8_ENCODING);
-        return 0;
+        return CONTINUE;
     }
 };
 
 class IsSkippedProxyHeaderHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         const std::string& header = params.get<const std::string>(0);
         result.set(ProxyHeadersHelper::skipped(header.c_str()));
-        return 0;
+        return CONTINUE;
     }
 };
 
 class AllowCachingHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(true);
-        return 0;
+        return CONTINUE;
     }
 };
 
 class AllowCachingInputCookieHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(true);
-        return 0;
+        return CONTINUE;
     }
 };
 
 class AllowCachingOutputCookieHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(false);
-        return 0;
+        return CONTINUE;
     }
 };
 
 class IsErrorDocHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(false);
-        return 0;
+        return CONTINUE;
     }
 };
 
 class GetCacheCookieHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         const Context* ctx = params.getPtr<const Context>(0);
         const std::string& cookie = params.get<const std::string>(1);
         if (ctx->request()->hasCookie(cookie)) {
@@ -377,7 +377,7 @@ class GetCacheCookieHandler : public MessageHandler {
         else {
             result.set(StringUtils::EMPTY_STRING);
         }
-        return 0;
+        return CONTINUE;
     }
 };
 

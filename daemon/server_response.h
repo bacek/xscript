@@ -1,18 +1,16 @@
 #ifndef _XSCRIPT_SERVER_REQUEST_H_
 #define _XSCRIPT_SERVER_REQUEST_H_
 
-#include <boost/cstdint.hpp>
-
-#include "internal/default_request_response.h"
+#include "xscript/response.h"
 
 namespace xscript {
 
-class ServerRequest : public DefaultRequestResponse {
+class ServerResponse : public Response {
 public:
-    ServerRequest();
-    virtual ~ServerRequest();
-    virtual void attach(std::istream *is, std::ostream *os, char *env[]);
-    virtual void detach();
+    ServerResponse(std::ostream *stream);
+    virtual ~ServerResponse();
+
+    void detach();
 
 private:
     virtual void writeError(unsigned short status, const std::string &message);

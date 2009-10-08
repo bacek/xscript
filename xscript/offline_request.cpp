@@ -11,8 +11,10 @@
 #include "xscript/exception.h"
 #include "xscript/logger.h"
 #include "xscript/policy.h"
+#include "xscript/util.h"
+#include "xscript/writer.h"
 
-#include <internal/algorithm.h>
+#include "internal/algorithm.h"
 
 #include "offline_request.h"
 
@@ -23,25 +25,120 @@
 namespace xscript {
 
 OfflineRequest::OfflineRequest(const std::string &docroot) :
-    data_stream_(NULL), error_stream_(NULL), docroot_(docroot), need_output_(true) {
+    docroot_(docroot) {
 }
 
 OfflineRequest::~OfflineRequest() {
 }
 
-void
-OfflineRequest::writeBuffer(const char *buf, std::streamsize size) {
-    data_stream_->write(buf, size);
+const std::string&
+OfflineRequest::getDocumentRoot() const {
+    return docroot_;
 }
 
 void
-OfflineRequest::writeError(unsigned short status, const std::string &message) {
-    *error_stream_ << status << std::endl << message << std::endl;
+OfflineRequest::attach(const std::string &uri,
+                       const std::string &xml,
+                       const std::string &body,
+                       const std::vector<std::string> &headers,
+                       const std::vector<std::string> &vars) {
+    try {
+        xml_ = xml;
+        
+        if (uri.empty()) {
+            throw std::runtime_error("Cannot process empty uri");
+        }
+        
+        std::vector<std::string> env;
+        processVariables(vars, env);
+        processHeaders(headers, body.size(), env);
+    
+        std::string processed_url = Policy::getPathByScheme(this, uri);
+        
+        size_t query_pos = processed_url.rfind('?');
+        if (query_pos != std::string::npos) {
+            std::string query = processed_url.substr(query_pos + 1);
+            if (!query.empty()) {
+                env.push_back(std::string("QUERY_STRING=").append(query));
+            }
+            processed_url.erase(query_pos);
+        }
+        
+        size_t pos = processed_url.find("://");
+        if (std::string::npos == pos) {
+            if (processed_url[0] != '/') {
+                processed_url = docroot_ + "/" + processed_url;
+            }
+        }
+        else {
+            std::string protocol = processed_url.substr(0, pos);
+            if (strcasecmp(protocol.c_str(), "http") == 0) {
+            }
+            else if (strcasecmp(protocol.c_str(), "https") == 0) {
+                env.push_back("HTTPS=on");
+            }
+            else {
+                throw std::runtime_error("Protocol is not supported: " + protocol);
+            }
+            
+            pos += 3;
+            size_t base_pos = processed_url.find('/', pos);
+            
+            std::string full_host;
+            unsigned short port_int = 80;
+            if (std::string::npos == base_pos) {
+                processed_url.erase(0, pos);
+            }
+            else {
+                full_host = processed_url.substr(pos, base_pos - pos);
+        
+                size_t port_pos = full_host.find(':');
+                if (std::string::npos != port_pos) {
+                    std::string port = full_host.substr(port_pos + 1);
+                    try {
+                        port_int = boost::lexical_cast<unsigned short>(port);
+                    }
+                    catch(const boost::bad_lexical_cast &e) {
+                        throw std::runtime_error("Cannot parse port: " + port);
+                    }
+                }
+                
+                if (!full_host.empty()) {
+                    env.push_back(std::string("SERVER_NAME=").append(full_host));
+                    env.push_back(std::string("SERVER_PORT=").append(boost::lexical_cast<std::string>(port_int)));
+                    env.push_back(std::string("HTTP_HOST=").append(full_host));
+                }
+                processed_url.erase(0, base_pos);
+            }
+    
+            processed_url = docroot_ + "/" + processed_url;
+        }
+
+        processPathInfo(processed_url, env);
+        
+        char* env_vars[env.size() + 1];
+        env_vars[env.size()] = NULL;
+        for(unsigned int i = 0; i < env.size(); ++i) {
+            env_vars[i] = const_cast<char*>(env[i].c_str());
+        }
+    
+        std::stringstream stream(body);  
+        Request::attach(&stream, env_vars);
+    }
+    catch(const BadRequestError &e) {
+        throw;
+    }
+    catch(const std::exception &e) {
+        throw BadRequestError(e.what());
+    }
+    catch(...) {
+        throw BadRequestError("Unknown error");
+    }
 }
 
-void
-OfflineRequest::writeByWriter(const BinaryWriter *writer) {
-    writer->write(data_stream_);
+const std::string&
+OfflineRequest::xml() const {
+    return xml_;
 }
 
 void
@@ -150,125 +247,40 @@ OfflineRequest::processPathInfo(const std::string &path,
     }   
 }
 
-void
-OfflineRequest::attach(const std::string &uri,
-                       const std::string &xml,
-                       const std::string &body,
-                       const std::vector<std::string> &headers,
-                       const std::vector<std::string> &vars,
-                       std::ostream *data_stream,
-                       std::ostream *error_stream,
-                       bool need_output) {
-    try {
-        data_stream_ = data_stream; 
-        error_stream_ = error_stream;
-        xml_ = xml;
-        need_output_ = need_output;
-        
-        if (uri.empty()) {
-            throw std::runtime_error("Cannot process empty uri");
-        }
-        
-        std::vector<std::string> env;
-        processVariables(vars, env);
-        processHeaders(headers, body.size(), env);
-    
-        std::string processed_url = Policy::getPathByScheme(this, uri);
-        
-        size_t query_pos = processed_url.rfind('?');
-        if (query_pos != std::string::npos) {
-            std::string query = processed_url.substr(query_pos + 1);
-            if (!query.empty()) {
-                env.push_back(std::string("QUERY_STRING=").append(query));
-            }
-            processed_url.erase(query_pos);
-        }
-        
-        size_t pos = processed_url.find("://");
-        if (std::string::npos == pos) {
-            if (processed_url[0] != '/') {
-                processed_url = docroot_ + "/" + processed_url;
-            }
-        }
-        else {
-            std::string protocol = processed_url.substr(0, pos);
-            if (strcasecmp(protocol.c_str(), "http") == 0) {
-            }
-            else if (strcasecmp(protocol.c_str(), "https") == 0) {
-                env.push_back("HTTPS=on");
-            }
-            else {
-                throw std::runtime_error("Protocol is not supported: " + protocol);
-            }
-            
-            pos += 3;
-            size_t base_pos = processed_url.find('/', pos);
-            
-            std::string full_host;
-            unsigned short port_int = 80;
-            if (std::string::npos == base_pos) {
-                processed_url.erase(0, pos);
-            }
-            else {
-                full_host = processed_url.substr(pos, base_pos - pos);
-        
-                size_t port_pos = full_host.find(':');
-                if (std::string::npos != port_pos) {
-                    std::string port = full_host.substr(port_pos + 1);
-                    try {
-                        port_int = boost::lexical_cast<unsigned short>(port);
-                    }
-                    catch(const boost::bad_lexical_cast &e) {
-                        throw std::runtime_error("Cannot parse port: " + port);
-                    }
-                }
-                
-                if (!full_host.empty()) {
-                    env.push_back(std::string("SERVER_NAME=").append(full_host));
-                    env.push_back(std::string("SERVER_PORT=").append(boost::lexical_cast<std::string>(port_int)));
-                    env.push_back(std::string("HTTP_HOST=").append(full_host));
-                }
-                processed_url.erase(0, base_pos);
-            }
-    
-            processed_url = docroot_ + "/" + processed_url;
-        }
 
-        processPathInfo(processed_url, env);
-        
-        char* env_vars[env.size() + 1];
-        env_vars[env.size()] = NULL;
-        for(unsigned int i = 0; i < env.size(); ++i) {
-            env_vars[i] = const_cast<char*>(env[i].c_str());
-        }
-    
-        std::stringstream stream(body);  
-        DefaultRequestResponse::attach(&stream, env_vars);
-    }
-    catch(const BadRequestError &e) {
-        throw;
-    }
-    catch(const std::exception &e) {
-        throw BadRequestError(e.what());
-    }
-    catch(...) {
-        throw BadRequestError("Unknown error");
-    }
+OfflineResponse::OfflineResponse(std::ostream *data_stream,
+                                 std::ostream *error_stream,
+                                 bool need_output) :
+    data_stream_(data_stream),
+    error_stream_(error_stream),
+    need_output_(need_output) {
 }
 
-const std::string&
-OfflineRequest::getDocumentRoot() const {
-    return docroot_;
+OfflineResponse::~OfflineResponse() {
+}
+
+void
+OfflineResponse::writeBuffer(const char *buf, std::streamsize size) {
+    data_stream_->write(buf, size);
+}
+
+void
+OfflineResponse::writeError(unsigned short status, const std::string &message) {
+    *error_stream_ << status << std::endl << message << std::endl;
+}
+
+void
+OfflineResponse::writeByWriter(const BinaryWriter *writer) {
+    writer->write(data_stream_);
+}
+
+void
+OfflineResponse::writeHeaders() {
 }
 
 bool
-OfflineRequest::suppressBody() const {
-    return need_output_ ? DefaultRequestResponse::suppressBody() : true;
-}
-
-const std::string&
-OfflineRequest::xml() const {
-    return xml_;
+OfflineResponse::suppressBody(const Request *req) const {
+    return need_output_ ? Response::suppressBody(req) : true;
 }
 
 } // namespace xscript

@@ -9,13 +9,10 @@
 #include "xscript/context.h"
 #include "xscript/request.h"
 #include "xscript/request_data.h"
-#include "xscript/request_impl.h"
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
 #include "xscript/state.h"
 #include "xscript/xml_util.h"
-
-#include "internal/default_request_response.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -26,6 +23,9 @@ using namespace xscript;
 class LuaTest : public CppUnit::TestFixture {
 public:
 
+    void attachRequest(Request *request,
+                       const std::vector<std::string> &env);
+    
     void testPrint();
 
     void testState();
@@ -81,6 +81,18 @@ private:
 CPPUNIT_TEST_SUITE_REGISTRATION( LuaTest );
 
 #endif
+
+void
+LuaTest::attachRequest(Request *request,
+                       const std::vector<std::string> &env) {   
+    char* env_vars[env.size() + 1];
+    env_vars[env.size()] = NULL;
+    for(unsigned int i = 0; i < env.size(); ++i) {
+        env_vars[i] = const_cast<char*>(env[i].c_str());
+    }
+    std::stringstream stream(StringUtils::EMPTY_STRING);  
+    request->attach(&stream, env_vars);
+}
 
 void
 LuaTest::testPrint() {
@@ -170,63 +182,23 @@ LuaTest::testStateIs() {
     CPPUNIT_ASSERT(state->asBool("guard2_passed"));
 }
 
-
-class FakeRequestResponse : public DefaultRequestResponse {
-
-public:
-    void setCookie(const xscript::Cookie &cookie) {
-        cookies[cookie.name()] = cookie;
-    };
-    void setStatus(unsigned short s) {
-        status = s;
-    };
-    void setHeader(const std::string &name, const std::string &value) {
-        headers[name] = value;
-    };
-
-    std::streamsize write(const char *, std::streamsize size) {
-        return size;
-    };
-
-    void setIsSecure(bool is) {
-        is_secure = is;
-    }
-
-    bool isSecure() const {
-        return is_secure;
-    }
-
-    void setContentLength(std::streamsize length) {
-        content_length = length;
-    }
-
-    std::streamsize getContentLength() const {
-        return content_length;
-    }
-
-    unsigned short status;
-    std::string content_type;
-    std::streamsize content_length;
-    std::map<std::string, std::string> headers;
-    std::map<std::string, Cookie> cookies;
-
-    bool is_secure;
-};
-
 void
 LuaTest::testRequest() {
 
-    boost::shared_ptr<RequestResponse> request(new FakeRequestResponse());
-    FakeRequestResponse* fake_request = dynamic_cast<FakeRequestResponse*>(request.get());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());   
     boost::shared_ptr<State> state(new State());
 
-    fake_request->setArg("query", "QUERY");
-    fake_request->addInputHeader("Host", "fireball.yandex.ru");
-    fake_request->addInputCookie("SessionId", "2.12.85.0.6");
-    fake_request->setIsSecure(true);
-    fake_request->setContentLength(42);
-
-    boost::shared_ptr<RequestData> data(new RequestData(request, state));
+    std::vector<std::string> env;
+    env.push_back("QUERY_STRING=query=QUERY");
+    env.push_back("HTTP_HOST=fireball.yandex.ru");
+    env.push_back("HTTP_COOKIE=SessionId=2.12.85.0.6;");
+    env.push_back("HTTPS=on");
+    env.push_back("HTTP_CONTENT_LENGTH=42");
+    
+    attachRequest(request.get(), env);
+    
+    boost::shared_ptr<RequestData> data(new RequestData(request, response, state));
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-request.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
@@ -242,47 +214,65 @@ LuaTest::testRequest() {
 
 void
 LuaTest::testResponse() {
-
-    boost::shared_ptr<RequestResponse> request(new FakeRequestResponse());
-    FakeRequestResponse* fake_request = dynamic_cast<FakeRequestResponse*>(request.get());
+   
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());   
     boost::shared_ptr<State> state(new State());
 
-    fake_request->setArg("query", "QUERY");
-    fake_request->addInputHeader("Host", "fireball.yandex.ru");
-    fake_request->addInputCookie("SessionId", "2.12.85.0.6");
+    std::vector<std::string> env;
+    env.push_back("QUERY_STRING=query=QUERY");
+    env.push_back("HTTP_HOST=fireball.yandex.ru");
+    env.push_back("HTTP_COOKIE=SessionId=2.12.85.0.6;");
+    
+    attachRequest(request.get(), env);
 
-    boost::shared_ptr<RequestData> data(new RequestData(request, state));
+    boost::shared_ptr<RequestData> data(new RequestData(request, response, state));
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-response.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
 
-    CPPUNIT_ASSERT_EQUAL((unsigned short)404, fake_request->status);
-    CPPUNIT_ASSERT_EQUAL(std::string("Foo Bar"), fake_request->headers["X-Header"]);
-    CPPUNIT_ASSERT_EQUAL(std::string("application/binary"), fake_request->headers["Content-type"]);
+    CPPUNIT_ASSERT_EQUAL((unsigned short)404, response->status());
+    
+    const HeaderMap& headers = response->outHeaders();
+    HeaderMap::const_iterator it = headers.find("X-Header");
+    std::string header = it == headers.end() ? StringUtils::EMPTY_STRING : it->second;
+    CPPUNIT_ASSERT_EQUAL(std::string("Foo Bar"), header);
+    
+    it = headers.find("Content-type");
+    header = it == headers.end() ? StringUtils::EMPTY_STRING : it->second;
+    CPPUNIT_ASSERT_EQUAL(std::string("application/binary"), header);
 }
 
 void
 LuaTest::testResponseRedirect() {
 
-    boost::shared_ptr<RequestResponse> request(new FakeRequestResponse());
-    FakeRequestResponse* fake_request = dynamic_cast<FakeRequestResponse*>(request.get());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());   
     boost::shared_ptr<State> state(new State());
 
-    fake_request->setArg("query", "QUERY");
-    fake_request->addInputHeader("Host", "fireball.yandex.ru");
-    fake_request->addInputCookie("SessionId", "2.12.85.0.6");
+    std::vector<std::string> env;
+    env.push_back("QUERY_STRING=query=QUERY");
+    env.push_back("HTTP_HOST=fireball.yandex.ru");
+    env.push_back("HTTP_COOKIE=SessionId=2.12.85.0.6;");
+    
+    attachRequest(request.get(), env);
 
-    boost::shared_ptr<RequestData> data(new RequestData(request, state));
+    boost::shared_ptr<RequestData> data(new RequestData(request, response, state));
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-response-redirect.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
 
-    CPPUNIT_ASSERT_EQUAL((unsigned short)302, fake_request->status);
-    CPPUNIT_ASSERT_EQUAL(std::string("http://example.com/"), fake_request->headers["Location"]);
+    CPPUNIT_ASSERT_EQUAL((unsigned short)302, response->status());
+    
+    const HeaderMap& headers = response->outHeaders();
+    HeaderMap::const_iterator it = headers.find("Location");
+    std::string header = it == headers.end() ? StringUtils::EMPTY_STRING : it->second;    
+    
+    CPPUNIT_ASSERT_EQUAL(std::string("http://example.com/"), header);
 
 }
 
@@ -305,11 +295,10 @@ LuaTest::testEncode() {
 void
 LuaTest::testCookie() {
 
-    boost::shared_ptr<RequestResponse> request(new FakeRequestResponse());
-    FakeRequestResponse* fake_request = dynamic_cast<FakeRequestResponse*>(request.get());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());   
     boost::shared_ptr<State> state(new State());
-
-    boost::shared_ptr<RequestData> data(new RequestData(request, state));
+    boost::shared_ptr<RequestData> data(new RequestData(request, response, state));
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-cookie.xml");
     boost::shared_ptr<Context> ctx(new Context(script, data));
     ContextStopper ctx_stopper(ctx);
@@ -317,19 +306,25 @@ LuaTest::testCookie() {
     XmlDocHelper doc(script->invoke(ctx));
 
     CPPUNIT_ASSERT(NULL != doc.get());
-    CPPUNIT_ASSERT(fake_request->cookies.end() != fake_request->cookies.find("foo"));
-    Cookie c = fake_request->cookies["foo"];
-    CPPUNIT_ASSERT_EQUAL(std::string("/some/path"), c.path());
-    CPPUNIT_ASSERT_EQUAL(std::string(".example.com"), c.domain());
-    CPPUNIT_ASSERT_EQUAL(time_t(123456789), c.expires());
+    
+    const CookieSet& cookies = response->outCookies();
+    Cookie cookie("foo", "");
+    CookieSet::const_iterator cookie_it = cookies.find(cookie);
+    
+    CPPUNIT_ASSERT(cookies.end() != cookie_it);
+    CPPUNIT_ASSERT_EQUAL(std::string("/some/path"), cookie_it->path());
+    CPPUNIT_ASSERT_EQUAL(std::string(".example.com"), cookie_it->domain());
+    CPPUNIT_ASSERT_EQUAL(time_t(123456789), cookie_it->expires());
 
     std::string out = XmlUtils::xpathValue(doc.get(), "/page/lua", "Bye");
     CPPUNIT_ASSERT(out.find(".example.com") != std::string::npos);
     CPPUNIT_ASSERT(out.find( "/some/path") != std::string::npos);
     CPPUNIT_ASSERT(out.find( "123456789") != std::string::npos);
 
-    Cookie c2 = fake_request->cookies["baz"];
-    CPPUNIT_ASSERT_EQUAL(time_t(Cookie::MAX_LIVE_TIME), c2.expires());
+    Cookie cookie2("baz", "");
+    cookie_it = cookies.find(cookie2);
+    CPPUNIT_ASSERT(cookies.end() != cookie_it);
+    CPPUNIT_ASSERT_EQUAL(time_t(Cookie::MAX_LIVE_TIME), cookie_it->expires());
 }
 
 

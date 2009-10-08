@@ -23,7 +23,7 @@ namespace xscript {
 namespace DevelopmentModeHandlers {
 
 class ProcessErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         const std::string& message = params.get<const std::string>(0);
         log()->error("%s", message.c_str());
@@ -32,37 +32,37 @@ class ProcessErrorHandler : public MessageHandler {
 };
 
 class SendErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         Response* response = params.getPtr<Response>(0);
         unsigned short status = params.get<unsigned short>(1);
         const std::string& message = params.get<const std::string>(2);
         response->sendError(status, message);
-        return -1;
+        return BREAK;
     }
 };
 
 class IsProductionHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(false);
-        return -1;
+        return BREAK;
     }
 };
 
 class AssignBlockErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         Context* ctx = params.getPtr<Context>(0);
         const Block* block = params.getPtr<const Block>(1);
         const std::string& error = params.get<const std::string>(2);
         ctx->assignRuntimeError(block, error);
-        return -1;
+        return BREAK;
     }
 };
 
 class ProcessPerblockXsltErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         const Context* ctx = params.getPtr<const Context>(0);
         const Block* block = params.getPtr<const Block>(1);
@@ -76,12 +76,12 @@ class ProcessPerblockXsltErrorHandler : public MessageHandler {
                 throw InvokeError(error, "xslt", block->xsltName());
             }
         }
-        return -1;
+        return BREAK;
     }
 };
 
 class ProcessScriptErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         
         const Context* ctx = params.getPtr<const Context>(0);
@@ -101,12 +101,12 @@ class ProcessScriptErrorHandler : public MessageHandler {
             throw InvokeError(res.c_str());
         }
         
-        return -1;
+        return BREAK;
     }
 };
 
 class ProcessMainXsltErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         
         const Context* ctx = params.getPtr<const Context>(0);
@@ -128,12 +128,12 @@ class ProcessMainXsltErrorHandler : public MessageHandler {
             }
         }
         
-        return -1;
+        return BREAK;
     }
 };
 
 class ProcessXmlErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         if (XmlUtils::hasXMLError()) {
             std::string error = XmlUtils::getXMLError();
@@ -145,12 +145,12 @@ class ProcessXmlErrorHandler : public MessageHandler {
             }
         }
         
-        return -1;
+        return BREAK;
     }
 };
 
 class CollectErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         const InvokeError& error = params.get<const InvokeError>(0);
         InvokeError& full_error = params.get<InvokeError>(1);
@@ -162,21 +162,21 @@ class CollectErrorHandler : public MessageHandler {
             full_error.add(it->first, it->second);        
         } 
  
-        return -1;
+        return BREAK;
     }
 };
 
 class CheckDevelopmentVariableHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         const Request* request = params.getPtr<const Request>(0);
         const std::string& var = params.get<const std::string>(1);
         result.set(VirtualHostData::instance()->checkVariable(request, var));
-        return -1;
+        return BREAK;
     }
 };
 
 class CheckRemoteTimeoutHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         RemoteTaggedBlock* block = params.getPtr<RemoteTaggedBlock>(0);
         if (block->retryCount() == 0 &&
@@ -185,7 +185,7 @@ class CheckRemoteTimeoutHandler : public MessageHandler {
             
             throw std::runtime_error("remote timeout setup is prohibited for non-tagged blocks or when tag cache time is nil");
         }
-        return -1;
+        return BREAK;
     }
 };
 

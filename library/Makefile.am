@@ -5,7 +5,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	extension.cpp extension_list.cpp header_param.cpp http_user_param.cpp \
 	loader.cpp logger.cpp object.cpp param.cpp param_factory.cpp \
 	query_arg_param.cpp request.cpp request_param.cpp request_data.cpp \
-	request_data_param.cpp response.cpp request_impl.cpp parser.cpp request_response.cpp \
+	request_data_param.cpp response.cpp \
 	sanitizer.cpp script.cpp script_factory.cpp state.cpp policy.cpp \
 	state_arg_param.cpp state_impl.cpp state_param.cpp state_value.cpp \
 	stylesheet.cpp stylesheet_factory.cpp tag.cpp \
@@ -27,7 +27,6 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	dummy_average_counter.cpp dummy_simple_counter.cpp \
 	dummy_cache_counter.cpp dummy_cache_usage_counter.cpp \
 	dummy_tagged_cache_usage_counter.cpp \
-	default_request_response.cpp \
 	validator_factory.cpp validator.cpp validator_exception.cpp \
 	string_utils.cpp refresher.cpp vhost_arg_param.cpp guard_checker.cpp \
 	page_random_param.cpp message_interface.cpp message_errors.cpp exception.cpp

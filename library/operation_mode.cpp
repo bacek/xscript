@@ -195,34 +195,34 @@ OperationMode::checkRemoteTimeout(RemoteTaggedBlock *block) {
 namespace OperationModeHandlers {
 
 class ProcessErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         const std::string& message = params.get<const std::string>(0);
         log()->warn("%s", message.c_str());
-        return 0;
+        return CONTINUE;
     }
 };
 
 class SendErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         Response* response = params.getPtr<Response>(0);
         unsigned short status = params.get<unsigned short>(1);
         response->sendError(status, StringUtils::EMPTY_STRING);
-        return 0;
+        return CONTINUE;
     }
 };
 
 class IsProductionHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(true);
-        return 0;
+        return CONTINUE;
     }
 };
 
 class ProcessPerblockXsltErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         const Block* block = params.getPtr<const Block>(1);
         if (XmlUtils::hasXMLError()) {
@@ -231,12 +231,12 @@ class ProcessPerblockXsltErrorHandler : public MessageHandler {
                 ", method: " + block->method() + ". Perblock stylesheet: " + block->xsltName();
             XmlUtils::printXMLError(postfix);
         }
-        return 0;
+        return CONTINUE;
     }
 };
 
 class ProcessMainXsltErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         const Script* script = params.getPtr<const Script>(1);
         const Stylesheet* style = params.getPtr<const Stylesheet>(2);
@@ -244,24 +244,24 @@ class ProcessMainXsltErrorHandler : public MessageHandler {
             std::string postfix = "Script: " + script->name() + ". Main stylesheet: " + style->name();
             XmlUtils::printXMLError(postfix);
         }
-        return 0;
+        return CONTINUE;
     }
 };
 
 class ProcessXmlErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         if (XmlUtils::hasXMLError()) {
             const std::string& filename = params.get<const std::string>(0);
             std::string postfix = "File: " + filename;
             XmlUtils::printXMLError(postfix);
         }
-        return 0;
+        return CONTINUE;
     }
 };
 
 class CollectErrorHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         const InvokeError& error = params.get<const InvokeError>(0);
         InvokeError& full_error = params.get<InvokeError>(1);
@@ -277,20 +277,20 @@ class CollectErrorHandler : public MessageHandler {
         }
         
         log()->error("%s", stream.str().c_str());  
-        return 0;
+        return CONTINUE;
     }
 };
 
 class CheckDevelopmentVariableHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)params;
         result.set(false);
-        return 0;
+        return CONTINUE;
     }
 };
 
 class CheckRemoteTimeoutHandler : public MessageHandler {
-    int process(const MessageParams &params, MessageResultBase &result) {
+    Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
         RemoteTaggedBlock* block = params.getPtr<RemoteTaggedBlock>(0);
         if (block->retryCount() == 0 &&
@@ -301,7 +301,7 @@ class CheckRemoteTimeoutHandler : public MessageHandler {
             log()->warn("remote timeout setup is prohibited for non-tagged blocks or when tag cache time is nil: %s",
                     block->owner()->name().c_str());
         }
-        return 0;
+        return CONTINUE;
     }
 };
 

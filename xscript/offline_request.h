@@ -7,37 +7,26 @@
 #include <libxml/xpath.h>
 #include <boost/thread/mutex.hpp>
 
-#include "xscript/functors.h"
-#include "xscript/request_impl.h"
-#include "xscript/util.h"
-
-#include "internal/default_request_response.h"
+#include "xscript/request.h"
+#include "xscript/response.h"
 
 namespace xscript {
 
-class OfflineRequest : public DefaultRequestResponse {
+class OfflineRequest : public Request {
 public:
     OfflineRequest(const std::string &docroot);
     virtual ~OfflineRequest();
 
-    virtual void attach(const std::string &uri,
-                        const std::string &xml,
-                        const std::string &body,
-                        const std::vector<std::string> &headers,
-                        const std::vector<std::string> &vars,
-                        std::ostream *data_stream,
-                        std::ostream *error_stream,
-                        bool need_output);
+    void attach(const std::string &uri,
+                const std::string &xml,
+                const std::string &body,
+                const std::vector<std::string> &headers,
+                const std::vector<std::string> &vars);
     
     virtual const std::string& getDocumentRoot() const;
-    virtual bool suppressBody() const;
     const std::string& xml() const;
 
-private:
-    virtual void writeBuffer(const char *buf, std::streamsize size);
-    virtual void writeError(unsigned short status, const std::string &message);
-    virtual void writeByWriter(const BinaryWriter *writer);
-    
+private:   
     void processHeaders(const std::vector<std::string> &headers,
                         unsigned long body_size,
                         std::vector<std::string> &env);
@@ -48,10 +37,27 @@ private:
                          std::vector<std::string> &env);
     
 private:
-    std::ostream *data_stream_;
-    std::ostream *error_stream_;
     std::string docroot_;
     std::string xml_;
+};
+
+class OfflineResponse : public Response {
+public:
+    OfflineResponse(std::ostream *data_stream,
+                    std::ostream *error_stream,
+                    bool need_output);
+    virtual ~OfflineResponse();
+
+private:
+    virtual bool suppressBody(const Request *req) const;
+    virtual void writeBuffer(const char *buf, std::streamsize size);
+    virtual void writeError(unsigned short status, const std::string &message);
+    virtual void writeByWriter(const BinaryWriter *writer);
+    virtual void writeHeaders();
+    
+private:
+    std::ostream *data_stream_;
+    std::ostream *error_stream_;
     bool need_output_;
 };
 

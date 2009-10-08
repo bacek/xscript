@@ -130,7 +130,9 @@ ProcServer::run() {
         headers.push_back(header);
     }
 
-    boost::shared_ptr<RequestResponse> request(new OfflineRequest(root_));
+    boost::shared_ptr<Request> request(new OfflineRequest(root_));
+    boost::shared_ptr<Response> response(new OfflineResponse(&std::cout, &std::cerr, need_output_));
+    
     OfflineRequest* offline_request = dynamic_cast<OfflineRequest*>(request.get());
 
     try {        
@@ -138,18 +140,15 @@ ProcServer::run() {
                                 StringUtils::EMPTY_STRING,
                                 StringUtils::EMPTY_STRING,
                                 headers,
-                                vars,
-                                &std::cout,
-                                &std::cerr,
-                                need_output_);
+                                vars);
         
         boost::shared_ptr<RequestData> data(
-            new RequestData(request, boost::shared_ptr<State>(new State())));
+            new RequestData(request, response, boost::shared_ptr<State>(new State())));
 
         handleRequest(data);
     }
     catch (const BadRequestError &e) {
-        OperationMode::sendError(offline_request, 400, e.what());
+        OperationMode::sendError(response.get(), 400, e.what());
     }
     catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;

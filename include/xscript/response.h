@@ -7,7 +7,31 @@
 
 #include <xscript/request.h>
 
+#if defined(HAVE_STLPORT_HASHMAP)
+#include <hash_set>
+#include <hash_map>
+#elif defined(HAVE_EXT_HASH_MAP) || defined(HAVE_GNUCXX_HASHMAP)
+#include <ext/hash_set>
+#include <ext/hash_map>
+#endif
+
 namespace xscript {
+
+#if defined(HAVE_GNUCXX_HASHMAP)
+
+typedef __gnu_cxx::hash_map<std::string, std::string, StringCIHash, StringCIEqual> HeaderMap;
+
+#elif defined(HAVE_EXT_HASH_MAP) || defined(HAVE_STLPORT_HASHMAP)
+
+typedef std::hash_map<std::string, std::string, StringCIHash, StringCIEqual> HeaderMap;
+
+#else
+
+typedef std::map<std::string, std::string, StringCILess> HeaderMap;
+
+#endif
+
+typedef std::set<Cookie, CookieLess> CookieSet;
 
 class BinaryWriter;
 class Cookie;
@@ -17,16 +41,16 @@ public:
     Response();
     virtual ~Response();
 
-    virtual void setCookie(const Cookie &cookie) = 0;
-    virtual void setStatus(unsigned short status) = 0;
-    virtual void sendError(unsigned short status, const std::string &message) = 0;
-    virtual void setHeader(const std::string &name, const std::string &value) = 0;
+    void setCookie(const Cookie &cookie);
+    void setStatus(unsigned short status);
+    void sendError(unsigned short status, const std::string &message);
+    void setHeader(const std::string &name, const std::string &value);
 
-    virtual std::streamsize write(const char *buf, std::streamsize size) = 0;
-    virtual std::streamsize write(std::auto_ptr<BinaryWriter> buf) = 0;
-    virtual std::string outputHeader(const std::string &name) const = 0;
+    std::streamsize write(const char *buf, std::streamsize size, Request *request);
+    std::streamsize write(std::auto_ptr<BinaryWriter> buf);
+    std::string outputHeader(const std::string &name) const;
 
-    virtual void sendHeaders() = 0;
+    void sendHeaders();
 
     void redirectBack(const Request *req);
     void redirectToPath(const std::string &path);
@@ -34,10 +58,24 @@ public:
     void setContentType(const std::string &type);
     void setContentEncoding(const std::string &encoding);
 
-    virtual bool isBinary() const = 0;
-    virtual bool isStatusOK() const = 0; 
-    virtual const HeaderMap& outHeaders() const = 0;
-    virtual const CookieSet& outCookies() const = 0;
+    bool isBinary() const;
+    unsigned short status() const; 
+    const HeaderMap& outHeaders() const;
+    const CookieSet& outCookies() const;
+    
+    void detach();
+    
+protected:
+    virtual bool suppressBody(const Request *req) const;
+    virtual void writeBuffer(const char *buf, std::streamsize size);
+    virtual void writeByWriter(const BinaryWriter *writer);
+    virtual void writeError(unsigned short status, const std::string &message);
+    virtual void writeHeaders();
+    
+private:
+    class ResponseData;
+    friend class ResponseData;
+    ResponseData *data_;
 };
 
 } // namespace xscript

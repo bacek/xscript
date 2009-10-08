@@ -3,16 +3,17 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "xscript/request_response.h"
-
 namespace xscript {
 
+class Request;
+class Response;
 class State;
 
 class RequestData {
 public:
     RequestData();
-    RequestData(const boost::shared_ptr<RequestResponse> &req,
+    RequestData(const boost::shared_ptr<Request> &req,
+                const boost::shared_ptr<Response> &resp,
                 const boost::shared_ptr<State> &state);
     virtual ~RequestData();
 
@@ -21,15 +22,16 @@ public:
     }
 
     inline Request* request() const {
-        return request_response_.get();
+        return request_.get();
     }
 
     inline Response* response() const {
-        return request_response_.get();
+        return response_.get();
     }
 
 private:
-    boost::shared_ptr<RequestResponse> request_response_;
+    boost::shared_ptr<Request> request_;
+    boost::shared_ptr<Response> response_;
     boost::shared_ptr<State> state_;
 };
 

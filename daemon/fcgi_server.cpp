@@ -25,7 +25,7 @@
 #include <libxslt/xsltutils.h>
 
 #include "fcgi_server.h"
-#include "server_request.h"
+#include "server_response.h"
 
 #include "xscript/authorizer.h"
 #include "xscript/config.h"
@@ -139,20 +139,21 @@ FCGIServer::handle() {
                 std::istream is(&inbuf);
                 std::ostream os(&outbuf);
 
-                boost::shared_ptr<RequestResponse> request(new ServerRequest());
-                ServerRequest *server_request = dynamic_cast<ServerRequest*>(request.get());
-                RequestDetacher request_detacher(server_request);
+                boost::shared_ptr<Request> request(new Request());
+                boost::shared_ptr<Response> response(new ServerResponse(&os));
+                ServerResponse *server_response = dynamic_cast<ServerResponse*>(response.get());
+                ResponseDetacher response_detacher(server_response);
 
                 try {
-                    server_request->attach(&is, &os, req.envp);
+                    request->attach(&is, req.envp);
 
                     boost::shared_ptr<RequestData> data(
-                        new RequestData(request, boost::shared_ptr<State>(new State())));
+                        new RequestData(request, response, boost::shared_ptr<State>(new State())));
 
                     handleRequest(data);
                 }
                 catch (const BadRequestError &e) {
-                    OperationMode::sendError(server_request, 400, e.what());
+                    OperationMode::sendError(response.get(), 400, e.what());
                     throw;
                 }
             }
@@ -193,13 +194,12 @@ FCGIServer::RequestAcceptor::~RequestAcceptor() {
     }
 }
 
-
-FCGIServer::RequestDetacher::RequestDetacher(ServerRequest *req) : req_(req) {
-    assert(NULL != req);
+FCGIServer::ResponseDetacher::ResponseDetacher(ServerResponse *resp) : resp_(resp) {
+    assert(NULL != resp);
 }
 
-FCGIServer::RequestDetacher::~RequestDetacher() {
-    req_->detach();
+FCGIServer::ResponseDetacher::~ResponseDetacher() {
+    resp_->detach();
 }
 
 

@@ -1,8 +1,9 @@
 #ifndef _XSCRIPT_ALGORITHM_H_
 #define _XSCRIPT_ALGORITHM_H_
 
-#include <cctype>
 #include <algorithm>
+#include <cctype>
+#include <string>
 
 namespace xscript {
 

@@ -16,6 +16,8 @@
 #include <libxml/tree.h>
 
 #include "xscript/invoke_result.h"
+#include "xscript/request.h"
+#include "xscript/response.h"
 #include "xscript/request_data.h"
 #include "xscript/util.h"
 
@@ -24,8 +26,6 @@ namespace xscript {
 class AuthContext;
 class Block;
 class DocumentWriter;
-class Request;
-class Response;
 class Script;
 class State;
 class Stylesheet;
