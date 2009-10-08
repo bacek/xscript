@@ -1,3 +1,9 @@
+xscript (5.69-0) unstable; urgency=low
+
+  * version up
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 08 Oct 2009 15:22:28 +0400
+
 xscript (5.68-26) unstable; urgency=low
 
   * request and response refactoring
