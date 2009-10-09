@@ -23,7 +23,6 @@ public:
                 const std::vector<std::string> &headers,
                 const std::vector<std::string> &vars);
     
-    virtual const std::string& getDocumentRoot() const;
     const std::string& xml() const;
 
 private:   

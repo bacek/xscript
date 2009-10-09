@@ -31,11 +31,6 @@ OfflineRequest::OfflineRequest(const std::string &docroot) :
 OfflineRequest::~OfflineRequest() {
 }
 
-const std::string&
-OfflineRequest::getDocumentRoot() const {
-    return docroot_;
-}
-
 void
 OfflineRequest::attach(const std::string &uri,
                        const std::string &xml,
