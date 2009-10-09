@@ -115,20 +115,26 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx) {
     catch (const std::exception &e) {
         log()->error("caught exception while fetching cached doc: %s", e.what());
     }
+   
+    if (have_cached_doc && Tag::UNDEFINED_TIME == tag.expire_time) {
+        tag.modified = true;
+        boost::any a(tag);
+        XmlDocHelper newdoc = call(ctx, a);
+        
+        if (NULL != newdoc.get()) {
+            return processResponse(ctx, newdoc, a);
+        }
+
+        tag = boost::any_cast<Tag>(a);
+        if (tag.modified) {
+            have_cached_doc = false;
+        }
+    }
 
     if (!have_cached_doc) {
         return Block::invokeInternal(ctx);
     }
     
-    if (Tag::UNDEFINED_TIME == tag.expire_time) {
-        tag.modified = true;
-        boost::any a(tag);
-        XmlDocHelper newdoc = call(ctx, a);
-        if (NULL != newdoc.get()) {
-            return processResponse(ctx, newdoc, a);
-        }
-    }
-
     evalXPath(ctx.get(), doc);
     return InvokeResult(doc, InvokeResult::SUCCESS);
 }
