@@ -129,6 +129,9 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
     PROFILER(log(), "getHttp: " + url);
 
     if (strncasecmp(url.c_str(), "file://", sizeof("file://") - 1) == 0) {
+        log()->error("Loading file in Http block is deprecated. Use File block. Url: %s. Owner: %s",
+                url.c_str(), owner()->name().c_str());
+        
         namespace fs = boost::filesystem;
         url.erase(0, sizeof("file://") - 1);
         fs::path file_path(url);

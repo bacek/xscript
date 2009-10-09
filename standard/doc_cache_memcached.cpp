@@ -47,9 +47,10 @@ protected:
 
 private:
     struct memcache *mc_;
+    boost::uint32_t max_size_;
 };
 
-DocCacheMemcached::DocCacheMemcached()
+DocCacheMemcached::DocCacheMemcached() : max_size_(0)
 {
     mc_ = mc_new();
     if (!mc_) 
@@ -71,6 +72,9 @@ DocCacheMemcached::init(const Config *config) {
     
     std::vector<std::string> names;
     config->subKeys(std::string("/xscript/tagged-cache-memcached/server"), names);
+    
+    max_size_ = config->as<boost::uint32_t>("/xscript/tagged-cache-memcached/max-size", 1024*1024);
+    
     if (names.empty()) {
         throw std::runtime_error("No memcached servers specified in config");
     }
@@ -132,6 +136,12 @@ DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHe
 
     xmlSaveFormatFileTo(buf, doc.get(), "UTF-8", 0);
 
+    boost::uint32_t size = val.length();
+    if (size > max_size_) {
+        log()->info("object size %d exceeds limit %d", size, max_size_);
+        return false;
+    }
+    
     char * mc_key2 = strdup(mc_key.c_str());
     mc_set(mc_, mc_key2, mc_key.length(), val.c_str(), val.length(), tag.expire_time, 0);
     free(mc_key2);
