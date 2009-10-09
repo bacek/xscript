@@ -73,7 +73,7 @@ DocCacheMemcached::init(const Config *config) {
     std::vector<std::string> names;
     config->subKeys(std::string("/xscript/tagged-cache-memcached/server"), names);
     
-    max_size_ = config->as<boost::uint32_t>("/xscript/tagged-cache-memcached/max-size", 1024*1024);
+    max_size_ = config->as<boost::uint32_t>("/xscript/tagged-cache-memcached/max-size", 1048497);
     
     if (names.empty()) {
         throw std::runtime_error("No memcached servers specified in config");
