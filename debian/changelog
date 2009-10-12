@@ -1,3 +1,10 @@
+xscript (5.69-1) unstable; urgency=low
+
+  * max object size added to memcached
+  * docroot scheme fixed in xscript-proc
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 12 Oct 2009 11:29:58 +0400
+
 xscript (5.69-0) unstable; urgency=low
 
   * version up
