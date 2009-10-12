@@ -20,6 +20,7 @@
 #include "xscript/context.h"
 #include "xscript/http_helper.h"
 #include "xscript/logger.h"
+#include "xscript/operation_mode.h"
 #include "xscript/param.h"
 #include "xscript/policy.h"
 #include "xscript/profiler.h"
@@ -129,8 +130,11 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
     PROFILER(log(), "getHttp: " + url);
 
     if (strncasecmp(url.c_str(), "file://", sizeof("file://") - 1) == 0) {
-        log()->error("Loading file in Http block is deprecated. Use File block. Url: %s. Owner: %s",
-                url.c_str(), owner()->name().c_str());
+        std::stringstream ss;
+        ss << "Loading file in Http block is deprecated. Use File block. Url: "
+           << url << ". Owner: " << owner()->name();
+        
+        OperationMode::processError(ss.str());
         
         namespace fs = boost::filesystem;
         url.erase(0, sizeof("file://") - 1);
