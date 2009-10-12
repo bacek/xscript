@@ -48,7 +48,18 @@ OfflineRequest::attach(const std::string &uri,
         processVariables(vars, env);
         processHeaders(headers, body.size(), env);
     
-        std::string processed_url = Policy::getPathByScheme(this, uri);
+        const char root_scheme[] = "docroot://";
+        std::string processed_url;
+        if (strncasecmp(uri.c_str(), root_scheme, sizeof(root_scheme) - 1) == 0) {
+            std::string::size_type pos = sizeof(root_scheme) - 1;
+            if ('/' != uri[pos]) {
+                --pos;
+            }
+            processed_url = docroot_ + (uri.substr(pos));
+        }
+        else {
+            processed_url = Policy::getPathByScheme(this, uri);
+        }
         
         size_t query_pos = processed_url.rfind('?');
         if (query_pos != std::string::npos) {
