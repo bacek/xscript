@@ -128,7 +128,8 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
     Context::resetTimer();
     XmlUtils::resetReporter();
     const std::string &script_name = request_data->request()->getScriptFilename();
-    PROFILER(log(), "overall time for " + script_name);
+
+    PROFILER_FORCE(log(), "overall time for " + script_name);
     log()->info("requested file: %s", script_name.c_str());
     
     try {

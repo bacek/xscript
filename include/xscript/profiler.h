@@ -69,7 +69,10 @@ private:
     if ((log)->level() >= xscript::Logger::LEVEL_INFO) \
         __p.reset(new xscript::Profiler((log), (info)));
 
+#define PROFILER_FORCE(log,info) \
+    std::auto_ptr<xscript::Profiler> __p(new xscript::Profiler((log), (info)))
+
 #define PROFILER_RELEASE() \
-    __p->release()
+    NULL == __p.get() ? 0 : __p->release()
 
 #endif // _XSCRIPT_PROFILER_H_
