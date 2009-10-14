@@ -49,14 +49,14 @@ public:
      */
     Profiler(Logger* log, const std::string& info);
 
+    boost::uint64_t release();
     /**
      * Destructor which output profiling info into log.
      */
     ~Profiler();
 private:
-    Logger *log_;
-    std::string info_;
-    timeval startTime_;
+    struct ProfilerData;
+    ProfilerData *data_;
 };
 
 } // namespace xscript
@@ -68,5 +68,8 @@ private:
     std::auto_ptr<xscript::Profiler> __p; \
     if ((log)->level() >= xscript::Logger::LEVEL_INFO) \
         __p.reset(new xscript::Profiler((log), (info)));
+
+#define PROFILER_RELEASE() \
+    __p->release()
 
 #endif // _XSCRIPT_PROFILER_H_

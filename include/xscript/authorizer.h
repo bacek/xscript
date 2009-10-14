@@ -14,6 +14,10 @@ public:
     AuthContext();
     virtual ~AuthContext();
     virtual bool authorized() const;
+    const std::string& status() const;
+    
+    static const std::string STATUS_METHOD;
+    static const std::string NOAUTH_STATUS;
 };
 
 class Authorizer : public virtual Component<Authorizer> {

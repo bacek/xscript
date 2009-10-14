@@ -146,16 +146,16 @@ FCGIServer::handle() {
 
                 try {
                     request->attach(&is, req.envp);
-
-                    boost::shared_ptr<RequestData> data(
-                        new RequestData(request, response, boost::shared_ptr<State>(new State())));
-
-                    handleRequest(data);
                 }
                 catch (const BadRequestError &e) {
                     OperationMode::sendError(response.get(), 400, e.what());
                     throw;
                 }
+                    
+                boost::shared_ptr<RequestData> data(
+                    new RequestData(request, response, boost::shared_ptr<State>(new State())));
+
+                handleRequest(data);
             }
             catch (const std::exception &e) {
                 log()->error("caught exception while handling request: %s", e.what());

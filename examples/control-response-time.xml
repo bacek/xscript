@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet href="control-response-time.xsl" type="text/xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript">
+    <x:control>
+        <method>response-time</method>
+    </x:control>
+</page>

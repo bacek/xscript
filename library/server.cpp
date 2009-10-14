@@ -5,10 +5,11 @@
 #include <sstream>
 #include <stdexcept>
 
-#include <boost/ref.hpp>
 #include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <boost/current_function.hpp>
+#include <boost/function.hpp>
+#include <boost/ref.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
@@ -22,8 +23,10 @@
 #include <libxslt/xsltutils.h>
 
 #include "xscript/authorizer.h"
+#include "xscript/block.h"
 #include "xscript/config.h"
 #include "xscript/context.h"
+#include "xscript/control_extension.h"
 #include "xscript/doc_cache.h"
 #include "xscript/logger.h"
 #include "xscript/operation_mode.h"
@@ -31,6 +34,7 @@
 #include "xscript/profiler.h"
 #include "xscript/request_data.h"
 #include "xscript/response.h"
+#include "xscript/response_time_counter.h"
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
 #include "xscript/server.h"
@@ -43,6 +47,9 @@
 #include "xscript/vhost_data.h"
 #include "xscript/writer.h"
 #include "xscript/xslt_profiler.h"
+
+#include "internal/response_time_counter_block.h"
+#include "internal/response_time_counter_impl.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -66,12 +73,39 @@ public:
         if (0 == res) {
             hostname_.assign(buf);
         }
+        
+        responseCounter_ = ResponseTimeCounterFactory::instance()->createCounter("response-time");
+        
+        ControlExtension::Constructor f =
+            boost::bind(boost::mem_fn(&ServerData::createResponseTimeCounterBlock), this, _1, _2, _3);
+        ControlExtension::registerConstructor("response-time", f);
+        
+        ControlExtension::Constructor f2 =
+            boost::bind(boost::mem_fn(&ServerData::createResetResponseTimeCounterBlock), this, _1, _2, _3);
+        ControlExtension::registerConstructor("reset-response-time", f2);
     }
     ~ServerData() {}
+    
+    std::auto_ptr<Block>
+    createResponseTimeCounterBlock(const ControlExtension *ext,
+                                   Xml *owner,
+                                   xmlNodePtr node) {
+        return std::auto_ptr<Block>(
+            new ResponseTimeCounterBlock(ext, owner, node, responseCounter_));
+    }
+    
+    std::auto_ptr<Block>
+    createResetResponseTimeCounterBlock(const ControlExtension *ext,
+                                        Xml *owner,
+                                        xmlNodePtr node) {
+        return std::auto_ptr<Block>(
+            new ResetResponseTimeCounterBlock(ext, owner, node, responseCounter_));
+    }
     
     Config *config_;
     unsigned short alternate_port_, noxslt_port_;
     std::string hostname_;
+    boost::shared_ptr<ResponseTimeCounter> responseCounter_;
 };
 
 Server::Server(Config *config) : data_(new ServerData(config)) {
@@ -93,23 +127,26 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
     Context::resetTimer();
     XmlUtils::resetReporter();
     const std::string &script_name = request_data->request()->getScriptFilename();
+    PROFILER(log(), "overall time for " + script_name);
+    log()->info("requested file: %s", script_name.c_str());
+    
     try {
         std::string url = request_data->request()->getOriginalUrl();
         log()->info("original url: %s", url.c_str());
         
-        PROFILER(log(), "overall time for " + script_name);
-        log()->info("requested file: %s", script_name.c_str());
 
         boost::shared_ptr<Script> script = getScript(request_data->request());
         if (NULL == script.get()) {
             OperationMode::sendError(request_data->response(), 404,
                                      script_name + " not found");
+            data_->responseCounter_->add(request_data->response(), PROFILER_RELEASE());
             return;  
         }
 
         if (!script->allowMethod(request_data->request()->getRequestMethod())) {
             OperationMode::sendError(request_data->response(), 405,
                                      request_data->request()->getRequestMethod() + " not allowed");
+            data_->responseCounter_->add(request_data->response(), PROFILER_RELEASE());
             return;
         }
 
@@ -119,12 +156,14 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
         boost::shared_ptr<AuthContext> auth = authorizer->checkAuth(ctx);
         assert(NULL != auth.get());
 
+        ctx->authContext(auth);
+        
         if (!auth->authorized()) {
             authorizer->redirectToAuth(ctx, auth.get());
             ctx->response()->sendHeaders();
+            data_->responseCounter_->add(ctx.get(), PROFILER_RELEASE());
             return;
         }
-        ctx->authContext(auth);
 
         bool loaded = false;
         bool cachable = script->cachable(ctx.get(), false);
@@ -137,12 +176,14 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
             XmlUtils::throwUnless(NULL != doc.get());
             
             if (script->binaryPage() || request_data->response()->isBinary()) {
+                data_->responseCounter_->add(ctx.get(), PROFILER_RELEASE());
                 return;
             }
             
             if (script->forceStylesheet() && !ctx->noMainXsltPort()) {
                 script->applyStylesheet(ctx, doc);
                 if (request_data->response()->isBinary()) {
+                    data_->responseCounter_->add(ctx.get(), PROFILER_RELEASE());
                     return;
                 }
             }
@@ -156,11 +197,19 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
         }
         
         XsltProfiler::instance()->dumpProfileInfo(ctx);
+        data_->responseCounter_->add(ctx.get(), PROFILER_RELEASE());
     }
     catch (const std::exception &e) {
         log()->error("%s: exception caught: %s. Owner: %s",
             BOOST_CURRENT_FUNCTION, e.what(), script_name.c_str());
         OperationMode::sendError(request_data->response(), 500, e.what());
+        data_->responseCounter_->add(request_data->response(), PROFILER_RELEASE());
+    }
+    catch (...) {
+        log()->error("%s: unknown exception caught. Owner: %s",
+            BOOST_CURRENT_FUNCTION, script_name.c_str());
+        OperationMode::sendError(request_data->response(), 500, "unknown error");
+        data_->responseCounter_->add(request_data->response(), PROFILER_RELEASE());
     }
 }
 

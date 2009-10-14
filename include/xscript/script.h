@@ -24,7 +24,7 @@ class ScriptHandlerRegisterer;
 /**
  * Parsed script.
  *
- * Stores parse blocks, assosiated stylesheet and various processing flags.
+ * Stores parse blocks, associated stylesheet and various processing flags.
  * Created by ScriptFactory (for caching purposes).
  */
 

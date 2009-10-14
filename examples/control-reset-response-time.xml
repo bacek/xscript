@@ -1,0 +1,7 @@
+<page xmlns:x="http://www.yandex.ru/xscript"
+    >
+
+    <x:control>
+        <method>reset-response-time</method>
+    </x:control>
+</page>

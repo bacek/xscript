@@ -27,18 +27,42 @@ profile(const boost::function<void ()>& f) {
     return endTime - startTime;
 }
 
-Profiler::Profiler(Logger* log, const std::string& info) : log_(log), info_(info) {
-    gettimeofday(&startTime_, 0);
+struct Profiler::ProfilerData {
+    ProfilerData(Logger* log, const std::string& info) : active_(true), log_(log), info_(info) {}
+    
+    bool active_;
+    Logger *log_;
+    std::string info_;
+    timeval startTime_;
+};
+
+Profiler::Profiler(Logger* log, const std::string& info) :
+    data_(new ProfilerData(log, info))
+{
+    gettimeofday(&data_->startTime_, 0);
 }
 
-Profiler::~Profiler() {
+boost::uint64_t
+Profiler::release() {
+    if (!data_->active_) {
+        return 0;
+    }
+    
+    data_->active_ = false;
     timeval endTime;
     gettimeofday(&endTime, 0);
 
-    uint64_t delta = endTime - startTime_;
+    uint64_t delta = endTime - data_->startTime_;
 
-    log_->info("[profile] %llu.%06llu %s", (unsigned long long)(delta / 1000000),
-	(unsigned long long)(delta % 1000000), info_.c_str());
+    data_->log_->info("[profile] %llu.%06llu %s", (unsigned long long)(delta / 1000000),
+    (unsigned long long)(delta % 1000000), data_->info_.c_str());
+    
+    return delta;
+}                   
+                   
+Profiler::~Profiler() {
+    release();
+    delete data_;
 }
 
 } // namespace xscript
