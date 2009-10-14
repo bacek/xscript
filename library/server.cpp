@@ -74,7 +74,8 @@ public:
             hostname_.assign(buf);
         }
         
-        responseCounter_ = ResponseTimeCounterFactory::instance()->createCounter("response-time");
+        responseCounter_ = boost::shared_ptr<ResponseTimeCounter>(
+            ResponseTimeCounterFactory::instance()->createCounter("response-time").release());
         
         ControlExtension::Constructor f =
             boost::bind(boost::mem_fn(&ServerData::createResponseTimeCounterBlock), this, _1, _2, _3);
