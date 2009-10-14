@@ -22,7 +22,7 @@ ResponseTimeCounterImpl::StatusInfo::add(const char *info, boost::uint64_t value
     CounterMapType::iterator it = custom_counters_.find(auth);
     if (custom_counters_.end() == it) {
         counter = boost::shared_ptr<AverageCounter>(
-            AverageCounterFactory::instance()->createCounter("point"));
+            AverageCounterFactory::instance()->createCounter("point").release());
         custom_counters_.insert(std::make_pair(auth, counter));
     }
     else {
