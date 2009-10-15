@@ -19,11 +19,11 @@
 	        <tr align="center">
 		    <td>Status</td>
 		    <td>Auth status</td>
-		    <td>Request count</td>
-		    <td>Average response</td>
-		    <td>Min response</td>
-		    <td>Max response</td>
-		    <td>Total response</td>
+		    <td>Count</td>
+		    <td>Avg time</td>
+		    <td>Min time</td>
+		    <td>Max time</td>
+<!--		    <td>Total response</td>  -->
 		    <td>RPS</td>
 		</tr>
 		<xsl:if test="$collect-time > 0">
@@ -37,7 +37,8 @@
 </xsl:template>
 
 <xsl:template match="status">
-    <tr align="center">
+    <tr colspan="8"><td></td></tr>
+    <tr align="center" style="font-weight:normal;background-color:#dddddd">
         <td><xsl:value-of select="@code"/></td>
 	<td>all</td>
         <td><xsl:value-of select="sum(child::point/@count)"/></td>
@@ -54,10 +55,12 @@
         </td>
         <td><xsl:value-of select="math:min(child::point/@min)"/></td>
         <td><xsl:value-of select="math:max(child::point/@max)"/></td>	
-        <td><xsl:value-of select="sum(child::point/@total)"/></td>
-        <td><xsl:value-of select="sum(child::point/@count) div $collect-time"/></td>
+<!--        <td><xsl:value-of select="sum(child::point/@total)"/></td>  -->
+        <td><xsl:value-of select="format-number(sum(child::point/@count) div $collect-time, '#.###')"/></td>
     </tr>
+ 
     <xsl:apply-templates select="point"/>
+
 </xsl:template>
 
 <xsl:template match="point">
@@ -68,8 +71,8 @@
 	<td><xsl:value-of select="@avg"/></td>
         <td><xsl:value-of select="@min"/></td>
         <td><xsl:value-of select="@max"/></td>
-        <td><xsl:value-of select="@total"/></td>
-	<td><xsl:value-of select="@count div $collect-time"/></td>
+<!--        <td><xsl:value-of select="@total"/></td>   -->
+	<td><xsl:value-of select="format-number(@count div $collect-time, '#.###')"/></td>
     </tr>
 </xsl:template>
 
