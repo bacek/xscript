@@ -141,11 +141,9 @@ ProcServer::run() {
                                 StringUtils::EMPTY_STRING,
                                 headers,
                                 vars);
-        
-        boost::shared_ptr<RequestData> data(
-            new RequestData(request, response, boost::shared_ptr<State>(new State())));
 
-        handleRequest(data);
+        boost::shared_ptr<Context> ctx;
+        handleRequest(request, response, ctx);
     }
     catch (const BadRequestError &e) {
         OperationMode::sendError(response.get(), 400, e.what());
@@ -160,18 +158,22 @@ ProcServer::run() {
 
 bool
 ProcServer::needApplyMainStylesheet(Request *request) const {
-    return apply_main_stylesheet_ ? Server::needApplyMainStylesheet(request) : apply_main_stylesheet_;
+    return apply_main_stylesheet_ ?
+        Server::needApplyMainStylesheet(request) : apply_main_stylesheet_;
 }
 
 bool
 ProcServer::needApplyPerblockStylesheet(Request *request) const {
-    return apply_perblock_stylesheet_ ? Server::needApplyPerblockStylesheet(request) : apply_perblock_stylesheet_;
+    return apply_perblock_stylesheet_ ?
+        Server::needApplyPerblockStylesheet(request) : apply_perblock_stylesheet_;
 }
 
 Context*
-ProcServer::createContext(
-    const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData> &request_data) {
-    std::auto_ptr<Context> ctx(new Context(script, request_data));
+ProcServer::createContext(const boost::shared_ptr<Script> &script,
+                          const boost::shared_ptr<State> &state,
+                          const boost::shared_ptr<Request> &request,
+                          const boost::shared_ptr<Response> &response) {
+    std::auto_ptr<Context> ctx(Server::createContext(script, state, request, response));
     if (!stylesheet_.empty()) {
         ctx->xsltName(stylesheet_);
     }

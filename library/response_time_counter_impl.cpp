@@ -4,6 +4,7 @@
 
 #include "xscript/authorizer.h"
 #include "xscript/context.h"
+#include "xscript/control_extension.h"
 #include "internal/response_time_counter_impl.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -73,6 +74,9 @@ ResponseTimeCounterImpl::add(const Response *resp, boost::uint64_t value) {
 
 void
 ResponseTimeCounterImpl::add(const Context *ctx, boost::uint64_t value) {
+    if (ControlExtension::isControl(ctx)) {
+        return;
+    }
     boost::mutex::scoped_lock lock(mtx_);
     boost::shared_ptr<StatusInfo> status_info =
         findStatusInfo(ctx->response()->status());

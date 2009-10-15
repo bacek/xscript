@@ -7,9 +7,9 @@
 #include "internal/extension_list.h"
 #include "internal/loader.h"
 #include "xscript/logger_factory.h"
-#include "xscript/request_data.h"
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
+#include "xscript/state.h"
 #include "xscript/tagged_block.h"
 
 using namespace xscript;
@@ -39,9 +39,11 @@ private:
         std::auto_ptr<Config> config = Config::create("test.conf");
         config->startup();
 
-        boost::shared_ptr<RequestData> data(new RequestData());
+        boost::shared_ptr<Request> request(new Request());
+        boost::shared_ptr<Response> response(new Response());
+        boost::shared_ptr<State> state(new State());
         boost::shared_ptr<Script> script = ScriptFactory::createScript("http-local-tagged.xml"); //cache_time==5
-        boost::shared_ptr<Context> ctx(new Context(script, data));
+        boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
         ContextStopper ctx_stopper(ctx);
 
         XmlDocHelper doc(script->invoke(ctx));

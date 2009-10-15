@@ -71,11 +71,9 @@ OfflineServer::renderBuffer(const std::string &url,
 
     try {
         offline_request->attach(url, xml, body, header_list, var_list);        
-        
-        boost::shared_ptr<RequestData> data(
-            new RequestData(request, response, boost::shared_ptr<State>(new State())));
 
-        handleRequest(data);
+        boost::shared_ptr<Context> ctx;
+        handleRequest(request, response, ctx);
     }
     catch (const BadRequestError &e) {
         OperationMode::sendError(response.get(), 400, e.what());

@@ -41,6 +41,7 @@ public:
     virtual std::string name() const;
 
     virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Object *obj) const;
+    
 protected:
     virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc);
     virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);

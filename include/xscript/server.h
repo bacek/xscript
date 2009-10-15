@@ -5,13 +5,14 @@
 #include <boost/utility.hpp>
 #include <string>
 
+#include "xscript/request.h"
+#include "xscript/response.h"
+#include "xscript/state.h"
 #include "xscript/xml_helpers.h"
 
 namespace xscript {
 
 class Config;
-class RequestData;
-class Request;
 class Context;
 class Script;
 
@@ -28,7 +29,9 @@ public:
     const std::string& hostname() const;
 
 protected:
-    virtual void handleRequest(const boost::shared_ptr<RequestData>& request_data);    
+    void handleRequest(const boost::shared_ptr<Request> &request,
+                       const boost::shared_ptr<Response> &response,
+                       boost::shared_ptr<Context> &ctx);    
     bool processCachedDoc(Context *ctx, const Script *script);
     void sendResponse(Context *ctx, XmlDocHelper doc);
     void sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc);
@@ -39,7 +42,9 @@ protected:
     void sendHeaders(Context *ctx);
 
     virtual Context* createContext(const boost::shared_ptr<Script> &script,
-                                   const boost::shared_ptr<RequestData> &request_data);
+                                   const boost::shared_ptr<State> &state,
+                                   const boost::shared_ptr<Request> &request,
+                                   const boost::shared_ptr<Response> &response);
 
     Config* config() const;
 private:

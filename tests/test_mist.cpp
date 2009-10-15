@@ -4,7 +4,6 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "xscript/context.h"
-#include "xscript/request_data.h"
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
 #include "xscript/state.h"
@@ -55,16 +54,17 @@ MistTest::testDrop() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-drop.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     std::vector<std::string> v;
-    State* state = ctx->state();
     state->keys(v);
     CPPUNIT_ASSERT_EQUAL(static_cast<std::vector<std::string>::size_type>(2), v.size());
 }
@@ -74,15 +74,15 @@ MistTest::testTypes() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-types.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-
-    State* state = ctx->state();
 
     CPPUNIT_ASSERT_EQUAL(static_cast<boost::int32_t>(1), state->asLong("val-1"));
     CPPUNIT_ASSERT_EQUAL(std::string("string-2"), state->asString("val-2"));
@@ -98,15 +98,15 @@ MistTest::testDate() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-date.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-
-    State* state = ctx->state();
 
     time_t now = time(NULL);
 
@@ -124,15 +124,15 @@ MistTest::testSplit() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-split.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-
-    State* state = ctx->state();
 
     CPPUNIT_ASSERT_EQUAL(std::string("test"), state->asString("pref0"));
     CPPUNIT_ASSERT_EQUAL(std::string("test string property"), state->asString("testconcat"));
@@ -145,12 +145,13 @@ MistTest::testEscape() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-escape.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
-    State* state = ctx->state();
     state->setString("data", "<stress>&data;</stress>");
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -166,9 +167,11 @@ MistTest::testStylesheet() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-style.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     CPPUNIT_ASSERT_EQUAL(std::string("object.xsl"), ctx->xsltName());
@@ -185,15 +188,15 @@ MistTest::testDefined() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-defined.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-
-    State* state = ctx->state();
 
     CPPUNIT_ASSERT_EQUAL(std::string("15"), state->asString("replace_var"));
 }
@@ -203,15 +206,15 @@ MistTest::testDomain() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-domain.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-
-    State* state = ctx->state();
 
     CPPUNIT_ASSERT_EQUAL(std::string("net"), state->asString("tld"));
     CPPUNIT_ASSERT_EQUAL(std::string("localhost"), state->asString("no_level"));
@@ -229,15 +232,15 @@ MistTest::testKeys() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-keys.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-
-    State* state = ctx->state();
 
     CPPUNIT_ASSERT_EQUAL(std::string("value3"), state->asString("var"));
 }

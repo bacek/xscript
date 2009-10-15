@@ -6,7 +6,6 @@
 #include "xscript/config.h"
 #include "xscript/context.h"
 #include "xscript/doc_cache.h"
-#include "xscript/request_data.h"
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
 #include "xscript/state.h"
@@ -47,9 +46,11 @@ DocCacheTest::testMissed() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("http-local.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(script->block(0));
@@ -69,9 +70,11 @@ DocCacheTest::testStoreLoad() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("http-local.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -118,9 +121,11 @@ DocCacheTest::testGetLocalTagged() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("http-local-tagged.xml"); //cache_time==5
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(script->block(0));
@@ -165,9 +170,11 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("http-local-tagged.xml"); //cache_time==5
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(script->block(0));

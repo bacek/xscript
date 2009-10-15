@@ -39,7 +39,9 @@ class Stylesheet;
 class Context : private boost::noncopyable {
 public:
     Context(const boost::shared_ptr<Script> &script,
-            const boost::shared_ptr<RequestData> &data);
+            const boost::shared_ptr<State> &state,
+            const boost::shared_ptr<Request> &request,
+            const boost::shared_ptr<Response> &response);
     virtual ~Context();
 
     static boost::shared_ptr<Context> createChildContext(

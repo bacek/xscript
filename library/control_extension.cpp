@@ -1,14 +1,17 @@
 #include "settings.h"
 
 #include "xscript/block.h"
-#include "xscript/xml_util.h"
+#include "xscript/context.h"
 #include "xscript/control_extension.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
 
 namespace xscript {
+
+static const std::string CONTROL_KEY = "CONTROL_KEY";
 
 ControlExtension::ControlExtension() {
 }
@@ -75,6 +78,26 @@ ControlExtension::findConstructor(const std::string& method) {
         throw std::runtime_error("method doesn't exists");
     }
     return m->second;
+}
+
+void
+ControlExtension::setControlFlag(Context *ctx) {
+    try {
+        ctx->param(CONTROL_KEY, true);
+    }
+    catch(const std::invalid_argument&) {
+    }
+}
+
+bool
+ControlExtension::isControl(const Context *ctx) {
+    try {
+        return ctx->param<bool>(CONTROL_KEY);
+    }
+    catch(const std::invalid_argument&) {
+    }
+    
+    return false;
 }
 
 // We should not register ControlExtension. It will be registered in Config::startup

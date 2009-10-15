@@ -8,7 +8,6 @@
 
 #include "xscript/context.h"
 #include "xscript/request.h"
-#include "xscript/request_data.h"
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
 #include "xscript/state.h"
@@ -96,9 +95,11 @@ LuaTest::attachRequest(Request *request,
 
 void
 LuaTest::testPrint() {
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-print.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -114,15 +115,16 @@ LuaTest::testPrint() {
 
 void
 LuaTest::testState() {
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-state.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
-    State* state = data->state();
     for (int i = 1; i <= 10; ++i) {
 
         std::string num = boost::lexical_cast<std::string>(i);
@@ -145,15 +147,15 @@ LuaTest::testState() {
 
 void
 LuaTest::testStateHas() {
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-state-has.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-
-    State* state = data->state();
 
     // Unknown param returns empty string
     CPPUNIT_ASSERT_EQUAL(std::string(""), state->asString("unknown_param"));
@@ -167,16 +169,15 @@ LuaTest::testStateHas() {
 
 void
 LuaTest::testStateIs() {
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-state-is.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-
-    State* state = data->state();
-
     CPPUNIT_ASSERT(state->asBool("guard0_passed"));
     CPPUNIT_ASSERT(state->asBool("guard1_passed"));
     CPPUNIT_ASSERT(state->asBool("guard2_passed"));
@@ -198,9 +199,8 @@ LuaTest::testRequest() {
     
     attachRequest(request.get(), env);
     
-    boost::shared_ptr<RequestData> data(new RequestData(request, response, state));
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-request.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -226,9 +226,8 @@ LuaTest::testResponse() {
     
     attachRequest(request.get(), env);
 
-    boost::shared_ptr<RequestData> data(new RequestData(request, response, state));
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-response.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -259,9 +258,8 @@ LuaTest::testResponseRedirect() {
     
     attachRequest(request.get(), env);
 
-    boost::shared_ptr<RequestData> data(new RequestData(request, response, state));
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-response-redirect.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -278,9 +276,11 @@ LuaTest::testResponseRedirect() {
 
 void
 LuaTest::testEncode() {
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-encode.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -298,9 +298,8 @@ LuaTest::testCookie() {
     boost::shared_ptr<Request> request(new Request());
     boost::shared_ptr<Response> response(new Response());   
     boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<RequestData> data(new RequestData(request, response, state));
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-cookie.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -330,9 +329,11 @@ LuaTest::testCookie() {
 
 void
 LuaTest::testBadType() {
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-badtype.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -342,9 +343,11 @@ LuaTest::testBadType() {
 
 void
 LuaTest::testBadArgCount() {
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-badargcount.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -360,23 +363,25 @@ LuaTest::testBadCode() {
 
 void
 LuaTest::testMultiBlock() {
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-multi.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-
-    State* state = data->state();
     CPPUNIT_ASSERT_EQUAL(state->asString("bar"), std::string("baz"));
 }
 
 void
 LuaTest::testMD5() {
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-md5.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -394,16 +399,15 @@ LuaTest::testDomain() {
 
     using namespace xscript;
 
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-domain.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-
-    State* state = ctx->state();
-
     CPPUNIT_ASSERT_EQUAL(std::string("hghltd.yandex.net"), state->asString("no_level"));
     CPPUNIT_ASSERT_EQUAL(std::string("net"), state->asString("tld"));
     CPPUNIT_ASSERT_EQUAL(std::string("www.yandex.ru"), state->asString("no_level_no_scheme"));
@@ -417,9 +421,11 @@ LuaTest::testDomain() {
 
 void
 LuaTest::testXmlEncode() {
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-xmlescape.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));
@@ -435,9 +441,11 @@ LuaTest::testXmlEncode() {
 // Incomplete test for logger... Just check manually default.log
 void
 LuaTest::testLogger() {
-    boost::shared_ptr<RequestData> data(new RequestData());
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
     boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-logger.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, data));
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
     XmlDocHelper doc(script->invoke(ctx));

@@ -18,7 +18,7 @@ public:
                              Xml *owner,
                              xmlNodePtr node,
                              const boost::shared_ptr<ResponseTimeCounter> &counter);
-    XmlDocHelper call(boost::shared_ptr<Context>, boost::any &) throw (std::exception);
+    XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::exception);
     
 private:
     boost::shared_ptr<ResponseTimeCounter> responseCounter_;
@@ -30,7 +30,7 @@ public:
                                   Xml *owner,
                                   xmlNodePtr node,
                                   const boost::shared_ptr<ResponseTimeCounter> &counter);
-    XmlDocHelper call(boost::shared_ptr<Context>, boost::any &) throw (std::exception);
+    XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::exception);
     
 private:
     boost::shared_ptr<ResponseTimeCounter> responseCounter_;

@@ -32,6 +32,7 @@
 #include "xscript/context.h"
 #include "xscript/logger.h"
 #include "xscript/operation_mode.h"
+#include "xscript/profiler.h"
 #include "xscript/request_data.h"
 #include "xscript/script.h"
 #include "xscript/state.h"
@@ -39,6 +40,9 @@
 #include "xscript/vhost_data.h"
 #include "xscript/writer.h"
 #include "xscript/xml_util.h"
+
+#include "internal/response_time_counter_block.h"
+#include "internal/response_time_counter_impl.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -62,15 +66,45 @@ class FCGIServer::RequestAcceptor {
 FCGIServer::FCGIServer(Config *config) :
         Server(config), socket_(-1), inbuf_size_(0), outbuf_size_(0),
         workerCounter_(SimpleCounterFactory::instance()->createCounter("fcgi-workers", true)),
-        uptimeCounter_() {
+        uptimeCounter_(),
+        responseCounter_(boost::shared_ptr<ResponseTimeCounter>(
+                ResponseTimeCounterFactory::instance()->createCounter("response-time").release()))
+{
     if (0 != FCGX_Init()) {
         throw std::runtime_error("can not init fastcgi library");
     }
     StatusInfo::instance()->getStatBuilder().addCounter(workerCounter_.get());
     StatusInfo::instance()->getStatBuilder().addCounter(&uptimeCounter_);
+    
+    responseCounter_ = boost::shared_ptr<ResponseTimeCounter>(
+        ResponseTimeCounterFactory::instance()->createCounter("response-time").release());
+    
+    ControlExtension::Constructor f =
+        boost::bind(boost::mem_fn(&FCGIServer::createResponseTimeCounterBlock), this, _1, _2, _3);
+    ControlExtension::registerConstructor("response-time", f);
+    
+    ControlExtension::Constructor f2 =
+        boost::bind(boost::mem_fn(&FCGIServer::createResetResponseTimeCounterBlock), this, _1, _2, _3);
+    ControlExtension::registerConstructor("reset-response-time", f2);
 }
 
 FCGIServer::~FCGIServer() {
+}
+
+std::auto_ptr<Block>
+FCGIServer::createResponseTimeCounterBlock(const ControlExtension *ext,
+                                           Xml *owner,
+                                           xmlNodePtr node) {
+    return std::auto_ptr<Block>(
+        new ResponseTimeCounterBlock(ext, owner, node, responseCounter_));
+}
+
+std::auto_ptr<Block>
+FCGIServer::createResetResponseTimeCounterBlock(const ControlExtension *ext,
+                                                Xml *owner,
+                                                xmlNodePtr node) {
+    return std::auto_ptr<Block>(
+        new ResetResponseTimeCounterBlock(ext, owner, node, responseCounter_));
 }
 
 bool
@@ -143,19 +177,22 @@ FCGIServer::handle() {
                 boost::shared_ptr<Response> response(new ServerResponse(&os));
                 ServerResponse *server_response = dynamic_cast<ServerResponse*>(response.get());
                 ResponseDetacher response_detacher(server_response);
-
+                boost::shared_ptr<Context> ctx;
+                
+                const std::string &script_name = request->getScriptFilename();
+                PROFILER_FORCE(log(), "overall time for " + script_name);
+                log()->info("requested file: %s", script_name.c_str());
+                
                 try {
                     request->attach(&is, req.envp);
+                    handleRequest(request, response, ctx);
                 }
                 catch (const BadRequestError &e) {
                     OperationMode::sendError(response.get(), 400, e.what());
-                    throw;
                 }
-                    
-                boost::shared_ptr<RequestData> data(
-                    new RequestData(request, response, boost::shared_ptr<State>(new State())));
 
-                handleRequest(data);
+                ctx.get() ? responseCounter_->add(ctx.get(), PROFILER_RELEASE()) :
+                    responseCounter_->add(response.get(), PROFILER_RELEASE());
             }
             catch (const std::exception &e) {
                 log()->error("caught exception while handling request: %s", e.what());

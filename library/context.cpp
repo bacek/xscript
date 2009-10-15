@@ -43,8 +43,11 @@ private:
 
 struct Context::ContextData {
     ContextData(const boost::shared_ptr<Script> &script,
-                const boost::shared_ptr<RequestData> &data) :
-        stopped_(false), script_(script), request_data_(data),
+                const boost::shared_ptr<State> &state,
+                const boost::shared_ptr<Request> &request,
+                const boost::shared_ptr<Response> &response) :
+        stopped_(false), script_(script),
+        request_data_(new RequestData(request, response, state)),
         xslt_name_(script->xsltName()), flags_(0), page_random_(-1),
         params_(boost::shared_ptr<ParamsMap>(new ParamsMap())) 
     {
@@ -160,10 +163,12 @@ struct Context::ContextData {
 boost::thread_specific_ptr<std::list<TimeoutCounter> > Context::ContextData::block_timers_;
 
 Context::Context(const boost::shared_ptr<Script> &script,
-                 const boost::shared_ptr<RequestData> &data) : ctx_data_(NULL)
+                 const boost::shared_ptr<State> &state,
+                 const boost::shared_ptr<Request> &request,
+                 const boost::shared_ptr<Response> &response) : ctx_data_(NULL)
 {
     assert(script.get());
-    ctx_data_ = new ContextData(script, data);
+    ctx_data_ = new ContextData(script, state, request, response);
     ExtensionList::instance()->initContext(this);
     appendKey(boost::lexical_cast<std::string>(pageRandom()));
     init();

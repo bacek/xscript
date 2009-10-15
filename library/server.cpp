@@ -31,10 +31,8 @@
 #include "xscript/logger.h"
 #include "xscript/operation_mode.h"
 #include "xscript/policy.h"
-#include "xscript/profiler.h"
 #include "xscript/request_data.h"
 #include "xscript/response.h"
-#include "xscript/response_time_counter.h"
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
 #include "xscript/server.h"
@@ -47,9 +45,6 @@
 #include "xscript/vhost_data.h"
 #include "xscript/writer.h"
 #include "xscript/xslt_profiler.h"
-
-#include "internal/response_time_counter_block.h"
-#include "internal/response_time_counter_impl.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -73,40 +68,12 @@ public:
         if (0 == res) {
             hostname_.assign(buf);
         }
-        
-        responseCounter_ = boost::shared_ptr<ResponseTimeCounter>(
-            ResponseTimeCounterFactory::instance()->createCounter("response-time").release());
-        
-        ControlExtension::Constructor f =
-            boost::bind(boost::mem_fn(&ServerData::createResponseTimeCounterBlock), this, _1, _2, _3);
-        ControlExtension::registerConstructor("response-time", f);
-        
-        ControlExtension::Constructor f2 =
-            boost::bind(boost::mem_fn(&ServerData::createResetResponseTimeCounterBlock), this, _1, _2, _3);
-        ControlExtension::registerConstructor("reset-response-time", f2);
     }
     ~ServerData() {}
-    
-    std::auto_ptr<Block>
-    createResponseTimeCounterBlock(const ControlExtension *ext,
-                                   Xml *owner,
-                                   xmlNodePtr node) {
-        return std::auto_ptr<Block>(
-            new ResponseTimeCounterBlock(ext, owner, node, responseCounter_));
-    }
-    
-    std::auto_ptr<Block>
-    createResetResponseTimeCounterBlock(const ControlExtension *ext,
-                                        Xml *owner,
-                                        xmlNodePtr node) {
-        return std::auto_ptr<Block>(
-            new ResetResponseTimeCounterBlock(ext, owner, node, responseCounter_));
-    }
     
     Config *config_;
     unsigned short alternate_port_, noxslt_port_;
     std::string hostname_;
-    boost::shared_ptr<ResponseTimeCounter> responseCounter_;
 };
 
 Server::Server(Config *config) : data_(new ServerData(config)) {
@@ -123,36 +90,30 @@ Server::config() const {
 }
 
 void
-Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
-    VirtualHostData::instance()->set(request_data->request());
-    Context::resetTimer();
-    XmlUtils::resetReporter();
-    const std::string &script_name = request_data->request()->getScriptFilename();
-
-    PROFILER_FORCE(log(), "overall time for " + script_name);
-    log()->info("requested file: %s", script_name.c_str());
-    
+Server::handleRequest(const boost::shared_ptr<Request> &request,
+                      const boost::shared_ptr<Response> &response,
+                      boost::shared_ptr<Context> &ctx) {  
     try {
-        std::string url = request_data->request()->getOriginalUrl();
+        VirtualHostData::instance()->set(request.get());
+        Context::resetTimer();
+        XmlUtils::resetReporter();
+        
+        std::string url = request->getOriginalUrl();
         log()->info("original url: %s", url.c_str());
         
-
-        boost::shared_ptr<Script> script = getScript(request_data->request());
+        boost::shared_ptr<Script> script = getScript(request.get());
         if (NULL == script.get()) {
-            OperationMode::sendError(request_data->response(), 404,
-                                     script_name + " not found");
-            data_->responseCounter_->add(request_data->response(), PROFILER_RELEASE());
+            OperationMode::sendError(response.get(), 404, request->getScriptFilename() + " not found");
             return;  
         }
 
-        if (!script->allowMethod(request_data->request()->getRequestMethod())) {
-            OperationMode::sendError(request_data->response(), 405,
-                                     request_data->request()->getRequestMethod() + " not allowed");
-            data_->responseCounter_->add(request_data->response(), PROFILER_RELEASE());
+        if (!script->allowMethod(request->getRequestMethod())) {
+            OperationMode::sendError(response.get(), 405, request->getRequestMethod() + " not allowed");
             return;
         }
 
-        boost::shared_ptr<Context> ctx(createContext(script, request_data));
+        boost::shared_ptr<State> state(new State());
+        ctx = boost::shared_ptr<Context>(createContext(script, state, request, response));
         ContextStopper ctx_stopper(ctx);
         Authorizer *authorizer = Authorizer::instance();
         boost::shared_ptr<AuthContext> auth = authorizer->checkAuth(ctx);
@@ -162,8 +123,7 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
         
         if (!auth->authorized()) {
             authorizer->redirectToAuth(ctx, auth.get());
-            ctx->response()->sendHeaders();
-            data_->responseCounter_->add(ctx.get(), PROFILER_RELEASE());
+            response->sendHeaders();
             return;
         }
 
@@ -177,15 +137,13 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
             XmlDocHelper doc = script->invoke(ctx);
             XmlUtils::throwUnless(NULL != doc.get());
             
-            if (script->binaryPage() || request_data->response()->isBinary()) {
-                data_->responseCounter_->add(ctx.get(), PROFILER_RELEASE());
+            if (script->binaryPage() || response->isBinary()) {
                 return;
             }
             
             if (script->forceStylesheet() && !ctx->noMainXsltPort()) {
                 script->applyStylesheet(ctx, doc);
-                if (request_data->response()->isBinary()) {
-                    data_->responseCounter_->add(ctx.get(), PROFILER_RELEASE());
+                if (response->isBinary()) {
                     return;
                 }
             }
@@ -199,19 +157,16 @@ Server::handleRequest(const boost::shared_ptr<RequestData> &request_data) {
         }
         
         XsltProfiler::instance()->dumpProfileInfo(ctx);
-        data_->responseCounter_->add(ctx.get(), PROFILER_RELEASE());
     }
     catch (const std::exception &e) {
         log()->error("%s: exception caught: %s. Owner: %s",
-            BOOST_CURRENT_FUNCTION, e.what(), script_name.c_str());
-        OperationMode::sendError(request_data->response(), 500, e.what());
-        data_->responseCounter_->add(request_data->response(), PROFILER_RELEASE());
+            BOOST_CURRENT_FUNCTION, e.what(), request->getScriptFilename().c_str());
+        OperationMode::sendError(response.get(), 500, e.what());
     }
     catch (...) {
         log()->error("%s: unknown exception caught. Owner: %s",
-            BOOST_CURRENT_FUNCTION, script_name.c_str());
-        OperationMode::sendError(request_data->response(), 500, "unknown error");
-        data_->responseCounter_->add(request_data->response(), PROFILER_RELEASE());
+            BOOST_CURRENT_FUNCTION, request->getScriptFilename().c_str());
+        OperationMode::sendError(response.get(), 500, "unknown error");
     }
 }
 
@@ -397,8 +352,10 @@ Server::needApplyPerblockStylesheet(Request *request) const {
 
 Context*
 Server::createContext(const boost::shared_ptr<Script> &script,
-                      const boost::shared_ptr<RequestData> &request_data) {
-    return new Context(script, request_data);
+                      const boost::shared_ptr<State> &state,
+                      const boost::shared_ptr<Request> &request,
+                      const boost::shared_ptr<Response> &response) {
+    return new Context(script, state, request, response);
 }
 
 std::pair<std::string, bool>

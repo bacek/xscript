@@ -4,7 +4,6 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "xscript/context.h"
-#include "xscript/request_data.h"
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
 #include "xscript/state.h"
@@ -103,9 +102,11 @@ class ValidatorTest : public CppUnit::TestFixture {
 
     // Check that validator created and failed.
     void testBlockFail() {
-        boost::shared_ptr<RequestData> data(new RequestData());
+        boost::shared_ptr<Request> request(new Request());
+        boost::shared_ptr<Response> response(new Response());
+        boost::shared_ptr<State> state(new State());
         boost::shared_ptr<Script> script = ScriptFactory::createScript("./validator.xml");
-        boost::shared_ptr<Context> ctx(new Context(script, data));
+        boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
         ContextStopper ctx_stopper(ctx);
 
         XmlDocHelper doc(script->invoke(ctx));
@@ -118,9 +119,11 @@ class ValidatorTest : public CppUnit::TestFixture {
 
     // Check that validator created and passed.
     void testBlockPass() {
-        boost::shared_ptr<RequestData> data(new RequestData());
+        boost::shared_ptr<Request> request(new Request());
+        boost::shared_ptr<Response> response(new Response());
+        boost::shared_ptr<State> state(new State());
         boost::shared_ptr<Script> script = ScriptFactory::createScript("./validator2.xml");
-        boost::shared_ptr<Context> ctx(new Context(script, data));
+        boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
         ContextStopper ctx_stopper(ctx);
 
         XmlDocHelper doc(script->invoke(ctx));

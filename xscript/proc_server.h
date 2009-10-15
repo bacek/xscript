@@ -18,8 +18,10 @@ public:
     virtual bool useXsltProfiler() const;
 
 protected:
-    virtual Context* createContext(
-        const boost::shared_ptr<Script> &script, const boost::shared_ptr<RequestData> &request_data);
+    virtual Context* createContext(const boost::shared_ptr<Script> &script,
+                                   const boost::shared_ptr<State> &state,
+                                   const boost::shared_ptr<Request> &request,
+                                   const boost::shared_ptr<Response> &response);
 
 private:
     std::string root_;

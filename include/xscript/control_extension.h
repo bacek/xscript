@@ -27,7 +27,9 @@ public:
 
     typedef boost::function<std::auto_ptr<Block> (const ControlExtension *ext, Xml*, xmlNodePtr)> Constructor;
     static void registerConstructor(const std::string & method, Constructor ctor);
-
+    static void setControlFlag(Context *ctx);
+    static bool isControl(const Context *ctx);
+    
 protected:
     typedef std::map<std::string, Constructor> ConstructorMap;
 
