@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-stylesheet href="control-response-time.xsl" type="text/xsl"?>
 <page xmlns:x="http://www.yandex.ru/xscript">
+    <xscript>
+        <add-headers>
+            <header name="Cache-Control" value="max-age=0, proxy-revalidate"/>
+            <header name="Pragma" value="no-cache"/>
+	</add-headers>
+    </xscript>
     <x:control>
         <method>response-time</method>
     </x:control>

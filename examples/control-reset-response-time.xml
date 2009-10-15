@@ -1,5 +1,10 @@
-<page xmlns:x="http://www.yandex.ru/xscript"
-    >
+<page xmlns:x="http://www.yandex.ru/xscript">
+    <xscript>
+        <add-headers>
+            <header name="Cache-Control" value="max-age=0, proxy-revalidate"/>
+            <header name="Pragma" value="no-cache"/>
+        </add-headers>
+    </xscript>
 
     <x:control>
         <method>reset-response-time</method>
