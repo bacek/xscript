@@ -31,6 +31,7 @@ public:
     }
 
     XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::exception) {
+        ControlExtension::setControlFlag(ctx.get());
         LoggerFactory::instance()->logRotate();
         XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
         XmlUtils::throwUnless(NULL != doc.get());
@@ -39,8 +40,6 @@ public:
         XmlUtils::throwUnless(NULL != node);
 
         xmlDocSetRootElement(doc.get(), node);
-
-        ControlExtension::setControlFlag(ctx.get());
         
         return doc;
     }
