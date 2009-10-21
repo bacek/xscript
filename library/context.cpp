@@ -137,7 +137,7 @@ struct Context::ContextData {
     std::string key_;
 
     unsigned int flags_;
-    unsigned int expire_time_delta_;
+    boost::uint32_t expire_time_delta_;
     boost::int32_t page_random_;
 
     std::map<const Block*, std::string> runtime_errors_;
@@ -157,7 +157,7 @@ struct Context::ContextData {
     static const unsigned int SKIP_NEXT_BLOCKS = 1 << 5;
     static const unsigned int STOP_BLOCKS = 1 << 6;
     
-    static const unsigned int DEFAULT_EXPIRE_TIME_DELTA = 300;
+    static const boost::uint32_t DEFAULT_EXPIRE_TIME_DELTA = 300;
 };
 
 boost::thread_specific_ptr<std::list<TimeoutCounter> > Context::ContextData::block_timers_;
@@ -356,14 +356,14 @@ Context::xsltName(const std::string &value) {
     }
 }
 
-unsigned int
+boost::uint32_t
 Context::expireTimeDelta() const {
     boost::mutex::scoped_lock sl(ctx_data_->attr_mutex_);
     return ctx_data_->expire_time_delta_;
 }
 
 void
-Context::expireTimeDelta(unsigned int value) {
+Context::expireTimeDelta(boost::uint32_t value) {
     boost::mutex::scoped_lock sl(ctx_data_->attr_mutex_);
     ctx_data_->expire_time_delta_ = value;
 }

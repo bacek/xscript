@@ -34,7 +34,7 @@ public:
 
     bool forceStylesheet() const;
     bool binaryPage() const;
-    unsigned int expireTimeDelta() const;
+    boost::uint32_t expireTimeDelta() const;
     bool expireTimeDeltaUndefined() const;
     time_t cacheTime() const;
     boost::int32_t pageRandomMax() const;

@@ -49,7 +49,7 @@
 namespace xscript {
 
 static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
-static const unsigned int EXPIRE_TIME_DELTA_UNDEFINED = std::numeric_limits<unsigned int>::max();
+static const boost::uint32_t EXPIRE_TIME_DELTA_UNDEFINED = std::numeric_limits<boost::uint32_t>::max();
 static const std::string GET_METHOD = "GET";
 
 const std::string Script::PARSE_XSCRIPT_NODE_METHOD = "SCRIPT_PARSE_XSCRIPT_NODE";
@@ -65,7 +65,7 @@ public:
     bool threaded() const;
     bool forceStylesheet() const;
     bool binaryPage() const;
-    unsigned int expireTimeDelta() const;
+    boost::uint32_t expireTimeDelta() const;
     time_t cacheTime() const;
     boost::int32_t pageRandomMax() const;
     bool cacheTimeUndefined() const;
@@ -92,7 +92,7 @@ public:
 
     void threaded(bool value);
     void forceStylesheet(bool value);
-    void expireTimeDelta(unsigned int value);
+    void expireTimeDelta(boost::uint32_t value);
     void cacheTime(time_t value);
     void pageRandomMax(boost::int32_t value);
     void binaryPage(bool value);
@@ -122,7 +122,7 @@ public:
     XmlDocHelper doc_;
     std::vector<Block*> blocks_;
     unsigned int flags_;
-    unsigned int expire_time_delta_;
+    boost::uint32_t expire_time_delta_;
     time_t cache_time_;
     boost::int32_t page_random_max_;
     std::set<xmlNodePtr> xscript_node_set_;
@@ -175,7 +175,7 @@ Script::ScriptData::binaryPage() const {
     return flags_ & FLAG_BINARY_PAGE;
 }
 
-unsigned int
+boost::uint32_t
 Script::ScriptData::expireTimeDelta() const {
     return expire_time_delta_;
 }
@@ -270,7 +270,7 @@ Script::ScriptData::forceStylesheet(bool value) {
 }
 
 void
-Script::ScriptData::expireTimeDelta(unsigned int value) {
+Script::ScriptData::expireTimeDelta(boost::uint32_t value) {
     expire_time_delta_ = value;
 }
 
@@ -845,7 +845,7 @@ Script::PropertyHandler::process(const MessageParams &params,
     }
     else if (strncasecmp(prop, "http-expire-time-delta", sizeof("http-expire-time-delta")) == 0) {
         try {
-            script->data_->expireTimeDelta(boost::lexical_cast<unsigned int>(value));
+            script->data_->expireTimeDelta(boost::lexical_cast<boost::uint32_t>(value));
         }
         catch(const boost::bad_lexical_cast &e) {
             throw std::runtime_error(
@@ -988,7 +988,7 @@ Script::binaryPage() const {
     return data_->binaryPage();
 }
 
-unsigned int
+boost::uint32_t
 Script::expireTimeDelta() const {
     return data_->expireTimeDelta();
 }
@@ -1153,9 +1153,15 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
 }
 
 void
-Script::addExpiresHeader(const Context *ctx) const {
-    ctx->response()->setHeader(
-            "Expires", HttpDateUtils::format(time(NULL) + ctx->expireTimeDelta()));
+Script::addExpiresHeader(const Context *ctx) const {   
+    boost::int32_t now = (boost::int32_t)time(NULL);
+    boost::int32_t max = Cookie::MAX_LIVE_TIME;
+    
+    boost::int32_t expires =
+        (boost::int64_t)now + (boost::int64_t)ctx->expireTimeDelta() > (boost::int64_t)max ?
+            max : now + ctx->expireTimeDelta();
+       
+    ctx->response()->setHeader("Expires", HttpDateUtils::format(expires));
 }
 
 
@@ -1172,8 +1178,6 @@ bool
 Script::expireTimeDeltaUndefined() const {
     return data_->expireTimeDeltaUndefined();
 }
-
-
 
 std::string
 Script::createTagKey(const Context *ctx, bool page_cache) const {

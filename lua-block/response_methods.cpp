@@ -136,8 +136,11 @@ luaResponseSetExpireTimeDelta(lua_State *lua) throw () {
     try {
         luaCheckStackSize(lua, 2);
         Context *ctx = luaReadStack<Context>(lua, "xscript.response", 1);
-        unsigned int expire_time_delta = luaReadStack<boost::uint32_t>(lua, 2);
-        ctx->rootContext()->expireTimeDelta(expire_time_delta);
+        boost::int32_t expire_time_delta = luaReadStack<boost::int32_t>(lua, 2);
+        if (expire_time_delta < 0) {
+            throw std::runtime_error("negative expire time delta is not allowed");
+        }
+        ctx->rootContext()->expireTimeDelta((boost::uint32_t)expire_time_delta);
         return 0;
     }
     catch (const LuaError &e) {

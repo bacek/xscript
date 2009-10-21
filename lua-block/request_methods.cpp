@@ -200,7 +200,7 @@ luaRequestGetPathInfo(lua_State *lua) throw () {
 
 extern "C" int
 luaRequestGetRealPath(lua_State *lua) throw () {
-    return call_method(lua, &Request::getPathTranslated);
+    return call_method(lua, &Request::getScriptFilename);
 }
 
 extern "C" int
