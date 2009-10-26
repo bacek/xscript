@@ -48,12 +48,14 @@ public:
      * \param info  Info string appened to output.
      */
     Profiler(Logger* log, const std::string& info);
-
-    boost::uint64_t release();
     /**
      * Destructor which output profiling info into log.
      */
     ~Profiler();
+    
+    boost::uint64_t release();
+    void setInfo(const std::string &info);
+    boost::uint64_t checkPoint(const std::string &info);
 private:
     struct ProfilerData;
     ProfilerData *data_;
@@ -71,6 +73,12 @@ private:
 
 #define PROFILER_FORCE(log,info) \
     std::auto_ptr<xscript::Profiler> __p(new xscript::Profiler((log), (info)))
+
+#define PROFILER_SET_INFO(info) \
+	if (NULL != __p.get()) __p->setInfo(info)
+
+#define PROFILER_CHECK_POINT(info) \
+    if (NULL != __p.get()) __p->checkPoint(info)
 
 #define PROFILER_RELEASE() \
     NULL == __p.get() ? 0 : __p->release()

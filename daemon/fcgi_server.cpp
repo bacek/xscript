@@ -165,8 +165,10 @@ FCGIServer::handle() {
         RequestAcceptor request_acceptor(&req);
         if (request_acceptor.accepted()) {
             try {
+                PROFILER_FORCE(log(), "overall time");
+                
                 SimpleCounter::ScopedCount c(workerCounter_.get());
-
+                
                 fcgi_streambuf inbuf(req.in, &inv[0], inv.size());
                 fcgi_streambuf outbuf(req.out, &outv[0], outv.size());
 
@@ -179,12 +181,14 @@ FCGIServer::handle() {
                 ResponseDetacher response_detacher(server_response);
                 boost::shared_ptr<Context> ctx;
                 
-                const std::string &script_name = request->getScriptFilename();
-                PROFILER_FORCE(log(), "overall time for " + script_name);
-                log()->info("requested file: %s", script_name.c_str());
-                
                 try {
                     request->attach(&is, req.envp);
+                    PROFILER_CHECK_POINT("request read and parse");
+                    
+                    const std::string &script_name = request->getScriptFilename();
+                    PROFILER_SET_INFO("overall time for " + script_name);
+                    log()->info("requested file: %s", script_name.c_str());
+                    
                     handleRequest(request, response, ctx);
                 }
                 catch (const BadRequestError &e) {

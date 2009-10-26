@@ -1,7 +1,8 @@
 #include "settings.h"
 
-#include "xscript/profiler.h"
 #include "xscript/logger.h"
+#include "xscript/profiler.h"
+#include "xscript/string_utils.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -44,22 +45,36 @@ Profiler::Profiler(Logger* log, const std::string& info) :
 
 boost::uint64_t
 Profiler::release() {
+    boost::uint64_t delta = checkPoint(StringUtils::EMPTY_STRING);
+    data_->active_ = false;
+    return delta;
+}
+
+boost::uint64_t
+Profiler::checkPoint(const std::string &message) {
     if (!data_->active_) {
         return 0;
     }
     
-    data_->active_ = false;
     timeval endTime;
     gettimeofday(&endTime, 0);
 
     uint64_t delta = endTime - data_->startTime_;
 
-    data_->log_->info("[profile] %llu.%06llu %s", (unsigned long long)(delta / 1000000),
-    (unsigned long long)(delta % 1000000), data_->info_.c_str());
+    data_->log_->info("[profile] %llu.%06llu %s",
+                      (unsigned long long)(delta / 1000000),
+                      (unsigned long long)(delta % 1000000),
+                      message.empty() ? data_->info_.c_str() : message.c_str());
     
     return delta;
-}                   
-                   
+}
+
+
+void
+Profiler::setInfo(const std::string &info) {
+    data_->info_ = info;
+}
+
 Profiler::~Profiler() {
     release();
     delete data_;
