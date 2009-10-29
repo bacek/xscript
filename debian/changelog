@@ -1,3 +1,9 @@
+xscript (5.69-6) unstable; urgency=low
+
+  * profiler fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 29 Oct 2009 19:55:48 +0300
+
 xscript (5.69-5) unstable; urgency=low
 
   * expires time delta fixed
