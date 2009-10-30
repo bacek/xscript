@@ -433,25 +433,16 @@ Script::ScriptData::parseNode(xmlNodePtr node, std::vector<xmlNodePtr> &xscript_
                 node = node->next;
                 continue;
             }
-                               
-            if (node->ns && node->ns->href &&
+            
+            if (xmlStrEqual(node->name, XINCLUDE_FALLBACK) &&
+                node->ns && node->ns->href &&
                 (xmlStrEqual(node->ns->href, XINCLUDE_NS) ||
                  xmlStrEqual(node->ns->href, XINCLUDE_OLD_NS))) {
                 
-                if (xmlStrEqual(node->name, XINCLUDE_NODE)) {
-                    const char *href = XmlUtils::attrValue(node, (const char*)XINCLUDE_HREF);
-                    if (NULL != href) {
-                        throw UnboundRuntimeError(
-                            std::string("Cannot include file: ") + href +
-                                ". Check include file for syntax error");
-                    }
-                }
-                else if (xmlStrEqual(node->name, XINCLUDE_FALLBACK)) {
-                    node = node->next;
-                    continue;
-                }
+                node = node->next;
+                continue;
             }
-                        
+    
             Extension *ext = elist->extension(node, true);
             if (NULL != ext) {
                 log()->debug("%s, creating block %s", owner_->name().c_str(), ext->name());
@@ -1063,6 +1054,10 @@ Script::parse(const std::string &xml) {
 
         XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT) >= 0);
 
+        if (NULL == xmlDocGetRootElement(doc.get())) {
+            throw std::runtime_error("got xml doc with no root");
+        }
+        
         TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
         TimeMapType fake;
         modified_info ? swapModifiedInfo(*modified_info) : swapModifiedInfo(fake);
