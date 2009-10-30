@@ -5,6 +5,10 @@
 >
 
 <xsl:variable name="collect-time" select="/page/response-time/@collect-time"/>
+<xsl:variable name="days" select="floor($collect-time div 79800)"/>
+<xsl:variable name="hours" select="floor(($collect-time - 79800*$days) div 3600)"/>
+<xsl:variable name="minutes" select="floor(($collect-time - 79800*$days - 3600*$hours) div 60)"/>
+
 <xsl:template match="/page/response-time">
     <html>
         <head>
@@ -13,7 +17,11 @@
         <body>
 	    <h2>Xscript5 response time statistics</h2>
 
-	    <div style="margin-left:5px">Collection time: <xsl:value-of select="$collect-time"/> sec<br/><br/></div>
+	    <div style="margin-left:5px">Collection time: 
+		<xsl:value-of select="$days"/> days
+		<xsl:value-of select="$hours"/> hours 
+		<xsl:value-of select="$minutes"/> minutes
+		<br/><br/></div>
 	    
 	    <table border="1" cellpadding="5px">
 	        <tr align="center">
@@ -31,7 +39,7 @@
 		</xsl:if>
 	    </table>
 	    <br/>
-	    <div style="margin-left:5px">* Time data in microseconds</div>
+	    <div style="margin-left:5px">* Time data in seconds</div>
 	</body>
     </html>
 </xsl:template>
@@ -49,12 +57,12 @@
 	            <xsl:value-of select="0"/>
 	        </xsl:when>
 		<xsl:otherwise>
-		    <xsl:value-of select="floor(sum(child::point/@total) div $sum)"/>
+		    <xsl:value-of select="format-number(sum(child::point/@total) div ($sum*1e6), '#.###')"/>
 		</xsl:otherwise>
 	    </xsl:choose>
         </td>
-        <td><xsl:value-of select="math:min(child::point/@min)"/></td>
-        <td><xsl:value-of select="math:max(child::point/@max)"/></td>	
+        <td><xsl:value-of select="format-number(math:min(child::point/@min) div 1e6, '#.###')"/></td>
+        <td><xsl:value-of select="format-number(math:max(child::point/@max) div 1e6, '#.###')"/></td>	
 <!--        <td><xsl:value-of select="sum(child::point/@total)"/></td>  -->
         <td><xsl:value-of select="format-number(sum(child::point/@count) div $collect-time, '#.###')"/></td>
     </tr>
@@ -68,9 +76,9 @@
         <td><xsl:value-of select="../@code"/></td>
 	<td><xsl:value-of select="@auth-type"/></td>
 	<td><xsl:value-of select="@count"/></td>        
-	<td><xsl:value-of select="@avg"/></td>
-        <td><xsl:value-of select="@min"/></td>
-        <td><xsl:value-of select="@max"/></td>
+	<td><xsl:value-of select="format-number(@avg div 1e6, '#.###')"/></td>
+        <td><xsl:value-of select="format-number(@min div 1e6, '#.###')"/></td>
+        <td><xsl:value-of select="format-number(@max div 1e6, '#.###')"/></td>
 <!--        <td><xsl:value-of select="@total"/></td>   -->
 	<td><xsl:value-of select="format-number(@count div $collect-time, '#.###')"/></td>
     </tr>
