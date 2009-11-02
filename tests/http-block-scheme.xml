@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<result xmlns:x="http://www.yandex.ru/xscript">
+  <xscript all-threaded="no"/>
+  <x:http>
+    <method>getHttp</method>
+    <param type="string">file://include.xml</param>
+  </x:http>
+</result>

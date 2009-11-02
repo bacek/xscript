@@ -18,7 +18,8 @@
 class InvokeTest : public CppUnit::TestFixture {
 public:
     void testInvoke();
-    void testHttpBlockParams();
+    void testFileBlockParams();
+    void testHttpBlockScheme();
     void testParams();
     void testNoBlocks();
     void testEmptyCDATA();
@@ -29,7 +30,8 @@ public:
 private:
     CPPUNIT_TEST_SUITE(InvokeTest);
     CPPUNIT_TEST(testInvoke);
-    CPPUNIT_TEST(testHttpBlockParams);
+    CPPUNIT_TEST(testFileBlockParams);
+    CPPUNIT_TEST(testHttpBlockScheme);
     CPPUNIT_TEST(testParams);
     CPPUNIT_TEST(testNoBlocks);
     CPPUNIT_TEST(testEmptyCDATA);
@@ -85,14 +87,14 @@ InvokeTest::testParams() {
 }
 
 void
-InvokeTest::testHttpBlockParams() {
+InvokeTest::testFileBlockParams() {
 
     using namespace xscript;
 
     boost::shared_ptr<Request> request(new Request());
     boost::shared_ptr<Response> response(new Response());
     boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("http-block-params.xml");
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("file-block-params.xml");
     boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
     ContextStopper ctx_stopper(ctx);
 
@@ -101,6 +103,23 @@ InvokeTest::testHttpBlockParams() {
 
     CPPUNIT_ASSERT_EQUAL(std::string("success"),
                          XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
+}
+
+void
+InvokeTest::testHttpBlockScheme() {
+
+    using namespace xscript;
+
+    boost::shared_ptr<Request> request(new Request());
+    boost::shared_ptr<Response> response(new Response());
+    boost::shared_ptr<State> state(new State());
+    boost::shared_ptr<Script> script = ScriptFactory::createScript("http-block-scheme.xml");
+    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    ContextStopper ctx_stopper(ctx);
+
+    XmlDocHelper doc(script->invoke(ctx));
+    CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/result/xscript_invoke_failed/@error"));
 }
 
 void

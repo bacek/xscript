@@ -1,10 +1,10 @@
 <?xml version="1.0" ?>
 <result xmlns:x="http://www.yandex.ru/xscript">
   <xscript all-threaded="no"/>
-  <x:http>
-    <xslt>http-block-params.xsl</xslt>
-    <method>getHttp</method>
+  <x:file>
+    <xslt>file-block-params.xsl</xslt>
+    <method>load</method>
     <param type="string">file://include.xml</param>
     <xslt-param id="test" type="string">Hello, World!</xslt-param>
-  </x:http>
+  </x:file>
 </result>
