@@ -15,7 +15,10 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
+#include <openssl/bio.h>
 #include <openssl/blowfish.h>
+#include <openssl/buffer.h>
+#include <openssl/evp.h>
 #include <openssl/md5.h>
 
 #include "xscript/util.h"
@@ -189,6 +192,43 @@ HashUtils::crc32(const char *key, unsigned long len) {
     boost::crc_32_type result;
     result.process_bytes(key, len);
     return result.checksum();
+}
+
+void
+HashUtils::encodeBase64(const char *input, unsigned long len, std::string &result) {
+    BIO *bmem, *b64;
+    BUF_MEM *bptr;
+
+    b64 = BIO_new(BIO_f_base64());
+    bmem = BIO_new(BIO_s_mem());
+    b64 = BIO_push(b64, bmem);
+    BIO_write(b64, input, len);
+    BIO_flush(b64);
+    BIO_get_mem_ptr(b64, &bptr);
+
+    result.assign((const char*)bptr->data, bptr->length-1);
+    BIO_free_all(b64);
+}
+
+void
+HashUtils::decodeBase64(const char *input, unsigned long len, std::string &result) {
+    BIO *b64, *bmem;
+    
+    char* buffer = (char*)malloc(len);
+    memset(buffer, 0, len);
+    
+    b64 = BIO_new(BIO_f_base64());
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
+    bmem = BIO_new_mem_buf((void*)input, len);
+    bmem = BIO_push(b64, bmem);
+    
+    size_t out_len = BIO_read(bmem, buffer, len);
+    
+    BIO_free_all(bmem);
+    
+    result.assign(buffer, out_len);
+    
+    free(buffer);
 }
 
 FileUtils::FileUtils() {

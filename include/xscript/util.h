@@ -42,6 +42,9 @@ public:
                                 const char *key, unsigned long key_len, const char *ivec);
     static boost::uint32_t crc32(const std::string &key);
     static boost::uint32_t crc32(const char *key, unsigned long len);
+    
+    static void encodeBase64(const char *input, unsigned long len, std::string &result);
+    static void decodeBase64(const char *input, unsigned long len, std::string &result);
 private:
     HashUtils();
     virtual ~HashUtils();
