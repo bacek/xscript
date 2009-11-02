@@ -200,13 +200,14 @@ HashUtils::encodeBase64(const char *input, unsigned long len, std::string &resul
     BUF_MEM *bptr;
 
     b64 = BIO_new(BIO_f_base64());
+    BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
     bmem = BIO_new(BIO_s_mem());
     b64 = BIO_push(b64, bmem);
     BIO_write(b64, input, len);
     BIO_flush(b64);
     BIO_get_mem_ptr(b64, &bptr);
 
-    result.assign((const char*)bptr->data, bptr->length-1);
+    result.assign((const char*)bptr->data, bptr->length);
     BIO_free_all(b64);
 }
 
