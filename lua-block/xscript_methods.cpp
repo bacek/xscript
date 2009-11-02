@@ -177,6 +177,42 @@ luaMD5(lua_State *lua) {
 }
 
 static int
+luaBase64Encode(lua_State *lua) {
+    try {
+        luaCheckStackSize(lua, 1);
+        std::string data = luaReadStack<std::string>(lua, 1);
+
+        HashUtils::encodeBase64(data.c_str(), data.size(), data);
+        lua_pushstring(lua, data.c_str());
+        // Our value on stack
+        return 1;
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:base64encode]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
+static int
+luaBase64Decode(lua_State *lua) {
+    try {
+        luaCheckStackSize(lua, 1);
+        std::string data = luaReadStack<std::string>(lua, 1);
+
+        HashUtils::decodeBase64(data.c_str(), data.size(), data);
+        lua_pushstring(lua, data.c_str());
+        // Our value on stack
+        return 1;
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:base64decode]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
+static int
 luaDomain(lua_State *lua) {
     try {
         int stack_size = lua_gettop(lua);
@@ -354,6 +390,12 @@ setupXScript(lua_State *lua, std::string * buf, Context *ctx, Block *block) {
     lua_pushcfunction(lua, &luaMD5);
     lua_setfield(lua, -2, "md5");
 
+    lua_pushcfunction(lua, &luaBase64Encode);
+    lua_setfield(lua, -2, "base64encode");
+    
+    lua_pushcfunction(lua, &luaBase64Decode);
+    lua_setfield(lua, -2, "base64decode");
+    
     lua_pushcfunction(lua, &luaDomain);
     lua_setfield(lua, -2, "domain");
 
