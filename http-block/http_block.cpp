@@ -115,6 +115,16 @@ HttpBlock::property(const char *name, const char *value) {
     }
 }
 
+std::string
+HttpBlock::concatParams(const Context *ctx, unsigned int first, unsigned int last) const {  
+    std::string url = Block::concatParams(ctx, first, last);
+    if (strncasecmp(url.c_str(), "file://", sizeof("file://") - 1) == 0) {
+        throw InvokeError("File scheme is not allowed", "url", url);
+    }
+    return url;
+    
+}
+
 XmlDocHelper
 HttpBlock::getHttp(Context *ctx, boost::any &a) {
 
@@ -129,47 +139,6 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
     std::string url = concatParams(ctx, 0, size - 1);
     PROFILER(log(), "getHttp: " + url);
 
-    if (strncasecmp(url.c_str(), "file://", sizeof("file://") - 1) == 0) {
-        std::stringstream ss;
-        ss << "Loading file in Http block is deprecated. Use File block. Url: "
-           << url << ". Owner: " << owner()->name();
-        
-        OperationMode::processError(ss.str());
-        
-        namespace fs = boost::filesystem;
-        url.erase(0, sizeof("file://") - 1);
-        fs::path file_path(url);
-        std::string native_path = file_path.native_file_string();
-        
-        struct stat st;
-        int res = stat(native_path.c_str(), &st);
-        if (res != 0) {
-            std::stringstream stream;
-            StringUtils::report("failed to stat file: ", errno, stream);
-            throw InvokeError(stream.str(), "url", url);
-        }
-        
-        bool modified = true;
-        if (tagged()) {
-            const Tag* tag = boost::any_cast<Tag>(&a);
-            if (tag && tag->last_modified != Tag::UNDEFINED_TIME && st.st_mtime == tag->last_modified) {
-                modified = false;
-            }
-
-            Tag local_tag(modified, st.st_mtime, Tag::UNDEFINED_TIME);
-            a = boost::any(local_tag);
-        }
-        
-        XmlDocHelper doc;
-        if (modified) {
-            doc = XmlDocHelper(xmlParseFile(native_path.c_str()));
-            if (doc.get() == NULL) {
-                throw InvokeError("got empty document", "url", url);
-            }
-        }
-        return doc;
-    }
-    
     const Tag *tag = boost::any_cast<Tag>(&a);
     HttpHelper helper(url, getTimeout(ctx, url));
     
