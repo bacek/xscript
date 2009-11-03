@@ -387,12 +387,22 @@ HttpBlock::response(const HttpHelper &helper) const {
                                           charset_.empty() ? NULL : charset_.c_str(),
                                           XML_PARSE_DTDATTR | XML_PARSE_NOENT));
     }
-    else if (helper.contentType() == "text/plain") {
+    if (helper.contentType() == "text/plain") {
+        if (str->empty()) {
+            XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+            if (NULL != doc.get()) {
+                XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"text", NULL));
+                if (node.get() != NULL) {
+                    xmlDocSetRootElement(doc.get(), node.release());
+                }
+            }
+            return doc;
+        }
         std::string res;
         res.append("<text>").append(XmlUtils::escape(*str)).append("</text>");
-        return XmlDocHelper(xmlParseMemory(res.c_str(), res.size()));
+        return XmlDocHelper(xmlReadMemory(res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
     }
-    else if (helper.contentType() == "text/html") {
+    if (helper.contentType() == "text/html") {
         std::string data = XmlUtils::sanitize(*str, StringUtils::EMPTY_STRING, 0);
         return XmlDocHelper(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
                                           helper.charset().c_str(),

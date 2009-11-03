@@ -1,3 +1,10 @@
+xscript (5.69-10) unstable; urgency=low
+
+  * suppress errors on empty http result and text/plain case
+  * xmlParseMemory changed to xmlReadMemory when text/plain case
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Tue, 03 Nov 2009 17:03:22 +0300
+
 xscript (5.69-9) unstable; urgency=low
 
   * file scheme deprecated in http-block

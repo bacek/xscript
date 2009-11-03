@@ -194,6 +194,10 @@ public:
             }
             log()->debug("found %s, %s", content_type_.c_str(), charset_.c_str());
         }
+        else if (content_->empty() && (200 == status_ || 204 == status_)) {
+            charset_.assign("utf-8");
+            content_type_.assign("text/plain");
+        }
         else {
             charset_.assign("windows-1251");
             content_type_.assign("text/xml");
@@ -351,10 +355,13 @@ HttpHelper::checkStatus() const {
         stream << "server responded " << data_->status_;
         throw std::runtime_error(stream.str());
     }
-    else if (0 == data_->status_ && 0 == data_->content_->size()) {
+    if (0 == data_->status_ && data_->content_->empty()) {
         throw std::runtime_error("empty local content: possibly not performed");
     }
-    else if (304 == data_->status_ && !data_->sent_modified_since_) {
+    if (204 == data_->status_ && !data_->content_->empty()) {
+        throw std::runtime_error("content must be empty");
+    }
+    if (304 == data_->status_ && !data_->sent_modified_since_) {
         throw std::runtime_error("server responded not-modified but if-modified-since was not sent");
     }
 }
