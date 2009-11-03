@@ -194,42 +194,53 @@ HashUtils::crc32(const char *key, unsigned long len) {
     return result.checksum();
 }
 
+class BIOHolder {
+public:
+    BIOHolder(BIO *bio) : bio_(bio) {}
+    ~BIOHolder() {
+        if (NULL != bio_) {
+            BIO_free_all(bio_);
+        }
+    }
+private:
+    BIO* bio_;
+};
+
 void
 HashUtils::encodeBase64(const char *input, unsigned long len, std::string &result) {
-    BIO *bmem, *b64;
-    BUF_MEM *bptr;
-
-    b64 = BIO_new(BIO_f_base64());
+    BIO* b64 = BIO_new(BIO_f_base64());
     BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    bmem = BIO_new(BIO_s_mem());
+    BIO* bmem = BIO_new(BIO_s_mem());
     b64 = BIO_push(b64, bmem);
+    
+    BIOHolder holder(b64);
     BIO_write(b64, input, len);
     BIO_flush(b64);
+    BUF_MEM* bptr = NULL;
     BIO_get_mem_ptr(b64, &bptr);
-
+    if (NULL == bptr) {
+        result.clear();
+        return;
+    }
     result.assign((const char*)bptr->data, bptr->length);
-    BIO_free_all(b64);
 }
 
 void
 HashUtils::decodeBase64(const char *input, unsigned long len, std::string &result) {
-    BIO *b64, *bmem;
-    
-    char* buffer = (char*)malloc(len);
-    memset(buffer, 0, len);
-    
-    b64 = BIO_new(BIO_f_base64());
+    std::vector<char> buffer(len, 0x0);    
+    BIO* b64 = BIO_new(BIO_f_base64());
     BIO_set_flags(b64, BIO_FLAGS_BASE64_NO_NL);
-    bmem = BIO_new_mem_buf((void*)input, len);
+    BIO* bmem = BIO_new_mem_buf((void*)input, len);
     bmem = BIO_push(b64, bmem);
     
-    size_t out_len = BIO_read(bmem, buffer, len);
-    
+    size_t out_len = BIO_read(bmem, &buffer[0], len);
     BIO_free_all(bmem);
     
-    result.assign(buffer, out_len);
-    
-    free(buffer);
+    if (out_len <= 0 || out_len > len) {
+        result.clear();
+        return;
+    }
+    result.assign(buffer.begin(), buffer.begin() + out_len);
 }
 
 FileUtils::FileUtils() {
