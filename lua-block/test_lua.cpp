@@ -37,6 +37,7 @@ public:
     void testMD5();
     void testDomain();
     void testXmlEncode();
+    void testGetVHostArg();
     
     void testLogger();
 private:
@@ -61,6 +62,7 @@ private:
     CPPUNIT_TEST(testMD5);
     CPPUNIT_TEST(testDomain);
     CPPUNIT_TEST(testXmlEncode);
+    CPPUNIT_TEST(testGetVHostArg);
 
     CPPUNIT_TEST(testLogger);
 
@@ -365,3 +367,16 @@ LuaTest::testLogger() {
     XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 }
+
+void
+LuaTest::testGetVHostArg() {
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-get-vhost-arg.xml");
+    ContextStopper ctx_stopper(ctx);
+
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
+    CPPUNIT_ASSERT(NULL != doc.get());
+
+    // Unknown param returns empty string
+    CPPUNIT_ASSERT_EQUAL(std::string("1111"), ctx->state()->asString("maxdepth"));
+}
+

@@ -1,0 +1,10 @@
+<?xml version="1.0" ?>
+<?xml-stylesheet type="text/xsl" href="object.xsl"?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <x:lua>
+	  <![CDATA[
+	  depth = xscript.getVHostArg("xslt/max-depth")
+	  xscript.state:setString("maxdepth", depth)
+  ]]>
+  </x:lua>
+</page>

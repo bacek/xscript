@@ -2,28 +2,15 @@
 
 #include "xscript/context.h"
 #include "xscript/guard_checker.h"
-#include "xscript/param.h"
 #include "xscript/vhost_data.h"
+
+#include "internal/vhost_arg_param.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
 
 namespace xscript {
-
-class VHostArgParam : public TypedParam {
-public:
-    VHostArgParam(Object *owner, xmlNodePtr node);
-    virtual ~VHostArgParam();
-
-    virtual const char* type() const;
-    virtual std::string asString(const Context *ctx) const;
-
-    static std::string variable(const Context *ctx, const std::string &name);
-    
-    static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
-    static bool is(const Context *ctx, const std::string &name, const std::string &value);
-};
 
 VHostArgParam::VHostArgParam(Object *owner, xmlNodePtr node) :
     TypedParam(owner, node) {
@@ -39,22 +26,13 @@ VHostArgParam::type() const {
 
 std::string
 VHostArgParam::variable(const Context *ctx, const std::string &name) {
-    VirtualHostData *vhdata = VirtualHostData::instance();
-    if (strncasecmp(name.c_str(), "noxslt-port", sizeof("noxslt-port")) == 0) {
-        return boost::lexical_cast<std::string>(vhdata->getServer()->noXsltPort());
+    if (strncmp(name.c_str(), "XSCRIPT_", sizeof("XSCRIPT_") - 1) == 0) {
+        return VirtualHostData::instance()->getVariable(ctx->request(), name);
     }
-    else if (strncasecmp(name.c_str(), "alternate-port", sizeof("alternate-port")) == 0) {
-        return boost::lexical_cast<std::string>(vhdata->getServer()->alternatePort());
-    }
-    else if (strncmp(name.c_str(), "XSCRIPT_", sizeof("XSCRIPT_") - 1) == 0) {
-        return vhdata->getVariable(ctx->request(), name);
-    }
-    
     std::string value;
     if (Config::getCacheParam(name, value)) {
         return value;
     }
-    
     return StringUtils::EMPTY_STRING;
 }
 
