@@ -56,6 +56,9 @@ LoggerFactory::init(const Config * config) {
     ControlExtension::Constructor f = boost::bind(boost::mem_fn(&LoggerFactory::createBlock), this, _1, _2, _3);
     ControlExtension::registerConstructor("logrotate", f);
     
+    Config::addForbiddenKey("/xscript/logger/*");
+    Config::addForbiddenKey("/xscript/logger-factory/*");
+    
     std::vector<std::string> v;
     std::string key("/xscript/logger-factory/logger");
 

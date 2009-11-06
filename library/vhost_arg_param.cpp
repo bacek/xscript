@@ -46,12 +46,16 @@ VHostArgParam::variable(const Context *ctx, const std::string &name) {
     else if (strncasecmp(name.c_str(), "alternate-port", sizeof("alternate-port")) == 0) {
         return boost::lexical_cast<std::string>(vhdata->getServer()->alternatePort());
     }
-    
-    if (strncmp(name.c_str(), "XSCRIPT_", sizeof("XSCRIPT_") - 1) != 0) {
-        throw std::runtime_error(
-            "Environment variable without XSCRIPT prefix is not allowed in VHostArg: " + name);
+    else if (strncmp(name.c_str(), "XSCRIPT_", sizeof("XSCRIPT_") - 1) == 0) {
+        return vhdata->getVariable(ctx->request(), name);
     }
-    return vhdata->getVariable(ctx->request(), name);
+    
+    std::string value;
+    if (Config::getCacheParam(name, value)) {
+        return value;
+    }
+    
+    return StringUtils::EMPTY_STRING;
 }
 
 std::string

@@ -11,6 +11,7 @@
 #include <libxml/parser.h>
 #include <libxml/xinclude.h>
 
+#include "xscript/algorithm.h"
 #include "xscript/authorizer.h"
 #include "xscript/config.h"
 #include "xscript/control_extension.h"
@@ -52,10 +53,28 @@ typedef std::map<std::string, std::string> VarMap;
 typedef details::hash_map<std::string, std::string, details::StringHash> VarMap;
 #endif
 
+static std::map<std::string, std::string>* cache_params = NULL;
+static std::set<std::string>* forbidden_keys = NULL;
+static bool stop_collect_cache = false;
+
 Config::Config() {
+    if (NULL == cache_params) {
+        cache_params = new std::map<std::string, std::string>();
+    }
+    if (NULL == forbidden_keys) {
+        forbidden_keys = new std::set<std::string>();
+    }
 }
 
 Config::~Config() {
+    if (NULL != cache_params) {
+        delete cache_params;
+        cache_params = NULL;
+    }
+    if (NULL != forbidden_keys) {
+        delete forbidden_keys;
+        forbidden_keys = NULL;
+    }
 }
 
 void
@@ -138,6 +157,68 @@ Config::create(int &argc, char *argv[], bool dont_check, HelpFunc func) {
         stream << "usage: xscript --config=<config file>";
     }
     throw std::logic_error(stream.str());
+}
+
+void
+Config::addForbiddenKey(const std::string &key) {
+    if (stop_collect_cache) {
+        return;
+    }
+    Range key_r = trim(createRange(key));
+    if (key_r.empty()) {
+        return;
+    }
+    
+    static Range mask = createRange("/*");
+    if (endsWith(key_r, mask)) {
+        forbidden_keys->insert(std::string(key_r.begin(), key_r.end() - 1));
+    }
+    else {
+        forbidden_keys->insert(std::string(key_r.begin(), key_r.end()));
+    }
+}
+
+void
+Config::addCacheParam(const std::string &name, const std::string &value) {
+    if (stop_collect_cache) {
+        return;
+    }
+    Range name_r = trim(createRange(name));
+    static Range prefix = createRange("/xscript/");
+    if (!startsWith(name_r, prefix)) {
+        return;
+    }
+    
+    for(std::set<std::string>::iterator it = forbidden_keys->begin();
+        it != forbidden_keys->end();
+        ++it) {
+        if ('/' == *it->rbegin()) {
+            if (0 == strncmp(name_r.begin(), it->c_str(), it->size())) {
+                return;
+            }
+        }
+        else if (name_r == trim(createRange(*it))) {
+            return;
+        }
+    }
+    
+    std::string key(name_r.begin() + prefix.size(), name_r.end());
+    (*cache_params)[key] = value;
+}
+
+bool
+Config::getCacheParam(const std::string &name, std::string &value) {
+    std::map<std::string, std::string>::iterator it = cache_params->find(name);
+    if (cache_params->end() == it) {
+        return false;
+    }
+    value = it->second;
+    return true;
+}
+
+void
+Config::stopCollectCache() {
+    stop_collect_cache = true;
 }
 
 class XmlConfig::XmlConfigData {
@@ -316,6 +397,7 @@ static int default_timeout = 5000;
 
 void 
 ConfigParams::init(const Config *config) {
+    Config::addForbiddenKey("/xscript/default-block-timeout");
     default_timeout = config->as<int>("/xscript/default-block-timeout", 5000);
 }
 

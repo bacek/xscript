@@ -53,6 +53,7 @@ Authorizer::~Authorizer() {
 void
 Authorizer::init(const Config *config) {
     std::vector<std::string> v;
+    Config::addForbiddenKey("/xscript/auth/bots/*");
     config->subKeys("/xscript/auth/bots/bot", v);
     for (std::vector<std::string>::iterator i = v.begin(), end = v.end(); i != end; ++i) {
         bots_.push_back(StringUtils::tolower(config->as<std::string>(*i)));

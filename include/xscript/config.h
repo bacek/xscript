@@ -22,21 +22,31 @@ public:
     template<typename T> T as(const std::string &name) const;
     template<typename T> T as(const std::string &name, const T &defval) const;
 
-    virtual std::string value(const std::string &value) const = 0;
     virtual void subKeys(const std::string &value, std::vector<std::string> &v) const = 0;
 
     static std::auto_ptr<Config> create(const char *file);
     static std::auto_ptr<Config> create(int &argc, char *argv[], bool dont_check = false, HelpFunc func = NULL);
+    
+    static bool getCacheParam(const std::string &name, std::string &value);
+    static void addCacheParam(const std::string &name, const std::string &value);
+    static void addForbiddenKey(const std::string &key);
+    static void stopCollectCache();
+protected:
+    virtual std::string value(const std::string &value) const = 0;
 };
 
 template<typename T> inline T
 Config::as(const std::string &name) const {
-    return boost::lexical_cast<T>(value(name));
+    std::string val = value(name);
+    addCacheParam(name, val);
+    return boost::lexical_cast<T>(val);
 }
 
 template<> inline std::string
 Config::as<std::string>(const std::string &name) const {
-    return value(name);
+    std::string val = value(name);
+    addCacheParam(name, val);
+    return val;
 }
 
 template<typename T> inline T
@@ -45,6 +55,7 @@ Config::as(const std::string &name, const T &defval) const {
         return as<T>(name);
     }
     catch (const std::exception &e) {
+        addCacheParam(name, boost::lexical_cast<std::string>(defval));
         return defval;
     }
 }
