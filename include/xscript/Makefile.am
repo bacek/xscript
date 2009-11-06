@@ -11,4 +11,4 @@ pkginclude_HEADERS = algorithm.h args.h authorizer.h average_counter.h \
 	thread_pool.h util.h string_utils.h vhost_data.h writer.h xml.h xml_helpers.h xml_util.h \
 	xslt_extension.h xslt_profiler.h http_helper.h \
 	validator.h validator_factory.h validator_exception.h refresher.h guard_checker.h \
-	message_interface.h message_errors.h exception.h http_utils.h types.h response_time_counter.h
+	message_interface.h message_errors.h exception.h http_utils.h types.h response_time_counter.h test_utils.h

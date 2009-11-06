@@ -6,8 +6,11 @@
 #include <cppunit/ui/text/TestRunner.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "server_request.h"
 #include "xscript/config.h"
+#include "xscript/http_utils.h"
+#include "xscript/request.h"
+
+#include "internal/parser.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -28,7 +31,7 @@ private:
     CPPUNIT_TEST(testPost);
     CPPUNIT_TEST(testCookie);
     CPPUNIT_TEST(testBoundary);
-    CPPUNIT_TEST(testMultipart);
+//    CPPUNIT_TEST(testMultipart);
     CPPUNIT_TEST(testStatusString);
     CPPUNIT_TEST_SUITE_END();
 };
@@ -40,11 +43,16 @@ RequestTest::testGet() {
 
     using namespace xscript;
 
-    char *env[] = { "REQUEST_METHOD=GET", "QUERY_STRING=test=pass&success=try%20again", "HTTP_HOST=yandex.ru", NULL };
+    char *env[] = {
+        (char*)"REQUEST_METHOD=GET",
+        (char*)"QUERY_STRING=test=pass&success=try%20again",
+        (char*)"HTTP_HOST=yandex.ru",
+        (char*)NULL
+    };
 
-    ServerRequest req;
-    std::stringstream in, out;
-    req.attach(&in, &out, env);
+    std::stringstream in;
+    Request req;
+    req.attach(&in, env);
 
     CPPUNIT_ASSERT_EQUAL(std::string("GET"), req.getRequestMethod());
 
@@ -60,11 +68,16 @@ RequestTest::testPost() {
 
     using namespace xscript;
 
-    char *env[] = { "REQUEST_METHOD=POST", "HTTP_CONTENT_LENGTH=29", "HTTP_HOST=yandex.ru", NULL };
+    char *env[] = {
+        (char*)"REQUEST_METHOD=POST",
+        (char*)"HTTP_CONTENT_LENGTH=29",
+        (char*)"HTTP_HOST=yandex.ru",
+        (char*)NULL
+    };
 
-    ServerRequest req;
+    Request req;
     std::stringstream in("test=pass&success=try%20again"), out;
-    req.attach(&in, &out, env);
+    req.attach(&in, env);
 
     CPPUNIT_ASSERT_EQUAL(std::string("POST"), req.getRequestMethod());
 
@@ -73,7 +86,6 @@ RequestTest::testPost() {
 
     CPPUNIT_ASSERT_EQUAL(std::string("pass"), req.getArg("test"));
     CPPUNIT_ASSERT_EQUAL(std::string("try again"), req.getArg("success"));
-
 }
 
 void
@@ -81,13 +93,17 @@ RequestTest::testCookie() {
 
     using namespace xscript;
 
-    char *env[] = { "REQUEST_METHOD=GET", "QUERY_STRING=test=pass&success=try%20again", "HTTP_HOST=yandex.ru",
-                    "HTTP_COOKIE=yandexuid=921562781154947430; yandex_login=highpower; my=Yx4CAAA", NULL
-                  };
+    char *env[] = {
+        (char*)"REQUEST_METHOD=GET",
+        (char*)"QUERY_STRING=test=pass&success=try%20again",
+        (char*)"HTTP_HOST=yandex.ru",
+        (char*)"HTTP_COOKIE=cookie1=921562781154947430; cookie2=highpower; cookie3=Ddgfgdd",
+        (char*)NULL
+    };
 
-    ServerRequest req;
-    std::stringstream in, out;
-    req.attach(&in, &out, env);
+    Request req;
+    std::stringstream in;
+    req.attach(&in, env);
 
     CPPUNIT_ASSERT_EQUAL(std::string("GET"), req.getRequestMethod());
 
@@ -97,9 +113,9 @@ RequestTest::testCookie() {
     CPPUNIT_ASSERT_EQUAL(std::string("pass"), req.getArg("test"));
     CPPUNIT_ASSERT_EQUAL(std::string("try again"), req.getArg("success"));
 
-    CPPUNIT_ASSERT_EQUAL(std::string("Yx4CAAA"), req.getCookie("my"));
-    CPPUNIT_ASSERT_EQUAL(std::string("highpower"), req.getCookie("yandex_login"));
-    CPPUNIT_ASSERT_EQUAL(std::string("921562781154947430"), req.getCookie("yandexuid"));
+    CPPUNIT_ASSERT_EQUAL(std::string("Ddgfgdd"), req.getCookie("cookie3"));
+    CPPUNIT_ASSERT_EQUAL(std::string("highpower"), req.getCookie("cookie2"));
+    CPPUNIT_ASSERT_EQUAL(std::string("921562781154947430"), req.getCookie("cookie1"));
 
 }
 
@@ -118,16 +134,18 @@ RequestTest::testMultipart() {
 
     using namespace xscript;
 
-    ServerRequest req;
-
-    char *env[] = { "REQUEST_METHOD=POST", "HTTP_HOST=yandex.ru", "HTTP_CONTENT_LENGTH=1361",
-                    "CONTENT_TYPE=multipart/form-data; boundary=---------------------------15403834263040891721303455736", NULL
-                  };
+    char *env[] = {
+        (char*)"REQUEST_METHOD=POST",
+        (char*)"HTTP_HOST=yandex.ru",
+        (char*)"HTTP_CONTENT_LENGTH=1361",
+        (char*)"CONTENT_TYPE=multipart/form-data; boundary=---------------------------15403834263040891721303455736",
+        (char*)NULL
+    };
 
     std::fstream f("multipart-test.dat");
-    std::stringstream out;
 
-    req.attach(&f, &out, env);
+    Request req;
+    req.attach(&f, env);
 
     CPPUNIT_ASSERT_EQUAL(std::string("test"), req.getArg("username"));
     CPPUNIT_ASSERT_EQUAL(std::string("test"), req.getArg("filename"));
@@ -145,10 +163,10 @@ RequestTest::testStatusString() {
 
     using namespace xscript;
 
-    CPPUNIT_ASSERT_EQUAL(std::string("OK"), std::string(Parser::statusToString(200)));
-    CPPUNIT_ASSERT_EQUAL(std::string("Moved Temporarily"), std::string(Parser::statusToString(302)));
-    CPPUNIT_ASSERT_EQUAL(std::string("Not found"), std::string(Parser::statusToString(404)));
-    CPPUNIT_ASSERT_EQUAL(std::string("Method not allowed"), std::string(Parser::statusToString(405)));
+    CPPUNIT_ASSERT_EQUAL(std::string("OK"), std::string(HttpUtils::statusToString(200)));
+    CPPUNIT_ASSERT_EQUAL(std::string("Found"), std::string(HttpUtils::statusToString(302)));
+    CPPUNIT_ASSERT_EQUAL(std::string("Not Found"), std::string(HttpUtils::statusToString(404)));
+    CPPUNIT_ASSERT_EQUAL(std::string("Method Not Allowed"), std::string(HttpUtils::statusToString(405)));
 }
 
 int

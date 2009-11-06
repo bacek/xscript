@@ -12,3 +12,15 @@ dist_sysconf_DATA = xscript.conf.example xscript-ulimits.conf
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -W -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
 AM_LDFLAGS = -lboost_thread -lboost_filesystem @yandex_platform_LIBS@
+
+if HAVE_TESTS
+
+TESTS = test
+check_PROGRAMS = test
+
+test_SOURCES = test.cpp
+
+test_LDADD = ../library/libxscript.la
+test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic
+
+endif

@@ -6,12 +6,8 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "xscript/context.h"
-#include "xscript/request.h"
-#include "xscript/script.h"
-#include "xscript/script_factory.h"
-#include "xscript/state.h"
 #include "xscript/xml_util.h"
+#include "xscript/test_utils.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -20,11 +16,7 @@
 using namespace xscript;
 
 class LuaTest : public CppUnit::TestFixture {
-public:
-
-    void attachRequest(Request *request,
-                       const std::vector<std::string> &env);
-    
+public:   
     void testPrint();
 
     void testState();
@@ -82,29 +74,13 @@ CPPUNIT_TEST_SUITE_REGISTRATION( LuaTest );
 #endif
 
 void
-LuaTest::attachRequest(Request *request,
-                       const std::vector<std::string> &env) {   
-    char* env_vars[env.size() + 1];
-    env_vars[env.size()] = NULL;
-    for(unsigned int i = 0; i < env.size(); ++i) {
-        env_vars[i] = const_cast<char*>(env[i].c_str());
-    }
-    std::stringstream stream(StringUtils::EMPTY_STRING);  
-    request->attach(&stream, env_vars);
-}
-
-void
 LuaTest::testPrint() {
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-print.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-print.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
-
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
+    
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
     CPPUNIT_ASSERT_EQUAL(
         std::string("Hello\n&nbsp;\nWorld!"),
@@ -115,29 +91,25 @@ LuaTest::testPrint() {
 
 void
 LuaTest::testState() {
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-state.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-state.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     for (int i = 1; i <= 10; ++i) {
 
         std::string num = boost::lexical_cast<std::string>(i);
-        CPPUNIT_ASSERT_EQUAL(state->asString("long " + num), num);
+        CPPUNIT_ASSERT_EQUAL(ctx->state()->asString("long " + num), num);
 
-        CPPUNIT_ASSERT_EQUAL(state->asString("string " + num),
+        CPPUNIT_ASSERT_EQUAL(ctx->state()->asString("string " + num),
                              boost::lexical_cast<std::string>(i * 2));
-        CPPUNIT_ASSERT_EQUAL(state->asString("long long " + num),
+        CPPUNIT_ASSERT_EQUAL(ctx->state()->asString("long long " + num),
                              boost::lexical_cast<std::string>(i * 3));
     }
 
     try {
-        std::string str = state->asString("unknown_param");
+        std::string str = ctx->state()->asString("unknown_param");
         throw std::logic_error("State must throw exception for not existed element");
     }
     catch (std::invalid_argument &) {
@@ -147,94 +119,77 @@ LuaTest::testState() {
 
 void
 LuaTest::testStateHas() {
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-state-has.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-state-has.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     // Unknown param returns empty string
-    CPPUNIT_ASSERT_EQUAL(std::string(""), state->asString("unknown_param"));
+    CPPUNIT_ASSERT_EQUAL(std::string(""), ctx->state()->asString("unknown_param"));
 
-    CPPUNIT_ASSERT_EQUAL(std::string("has1 passed"), state->asString("has1"));
-    CPPUNIT_ASSERT_EQUAL(std::string("has2 passed"), state->asString("has2"));
+    CPPUNIT_ASSERT_EQUAL(std::string("has1 passed"), ctx->state()->asString("has1"));
+    CPPUNIT_ASSERT_EQUAL(std::string("has2 passed"), ctx->state()->asString("has2"));
 
-    CPPUNIT_ASSERT_EQUAL(std::string("0"), state->asString("art"));
-    CPPUNIT_ASSERT_EQUAL(std::string("0"), state->asString("xxx_art"));
+    CPPUNIT_ASSERT_EQUAL(std::string("0"), ctx->state()->asString("art"));
+    CPPUNIT_ASSERT_EQUAL(std::string("0"), ctx->state()->asString("xxx_art"));
 }
 
 void
 LuaTest::testStateIs() {
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-state-is.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-state-is.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-    CPPUNIT_ASSERT(state->asBool("guard0_passed"));
-    CPPUNIT_ASSERT(state->asBool("guard1_passed"));
-    CPPUNIT_ASSERT(state->asBool("guard2_passed"));
+    
+    CPPUNIT_ASSERT(ctx->state()->asBool("guard0_passed"));
+    CPPUNIT_ASSERT(ctx->state()->asBool("guard1_passed"));
+    CPPUNIT_ASSERT(ctx->state()->asBool("guard2_passed"));
 }
 
 void
 LuaTest::testRequest() {
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());   
-    boost::shared_ptr<State> state(new State());
-
-    std::vector<std::string> env;
-    env.push_back("QUERY_STRING=query=QUERY");
-    env.push_back("HTTP_HOST=fireball.yandex.ru");
-    env.push_back("HTTP_COOKIE=SessionId=2.12.85.0.6;");
-    env.push_back("HTTPS=on");
-    env.push_back("HTTP_CONTENT_LENGTH=42");
     
-    attachRequest(request.get(), env);
+    char *env[] = {
+        (char*)"QUERY_STRING=query=QUERY",
+        (char*)"HTTP_HOST=fireball.yandex.ru",
+        (char*)"HTTP_COOKIE=SessionId=2.12.85.0.6;",
+        (char*)"HTTPS=on",
+        (char*)"HTTP_CONTENT_LENGTH=42",
+        (char*)NULL
+    };
     
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-request.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-request.xml", env);
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
 
-    CPPUNIT_ASSERT_EQUAL(std::string("QUERY"), state->asString("test args"));
-    CPPUNIT_ASSERT_EQUAL(std::string("fireball.yandex.ru"), state->asString("test headers"));
-    CPPUNIT_ASSERT_EQUAL(std::string("2.12.85.0.6"), state->asString("test cookies"));
-    CPPUNIT_ASSERT_EQUAL(true, state->asBool("test isSecure"));
-    CPPUNIT_ASSERT_EQUAL(boost::int64_t(42), state->asLongLong("test content_length"));
+    CPPUNIT_ASSERT_EQUAL(std::string("QUERY"), ctx->state()->asString("test args"));
+    CPPUNIT_ASSERT_EQUAL(std::string("fireball.yandex.ru"), ctx->state()->asString("test headers"));
+    CPPUNIT_ASSERT_EQUAL(std::string("2.12.85.0.6"), ctx->state()->asString("test cookies"));
+    CPPUNIT_ASSERT_EQUAL(true, ctx->state()->asBool("test isSecure"));
+    CPPUNIT_ASSERT_EQUAL(boost::int64_t(42), ctx->state()->asLongLong("test content_length"));
 }
 
 void
 LuaTest::testResponse() {
-   
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());   
-    boost::shared_ptr<State> state(new State());
-
-    std::vector<std::string> env;
-    env.push_back("QUERY_STRING=query=QUERY");
-    env.push_back("HTTP_HOST=fireball.yandex.ru");
-    env.push_back("HTTP_COOKIE=SessionId=2.12.85.0.6;");
     
-    attachRequest(request.get(), env);
-
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-response.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    char *env[] = {
+        (char*)"QUERY_STRING=query=QUERY",
+        (char*)"HTTP_HOST=fireball.yandex.ru",
+        (char*)"HTTP_COOKIE=SessionId=2.12.85.0.6;",
+        (char*)NULL
+    };
+    
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-response.xml", env);
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
 
-    CPPUNIT_ASSERT_EQUAL((unsigned short)404, response->status());
+    CPPUNIT_ASSERT_EQUAL((unsigned short)404, ctx->response()->status());
     
-    const HeaderMap& headers = response->outHeaders();
+    const HeaderMap& headers = ctx->response()->outHeaders();
     HeaderMap::const_iterator it = headers.find("X-Header");
     std::string header = it == headers.end() ? StringUtils::EMPTY_STRING : it->second;
     CPPUNIT_ASSERT_EQUAL(std::string("Foo Bar"), header);
@@ -246,27 +201,22 @@ LuaTest::testResponse() {
 
 void
 LuaTest::testResponseRedirect() {
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());   
-    boost::shared_ptr<State> state(new State());
-
-    std::vector<std::string> env;
-    env.push_back("QUERY_STRING=query=QUERY");
-    env.push_back("HTTP_HOST=fireball.yandex.ru");
-    env.push_back("HTTP_COOKIE=SessionId=2.12.85.0.6;");
     
-    attachRequest(request.get(), env);
-
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-response-redirect.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    char *env[] = {
+        (char*)"QUERY_STRING=query=QUERY",
+        (char*)"HTTP_HOST=fireball.yandex.ru",
+        (char*)"HTTP_COOKIE=SessionId=2.12.85.0.6;",
+        NULL
+    };
+    
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-response-redirect.xml", env);
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
 
-    CPPUNIT_ASSERT_EQUAL((unsigned short)302, response->status());
+    CPPUNIT_ASSERT_EQUAL((unsigned short)302, ctx->response()->status());
     
-    const HeaderMap& headers = response->outHeaders();
+    const HeaderMap& headers = ctx->response()->outHeaders();
     HeaderMap::const_iterator it = headers.find("Location");
     std::string header = it == headers.end() ? StringUtils::EMPTY_STRING : it->second;    
     
@@ -276,14 +226,10 @@ LuaTest::testResponseRedirect() {
 
 void
 LuaTest::testEncode() {
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-encode.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-encode.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
     CPPUNIT_ASSERT_EQUAL(
@@ -294,19 +240,14 @@ LuaTest::testEncode() {
 
 void
 LuaTest::testCookie() {
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());   
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-cookie.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-cookie.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
 
     CPPUNIT_ASSERT(NULL != doc.get());
     
-    const CookieSet& cookies = response->outCookies();
+    const CookieSet& cookies = ctx->response()->outCookies();
     Cookie cookie("foo", "");
     CookieSet::const_iterator cookie_it = cookies.find(cookie);
     
@@ -329,64 +270,48 @@ LuaTest::testCookie() {
 
 void
 LuaTest::testBadType() {
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-badtype.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-badtype.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/xscript_invoke_failed"));
 }
 
 void
 LuaTest::testBadArgCount() {
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-badargcount.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-badargcount.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/xscript_invoke_failed"));
 }
 
 void
 LuaTest::testBadCode() {
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-badcode.xml");
+    TestUtils::createEnv("lua-badcode.xml");
 }
 
 
 void
 LuaTest::testMultiBlock() {
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-multi.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-multi.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-    CPPUNIT_ASSERT_EQUAL(state->asString("bar"), std::string("baz"));
+    CPPUNIT_ASSERT_EQUAL(ctx->state()->asString("bar"), std::string("baz"));
 }
 
 void
 LuaTest::testMD5() {
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-md5.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-md5.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
-
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
+    
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
     CPPUNIT_ASSERT_EQUAL(
         std::string("5946210c9e93ae37891dfe96c3e39614"),
@@ -399,38 +324,31 @@ LuaTest::testDomain() {
 
     using namespace xscript;
 
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-domain.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-domain.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
-    CPPUNIT_ASSERT_EQUAL(std::string("hghltd.yandex.net"), state->asString("no_level"));
-    CPPUNIT_ASSERT_EQUAL(std::string("net"), state->asString("tld"));
-    CPPUNIT_ASSERT_EQUAL(std::string("www.yandex.ru"), state->asString("no_level_no_scheme"));
-    CPPUNIT_ASSERT_EQUAL(std::string("yandex.ru"), state->asString("yandex.ru"));
-    CPPUNIT_ASSERT_EQUAL(std::string("yandex.ru"), state->asString("no_scheme"));
-    CPPUNIT_ASSERT_EQUAL(std::string("localhost"), state->asString("localhost"));
-    CPPUNIT_ASSERT(!state->has("invalid"));
-    CPPUNIT_ASSERT(!state->has("localfile"));
-    CPPUNIT_ASSERT(!state->has("empty"));
+    
+    CPPUNIT_ASSERT_EQUAL(std::string("hghltd.yandex.net"), ctx->state()->asString("no_level"));
+    CPPUNIT_ASSERT_EQUAL(std::string("net"), ctx->state()->asString("tld"));
+    CPPUNIT_ASSERT_EQUAL(std::string("www.yandex.ru"), ctx->state()->asString("no_level_no_scheme"));
+    CPPUNIT_ASSERT_EQUAL(std::string("yandex.ru"), ctx->state()->asString("yandex.ru"));
+    CPPUNIT_ASSERT_EQUAL(std::string("yandex.ru"), ctx->state()->asString("no_scheme"));
+    CPPUNIT_ASSERT_EQUAL(std::string("localhost"), ctx->state()->asString("localhost"));
+    CPPUNIT_ASSERT(!ctx->state()->has("invalid"));
+    CPPUNIT_ASSERT(!ctx->state()->has("localfile"));
+    CPPUNIT_ASSERT(!ctx->state()->has("empty"));
 }
 
 void
 LuaTest::testXmlEncode() {
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-xmlescape.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-xmlescape.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
-
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
+    
     CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
     CPPUNIT_ASSERT_EQUAL(
         std::string("&lt;some &amp; value&gt;"),
@@ -441,14 +359,9 @@ LuaTest::testXmlEncode() {
 // Incomplete test for logger... Just check manually default.log
 void
 LuaTest::testLogger() {
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("lua-logger.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-logger.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
-
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
     CPPUNIT_ASSERT(NULL != doc.get());
 }
