@@ -1,3 +1,12 @@
+xscript (5.69-11) unstable; urgency=low
+
+  * config added to VHostArg
+  * get-vhost-arg added
+  * getVHostArg added to lua
+  * default value added to get-protocol-arg 
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 09 Nov 2009 12:40:15 +0300
+
 xscript (5.69-10) unstable; urgency=low
 
   * suppress errors on empty http result and text/plain case
