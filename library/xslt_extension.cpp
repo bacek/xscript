@@ -29,6 +29,8 @@
 #include "xscript/xml_helpers.h"
 #include "xscript/xslt_extension.h"
 
+#include "internal/vhost_arg_param.h"
+
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
@@ -228,7 +230,6 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
     }
 }
 
-
 extern "C" void
 xscriptXsltGetProtocolArg(xmlXPathParserContextPtr ctxt, int nargs) {
 
@@ -239,21 +240,26 @@ xscriptXsltGetProtocolArg(xmlXPathParserContextPtr ctxt, int nargs) {
 
     XsltParamFetcher params(ctxt, nargs);
 
-    if (1 != nargs) {
+    if (nargs < 1 || nargs > 2) {
         XmlUtils::reportXsltError("xscript:get-protocol-arg: bad param count", ctxt);
         return;
     }
 
     const char* str = params.str(0);
     if (NULL == str) {
-        XmlUtils::reportXsltError("xscript:get-protocol-arg: bad parameter", ctxt);
+        XmlUtils::reportXsltError("xscript:get-protocol-arg: bad first parameter", ctxt);
         xmlXPathReturnEmptyNodeSet(ctxt);
         return;
     }
 
-    if (*str == '\0') {
-        xmlXPathReturnEmptyNodeSet(ctxt);
-        return;
+    const char* default_value = "";
+    if (nargs == 2) {
+        default_value = params.str(1);
+        if (NULL == default_value) {
+            XmlUtils::reportXsltError("xscript:get-protocol-arg: bad second parameter", ctxt);
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
     }
 
     xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
@@ -268,7 +274,7 @@ xscriptXsltGetProtocolArg(xmlXPathParserContextPtr ctxt, int nargs) {
             valuePush(ctxt, xmlXPathNewCString(value.c_str()));
         }
         else {
-            xmlXPathReturnEmptyNodeSet(ctxt);
+            valuePush(ctxt, xmlXPathNewCString(default_value));
         }
     }
     catch (const std::exception &e) {
@@ -338,6 +344,68 @@ xscriptXsltGetQueryArg(xmlXPathParserContextPtr ctxt, int nargs) {
     }
     catch (...) {
         XmlUtils::reportXsltError("xscript:get-query-arg: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
+xscriptXsltGetVHostArg(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:get-vhost-arg");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (nargs < 1 || nargs > 2) {
+        XmlUtils::reportXsltError("xscript:get-vhost-arg: bad param count", ctxt);
+        return;
+    }
+
+    const char* str = params.str(0);
+    if (NULL == str) {
+        XmlUtils::reportXsltError("xscript:get-vhost-arg: bad first parameter", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    const char* default_value = "";
+    if (nargs == 2) {
+        default_value = params.str(1);
+        if (NULL == default_value) {
+            XmlUtils::reportXsltError("xscript:get-vhost-arg: bad second parameter", ctxt);
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
+    }
+
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        std::string name(str);
+        boost::shared_ptr<Context> ctx = Stylesheet::getContext(tctx);
+        std::string val = VHostArgParam::variable(ctx.get(), name);
+        
+        if (!val.empty()) {
+            valuePush(ctxt, xmlXPathNewCString(val.c_str()));
+        }
+        else {
+            valuePush(ctxt, xmlXPathNewCString(default_value));
+        }
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:get-vhost-arg: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:get-vhost-arg: caught unknown exception", ctxt);
         ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
@@ -1627,6 +1695,7 @@ XsltExtensions::XsltExtensions() {
     XsltFunctionRegisterer("get_state_arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetStateArg);
     XsltFunctionRegisterer("get-protocol-arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetProtocolArg);
     XsltFunctionRegisterer("get-query-arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetQueryArg);
+    XsltFunctionRegisterer("get-vhost-arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetVHostArg);
     XsltFunctionRegisterer("get-cookie", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetCookie);
     XsltFunctionRegisterer("get-header", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetHeader);
 
