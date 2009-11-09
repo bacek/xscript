@@ -373,6 +373,8 @@ XmlConfig::value(const std::string &key) const {
 void
 XmlConfig::subKeys(const std::string &key, std::vector<std::string> &v) const {
 
+    Config::addForbiddenKey(key + "/*");
+    
     XmlXPathContextHelper xctx(xmlXPathNewContext(data_->doc_.get()));
     XmlUtils::throwUnless(NULL != xctx.get());
 

@@ -80,8 +80,6 @@ LoaderImpl::init(const Config *config) {
 
     std::vector<std::string> v;
     std::string key("/xscript/modules/module");
-
-    Config::addForbiddenKey("/xscript/modules/*");
     
     config->subKeys(key, v);
     for (std::vector<std::string>::iterator i = v.begin(), end = v.end(); i != end; ++i) {

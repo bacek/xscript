@@ -57,7 +57,6 @@ LoggerFactory::init(const Config * config) {
     ControlExtension::registerConstructor("logrotate", f);
     
     Config::addForbiddenKey("/xscript/logger/*");
-    Config::addForbiddenKey("/xscript/logger-factory/*");
     
     std::vector<std::string> v;
     std::string key("/xscript/logger-factory/logger");
