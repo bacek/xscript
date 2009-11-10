@@ -543,63 +543,15 @@ Script::ScriptData::buildXScriptNodeSet(std::vector<xmlNodePtr>& xscript_nodes) 
 
 bool
 Script::ScriptData::processXpointer(const Context *ctx,
-                                        xmlDocPtr doc,
-                                        xmlNodePtr newnode,
-                                        unsigned int count) const {
+                                    xmlDocPtr doc,
+                                    xmlNodePtr newnode,
+                                    unsigned int count) const {
     const Block *blck = block(count);
     if (!blck->xpointer(ctx)) {
         return false;
     }
     
-    if (blck->disableOutput()) {
-        xmlUnlinkNode(newnode);
-        return true;
-    } 
-    
-    XmlXPathObjectHelper xpathObj = blck->evalXPointer(doc);
-
-    if (XPATH_BOOLEAN == xpathObj->type) {
-        const char *str = 0 != xpathObj->boolval ? "1" : "0";
-        xmlNodePtr text_node = xmlNewText((const xmlChar *)str);
-        xmlReplaceNode(newnode, text_node);
-        return true;
-    }
-    if (XPATH_NUMBER == xpathObj->type) {
-        char str[40];
-        snprintf(str, sizeof(str) - 1, "%f", xpathObj->floatval);
-        str[sizeof(str) - 1] = '\0';
-        xmlNodePtr text_node = xmlNewText((const xmlChar *)&str[0]);
-        xmlReplaceNode(newnode, text_node);
-        return true;
-    }
-    if (XPATH_STRING == xpathObj->type) {
-        xmlNodePtr text_node = xmlNewText((const xmlChar *)xpathObj->stringval);
-        xmlReplaceNode(newnode, text_node);
-        return true;
-    }
-
-    xmlNodeSetPtr nodeset = xpathObj->nodesetval;
-    if (NULL == nodeset || 0 == nodeset->nodeNr) {
-        xmlUnlinkNode(newnode);
-        return true;
-    }
-    
-    xmlNodePtr current_node = nodeset->nodeTab[0];    
-    if (XML_ATTRIBUTE_NODE == current_node->type) {
-        current_node = current_node->children;
-    }    
-    xmlNodePtr last_input_node = xmlCopyNode(current_node, 1);         
-    xmlReplaceNode(newnode, last_input_node);
-    for (int i = 1; i < nodeset->nodeNr; ++i) {
-        xmlNodePtr current_node = nodeset->nodeTab[i];    
-        if (XML_ATTRIBUTE_NODE == current_node->type) {
-            current_node = current_node->children;
-        }                
-        xmlNodePtr insert_node = xmlCopyNode(current_node, 1);         
-        xmlAddNextSibling(last_input_node, insert_node);
-        last_input_node = insert_node;
-    }
-    
+    XmlUtils::processXPointer(blck, doc, newnode, true);
     return true;
 }
 

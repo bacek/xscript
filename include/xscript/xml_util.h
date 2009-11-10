@@ -13,8 +13,9 @@
 
 namespace xscript {
 
-class Encoder;
+class Block;
 class Config;
+class Encoder;
 
 class XmlUtils : private boost::noncopyable {
 public:
@@ -56,6 +57,9 @@ public:
     static xmlDocPtr fakeXml();
 
     static bool validate(const std::string &data);
+    
+    static void processXPointer(const Block *block, xmlDocPtr doc,
+                                xmlNodePtr insert_node, bool replace);
     
     static const char * const XSCRIPT_NAMESPACE;
 };
