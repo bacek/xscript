@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <x:lua>
+    <![CDATA[
+      splitted = xscript.strsplit('value1delimvalue2delimvalue3', 'delim');
+      xscript.state:setString('var1', splitted[1]);
+      xscript.state:setString('var2', splitted[2]);
+      xscript.state:setString('var3', splitted[3]);
+    ]]>
+  </x:lua>
+  
+  <x:lua>
+    <![CDATA[
+      splitted = xscript.strsplit('value', '');
+    ]]>
+  </x:lua>
+</page>
+

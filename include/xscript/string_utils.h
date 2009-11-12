@@ -1,8 +1,9 @@
 #ifndef _XSCRIPT_STRING_UTILS_H_
 #define _XSCRIPT_STRING_UTILS_H_
 
-#include <string>
 #include <ostream>
+#include <string>
+
 #include <boost/cstdint.hpp> // for boost::int32_t
 
 #include <xscript/range.h>
@@ -39,6 +40,8 @@ namespace StringUtils {
     std::string tolower(const std::string& str);
     std::string toupper(const std::string& str);
     const char* nextUTF8(const char* data);
+    
+    void split(const std::string &val, const std::string &delim, std::vector<std::string> &v);
 
     /**
      * Parse domain part from url.

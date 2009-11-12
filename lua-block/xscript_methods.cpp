@@ -366,6 +366,26 @@ luaGetVHostArg(lua_State *lua) {
     return 0;
 }
 
+static int
+luaStrSplit(lua_State *lua) {
+    try {
+        luaCheckStackSize(lua, 2);
+        std::string data = luaReadStack<std::string>(lua, 1);
+        std::string delim = luaReadStack<std::string>(lua, 2);
+
+        std::auto_ptr<std::vector<std::string> > result(new std::vector<std::string>());
+        StringUtils::split(data, delim, *result);
+        luaPushStack(lua, result);
+        // Our value on stack
+        return 1;
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:strsplit]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
 void
 setupXScript(lua_State *lua, std::string * buf, Context *ctx, Block *block) {
     log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
@@ -439,6 +459,9 @@ setupXScript(lua_State *lua, std::string * buf, Context *ctx, Block *block) {
     
     lua_pushcfunction(lua, &luaGetVHostArg);
     lua_setfield(lua, -2, "getVHostArg");
+    
+    lua_pushcfunction(lua, &luaStrSplit);
+    lua_setfield(lua, -2, "strsplit");
     
     lua_pop(lua, 2); // pop _G and xscript
 

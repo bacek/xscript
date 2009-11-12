@@ -105,7 +105,7 @@ StringUtils::parse(const Range &range, std::vector<NamedValue> &v, Encoder *enco
     }
     while (!part.empty()) {
         splitFirstOf(part, "&;", head, tail);
-        split(head, '=', key, value);
+        xscript::split(head, '=', key, value);
         if (!key.empty()) {
             std::pair<std::string, std::string> p(urldecode(key), urldecode(value));
             if (!xmlCheckUTF8((const xmlChar*) p.first.c_str())) {
@@ -165,7 +165,8 @@ StringUtils::nextUTF8(const char* data) {
     return data + NEXT_UTF8[static_cast<unsigned char>(*data)];
 }
 
-std::string StringUtils::parseDomainFromURL(std::string url, boost::int32_t level) {
+std::string
+StringUtils::parseDomainFromURL(std::string url, boost::int32_t level) {
     
     if (0 > level) {
         throw std::invalid_argument("bad param: level");
@@ -223,6 +224,24 @@ std::string StringUtils::parseDomainFromURL(std::string url, boost::int32_t leve
     }
 
     return url;
+}
+
+void
+StringUtils::split(const std::string &val, const std::string &delim, std::vector<std::string> &v) {
+    if (delim.empty() || delim[0] == '\0') {
+        throw std::runtime_error("empty delimeter");
+    }
+
+    bool searching = true;
+    unsigned int count = 0;
+    std::string::size_type pos, lpos = 0;
+    while (searching) {
+        if ((pos = val.find(delim, lpos)) == std::string::npos) {
+            searching = false;
+        }
+        v.push_back(val.substr(lpos, searching ? pos - lpos : std::string::npos));
+        lpos = pos + delim.size();
+    }
 }
 
 }

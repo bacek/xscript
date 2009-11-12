@@ -600,28 +600,19 @@ MistWorker::setStateSplitString(Context *ctx, const std::vector<std::string> &pa
 
     const std::string &val = params[1]; 
     const std::string &delim = params[2];
-
-    if (delim.empty() || delim[0] == '\0') {
-        throw std::runtime_error("empty delimeter");
-    }
+       
+    std::vector<std::string> vals;
+    StringUtils::split(val, delim, vals);
 
     StatePrefixNode node(prefix, "split_string", state);
 
-    bool searching = true;
     unsigned int count = 0;
-    std::string::size_type pos, lpos = 0;
-    while (searching) {
-
-        if ((pos = val.find(delim, lpos)) == std::string::npos) {
-            searching = false;
-        }
-        std::string stateval = val.substr(lpos, searching ? pos - lpos : std::string::npos);
-        lpos = pos + delim.size();
-
+    for(std::vector<std::string>::iterator it = vals.begin();
+        it != vals.end();
+        ++it) {
         std::string num = boost::lexical_cast<std::string>(count++);
-        state->setString(prefix + num, stateval);
-
-        XmlChildNode child(node.getNode(), "part", stateval.c_str());
+        state->setString(prefix + num, *it);
+        XmlChildNode child(node.getNode(), "part", it->c_str());
         child.setProperty("no", num.c_str());
     }
     return XmlNodeHelper(node.releaseNode());

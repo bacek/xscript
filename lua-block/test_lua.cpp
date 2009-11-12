@@ -38,6 +38,7 @@ public:
     void testDomain();
     void testXmlEncode();
     void testGetVHostArg();
+    void testStrSplit();
     
     void testLogger();
 private:
@@ -63,6 +64,7 @@ private:
     CPPUNIT_TEST(testDomain);
     CPPUNIT_TEST(testXmlEncode);
     CPPUNIT_TEST(testGetVHostArg);
+    CPPUNIT_TEST(testStrSplit);
 
     CPPUNIT_TEST(testLogger);
 
@@ -380,3 +382,17 @@ LuaTest::testGetVHostArg() {
     CPPUNIT_ASSERT_EQUAL(std::string("1111"), ctx->state()->asString("maxdepth"));
 }
 
+void
+LuaTest::testStrSplit() {
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-strsplit.xml");
+    ContextStopper ctx_stopper(ctx);
+
+    XmlDocHelper doc(ctx->script()->invoke(ctx));
+    CPPUNIT_ASSERT(NULL != doc.get());
+
+    CPPUNIT_ASSERT_EQUAL(std::string("value1"), ctx->state()->asString("var1"));
+    CPPUNIT_ASSERT_EQUAL(std::string("value2"), ctx->state()->asString("var2"));
+    CPPUNIT_ASSERT_EQUAL(std::string("value3"), ctx->state()->asString("var3"));
+    
+    CPPUNIT_ASSERT_EQUAL(ctx->result(1).type, InvokeResult::ERROR);
+}
