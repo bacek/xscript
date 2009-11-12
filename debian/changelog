@@ -1,3 +1,9 @@
+xscript (5.69-14) unstable; urgency=low
+
+  * strsplit added to lua
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 12 Nov 2009 15:53:15 +0300
+
 xscript (5.69-13) unstable; urgency=low
 
   * xpointer processing added to xsl 
