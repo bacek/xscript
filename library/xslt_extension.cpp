@@ -1559,6 +1559,57 @@ xscriptXsltSetStateString(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltIf(xmlXPathParserContextPtr ctxt, int nargs) {
+    log()->entering("xscript:if");
+    if (NULL == ctxt) {
+        return;
+    }
+    
+    if (nargs < 2 || nargs > 3) {
+        for(int i = 0; i < nargs; ++i) {
+            XmlXPathObjectHelper param(valuePop(ctxt));
+        }
+        XmlUtils::reportXsltError("xscript:if: bad param count", ctxt);
+        return;
+    }
+
+    XmlXPathObjectHelper expr2;
+    if (3 == nargs) {
+        expr2 = XmlXPathObjectHelper(valuePop(ctxt));
+    }
+    XmlXPathObjectHelper expr1(valuePop(ctxt));
+    XmlXPathObjectHelper condition(valuePop(ctxt));
+    
+    if (NULL == condition.get()) {
+        XmlUtils::reportXsltError("xscript:if: bad condition", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+    
+    if (NULL == expr1.get()) {
+        XmlUtils::reportXsltError("xscript:if: bad expr1", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+    
+    if (3 == nargs && NULL == expr2.get()) {
+        XmlUtils::reportXsltError("xscript:if: bad expr2", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    if (0 != xmlXPathCastToBoolean(condition.get())) {
+        valuePush(ctxt, expr1.release());
+    }
+    else if (3 == nargs) {
+        valuePush(ctxt, expr2.release());
+    }
+    else {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
 xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp) {
     (void)comp;
     if (tctx == NULL) {
@@ -1718,6 +1769,8 @@ XsltExtensions::XsltExtensions() {
     
     XsltFunctionRegisterer("xmlescape", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltXmlEscape);
     XsltFunctionRegisterer("set-state-string", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSetStateString);
+    
+    XsltFunctionRegisterer("if", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltIf);
 }
 
 } // namespace xscript
