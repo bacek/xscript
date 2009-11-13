@@ -240,7 +240,10 @@ luaRequestGetOriginalUrl(lua_State *lua) throw () {
     return call_method(lua, &Request::getOriginalUrl);
 }
 
-
+extern "C" int
+luaGetDocumentRoot(lua_State *lua) throw () {
+    return call_method(lua, &Request::getDocumentRoot);
+}
 
 static const struct luaL_reg requestlib [] = {
     {"getArg",        luaRequestGetArg},
@@ -272,6 +275,7 @@ static const struct luaL_reg requestlib [] = {
     {"getOriginalHost", luaRequestGetOriginalHost},
     {"getOriginalURI",  luaRequestGetOriginalURI},
     {"getOriginalUrl",  luaRequestGetOriginalUrl},
+    {"getDocumentRoot",  luaGetDocumentRoot},
 
     {NULL, NULL}
 };

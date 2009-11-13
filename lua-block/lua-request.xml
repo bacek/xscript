@@ -2,14 +2,15 @@
 <?xml-stylesheet type="text/xsl" href="object.xsl"?>
 <page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
   <x:lua>
-	  <![CDATA[
-	  print("Hello from lua!");
-    xscript.state:setString("test args", xscript.request:getArg("query"));
-    xscript.state:setString("test headers", xscript.request:getHeader("Host"));
-	xscript.state:setString("test cookies", xscript.request:getCookie("SessionId"));
-	xscript.state:setBool("test isSecure", xscript.request:isSecure());
-	xscript.state:setLong("test content_length", xscript.request:getContentLength());
-	  print("Bye from lua!");
+    <![CDATA[
+      print("Hello from lua!");
+      xscript.state:setString("test args", xscript.request:getArg("query"));
+      xscript.state:setString("test headers", xscript.request:getHeader("Host"));
+      xscript.state:setString("test cookies", xscript.request:getCookie("SessionId"));
+      xscript.state:setBool("test isSecure", xscript.request:isSecure());
+      xscript.state:setLong("test content_length", xscript.request:getContentLength());
+      xscript.state:setString("test document_root", xscript.request:getDocumentRoot());
+      print("Bye from lua!");
   ]]>
   </x:lua>
 </page>

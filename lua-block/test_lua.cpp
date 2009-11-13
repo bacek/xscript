@@ -161,6 +161,7 @@ LuaTest::testRequest() {
         (char*)"HTTP_COOKIE=SessionId=2.12.85.0.6;",
         (char*)"HTTPS=on",
         (char*)"HTTP_CONTENT_LENGTH=42",
+        (char*)"DOCUMENT_ROOT=test_doc_root",
         (char*)NULL
     };
     
@@ -174,6 +175,7 @@ LuaTest::testRequest() {
     CPPUNIT_ASSERT_EQUAL(std::string("2.12.85.0.6"), ctx->state()->asString("test cookies"));
     CPPUNIT_ASSERT_EQUAL(true, ctx->state()->asBool("test isSecure"));
     CPPUNIT_ASSERT_EQUAL(boost::int64_t(42), ctx->state()->asLongLong("test content_length"));
+    CPPUNIT_ASSERT_EQUAL(std::string("test_doc_root"), ctx->state()->asString("test document_root"));
 }
 
 void
