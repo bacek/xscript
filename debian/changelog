@@ -1,3 +1,9 @@
+xscript (5.69-18) unstable; urgency=low
+
+  * x:if fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 16 Nov 2009 12:23:12 +0300
+
 xscript (5.69-17) unstable; urgency=low
 
   * return empty string by default in x:if
