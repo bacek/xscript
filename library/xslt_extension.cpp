@@ -1606,6 +1606,7 @@ xscriptXsltIf(xmlXPathParserContextPtr ctxt, int nargs) {
     }
     else {
         xmlXPathReturnEmptyNodeSet(ctxt);
+        valuePush(ctxt, xmlXPathNewCString(StringUtils::EMPTY_STRING.c_str()));
     }
 }
 
