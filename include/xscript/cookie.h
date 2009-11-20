@@ -61,8 +61,6 @@ public:
     }
 
     std::string toString() const;
-    
-private:
     bool check() const;
 
 public:

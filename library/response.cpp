@@ -10,6 +10,7 @@
 #include "xscript/http_utils.h"
 #include "xscript/request.h"
 #include "xscript/response.h"
+#include "xscript/vhost_data.h"
 #include "xscript/writer.h"
 
 #include "internal/parser.h"
@@ -76,6 +77,14 @@ Response::~Response() {
 
 void
 Response::setCookie(const Cookie &cookie) {
+    if (!cookie.check()) {
+        const Request *request = VirtualHostData::instance()->get();
+        std::string url = request ? request->getOriginalUrl() : StringUtils::EMPTY_STRING;
+        log()->warn("Incorrect cookie. Skipped. Url: %s Name: %s; value: %s; domain: %s; path: %s", url.c_str(),
+                StringUtils::urlencode(cookie.name()).c_str(), StringUtils::urlencode(cookie.value()).c_str(),
+                StringUtils::urlencode(cookie.domain()).c_str(), StringUtils::urlencode(cookie.path()).c_str());
+        return;
+    }
     boost::mutex::scoped_lock sl(data_->resp_mutex_);
     if (!data_->headers_sent_) {
         data_->out_cookies_.insert(cookie);

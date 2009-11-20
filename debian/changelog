@@ -1,3 +1,9 @@
+xscript (5.69-20) unstable; urgency=low
+
+  * cookie validating fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 20 Nov 2009 18:45:53 +0300
+
 xscript (5.69-19) unstable; urgency=low
 
   * cookie validating added

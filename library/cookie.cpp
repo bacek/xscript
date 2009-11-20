@@ -31,13 +31,6 @@ Cookie::~Cookie() {
 std::string
 Cookie::toString() const {
 
-    if (!check()) {
-        log()->warn("Incorrect cookie. Skipped. Name: %s; value: %s; domain: %s; path: %s",
-                StringUtils::urlencode(name_).c_str(), StringUtils::urlencode(value_).c_str(),
-                StringUtils::urlencode(domain_).c_str(), StringUtils::urlencode(path_).c_str());
-        return StringUtils::EMPTY_STRING;
-    }
-
     std::stringstream stream;
     stream << name_ << '=' << value_;
     if (!domain_.empty()) {

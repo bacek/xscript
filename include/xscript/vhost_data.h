@@ -16,6 +16,7 @@ public:
     virtual ~VirtualHostData();
 
     void set(const Request *request);
+    const Request* get() const;
     const Server* getServer() const;
 
     bool hasVariable(const Request *request, const std::string &var) const;

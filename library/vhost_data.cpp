@@ -54,6 +54,11 @@ VirtualHostData::set(const Request *request) {
     data_->request_provider_.reset(new HostData::RequestProvider(request));
 }
 
+const Request*
+VirtualHostData::get() const {
+    return data_->get();
+}
+
 void
 VirtualHostData::setServer(const Server *server) {
     data_->server_ = server;
