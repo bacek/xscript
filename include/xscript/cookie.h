@@ -60,9 +60,12 @@ public:
         expires_ = value ? MAX_LIVE_TIME : 0;
     }
 
-
     std::string toString() const;
+    
+private:
+    bool check() const;
 
+public:
     static const time_t MAX_LIVE_TIME;
 
 private:

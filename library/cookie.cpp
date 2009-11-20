@@ -3,8 +3,10 @@
 #include <sstream>
 #include <exception>
 
-#include "xscript/util.h"
 #include "xscript/cookie.h"
+#include "xscript/string_utils.h"
+#include "xscript/util.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -30,6 +32,12 @@ Cookie::~Cookie() {
 std::string
 Cookie::toString() const {
 
+    if (!check()) {
+        log()->warn("Incorrect cookie. Skipped. Name: %s; value: %s; domain: %s; path: %s",
+                name_.c_str(), value_.c_str(), domain_.c_str(), path_.c_str());
+        return StringUtils::EMPTY_STRING;
+    }
+
     std::stringstream stream;
     stream << name_ << '=' << value_;
     if (!domain_.empty()) {
@@ -45,6 +53,17 @@ Cookie::toString() const {
         stream << "; secure";
     }
     return stream.str();
+}
+
+bool
+Cookie::check() const {
+     if (std::string::npos != name_.find_first_of("\r\n") ||
+         std::string::npos != value_.find_first_of("\r\n") ||
+         std::string::npos != domain_.find_first_of("\r\n") ||
+         std::string::npos != path_.find_first_of("\r\n")) {
+         return false;
+     }
+     return true;
 }
 
 } // namespace xscript
