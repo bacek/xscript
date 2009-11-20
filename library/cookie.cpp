@@ -6,7 +6,6 @@
 #include "xscript/cookie.h"
 #include "xscript/string_utils.h"
 #include "xscript/util.h"
-#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -34,7 +33,8 @@ Cookie::toString() const {
 
     if (!check()) {
         log()->warn("Incorrect cookie. Skipped. Name: %s; value: %s; domain: %s; path: %s",
-                name_.c_str(), value_.c_str(), domain_.c_str(), path_.c_str());
+                StringUtils::urlencode(name_).c_str(), StringUtils::urlencode(value_).c_str(),
+                StringUtils::urlencode(domain_).c_str(), StringUtils::urlencode(path_).c_str());
         return StringUtils::EMPTY_STRING;
     }
 
