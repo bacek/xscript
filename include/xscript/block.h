@@ -92,10 +92,10 @@ protected:
     virtual void parseXPathNode(const xmlNodePtr node);
     virtual void parseGuardNode(const xmlNodePtr node, bool is_not);
     virtual void parseParamNode(const xmlNodePtr node);
-    virtual void processParam(std::auto_ptr<Param> p);
     
     virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const;
     
+    void addParam(std::auto_ptr<Param> param);
     void detectBase();
 
     InvokeResult errorResult(const InvokeError &error, std::string &full_error) const;

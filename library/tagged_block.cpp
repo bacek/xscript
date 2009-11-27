@@ -180,9 +180,9 @@ TaggedBlock::postCall(Context *ctx, const InvokeResult &result, const boost::any
 
 void
 TaggedBlock::parseParamNode(const xmlNodePtr node) {
-    Block::parseParamNode(node);
-    Param* param = params().back();
-    if (NULL == dynamic_cast<const TagParam*>(param)) {
+    std::auto_ptr<Param> param = createParam(node);
+    if (NULL == dynamic_cast<const TagParam*>(param.get())) {
+        addParam(param);
         return;
     }
     
@@ -191,7 +191,7 @@ TaggedBlock::parseParamNode(const xmlNodePtr node) {
     }
     tb_data_->tag_position_ = params().size();
     
-    const std::string& v = p->value();
+    const std::string& v = param->value();
     if (!v.empty()) {
         try {
             cacheTime(boost::lexical_cast<time_t>(v));

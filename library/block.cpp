@@ -297,7 +297,7 @@ Block::parse() {
         data_->parseNamespaces();
         
         for (xmlNodePtr node = data_->node_->children; NULL != node; node = node->next) {
-            parseBlockNode(node);
+            parseSubNode(node);
         }
         postParse();
     }
@@ -825,15 +825,13 @@ Block::parseGuardNode(const xmlNodePtr node, bool is_not) {
 void
 Block::parseParamNode(const xmlNodePtr node) {
     std::auto_ptr<Param> p = createParam(node);
-    data_->params_.push_back(p.get());
-    p.release();
-//    processParam(p);
+    addParam(p);
 }
 
 void
-Block::processParam(std::auto_ptr<Param> p) {
-    data_->params_.push_back(p.get());
-	p.release();
+Block::addParam(std::auto_ptr<Param> param) {
+    data_->params_.push_back(param.get());
+    param.release();
 }
 
 Logger*

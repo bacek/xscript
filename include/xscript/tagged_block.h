@@ -32,7 +32,6 @@ public:
     bool cacheLevel(unsigned char type) const;
     
 protected:
-    virtual void processParam(std::auto_ptr<Param> p);
     virtual InvokeResult invokeInternal(boost::shared_ptr<Context> ctx);
     virtual void postCall(Context *ctx, const InvokeResult &result, const boost::any &a);
     virtual void postParse();
@@ -41,6 +40,8 @@ protected:
     int tagPosition() const;
     bool haveTagParam() const;
     bool cacheTimeUndefined() const;
+    
+    void parseParamNode(const xmlNodePtr node);
     
     std::string processMainKey(const Context *ctx) const;
     std::string processParamsKey(const Context *ctx) const;
