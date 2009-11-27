@@ -296,37 +296,41 @@ Block::parse() {
 
         data_->parseNamespaces();
         
-        ParamFactory *pf = ParamFactory::instance();
         for (xmlNodePtr node = data_->node_->children; NULL != node; node = node->next) {
-            if (node->name) {
-                if (xpathNode(node)) {
-                    parseXPathNode(node);
-                }
-                else if (paramNode(node)) {
-                    parseParamNode(node, pf);
-                }
-                else if (xsltParamNode(node)) {
-                    parseXsltParamNode(node, pf);
-                }
-                else if (guardNode(node)) {
-                    parseGuardNode(node, false);
-                }
-                else if (guardNotNode(node)) {
-                    parseGuardNode(node, true);
-                }
-                else if (XML_ELEMENT_NODE == node->type) {
-                    const char *value = XmlUtils::value(node);
-                    if (value) {
-                        property((const char*) node->name, value);
-                    }
-                }
-            }
+            parseBlockNode(node);
         }
         postParse();
     }
     catch(const std::exception &e) {
         log()->error("%s, parse failed for '%s': %s", name(), owner()->name().c_str(), e.what());
         throw;
+    }
+}
+
+void
+Block::parseSubNode(xmlNodePtr node) {
+    if (node->name) {
+        if (xpathNode(node)) {
+            parseXPathNode(node);
+        }
+        else if (paramNode(node)) {
+            parseParamNode(node);
+        }
+        else if (xsltParamNode(node)) {
+            parseXsltParamNode(node);
+        }
+        else if (guardNode(node)) {
+            parseGuardNode(node, false);
+        }
+        else if (guardNotNode(node)) {
+            parseGuardNode(node, true);
+        }
+        else if (XML_ELEMENT_NODE == node->type) {
+            const char *value = XmlUtils::value(node);
+            if (value) {
+                property((const char*) node->name, value);
+            }
+        }
     }
 }
 
@@ -819,9 +823,11 @@ Block::parseGuardNode(const xmlNodePtr node, bool is_not) {
 }
 
 void
-Block::parseParamNode(const xmlNodePtr node, ParamFactory *pf) {
-    std::auto_ptr<Param> p = pf->param(this, node);
-    processParam(p);
+Block::parseParamNode(const xmlNodePtr node) {
+    std::auto_ptr<Param> p = createParam(node);
+    data_->params_.push_back(p.get());
+    p.release();
+//    processParam(p);
 }
 
 void

@@ -36,8 +36,10 @@ protected:
     void xsltName(const std::string &value);
     bool xsltParamNode(const xmlNodePtr node) const;
 
-    void parseXsltParamNode(const xmlNodePtr node, ParamFactory *pf);
+    void parseXsltParamNode(const xmlNodePtr node);
     void applyStylesheet(boost::shared_ptr<Stylesheet> sh, boost::shared_ptr<Context> ctx, XmlDocHelper &doc, bool need_copy);
+    
+    std::auto_ptr<Param> createParam(const xmlNodePtr node);
 
 private:
     class ObjectData;

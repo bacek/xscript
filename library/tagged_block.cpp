@@ -179,9 +179,10 @@ TaggedBlock::postCall(Context *ctx, const InvokeResult &result, const boost::any
 }
 
 void
-TaggedBlock::processParam(std::auto_ptr<Param> p) {
-    if (NULL == dynamic_cast<const TagParam*>(p.get())) {
-        Block::processParam(p);
+TaggedBlock::parseParamNode(const xmlNodePtr node) {
+    Block::parseParamNode(node);
+    Param* param = params().back();
+    if (NULL == dynamic_cast<const TagParam*>(param)) {
         return;
     }
     

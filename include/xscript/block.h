@@ -83,14 +83,15 @@ protected:
 
     XmlDocHelper fakeDoc() const;
 
-    bool xpathNode(const xmlNodePtr node) const;
-    bool guardNode(const xmlNodePtr node) const;
-    bool guardNotNode(const xmlNodePtr node) const;
-    bool paramNode(const xmlNodePtr node) const;
+    virtual bool xpathNode(const xmlNodePtr node) const;
+    virtual bool guardNode(const xmlNodePtr node) const;
+    virtual bool guardNotNode(const xmlNodePtr node) const;
+    virtual bool paramNode(const xmlNodePtr node) const;
 
-    void parseXPathNode(const xmlNodePtr node);
-    void parseGuardNode(const xmlNodePtr node, bool is_not);
-    void parseParamNode(const xmlNodePtr node, ParamFactory *pf);
+    virtual void parseSubNode(xmlNodePtr node);
+    virtual void parseXPathNode(const xmlNodePtr node);
+    virtual void parseGuardNode(const xmlNodePtr node, bool is_not);
+    virtual void parseParamNode(const xmlNodePtr node);
     virtual void processParam(std::auto_ptr<Param> p);
     
     virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const;

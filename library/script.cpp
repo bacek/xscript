@@ -696,8 +696,6 @@ Script::ParseXScriptNodeHandler::process(const MessageParams &params,
                               boost::bind(&Script::ScriptData::property, script->data_, _1, _2));
 
     xmlNodePtr child = node->children;
-    ParamFactory *pf = ParamFactory::instance();
-
     for( ; child; child = child->next) {
         if (child->name &&
             xmlStrncasecmp(child->name, (const xmlChar*) "add-headers", sizeof("add-headers")) == 0) {
@@ -706,7 +704,7 @@ Script::ParseXScriptNodeHandler::process(const MessageParams &params,
         }
         else if (script->xsltParamNode(child)) {
             log()->debug("parsing xslt-param node from script");
-            script->parseXsltParamNode(child, pf);
+            script->parseXsltParamNode(child);
             continue;
         }
         else if (XML_ELEMENT_NODE == child->type) {

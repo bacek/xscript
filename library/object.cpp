@@ -118,8 +118,8 @@ Object::xsltParamNode(const xmlNodePtr node) const {
 }
 
 void
-Object::parseXsltParamNode(const xmlNodePtr node, ParamFactory *pf) {
-    std::auto_ptr<Param> p = pf->param(this, node);
+Object::parseXsltParamNode(const xmlNodePtr node) {
+    std::auto_ptr<Param> p = createParam(node);
     log()->debug("%s, creating param %s", BOOST_CURRENT_FUNCTION, p->id().c_str());
     data_->checkParam(p.get());
     p.release();
@@ -146,6 +146,12 @@ std::string
 Object::createTagKey(const Context *ctx) const {
     (void)ctx;
     return StringUtils::EMPTY_STRING;
+}
+
+std::auto_ptr<Param>
+Object::createParam(const xmlNodePtr node) {
+    ParamFactory *pf = ParamFactory::instance();
+    return pf->param(this, node);
 }
 
 } // namespace xscript
