@@ -6,11 +6,9 @@
 #include <map>
 #include <vector>
 
-#include <boost/any.hpp>
-
 #include <xscript/exception.h>
 #include <xscript/extension.h>
-#include <xscript/invoke_result.h>
+#include "xscript/invoke_context.h"
 #include <xscript/object.h>
 #include <xscript/xml_helpers.h>
 
@@ -48,16 +46,14 @@ public:
     virtual void parse();
     virtual std::string fullName(const std::string &name) const;
 
-    virtual InvokeResult invoke(boost::shared_ptr<Context> ctx);
+    virtual boost::shared_ptr<InvokeContext> invoke(boost::shared_ptr<Context> ctx);
     virtual void invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
-    virtual void applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc);
+    virtual bool applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc);
 
-    InvokeResult infoResult(const char *error) const;
-    InvokeResult errorResult(const char *error) const;
-    InvokeResult errorResult(const InvokeError &error) const;
- 
-    InvokeResult fakeResult() const;
-    
+    boost::shared_ptr<InvokeContext> errorResult(const char *error, bool info) const;
+    boost::shared_ptr<InvokeContext> errorResult(const InvokeError &error, bool info) const;
+    boost::shared_ptr<InvokeContext> fakeResult(bool error) const;
+       
     void throwBadArityError() const;
 
     Logger * log() const;
@@ -66,22 +62,19 @@ public:
     virtual void stopTimer(Context *ctx);
     
 protected:
-    virtual InvokeResult invokeInternal(boost::shared_ptr<Context> ctx);
+    virtual void invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void postParse();
-    virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) = 0;
-    virtual InvokeResult processResponse(boost::shared_ptr<Context> ctx, XmlDocHelper doc, boost::any &a);
+    virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) = 0;
+    virtual void processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void property(const char *name, const char *value);
-    virtual void postCall(Context *ctx, const InvokeResult &result, const boost::any &a);
-    virtual void postInvoke(Context *ctx, const XmlDocHelper &doc);
+    virtual void postCall(Context *ctx, InvokeContext *invoke_ctx);
+    virtual void postInvoke(Context *ctx, InvokeContext *invoke_ctx);
     virtual void callInternal(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
     
-    bool doApplyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc);
     bool checkGuard(Context *ctx) const;
-    void evalXPath(Context *ctx, const XmlDocHelper &doc) const;
+    void evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const;
     void appendNodeValue(xmlNodePtr node, std::string &val) const;
-
-    XmlDocHelper fakeDoc() const;
 
     virtual bool xpathNode(const xmlNodePtr node) const;
     virtual bool guardNode(const xmlNodePtr node) const;
@@ -97,13 +90,15 @@ protected:
     
     void addParam(std::auto_ptr<Param> param);
     void detectBase();
-
-    InvokeResult errorResult(const InvokeError &error, std::string &full_error) const;
-    std::string errorMessage(const InvokeError &error) const;
     
 private:
-    InvokeResult errorResult(const InvokeError &error, const char *tag_name, std::string &full_error) const;
+    std::string errorMessage(const InvokeError &error) const;
+    boost::shared_ptr<InvokeContext> errorResult(XmlDocHelper doc) const;
+    boost::shared_ptr<InvokeContext> errorResult(const InvokeError &error, std::string &full_error) const;
+    XmlDocHelper errorDoc(const InvokeError &error, const char *tag_name, std::string &full_error) const;
+    XmlDocHelper fakeDoc() const;
     
+private:
     struct BlockData;
     friend struct BlockData;
     BlockData *data_;

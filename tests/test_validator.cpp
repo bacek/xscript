@@ -7,6 +7,7 @@
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
 #include "xscript/state.h"
+#include "xscript/test_utils.h"
 #include "xscript/validator_exception.h"
 #include "xscript/validator_factory.h"
 #include "xscript/xml_helpers.h"
@@ -102,16 +103,11 @@ class ValidatorTest : public CppUnit::TestFixture {
 
     // Check that validator created and failed.
     void testBlockFail() {
-        boost::shared_ptr<Request> request(new Request());
-        boost::shared_ptr<Response> response(new Response());
-        boost::shared_ptr<State> state(new State());
-        boost::shared_ptr<Script> script = ScriptFactory::createScript("./validator.xml");
-        boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+        boost::shared_ptr<Context> ctx = TestUtils::createEnv("./validator.xml");
         ContextStopper ctx_stopper(ctx);
-
-        XmlDocHelper doc(script->invoke(ctx));
-        CPPUNIT_ASSERT(NULL != doc.get());
-        CPPUNIT_ASSERT(xscript::XmlUtils::xpathExists(doc.get(), "//xscript_invoke_failed"));
+        XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+        CPPUNIT_ASSERT(NULL != doc->get());
+        CPPUNIT_ASSERT(xscript::XmlUtils::xpathExists(doc->get(), "//xscript_invoke_failed"));
 
         // Guard was set
         CPPUNIT_ASSERT(ctx->state()->is("epic-failure"));
@@ -119,16 +115,11 @@ class ValidatorTest : public CppUnit::TestFixture {
 
     // Check that validator created and passed.
     void testBlockPass() {
-        boost::shared_ptr<Request> request(new Request());
-        boost::shared_ptr<Response> response(new Response());
-        boost::shared_ptr<State> state(new State());
-        boost::shared_ptr<Script> script = ScriptFactory::createScript("./validator2.xml");
-        boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+        boost::shared_ptr<Context> ctx = TestUtils::createEnv("./validator2.xml");
         ContextStopper ctx_stopper(ctx);
-
-        XmlDocHelper doc(script->invoke(ctx));
-        CPPUNIT_ASSERT(NULL != doc.get());
-        CPPUNIT_ASSERT(xscript::XmlUtils::xpathExists(doc.get(), "//include-data"));
+        XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+        CPPUNIT_ASSERT(NULL != doc->get());
+        CPPUNIT_ASSERT(xscript::XmlUtils::xpathExists(doc->get(), "//include-data"));
         
         // Guard wasn't set
         CPPUNIT_ASSERT(!ctx->state()->is("epic-failure"));

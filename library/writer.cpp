@@ -40,9 +40,9 @@ XmlWriter::addHeaders(Response *response) {
 }
 
 void
-XmlWriter::write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf) {
+XmlWriter::write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf) {
     addHeaders(response);
-    xmlSaveFormatFileTo(buf, doc.get(), encoding_.c_str(), 1);
+    xmlSaveFormatFileTo(buf, doc, encoding_.c_str(), 1);
 }
 
 HtmlWriter::HtmlWriter(const boost::shared_ptr<Stylesheet> &sh) :
@@ -75,9 +75,9 @@ HtmlWriter::addHeaders(Response *response) {
 }
 
 void
-HtmlWriter::write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf) {
+HtmlWriter::write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf) {
     addHeaders(response);
-    xsltSaveResultTo(buf, doc.get(), stylesheet_->stylesheet());
+    xsltSaveResultTo(buf, doc, stylesheet_->stylesheet());
     xmlOutputBufferClose(buf);
 }
 

@@ -91,7 +91,9 @@ FileBlock::isInvoke() const {
 }
 
 XmlDocHelper
-FileBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) {
+FileBlock::call(boost::shared_ptr<Context> ctx,
+    boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
+    
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
     const std::vector<Param*> &p = params();
@@ -143,11 +145,11 @@ FileBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::excep
         return invokeMethod(file, ctx);
     }
 
-    const Tag* tag = boost::any_cast<Tag>(&a);
+    const Tag& tag = invoke_ctx->tag();
 
     XmlDocHelper doc;
     bool modified = true;
-    if (tag && tag->last_modified != Tag::UNDEFINED_TIME && st.st_mtime == tag->last_modified) {
+    if (invoke_ctx->haveCachedCopy() && tag.last_modified != Tag::UNDEFINED_TIME && st.st_mtime == tag.last_modified) {
         // We got tag and file modification time equal than last_modified in tag
         // Set "modified" to false and omit loading doc.
         modified = false;
@@ -157,7 +159,7 @@ FileBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::excep
     }
 
     Tag local_tag(modified, st.st_mtime, Tag::UNDEFINED_TIME);
-    a = boost::any(local_tag);
+    invoke_ctx->tag(local_tag);
 
     return doc;
 }
@@ -183,29 +185,24 @@ FileBlock::loadFile(const std::string &file_name, boost::shared_ptr<Context> ctx
 
     PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
 
-    {
-        XmlInfoCollector::Starter starter;
-        XmlDocHelper doc(xmlReadFile(
-                             file_name.c_str(),
-                             NULL,
-                             XML_PARSE_DTDATTR | XML_PARSE_NOENT)
-                        );
-    
-        XmlUtils::throwUnless(NULL != doc.get());
-    
-        if (processXInclude_) {
-            XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT) >= 0);
-        }
-        
-        std::string error = XmlInfoCollector::getError();
-        if (!error.empty()) {
-            throw InvokeError(error);
-        }
-        
-        OperationMode::processXmlError(file_name);
-        
-        return doc;
+    XmlInfoCollector::Starter starter;
+    XmlDocHelper doc(xmlReadFile(
+        file_name.c_str(), NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+
+    XmlUtils::throwUnless(NULL != doc.get());
+
+    if (processXInclude_) {
+        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT) >= 0);
     }
+    
+    std::string error = XmlInfoCollector::getError();
+    if (!error.empty()) {
+        throw InvokeError(error);
+    }
+    
+    OperationMode::processXmlError(file_name);
+    
+    return doc;
 }
 
 XmlDocHelper
@@ -251,10 +248,10 @@ FileBlock::invokeFile(const std::string &file_name, boost::shared_ptr<Context> c
 
     ContextStopper ctx_stopper(local_ctx);
     
-    XmlDocHelper doc = script->invoke(local_ctx);
-    XmlUtils::throwUnless(NULL != doc.get());
+    XmlDocSharedHelper doc = script->invoke(local_ctx);
+    XmlUtils::throwUnless(NULL != doc->get());
     
-    return doc;
+    return *doc;
 }
 
 

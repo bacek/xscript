@@ -86,6 +86,11 @@ RemoteTaggedBlock::setDefaultRemoteTimeout() {
     rtb_data_->remote_timeout_ = 0;
 }
 
+bool
+RemoteTaggedBlock::remote() const {
+    return true;
+}
+
 void
 RemoteTaggedBlock::postParse() {
     ThreadedBlock::postParse();
@@ -100,13 +105,15 @@ RemoteTaggedBlock::retryCount() const {
 }
 
 XmlDocHelper
-RemoteTaggedBlock::call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) {
+RemoteTaggedBlock::call(boost::shared_ptr<Context> ctx,
+    boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
+    
     for(int rcount = retryCount(); rcount >= 0; --rcount) {
         try {
             if (ctx->stopBlocks()) {
                 throw SkipResultInvokeError("block is stopped");
             }
-            return retryCall(ctx, a);
+            return retryCall(ctx, invoke_ctx);
         }
         catch(const RetryInvokeError &e) {
             if (rcount > 0) {

@@ -80,7 +80,7 @@ ThreadedBlock::property(const char *name, const char *value) {
 }
 
 void
-ThreadedBlock::postInvoke(Context *ctx, const XmlDocHelper &doc) {
+ThreadedBlock::postInvoke(Context *ctx, InvokeContext *invoke_ctx) {
     
     bool show_elapsed_time = trb_data_->check_elapsed_time_ ? trb_data_->check_elapsed_time_ :
         OperationMode::checkDevelopmentVariable(ctx->request(), ThreadedBlockData::SHOW_ELAPSED_TIME);
@@ -89,7 +89,7 @@ ThreadedBlock::postInvoke(Context *ctx, const XmlDocHelper &doc) {
         return;
     }
     
-    xmlNodePtr node = xmlDocGetRootElement(doc.get());
+    xmlNodePtr node = xmlDocGetRootElement(invoke_ctx->resultDoc()->get());
     if (NULL == node) {
         return;
     }

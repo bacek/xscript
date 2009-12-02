@@ -126,7 +126,7 @@ struct Context::ContextData {
     boost::shared_ptr<RequestData> request_data_;
     boost::shared_ptr<Context> parent_context_;
     std::string xslt_name_;
-    std::vector<InvokeResult> results_;
+    std::vector<boost::shared_ptr<InvokeContext> > results_;
     std::list<xmlNodePtr> clear_node_list_;
 
     boost::condition condition_;
@@ -248,13 +248,13 @@ Context::wait(int millis) {
     
     bool save_result = timedout || stopBlocks();
     if (save_result) {
-        for (std::vector<xmlDocPtr>::size_type i = 0; i < ctx_data_->results_.size(); ++i) {
-            if (NULL == ctx_data_->results_[i].doc.get()) {
+        for (unsigned int i = 0; i < ctx_data_->results_.size(); ++i) {
+            if (NULL == ctx_data_->results_[i].get()) {
                 if (timedout) {
-                    ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult("timed out");
+                    ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult("timed out", false);
                 }
                 else {
-                    ctx_data_->results_[i] = ctx_data_->script_->block(i)->infoResult("stopped");
+                    ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult("stopped", true);
                 }
             }
         }
@@ -277,14 +277,13 @@ Context::expect(unsigned int count) {
 }
 
 void
-Context::result(unsigned int n, InvokeResult result) {
-
+Context::result(unsigned int n, boost::shared_ptr<InvokeContext> result) {
     log()->debug("%s: %d, result of %u block: %p", BOOST_CURRENT_FUNCTION,
-                 static_cast<int>(stopped()), n, result.doc.get());
-
+                 static_cast<int>(stopped()), n, result->resultDoc()->get());
+    
     boost::mutex::scoped_lock sl(ctx_data_->results_mutex_);
     if (!stopped() && ctx_data_->results_.size() != 0) {
-        if (NULL == ctx_data_->results_[n].doc.get()) {
+        if (NULL == ctx_data_->results_[n].get()) {
             ctx_data_->results_[n] = result;
             ctx_data_->condition_.notify_all();
         }
@@ -300,9 +299,9 @@ Context::resultsReady() const {
     if (stopBlocks()) {
         return true;
     }
-    for (std::vector<InvokeResult>::const_iterator i = ctx_data_->results_.begin(),
-            end = ctx_data_->results_.end(); i != end; ++i) {
-        if (NULL == i->doc.get()) {
+    for (std::vector<boost::shared_ptr<InvokeContext> >::const_iterator it = ctx_data_->results_.begin(),
+            end = ctx_data_->results_.end(); it != end; ++it) {
+        if (NULL == it->get()) {
             return false;
         }
     }
@@ -327,7 +326,7 @@ Context::delay(int millis) const {
     return xt;
 }
 
-InvokeResult
+boost::shared_ptr<InvokeContext>
 Context::result(unsigned int n) const {
 
     boost::mutex::scoped_lock sl(ctx_data_->results_mutex_);

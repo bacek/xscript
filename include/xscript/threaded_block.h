@@ -21,7 +21,7 @@ public:
 
 protected:
     virtual void property(const char *name, const char *value);
-    virtual void postInvoke(Context *ctx, const XmlDocHelper &doc);
+    virtual void postInvoke(Context *ctx, InvokeContext *invoke_ctx);
     virtual int remainedTime(Context *ctx) const;
 
 private:

@@ -128,24 +128,18 @@ Object::parseXsltParamNode(const xmlNodePtr node) {
 void
 Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh,
                         boost::shared_ptr<Context> ctx,
-                        XmlDocHelper &doc,
+                        XmlDocSharedHelper &doc,
                         bool need_copy) {
 
-    assert(NULL != doc.get());
+    assert(NULL != doc->get());
     if (need_copy) {
-        XmlDocHelper newdoc = sh->apply(this, ctx, doc);
-        doc = XmlDocHelper(xmlCopyDoc(newdoc.get(), 1));
+        XmlDocHelper newdoc = sh->apply(this, ctx, doc->get());
+        doc.reset(new XmlDocHelper(xmlCopyDoc(newdoc.get(), 1)));
     }
     else {
-        doc = sh->apply(this, ctx, doc);
+        doc.reset(new XmlDocHelper(sh->apply(this, ctx, doc->get())));
     }
-    XmlUtils::throwUnless(NULL != doc.get());
-}
-
-std::string
-Object::createTagKey(const Context *ctx) const {
-    (void)ctx;
-    return StringUtils::EMPTY_STRING;
+    XmlUtils::throwUnless(NULL != doc->get());
 }
 
 std::auto_ptr<Param>

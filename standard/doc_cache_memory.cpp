@@ -47,15 +47,15 @@ public:
     virtual time_t minimalCacheTime() const;
     virtual std::string name() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Object *obj) const;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CacheObject *obj) const;
 
     unsigned int maxSize() const;
     
     virtual void fillStatBuilder(StatBuilder *builder);
 
 protected:
-    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc);
-    virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);
+    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
+    virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy);
 
 private:
     DocPool* pool(const TagKey *key) const;
@@ -84,7 +84,7 @@ DocCacheMemory::~DocCacheMemory() {
 }
 
 std::auto_ptr<TagKey>
-DocCacheMemory::createKey(const Context *ctx, const Object *obj) const {
+DocCacheMemory::createKey(const Context *ctx, const CacheObject *obj) const {
     return std::auto_ptr<TagKey>(new TagKeyMemory(ctx, obj));
 }
 
@@ -137,19 +137,32 @@ DocCacheMemory::name() const {
 }
 
 bool
-DocCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
+DocCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) {
     log()->debug("loading doc in memory cache");
     DocPool *mpool = pool(key);
     assert(NULL != mpool);
-    return mpool->loadDoc(*key, tag, doc);
+    if (!mpool->loadDoc(*key, tag, doc)) {
+        return false;
+    }
+    if (need_copy) {
+        XmlDocSharedHelper res_doc(new XmlDocHelper(xmlCopyDoc(doc->get(), 1)));
+        doc = res_doc;
+    }
+    return true;
 }
 
 bool
-DocCacheMemory::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper &doc) {
+DocCacheMemory::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy) {
     log()->debug("saving doc in memory cache");
     DocPool *mpool = pool(key);
     assert(NULL != mpool);
-    return mpool->saveDoc(*key, tag, doc);
+    
+    XmlDocSharedHelper res_doc = doc;
+    if (need_copy) {
+        res_doc = XmlDocSharedHelper(new XmlDocHelper(xmlCopyDoc(doc->get(), 1)));
+    }
+    
+    return mpool->saveDoc(*key, tag, res_doc);
 }
 
 unsigned int

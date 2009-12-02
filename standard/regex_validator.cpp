@@ -1,7 +1,5 @@
 #include "settings.h"
 
-#include <iostream>
-
 #include <boost/lexical_cast.hpp>
 
 #include "xscript/param.h"

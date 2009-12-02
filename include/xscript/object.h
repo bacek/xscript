@@ -26,9 +26,7 @@ public:
     const std::vector<Param*>& xsltParams() const;
 
     virtual std::string fullName(const std::string &name) const = 0;
-    virtual void applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) = 0;
-
-    virtual std::string createTagKey(const Context *ctx) const;
+    virtual bool applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) = 0;
     
 protected:
     virtual void postParse();
@@ -37,7 +35,7 @@ protected:
     bool xsltParamNode(const xmlNodePtr node) const;
 
     void parseXsltParamNode(const xmlNodePtr node);
-    void applyStylesheet(boost::shared_ptr<Stylesheet> sh, boost::shared_ptr<Context> ctx, XmlDocHelper &doc, bool need_copy);
+    void applyStylesheet(boost::shared_ptr<Stylesheet> sh, boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc, bool need_copy);
     
     std::auto_ptr<Param> createParam(const xmlNodePtr node);
 

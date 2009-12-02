@@ -35,7 +35,7 @@ DocPool::getMemoryCounter() const {
 }
 
 bool
-DocPool::loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc) {
+DocPool::loadDoc(const TagKey &key, Tag &tag, XmlDocSharedHelper &doc) {
     const std::string &keyStr = key.asString();
     DocPool::LoadResult res = loadDocImpl(keyStr, tag, doc);
 
@@ -57,7 +57,7 @@ DocPool::loadDoc(const TagKey &key, Tag &tag, XmlDocHelper &doc) {
 }
 
 DocPool::LoadResult
-DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocHelper &doc) {
+DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocSharedHelper &doc) {
     log()->debug("%s, key: %s", BOOST_CURRENT_FUNCTION, keyStr.c_str());
 
     boost::mutex::scoped_lock lock(mutex_);
@@ -88,7 +88,7 @@ DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocHelper &doc) {
     }
 
     tag = data.tag;
-    doc.reset(data.copyDoc());
+    doc = data.doc;
 
     if (data.pos != list_.end()) {
         list_.erase(data.pos);
@@ -100,7 +100,7 @@ DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocHelper &doc) {
 }
 
 bool
-DocPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocHelper &doc) {
+DocPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocSharedHelper &doc) {
     const std::string &keyStr = key.asString();
     DocPool::SaveResult res = saveDocImpl(keyStr, tag, doc);
     switch (res) {
@@ -116,7 +116,7 @@ DocPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocHelper &doc) {
 }
 
 DocPool::SaveResult
-DocPool::saveDocImpl(const std::string &keyStr, const Tag& tag, const XmlDocHelper &doc) {
+DocPool::saveDocImpl(const std::string &keyStr, const Tag& tag, const XmlDocSharedHelper &doc) {
 
     log()->debug("%s, key: %s", BOOST_CURRENT_FUNCTION, keyStr.c_str());
 
@@ -138,7 +138,7 @@ DocPool::saveDocImpl(const std::string &keyStr, const Tag& tag, const XmlDocHelp
 
 
 void
-DocPool::saveAtIterator(const Key2Data::iterator& i, const Tag& tag, const XmlDocHelper& doc) {
+DocPool::saveAtIterator(const Key2Data::iterator &i, const Tag &tag, const XmlDocSharedHelper &doc) {
     DocData &data = i->second;
 
     if (data.pos != list_.end()) {
@@ -148,7 +148,7 @@ DocPool::saveAtIterator(const Key2Data::iterator& i, const Tag& tag, const XmlDo
     counter_->decUsedMemory(data.doc_size);
     memoryCounter_->remove(data.doc_size);
 
-    data.assign(tag, doc.get());
+    data.assign(tag, doc);
 
     counter_->incUsedMemory(data.doc_size);
     memoryCounter_->add(data.doc_size);
@@ -226,42 +226,33 @@ DocPool::removeExpiredDocuments() {
 
 
 
-DocPool::DocData::DocData() : tag(), ptr(NULL), pos(), prefetch_marked(false), doc_size(0) {
+DocPool::DocData::DocData() : tag(), pos(), prefetch_marked(false), doc_size(0) {
 }
 
 DocPool::DocData::DocData(LRUList::iterator list_pos) :
-        tag(), ptr(NULL), pos(list_pos), prefetch_marked(false), doc_size(0) {
+        tag(), pos(list_pos), prefetch_marked(false), doc_size(0) {
 }
 
 void
-DocPool::DocData::assign(const Tag& t, const xmlDocPtr p) {
-    assert(NULL != p);
+DocPool::DocData::assign(const Tag &t, const XmlDocSharedHelper &elem) {
+    assert(NULL != elem.get());
+    assert(NULL != elem->get());
     clearDoc();
 
     tag = t;
     size_t s1 = getAllocatedMemory();
-    ptr = xmlCopyDoc(p, 1);
+    doc = elem;
     size_t s2 = getAllocatedMemory();
 
     doc_size = s2-s1;
 
-    XmlUtils::throwUnless(NULL != ptr);
     stored_time = time(NULL);
     prefetch_marked = false;
 }
 
-xmlDocPtr
-DocPool::DocData::copyDoc() const {
-    assert(ptr);
-    xmlDocPtr p = xmlCopyDoc(ptr, 1);
-    XmlUtils::throwUnless(NULL != p);
-    return p;
-}
-
 void
 DocPool::DocData::clearDoc() {
-    XmlDocHelper cleanup(ptr);
-    ptr = NULL;
+    doc.reset();
 }
 
 } // namespace xscript

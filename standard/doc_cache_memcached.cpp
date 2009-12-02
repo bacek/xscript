@@ -18,7 +18,7 @@ namespace xscript {
  */
 class TagKeyMemcached : public TagKeyMemory {
 public:
-    TagKeyMemcached(const Context *ctx, const Object *obj)
+    TagKeyMemcached(const Context *ctx, const CacheObject *obj)
         : TagKeyMemory(ctx, obj)
     {
         value_ = HashUtils::hexMD5(value_.c_str(), value_.length());
@@ -40,11 +40,13 @@ public:
     virtual time_t minimalCacheTime() const;
     virtual std::string name() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Object *obj) const;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CacheObject *obj) const;
+    
+    virtual bool distributed() const;
     
 protected:
-    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc);
-    virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);
+    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
+    virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy);
 
 private:
     struct memcache *mc_;
@@ -65,6 +67,11 @@ DocCacheMemcached::~DocCacheMemcached()
     mc_free(mc_);
 }
 
+
+bool
+DocCacheMemcached::distributed() const {
+    return true;
+}
 
 void
 DocCacheMemcached::init(const Config *config) {
@@ -105,7 +112,7 @@ DocCacheMemcached::name() const {
 }
 
 std::auto_ptr<TagKey> 
-DocCacheMemcached::createKey(const Context *ctx, const Object *obj) const {
+DocCacheMemcached::createKey(const Context *ctx, const CacheObject *obj) const {
     log()->debug("Creating key");
     return std::auto_ptr<TagKey>(new TagKeyMemcached(ctx, obj));
 }
@@ -124,7 +131,8 @@ memcacheCloseFunc(void *ctx) {
 }
 
 bool 
-DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHelper &doc) {
+DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy) {
+    (void)need_copy;
     log()->debug("saving doc in memcached");
   
     std::string mc_key = key->asString();
@@ -137,7 +145,7 @@ DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHe
     xmlOutputBufferPtr buf = NULL;
     buf = xmlOutputBufferCreateIO(&memcacheWriteFunc, &memcacheCloseFunc, &val, NULL);
 
-    xmlSaveFormatFileTo(buf, doc.get(), "UTF-8", 0);
+    xmlSaveFormatFileTo(buf, doc->get(), "UTF-8", 0);
 
     boost::uint32_t size = val.length();
     if (size > max_size_) {
@@ -152,7 +160,8 @@ DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHe
 }
 
 bool 
-DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
+DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) {
+    (void)need_copy;
     log()->debug("loading doc in memcached");
 
     std::string mc_key = key->asString();
@@ -183,7 +192,7 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
         val += sizeof(time_t);
         vallen -= 2*sizeof(time_t);
 
-        doc = XmlDocHelper(xmlParseMemory(val, vallen));
+        doc = XmlDocSharedHelper(new XmlDocHelper(xmlParseMemory(val, vallen)));
         log()->debug("Parsed %p", doc.get());
         free(orig_val);
         XmlUtils::throwUnless(NULL != doc.get());

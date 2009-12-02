@@ -17,7 +17,7 @@ public:
     virtual const std::string& outputEncoding() const;
 
     virtual void addHeaders(Response *response);
-    virtual void write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf);
+    virtual void write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf);
 
 private:
     std::string encoding_;
@@ -31,7 +31,7 @@ public:
     virtual const std::string& outputEncoding() const;
 
     virtual void addHeaders(Response *response);
-    virtual void write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf);
+    virtual void write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf);
 
 private:
     boost::shared_ptr<Stylesheet> stylesheet_;

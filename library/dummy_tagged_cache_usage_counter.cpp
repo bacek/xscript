@@ -9,14 +9,14 @@ namespace xscript {
 
 void
 DummyTaggedCacheUsageCounter::fetchedHit(const Context *ctx,
-                                         const Object *obj) {
+                                         const CacheObject *obj) {
     (void)ctx;
     (void)obj;
 }
 
 void
 DummyTaggedCacheUsageCounter::fetchedMiss(const Context *ctx,
-                                          const Object *obj) {
+                                          const CacheObject *obj) {
     (void)ctx;
     (void)obj;
 }

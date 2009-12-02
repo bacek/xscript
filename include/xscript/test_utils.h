@@ -15,24 +15,10 @@
 #include "xscript/state.h"
 
 namespace xscript {
+namespace TestUtils {
 
-class TestUtils : private boost::noncopyable {
-public:
-    static boost::shared_ptr<Context> createEnv(const std::string &script_name);
-    static boost::shared_ptr<Context> createEnv(const std::string &script_name, char *env[]);
-
-private:   
-    TestUtils() {}
-    virtual ~TestUtils() {}
-};
-
-boost::shared_ptr<Context>
-TestUtils::createEnv(const std::string &script_name) {
-    return createEnv(script_name, NULL);
-}
-
-boost::shared_ptr<Context>
-TestUtils::createEnv(const std::string &script_name, char *env[]) {
+static boost::shared_ptr<Context>
+createEnv(const std::string &script_name, char *env[]) {
     boost::shared_ptr<Request> request(new Request());
     boost::shared_ptr<Response> response(new Response());   
     boost::shared_ptr<State> state(new State());
@@ -46,6 +32,12 @@ TestUtils::createEnv(const std::string &script_name, char *env[]) {
     return boost::shared_ptr<Context>(new Context(script, state, request, response));
 }
 
+static boost::shared_ptr<Context>
+createEnv(const std::string &script_name) {
+    return createEnv(script_name, NULL);
+}
+
+} // namespace TestUtils
 } // namespace xscript
 
 #endif // _XSCRIPT_TEST_UTILS_H_

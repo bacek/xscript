@@ -157,8 +157,8 @@ LuaSharedContext create_lua(Context *ctx, Block *block) {
 }
 
 XmlDocHelper
-LuaBlock::call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::exception) {
-
+LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
+    (void)invoke_ctx;
     log()->entering(BOOST_CURRENT_FUNCTION);    
     
     PROFILER(log(), "Lua block execution, " + owner()->name());

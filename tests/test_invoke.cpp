@@ -9,6 +9,7 @@
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
 #include "xscript/state.h"
+#include "xscript/test_utils.h"
 #include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -50,176 +51,116 @@ CPPUNIT_REGISTRY_ADD("invoke", "xscript");
 
 void
 InvokeTest::testInvoke() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("invoke.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("invoke.xml");
     ContextStopper ctx_stopper(ctx);
-
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
 }
 
 void
 InvokeTest::testParams() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("params.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("params.xml");
     ContextStopper ctx_stopper(ctx);
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
 
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
-
-    CPPUNIT_ASSERT_EQUAL(std::string("params.xsl"), script->xsltName());
-    script->applyStylesheet(ctx, doc);
+    CPPUNIT_ASSERT_EQUAL(std::string("params.xsl"), ctx->script()->xsltName());
+    ctx->script()->applyStylesheet(ctx, doc);
 
     CPPUNIT_ASSERT_EQUAL(std::string("success"),
-                         XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
+                         XmlUtils::xpathValue(doc->get(), "/result/status", "failed"));
 }
 
 void
 InvokeTest::testFileBlockParams() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("file-block-params.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("file-block-params.xml");
     ContextStopper ctx_stopper(ctx);
-
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("success"),
-                         XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
+                         XmlUtils::xpathValue(doc->get(), "/result/status", "failed"));
 }
 
 void
 InvokeTest::testHttpBlockScheme() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("http-block-scheme.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-block-scheme.xml");
     ContextStopper ctx_stopper(ctx);
-
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/result/xscript_invoke_failed/@error"));
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "/result/xscript_invoke_failed/@error"));
 }
 
 void
 InvokeTest::testNoBlocks() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("noblocks.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("noblocks.xml");
     ContextStopper ctx_stopper(ctx);
-
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
 }
 
 void
 InvokeTest::testEmptyCDATA() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("empty-cdata.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("empty-cdata.xml");
     ContextStopper ctx_stopper(ctx);
-
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
 }
 
 void
 InvokeTest::testEvalXPath() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("invoke.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("invoke.xml");
     ContextStopper ctx_stopper(ctx);
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
 
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(ctx->state()->has("delim_expr"));
+    CPPUNIT_ASSERT(ctx->state()->has("result_expr"));
+    CPPUNIT_ASSERT_EQUAL(std::string("string"), ctx->state()->asString("delim_expr"));
+    CPPUNIT_ASSERT_EQUAL(std::string("string"), ctx->state()->asString("result_expr"));
 
-    CPPUNIT_ASSERT(state->has("delim_expr"));
-    CPPUNIT_ASSERT(state->has("result_expr"));
-    CPPUNIT_ASSERT_EQUAL(std::string("string"), state->asString("delim_expr"));
-    CPPUNIT_ASSERT_EQUAL(std::string("string"), state->asString("result_expr"));
-
-    CPPUNIT_ASSERT(state->is("test-xpath-bool-true"));
-    CPPUNIT_ASSERT(state->is("test-xpath-bool-true2"));
-    CPPUNIT_ASSERT(!state->is("test-xpath-bool-false"));
-    CPPUNIT_ASSERT_EQUAL(std::string("0"), state->asString("test-xpath-number0"));
-    CPPUNIT_ASSERT_EQUAL(std::string("1"), state->asString("test-xpath-number1"));
-    CPPUNIT_ASSERT_EQUAL(std::string("3"), state->asString("test-xpath-number3"));
-    CPPUNIT_ASSERT_EQUAL(std::string("4"), state->asString("test-xpath-number4"));
-    CPPUNIT_ASSERT_EQUAL(std::string("string"), state->asString("test-xpath-string"));
+    CPPUNIT_ASSERT(ctx->state()->is("test-xpath-bool-true"));
+    CPPUNIT_ASSERT(ctx->state()->is("test-xpath-bool-true2"));
+    CPPUNIT_ASSERT(!ctx->state()->is("test-xpath-bool-false"));
+    CPPUNIT_ASSERT_EQUAL(std::string("0"), ctx->state()->asString("test-xpath-number0"));
+    CPPUNIT_ASSERT_EQUAL(std::string("1"), ctx->state()->asString("test-xpath-number1"));
+    CPPUNIT_ASSERT_EQUAL(std::string("3"), ctx->state()->asString("test-xpath-number3"));
+    CPPUNIT_ASSERT_EQUAL(std::string("4"), ctx->state()->asString("test-xpath-number4"));
+    CPPUNIT_ASSERT_EQUAL(std::string("string"), ctx->state()->asString("test-xpath-string"));
 }
 
 void
 InvokeTest::testCheckGuard() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("invoke.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("invoke.xml");
     ContextStopper ctx_stopper(ctx);
 
-    state->setString("guardkey", "some value");
+    ctx->state()->setString("guardkey", "some value");
 
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
 
-    CPPUNIT_ASSERT(!state->has("val-2"));
-    CPPUNIT_ASSERT_EQUAL(static_cast<boost::int32_t>(3), state->asLong("val-3"));
+    CPPUNIT_ASSERT(!ctx->state()->has("val-2"));
+    CPPUNIT_ASSERT_EQUAL(static_cast<boost::int32_t>(3), ctx->state()->asLong("val-3"));
 }
 
 void
 InvokeTest::testStylesheet() {
 
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("xslt.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("xslt.xml");
     ContextStopper ctx_stopper(ctx);
 
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("long"),
-                         XmlUtils::xpathValue(doc.get(), "/page/state-results/type", "failed"));
+                         XmlUtils::xpathValue(doc->get(), "/page/state-results/type", "failed"));
 }

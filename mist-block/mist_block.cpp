@@ -30,7 +30,8 @@ MistBlock::postParse() {
 }
 
 XmlDocHelper
-MistBlock::call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::exception) {
+MistBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
+    (void)invoke_ctx;
     assert(worker_.get());
     
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));

@@ -71,8 +71,8 @@ class TaggedCacheScriptUsageCounterImpl : public TaggedCacheUsageCounterImpl {
 public:
     TaggedCacheScriptUsageCounterImpl(const std::string &name);
     
-    void fetchedHit(const Context *ctx, const Object *obj);
-    void fetchedMiss(const Context *ctx, const Object *obj);
+    void fetchedHit(const Context *ctx, const CacheObject *obj);
+    void fetchedMiss(const Context *ctx, const CacheObject *obj);
     
 private:
     void fetched(const Context *ctx, const Script *script, bool is_hit);
@@ -82,8 +82,8 @@ class TaggedCacheBlockUsageCounterImpl : public TaggedCacheUsageCounterImpl {
 public:
     TaggedCacheBlockUsageCounterImpl(const std::string &name);
     
-    void fetchedHit(const Context *ctx, const Object *obj);
-    void fetchedMiss(const Context *ctx, const Object *obj);
+    void fetchedHit(const Context *ctx, const CacheObject *obj);
+    void fetchedMiss(const Context *ctx, const CacheObject *obj);
     
 private:
     void fetched(const Context *ctx, const TaggedBlock *block, bool is_hit);

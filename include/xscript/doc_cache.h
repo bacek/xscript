@@ -9,15 +9,29 @@
 
 namespace xscript {
 
+class CacheObject;
 class Config;
 class Context;
 class DocCacheStrategy;
-class Object;
 class Tag;
 
 /**
- * Cache result of block invokations using sequence of different strategies.
+ * Cache result of block invocations using sequence of different strategies.
  */
+
+class CacheContext {
+public:
+    CacheContext(const CacheObject *obj);
+    CacheContext(const CacheObject *obj, bool allow_distributed);
+    
+    const CacheObject* object() const;
+    bool allowDistributed() const;
+    void allowDistributed(bool flag);
+    
+private:
+    const CacheObject* obj_;
+    bool allow_distributed_;
+};
 
 class DocCacheBase {
 public:
@@ -26,13 +40,16 @@ public:
 
     time_t minimalCacheTime() const;
 
-    bool loadDoc(const Context *ctx, const Object *obj, Tag &tag, XmlDocHelper &doc);
-    bool saveDoc(const Context *ctx, const Object *obj, const Tag &tag, const XmlDocHelper &doc);
+    virtual bool loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc);
+    virtual bool saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag, const XmlDocSharedHelper &doc);
 
     virtual void init(const Config *config);
     void addStrategy(DocCacheStrategy *strategy, const std::string &name);
     
 protected:
+    bool loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
+    bool saveDocImpl(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy);
+    
     class StatInfo;
     virtual void createUsageCounter(boost::shared_ptr<StatInfo> info) = 0;
     virtual std::string name() const = 0;
@@ -61,6 +78,9 @@ public:
     virtual ~PageCache();
     static PageCache* instance();
 
+    virtual bool loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc);
+    virtual bool saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag, const XmlDocSharedHelper &doc);
+    
 protected:
     PageCache();
     

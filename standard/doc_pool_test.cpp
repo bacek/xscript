@@ -30,14 +30,14 @@ public:
 
         std::string key("1");
 
-        XmlDocHelper doc1(xmlNewDoc((const xmlChar*) "1.0"));
+        XmlDocSharedHelper doc1(new XmlDocHelper(xmlNewDoc((const xmlChar*) "1.0")));
 
         time_t t = time(0);
         Tag tag(false, t, t+6);
 
         pool.saveDocImpl(key, tag, doc1);
 
-        XmlDocHelper loaded;
+        XmlDocSharedHelper loaded;
         DocPool::LoadResult res = pool.loadDocImpl(key, tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("First load successful", DocPool::LOAD_SUCCESSFUL, res);
 
@@ -57,14 +57,14 @@ public:
 
         DocPool pool(2, "pool");
 
-        XmlDocHelper doc1(xmlNewDoc((const xmlChar*) "1.0"));
+        XmlDocSharedHelper doc1(new XmlDocHelper(xmlNewDoc((const xmlChar*) "1.0")));
 
         time_t t = time(0);
         Tag tag(false, t, t+6);
 
         pool.saveDocImpl("1", tag, doc1);
 
-        XmlDocHelper loaded;
+        XmlDocSharedHelper loaded;
 
         DocPool::LoadResult res = pool.loadDocImpl("1", tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("First load successful", DocPool::LOAD_SUCCESSFUL, res);

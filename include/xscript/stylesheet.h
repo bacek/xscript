@@ -27,8 +27,8 @@ public:
     const std::string& outputEncoding() const;
     bool haveOutputInfo() const;
 
-    XmlDocHelper apply(Object *obj, boost::shared_ptr<Context> ctx, const XmlDocHelper &doc);
-
+    XmlDocHelper apply(Object *obj, boost::shared_ptr<Context> ctx, xmlDocPtr doc);
+    
     static boost::shared_ptr<Context> getContext(xsltTransformContextPtr tctx);
     static Stylesheet* getStylesheet(xsltTransformContextPtr tctx);
     static const Block* getBlock(xsltTransformContextPtr tctx);

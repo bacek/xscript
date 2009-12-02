@@ -109,7 +109,7 @@ public:
     void buildXScriptNodeSet(std::vector<xmlNodePtr> &xscript_nodes);
     bool processXpointer(const Context *ctx, xmlDocPtr doc, xmlNodePtr newnode, unsigned int count) const;
     void addHeaders(Context *ctx);
-    XmlDocHelper fetchResults(Context *ctx);
+    XmlDocSharedHelper fetchResults(Context *ctx);
     void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
                         unsigned int &count, unsigned int &xscript_count);
     std::string cachedUrl(const Context *ctx) const;
@@ -565,18 +565,18 @@ Script::ScriptData::addHeaders(Context *ctx) {
     setHeaders(response);
 }
 
-XmlDocHelper
+XmlDocSharedHelper
 Script::ScriptData::fetchResults(Context *ctx) {
 
-    XmlDocHelper newdoc(xmlCopyDoc(doc_.get(), 1));
-    XmlUtils::throwUnless(NULL != newdoc.get());
+    XmlDocSharedHelper newdoc(new XmlDocHelper(xmlCopyDoc(doc_.get(), 1)));
+    XmlUtils::throwUnless(NULL != newdoc->get());
 
     unsigned int count = 0, xscript_count = 0;
 
     xmlNodePtr node = xmlDocGetRootElement(doc_.get());
     assert(node);
     
-    xmlNodePtr newnode = xmlDocGetRootElement(newdoc.get());
+    xmlNodePtr newnode = xmlDocGetRootElement(newdoc->get());
     assert(newnode);
     
     fetchRecursive(ctx, node, newnode, count, xscript_count);
@@ -596,13 +596,13 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
         }
         xmlNodePtr next = newnode->next;
         if (count < blocks_num && block(count)->node() == node) {
-            InvokeResult result = ctx->result(count);
-            xmlDocPtr doc = result.doc.get();
+            boost::shared_ptr<InvokeContext> result = ctx->result(count);
+            xmlDocPtr doc = result->resultDoc()->get();
             assert(doc);
 
             xmlNodePtr result_doc_root_node = xmlDocGetRootElement(doc);
             if (result_doc_root_node) {
-                if (result.error() || !processXpointer(ctx, doc, newnode, count)) {
+                if (result->error() || !processXpointer(ctx, doc, newnode, count)) {
                     xmlReplaceNode(newnode, xmlCopyNode(result_doc_root_node, 1));
                 }
             }
@@ -1034,7 +1034,7 @@ Script::fullName(const std::string &name) const {
     return Xml::fullName(name);
 }
 
-XmlDocHelper
+XmlDocSharedHelper
 Script::invoke(boost::shared_ptr<Context> ctx) {
 
     log()->info("%s, invoking %s", BOOST_CURRENT_FUNCTION, name().c_str());
@@ -1054,7 +1054,7 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
             stop = true;
         }
         if (stop) {
-            ctx->result(count, (*it)->fakeResult());
+            ctx->result(count, (*it)->fakeResult(true));
             continue;
         }
         
@@ -1075,11 +1075,11 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
     return data_->fetchResults(ctx.get());
 }
 
-void
-Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {    
+bool
+Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) {    
     std::string xslt = ctx->xsltName();
     if (xslt.empty()) {
-        return;
+        return true;
     }
     
     boost::shared_ptr<Stylesheet> stylesheet(StylesheetFactory::createStylesheet(xslt));
@@ -1090,11 +1090,14 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
     ctx->createDocumentWriter(stylesheet);
     Object::applyStylesheet(stylesheet, ctx, doc, false);
     
+    bool result = true;
     if (XmlUtils::hasXMLError()) {
         ctx->rootContext()->setNoCache();
+        result = false;
     }
 		    
     OperationMode::processMainXsltError(ctx.get(), this, stylesheet.get());
+    return result;
 }
 
 void

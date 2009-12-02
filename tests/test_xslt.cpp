@@ -8,6 +8,7 @@
 #include "xscript/script_factory.h"
 #include "xscript/state.h"
 #include "xscript/stylesheet.h"
+#include "xscript/test_utils.h"
 #include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -89,51 +90,38 @@ XsltTest::testNl2br() {
 
 void
 XsltTest::testFile(const std::string &name) {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript(name);
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv(name);
     ContextStopper ctx_stopper(ctx);
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
 
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
-
-    CPPUNIT_ASSERT_EQUAL(true, script->forceStylesheet());
-    script->applyStylesheet(ctx, doc);
+    CPPUNIT_ASSERT_EQUAL(true, ctx->script()->forceStylesheet());
+    ctx->script()->applyStylesheet(ctx, doc);
 
     CPPUNIT_ASSERT_EQUAL(std::string("success"),
-                         XmlUtils::xpathValue(doc.get(), "/result/status"));
+                         XmlUtils::xpathValue(doc->get(), "/result/status"));
 }
 
 void
 XsltTest::testMist() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("mist-extension.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("mist-extension.xml");
     ContextStopper ctx_stopper(ctx);
 
     CPPUNIT_ASSERT_EQUAL(std::string("mist-extension.xsl"), ctx->xsltName());
 
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
 
-    CPPUNIT_ASSERT_EQUAL(std::string("2"), state->asString("c"));
+    CPPUNIT_ASSERT_EQUAL(std::string("2"), ctx->state()->asString("c"));
 
-    CPPUNIT_ASSERT_EQUAL(true, script->forceStylesheet());
-    script->applyStylesheet(ctx, doc);
+    CPPUNIT_ASSERT_EQUAL(true, ctx->script()->forceStylesheet());
+    ctx->script()->applyStylesheet(ctx, doc);
 
-    CPPUNIT_ASSERT_EQUAL(std::string("1"), state->asString("a"));
-    CPPUNIT_ASSERT_EQUAL(std::string("1"), state->asString("b"));
-    CPPUNIT_ASSERT_EQUAL(std::string("2"), state->asString("d"));
+    CPPUNIT_ASSERT_EQUAL(std::string("1"), ctx->state()->asString("a"));
+    CPPUNIT_ASSERT_EQUAL(std::string("1"), ctx->state()->asString("b"));
+    CPPUNIT_ASSERT_EQUAL(std::string("2"), ctx->state()->asString("d"));
 }
 
 void

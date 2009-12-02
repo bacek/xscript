@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libxscript.la
 
-libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
+libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp cache_object.cpp \
 	config.cpp context.cpp cookie.cpp encoder.cpp cookie_param.cpp \
 	extension.cpp extension_list.cpp header_param.cpp http_user_param.cpp \
 	loader.cpp logger.cpp object.cpp param.cpp param_factory.cpp \
@@ -32,7 +32,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp \
 	page_random_param.cpp message_interface.cpp message_errors.cpp exception.cpp \
 	parser.cpp request_impl.cpp http_utils.cpp \
 	dummy_response_time_counter.cpp response_time_counter_impl.cpp response_time_counter_factory.cpp \
-	response_time_counter_block.cpp
+	response_time_counter_block.cpp invoke_context.cpp
 
 libxscript_la_LDFLAGS = @VERSION_INFO@ -lcurl
 

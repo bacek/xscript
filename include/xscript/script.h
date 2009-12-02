@@ -9,6 +9,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/thread/mutex.hpp>
 
+#include <xscript/cache_object.h>
 #include <xscript/functors.h>
 #include <xscript/object.h>
 #include <xscript/xml.h>
@@ -28,7 +29,7 @@ class ScriptHandlerRegisterer;
  * Created by ScriptFactory (for caching purposes).
  */
 
-class Script : public virtual Object, public Xml {
+class Script : public virtual Object, public Xml, public CacheObject {
 public:
     virtual ~Script();
 
@@ -48,8 +49,8 @@ public:
     std::string info(const Context *ctx) const;
     bool cachable(const Context *ctx, bool for_save) const;
     
-    virtual XmlDocHelper invoke(boost::shared_ptr<Context> ctx);
-    virtual void applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc);
+    virtual XmlDocSharedHelper invoke(boost::shared_ptr<Context> ctx);
+    virtual bool applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc);
     
     virtual std::string fullName(const std::string &name) const;
     

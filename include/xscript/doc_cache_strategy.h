@@ -10,8 +10,8 @@
 
 namespace xscript {
 
+class CacheObject;
 class Context;
-class Object;
 class StatBuilder;
 class Tag;
 class TaggedBlock;
@@ -33,16 +33,18 @@ public:
 
     virtual time_t minimalCacheTime() const = 0;
     virtual std::string name() const = 0;
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Object *obj) const = 0;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CacheObject *obj) const = 0;
 
-    virtual bool loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc);
-    virtual bool saveDoc(const TagKey *key, const Tag& tag, const XmlDocHelper &doc);
+    virtual bool loadDoc(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
+    virtual bool saveDoc(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy);
     
     virtual void fillStatBuilder(StatBuilder *builder);
+    
+    virtual bool distributed() const;
 
 protected:
-    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) = 0;
-    virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocHelper &doc) = 0;
+    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) = 0;
+    virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy) = 0;
     
     virtual void insert2Cache(const std::string &no_cache);
 };

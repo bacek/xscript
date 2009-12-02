@@ -4,13 +4,14 @@
 #include <ctime>
 
 #include <xscript/block.h>
+#include <xscript/cache_object.h>
 #include <xscript/functors.h>
 #include <xscript/tag.h>
 #include <xscript/xml_helpers.h>
 
 namespace xscript {
 
-class TaggedBlock : public virtual Block {
+class TaggedBlock : public virtual Block, public CacheObject {
 public:
     TaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~TaggedBlock();
@@ -20,6 +21,8 @@ public:
 
     virtual bool tagged() const;
     virtual void tagged(bool tagged);
+    
+    virtual bool remote() const;
     
     virtual time_t cacheTime() const;
     virtual void cacheTime(time_t cache_time);
@@ -32,8 +35,8 @@ public:
     bool cacheLevel(unsigned char type) const;
     
 protected:
-    virtual InvokeResult invokeInternal(boost::shared_ptr<Context> ctx);
-    virtual void postCall(Context *ctx, const InvokeResult &result, const boost::any &a);
+    virtual void invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+    virtual void postCall(Context *ctx, InvokeContext *invoke_ctx);
     virtual void postParse();
     virtual void property(const char *name, const char *value);
     bool propertyInternal(const char *name, const char *value);

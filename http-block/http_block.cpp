@@ -94,8 +94,8 @@ HttpBlock::postParse() {
 }
 
 XmlDocHelper
-HttpBlock::retryCall(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception) {
-    return (this->*method_)(ctx.get(), a);
+HttpBlock::retryCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
+    return (this->*method_)(ctx.get(), invoke_ctx.get());
 }
 
 void
@@ -126,7 +126,7 @@ HttpBlock::concatParams(const Context *ctx, unsigned int first, unsigned int las
 }
 
 XmlDocHelper
-HttpBlock::getHttp(Context *ctx, boost::any &a) {
+HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) {
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
@@ -135,21 +135,20 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
     if (size == 0) {
         throwBadArityError();
     }
-
+    
     std::string url = concatParams(ctx, 0, size - 1);
+    
     PROFILER(log(), "getHttp: " + url);
 
-    const Tag *tag = boost::any_cast<Tag>(&a);
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), tag);
+    appendHeaders(helper, ctx->request(), invoke_ctx);
     httpCall(helper);
     checkStatus(helper);
     
-    createTagInfo(helper, a);
-    const Tag *result_tag = boost::any_cast<Tag>(&a);
+    createTagInfo(helper, invoke_ctx);
 
-    if (result_tag && !result_tag->modified) {
+    if (invoke_ctx->haveCachedCopy() && !invoke_ctx->tag().modified) {
         return XmlDocHelper();
     }
 
@@ -158,8 +157,8 @@ HttpBlock::getHttp(Context *ctx, boost::any &a) {
 
 
 XmlDocHelper
-HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
-    (void)a;
+HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) {
+    (void)invoke_ctx;
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
@@ -207,7 +206,7 @@ HttpBlock::getBinaryPage(Context *ctx, boost::any &a) {
 
 
 XmlDocHelper
-HttpBlock::postHttp(Context *ctx, boost::any &a) {
+HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) {
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
@@ -221,9 +220,7 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    const Tag *tag = boost::any_cast<Tag>(&a);
-    
-    appendHeaders(helper, ctx->request(), tag);
+    appendHeaders(helper, ctx->request(), invoke_ctx);
 
     std::string body = p[size-1]->asString(ctx);
     helper.postData(body.data(), body.size());
@@ -231,10 +228,9 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
     httpCall(helper);
     checkStatus(helper);
 
-    createTagInfo(helper, a);
-    const Tag *result_tag = boost::any_cast<Tag>(&a);
+    createTagInfo(helper, invoke_ctx);
 
-    if (result_tag && !result_tag->modified) {
+    if (invoke_ctx->haveCachedCopy() && !invoke_ctx->tag().modified) {
         return XmlDocHelper();
     }
 
@@ -242,8 +238,8 @@ HttpBlock::postHttp(Context *ctx, boost::any &a) {
 }
 
 XmlDocHelper
-HttpBlock::postByRequest(Context *ctx, boost::any &a) {
-    (void)a;
+HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) {
+    (void)invoke_ctx;
     
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
@@ -275,8 +271,8 @@ HttpBlock::postByRequest(Context *ctx, boost::any &a) {
 }
 
 XmlDocHelper
-HttpBlock::getByState(Context *ctx, boost::any &a) {
-    (void)a;
+HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) {
+    (void)invoke_ctx;
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
     
@@ -314,8 +310,8 @@ HttpBlock::getByState(Context *ctx, boost::any &a) {
 }
 
 XmlDocHelper
-HttpBlock::getByRequest(Context *ctx, boost::any &a) {
-    (void)a;
+HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) {
+    (void)invoke_ctx;
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
@@ -344,7 +340,7 @@ HttpBlock::getByRequest(Context *ctx, boost::any &a) {
 }
 
 void
-HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, const Tag *tag) const {
+HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, InvokeContext *invoke_ctx) const {
     std::vector<std::string> headers;
     bool real_ip = false;
     const std::string& ip_header_name = Policy::realIPHeaderName();
@@ -375,7 +371,8 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, const Tag *
         headers.back().append(": ").append(request->getRealIP());
     }
     
-    helper.appendHeaders(headers, tag ? tag->last_modified : Tag::UNDEFINED_TIME);
+    helper.appendHeaders(headers,
+            invoke_ctx->tagged() ? invoke_ctx->tag().last_modified : Tag::UNDEFINED_TIME);
 }
 
 XmlDocHelper
@@ -412,13 +409,12 @@ HttpBlock::response(const HttpHelper &helper) const {
 }
 
 void
-HttpBlock::createTagInfo(const HttpHelper &helper, boost::any &a) const {
+HttpBlock::createTagInfo(const HttpHelper &helper, InvokeContext *invoke_ctx) const {
+    invoke_ctx->resetTag();
     if (!tagged()) {
         return;
     }
-
-    Tag tag = helper.createTag();
-    a = boost::any(tag);
+    invoke_ctx->tag(helper.createTag());
 }
 
 int

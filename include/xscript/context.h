@@ -15,7 +15,7 @@
 
 #include <libxml/tree.h>
 
-#include "xscript/invoke_result.h"
+#include "xscript/invoke_context.h"
 #include "xscript/request.h"
 #include "xscript/response.h"
 #include "xscript/request_data.h"
@@ -49,12 +49,12 @@ public:
     
     void wait(int millis);
     void expect(unsigned int count);
-    void result(unsigned int n, InvokeResult result);
+    void result(unsigned int n, boost::shared_ptr<InvokeContext> result);
     void addNode(xmlNodePtr node);
 
     bool resultsReady() const;
     boost::xtime delay(int millis) const;
-    InvokeResult result(unsigned int n) const;
+    boost::shared_ptr<InvokeContext> result(unsigned int n) const;
 
     const boost::shared_ptr<RequestData>& requestData() const;
     Request* request() const;

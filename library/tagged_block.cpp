@@ -67,6 +67,11 @@ TaggedBlock::tagged(bool tagged) {
     cacheLevel(TaggedBlockData::FLAG_TAGGED, tagged);
 }
 
+bool
+TaggedBlock::remote() const {
+    return false;
+}
+
 void
 TaggedBlock::cacheLevel(unsigned char type, bool value) {
     tb_data_->cache_level_ = value ?
@@ -89,61 +94,69 @@ TaggedBlock::cacheTime(time_t cache_time) {
     tb_data_->cache_time_ = cache_time;
 }
 
-InvokeResult
-TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx) {
+void
+TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
 
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
     if (!tagged()) {
-        return Block::invokeInternal(ctx);
+        Block::invokeInternal(ctx, invoke_ctx);
+        return;
     }
 
     if (!xsltName().empty() && ctx->noXsltPort()) {
-        return Block::invokeInternal(ctx);
+        Block::invokeInternal(ctx, invoke_ctx);
+        return;
     }
     
     if (!Policy::allowCaching(ctx.get(), this)) {
-        return Block::invokeInternal(ctx);
+        Block::invokeInternal(ctx, invoke_ctx);
+        return;
     }
 
     bool have_cached_doc = false;
-    XmlDocHelper doc(NULL);
-    Tag tag;
+    XmlDocSharedHelper doc;
+    Tag cache_tag;
     try {
-        have_cached_doc = DocCache::instance()->loadDoc(ctx.get(), this, tag, doc);
+        CacheContext cache_ctx(this, this->remote());
+        have_cached_doc = DocCache::instance()->loadDoc(ctx.get(), &cache_ctx, cache_tag, doc);
     }
     catch (const std::exception &e) {
         log()->error("caught exception while fetching cached doc: %s", e.what());
     }
    
-    if (have_cached_doc && Tag::UNDEFINED_TIME == tag.expire_time) {
-        tag.modified = true;
-        boost::any a(tag);
-        XmlDocHelper newdoc = call(ctx, a);
-        
-        if (NULL != newdoc.get()) {
-            return processResponse(ctx, newdoc, a);
-        }
-
-        tag = boost::any_cast<Tag>(a);
-        if (tag.modified) {
-            have_cached_doc = false;
-        }
-    }
-
     if (!have_cached_doc) {
-        return Block::invokeInternal(ctx);
+        Block::invokeInternal(ctx, invoke_ctx);
+        return;
     }
     
+    if (Tag::UNDEFINED_TIME == cache_tag.expire_time) {
+        invoke_ctx->haveCachedCopy(true);
+        invoke_ctx->tag(cache_tag);
+        XmlDocSharedHelper newdoc(new XmlDocHelper(call(ctx, invoke_ctx)));
+        
+        if (invoke_ctx->tag().modified) {
+            if (NULL == newdoc->get()) {
+                log()->error("Got empty document in tagged block. Cached copy used");
+            }
+            else {
+                invoke_ctx->resultDoc(newdoc);
+                processResponse(ctx, invoke_ctx);
+                return;
+            }
+        }
+    }
+    
+    invoke_ctx->resultType(InvokeContext::SUCCESS);
+    invoke_ctx->resultDoc(doc);
     evalXPath(ctx.get(), doc);
-    return InvokeResult(doc, InvokeResult::SUCCESS);
 }
 
 void
-TaggedBlock::postCall(Context *ctx, const InvokeResult &result, const boost::any &a) {
+TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
 
     log()->debug("%s, tagged: %d", BOOST_CURRENT_FUNCTION, static_cast<int>(tagged()));
-    if (!tagged() || !result.success()) {
+    if (!tagged() || !invoke_ctx->success()) {
         return;
     }
 
@@ -156,8 +169,8 @@ TaggedBlock::postCall(Context *ctx, const InvokeResult &result, const boost::any
     }
     
     time_t now = time(NULL);
-    Tag tag = boost::any_cast<Tag>(a);
     DocCache *cache = DocCache::instance();
+    Tag tag = invoke_ctx->tag();
 
     bool can_store = false;
     if (CACHE_TIME_UNDEFINED != tb_data_->cache_time_) {
@@ -174,7 +187,8 @@ TaggedBlock::postCall(Context *ctx, const InvokeResult &result, const boost::any
     }
 
     if (can_store) {
-        cache->saveDoc(ctx, this, tag, result.doc);
+        CacheContext cache_ctx(this, this->remote());
+        cache->saveDoc(ctx, &cache_ctx, tag, invoke_ctx->resultDoc());
     }
 }
 

@@ -17,7 +17,7 @@ public:
 
 protected:
     virtual void postParse();
-    virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception);
+    virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception);
 
 private:
     MistBlock(const MistBlock &);

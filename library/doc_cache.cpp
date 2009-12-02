@@ -42,7 +42,8 @@ public:
                 : Block(ext, owner, node), cache_data_(cache_data) {
         }
 
-        XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::any &) throw (std::exception) {
+        XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
+            (void)invoke_ctx;
             ControlExtension::setControlFlag(ctx.get());
             return cache_data_.createReport();
         }
@@ -151,27 +152,41 @@ DocCacheBase::minimalCacheTime() const {
 }
 
 bool
-DocCacheBase::loadDoc(const Context *ctx, const Object *obj, Tag &tag, XmlDocHelper &doc) {
+DocCacheBase::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc) {
+    return loadDocImpl(ctx, cache_ctx, tag, doc, false);
+}
+
+bool
+DocCacheBase::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag, const XmlDocSharedHelper &doc) {
+    return saveDocImpl(ctx, cache_ctx, tag, doc, false);
+}
+
+bool
+DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) {
     // FIXME Add saving of loaded doc into higher-order caches.
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     bool loaded = false;
     DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
     while ( !loaded && i != data_->strategies_.end()) {
         DocCacheStrategy* strategy = i->first;
-        std::auto_ptr<TagKey> key = strategy->createKey(ctx, obj);
+        if (strategy->distributed() && !cache_ctx->allowDistributed()) {
+            continue;
+        }
+        
+        std::auto_ptr<TagKey> key = strategy->createKey(ctx, cache_ctx->object());
         
         boost::function<bool()> f =
             boost::bind(&DocCacheStrategy::loadDoc, strategy,
-                    boost::cref(key.get()), boost::ref(tag), boost::ref(doc));
+                    boost::cref(key.get()), boost::ref(tag), boost::ref(doc), need_copy);
         
         std::pair<bool, uint64_t> res = profile(f);
         
         if (res.first) {
-            i->second->usageCounter_->fetchedHit(ctx, obj);
+            i->second->usageCounter_->fetchedHit(ctx, cache_ctx->object());
             i->second->hitCounter_->add(res.second);
         }
         else {
-            i->second->usageCounter_->fetchedMiss(ctx, obj);
+            i->second->usageCounter_->fetchedMiss(ctx, cache_ctx->object());
             i->second->missCounter_->add(res.second);
         }
         
@@ -183,11 +198,15 @@ DocCacheBase::loadDoc(const Context *ctx, const Object *obj, Tag &tag, XmlDocHel
         --i; // Do not store in cache from doc was loaded.
         for(DocCacheData::StrategyMap::iterator j = data_->strategies_.begin(); j != i; ++j) {
             DocCacheStrategy* strategy = j->first;
-            std::auto_ptr<TagKey> key = strategy->createKey(ctx, obj);
+            if (strategy->distributed() && !cache_ctx->allowDistributed()) {
+                continue;
+            }
+            
+            std::auto_ptr<TagKey> key = strategy->createKey(ctx, cache_ctx->object());
             
             boost::function<bool()> f =
                 boost::bind(&DocCacheStrategy::saveDoc, strategy,
-                        boost::cref(key.get()), boost::cref(tag), boost::cref(doc));
+                        boost::cref(key.get()), boost::cref(tag), boost::cref(doc), need_copy);
             std::pair<bool, uint64_t> res = profile(f);
             i->second->saveCounter_->add(res.second);            
         }
@@ -197,17 +216,17 @@ DocCacheBase::loadDoc(const Context *ctx, const Object *obj, Tag &tag, XmlDocHel
 }
 
 bool
-DocCacheBase::saveDoc(const Context *ctx, const Object *obj, const Tag& tag, const XmlDocHelper &doc) {
+DocCacheBase::saveDocImpl(const Context *ctx, const CacheContext *cache_ctx, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy) {
     bool saved = false;
     for (DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
          i != data_->strategies_.end();
          ++i) {
         DocCacheStrategy* strategy = i->first;
-        std::auto_ptr<TagKey> key = strategy->createKey(ctx, obj);
+        std::auto_ptr<TagKey> key = strategy->createKey(ctx, cache_ctx->object());
         
         boost::function<bool()> f =
             boost::bind(&DocCacheStrategy::saveDoc, strategy,
-                    boost::cref(key.get()), boost::cref(tag), boost::cref(doc));
+                    boost::cref(key.get()), boost::cref(tag), boost::cref(doc), need_copy);
         
         std::pair<bool, uint64_t> res = profile(f);
         i->second->saveCounter_->add(res.second); 
@@ -259,6 +278,39 @@ PageCache::createUsageCounter(boost::shared_ptr<StatInfo> info) {
 std::string
 PageCache::name() const {
     return "page-cache";
+}
+
+bool
+PageCache::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc) {
+    return loadDocImpl(ctx, cache_ctx, tag, doc, true);
+}
+
+bool
+PageCache::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag, const XmlDocSharedHelper &doc) {
+    return saveDocImpl(ctx, cache_ctx, tag, doc, true);
+}
+
+CacheContext::CacheContext(const CacheObject *obj) :
+    obj_(obj), allow_distributed_(true)
+{}
+
+CacheContext::CacheContext(const CacheObject *obj, bool allow_distributed) :
+    obj_(obj), allow_distributed_(allow_distributed)
+{}
+
+const CacheObject*
+CacheContext::object() const {
+    return obj_;
+}
+
+bool
+CacheContext::allowDistributed() const {
+    return allow_distributed_;
+}
+
+void
+CacheContext::allowDistributed(bool flag) {
+    allow_distributed_ = flag;
 }
 
 } // namespace xscript

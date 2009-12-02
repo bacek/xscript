@@ -343,28 +343,28 @@ Block::fullName(const std::string &name) const {
     return owner()->fullName(name_tmp);
 }
 
-InvokeResult
+boost::shared_ptr<InvokeContext>
 Block::invoke(boost::shared_ptr<Context> ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
     if (ctx->stopped()) {
         log()->error("Context already stopped. Cannot invoke block. Owner: %s. Block: %s. Method: %s",
             owner()->name().c_str(), name(), data_->method_.c_str());
-        return fakeResult();
+        return fakeResult(true);
     }
 
-    InvokeResult result;
+    boost::shared_ptr<InvokeContext> result;
     try {
         if (!checkGuard(ctx.get())) {
             log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
                 owner()->name().c_str(), name(), data_->method_.c_str());
-            return fakeResult();
+            return fakeResult(false);
         }
-        
         BlockTimerStarter starter(ctx.get(), this);
-        result = invokeInternal(ctx);
-        if (!result.error()) {
-            postInvoke(ctx.get(), result.doc);
+        result = boost::shared_ptr<InvokeContext>(new InvokeContext());
+        invokeInternal(ctx, result);
+        if (!result->error()) {
+            postInvoke(ctx.get(), result.get());
         }
     }
     catch (const CriticalInvokeError &e) {
@@ -374,24 +374,23 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     }
     catch (const SkipResultInvokeError &e) {
         log()->info("%s", errorMessage(e).c_str());
-        result = fakeResult();
+        result = errorResult(fakeDoc());
     }
     catch (const InvokeError &e) {
-        result = errorResult(e);
+        result = errorResult(e, false);
     }
     catch (const std::exception &e) {
-        result = errorResult(e.what());
+        result = errorResult(e.what(), false);
     }
     
-    if (!result.success()) {
+    if (!result->success()) {
         ctx->rootContext()->setNoCache();
     }
-    
     return result;
 }
 
-InvokeResult
-Block::invokeInternal(boost::shared_ptr<Context> ctx) {
+void
+Block::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
     // Check validators for each param before calling it.
@@ -400,15 +399,14 @@ Block::invokeInternal(boost::shared_ptr<Context> ctx) {
         ++i) {
         (*i)->checkValidator(ctx.get());
     }
-
-    boost::any a;
-    XmlDocHelper doc(call(ctx, a));
-
+    
+    XmlDocHelper doc(call(ctx, invoke_ctx));
     if (NULL == doc.get()) {
-        return errorResult("got empty document");
+        invoke_ctx = errorResult("got empty document", false);
+        return;
     }
-
-    return processResponse(ctx, doc, a);
+    invoke_ctx->resultDoc(doc);
+    processResponse(ctx, invoke_ctx);
 }
 
 void
@@ -422,13 +420,14 @@ Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
     }
 }
 
-InvokeResult
-Block::processResponse(boost::shared_ptr<Context> ctx, XmlDocHelper doc, boost::any &a) {
-    if (NULL == doc.get()) {
+void
+Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) { 
+    XmlDocSharedHelper doc = invoke_ctx->resultDoc();
+    if (NULL == doc->get()) {
         throw InvokeError("null response document");
     }
 
-    if (NULL == xmlDocGetRootElement(doc.get())) {
+    if (NULL == xmlDocGetRootElement(doc->get())) {
         throw InvokeError("got document with no root");
     }
 
@@ -436,35 +435,31 @@ Block::processResponse(boost::shared_ptr<Context> ctx, XmlDocHelper doc, boost::
         throw InvokeError("context is already stopped, cannot process response");
     }
 
-    bool is_error_doc = Policy::isErrorDoc(doc.get());
+    bool is_error_doc = Policy::isErrorDoc(doc->get());
     
-    log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
-    bool need_perblock = !ctx->noXsltPort();
+    log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc->get());
+    bool need_perblock = !ctx->noXsltPort() && !xsltName().empty();
     bool success = true;
     if (need_perblock) {
-        success = doApplyStylesheet(ctx, doc);
+        success = applyStylesheet(ctx, doc);
     }
 
-    InvokeResult::Type type = !is_error_doc && success ?
-            InvokeResult::SUCCESS : InvokeResult::NO_CACHE;
+    InvokeContext::ResultType type = !is_error_doc && success ?
+            InvokeContext::SUCCESS : InvokeContext::NO_CACHE;
     
-    InvokeResult result(doc, type);
+    invoke_ctx->resultType(type);
+    invoke_ctx->resultDoc(doc);
     
-    postCall(ctx.get(), result, a);
+    postCall(ctx.get(), invoke_ctx.get());
 
     if (need_perblock || xsltName().empty()) {
-        evalXPath(ctx.get(), result.doc);
+        evalXPath(ctx.get(), doc);
     }
-
-    return result;
 }
 
 bool
-Block::doApplyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
-    if (xsltName().empty()) {
-        return true;
-    }
-    
+Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) {
+
     const TimeoutCounter &timer = ctx->timer();
     if (timer.expired()) {
         throw InvokeError("block is timed out", "timeout",
@@ -478,7 +473,7 @@ Block::doApplyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
         Object::applyStylesheet(sh, ctx, doc, true);
     }
 
-    XmlUtils::throwUnless(NULL != doc.get());
+    XmlUtils::throwUnless(NULL != doc->get());
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
         
     bool result = true;
@@ -486,47 +481,57 @@ Block::doApplyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
         ctx->rootContext()->setNoCache();
         result = false;
     }
-		        
+                
     OperationMode::processPerblockXsltError(ctx.get(), this);
-				    
+                    
     return result;
 }
 
-void
-Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocHelper &doc) {
-    doApplyStylesheet(ctx, doc);
-}
-
-InvokeResult
-Block::infoResult(const char *error) const {
+boost::shared_ptr<InvokeContext>
+Block::errorResult(const char *error, bool info) const {
     std::string full_error;
     InvokeError invoke_error(error);
-    return errorResult(invoke_error, BlockData::XSCRIPT_INVOKE_INFO.c_str(), full_error);
+    if (info) {
+        return errorResult(errorDoc(invoke_error, BlockData::XSCRIPT_INVOKE_INFO.c_str(), full_error));
+    }
+    return errorResult(errorDoc(invoke_error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error));
 }
 
-InvokeResult
-Block::errorResult(const char *error) const {
+boost::shared_ptr<InvokeContext>
+Block::errorResult(const InvokeError &error, bool info) const {
     std::string full_error;
-    InvokeError invoke_error(error);
-    return errorResult(invoke_error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error);
+    if (info) {
+        return errorResult(errorDoc(error, BlockData::XSCRIPT_INVOKE_INFO.c_str(), full_error));    
+    }
+    return errorResult(errorDoc(error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error));
 }
 
-InvokeResult
-Block::errorResult(const InvokeError &error) const {
-    std::string full_error;
-    return errorResult(error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error);
-}
-
-InvokeResult
+boost::shared_ptr<InvokeContext>
 Block::errorResult(const InvokeError &error, std::string &full_error) const {
-    return errorResult(error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error);
+    return errorResult(errorDoc(error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error));
 }
 
-InvokeResult
-Block::errorResult(const InvokeError &error,
-                   const char *tag_name,
-                   std::string &full_error) const {
+boost::shared_ptr<InvokeContext>
+Block::errorResult(XmlDocHelper doc) const {   
+    boost::shared_ptr<InvokeContext> ctx(new InvokeContext());
+    ctx->resultDoc(doc);
+    ctx->resultType(InvokeContext::ERROR);
+    return ctx;
+}
 
+boost::shared_ptr<InvokeContext>
+Block::fakeResult(bool error) const {   
+    boost::shared_ptr<InvokeContext> ctx(new InvokeContext());
+    ctx->resultDoc(fakeDoc());
+    ctx->resultType(error ? InvokeContext::ERROR : InvokeContext::SUCCESS);
+    return ctx;
+}
+
+XmlDocHelper
+Block::errorDoc(const InvokeError &error,
+                const char *tag_name,
+                std::string &full_error) const {
+    
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
 
@@ -572,7 +577,7 @@ Block::errorResult(const InvokeError &error,
     full_error.assign(stream.str());
     log()->error("%s", full_error.c_str());
 
-    return InvokeResult(doc, InvokeResult::ERROR);
+    return doc;
 }
 
 std::string
@@ -603,11 +608,6 @@ Block::errorMessage(const InvokeError &error) const {
     return stream.str();
 }
 
-InvokeResult
-Block::fakeResult() const {
-    return InvokeResult(fakeDoc(), InvokeResult::ERROR);
-}
-
 void
 Block::throwBadArityError() const {
     throw CriticalInvokeError("bad arity");
@@ -626,9 +626,9 @@ Block::checkGuard(Context *ctx) const {
 }
 
 void
-Block::evalXPath(Context *ctx, const XmlDocHelper &doc) const {
+Block::evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const {
 
-    XmlXPathContextHelper xctx(xmlXPathNewContext(doc.get()));
+    XmlXPathContextHelper xctx(xmlXPathNewContext(doc->get()));
     XmlUtils::throwUnless(NULL != xctx.get());
     State *state = ctx->state();
     assert(NULL != state);
@@ -747,11 +747,11 @@ Block::property(const char *name, const char *value) {
 }
 
 void
-Block::postCall(Context *, const InvokeResult &, const boost::any &) {
+Block::postCall(Context *, InvokeContext *) {
 }
 
 void
-Block::postInvoke(Context *, const XmlDocHelper &) {
+Block::postInvoke(Context *, InvokeContext *) {
 }
 
 void

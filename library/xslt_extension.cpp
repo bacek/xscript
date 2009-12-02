@@ -1643,26 +1643,25 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
             return;
         }
 
-        InvokeResult result;
-        XmlNodeHelper xpointer_result;
+        boost::shared_ptr<InvokeContext> result;
         try {
             result = block->invoke(ctx);
-            if (NULL == result.doc.get()) {
+            if (NULL == result->resultDoc()->get()) {
                 XmlUtils::reportXsltError("xscript:ExtElementBlock: empty result", tctx);
+                return;
             }
             else if (block->xpointer(ctx.get())) {
-                XmlUtils::processXPointer(block, result.doc.get(), tctx->insert, false);
-            }
-            else {
-                xmlAddChild(tctx->insert, xmlCopyNode(xmlDocGetRootElement(result.doc.get()), 1));
+                XmlUtils::processXPointer(block, result->resultDoc()->get(), tctx->insert, false);
+                return;
             }
         }
         catch (const InvokeError &e) {
-            result = block->errorResult(e);
+            result = block->errorResult(e, false);
         }
         catch (const std::exception &e) {
-            result = block->errorResult(e.what());
+            result = block->errorResult(e.what(), false);
         }
+        xmlAddChild(tctx->insert, xmlCopyNode(xmlDocGetRootElement(result->resultDoc()->get()), 1));
     }
     catch (const std::exception &e) {
         XmlUtils::reportXsltError("xscript:ExtElementBlock: caught exception: " + std::string(e.what()), tctx);

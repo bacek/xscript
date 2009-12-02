@@ -24,7 +24,7 @@ class HttpHelper;
 
 class HttpMethodRegistrator;
 
-typedef XmlDocHelper (HttpBlock::*HttpMethod)(Context *ctx, boost::any &);
+typedef XmlDocHelper (HttpBlock::*HttpMethod)(Context *ctx, InvokeContext *invoke_ctx);
 
 #ifndef HAVE_HASHMAP
 typedef std::map<std::string, HttpMethod> MethodMap;
@@ -41,19 +41,19 @@ public:
 protected:
     virtual void postParse();
     virtual void property(const char *name, const char *value);
-    virtual XmlDocHelper retryCall(boost::shared_ptr<Context> ctx, boost::any &a) throw (std::exception);
+    virtual XmlDocHelper retryCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception);
     virtual std::string concatParams(const Context *ctx, unsigned int first, unsigned int last) const;
     
-    XmlDocHelper getHttp(Context *ctx, boost::any &a);
-    XmlDocHelper postHttp(Context *ctx, boost::any &a);
-    XmlDocHelper getByState(Context *ctx, boost::any &a);
-    XmlDocHelper getByRequest(Context *ctx, boost::any &a);
-    XmlDocHelper postByRequest(Context *ctx, boost::any &a);
-    XmlDocHelper getBinaryPage(Context *ctx, boost::any &a);
+    XmlDocHelper getHttp(Context *ctx, InvokeContext *invoke_ctx);
+    XmlDocHelper postHttp(Context *ctx, InvokeContext *invoke_ctx);
+    XmlDocHelper getByState(Context *ctx, InvokeContext *invoke_ctx);
+    XmlDocHelper getByRequest(Context *ctx, InvokeContext *invoke_ctx);
+    XmlDocHelper postByRequest(Context *ctx, InvokeContext *invoke_ctx);
+    XmlDocHelper getBinaryPage(Context *ctx, InvokeContext *invoke_ctx);
 
     XmlDocHelper response(const HttpHelper &h) const;
-    void appendHeaders(HttpHelper &helper, const Request *request, const Tag *tag) const;
-    void createTagInfo(const HttpHelper &h, boost::any &a) const;
+    void appendHeaders(HttpHelper &helper, const Request *request, InvokeContext *invoke_ctx) const;
+    void createTagInfo(const HttpHelper &h, InvokeContext *invoke_ctx) const;
 
     static void registerMethod(const char *name, HttpMethod method);
 

@@ -33,8 +33,8 @@ protected:
                        const boost::shared_ptr<Response> &response,
                        boost::shared_ptr<Context> &ctx);    
     bool processCachedDoc(Context *ctx, const Script *script);
-    void sendResponse(Context *ctx, XmlDocHelper doc);
-    void sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc);
+    void sendResponse(Context *ctx, XmlDocSharedHelper doc);
+    void sendResponseCached(Context *ctx, const Script *script, XmlDocSharedHelper doc);
                                
     virtual boost::shared_ptr<Script> getScript(Request *request);
     static std::pair<std::string, bool> findScript(const std::string &name);

@@ -148,7 +148,7 @@ TaggedCacheScriptUsageCounterImpl::TaggedCacheScriptUsageCounterImpl(const std::
 
 void
 TaggedCacheScriptUsageCounterImpl::fetchedHit(const Context *ctx,
-                                              const Object *obj) {
+                                              const CacheObject *obj) {
     const Script *script = dynamic_cast<const Script*>(obj);
     if (NULL == script) {
         return;
@@ -159,7 +159,7 @@ TaggedCacheScriptUsageCounterImpl::fetchedHit(const Context *ctx,
 
 void
 TaggedCacheScriptUsageCounterImpl::fetchedMiss(const Context *ctx,
-                                               const Object *obj) {
+                                               const CacheObject *obj) {
     const Script *script = dynamic_cast<const Script*>(obj);
     if (NULL == script) {
         return;
@@ -198,7 +198,7 @@ TaggedCacheBlockUsageCounterImpl::TaggedCacheBlockUsageCounterImpl(const std::st
 
 void
 TaggedCacheBlockUsageCounterImpl::fetchedHit(const Context *ctx,
-                                             const Object *obj) {
+                                             const CacheObject *obj) {
     const TaggedBlock *block = dynamic_cast<const TaggedBlock*>(obj);
     if (NULL == block) {
         return;
@@ -209,7 +209,7 @@ TaggedCacheBlockUsageCounterImpl::fetchedHit(const Context *ctx,
 
 void
 TaggedCacheBlockUsageCounterImpl::fetchedMiss(const Context *ctx,
-                                              const Object *obj) {
+                                              const CacheObject *obj) {
     const TaggedBlock *block = dynamic_cast<const TaggedBlock*>(obj);
     if (NULL == block) {
         return;

@@ -1,7 +1,6 @@
 #include "settings.h"
 
 #include <algorithm>
-#include <iostream>
 #include <iterator>
 #include <map>
 #include <set>
@@ -347,11 +346,11 @@ Stylesheet::haveOutputInfo() const {
 }
 
 XmlDocHelper
-Stylesheet::apply(Object *obj, boost::shared_ptr<Context> ctx, const XmlDocHelper &doc) {
+Stylesheet::apply(Object *obj, boost::shared_ptr<Context> ctx, xmlDocPtr doc) {
 
     log()->entering(BOOST_CURRENT_FUNCTION);
     
-    XsltTransformContextHelper tctx(xsltNewTransformContext(data_->stylesheet_.get(), doc.get()));
+    XsltTransformContextHelper tctx(xsltNewTransformContext(data_->stylesheet_.get(), doc));
     XmlUtils::throwUnless(NULL != tctx.get());
 
     log()->debug("%s: transform context created", name().c_str());
@@ -373,8 +372,7 @@ Stylesheet::apply(Object *obj, boost::shared_ptr<Context> ctx, const XmlDocHelpe
     internal::Profiler profiler("Total apply time");
 
     XmlDocHelper newdoc(
-        xsltApplyStylesheetUser(data_->stylesheet_.get(),
-                                doc.get(),
+            xsltApplyStylesheetUser(data_->stylesheet_.get(), doc,
                                 NULL, NULL, NULL, tctx.get()));
 
     // Looks like we have to do something with this.

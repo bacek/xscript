@@ -10,6 +10,7 @@
 #include "xscript/script_factory.h"
 #include "xscript/state.h"
 #include "xscript/tagged_block.h"
+#include "xscript/test_utils.h"
 #include "xscript/util.h"
 
 #include <time.h>
@@ -43,44 +44,32 @@ CPPUNIT_REGISTRY_ADD("tagged-cache", "xscript");
 
 void
 DocCacheTest::testMissed() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("http-local.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-local.xml");
     ContextStopper ctx_stopper(ctx);
 
-    const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(script->block(0));
+    const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(ctx->script()->block(0));
     CPPUNIT_ASSERT(NULL != block);
     CPPUNIT_ASSERT(!block->tagged());
 
     DocCache* tcache = DocCache::instance();
 
     Tag tag_load;
-    XmlDocHelper doc_load;
+    XmlDocSharedHelper doc_load;
 
-    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CacheContext cache_ctx(block);
+    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
 }
 
 void
 DocCacheTest::testStoreLoad() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("http-local.xml");
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-local.xml");
     ContextStopper ctx_stopper(ctx);
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
 
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
-
-    const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(script->block(0));
+    const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(ctx->script()->block(0));
     CPPUNIT_ASSERT(NULL != block);
     CPPUNIT_ASSERT(!block->tagged());
 
@@ -90,53 +79,49 @@ DocCacheTest::testStoreLoad() {
     DocCache* tcache = DocCache::instance();
 
     // check first save
-    CPPUNIT_ASSERT(tcache->saveDoc(ctx.get(), block, tag, doc));
+    CacheContext cache_ctx(block);
+    CPPUNIT_ASSERT(tcache->saveDoc(ctx.get(), &cache_ctx, tag, doc));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     // check save again
-    CPPUNIT_ASSERT(tcache->saveDoc(ctx.get(), block, tag, doc));
+    CPPUNIT_ASSERT(tcache->saveDoc(ctx.get(), &cache_ctx, tag, doc));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     // check first load
-    XmlDocHelper doc_load;
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
-    CPPUNIT_ASSERT(NULL != doc_load.get());
+    XmlDocSharedHelper doc_load;
+    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
+    CPPUNIT_ASSERT(NULL != doc_load->get());
 
     CPPUNIT_ASSERT_EQUAL(tag.modified, tag_load.modified);
     CPPUNIT_ASSERT_EQUAL(tag.last_modified, tag_load.last_modified);
     CPPUNIT_ASSERT_EQUAL(tag.expire_time, tag_load.expire_time);
 
     // check load again
-    doc_load.reset(NULL);
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    doc_load.reset();
+    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
 
     sleep(tag.expire_time - tag.last_modified);
 
     // check skip expired
-    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
 }
 
 void
 DocCacheTest::testGetLocalTagged() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("http-local-tagged.xml"); //cache_time==5
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-local-tagged.xml");
     ContextStopper ctx_stopper(ctx);
 
-    const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(script->block(0));
+    const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(ctx->script()->block(0));
     CPPUNIT_ASSERT(NULL != block);
     CPPUNIT_ASSERT(block->tagged());
 
     DocCache* tcache = DocCache::instance();
 
     Tag tag_load;
-    XmlDocHelper doc_load;
-    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    XmlDocSharedHelper doc_load;
+    CacheContext cache_ctx(block);
+    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
 
     /*
     struct timeb t;
@@ -149,43 +134,38 @@ DocCacheTest::testGetLocalTagged() {
     }
     */
 
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
-    CPPUNIT_ASSERT(NULL != doc_load.get());
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
+    CPPUNIT_ASSERT(NULL != doc_load->get());
 
     sleep(3);
 
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
-    CPPUNIT_ASSERT(NULL != doc_load.get());
+    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
+    CPPUNIT_ASSERT(NULL != doc_load->get());
 
     sleep(2);
 
     // check skip expired
-    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
 }
 
 void
 DocCacheTest::testGetLocalTaggedPrefetch() {
-
     using namespace xscript;
-
-    boost::shared_ptr<Request> request(new Request());
-    boost::shared_ptr<Response> response(new Response());
-    boost::shared_ptr<State> state(new State());
-    boost::shared_ptr<Script> script = ScriptFactory::createScript("http-local-tagged.xml"); //cache_time==5
-    boost::shared_ptr<Context> ctx(new Context(script, state, request, response));
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-local-tagged.xml");
     ContextStopper ctx_stopper(ctx);
 
-    const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(script->block(0));
+    const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(ctx->script()->block(0));
     CPPUNIT_ASSERT(NULL != block);
     CPPUNIT_ASSERT(block->tagged());
 
     DocCache* tcache = DocCache::instance();
 
     Tag tag_load;
-    XmlDocHelper doc_load;
-    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    XmlDocSharedHelper doc_load;
+    CacheContext cache_ctx(block);
+    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
 
     /*
     struct timeb t;
@@ -198,29 +178,29 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
     }
     */
 
-    XmlDocHelper doc(script->invoke(ctx));
-    CPPUNIT_ASSERT(NULL != doc.get());
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
 
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
-    CPPUNIT_ASSERT(NULL != doc_load.get());
+    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
+    CPPUNIT_ASSERT(NULL != doc_load->get());
 
     sleep(3);
 
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
-    CPPUNIT_ASSERT(NULL != doc_load.get());
+    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
+    CPPUNIT_ASSERT(NULL != doc_load->get());
 
     sleep(1);
 
     // check mark cache file for prefetch
-    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
 
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
-    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
+    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
+    CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
 
     sleep(1);
 
     // check skip expired
-    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), block, tag_load, doc_load));
+    CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
 }
 

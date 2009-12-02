@@ -31,7 +31,7 @@ namespace xscript {
 
 class TaggedKeyDisk : public TagKey {
 public:
-    TaggedKeyDisk(const Context *ctx, const Object *obj);
+    TaggedKeyDisk(const Context *ctx, const CacheObject *obj);
 
     boost::uint32_t number() const;
     virtual const std::string& asString() const;
@@ -55,18 +55,18 @@ public:
     virtual time_t minimalCacheTime() const;
     virtual std::string name() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const Object *obj) const;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CacheObject *obj) const;
 
 protected:
-    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc);
-    virtual bool saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper &doc);
+    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
+    virtual bool saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy);
+    
 private:
-
     static void makeDir(const std::string &name);
     static void createDir(const std::string &name);
 
     static bool load(const std::string &path, const std::string &key, Tag &tag, std::vector<char> &doc_data);
-    static bool save(const std::string &path, const std::string &key, const Tag &tag, const XmlDocHelper &doc);
+    static bool save(const std::string &path, const std::string &key, const Tag &tag, xmlDocPtr doc);
 
 
     static const time_t DEFAULT_CACHE_TIME;
@@ -98,7 +98,7 @@ const boost::uint32_t DocCacheDisk::VERSION_SIGNATURE_MARKED = 0xdfc00202;
 const boost::uint32_t DocCacheDisk::DOC_SIGNATURE_START = 0x0a0b0d0a;
 const boost::uint32_t DocCacheDisk::DOC_SIGNATURE_END = 0x0a0e0d0a;
 
-TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const Object *obj) {
+TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const CacheObject *obj) {
     assert(NULL != ctx);
     assert(NULL != obj);
 
@@ -183,7 +183,8 @@ DocCacheDisk::name() const {
 }
 
 bool
-DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
+DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) {
+    (void)need_copy;
     log()->debug("loading doc in disk cache");
     
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
@@ -206,8 +207,8 @@ DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
     }
 
     try {
-        doc = XmlDocHelper(xmlParseMemory(&vec[0], vec.size()));
-        XmlUtils::throwUnless(NULL != doc.get());
+        doc = XmlDocSharedHelper(new XmlDocHelper(xmlParseMemory(&vec[0], vec.size())));
+        XmlUtils::throwUnless(NULL != doc->get());
         return true;
     }
     catch (const std::exception &e) {
@@ -217,7 +218,8 @@ DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
 }
 
 bool
-DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper &doc) {
+DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy) {
+    (void)need_copy;
     log()->debug("saving doc in disk cache");
     
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
@@ -225,7 +227,7 @@ DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper 
 
     const std::string &key_str = key->asString();
 
-    if (NULL == xmlDocGetRootElement(doc.get())) {
+    if (NULL == xmlDocGetRootElement(doc->get())) {
         log()->error("skip saving empty doc, key: %s", key_str.c_str());
         return false;
     }
@@ -249,7 +251,7 @@ DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper 
 
         close(fd);
 
-        if (!save(buf, key_str, tag, doc)) {
+        if (!save(buf, key_str, tag, doc->get())) {
             log()->error("can not create doc: %s, key: %s", path.c_str(), key_str.c_str());
             return false;
         }
@@ -268,7 +270,7 @@ DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocHelper 
 }
 
 std::auto_ptr<TagKey>
-DocCacheDisk::createKey(const Context *ctx, const Object *obj) const {
+DocCacheDisk::createKey(const Context *ctx, const CacheObject *obj) const {
     return std::auto_ptr<TagKey>(new TaggedKeyDisk(ctx, obj));
 }
 
@@ -368,7 +370,7 @@ DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag, st
 }
 
 bool
-DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &tag, const XmlDocHelper &doc) {
+DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &tag, xmlDocPtr doc) {
 
     log()->debug("saving %s, key: %s", path.c_str(), key.c_str());
 
@@ -390,7 +392,7 @@ DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &t
         wf.write(key.data(), key_size);
 
         wf.write(&DOC_SIGNATURE_START, sizeof(boost::uint32_t));
-        xmlDocDump(f, doc.get());
+        xmlDocDump(f, doc);
         wf.write(&DOC_SIGNATURE_END, sizeof(boost::uint32_t));
 
         return true;

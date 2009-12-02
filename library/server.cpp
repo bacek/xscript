@@ -134,8 +134,8 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
         }
         
         if (!loaded) {
-            XmlDocHelper doc = script->invoke(ctx);
-            XmlUtils::throwUnless(NULL != doc.get());
+            XmlDocSharedHelper doc = script->invoke(ctx);
+            XmlUtils::throwUnless(NULL != doc->get());
             
             if (script->binaryPage() || response->isBinary()) {
                 return;
@@ -172,14 +172,15 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
 
 bool
 Server::processCachedDoc(Context *ctx, const Script *script) {
-    XmlDocHelper doc(NULL);
+    XmlDocSharedHelper doc;
     try {
         Tag tag;
-        if (!PageCache::instance()->loadDoc(ctx, script, tag, doc)) {
+        CacheContext cache_ctx(script);
+        if (!PageCache::instance()->loadDoc(ctx, &cache_ctx, tag, doc)) {
             return false;
         }
 
-        xmlNodePtr root = xmlDocGetRootElement(doc.get());
+        xmlNodePtr root = xmlDocGetRootElement(doc->get());
         XmlUtils::throwUnless(NULL != root);
            
         xmlNodePtr cache_data_node = root->last;
@@ -250,7 +251,7 @@ Server::processCachedDoc(Context *ctx, const Script *script) {
 }
 
 void
-Server::sendResponse(Context *ctx, XmlDocHelper doc) {
+Server::sendResponse(Context *ctx, XmlDocSharedHelper doc) {
     sendHeaders(ctx);
     if (ctx->suppressBody()) {
         return;
@@ -266,7 +267,7 @@ Server::sendResponse(Context *ctx, XmlDocHelper doc) {
     XmlUtils::throwUnless(NULL != buf);
     
     try {
-        ctx->documentWriter()->write(ctx->response(), doc, buf);
+        ctx->documentWriter()->write(ctx->response(), doc->get(), buf);
     }
     catch(const std::exception &e) {
         xmlOutputBufferClose(buf);
@@ -275,7 +276,7 @@ Server::sendResponse(Context *ctx, XmlDocHelper doc) {
 }
 
 void
-Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc) {    
+Server::sendResponseCached(Context *ctx, const Script *script, XmlDocSharedHelper doc) {    
     addHeaders(ctx);
     if (script->cacheTime() < PageCache::instance()->minimalCacheTime()) {
         sendResponse(ctx, doc);
@@ -311,14 +312,15 @@ Server::sendResponseCached(Context *ctx, const Script *script, XmlDocHelper doc)
     xmlAddChild(cache_data_node.get(), context_data_node.get());
     context_data_node.release();
     
-    xmlNodePtr root = xmlDocGetRootElement(doc.get());
+    xmlNodePtr root = xmlDocGetRootElement(doc->get());
     xmlAddChild(root, cache_data_node.get());
     xmlNodePtr cache_node = cache_data_node.release();
 
     try {
         Tag tag;
         tag.expire_time = time(NULL) + script->cacheTime();
-        PageCache::instance()->saveDoc(ctx, script, tag, doc);
+        CacheContext cache_ctx(script);
+        PageCache::instance()->saveDoc(ctx, &cache_ctx, tag, doc);
     }
     catch(const std::exception &e) {
         log()->error("Error in saving page to cache: %s", e.what());

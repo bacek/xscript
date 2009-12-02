@@ -16,7 +16,7 @@ public:
     virtual const std::string& outputEncoding() const = 0;
 
     virtual void addHeaders(Response *response) = 0;
-    virtual void write(Response *response, const XmlDocHelper &doc, xmlOutputBufferPtr buf) = 0;
+    virtual void write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf) = 0;
 };
 
 class BinaryWriter : private boost::noncopyable {

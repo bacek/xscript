@@ -32,13 +32,18 @@ DocCacheStrategy::init(const Config *config) {
 }
 
 bool
-DocCacheStrategy::loadDoc(const TagKey *key, Tag &tag, XmlDocHelper &doc) {
-    return loadDocImpl(key, tag, doc);
+DocCacheStrategy::loadDoc(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) {
+    return loadDocImpl(key, tag, doc, need_copy);
 }
 
 bool
-DocCacheStrategy::saveDoc(const TagKey *key, const Tag& tag, const XmlDocHelper &doc) {
-    return saveDocImpl(key, tag, doc);
+DocCacheStrategy::saveDoc(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy) {
+    return saveDocImpl(key, tag, doc, need_copy);
+}
+
+bool
+DocCacheStrategy::distributed() const {
+    return false;
 }
 
 void

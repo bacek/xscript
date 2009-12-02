@@ -1,13 +1,12 @@
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
+#include "settings.h"
 
-#include "xscript/param.h"
-#include "xscript/tagged_block.h"
+#include "xscript/cache_object.h"
+
 #include "tag_key_memory.h"
 
 namespace xscript {
 
-TagKeyMemory::TagKeyMemory(const Context *ctx, const Object *obj) : value_() {
+TagKeyMemory::TagKeyMemory(const Context *ctx, const CacheObject *obj) : value_() {
     assert(NULL != ctx);
     assert(NULL != obj);
 
