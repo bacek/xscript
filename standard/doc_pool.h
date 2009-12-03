@@ -60,7 +60,6 @@ public:
     void clear();
 
     const CacheCounter* getCounter() const;
-    const AverageCounter* getMemoryCounter() const;
 
 private:
     class DocData;
@@ -84,7 +83,6 @@ private:
         LRUList::iterator   pos;
         time_t              stored_time;
         bool                prefetch_marked;
-        size_t              doc_size;
     };
 
     void shrink();
@@ -95,7 +93,6 @@ private:
 private:
     size_t          capacity_;
     std::auto_ptr<CacheCounter>     counter_;
-    std::auto_ptr<AverageCounter>   memoryCounter_;
 
     boost::mutex    mutex_;
 

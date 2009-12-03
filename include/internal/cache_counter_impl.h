@@ -24,7 +24,6 @@ public:
     void incRemoved();
 
 private:
-    size_t usedMemory_;
     size_t stored_;
     size_t loaded_;
     size_t removed_;

@@ -122,7 +122,6 @@ DocCacheMemory::fillStatBuilder(StatBuilder *builder) {
         it != pools_.end();
         ++it) {
         builder->addCounter((*it)->getCounter());
-        builder->addCounter((*it)->getMemoryCounter());
     }
 }
 

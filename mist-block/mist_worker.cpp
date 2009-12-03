@@ -196,7 +196,7 @@ MistWorker::setStateRandom(Context *ctx, const std::vector<std::string> &params)
         lo = boost::lexical_cast<boost::int64_t>(params[1]);
     }
     catch (const boost::bad_lexical_cast &e) {
-        throw std::invalid_argument("bad param: lo");
+        throw std::runtime_error("bad param: lo");
     }
 
     boost::int64_t hi;
@@ -204,11 +204,11 @@ MistWorker::setStateRandom(Context *ctx, const std::vector<std::string> &params)
         hi = boost::lexical_cast<boost::int64_t>(params[2]);
     }
     catch (const boost::bad_lexical_cast &e) {
-        throw std::invalid_argument("bad param: hi");
+        throw std::runtime_error("bad param: hi");
     }
 
     if (hi <= lo) {
-        throw std::invalid_argument("bad range");
+        throw std::runtime_error("bad range");
     }
 
     boost::int64_t val = lo;
