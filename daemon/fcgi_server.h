@@ -11,6 +11,7 @@
 #include "xscript/server.h"
 #include "xscript/simple_counter.h"
 
+#include "cleanup_manager.h"
 #include "uptime_counter.h"
 
 namespace xscript {
@@ -58,6 +59,7 @@ private:
     std::auto_ptr<SimpleCounter> workerCounter_;
     UptimeCounter uptimeCounter_;
     boost::shared_ptr<ResponseTimeCounter> responseCounter_;
+    CleanupManager cleanup_manager_;
 };
 
 } // namespace xscript

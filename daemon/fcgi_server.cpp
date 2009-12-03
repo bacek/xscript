@@ -148,6 +148,8 @@ FCGIServer::run() {
     
     Config::stopCollectCache();
     
+    cleanup_manager_.init(pool_size);
+    
     workerCounter_->max(pool_size);
     for (unsigned short i = 0; i < pool_size; ++i) {
         create_thread(f);
@@ -169,9 +171,9 @@ FCGIServer::handle() {
     XmlUtils::registerReporters();
     
     for (;;) {
-        RequestAcceptor request_acceptor(&req);
-        if (request_acceptor.accepted()) {
-            try {
+        try {
+            RequestAcceptor request_acceptor(&req);
+            if (request_acceptor.accepted()) {
                 PROFILER_FORCE(log(), "overall time");
                 
                 SimpleCounter::ScopedCount c(workerCounter_.get());
@@ -182,32 +184,35 @@ FCGIServer::handle() {
                 std::istream is(&inbuf);
                 std::ostream os(&outbuf);
 
-                boost::shared_ptr<Request> request(new Request());
-                boost::shared_ptr<Response> response(new ServerResponse(&os));
-                ServerResponse *server_response = dynamic_cast<ServerResponse*>(response.get());
-                ResponseDetacher response_detacher(server_response);
                 boost::shared_ptr<Context> ctx;
-                
-                try {
-                    request->attach(&is, req.envp);
-                    PROFILER_CHECK_POINT("request read and parse");
+                {
+                    boost::shared_ptr<Request> request(new Request());
+                    boost::shared_ptr<Response> response(new ServerResponse(&os));
+                    ServerResponse *server_response = dynamic_cast<ServerResponse*>(response.get());
+                    ResponseDetacher response_detacher(server_response);
                     
-                    const std::string &script_name = request->getScriptFilename();
-                    PROFILER_SET_INFO("overall time for " + script_name);
-                    log()->info("requested file: %s", script_name.c_str());
-                    
-                    handleRequest(request, response, ctx);
+                    try {
+                        request->attach(&is, req.envp);
+                        PROFILER_CHECK_POINT("request read and parse");
+                        
+                        const std::string &script_name = request->getScriptFilename();
+                        PROFILER_SET_INFO("overall time for " + script_name);
+                        log()->info("requested file: %s", script_name.c_str());
+                        
+                        handleRequest(request, response, ctx);
+                    }
+                    catch (const BadRequestError &e) {
+                        OperationMode::sendError(response.get(), 400, e.what());
+                    }
+    
+                    ctx.get() ? responseCounter_->add(ctx.get(), PROFILER_RELEASE()) :
+                        responseCounter_->add(response.get(), PROFILER_RELEASE());
                 }
-                catch (const BadRequestError &e) {
-                    OperationMode::sendError(response.get(), 400, e.what());
-                }
-
-                ctx.get() ? responseCounter_->add(ctx.get(), PROFILER_RELEASE()) :
-                    responseCounter_->add(response.get(), PROFILER_RELEASE());
+                cleanup_manager_.push(ctx);
             }
-            catch (const std::exception &e) {
-                log()->error("caught exception while handling request: %s", e.what());
-            }
+        }
+        catch (const std::exception &e) {
+            log()->error("caught exception while handling request: %s", e.what());
         }
     }
     FCGX_Free(&req, 1);
