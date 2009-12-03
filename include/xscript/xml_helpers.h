@@ -62,30 +62,7 @@ typedef ResourceHolder<xsltStylesheetPtr> XsltStylesheetHelper;
 typedef ResourceHolder<xsltTransformContextPtr> XsltTransformContextHelper;
 
 typedef boost::shared_ptr<XmlDocHelper> XmlDocSharedHelper;
-/*
-class XmlDocSharedHelper {
-public:
-    XmlDocSharedHelper::XmlDocSharedHelper() {}
-    XmlDocSharedHelper::XmlDocSharedHelper(xmlDocPtr doc) : doc_(new XmlDocHelper(doc)) {}
-    XmlDocSharedHelper::XmlDocSharedHelper(const XmlDocSharedHelper &doc) : doc_(doc) {}
-    XmlDocSharedHelper& XmlDocSharedHelper::operator = (const XmlDocSharedHelper &doc) {
-        if (&doc != this) {
-            doc_ = doc;
-        }
-        return *this;
-    }
-    ~XmlDocSharedHelper() {}
-    xmlDocPtr get() const {
-        return doc_->get();
-    }
-    XmlDocHelper& doc() const{
-        return *doc_;
-    }
-    
-private:
-    boost::shared_ptr<XmlDocHelper> doc_;
-};
-*/
+
 } // namespace xscript
 
 #endif // _XSCRIPT_XML_HELPERS_H_
