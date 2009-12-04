@@ -1,5 +1,7 @@
 #include "settings.h"
 
+#include <string.h>
+
 #include "xscript/cache_object.h"
 
 #ifdef HAVE_DMALLOC_H
