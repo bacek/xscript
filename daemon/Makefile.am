@@ -1,11 +1,11 @@
 bin_PROGRAMS = xscript-bin
 
-xscript_bin_SOURCES = server_response.cpp fcgi_server.cpp main.cpp uptime_counter.cpp cleanup_manager.cpp
+xscript_bin_SOURCES = server_response.cpp fcgi_server.cpp main.cpp uptime_counter.cpp
 
 xscript_bin_LDADD = ../library/libxscript.la
 xscript_bin_LDFLAGS = -lfcgi -lfcgi++ -export-dynamic
 
-noinst_HEADERS = server_response.h fcgi_server.h uptime_counter.h cleanup_manager.h
+noinst_HEADERS = server_response.h fcgi_server.h uptime_counter.h
 
 dist_sysconf_DATA = xscript.conf.example xscript-ulimits.conf
 
