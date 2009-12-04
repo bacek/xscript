@@ -775,7 +775,9 @@ Script::PropertyHandler::process(const MessageParams &params,
     
     log()->debug("%s, setting property: %s=%s", script->name().c_str(), prop, value);
 
-    if (strncasecmp(prop, "all-threaded", sizeof("all-threaded")) == 0) {
+    if (script->checkProperty(prop, value)) {
+    }
+    else if (strncasecmp(prop, "all-threaded", sizeof("all-threaded")) == 0) {
         script->data_->threaded(strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
     else if (strncasecmp(prop, "allow-methods", sizeof("allow-methods")) == 0) {

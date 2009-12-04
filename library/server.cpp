@@ -175,7 +175,7 @@ Server::processCachedDoc(Context *ctx, const Script *script) {
     XmlDocSharedHelper doc;
     try {
         Tag tag;
-        CacheContext cache_ctx(script);
+        CacheContext cache_ctx(script, script->allowDistributed());
         if (!PageCache::instance()->loadDoc(ctx, &cache_ctx, tag, doc)) {
             return false;
         }
@@ -319,7 +319,7 @@ Server::sendResponseCached(Context *ctx, const Script *script, XmlDocSharedHelpe
     try {
         Tag tag;
         tag.expire_time = time(NULL) + script->cacheTime();
-        CacheContext cache_ctx(script);
+        CacheContext cache_ctx(script, script->allowDistributed());
         PageCache::instance()->saveDoc(ctx, &cache_ctx, tag, doc);
     }
     catch(const std::exception &e) {

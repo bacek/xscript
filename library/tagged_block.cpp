@@ -118,7 +118,7 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
     XmlDocSharedHelper doc;
     Tag cache_tag;
     try {
-        CacheContext cache_ctx(this, this->remote());
+        CacheContext cache_ctx(this, this->allowDistributed());
         have_cached_doc = DocCache::instance()->loadDoc(ctx.get(), &cache_ctx, cache_tag, doc);
     }
     catch (const std::exception &e) {
@@ -187,7 +187,7 @@ TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
     }
 
     if (can_store) {
-        CacheContext cache_ctx(this, this->remote());
+        CacheContext cache_ctx(this, this->allowDistributed());
         cache->saveDoc(ctx, &cache_ctx, tag, invoke_ctx->resultDoc());
     }
 }
@@ -225,7 +225,9 @@ TaggedBlock::postParse() {
 
 void
 TaggedBlock::property(const char *name, const char *value) {
-    if (!propertyInternal(name , value)) {
+    if (!CacheObject::checkProperty(name, value) &&
+        !propertyInternal(name , value)) {
+        
         Block::property(name, value);
     }
 }

@@ -15,6 +15,14 @@ public:
     virtual ~CacheObject();
 
     virtual std::string createTagKey(const Context *ctx) const = 0;
+    virtual bool allowDistributed() const;
+    
+protected:
+    virtual bool checkProperty(const char *name, const char *value);
+    
+private:
+    class ObjectData;
+    ObjectData *data_;
 };
 
 } // namespace xscript
