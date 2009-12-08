@@ -1,12 +1,12 @@
 #include "settings.h"
 
-#include "xscript/cache_object.h"
+#include "xscript/cached_object.h"
 
 #include "tag_key_memory.h"
 
 namespace xscript {
 
-TagKeyMemory::TagKeyMemory(const Context *ctx, const CacheObject *obj) : value_() {
+TagKeyMemory::TagKeyMemory(const Context *ctx, const CachedObject *obj) : value_() {
     assert(NULL != ctx);
     assert(NULL != obj);
 

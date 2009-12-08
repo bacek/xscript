@@ -4,14 +4,14 @@
 #include <ctime>
 
 #include <xscript/block.h>
-#include <xscript/cache_object.h>
+#include <xscript/cached_object.h>
 #include <xscript/functors.h>
 #include <xscript/tag.h>
 #include <xscript/xml_helpers.h>
 
 namespace xscript {
 
-class TaggedBlock : public virtual Block, public CacheObject {
+class TaggedBlock : public virtual Block, public CachedObject {
 public:
     TaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~TaggedBlock();

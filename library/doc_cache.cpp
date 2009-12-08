@@ -290,15 +290,15 @@ PageCache::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag 
     return saveDocImpl(ctx, cache_ctx, tag, doc, true);
 }
 
-CacheContext::CacheContext(const CacheObject *obj) :
+CacheContext::CacheContext(const CachedObject *obj) :
     obj_(obj), allow_distributed_(true)
 {}
 
-CacheContext::CacheContext(const CacheObject *obj, bool allow_distributed) :
+CacheContext::CacheContext(const CachedObject *obj, bool allow_distributed) :
     obj_(obj), allow_distributed_(allow_distributed)
 {}
 
-const CacheObject*
+const CachedObject*
 CacheContext::object() const {
     return obj_;
 }

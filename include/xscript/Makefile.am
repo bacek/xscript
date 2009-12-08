@@ -1,4 +1,4 @@
-pkginclude_HEADERS = algorithm.h args.h authorizer.h average_counter.h cache_object.h \
+pkginclude_HEADERS = algorithm.h args.h authorizer.h average_counter.h cached_object.h \
 	block.h cache_counter.h cache_usage_counter.h tagged_cache_usage_counter.h component.h config.h context.h \
 	control_extension.h cookie.h counter_base.h doc_cache.h invoke_context.h \
 	doc_cache_strategy.h encoder.h extension.h functors.h logger_factory.h \

@@ -9,7 +9,7 @@
 
 namespace xscript {
 
-class CacheObject;
+class CachedObject;
 class Config;
 class Context;
 class DocCacheStrategy;
@@ -21,15 +21,15 @@ class Tag;
 
 class CacheContext {
 public:
-    CacheContext(const CacheObject *obj);
-    CacheContext(const CacheObject *obj, bool allow_distributed);
+    CacheContext(const CachedObject *obj);
+    CacheContext(const CachedObject *obj, bool allow_distributed);
     
-    const CacheObject* object() const;
+    const CachedObject* object() const;
     bool allowDistributed() const;
     void allowDistributed(bool flag);
     
 private:
-    const CacheObject* obj_;
+    const CachedObject* obj_;
     bool allow_distributed_;
 };
 

@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libxscript.la
 
-libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp cache_object.cpp \
+libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp cached_object.cpp \
 	config.cpp context.cpp cookie.cpp encoder.cpp cookie_param.cpp \
 	extension.cpp extension_list.cpp header_param.cpp http_user_param.cpp \
 	loader.cpp logger.cpp object.cpp param.cpp param_factory.cpp \

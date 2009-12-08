@@ -31,7 +31,7 @@ namespace xscript {
 
 class TaggedKeyDisk : public TagKey {
 public:
-    TaggedKeyDisk(const Context *ctx, const CacheObject *obj);
+    TaggedKeyDisk(const Context *ctx, const CachedObject *obj);
 
     boost::uint32_t number() const;
     virtual const std::string& asString() const;
@@ -55,7 +55,7 @@ public:
     virtual time_t minimalCacheTime() const;
     virtual std::string name() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CacheObject *obj) const;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CachedObject *obj) const;
 
 protected:
     virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
@@ -98,7 +98,7 @@ const boost::uint32_t DocCacheDisk::VERSION_SIGNATURE_MARKED = 0xdfc00202;
 const boost::uint32_t DocCacheDisk::DOC_SIGNATURE_START = 0x0a0b0d0a;
 const boost::uint32_t DocCacheDisk::DOC_SIGNATURE_END = 0x0a0e0d0a;
 
-TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const CacheObject *obj) {
+TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const CachedObject *obj) {
     assert(NULL != ctx);
     assert(NULL != obj);
 
@@ -270,7 +270,7 @@ DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedH
 }
 
 std::auto_ptr<TagKey>
-DocCacheDisk::createKey(const Context *ctx, const CacheObject *obj) const {
+DocCacheDisk::createKey(const Context *ctx, const CachedObject *obj) const {
     return std::auto_ptr<TagKey>(new TaggedKeyDisk(ctx, obj));
 }
 

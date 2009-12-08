@@ -18,7 +18,7 @@ namespace xscript {
  */
 class TagKeyMemcached : public TagKeyMemory {
 public:
-    TagKeyMemcached(const Context *ctx, const CacheObject *obj)
+    TagKeyMemcached(const Context *ctx, const CachedObject *obj)
         : TagKeyMemory(ctx, obj)
     {
         value_ = HashUtils::hexMD5(value_.c_str(), value_.length());
@@ -40,7 +40,7 @@ public:
     virtual time_t minimalCacheTime() const;
     virtual std::string name() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CacheObject *obj) const;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CachedObject *obj) const;
     
     virtual bool distributed() const;
     
@@ -112,7 +112,7 @@ DocCacheMemcached::name() const {
 }
 
 std::auto_ptr<TagKey> 
-DocCacheMemcached::createKey(const Context *ctx, const CacheObject *obj) const {
+DocCacheMemcached::createKey(const Context *ctx, const CachedObject *obj) const {
     log()->debug("Creating key");
     return std::auto_ptr<TagKey>(new TagKeyMemcached(ctx, obj));
 }

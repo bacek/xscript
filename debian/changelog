@@ -1,3 +1,11 @@
+xscript (5.70-0) unstable; urgency=low
+
+  * distributed cache control added
+  * Invoke context added
+  * Doc copy removed for memory cache
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 08 Dec 2009 14:45:51 +0300
+
 xscript (5.69-20) unstable; urgency=low
 
   * cookie validating fixed

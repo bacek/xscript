@@ -9,7 +9,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include <xscript/cache_object.h>
+#include <xscript/cached_object.h>
 #include <xscript/functors.h>
 #include <xscript/object.h>
 #include <xscript/xml.h>
@@ -29,7 +29,7 @@ class ScriptHandlerRegisterer;
  * Created by ScriptFactory (for caching purposes).
  */
 
-class Script : public virtual Object, public Xml, public CacheObject {
+class Script : public virtual Object, public Xml, public CachedObject {
 public:
     virtual ~Script();
 

@@ -225,7 +225,7 @@ TaggedBlock::postParse() {
 
 void
 TaggedBlock::property(const char *name, const char *value) {
-    if (!CacheObject::checkProperty(name, value) &&
+    if (!CachedObject::checkProperty(name, value) &&
         !propertyInternal(name , value)) {
         
         Block::property(name, value);

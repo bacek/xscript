@@ -9,14 +9,14 @@
 
 namespace xscript {
 
-class CacheObject;
+class CachedObject;
 class Context;
 class TagKey;
 
 class TaggedCacheUsageCounter : public CounterBase {
 public:
-    virtual void fetchedHit(const Context *ctx, const CacheObject *obj) = 0;
-    virtual void fetchedMiss(const Context *ctx, const CacheObject *obj) = 0;
+    virtual void fetchedHit(const Context *ctx, const CachedObject *obj) = 0;
+    virtual void fetchedMiss(const Context *ctx, const CachedObject *obj) = 0;
 };
 
 class TaggedCacheUsageCounterFactory : public Component<TaggedCacheUsageCounterFactory> {

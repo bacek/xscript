@@ -47,7 +47,7 @@ public:
     virtual time_t minimalCacheTime() const;
     virtual std::string name() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CacheObject *obj) const;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CachedObject *obj) const;
 
     unsigned int maxSize() const;
     
@@ -84,7 +84,7 @@ DocCacheMemory::~DocCacheMemory() {
 }
 
 std::auto_ptr<TagKey>
-DocCacheMemory::createKey(const Context *ctx, const CacheObject *obj) const {
+DocCacheMemory::createKey(const Context *ctx, const CachedObject *obj) const {
     return std::auto_ptr<TagKey>(new TagKeyMemory(ctx, obj));
 }
 

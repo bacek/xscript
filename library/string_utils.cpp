@@ -233,7 +233,6 @@ StringUtils::split(const std::string &val, const std::string &delim, std::vector
     }
 
     bool searching = true;
-    unsigned int count = 0;
     std::string::size_type pos, lpos = 0;
     while (searching) {
         if ((pos = val.find(delim, lpos)) == std::string::npos) {

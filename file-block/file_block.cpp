@@ -312,5 +312,10 @@ FileBlock::createTagKey(const Context *ctx) const {
     return key;
 }
 
+bool
+FileBlock::allowDistributed() const {
+    return strategy() == DISTRIBUTED || (strategy() == SMART && isInvoke());
+}
+
 }
 

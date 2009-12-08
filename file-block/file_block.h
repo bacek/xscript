@@ -27,6 +27,7 @@ public:
     virtual ~FileBlock();
 
     std::string createTagKey(const Context *ctx) const;
+    virtual bool allowDistributed() const;
 private:
     virtual void postParse();
     virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception); 

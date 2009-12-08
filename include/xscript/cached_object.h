@@ -9,16 +9,23 @@ namespace xscript {
 
 class Context;
 
-class CacheObject : private boost::noncopyable {
+class CachedObject : private boost::noncopyable {
 public:
-    CacheObject();
-    virtual ~CacheObject();
+    CachedObject();
+    virtual ~CachedObject();
 
     virtual std::string createTagKey(const Context *ctx) const = 0;
     virtual bool allowDistributed() const;
     
 protected:
+    enum Strategy {
+        LOCAL,
+        DISTRIBUTED,
+        SMART
+    };
+    
     virtual bool checkProperty(const char *name, const char *value);
+    Strategy strategy() const;
     
 private:
     class ObjectData;
