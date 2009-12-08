@@ -225,9 +225,7 @@ TaggedBlock::postParse() {
 
 void
 TaggedBlock::property(const char *name, const char *value) {
-    if (!CachedObject::checkProperty(name, value) &&
-        !propertyInternal(name , value)) {
-        
+    if (!propertyInternal(name , value)) {
         Block::property(name, value);
     }
 }
@@ -236,6 +234,8 @@ bool
 TaggedBlock::propertyInternal(const char *name, const char *value) {
     if (strncasecmp(name, "no-cache", sizeof("no-cache")) == 0) {
         Policy::processCacheLevel(this, value);
+    }
+    else if (CachedObject::checkProperty(name, value)) {        
     }
     else if (strncasecmp(name, "tag", sizeof("tag")) == 0) {
         if (tagged()) {

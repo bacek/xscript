@@ -1,3 +1,9 @@
+xscript (5.70-1) unstable; urgency=low
+
+  * distributed cache fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 08 Dec 2009 19:02:01 +0300
+
 xscript (5.70-0) unstable; urgency=low
 
   * distributed cache control added

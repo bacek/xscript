@@ -203,7 +203,7 @@ fi
 
 AM_CONDITIONAL(HAVE_FILE_BLOCK, [test "f$ac_have_file" = "fyes"])
 
-AC_CHECK_HEADER([memcache.h], [ac_have_memcache="yes"], [ac_have_memcache="no"])
+AC_CHECK_HEADER([libmemcached/memcached.h], [ac_have_memcache="yes"], [ac_have_memcache="no"])
 AM_CONDITIONAL(HAVE_MEMCACHE, [test "f$ac_have_memcache" = "fyes"])	
 
 ac_python="yes"

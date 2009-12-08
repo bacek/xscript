@@ -49,6 +49,8 @@ public:
 protected:
     bool loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
     bool saveDocImpl(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy);
+
+    bool allow(const DocCacheStrategy* strategy, const CacheContext *cache_ctx) const;
     
     class StatInfo;
     virtual void createUsageCounter(boost::shared_ptr<StatInfo> info) = 0;

@@ -162,6 +162,14 @@ DocCacheBase::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const T
 }
 
 bool
+DocCacheBase::allow(const DocCacheStrategy* strategy, const CacheContext *cache_ctx) const {
+    if (strategy->distributed() && !cache_ctx->allowDistributed()) {
+        return false;
+    }
+    return true;
+}
+
+bool
 DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) {
     // FIXME Add saving of loaded doc into higher-order caches.
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
@@ -169,7 +177,8 @@ DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag
     DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
     while ( !loaded && i != data_->strategies_.end()) {
         DocCacheStrategy* strategy = i->first;
-        if (strategy->distributed() && !cache_ctx->allowDistributed()) {
+        if (!allow(strategy, cache_ctx)) {
+            ++i;
             continue;
         }
         
@@ -198,7 +207,7 @@ DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag
         --i; // Do not store in cache from doc was loaded.
         for(DocCacheData::StrategyMap::iterator j = data_->strategies_.begin(); j != i; ++j) {
             DocCacheStrategy* strategy = j->first;
-            if (strategy->distributed() && !cache_ctx->allowDistributed()) {
+            if (!allow(strategy, cache_ctx)) {
                 continue;
             }
             
@@ -222,6 +231,9 @@ DocCacheBase::saveDocImpl(const Context *ctx, const CacheContext *cache_ctx, con
          i != data_->strategies_.end();
          ++i) {
         DocCacheStrategy* strategy = i->first;
+        if (!allow(strategy, cache_ctx)) {
+            continue;
+        }
         std::auto_ptr<TagKey> key = strategy->createKey(ctx, cache_ctx->object());
         
         boost::function<bool()> f =

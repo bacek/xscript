@@ -79,7 +79,7 @@ pkglib_LTLIBRARIES += xscript-memcached.la
 xscript_memcached_la_SOURCES = doc_cache_memcached.cpp tag_key_memory.cpp
 xscript_memcached_la_CFLAGS = -g -O0
 xscript_memcached_la_LIBADD = ../library/libxscript.la
-xscript_memcached_la_LDFLAGS = -module -lmemcache
+xscript_memcached_la_LDFLAGS = -module -lmemcached
 endif
 
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
@@ -122,7 +122,7 @@ test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic
 
 if HAVE_MEMCACHE
 test_SOURCES += memcached_test.cpp
-test_LDFLAGS += -lmemcache
+test_LDFLAGS += -lmemcached
 endif
 
 endif

@@ -1,4 +1,6 @@
-#include <memcache.h>
+#include <libmemcached/memcached.h>
+
+#include <boost/thread/mutex.hpp>
 
 #include "xscript/doc_cache.h"
 #include "xscript/string_utils.h"
@@ -49,13 +51,14 @@ protected:
     virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy);
 
 private:
-    struct memcache *mc_;
+    struct memcached_st *mc_;
     boost::uint32_t max_size_;
+    mutable boost::mutex mutex_;
 };
 
 DocCacheMemcached::DocCacheMemcached() : max_size_(0)
 {
-    mc_ = mc_new();
+    mc_ = memcached_create(NULL);
     if (!mc_) 
         throw std::runtime_error("Unable to allocate new memcache object");
 
@@ -64,7 +67,7 @@ DocCacheMemcached::DocCacheMemcached() : max_size_(0)
 
 DocCacheMemcached::~DocCacheMemcached()
 {
-    mc_free(mc_);
+    memcached_free(mc_);
 }
 
 
@@ -92,7 +95,22 @@ DocCacheMemcached::init(const Config *config) {
     for (std::vector<std::string>::iterator i = names.begin(), end = names.end(); i != end; ++i) {
         std::string server = config->as<std::string>(*i);
         log()->debug("Adding %s", server.c_str());
-        mc_server_add4(mc_, server.c_str());
+        std::string host;
+        unsigned int port = 0;
+        std::string::size_type pos = server.find(":");
+        if (pos != std::string::npos && server[pos + 1] != '\0') {
+            try {
+                port = boost::lexical_cast<unsigned int>(server.substr(pos + 1));
+            }
+            catch(const boost::bad_lexical_cast&) {
+                log()->error("Cannot parse memcached server port: %s", server.c_str());
+                continue;
+            }
+        }
+        host = server.substr(0, pos);
+        if (MEMCACHED_SUCCESS != memcached_server_add(mc_, host.c_str(), port)) {
+            log()->error("Cannot add memcached server: %s:%d", host.c_str(), port);
+        }
     }
     
     std::string no_cache =
@@ -154,9 +172,13 @@ DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocSh
     }
     
     char * mc_key2 = strdup(mc_key.c_str());
-    mc_set(mc_, mc_key2, mc_key.length(), val.c_str(), val.length(), tag.expire_time, 0);
+    memcached_return rv;
+    {
+        boost::mutex::scoped_lock lock(mutex_);
+        rv = memcached_set(mc_, mc_key2, mc_key.length(), val.c_str(), val.length() + 1, tag.expire_time, 0);
+    }
     free(mc_key2);
-    return true;
+    return MEMCACHED_SUCCESS == rv;
 }
 
 bool 
@@ -172,7 +194,13 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
     }
     
     size_t vallen;
-    char * val = static_cast<char*>(mc_aget2(mc_, mc_key2, mc_key.length(), &vallen));
+    uint32_t flags = 0;
+    memcached_return error;
+    char* val = NULL;
+    {
+        boost::mutex::scoped_lock lock(mutex_);
+        val = static_cast<char*>(memcached_get(mc_, mc_key2, mc_key.length(), &vallen, &flags, &error));
+    }
     free(mc_key2);
 
     if (!val) {
