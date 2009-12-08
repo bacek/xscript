@@ -49,13 +49,13 @@ protected:
     virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy);
 
 private:
-    struct memcache *mc_;
+    struct memcached_st *mc_;
     boost::uint32_t max_size_;
 };
 
 DocCacheMemcached::DocCacheMemcached() : max_size_(0)
 {
-    mc_ = mc_new();
+    mc_ = memcached_create(NULL);
     if (!mc_) 
         throw std::runtime_error("Unable to allocate new memcache object");
 
@@ -64,7 +64,7 @@ DocCacheMemcached::DocCacheMemcached() : max_size_(0)
 
 DocCacheMemcached::~DocCacheMemcached()
 {
-    mc_free(mc_);
+    memcached_free(mc_);
 }
 
 
@@ -93,6 +93,8 @@ DocCacheMemcached::init(const Config *config) {
         std::string server = config->as<std::string>(*i);
         log()->debug("Adding %s", server.c_str());
         mc_server_add4(mc_, server.c_str());
+        
+        memcached_server_add
     }
     
     std::string no_cache =
