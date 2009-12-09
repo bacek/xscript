@@ -69,7 +69,7 @@ LRUCache<Key, Data>::clear() {
 
 template<typename Key, typename Data> void
 LRUCache<Key, Data>::erase(iterator it) {
-    if (it == end()) {
+    if (it == key2data_.end()) {
         throw std::out_of_range("invalid iterator in LRUCache");
     }
     data_.erase(it->second);
