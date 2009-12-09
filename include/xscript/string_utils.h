@@ -4,9 +4,10 @@
 #include <ostream>
 #include <string>
 
-#include <boost/cstdint.hpp> // for boost::int32_t
+#include <boost/cstdint.hpp>
 
 #include <xscript/range.h>
+#include <xscript/resource_holder.h>
 
 /**
  * Various string and url related utilities.
@@ -52,6 +53,12 @@ namespace StringUtils {
     std::string parseDomainFromURL(std::string url, boost::int32_t level = 0);
 };
 
+template<>
+inline void ResourceHolderTraits<char*>::destroy(char *value) {
+    free(value);
+};
+
+typedef ResourceHolder<char*> CharHelper;
 
 };
 

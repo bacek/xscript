@@ -48,7 +48,7 @@ public:
     
 protected:
     virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
-    virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy);
+    virtual bool saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy);
 
 private:
     struct memcached_st *mc_;
@@ -59,8 +59,9 @@ private:
 DocCacheMemcached::DocCacheMemcached() : max_size_(0)
 {
     mc_ = memcached_create(NULL);
-    if (!mc_) 
-        throw std::runtime_error("Unable to allocate new memcache object");
+    if (!mc_) {
+        throw std::runtime_error("Unable to allocate new memcached object");
+    }
 
     CacheStrategyCollector::instance()->addStrategy(this, name());
 }
@@ -149,7 +150,7 @@ memcacheCloseFunc(void *ctx) {
 }
 
 bool 
-DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy) {
+DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy) {
     (void)need_copy;
     log()->debug("saving doc in memcached");
   
@@ -171,14 +172,18 @@ DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocSh
         return false;
     }
     
-    char * mc_key2 = strdup(mc_key.c_str());
     memcached_return rv;
     {
         boost::mutex::scoped_lock lock(mutex_);
-        rv = memcached_set(mc_, mc_key2, mc_key.length(), val.c_str(), val.length() + 1, tag.expire_time, 0);
+        rv = memcached_set(mc_, mc_key.c_str(), mc_key.length(), val.c_str(), val.length(), tag.expire_time, 0);
     }
-    free(mc_key2);
-    return MEMCACHED_SUCCESS == rv;
+    
+    if (MEMCACHED_SUCCESS != rv) {
+        log()->warn("Saving data to memcached failed: %d", rv);
+        return false;
+    }
+    
+    return true;
 }
 
 bool 
@@ -187,42 +192,40 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
     log()->debug("loading doc in memcached");
 
     std::string mc_key = key->asString();
-    char * mc_key2 = strdup(mc_key.c_str());
-    if (!mc_key2) {
-        log()->warn("Cannot copy key for memcached");
-        return false;
-    }
     
     size_t vallen;
     uint32_t flags = 0;
-    memcached_return error;
-    char* val = NULL;
+    memcached_return rv;
+    CharHelper val;
     {
         boost::mutex::scoped_lock lock(mutex_);
-        val = static_cast<char*>(memcached_get(mc_, mc_key2, mc_key.length(), &vallen, &flags, &error));
+        val = CharHelper(memcached_get(mc_, mc_key.c_str(), mc_key.length(), &vallen, &flags, &rv));
     }
-    free(mc_key2);
 
-    if (!val) {
+    bool failed = (NULL == val.get());
+    if ((failed && MEMCACHED_NOTFOUND != rv) || MEMCACHED_SUCCESS != rv) {
+        failed = true;
+        log()->warn("Loading data from memcached failed: %d", rv);
+    }
+    
+    if (failed) {
         return false;
     }
 
-    log()->debug("Loaded! %s", val);
+    log()->debug("Loaded! %s", val.get());
     try {
         log()->debug("Parsing");
 
-        char * orig_val = val;
+        char* value = val.get();
 
-        // Setting Tag
-        tag.last_modified = *((time_t*)(val));
-        val += sizeof(time_t);
-        tag.expire_time = *((time_t*)(val));
-        val += sizeof(time_t);
+        tag.last_modified = *((time_t*)(value));
+        value += sizeof(time_t);
+        tag.expire_time = *((time_t*)(value));
+        value += sizeof(time_t);
         vallen -= 2*sizeof(time_t);
 
-        doc = XmlDocSharedHelper(new XmlDocHelper(xmlParseMemory(val, vallen)));
+        doc = XmlDocSharedHelper(new XmlDocHelper(xmlParseMemory(value, vallen)));
         log()->debug("Parsed %p", doc.get());
-        free(orig_val);
         XmlUtils::throwUnless(NULL != doc.get());
         return true;
     }

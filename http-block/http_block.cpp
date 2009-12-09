@@ -372,7 +372,7 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, InvokeConte
     }
     
     helper.appendHeaders(headers,
-            invoke_ctx->tagged() ? invoke_ctx->tag().last_modified : Tag::UNDEFINED_TIME);
+            invoke_ctx && invoke_ctx->tagged() ? invoke_ctx->tag().last_modified : Tag::UNDEFINED_TIME);
 }
 
 XmlDocHelper

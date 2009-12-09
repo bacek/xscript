@@ -39,6 +39,7 @@ static const struct luaL_reg statelib [] = {
     {"has",             luaStateHas },
     {"get",             luaStateGet},
     {"setBool",         luaStateSetBool},
+    {"setBoolean",      luaStateSetBool},
     {"setLong",         luaStateSetLong},
     {"setLongLong",     luaStateSetLongLong},
     {"setULong",        luaStateSetULong},
