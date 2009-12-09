@@ -228,16 +228,20 @@ XmlStorage::fetch(const std::string &key) {
         return boost::shared_ptr<Xml>();
     }
 
-    if (expired(cache_.data(it))) {
+    const Element &cached_data = cache_.data(it);
+    boost::shared_ptr<Xml> xml = cached_data.xml_;
+
+    if (expired(cached_data)) {
         cache_.erase(it);
         counter_->removed(key);
+        sl.unlock(); // cleanup xml after unlock
         return boost::shared_ptr<Xml>();
     }
 
-    log()->debug("%s found in storage", key.c_str());
     counter_->fetched(key);
-
-    return cache_.data(it).xml_;
+    sl.unlock();
+    log()->debug("%s found in storage", key.c_str());
+    return xml;
 }
 
 void

@@ -28,14 +28,13 @@ class LRUCache {
 
     Map key2data_;
     List data_;
-    unsigned int size_;
     unsigned int max_size_;
 
 public:
     typedef typename Map::iterator iterator;
     typedef typename Map::const_iterator const_iterator;
 
-    LRUCache(unsigned int size);
+    explicit LRUCache(unsigned int size);
     ~LRUCache();
 
     void clear();
@@ -47,23 +46,16 @@ public:
     void insert(const Key& key, const Data& data, CacheUsageCounter* counter);
 
     const_iterator begin() const;
-    iterator begin();
-
     const_iterator end() const;
-    iterator end();
 
     const Data& data(const_iterator it) const;
-private:
-    const_iterator find(const Key& key) const;
-    iterator find(const Key& key);
-    void update(iterator it, const Data& data);
-    void moveFront(typename List::iterator it);
 };
 
 
 template<typename Key, typename Data>
 LRUCache<Key, Data>::LRUCache(unsigned int size) :
-        size_(0), max_size_(size) {}
+        max_size_(size) {
+}
 
 template<typename Key, typename Data>
 LRUCache<Key, Data>::~LRUCache() {
@@ -73,58 +65,39 @@ template<typename Key, typename Data> void
 LRUCache<Key, Data>::clear() {
     key2data_.clear();
     data_.clear();
-    size_ = 0;
 }
 
 template<typename Key, typename Data> void
-LRUCache<Key, Data>::erase(LRUCache<Key, Data>::iterator it) {
-    if (it != end()) {
-        data_.erase(it->second);
-        key2data_.erase(it);
-        --size_;
-        return;
+LRUCache<Key, Data>::erase(iterator it) {
+    if (it == end()) {
+        throw std::out_of_range("invalid iterator in LRUCache");
     }
-    throw std::out_of_range("invalid iterator in LRUCache");
+    data_.erase(it->second);
+    key2data_.erase(it);
 }
 
 template<typename Key, typename Data> void
 LRUCache<Key, Data>::erase(const Key& key) {
-    iterator it = find(key);
+    iterator it = key2data_.find(key);
     erase(it);
-}
-
-template<typename Key, typename Data> typename LRUCache<Key, Data>::const_iterator
-LRUCache<Key, Data>::find(const Key& key) const {
-    return key2data_.find(key);
-}
-
-template<typename Key, typename Data> typename LRUCache<Key, Data>::iterator
-LRUCache<Key, Data>::find(const Key& key) {
-    return key2data_.find(key);
 }
 
 template<typename Key, typename Data> typename LRUCache<Key, Data>::iterator
 LRUCache<Key, Data>::fetch(const Key& key) {
-    iterator it = find(key);
-    if (it != end()) {
-        moveFront(it->second);
+    iterator map_it = key2data_.find(key);
+    if (map_it != key2data_.end()) {
+        typename List::iterator list_it = map_it->second;
+        if (list_it != data_.begin() && list_it != data_.end()) {
+            data_.splice(data_.begin(), data_, list_it);
+            map_it->second = data_.begin();
+	}
     }
-    return it;
-}
-
-template<typename Key, typename Data> typename LRUCache<Key, Data>::iterator
-LRUCache<Key, Data>::begin() {
-    return key2data_.begin();
+    return map_it;
 }
 
 template<typename Key, typename Data> typename LRUCache<Key, Data>::const_iterator
 LRUCache<Key, Data>::begin() const {
     return key2data_.begin();
-}
-
-template<typename Key, typename Data> typename LRUCache<Key, Data>::iterator
-LRUCache<Key, Data>::end() {
-    return key2data_.end();
 }
 
 template<typename Key, typename Data> typename LRUCache<Key, Data>::const_iterator
@@ -133,52 +106,33 @@ LRUCache<Key, Data>::end() const {
 }
 
 template<typename Key, typename Data> const Data&
-LRUCache<Key, Data>::data(LRUCache<Key, Data>::const_iterator it) const {
-    if (it != end()) {
-        return it->second->data_;
+LRUCache<Key, Data>::data(const_iterator it) const {
+    if (it == key2data_.end()) {
+        throw std::out_of_range("invalid iterator in LRUCache");
     }
-
-    throw std::out_of_range("invalid iterator in LRUCache");
+    return it->second->data_;
 }
 
 template<typename Key, typename Data> void
 LRUCache<Key, Data>::insert(const Key& key, const Data& data, CacheUsageCounter* counter) {
-    iterator it = find(key);
-    if (it == end()) {
-        if (size_ == max_size_) {
+    iterator it = key2data_.find(key);
+    if (it == key2data_.end()) {
+        if (key2data_.size() >= max_size_) {
             if (NULL != counter) {
                 counter->removed(data_.back().map_iterator_->first);
             }
             key2data_.erase(data_.back().map_iterator_);
             data_.pop_back();
-            --size_;
         }
         data_.push_front(ListElement(data, it));
         key2data_[key] = data_.begin();
-        data_.begin()->map_iterator_ = find(key);
-        ++size_;
+        data_.begin()->map_iterator_ = key2data_.find(key);
     }
     else {
-        update(it, data);
+        data_.erase(it->second);
+        data_.push_front(ListElement(data, it));
+        it->second = data_.begin();
     }
-}
-
-template<typename Key, typename Data> void
-LRUCache<Key, Data>::update(LRUCache<Key, Data>::iterator it, const Data& data) {
-    data_.erase(it->second);
-    data_.push_front(ListElement(data, it));
-    it->second = data_.begin();
-}
-
-template<typename Key, typename Data> void
-LRUCache<Key, Data>::moveFront(typename List::iterator it) {
-    if (it == data_.begin() || it == data_.end()) {
-        return;
-    }
-
-    iterator map_iter = it->map_iterator_;
-    data_.splice(data_.begin(), data_, it);
-    map_iter->second = data_.begin();
 }
 
 } // namespace xscript
