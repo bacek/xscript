@@ -1,6 +1,6 @@
 #include <libmemcached/memcached.h>
 
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/tss.hpp>
 
 #include "xscript/doc_cache.h"
 #include "xscript/string_utils.h"
@@ -27,6 +27,28 @@ public:
     }
 };
 
+class MemcachedProvider : private boost::noncopyable {
+public:
+    MemcachedProvider() {
+        mc_ = memcached_create(NULL);
+        if (!mc_) {
+            throw std::runtime_error("Unable to allocate new memcached object");
+        }
+    }
+
+    ~MemcachedProvider() {
+        memcached_free(mc_);
+    }
+    
+    memcached_st* get() {
+        return mc_;
+    }
+
+private:
+    memcached_st *mc_;
+};
+
+
 /**
  * Implementation of DocCacheStrategy using memcached.
  */
@@ -49,27 +71,22 @@ public:
 protected:
     virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
     virtual bool saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy);
+    void initMemcached();
 
 private:
-    struct memcached_st *mc_;
     boost::uint32_t max_size_;
-    mutable boost::mutex mutex_;
+    boost::int32_t timeout_;
+    std::multimap<std::string, unsigned int> servers_;
+    boost::thread_specific_ptr<MemcachedProvider> mc_;
 };
 
 DocCacheMemcached::DocCacheMemcached() : max_size_(0)
 {
-    mc_ = memcached_create(NULL);
-    if (!mc_) {
-        throw std::runtime_error("Unable to allocate new memcached object");
-    }
-
     CacheStrategyCollector::instance()->addStrategy(this, name());
 }
 
 DocCacheMemcached::~DocCacheMemcached()
-{
-    memcached_free(mc_);
-}
+{}
 
 
 bool
@@ -88,6 +105,7 @@ DocCacheMemcached::init(const Config *config) {
     config->subKeys(std::string("/xscript/tagged-cache-memcached/server"), names);
     
     max_size_ = config->as<boost::uint32_t>("/xscript/tagged-cache-memcached/max-size", 1048497);
+    timeout_ = config->as<boost::int32_t>("/xscript/tagged-cache-memcached/timeout", 0);
     
     if (names.empty()) {
         throw std::runtime_error("No memcached servers specified in config");
@@ -108,10 +126,8 @@ DocCacheMemcached::init(const Config *config) {
                 continue;
             }
         }
-        host = server.substr(0, pos);
-        if (MEMCACHED_SUCCESS != memcached_server_add(mc_, host.c_str(), port)) {
-            log()->error("Cannot add memcached server: %s:%d", host.c_str(), port);
-        }
+        
+        servers_.insert(std::make_pair(server.substr(0, pos), port));
     }
     
     std::string no_cache =
@@ -154,6 +170,8 @@ DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSh
     (void)need_copy;
     log()->debug("saving doc in memcached");
   
+    initMemcached();
+    
     std::string mc_key = key->asString();
     std::string val;
 
@@ -172,11 +190,8 @@ DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSh
         return false;
     }
     
-    memcached_return rv;
-    {
-        boost::mutex::scoped_lock lock(mutex_);
-        rv = memcached_set(mc_, mc_key.c_str(), mc_key.length(), val.c_str(), val.length(), tag.expire_time, 0);
-    }
+    memcached_return rv = memcached_set(
+        mc_->get(), mc_key.c_str(), mc_key.length(), val.c_str(), val.length(), tag.expire_time, 0);
     
     if (MEMCACHED_SUCCESS != rv) {
         log()->warn("Saving data to memcached failed: %d", rv);
@@ -191,24 +206,19 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
     (void)need_copy;
     log()->debug("loading doc in memcached");
 
+    initMemcached();
+    
     std::string mc_key = key->asString();
     
     size_t vallen;
     uint32_t flags = 0;
     memcached_return rv;
-    CharHelper val;
-    {
-        boost::mutex::scoped_lock lock(mutex_);
-        val = CharHelper(memcached_get(mc_, mc_key.c_str(), mc_key.length(), &vallen, &flags, &rv));
-    }
+    CharHelper val(memcached_get(mc_->get(), mc_key.c_str(), mc_key.length(), &vallen, &flags, &rv));
 
-    bool failed = (NULL == val.get());
-    if ((failed && MEMCACHED_NOTFOUND != rv) || MEMCACHED_SUCCESS != rv) {
-        failed = true;
-        log()->warn("Loading data from memcached failed: %d", rv);
-    }
-    
-    if (failed) {
+    if (NULL == val.get() || MEMCACHED_SUCCESS != rv) {
+        if (MEMCACHED_NOTFOUND != rv) {
+            log()->warn("Loading data from memcached failed: %d", rv);    
+        }
         return false;
     }
 
@@ -232,6 +242,46 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
     catch (const std::exception &e) {
         log()->error("error while parsing doc from cache: %s", e.what());
         return false;
+    }
+}
+
+
+void
+DocCacheMemcached::initMemcached() {
+    if (NULL == mc_.get()) {
+        mc_.reset(new MemcachedProvider());
+        
+        int count = 0;
+        for(std::multimap<std::string, unsigned int>::const_iterator it = servers_.begin();
+            it != servers_.end();
+            ++it) {
+            if (MEMCACHED_SUCCESS != memcached_server_add(mc_->get(), it->first.c_str(), it->second)) {
+                log()->error("Cannot add memcached server: %s:%d", it->first.c_str(), it->second);
+            }
+            else {
+                ++count;
+            }
+        }
+        
+        if (count == 0) {
+            mc_.reset();
+            throw std::runtime_error("Cannot add any memcached server");
+        }
+        
+        if (timeout_ > 0) {
+            if (MEMCACHED_SUCCESS != memcached_behavior_set(mc_->get(), MEMCACHED_BEHAVIOR_POLL_TIMEOUT, timeout_)) {
+                log()->error("Cannot set memcached poll timeout");
+            }
+            if (MEMCACHED_SUCCESS != memcached_behavior_set(mc_->get(), MEMCACHED_BEHAVIOR_CONNECT_TIMEOUT, timeout_)) {
+                log()->error("Cannot set memcached connect timeout");
+            }
+            if (MEMCACHED_SUCCESS != memcached_behavior_set(mc_->get(), MEMCACHED_BEHAVIOR_SND_TIMEOUT, timeout_)) {
+                log()->error("Cannot set memcached send timeout");
+            }
+            if (MEMCACHED_SUCCESS != memcached_behavior_set(mc_->get(), MEMCACHED_BEHAVIOR_RCV_TIMEOUT, timeout_)) {
+                log()->error("Cannot set memcached receive timeout");
+            }
+        }
     }
 }
 
