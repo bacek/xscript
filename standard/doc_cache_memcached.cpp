@@ -68,18 +68,25 @@ inline void ResourceHolderTraits<memcached_st*>::destroy(memcached_st *value) {
 };
 
 typedef ResourceHolder<memcached_st*> MemcahcedHelper;
-            
+
+struct MemcachedSetup {
+    MemcachedSetup() : poll_timeout_(0), connect_timeout_(0), send_timeout_(0), recv_timeout_(0) {}
+    std::multimap<std::string, boost::uint16_t> servers_;
+    boost::int32_t poll_timeout_;
+    boost::int32_t connect_timeout_;
+    boost::int32_t send_timeout_;
+    boost::int32_t recv_timeout_;
+};
+
 class MemcachedPool {
 public:
-    MemcachedPool(unsigned int size,
-        const std::multimap<std::string, unsigned int> &servers, boost::int32_t timeout);
+    MemcachedPool(unsigned int size, const MemcachedSetup &setup);
     ~MemcachedPool();
     std::auto_ptr<MemcachedConnection> get();
     
     class MemcachedPoolImpl {
     public:
-        MemcachedPoolImpl(unsigned int size,
-            const std::multimap<std::string, unsigned int> &servers, boost::int32_t timeout);
+        MemcachedPoolImpl(unsigned int size, const MemcachedSetup &setup);
         ~MemcachedPoolImpl();
         memcached_st* get();
         
@@ -115,9 +122,8 @@ private:
     boost::shared_ptr<MemcachedPool::MemcachedPoolImpl> pool_;
 };
 
-MemcachedPool::MemcachedPool(unsigned int size,
-    const std::multimap<std::string, unsigned int> &servers, boost::int32_t timeout) :
-        impl_(new MemcachedPoolImpl(size, servers, timeout))
+MemcachedPool::MemcachedPool(unsigned int size, const MemcachedSetup &setup) :
+        impl_(new MemcachedPoolImpl(size, setup))
 {}
 
 MemcachedPool::~MemcachedPool()
@@ -128,8 +134,7 @@ MemcachedPool::get() {
     return std::auto_ptr<MemcachedConnection>(new MemcachedConnection(impl_->get(), impl_));
 }
 
-MemcachedPool::MemcachedPoolImpl::MemcachedPoolImpl(unsigned int size,
-    const std::multimap<std::string, unsigned int> &servers, boost::int32_t timeout) {
+MemcachedPool::MemcachedPoolImpl::MemcachedPoolImpl(unsigned int size, const MemcachedSetup &setup) {
     for(unsigned int i = 0; i < size; ++i) {
         MemcahcedHelper mc(memcached_create(NULL));
         if (!mc.get()) {
@@ -137,8 +142,8 @@ MemcachedPool::MemcachedPoolImpl::MemcachedPoolImpl(unsigned int size,
         }
         
         int count = 0;
-        for(std::multimap<std::string, unsigned int>::const_iterator it = servers.begin();
-            it != servers.end();
+        for(std::multimap<std::string, boost::uint16_t>::const_iterator it = setup.servers_.begin();
+            it != setup.servers_.end();
             ++it) {
             if (MEMCACHED_SUCCESS != memcached_server_add(mc.get(), it->first.c_str(), it->second)) {
                 log()->error("Cannot add memcached server: %s:%d", it->first.c_str(), it->second);
@@ -152,17 +157,30 @@ MemcachedPool::MemcachedPoolImpl::MemcachedPoolImpl(unsigned int size,
             throw std::runtime_error("Cannot add any memcached server");
         }
         
-        if (timeout > 0) {
-            if (MEMCACHED_SUCCESS != memcached_behavior_set(mc.get(), MEMCACHED_BEHAVIOR_POLL_TIMEOUT, timeout)) {
+        if (setup.poll_timeout_ > 0) {
+            if (MEMCACHED_SUCCESS != memcached_behavior_set(
+                    mc.get(), MEMCACHED_BEHAVIOR_POLL_TIMEOUT, setup.poll_timeout_)) {
                 log()->error("Cannot set memcached poll timeout");
             }
-            if (MEMCACHED_SUCCESS != memcached_behavior_set(mc.get(), MEMCACHED_BEHAVIOR_CONNECT_TIMEOUT, timeout)) {
+        }
+        
+        if (setup.connect_timeout_ > 0) {
+            if (MEMCACHED_SUCCESS != memcached_behavior_set(
+                    mc.get(), MEMCACHED_BEHAVIOR_CONNECT_TIMEOUT, setup.connect_timeout_)) {
                 log()->error("Cannot set memcached connect timeout");
             }
-            if (MEMCACHED_SUCCESS != memcached_behavior_set(mc.get(), MEMCACHED_BEHAVIOR_SND_TIMEOUT, timeout)) {
+        }
+
+        if (setup.send_timeout_ > 0) {
+            if (MEMCACHED_SUCCESS != memcached_behavior_set(
+                    mc.get(), MEMCACHED_BEHAVIOR_SND_TIMEOUT, setup.send_timeout_)) {
                 log()->error("Cannot set memcached send timeout");
             }
-            if (MEMCACHED_SUCCESS != memcached_behavior_set(mc.get(), MEMCACHED_BEHAVIOR_RCV_TIMEOUT, timeout)) {
+        }
+
+        if (setup.recv_timeout_ > 0) {
+            if (MEMCACHED_SUCCESS != memcached_behavior_set(
+                    mc.get(), MEMCACHED_BEHAVIOR_RCV_TIMEOUT, setup.recv_timeout_)) {
                 log()->error("Cannot set memcached receive timeout");
             }
         }
@@ -223,23 +241,27 @@ DocCacheMemcached::init(const Config *config) {
     config->subKeys(std::string("/xscript/tagged-cache-memcached/server"), names);
     
     max_size_ = config->as<boost::uint32_t>("/xscript/tagged-cache-memcached/max-size", 1048497);
-    boost::int32_t timeout = config->as<boost::int32_t>("/xscript/tagged-cache-memcached/timeout", 0);
     boost::uint32_t workers = config->as<boost::uint32_t>("/xscript/tagged-cache-memcached/workers", 10);
+    
+    MemcachedSetup setup;
+    setup.poll_timeout_ = config->as<boost::uint16_t>("/xscript/tagged-cache-memcached/poll-timeout", 10);
+    setup.connect_timeout_ = config->as<boost::uint16_t>("/xscript/tagged-cache-memcached/connect-timeout", 10);
+    setup.send_timeout_ = config->as<boost::uint16_t>("/xscript/tagged-cache-memcached/transfer-timeout", 1000);
+    setup.recv_timeout_ = setup.send_timeout_;
     
     if (names.empty()) {
         throw std::runtime_error("No memcached servers specified in config");
     }
 
-    std::multimap<std::string, unsigned int> servers;
     for(std::vector<std::string>::iterator i = names.begin(), end = names.end(); i != end; ++i) {
         std::string server = config->as<std::string>(*i);
         log()->debug("Adding %s", server.c_str());
         std::string host;
-        unsigned int port = 0;
+        boost::uint16_t port = 0;
         std::string::size_type pos = server.find(":");
         if (pos != std::string::npos && server[pos + 1] != '\0') {
             try {
-                port = boost::lexical_cast<unsigned int>(server.substr(pos + 1));
+                port = boost::lexical_cast<boost::uint16_t>(server.substr(pos + 1));
             }
             catch(const boost::bad_lexical_cast&) {
                 log()->error("Cannot parse memcached server port: %s", server.c_str());
@@ -247,7 +269,7 @@ DocCacheMemcached::init(const Config *config) {
             }
         }
         
-        servers.insert(std::make_pair(server.substr(0, pos), port));
+        setup.servers_.insert(std::make_pair(server.substr(0, pos), port));
     }
     
     std::string no_cache =
@@ -255,7 +277,7 @@ DocCacheMemcached::init(const Config *config) {
 
     insert2Cache(no_cache);
     
-    pool_ = std::auto_ptr<MemcachedPool>(new MemcachedPool(workers, servers, timeout));
+    pool_ = std::auto_ptr<MemcachedPool>(new MemcachedPool(workers, setup));
 }
     
 time_t 
