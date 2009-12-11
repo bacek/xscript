@@ -251,18 +251,27 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) {
     
     std::string url = concatParams(ctx, 0, size - 1);
     
-    const std::string &query = ctx->request()->getQueryString();
-    if (!query.empty()) {
-        url.append(1, url.find('?') != std::string::npos ? '&' : '?');
-        url.append(query);
+    bool is_get = (strcmp(ctx->request()->getRequestMethod().c_str(), "GET") == 0);
+    
+    if (!is_get) {
+        const std::string &query = ctx->request()->getQueryString();
+        if (!query.empty()) {
+            url.push_back(url.find('?') != std::string::npos ? '&' : '?');
+            url.append(query);
+        }
     }
     
     HttpHelper helper(url, getTimeout(ctx, url));
-    
     appendHeaders(helper, ctx->request(), NULL);
 
-    std::pair<const char*, std::streamsize> body = ctx->request()->requestBody();
-    helper.postData(body.first, body.second);
+    if (is_get) {
+        const std::string &query = ctx->request()->getQueryString();
+        helper.postData(query.c_str(), query.length());
+    }
+    else {
+        std::pair<const char*, std::streamsize> body = ctx->request()->requestBody();
+        helper.postData(body.first, body.second);
+    }
 
     httpCall(helper);
     checkStatus(helper);
@@ -324,10 +333,29 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) {
     
     std::string url = concatParams(ctx, 0, size - 1);
     
-    const std::string &query = ctx->request()->getQueryString();
-    if (!query.empty()) {
-        url.append(1, url.find('?') != std::string::npos ? '&' : '?');
-        url.append(query);
+    bool is_post = (strcmp(ctx->request()->getRequestMethod().c_str(), "POST") == 0);
+    
+    if (!is_post) {
+        const std::string &query = ctx->request()->getQueryString();
+        if (!query.empty()) {
+            url.push_back(url.find('?') != std::string::npos ? '&' : '?');
+            url.append(query);
+        }
+    }
+    else {
+        const std::vector<StringUtils::NamedValue>& args = ctx->request()->args();
+        if (!args.empty()) {
+            bool has_query = url.find('?') != std::string::npos;
+            for(std::vector<StringUtils::NamedValue>::const_iterator it = args.begin(), end = args.end();
+                it != end;
+                ++it) {
+                url.push_back(has_query ? '&' : '?');
+                url.append(it->first);
+                url.push_back('=');
+                url.append(it->second);
+                has_query = true;
+            }
+        }
     }
     
     HttpHelper helper(url, getTimeout(ctx, url));
