@@ -402,7 +402,7 @@ Block::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
     
     XmlDocHelper doc(call(ctx, invoke_ctx));
     if (NULL == doc.get()) {
-        invoke_ctx = errorResult("got empty document", false);
+        errorResult("got empty document", false, invoke_ctx);
         return;
     }
     invoke_ctx->resultDoc(doc);
@@ -487,14 +487,22 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) 
     return result;
 }
 
-boost::shared_ptr<InvokeContext>
-Block::errorResult(const char *error, bool info) const {
+void
+Block::errorResult(const char *error, bool info, boost::shared_ptr<InvokeContext> &ctx) const {
     std::string full_error;
     InvokeError invoke_error(error);
-    if (info) {
-        return errorResult(errorDoc(invoke_error, BlockData::XSCRIPT_INVOKE_INFO.c_str(), full_error));
-    }
-    return errorResult(errorDoc(invoke_error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error));
+    XmlDocHelper doc = errorDoc(invoke_error, info ? BlockData::XSCRIPT_INVOKE_INFO.c_str() :
+        BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error);
+    
+    ctx->resultDoc(doc);
+    ctx->resultType(InvokeContext::ERROR);
+}
+
+boost::shared_ptr<InvokeContext>
+Block::errorResult(const char *error, bool info) const {
+    boost::shared_ptr<InvokeContext> result(new InvokeContext());
+    errorResult(error, info, result);
+    return result;
 }
 
 boost::shared_ptr<InvokeContext>
@@ -512,7 +520,7 @@ Block::errorResult(const InvokeError &error, std::string &full_error) const {
 }
 
 boost::shared_ptr<InvokeContext>
-Block::errorResult(XmlDocHelper doc) const {   
+Block::errorResult(XmlDocHelper doc) const {
     boost::shared_ptr<InvokeContext> ctx(new InvokeContext());
     ctx->resultDoc(doc);
     ctx->resultType(InvokeContext::ERROR);
@@ -534,17 +542,17 @@ Block::errorDoc(const InvokeError &error,
     
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
-
+    
     XmlNodeHelper main_node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)tag_name, NULL));
     XmlUtils::throwUnless(NULL != main_node.get());
-
+    
     xmlNewProp(main_node.get(), (const xmlChar*)"error", (const xmlChar*)error.what());
     std::stringstream stream;
     stream << error.what() << ". ";
-
+    
     xmlNewProp(main_node.get(), (const xmlChar*)"block", (const xmlChar*)name());
     stream << "block: " << name() << ". ";
-
+    
     if (!method().empty()) {
         xmlNewProp(main_node.get(), (const xmlChar*)"method", (const xmlChar*)method().c_str());
         stream << "method: " << method() << ". ";
@@ -573,10 +581,10 @@ Block::errorDoc(const InvokeError &error,
     }
     
     xmlDocSetRootElement(doc.get(), main_node.release());
-
+    
     full_error.assign(stream.str());
     log()->error("%s", full_error.c_str());
-
+    
     return doc;
 }
 

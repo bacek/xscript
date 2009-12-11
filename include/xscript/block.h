@@ -95,6 +95,7 @@ private:
     std::string errorMessage(const InvokeError &error) const;
     boost::shared_ptr<InvokeContext> errorResult(XmlDocHelper doc) const;
     boost::shared_ptr<InvokeContext> errorResult(const InvokeError &error, std::string &full_error) const;
+    void errorResult(const char *error, bool info, boost::shared_ptr<InvokeContext> &ctx) const;
     XmlDocHelper errorDoc(const InvokeError &error, const char *tag_name, std::string &full_error) const;
     XmlDocHelper fakeDoc() const;
     

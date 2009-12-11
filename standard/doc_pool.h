@@ -12,7 +12,6 @@
 #include "xscript/doc_cache_strategy.h"
 #include "xscript/xml_helpers.h"
 #include "xscript/cache_counter.h"
-#include "xscript/memory_statistic.h"
 
 namespace xscript {
 

@@ -18,7 +18,6 @@
 #include "xscript/doc_cache.h"
 #include "xscript/doc_cache_strategy.h"
 #include "xscript/logger.h"
-#include "xscript/memory_statistic.h"
 #include "xscript/param.h"
 #include "xscript/stat_builder.h"
 #include "xscript/string_utils.h"

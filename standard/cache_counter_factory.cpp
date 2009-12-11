@@ -1,7 +1,6 @@
 #include "settings.h"
 
 #include "internal/cache_counter_impl.h"
-#include "xscript/memory_statistic.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -22,6 +21,5 @@ CacheCounterFactoryImpl::createCounter(const std::string &name, bool want_real) 
 }
 
 static ComponentImplRegisterer<CacheCounterFactory> reg_(new CacheCounterFactoryImpl());
-static MemoryStatisticRegisterer reg2_;
 }
 
