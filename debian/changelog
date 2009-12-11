@@ -1,3 +1,10 @@
+xscript (5.70-7) unstable; urgency=low
+
+  * getByRequest and postByRequest updated
+  * more timeout params added to memcached
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 11 Dec 2009 17:47:27 +0300
+
 xscript (5.70-6) unstable; urgency=low
 
   * block invoke fixed in case of empty response
