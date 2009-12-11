@@ -57,7 +57,7 @@
 	            <xsl:value-of select="0"/>
 	        </xsl:when>
 		<xsl:otherwise>
-		    <xsl:value-of select="format-number(sum(child::point/@total) div ($sum*1e6), '#.###')"/>
+		    <xsl:value-of select="format-number(sum(child::point/@total) div ($sum*1e6), '#.######')"/>
 		</xsl:otherwise>
 	    </xsl:choose>
         </td>
@@ -76,7 +76,7 @@
         <td><xsl:value-of select="../@code"/></td>
 	<td><xsl:value-of select="@auth-type"/></td>
 	<td><xsl:value-of select="@count"/></td>        
-	<td><xsl:value-of select="format-number(@avg div 1e6, '#.###')"/></td>
+	<td><xsl:value-of select="format-number(@avg div 1e6, '#.######')"/></td>
         <td><xsl:value-of select="format-number(@min div 1e6, '#.###')"/></td>
         <td><xsl:value-of select="format-number(@max div 1e6, '#.###')"/></td>
 <!--        <td><xsl:value-of select="@total"/></td>   -->
