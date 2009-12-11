@@ -6,7 +6,6 @@
 #include <exception>
 
 #include "fcgi_server.h"
-#include "xscript/memory_statistic.h"
 #include "xscript/config.h"
 #include "xscript/logger.h"
 
@@ -18,7 +17,6 @@ int
 main(int argc, char *argv[]) {
 
     using namespace xscript;
-    initAllocationStatistic();
 
     try {
         std::auto_ptr<Config> c = Config::create(argc, argv);

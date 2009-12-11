@@ -8,7 +8,6 @@
 #include <cstring>
 
 #include "xscript/config.h"
-#include "xscript/memory_statistic.h"
 #include "proc_server.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -44,7 +43,6 @@ int
 main(int argc, char *argv[]) {
 
     using namespace xscript;
-    initAllocationStatistic();
     try {
         std::auto_ptr<Config> config = Config::create(argc, argv, true);
         if (NULL == config.get()) {

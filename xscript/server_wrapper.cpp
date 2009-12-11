@@ -3,7 +3,6 @@
 #include <string>
 
 #include "xscript/config.h"
-#include "xscript/memory_statistic.h"
 #include "xscript/string_utils.h"
 
 #include "offline_server.h"
@@ -22,7 +21,6 @@ initialize(const char *config_path) {
     if (server.get()) {
         throw std::runtime_error("server is already initialized");
     }
-    xscript::initAllocationStatistic();
     config = xscript::Config::create(config_path);
     server.reset(new xscript::OfflineServer(config.get()));
 }
