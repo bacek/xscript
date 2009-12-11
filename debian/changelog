@@ -1,3 +1,9 @@
+xscript (5.70-6) unstable; urgency=low
+
+  * block invoke fixed in case of empty response
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 11 Dec 2009 13:12:54 +0300
+
 xscript (5.70-5) unstable; urgency=low
 
   * pool of memcached objects added
