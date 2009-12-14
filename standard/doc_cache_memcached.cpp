@@ -72,10 +72,10 @@ typedef ResourceHolder<memcached_st*> MemcahcedHelper;
 struct MemcachedSetup {
     MemcachedSetup() : poll_timeout_(0), connect_timeout_(0), send_timeout_(0), recv_timeout_(0) {}
     std::multimap<std::string, boost::uint16_t> servers_;
-    boost::int32_t poll_timeout_;
-    boost::int32_t connect_timeout_;
-    boost::int32_t send_timeout_;
-    boost::int32_t recv_timeout_;
+    boost::uint16_t poll_timeout_;
+    boost::uint16_t connect_timeout_;
+    boost::uint16_t send_timeout_;
+    boost::uint16_t recv_timeout_;
 };
 
 class MemcachedPool {
