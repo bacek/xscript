@@ -5,9 +5,9 @@
 >
 
 <xsl:variable name="collect-time" select="/page/response-time/@collect-time"/>
-<xsl:variable name="days" select="floor($collect-time div 79800)"/>
-<xsl:variable name="hours" select="floor(($collect-time - 79800*$days) div 3600)"/>
-<xsl:variable name="minutes" select="floor(($collect-time - 79800*$days - 3600*$hours) div 60)"/>
+<xsl:variable name="days" select="floor($collect-time div 86400)"/>
+<xsl:variable name="hours" select="floor(($collect-time - 86400*$days) div 3600)"/>
+<xsl:variable name="minutes" select="floor(($collect-time - 86400*$days - 3600*$hours) div 60)"/>
 
 <xsl:template match="/page/response-time">
     <html>
