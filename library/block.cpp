@@ -390,7 +390,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
 }
 
 void
-Block::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+Block::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> &invoke_ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
     // Check validators for each param before calling it.
@@ -474,7 +474,7 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) 
     }
 
     XmlUtils::throwUnless(NULL != doc->get());
-    log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
+    log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc->get());
         
     bool result = true;
     if (XmlUtils::hasXMLError()) {

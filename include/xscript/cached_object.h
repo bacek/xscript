@@ -16,14 +16,16 @@ public:
 
     virtual std::string createTagKey(const Context *ctx) const = 0;
     virtual bool allowDistributed() const;
-    
-protected:
+
     enum Strategy {
         LOCAL,
         DISTRIBUTED,
         SMART
     };
     
+    static void setDefaultCacheStrategy(CachedObject::Strategy strategy);
+    
+protected:
     virtual bool checkProperty(const char *name, const char *value);
     Strategy strategy() const;
     

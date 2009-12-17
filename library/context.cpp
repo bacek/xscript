@@ -249,7 +249,8 @@ Context::wait(int millis) {
     bool save_result = timedout || stopBlocks();
     if (save_result) {
         for (unsigned int i = 0; i < ctx_data_->results_.size(); ++i) {
-            if (NULL == ctx_data_->results_[i].get()) {
+            InvokeContext* result = ctx_data_->results_[i].get();
+            if (NULL == result || NULL == result->resultDoc()->get()) {
                 if (timedout) {
                     ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult("timed out", false);
                 }

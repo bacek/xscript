@@ -166,6 +166,8 @@ DocCacheDisk::init(const Config *config) {
         min_time_ = DEFAULT_CACHE_TIME;
     }
     
+    CachedObject::setDefaultCacheStrategy(CachedObject::SMART);
+    
     std::string no_cache =
         config->as<std::string>("/xscript/tagged-cache-disk/no-cache", StringUtils::EMPTY_STRING);
 
@@ -207,8 +209,9 @@ DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, 
     }
 
     try {
-        doc = XmlDocSharedHelper(new XmlDocHelper(xmlParseMemory(&vec[0], vec.size())));
-        XmlUtils::throwUnless(NULL != doc->get());
+        XmlDocHelper newdoc(xmlReadMemory(&vec[0], vec.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        XmlUtils::throwUnless(NULL != newdoc.get());
+        doc.reset(new XmlDocHelper(newdoc));
         return true;
     }
     catch (const std::exception &e) {

@@ -109,6 +109,8 @@ DocCacheMemory::init(const Config *config) {
         min_time_ = DEFAULT_CACHE_TIME;
     }
     
+    CachedObject::setDefaultCacheStrategy(CachedObject::SMART);
+    
     std::string no_cache =
         config->as<std::string>("/xscript/tagged-cache-memory/no-cache", StringUtils::EMPTY_STRING);
 

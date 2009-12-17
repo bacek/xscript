@@ -24,6 +24,15 @@ ComponentBase::ResourceTraits::destroy(ComponentBase *component) {
     boost::checked_delete(component);
 };
 
+ComponentBase::ComponentMapType&
+ComponentBase::componentMap() {
+    if (components_ == NULL) {
+        static ComponentMapType *map = new ComponentMapType();
+        components_ = map;
+    }
+    return *components_;
+}
+
 ComponentBase::ComponentMapType* ComponentBase::components_ = NULL;
 ComponentBase* const ComponentBase::ResourceTraits::DEFAULT_VALUE = static_cast<ComponentBase*>(NULL);
 

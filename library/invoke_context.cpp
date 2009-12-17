@@ -1,5 +1,7 @@
 #include "settings.h"
 
+#include <stdexcept>
+
 #include "xscript/invoke_context.h"
 #include "xscript/tag.h"
 
@@ -10,7 +12,8 @@
 namespace xscript {
 
 struct InvokeContext::ContextData {
-    ContextData() : tagged_(false), have_cached_copy_(false) {}
+    ContextData() : doc_(new XmlDocHelper()), tagged_(false),
+        result_type_(ERROR), have_cached_copy_(false) {}
     XmlDocSharedHelper doc_;
     bool tagged_;
     Tag tag_;
@@ -57,12 +60,18 @@ InvokeContext::haveCachedCopy(bool flag) {
 
 void
 InvokeContext::resultDoc(const XmlDocSharedHelper &doc) {
+    if (NULL == doc.get() || NULL == doc->get()) {
+        throw std::logic_error("Cannot add NULL doc to invoke context");
+    }
     ctx_data_->doc_.reset();
     ctx_data_->doc_ = doc;
 }
 
 void
 InvokeContext::resultDoc(XmlDocHelper doc) {
+    if (NULL == doc.get()) {
+        throw std::logic_error("Cannot add NULL doc to invoke context");
+    }
     ctx_data_->doc_ = XmlDocSharedHelper(new XmlDocHelper(doc));
 }
 

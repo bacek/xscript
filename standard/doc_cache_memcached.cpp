@@ -237,6 +237,18 @@ DocCacheMemcached::init(const Config *config) {
     
     Config::addForbiddenKey("/xscript/tagged-cache-memcached/*");
     
+    std::string cache_strategy = config->as<std::string>(
+            "/xscript/tagged-cache-memcached/enable", "");
+    if (strcasecmp(cache_strategy.c_str(), "yes") == 0) {
+        CachedObject::setDefaultCacheStrategy(CachedObject::DISTRIBUTED);
+    }
+    else if (strcasecmp(cache_strategy.c_str(), "no") == 0) {
+        CachedObject::setDefaultCacheStrategy(CachedObject::LOCAL);
+    }
+    else if (!cache_strategy.empty()) {
+        throw std::runtime_error("Unknown cache strategy: " + cache_strategy);
+    }
+    
     std::vector<std::string> names;
     config->subKeys(std::string("/xscript/tagged-cache-memcached/server"), names);
     
@@ -244,8 +256,8 @@ DocCacheMemcached::init(const Config *config) {
     boost::uint32_t workers = config->as<boost::uint32_t>("/xscript/tagged-cache-memcached/workers", 10);
     
     MemcachedSetup setup;
-    setup.poll_timeout_ = config->as<boost::uint16_t>("/xscript/tagged-cache-memcached/poll-timeout", 10);
-    setup.connect_timeout_ = config->as<boost::uint16_t>("/xscript/tagged-cache-memcached/connect-timeout", 10);
+    setup.poll_timeout_ = config->as<boost::uint16_t>("/xscript/tagged-cache-memcached/poll-timeout", 100);
+    setup.connect_timeout_ = config->as<boost::uint16_t>("/xscript/tagged-cache-memcached/connect-timeout", 100);
     setup.send_timeout_ = config->as<boost::uint16_t>("/xscript/tagged-cache-memcached/transfer-timeout", 1000);
     setup.recv_timeout_ = setup.send_timeout_;
     
@@ -382,10 +394,11 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
         tag.expire_time = *((time_t*)(value));
         value += sizeof(time_t);
         vallen -= 2*sizeof(time_t);
-
-        doc = XmlDocSharedHelper(new XmlDocHelper(xmlParseMemory(value, vallen)));
-        log()->debug("Parsed %p", doc.get());
-        XmlUtils::throwUnless(NULL != doc.get());
+        
+        XmlDocHelper newdoc(xmlReadMemory(value, vallen, "", "UTF-8", XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        log()->debug("Parsed %p", newdoc.get());
+        XmlUtils::throwUnless(NULL != newdoc.get());
+        doc.reset(new XmlDocHelper(newdoc));
         return true;
     }
     catch (const std::exception &e) {

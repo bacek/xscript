@@ -59,13 +59,7 @@ protected:
     
     typedef std::map<const char*, boost::shared_ptr<Holder>, StringComparator> ComponentMapType;
     
-    static ComponentMapType& componentMap() {
-        if (components_ == NULL) {
-            static ComponentMapType *map = new ComponentMapType();
-            components_ = map;
-        }
-        return *components_;
-    }
+    static ComponentMapType& componentMap();
     
 private:
     static ComponentMapType* components_;

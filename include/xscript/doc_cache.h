@@ -5,6 +5,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include <xscript/cached_object.h>
 #include <xscript/xml_helpers.h>
 
 namespace xscript {

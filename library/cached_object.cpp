@@ -11,6 +11,8 @@
 
 namespace xscript {
 
+static CachedObject::Strategy default_cache_strategy = CachedObject::DISTRIBUTED;
+
 class CachedObject::ObjectData {
 public:
     ObjectData();
@@ -19,7 +21,7 @@ public:
     Strategy strategy_;
 };
 
-CachedObject::ObjectData::ObjectData() : strategy_(SMART)
+CachedObject::ObjectData::ObjectData() : strategy_(default_cache_strategy)
 {}
 
 CachedObject::ObjectData::~ObjectData()
@@ -57,6 +59,11 @@ CachedObject::allowDistributed() const {
 CachedObject::Strategy
 CachedObject::strategy() const {
     return data_->strategy_;
+}
+
+void
+CachedObject::setDefaultCacheStrategy(CachedObject::Strategy strategy) {
+    default_cache_strategy = strategy;
 }
 
 } // namespace xscript

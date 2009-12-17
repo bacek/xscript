@@ -95,7 +95,7 @@ TaggedBlock::cacheTime(time_t cache_time) {
 }
 
 void
-TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> &invoke_ctx) {
 
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
