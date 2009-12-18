@@ -10,6 +10,7 @@
 #include "xscript/logger.h"
 #include "xscript/profiler.h"
 #include "xscript/stat_builder.h"
+#include "xscript/tag.h"
 #include "xscript/tagged_cache_usage_counter.h"
 #include "xscript/xml_util.h"
 
@@ -158,6 +159,16 @@ DocCacheBase::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &ta
 
 bool
 DocCacheBase::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag, const XmlDocSharedHelper &doc) {
+    if (NULL == doc->get() || NULL == xmlDocGetRootElement(doc->get())) {
+        log()->warn("cannot save empty document or document with no root to tagged cache");
+        return false;
+    }
+    
+    if (!tag.valid()) {
+        log()->warn("tag is not valid for save to tagged cache");
+        return false;
+    }
+    
     return saveDocImpl(ctx, cache_ctx, tag, doc, false);
 }
 

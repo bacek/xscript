@@ -324,11 +324,6 @@ DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSh
     (void)need_copy;
     log()->debug("saving doc in memcached");
     
-    if (!tag.valid()) {
-        log()->warn("tag is not valid");
-        return false;
-    }
-    
     std::string mc_key = key->asString();
     std::string val;
 
@@ -386,6 +381,11 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
         return false;
     }
 
+    if (vallen <= 2*sizeof(time_t)) {
+        log()->warn("incorrect data length while memcached loading");
+        return false;
+    }
+    
     log()->debug("Loaded! %s", val.get());
     try {
         log()->debug("Parsing");
@@ -406,6 +406,10 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
         XmlDocHelper newdoc(xmlReadMemory(value, vallen, "", "UTF-8", XML_PARSE_DTDATTR | XML_PARSE_NOENT));
         log()->debug("Parsed %p", newdoc.get());
         XmlUtils::throwUnless(NULL != newdoc.get());
+        if (NULL == xmlDocGetRootElement(newdoc.get())) {
+            log()->warn("get document with no root from memcached");
+            return false;
+        }
         doc.reset(new XmlDocHelper(newdoc));
         return true;
     }

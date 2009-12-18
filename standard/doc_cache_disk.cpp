@@ -216,6 +216,10 @@ DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, 
     try {
         XmlDocHelper newdoc(xmlReadMemory(&vec[0], vec.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
         XmlUtils::throwUnless(NULL != newdoc.get());
+        if (NULL == xmlDocGetRootElement(newdoc.get())) {
+            log()->warn("get document with no root from memcache");
+            return false;
+        }
         doc.reset(new XmlDocHelper(newdoc));
         return true;
     }
@@ -229,11 +233,6 @@ bool
 DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy) {
     (void)need_copy;
     log()->debug("saving doc in disk cache");
-    
-    if (!tag.valid()) {
-        log()->warn("tag is not valid");
-        return false;
-    }
     
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
     assert(NULL != dkey);
