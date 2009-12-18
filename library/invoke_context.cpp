@@ -61,7 +61,7 @@ InvokeContext::haveCachedCopy(bool flag) {
 void
 InvokeContext::resultDoc(const XmlDocSharedHelper &doc) {
     if (NULL == doc.get() || NULL == doc->get()) {
-        throw std::logic_error("Cannot add NULL doc to invoke context");
+        throw std::logic_error(std::string("Cannot add NULL doc to invoke context"));
     }
     ctx_data_->doc_.reset();
     ctx_data_->doc_ = doc;
@@ -70,7 +70,7 @@ InvokeContext::resultDoc(const XmlDocSharedHelper &doc) {
 void
 InvokeContext::resultDoc(XmlDocHelper doc) {
     if (NULL == doc.get()) {
-        throw std::logic_error("Cannot add NULL doc to invoke context");
+        throw std::logic_error(std::string("Cannot add NULL doc to invoke context"));
     }
     ctx_data_->doc_ = XmlDocSharedHelper(new XmlDocHelper(doc));
 }

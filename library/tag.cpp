@@ -61,6 +61,11 @@ Tag::Tag(bool mod, time_t last_mod, time_t exp_time) :
 }
 
 bool
+Tag::valid() const {
+    return UNDEFINED_TIME != last_modified || UNDEFINED_TIME != expire_time;
+}
+
+bool
 Tag::expired() const {
     return (UNDEFINED_TIME != expire_time) && (expire_time <= time(NULL));
 }

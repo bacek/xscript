@@ -230,6 +230,11 @@ DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedH
     (void)need_copy;
     log()->debug("saving doc in disk cache");
     
+    if (!tag.valid()) {
+        log()->warn("tag is not valid");
+        return false;
+    }
+    
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
     assert(NULL != dkey);
 
@@ -330,7 +335,11 @@ DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag, st
             return false;
         }
         is.read((char*) &tag.last_modified, sizeof(time_t));
-
+        if (!tag.valid()) {
+            log()->warn("tag is not valid");
+            return false;
+        }
+        
         time_t stored_time;
         is.read((char*) &stored_time, sizeof(time_t));
 

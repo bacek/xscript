@@ -149,6 +149,10 @@ DocCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc
     if (!mpool->loadDoc(*key, tag, doc)) {
         return false;
     }
+    if (!tag.valid()) {
+        log()->warn("tag is not valid");
+        return false;
+    }
     if (need_copy) {
         XmlDocSharedHelper res_doc(new XmlDocHelper(xmlCopyDoc(doc->get(), 1)));
         doc = res_doc;
@@ -159,6 +163,10 @@ DocCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc
 bool
 DocCacheMemory::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy) {
     log()->debug("saving doc in memory cache");
+    if (!tag.valid()) {
+        log()->warn("tag is not valid");
+        return false;
+    }
     DocPool *mpool = pool(key);
     assert(NULL != mpool);
     

@@ -14,6 +14,8 @@ public:
     static const time_t UNDEFINED_TIME;
 
     bool needPrefetch(time_t stored_time) const;
+    
+    bool valid() const;
 
 public:
     bool modified;

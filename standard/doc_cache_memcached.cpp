@@ -324,6 +324,11 @@ DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSh
     (void)need_copy;
     log()->debug("saving doc in memcached");
     
+    if (!tag.valid()) {
+        log()->warn("tag is not valid");
+        return false;
+    }
+    
     std::string mc_key = key->asString();
     std::string val;
 
@@ -392,6 +397,11 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
         tag.expire_time = *((time_t*)(value));
         value += sizeof(time_t);
         vallen -= 2*sizeof(time_t);
+        
+        if (!tag.valid()) {
+            log()->warn("tag is not valid");
+            return false;
+        }
         
         XmlDocHelper newdoc(xmlReadMemory(value, vallen, "", "UTF-8", XML_PARSE_DTDATTR | XML_PARSE_NOENT));
         log()->debug("Parsed %p", newdoc.get());

@@ -133,10 +133,10 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
     if (Tag::UNDEFINED_TIME == cache_tag.expire_time) {
         invoke_ctx->haveCachedCopy(true);
         invoke_ctx->tag(cache_tag);
-        XmlDocSharedHelper newdoc(new XmlDocHelper(call(ctx, invoke_ctx)));
+        XmlDocHelper newdoc(call(ctx, invoke_ctx));
         
         if (invoke_ctx->tag().modified) {
-            if (NULL == newdoc->get()) {
+            if (NULL == newdoc.get()) {
                 log()->error("Got empty document in tagged block. Cached copy used");
             }
             else {
