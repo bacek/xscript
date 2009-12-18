@@ -57,6 +57,8 @@ public:
 
     virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CachedObject *obj) const;
 
+    virtual CachedObject::Strategy strategy() const;
+    
 protected:
     virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
     virtual bool saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy);
@@ -165,9 +167,7 @@ DocCacheDisk::init(const Config *config) {
     if (min_time_ <= 0) {
         min_time_ = DEFAULT_CACHE_TIME;
     }
-    
-    CachedObject::setDefaultCacheStrategy(CachedObject::SMART);
-    
+       
     std::string no_cache =
         config->as<std::string>("/xscript/tagged-cache-disk/no-cache", StringUtils::EMPTY_STRING);
 
@@ -182,6 +182,11 @@ DocCacheDisk::minimalCacheTime() const {
 std::string
 DocCacheDisk::name() const {
     return "disk";
+}
+
+CachedObject::Strategy
+DocCacheDisk::strategy() const {
+    return CachedObject::LOCAL;
 }
 
 bool

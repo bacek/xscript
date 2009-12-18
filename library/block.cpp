@@ -390,7 +390,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
 }
 
 void
-Block::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> &invoke_ctx) {
+Block::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
     // Check validators for each param before calling it.

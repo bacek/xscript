@@ -41,11 +41,6 @@ DocCacheStrategy::saveDoc(const TagKey *key, const Tag& tag, const XmlDocSharedH
     return saveDocImpl(key, tag, doc, need_copy);
 }
 
-bool
-DocCacheStrategy::distributed() const {
-    return false;
-}
-
 void
 DocCacheStrategy::insert2Cache(const std::string &no_cache) {
 
@@ -91,6 +86,7 @@ CacheStrategyCollector::instance() {
 void
 CacheStrategyCollector::addStrategy(DocCacheStrategy* strategy, const std::string& name) {
     strategies_.push_back(std::make_pair(strategy, name));
+    CachedObject::addDefaultStrategy(strategy->strategy());
 }
 
 void

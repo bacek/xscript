@@ -51,7 +51,7 @@ public:
 
     virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CachedObject *obj) const;
     
-    virtual bool distributed() const;
+    virtual CachedObject::Strategy strategy() const;
     
 protected:
     virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
@@ -224,10 +224,9 @@ DocCacheMemcached::DocCacheMemcached() : max_size_(0)
 DocCacheMemcached::~DocCacheMemcached()
 {}
 
-
-bool
-DocCacheMemcached::distributed() const {
-    return true;
+CachedObject::Strategy
+DocCacheMemcached::strategy() const {
+    return CachedObject::DISTRIBUTED;
 }
 
 void
@@ -240,10 +239,9 @@ DocCacheMemcached::init(const Config *config) {
     std::string cache_strategy = config->as<std::string>(
             "/xscript/tagged-cache-memcached/enable", "");
     if (strcasecmp(cache_strategy.c_str(), "yes") == 0) {
-        CachedObject::setDefaultCacheStrategy(CachedObject::DISTRIBUTED);
     }
     else if (strcasecmp(cache_strategy.c_str(), "no") == 0) {
-        CachedObject::setDefaultCacheStrategy(CachedObject::LOCAL);
+        CachedObject::clearDefaultStrategy(CachedObject::DISTRIBUTED);
     }
     else if (!cache_strategy.empty()) {
         throw std::runtime_error("Unknown cache strategy: " + cache_strategy);

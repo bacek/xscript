@@ -163,9 +163,15 @@ DocCacheBase::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const T
 
 bool
 DocCacheBase::allow(const DocCacheStrategy* strategy, const CacheContext *cache_ctx) const {
-    if (strategy->distributed() && !cache_ctx->allowDistributed()) {
+    CachedObject::Strategy cache_strategy = strategy->strategy();
+    if (CachedObject::UNKNOWN == cache_strategy) {
         return false;
     }
+    
+    if (CachedObject::DISTRIBUTED == cache_strategy && !cache_ctx->allowDistributed()) {
+        return false;
+    }
+    
     return true;
 }
 

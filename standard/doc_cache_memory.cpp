@@ -51,6 +51,8 @@ public:
     unsigned int maxSize() const;
     
     virtual void fillStatBuilder(StatBuilder *builder);
+    
+    virtual CachedObject::Strategy strategy() const;
 
 protected:
     virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
@@ -109,8 +111,6 @@ DocCacheMemory::init(const Config *config) {
         min_time_ = DEFAULT_CACHE_TIME;
     }
     
-    CachedObject::setDefaultCacheStrategy(CachedObject::SMART);
-    
     std::string no_cache =
         config->as<std::string>("/xscript/tagged-cache-memory/no-cache", StringUtils::EMPTY_STRING);
 
@@ -134,6 +134,11 @@ DocCacheMemory::minimalCacheTime() const {
 std::string
 DocCacheMemory::name() const {
     return "memory";
+}
+
+CachedObject::Strategy
+DocCacheMemory::strategy() const {
+    return CachedObject::LOCAL;
 }
 
 bool

@@ -18,16 +18,17 @@ public:
     virtual bool allowDistributed() const;
 
     enum Strategy {
-        LOCAL,
-        DISTRIBUTED,
-        SMART
+        UNKNOWN = 0,
+        LOCAL = 1,
+        DISTRIBUTED = 2
     };
-    
-    static void setDefaultCacheStrategy(CachedObject::Strategy strategy);
+
+    static void addDefaultStrategy(Strategy strategy);
+    static void clearDefaultStrategy(Strategy strategy);
     
 protected:
     virtual bool checkProperty(const char *name, const char *value);
-    Strategy strategy() const;
+    bool checkStrategy(Strategy strategy) const;
     
 private:
     class ObjectData;

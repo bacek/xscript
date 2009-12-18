@@ -5,12 +5,12 @@
 #include <vector>
 #include <boost/utility.hpp>
 
+#include <xscript/cached_object.h>
 #include <xscript/component.h>
 #include <xscript/xml_helpers.h>
 
 namespace xscript {
 
-class CachedObject;
 class Context;
 class StatBuilder;
 class Tag;
@@ -40,7 +40,7 @@ public:
     
     virtual void fillStatBuilder(StatBuilder *builder);
     
-    virtual bool distributed() const;
+    virtual CachedObject::Strategy strategy() const = 0;
 
 protected:
     virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) = 0;
