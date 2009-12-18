@@ -209,7 +209,7 @@ DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, 
         }
     }
     catch (const std::exception &e) {
-        log()->error("error while loading doc from cache: %s", e.what());
+        log()->error("error while loading doc from disk cache: %s", e.what());
         return false;
     }
 
@@ -217,14 +217,14 @@ DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, 
         XmlDocHelper newdoc(xmlReadMemory(&vec[0], vec.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
         XmlUtils::throwUnless(NULL != newdoc.get());
         if (NULL == xmlDocGetRootElement(newdoc.get())) {
-            log()->warn("get document with no root from memcache");
+            log()->warn("get document with no root from disk cache");
             return false;
         }
         doc.reset(new XmlDocHelper(newdoc));
         return true;
     }
     catch (const std::exception &e) {
-        log()->error("error while parsing doc from cache: %s", e.what());
+        log()->error("error while parsing doc from disk cache: %s", e.what());
         return false;
     }
 }
@@ -238,11 +238,6 @@ DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedH
     assert(NULL != dkey);
 
     const std::string &key_str = key->asString();
-
-    if (NULL == xmlDocGetRootElement(doc->get())) {
-        log()->error("skip saving empty doc, key: %s", key_str.c_str());
-        return false;
-    }
 
     std::string path(root_);
     path.append(dkey->filename());
@@ -264,7 +259,7 @@ DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedH
         close(fd);
 
         if (!save(buf, key_str, tag, doc->get())) {
-            log()->error("can not create doc: %s, key: %s", path.c_str(), key_str.c_str());
+            log()->error("can not create doc in disk cache: %s, key: %s", path.c_str(), key_str.c_str());
             return false;
         }
 
@@ -272,11 +267,11 @@ DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedH
             return true;
         }
 
-        log()->error("error while saving doc to cache: %d, key: %s", errno, key_str.c_str());
+        log()->error("error while saving doc to disk cache: %d, key: %s", errno, key_str.c_str());
         return false;
     }
     catch (const std::exception &e) {
-        log()->error("error while saving doc to cache: %s, key: %s", e.what(), key_str.c_str());
+        log()->error("error while saving doc to disk cache: %s, key: %s", e.what(), key_str.c_str());
         return false;
     }
 }
@@ -335,7 +330,7 @@ DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag, st
         }
         is.read((char*) &tag.last_modified, sizeof(time_t));
         if (!tag.valid()) {
-            log()->warn("tag is not valid");
+            log()->warn("tag is not valid while loading from disk cache");
             return false;
         }
         

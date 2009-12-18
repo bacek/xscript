@@ -5,6 +5,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "xscript/average_counter.h"
+#include "xscript/context.h"
 #include "xscript/doc_cache.h"
 #include "xscript/doc_cache_strategy.h"
 #include "xscript/logger.h"
@@ -154,18 +155,25 @@ DocCacheBase::minimalCacheTime() const {
 
 bool
 DocCacheBase::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc) {
-    return loadDocImpl(ctx, cache_ctx, tag, doc, false);
+    bool res = loadDocImpl(ctx, cache_ctx, tag, doc, false);
+    if (!res && !tag.valid()) {
+        log()->warn("Tag is not valid while load doc from tagged cache. Url: %s",
+            ctx->request()->getOriginalUrl().c_str());
+    }
+    return res;
 }
 
 bool
 DocCacheBase::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag, const XmlDocSharedHelper &doc) {
     if (NULL == doc->get() || NULL == xmlDocGetRootElement(doc->get())) {
-        log()->warn("cannot save empty document or document with no root to tagged cache");
+        log()->warn("cannot save empty document or document with no root to tagged cache. Url: %s",
+            ctx->request()->getOriginalUrl().c_str());
         return false;
     }
     
     if (!tag.valid()) {
-        log()->warn("tag is not valid for save to tagged cache");
+        log()->warn("tag is not valid for save to tagged cache. Url: %s",
+            ctx->request()->getOriginalUrl().c_str());
         return false;
     }
     

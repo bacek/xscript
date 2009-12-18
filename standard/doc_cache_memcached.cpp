@@ -364,7 +364,7 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
     
     std::string mc_key = key->asString();
     
-    size_t vallen;
+    size_t vallen = 0;
     uint32_t flags = 0;
     memcached_return rv;
     CharHelper val;
@@ -399,7 +399,7 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
         vallen -= 2*sizeof(time_t);
         
         if (!tag.valid()) {
-            log()->warn("tag is not valid");
+            log()->warn("tag is not valid while loading from memcached");
             return false;
         }
         
@@ -414,7 +414,7 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
         return true;
     }
     catch (const std::exception &e) {
-        log()->error("error while parsing doc from cache: %s", e.what());
+        log()->error("error while parsing doc from memcached: %s", e.what());
         return false;
     }
 }

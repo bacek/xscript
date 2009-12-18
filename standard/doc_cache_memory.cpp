@@ -150,7 +150,7 @@ DocCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc
         return false;
     }
     if (!tag.valid()) {
-        log()->warn("tag is not valid");
+        log()->warn("tag is not valid while loading from memory cache");
         return false;
     }
     if (need_copy) {
@@ -163,10 +163,6 @@ DocCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc
 bool
 DocCacheMemory::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy) {
     log()->debug("saving doc in memory cache");
-    if (!tag.valid()) {
-        log()->warn("tag is not valid");
-        return false;
-    }
     DocPool *mpool = pool(key);
     assert(NULL != mpool);
     
