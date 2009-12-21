@@ -3,7 +3,9 @@
 #include <string.h>
 #include <stdexcept>
 
+#include "xscript/algorithm.h"
 #include "xscript/cached_object.h"
+#include "xscript/range.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -36,19 +38,39 @@ CachedObject::~CachedObject() {
 
 bool
 CachedObject::checkProperty(const char *name, const char *value) {
-    if (strncasecmp(name, "distributed-cache", sizeof("distributed-cache")) == 0) {
-        if (strncasecmp(value, "yes", sizeof("yes")) == 0) {
-            data_->strategy_ = DISTRIBUTED;
+    if (strncasecmp(name, "cache-strategy", sizeof("cache-strategy")) != 0) {
+        return false;
+    }
+    
+    data_->strategy_ = UNKNOWN;
+    Range strategy = trim(createRange(value));
+    if (strategy.empty()) {
+        throw std::runtime_error("empty cache strategy is not allowed");
+    }
+    do {
+        Range key;
+        split(strategy, ' ', key, strategy);
+        key = trim(key);
+        if (key.empty()) {
+            continue;
         }
-        else if (strncasecmp(value, "no", sizeof("no")) == 0) {
-            data_->strategy_ = LOCAL;
+        
+        if (key.size() == sizeof("distributed") - 1 &&
+            strncasecmp(key.begin(), "distributed", sizeof("distributed") - 1) == 0) {
+            data_->strategy_ |= DISTRIBUTED;
+        }
+        else if (key.size() == sizeof("local") - 1 &&
+                 strncasecmp(key.begin(), "local", sizeof("local") - 1) == 0) {
+            data_->strategy_ |= LOCAL;
         }
         else {
-            throw std::runtime_error("incorrect distributed-cache value");
+            throw std::runtime_error("incorrect cache-strategy value: " +
+                    std::string(key.begin(), key.end()));
         }
-        return true;
     }
-    return false;
+    while(!strategy.empty());
+
+    return true;
 }
 
 bool

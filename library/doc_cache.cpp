@@ -187,11 +187,12 @@ DocCacheBase::allow(const DocCacheStrategy* strategy, const CacheContext *cache_
         return false;
     }
     
-    if (CachedObject::DISTRIBUTED == cache_strategy && !cache_ctx->allowDistributed()) {
-        return false;
+    //TODO: move to checkStrategy;
+    if (CachedObject::DISTRIBUTED == cache_strategy) {
+        return cache_ctx->allowDistributed();
     }
     
-    return true;
+    return cache_ctx->object()->checkStrategy(cache_strategy);
 }
 
 bool

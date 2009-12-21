@@ -1,3 +1,9 @@
+xscript (5.70-9) unstable; urgency=low
+
+  * cache strategy processing extended
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 21 Dec 2009 12:28:57 +0300
+
 xscript (5.70-8) unstable; urgency=low
 
   * memcached fixed
