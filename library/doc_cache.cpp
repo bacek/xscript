@@ -154,11 +154,27 @@ DocCacheBase::minimalCacheTime() const {
 }
 
 bool
+DocCacheBase::checkTag(const Context *ctx, const Tag &tag, const char *operation) {
+    if (tag.valid()) {
+        return true;
+    }
+    
+    if (ctx) {
+        log()->warn("Tag is not valid while %s. Url: %s", operation,
+            ctx->request()->getOriginalUrl().c_str());
+    }
+    else {
+        log()->warn("Tag is not valid while %s.", operation);
+    }
+    
+    return false;
+}
+
+bool
 DocCacheBase::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc) {
     bool res = loadDocImpl(ctx, cache_ctx, tag, doc, false);
-    if (!res && !tag.valid()) {
-        log()->warn("Tag is not valid while load doc from tagged cache. Url: %s",
-            ctx->request()->getOriginalUrl().c_str());
+    if (!res) {
+        checkTag(ctx, tag, "loading doc from tagged cache");
     }
     return res;
 }
@@ -171,9 +187,7 @@ DocCacheBase::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const T
         return false;
     }
     
-    if (!tag.valid()) {
-        log()->warn("tag is not valid for save to tagged cache. Url: %s",
-            ctx->request()->getOriginalUrl().c_str());
+    if (!checkTag(ctx, tag, "saving doc from tagged cache")) {
         return false;
     }
     

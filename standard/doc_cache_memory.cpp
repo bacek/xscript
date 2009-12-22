@@ -149,8 +149,7 @@ DocCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc
     if (!mpool->loadDoc(*key, tag, doc)) {
         return false;
     }
-    if (!tag.valid()) {
-        log()->warn("tag is not valid while loading from memory cache");
+    if (!DocCacheBase::checkTag(NULL, tag, "loading doc from memory cache")) {
         return false;
     }
     if (need_copy) {

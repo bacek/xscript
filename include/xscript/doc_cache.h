@@ -47,6 +47,8 @@ public:
     virtual void init(const Config *config);
     void addStrategy(DocCacheStrategy *strategy, const std::string &name);
     
+    static bool checkTag(const Context *ctx, const Tag &tag, const char *operation);
+    
 protected:
     bool loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
     bool saveDocImpl(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy);

@@ -398,8 +398,7 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
         value += sizeof(time_t);
         vallen -= 2*sizeof(time_t);
         
-        if (!tag.valid()) {
-            log()->warn("tag is not valid while loading from memcached");
+        if (!DocCacheBase::checkTag(NULL, tag, "loading doc from memcached")) {
             return false;
         }
         

@@ -174,7 +174,7 @@ bool
 Server::processCachedDoc(Context *ctx, const Script *script) {
     XmlDocSharedHelper doc;
     try {
-        Tag tag;
+        Tag tag(true, 1, 1); // fake undefined Tag
         CacheContext cache_ctx(script, script->allowDistributed());
         if (!PageCache::instance()->loadDoc(ctx, &cache_ctx, tag, doc)) {
             return false;

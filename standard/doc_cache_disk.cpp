@@ -329,8 +329,8 @@ DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag, st
             return false;
         }
         is.read((char*) &tag.last_modified, sizeof(time_t));
-        if (!tag.valid()) {
-            log()->warn("tag is not valid while loading from disk cache");
+        
+        if (!DocCacheBase::checkTag(NULL, tag, "loading doc from disk cache")) {
             return false;
         }
         

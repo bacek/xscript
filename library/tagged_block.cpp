@@ -116,7 +116,7 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
 
     bool have_cached_doc = false;
     XmlDocSharedHelper doc;
-    Tag cache_tag;
+    Tag cache_tag(true, 1, 1); // fake undefined Tag
     try {
         CacheContext cache_ctx(this, this->allowDistributed());
         have_cached_doc = DocCache::instance()->loadDoc(ctx.get(), &cache_ctx, cache_tag, doc);
