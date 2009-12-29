@@ -1,3 +1,9 @@
+xscript (5.70-11) unstable; urgency=low
+
+  * memory leak fixed for threaded block
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 29 Dec 2009 14:19:28 +0300
+
 xscript (5.70-10) unstable; urgency=low
 
   * removed warning in case of cache miss

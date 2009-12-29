@@ -35,6 +35,7 @@ ThreadedBlock::ThreadedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) 
 }
 
 ThreadedBlock::~ThreadedBlock() {
+    delete trb_data_;
 }
 
 int
