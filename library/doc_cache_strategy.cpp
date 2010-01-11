@@ -7,6 +7,7 @@
 #include "xscript/control_extension.h"
 #include "xscript/doc_cache.h"
 #include "xscript/doc_cache_strategy.h"
+#include "xscript/logger.h"
 #include "xscript/tag.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -102,15 +103,20 @@ CacheStrategyCollector::init(const Config *config) {
     
     std::vector<std::string> v;
     config->subKeys("/xscript/page-cache-strategies/strategy", v);
-    for (std::vector<std::string>::iterator it = v.begin(), end = v.end(); it != end; ++it) {
-        
-        std::string name = config->as<std::string>(*it + "/@name");
+    for(std::vector<std::string>::iterator it = v.begin(), end = v.end(); it != end; ++it) {
+        std::string name;
+        try {
+            name = config->as<std::string>(*it + "/@id");
+        }
+        catch(const std::runtime_error &e) {
+            log()->error("Cannot find strategy id: %s", e.what());
+            continue;
+        }
         boost::shared_ptr<CacheStrategy> cache_strategy(new CacheStrategy());
         
         for(HandlerMapType::iterator handler_it = page_strategy_handlers_.begin();
             handler_it != page_strategy_handlers_.end();
             ++handler_it) {
-            
             std::auto_ptr<SubCacheStrategy> sub_strategy =
                 handler_it->second->create(config, *it + "/" + handler_it->first);
             
@@ -118,14 +124,14 @@ CacheStrategyCollector::init(const Config *config) {
                 cache_strategy->add(sub_strategy);
             }
         }
-        
         page_cache_strategies_.insert(std::make_pair(name, cache_strategy));
     }
     
+    v.clear();
     config->subKeys("/xscript/block-cache-strategies/strategy", v);
     for (std::vector<std::string>::iterator it = v.begin(), end = v.end(); it != end; ++it) {
         
-        std::string name = config->as<std::string>(*it + "/@name");
+        std::string name = config->as<std::string>(*it + "/@id");
         boost::shared_ptr<CacheStrategy> cache_strategy(new CacheStrategy());
         
         for(HandlerMapType::iterator handler_it = block_strategy_handlers_.begin();

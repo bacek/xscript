@@ -15,6 +15,9 @@ public:
     CachedObject();
     virtual ~CachedObject();
 
+    time_t cacheTime() const;
+    void cacheTime(time_t cache_time);
+    
     virtual std::string createTagKey(const Context *ctx) const = 0;
     virtual bool allowDistributed() const;
    
@@ -32,8 +35,11 @@ public:
     static void addDefaultStrategy(Strategy strategy);
     static void clearDefaultStrategy(Strategy strategy);
     
+    static const time_t CACHE_TIME_UNDEFINED;
+    
 protected:
     virtual bool checkProperty(const char *name, const char *value);
+    bool cacheTimeUndefined() const;
     
 private:
     class ObjectData;

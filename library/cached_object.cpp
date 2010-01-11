@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdexcept>
 
+#include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "xscript/algorithm.h"
@@ -20,6 +21,7 @@
 namespace xscript {
 
 static int default_cache_strategy = CachedObject::UNKNOWN;
+const time_t CachedObject::CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
 
 class CachedObject::ObjectData {
 public:
@@ -28,9 +30,11 @@ public:
     
     int strategy_;
     boost::shared_ptr<CacheStrategy> cache_strategy_;
+    time_t cache_time_;
 };
 
-CachedObject::ObjectData::ObjectData() : strategy_(default_cache_strategy)
+CachedObject::ObjectData::ObjectData() :
+    strategy_(default_cache_strategy), cache_time_(CACHE_TIME_UNDEFINED)
 {}
 
 CachedObject::ObjectData::~ObjectData()
@@ -41,6 +45,21 @@ CachedObject::CachedObject() : data_(new ObjectData())
 
 CachedObject::~CachedObject() {
     delete data_;
+}
+
+time_t
+CachedObject::cacheTime() const {
+    return data_->cache_time_;
+}
+
+void
+CachedObject::cacheTime(time_t cache_time) {
+    data_->cache_time_ = cache_time;
+}
+
+bool
+CachedObject::cacheTimeUndefined() const {
+    return data_->cache_time_ == CACHE_TIME_UNDEFINED;
 }
 
 bool
@@ -83,14 +102,35 @@ CachedObject::checkProperty(const char *name, const char *value) {
             if (NULL != data_->cache_strategy_.get()) {
                 throw std::runtime_error("only one cache strategy allowed");
             }
-            std::string str_name(key.begin(), key.end());
+                       
+            Range strategy_name, cache_time;
+            split(key, ':', strategy_name, cache_time);
+            strategy_name = trim(strategy_name);
+            cache_time = trim(cache_time);
+                      
+            std::string str_name(strategy_name.begin(), strategy_name.end());
+            
             boost::shared_ptr<CacheStrategy> cache_strategy =
                 CacheStrategyCollector::instance()->pageStrategy(str_name);
+            
             if (NULL == cache_strategy.get()) {
                 OperationMode::processError("unknown page cache strategy: " + str_name);
             }
             else {
                 data_->cache_strategy_ = cache_strategy;
+            }
+            
+            if (cache_time.empty()) {
+                throw std::runtime_error("Cache time for strategy is not specified");
+            }
+            
+            std::string cache_time_str(cache_time.begin(), cache_time.end());
+            try {
+                cacheTime(boost::lexical_cast<time_t>(cache_time_str));
+            }
+            catch(const boost::bad_lexical_cast &e) {
+                throw std::runtime_error(
+                    std::string("cannot parse cache time value: ") + cache_time_str);
             }
         }
     }

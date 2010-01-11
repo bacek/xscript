@@ -37,7 +37,6 @@ public:
     bool binaryPage() const;
     boost::uint32_t expireTimeDelta() const;
     bool expireTimeDeltaUndefined() const;
-    time_t cacheTime() const;
     boost::int32_t pageRandomMax() const;
     bool allowMethod(const std::string& value) const;
     const Block* block(unsigned int n) const;

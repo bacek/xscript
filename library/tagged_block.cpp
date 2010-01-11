@@ -21,10 +21,8 @@
 
 namespace xscript {
 
-static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
-
 struct TaggedBlock::TaggedBlockData {
-    TaggedBlockData() : cache_level_(0), cache_time_(CACHE_TIME_UNDEFINED), tag_position_(-1)
+    TaggedBlockData() : cache_level_(0), tag_position_(-1)
     {}
     
     ~TaggedBlockData() {
@@ -32,7 +30,6 @@ struct TaggedBlock::TaggedBlockData {
     
     std::string canonical_method_;
     unsigned char cache_level_;
-    time_t cache_time_;
     int tag_position_;
     
     static const unsigned char FLAG_TAGGED = 1;
@@ -59,9 +56,8 @@ TaggedBlock::tagged() const {
 
 void
 TaggedBlock::tagged(bool tagged) {
-    if (tagged &&
-        CACHE_TIME_UNDEFINED != tb_data_->cache_time_ &&
-        tb_data_->cache_time_ < DocCache::instance()->minimalCacheTime()) {
+    if (tagged && !cacheTimeUndefined() &&
+        cacheTime() < DocCache::instance()->minimalCacheTime()) {
         tagged = false;
     }
     cacheLevel(TaggedBlockData::FLAG_TAGGED, tagged);
@@ -85,13 +81,12 @@ TaggedBlock::cacheLevel(unsigned char type) const {
 
 time_t
 TaggedBlock::cacheTime() const {
-    return tb_data_->cache_time_;
+    return CachedObject::cacheTime();
 }
 
 void
 TaggedBlock::cacheTime(time_t cache_time) {
-    log()->debug("%s, cache_time: %lu", BOOST_CURRENT_FUNCTION, static_cast<unsigned long>(cache_time));
-    tb_data_->cache_time_ = cache_time;
+    CachedObject::cacheTime(cache_time);
 }
 
 void
@@ -173,9 +168,9 @@ TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
     Tag tag = invoke_ctx->tag();
 
     bool can_store = false;
-    if (CACHE_TIME_UNDEFINED != tb_data_->cache_time_) {
-        if (tb_data_->cache_time_ >= cache->minimalCacheTime()) {
-            tag.expire_time = now + tb_data_->cache_time_;
+    if (!cacheTimeUndefined()) {
+        if (cacheTime() >= cache->minimalCacheTime()) {
+            tag.expire_time = now + cacheTime();
             can_store = true;
         }
     }
@@ -244,7 +239,7 @@ TaggedBlock::propertyInternal(const char *name, const char *value) {
         
         if (strncasecmp(value, "yes", sizeof("yes")) != 0) {
             try {
-                tb_data_->cache_time_ = boost::lexical_cast<time_t>(value);
+                cacheTime(boost::lexical_cast<time_t>(value));
             }
             catch(const boost::bad_lexical_cast &e) {
                 throw std::runtime_error(
@@ -282,11 +277,6 @@ TaggedBlock::tagPosition() const {
 bool
 TaggedBlock::haveTagParam() const {
     return tb_data_->tag_position_ >= 0;
-}
-
-bool
-TaggedBlock::cacheTimeUndefined() const {
-    return tb_data_->cache_time_ == CACHE_TIME_UNDEFINED;
 }
 
 std::string

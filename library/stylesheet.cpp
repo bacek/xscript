@@ -282,7 +282,9 @@ Stylesheet::StylesheetData::appendXsltParams(const std::vector<Param*>& params,
         const std::string &id = param->id();
         std::pair<ParamSetType::iterator, bool> result = unique_params.insert(id);
         if (result.second == false) {
-            OperationMode::processError(std::string("duplicated xslt-param: ") + id);
+            std::stringstream stream;
+            stream << "duplicated xslt-param: " << id << ". Url: " << ctx->request()->getOriginalUrl();
+            OperationMode::processError(stream.str());
         }
         else {
             std::string value = param->asString(ctx);

@@ -49,7 +49,6 @@
 
 namespace xscript {
 
-static const time_t CACHE_TIME_UNDEFINED = std::numeric_limits<time_t>::max();
 static const boost::uint32_t EXPIRE_TIME_DELTA_UNDEFINED = std::numeric_limits<boost::uint32_t>::max();
 static const std::string GET_METHOD = "GET";
 
@@ -67,9 +66,7 @@ public:
     bool forceStylesheet() const;
     bool binaryPage() const;
     boost::uint32_t expireTimeDelta() const;
-    time_t cacheTime() const;
     boost::int32_t pageRandomMax() const;
-    bool cacheTimeUndefined() const;
     bool expireTimeDeltaUndefined() const;
     bool allowMethod(const std::string &value) const;
     bool cacheAllQuery() const;
@@ -94,7 +91,6 @@ public:
     void threaded(bool value);
     void forceStylesheet(bool value);
     void expireTimeDelta(boost::uint32_t value);
-    void cacheTime(time_t value);
     void pageRandomMax(boost::int32_t value);
     void binaryPage(bool value);
     void allowMethods(const char *value);
@@ -124,7 +120,6 @@ public:
     std::vector<Block*> blocks_;
     unsigned int flags_;
     boost::uint32_t expire_time_delta_;
-    time_t cache_time_;
     boost::int32_t page_random_max_;
     std::set<xmlNodePtr> xscript_node_set_;
     std::map<std::string, std::string> headers_;
@@ -154,7 +149,7 @@ class Script::CachableHandler : public MessageHandler {
 Script::ScriptData::ScriptData(Script *owner) :
     owner_(owner), doc_(NULL), flags_(FLAG_FORCE_STYLESHEET),
     expire_time_delta_(EXPIRE_TIME_DELTA_UNDEFINED),
-    cache_time_(CACHE_TIME_UNDEFINED), page_random_max_(0) {
+    page_random_max_(0) {
 }
 
 Script::ScriptData::~ScriptData() {
@@ -179,11 +174,6 @@ Script::ScriptData::binaryPage() const {
 boost::uint32_t
 Script::ScriptData::expireTimeDelta() const {
     return expire_time_delta_;
-}
-
-time_t
-Script::ScriptData::cacheTime() const {
-    return cache_time_;
 }
 
 boost::int32_t
@@ -276,11 +266,6 @@ Script::ScriptData::expireTimeDelta(boost::uint32_t value) {
 }
 
 void
-Script::ScriptData::cacheTime(time_t value) {
-    cache_time_ = value;
-}
-
-void
 Script::ScriptData::pageRandomMax(boost::int32_t value) {
     if (value < 0) {
         throw std::runtime_error("negative page random max is not allowed");
@@ -340,11 +325,6 @@ Script::ScriptData::extensionProperty(const std::string &name) const {
     }
     
     return it->second;
-}
-
-bool
-Script::ScriptData::cacheTimeUndefined() const {
-    return cache_time_ == CACHE_TIME_UNDEFINED;
 }
 
 bool
@@ -630,7 +610,7 @@ std::string
 Script::ScriptData::cachedUrl(const Context *ctx) const {
     std::string key(ctx->request()->getOriginalUrl());
     if (owner_->cacheStrategy()) {
-        std::string::size_type pos = key.rfind('?');
+        std::string::size_type pos = key.find('?');
         if (std::string::npos != pos) {
             key.erase(pos);
         }
@@ -638,7 +618,7 @@ Script::ScriptData::cachedUrl(const Context *ctx) const {
     }
     
     if (!cacheAllQuery()) {
-        std::string::size_type pos = key.rfind('?');
+        std::string::size_type pos = key.find('?');
         if (std::string::npos != pos) {
             key.erase(pos);
         }
@@ -810,8 +790,11 @@ Script::PropertyHandler::process(const MessageParams &params,
         }
     }
     else if (strncasecmp(prop, "cache-time", sizeof("cache-time")) == 0) {
+        if (NULL != script->cacheStrategy()) {
+            throw std::runtime_error("cache-time and cache-strategy are not allowed together");
+        }
         try {
-            script->data_->cacheTime(boost::lexical_cast<time_t>(value));
+            script->cacheTime(boost::lexical_cast<time_t>(value));
         }
         catch(const boost::bad_lexical_cast &e) {
             throw std::runtime_error(
@@ -879,7 +862,7 @@ Script::CachableHandler::process(const MessageParams &params,
     const Context* ctx = params.getPtr<const Context>(1);
     bool for_save = params.get<bool>(2);
     
-    if (script->data_->cacheTimeUndefined() || script->cacheTime() < DocCache::instance()->minimalCacheTime()) {
+    if (script->cacheTimeUndefined() || script->cacheTime() < DocCache::instance()->minimalCacheTime()) {
         result.set(false);
         return CONTINUE;
     }
@@ -957,11 +940,6 @@ Script::binaryPage() const {
 boost::uint32_t
 Script::expireTimeDelta() const {
     return data_->expireTimeDelta();
-}
-
-time_t
-Script::cacheTime() const {
-    return data_->cacheTime();
 }
 
 boost::int32_t
@@ -1252,7 +1230,7 @@ Script::info(const Context *ctx) const {
     info.append(url);
     info.append(" | Filename: ");
     info.append(name());
-    if (!data_->cacheTimeUndefined()) {
+    if (!cacheTimeUndefined()) {
         info.append(" | Cache-time: ");
         info.append(boost::lexical_cast<std::string>(cacheTime()));
     }
