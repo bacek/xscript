@@ -7,6 +7,7 @@
 
 namespace xscript {
 
+class CacheStrategy;
 class Context;
 
 class CachedObject : private boost::noncopyable {
@@ -25,6 +26,8 @@ public:
 
     //TODO: do it virtual
     bool checkStrategy(Strategy strategy) const;
+    
+    CacheStrategy* cacheStrategy() const;
     
     static void addDefaultStrategy(Strategy strategy);
     static void clearDefaultStrategy(Strategy strategy);

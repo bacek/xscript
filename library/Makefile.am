@@ -17,7 +17,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp cached_o
 	thread_pool.cpp script_cache.cpp stylesheet_cache.cpp \
 	stat_builder.cpp hostname_param.cpp status_info.cpp \
 	protocol.cpp http_helper.cpp \
-	doc_cache.cpp doc_cache_strategy.cpp \
+	doc_cache.cpp doc_cache_strategy.cpp cache_strategy.cpp \
 	profiler.cpp xslt_profiler.cpp \
 	average_counter_factory.cpp simple_counter_factory.cpp \
 	cache_counter_factory.cpp cache_usage_counter_factory.cpp \

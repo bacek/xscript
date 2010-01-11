@@ -24,6 +24,7 @@
 #include <libxml/uri.h>
 
 #include "xscript/block.h"
+#include "xscript/cache_strategy.h"
 #include "xscript/context.h"
 #include "xscript/doc_cache.h"
 #include "xscript/extension.h"
@@ -628,6 +629,14 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
 std::string
 Script::ScriptData::cachedUrl(const Context *ctx) const {
     std::string key(ctx->request()->getOriginalUrl());
+    if (owner_->cacheStrategy()) {
+        std::string::size_type pos = key.rfind('?');
+        if (std::string::npos != pos) {
+            key.erase(pos);
+        }
+        return key;
+    }
+    
     if (!cacheAllQuery()) {
         std::string::size_type pos = key.rfind('?');
         if (std::string::npos != pos) {
@@ -776,6 +785,11 @@ Script::PropertyHandler::process(const MessageParams &params,
     log()->debug("%s, setting property: %s=%s", script->name().c_str(), prop, value);
 
     if (script->checkProperty(prop, value)) {
+        if (NULL != script->cacheStrategy()) {
+            if (!script->data_->cache_query_.empty() || !script->data_->cache_cookies_.empty()) {
+                throw std::runtime_error("cache strategy and cache params are not allowed together");
+            }
+        }
     }
     else if (strncasecmp(prop, "all-threaded", sizeof("all-threaded")) == 0) {
         script->data_->threaded(strncasecmp(value, "yes", sizeof("yes")) == 0);
@@ -815,12 +829,21 @@ Script::PropertyHandler::process(const MessageParams &params,
             throw std::runtime_error(
                 std::string("cannot parse page-random-max value: ") + value);
         }
+        if (NULL != script->cacheStrategy()) {
+            throw std::runtime_error("cache strategy and cache params are not allowed together");
+        }
     }
     else if (strncasecmp(prop, "cache-query", sizeof("cache-query")) == 0) {
         script->data_->cacheQuery(value);
+        if (NULL != script->cacheStrategy()) {
+            throw std::runtime_error("cache strategy and cache params are not allowed together");
+        }
     }
     else if (strncasecmp(prop, "cache-cookies", sizeof("cache-cookies")) == 0) {
         script->data_->cacheCookies(value);
+        if (NULL != script->cacheStrategy()) {
+            throw std::runtime_error("cache strategy and cache params are not allowed together");
+        }
     }
     else if (ExtensionList::instance()->checkScriptProperty(prop, value)) {
         script->data_->extensionProperty(prop, value);
@@ -1131,31 +1154,54 @@ Script::expireTimeDeltaUndefined() const {
 
 std::string
 Script::createTagKey(const Context *ctx, bool page_cache) const {
-    
-    std::string key = page_cache ? data_->cachedUrl(ctx) : name();
-    key.push_back('|');
-    
-    const TimeMapType& modified_info = modifiedInfo();
-    for(TimeMapType::const_iterator it = modified_info.begin();
-        it != modified_info.end();
-        ++it) {
-        key.append(boost::lexical_cast<std::string>(it->second));
-        key.push_back('|');
-    }
-    
+    std::string key;
+    CacheStrategy* strategy = cacheStrategy();
     if (page_cache) {
+        key = data_->cachedUrl(ctx);
+        if (strategy) {
+            key.append(strategy->createKey(ctx));
+        }
+        else {
+            std::set<std::string> &cache_cookies = data_->cacheCookies();
+            for(std::set<std::string>::iterator it = cache_cookies.begin();
+                it != cache_cookies.end();
+                ++it) {
+                
+                std::string cookie = Policy::getCacheCookie(ctx, *it);
+                if (cookie.empty()) {
+                    continue;
+                }
+        
+                key.push_back('|');
+                key.append(*it);
+                key.push_back(':');
+                key.append(cookie);
+            }
+        }
+        
         const std::string &xslt = xsltName();
         if (!xslt.empty()) {
             namespace fs = boost::filesystem;
             fs::path path(xslt);
             if (fs::exists(path) && !fs::is_directory(path)) {
-                key.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
                 key.push_back('|');
+                key.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
             }
             else {
                 throw std::runtime_error("Cannot stat stylesheet " + xslt);
             }
         }
+    }
+    else {
+        key = name();
+    }
+    
+    const TimeMapType& modified_info = modifiedInfo();
+    for(TimeMapType::const_iterator it = modified_info.begin();
+        it != modified_info.end();
+        ++it) {
+        key.push_back('|');
+        key.append(boost::lexical_cast<std::string>(it->second));
     }
     
     std::vector<Block*> &blocks = data_->blocks();
@@ -1168,8 +1214,8 @@ Script::createTagKey(const Context *ctx, bool page_cache) const {
             namespace fs = boost::filesystem;
             fs::path path(xslt_name);
             if (fs::exists(path) && !fs::is_directory(path)) {
-                key.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
                 key.push_back('|');
+                key.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
             }
             else {
                 throw std::runtime_error("Cannot stat stylesheet " + xslt_name);
@@ -1177,28 +1223,12 @@ Script::createTagKey(const Context *ctx, bool page_cache) const {
         }            
     }
     
-    if (page_cache) {
-        std::set<std::string> &cache_cookies = data_->cacheCookies();
-        for(std::set<std::string>::iterator it = cache_cookies.begin();
-            it != cache_cookies.end();
-            ++it) {
-            
-            std::string cookie = Policy::getCacheCookie(ctx, *it);
-            if (cookie.empty()) {
-                continue;
-            }
-    
+    if (NULL == strategy) {
+        const std::string& ctx_key = ctx->key();
+        if (!ctx_key.empty()) {
             key.push_back('|');
-            key.append(*it);
-            key.push_back(':');
-            key.append(cookie);
+            key.append(ctx_key);
         }
-    }
-    
-    const std::string &ctx_key = ctx->key();
-    if (!ctx_key.empty()) {
-        key.push_back('|');
-        key.append(ctx_key);
     }
     
     return key;

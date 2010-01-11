@@ -282,7 +282,8 @@ Server::sendResponseCached(Context *ctx, const Script *script, XmlDocSharedHelpe
         sendResponse(ctx, doc);
         return;
     }
-       
+    
+    
     XmlNodeHelper headers_node(xmlNewNode(NULL, (const xmlChar*)"headers"));
     XmlNodeHelper context_data_node(xmlNewNode(NULL, (const xmlChar*)"context-data"));
     try {
@@ -305,7 +306,7 @@ Server::sendResponseCached(Context *ctx, const Script *script, XmlDocSharedHelpe
         sendResponse(ctx, doc);
         return;
     }
-        
+    
     XmlNodeHelper cache_data_node(xmlNewNode(NULL, (const xmlChar*)"cache-data"));
     xmlAddChild(cache_data_node.get(), headers_node.get());
     headers_node.release();

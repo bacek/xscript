@@ -214,6 +214,9 @@ DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag
     // FIXME Add saving of loaded doc into higher-order caches.
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     bool loaded = false;
+    typedef std::vector<std::pair<
+        DocCacheData::StrategyMap::iterator, boost::shared_ptr<TagKey> > > KeyMapType;
+    KeyMapType missed_keys;
     DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
     while ( !loaded && i != data_->strategies_.end()) {
         DocCacheStrategy* strategy = i->first;
@@ -237,6 +240,7 @@ DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag
         else {
             i->second->usageCounter_->fetchedMiss(ctx, cache_ctx->object());
             i->second->missCounter_->add(res.second);
+            missed_keys.push_back(std::make_pair(i, boost::shared_ptr<TagKey>(key.release())));
         }
         
         loaded = res.first; 
@@ -244,20 +248,15 @@ DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag
     }
 
     if (loaded) {
-        --i; // Do not store in cache from doc was loaded.
-        for(DocCacheData::StrategyMap::iterator j = data_->strategies_.begin(); j != i; ++j) {
-            DocCacheStrategy* strategy = j->first;
-            if (!allow(strategy, cache_ctx)) {
-                continue;
-            }
-            
-            std::auto_ptr<TagKey> key = strategy->createKey(ctx, cache_ctx->object());
-            
-            boost::function<bool()> f =
-                boost::bind(&DocCacheStrategy::saveDoc, strategy,
-                        boost::cref(key.get()), boost::cref(tag), boost::cref(doc), need_copy);
+        for(KeyMapType::iterator it = missed_keys.begin();
+            it != missed_keys.end();
+            ++it) {
+            DocCacheStrategy* strategy = it->first->first;
+            TagKey* key = it->second.get();
+            boost::function<bool()> f = boost::bind(&DocCacheStrategy::saveDoc, strategy,
+                boost::cref(key), boost::cref(tag), boost::cref(doc), need_copy);
             std::pair<bool, uint64_t> res = profile(f);
-            i->second->saveCounter_->add(res.second);            
+            i->second->saveCounter_->add(res.second);  
         }
     }
 

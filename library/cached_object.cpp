@@ -3,9 +3,15 @@
 #include <string.h>
 #include <stdexcept>
 
+#include <boost/shared_ptr.hpp>
+
 #include "xscript/algorithm.h"
 #include "xscript/cached_object.h"
+#include "xscript/doc_cache_strategy.h"
+#include "xscript/operation_mode.h"
 #include "xscript/range.h"
+
+#include "xscript/logger.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -21,6 +27,7 @@ public:
     ~ObjectData();
     
     int strategy_;
+    boost::shared_ptr<CacheStrategy> cache_strategy_;
 };
 
 CachedObject::ObjectData::ObjectData() : strategy_(default_cache_strategy)
@@ -42,11 +49,12 @@ CachedObject::checkProperty(const char *name, const char *value) {
         return false;
     }
     
-    data_->strategy_ = UNKNOWN;
     Range strategy = trim(createRange(value));
     if (strategy.empty()) {
         throw std::runtime_error("empty cache strategy is not allowed");
     }
+    
+    bool cache_type = false;
     do {
         Range key;
         split(strategy, ' ', key, strategy);
@@ -57,15 +65,33 @@ CachedObject::checkProperty(const char *name, const char *value) {
         
         if (key.size() == sizeof("distributed") - 1 &&
             strncasecmp(key.begin(), "distributed", sizeof("distributed") - 1) == 0) {
+            if (!cache_type) {
+                cache_type = true;
+                data_->strategy_ = UNKNOWN;
+            }
             data_->strategy_ |= DISTRIBUTED;
         }
         else if (key.size() == sizeof("local") - 1 &&
                  strncasecmp(key.begin(), "local", sizeof("local") - 1) == 0) {
+            if (!cache_type) {
+                cache_type = true;
+                data_->strategy_ = UNKNOWN;
+            }
             data_->strategy_ |= LOCAL;
         }
         else {
-            throw std::runtime_error("incorrect cache-strategy value: " +
-                    std::string(key.begin(), key.end()));
+            if (NULL != data_->cache_strategy_.get()) {
+                throw std::runtime_error("only one cache strategy allowed");
+            }
+            std::string str_name(key.begin(), key.end());
+            boost::shared_ptr<CacheStrategy> cache_strategy =
+                CacheStrategyCollector::instance()->pageStrategy(str_name);
+            if (NULL == cache_strategy.get()) {
+                OperationMode::processError("unknown page cache strategy: " + str_name);
+            }
+            else {
+                data_->cache_strategy_ = cache_strategy;
+            }
         }
     }
     while(!strategy.empty());
@@ -93,5 +119,9 @@ CachedObject::clearDefaultStrategy(Strategy strategy) {
     default_cache_strategy &= ~strategy;
 }
 
+CacheStrategy*
+CachedObject::cacheStrategy() const {
+    return data_->cache_strategy_.get();
+}
 
 } // namespace xscript

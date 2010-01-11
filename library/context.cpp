@@ -10,6 +10,7 @@
 
 #include "xscript/authorizer.h"
 #include "xscript/block.h"
+#include "xscript/cache_strategy.h"
 #include "xscript/context.h"
 #include "xscript/logger.h"
 #include "xscript/policy.h"
@@ -170,8 +171,10 @@ Context::Context(const boost::shared_ptr<Script> &script,
     assert(script.get());
     ctx_data_ = new ContextData(script, state, request, response);
     ExtensionList::instance()->initContext(this);
-    appendKey(boost::lexical_cast<std::string>(pageRandom()));
     init();
+    if (NULL == script()->cacheStrategy()) {
+        appendKey(boost::lexical_cast<std::string>(pageRandom()));
+    }
 }
 
 Context::Context(const boost::shared_ptr<Script> &script,
@@ -198,6 +201,10 @@ Context::init() {
     if (NULL != server) {
         noXsltPort(!server->needApplyPerblockStylesheet(request()));
         noMainXsltPort(!server->needApplyMainStylesheet(request()));
+    }
+    CacheStrategy *strategy = script()->cacheStrategy();
+    if (NULL != strategy) {
+        strategy->initContext(this);
     }
 }
 
@@ -531,6 +538,11 @@ Context::appendKey(const std::string &value) {
 boost::int32_t
 Context::pageRandom() const {
     return ctx_data_->pageRandom();
+}
+
+void
+Context::pageRandom(boost::int32_t value) {
+    ctx_data_->page_random_ = value;
 }
 
 const TimeoutCounter&

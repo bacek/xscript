@@ -120,6 +120,7 @@ public:
     void appendKey(const std::string &value);
     
     boost::int32_t pageRandom() const;
+    void pageRandom(boost::int32_t value);
 
     friend class ContextStopper;
 

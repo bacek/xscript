@@ -21,7 +21,7 @@ public:
 
     template<typename T> T as(const std::string &name) const;
     template<typename T> T as(const std::string &name, const T &defval) const;
-
+    
     virtual void subKeys(const std::string &value, std::vector<std::string> &v) const = 0;
 
     static std::auto_ptr<Config> create(const char *file);
