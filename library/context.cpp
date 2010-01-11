@@ -172,7 +172,7 @@ Context::Context(const boost::shared_ptr<Script> &script,
     ctx_data_ = new ContextData(script, state, request, response);
     ExtensionList::instance()->initContext(this);
     init();
-    if (NULL == script()->cacheStrategy()) {
+    if (NULL == script->cacheStrategy()) {
         appendKey(boost::lexical_cast<std::string>(pageRandom()));
     }
 }
