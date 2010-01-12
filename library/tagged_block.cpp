@@ -43,6 +43,11 @@ TaggedBlock::~TaggedBlock() {
     delete tb_data_;
 }
 
+bool
+TaggedBlock::cacheTimeUndefined() const {
+    return CachedObject::cacheTimeUndefined();
+}
+
 std::string
 TaggedBlock::canonicalMethod(const Context *ctx) const {
     (void)ctx;

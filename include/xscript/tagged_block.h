@@ -35,6 +35,7 @@ public:
     bool cacheLevel(unsigned char type) const;
     
 protected:
+    bool cacheTimeUndefined() const;
     virtual void invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void postCall(Context *ctx, InvokeContext *invoke_ctx);
     virtual void postParse();
