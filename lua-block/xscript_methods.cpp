@@ -381,28 +381,28 @@ append2Query(const std::string &part, Encoder *encoder, std::string &query) {
 static int
 luaBuildQueryString(lua_State *lua) {
     try {
-        luaCheckStackSize(lua, 1);
-        std::string encoding = luaReadStack<std::string>(lua, 1);
+        int stack_size = lua_gettop(lua);
+        if (stack_size < 0 || stack_size > 1) 
+            throw BadArgCount(stack_size);
+
+        std::auto_ptr<Encoder> encoder(NULL);
+        if (stack_size == 1) {
+            std::string encoding = luaReadStack<std::string>(lua, 1);
+            if (strncasecmp(encoding.c_str(), "utf-8", sizeof("utf-8") - 1) != 0) {
+                encoder = std::auto_ptr<Encoder>(Encoder::createEscaping("utf-8", encoding.c_str()));
+            }
+        }
         
         Context *ctx = getContext(lua);
-        
-        std::auto_ptr<Encoder> encoder(NULL);
-        if (strncasecmp(encoding.c_str(), "utf-8", sizeof("utf-8") - 1) != 0) {
-            encoder = std::auto_ptr<Encoder>(Encoder::createEscaping("utf-8", encoding.c_str()));
-        }
         
         const std::vector<StringUtils::NamedValue>& args = ctx->request()->args();
         std::string query;
         
         if (!args.empty()) {
-            bool is_first = true;
             for(std::vector<StringUtils::NamedValue>::const_iterator it = args.begin(), end = args.end();
                 it != end;
                 ++it) {
-                if (is_first) {
-                    is_first = false;
-                }
-                else {
+                if (!query.empty()) {
                     query.push_back('&');
                 }
                 

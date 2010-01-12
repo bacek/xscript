@@ -1,3 +1,9 @@
+xscript (5.70-19) unstable; urgency=low
+
+  * make encoding optional in lua buildQueryString
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 12 Jan 2010 19:03:59 +0300
+
 xscript (5.70-18) unstable; urgency=low
 
   * binary stability restored
