@@ -109,7 +109,9 @@ public:
     
     friend class QuerySubCacheStrategyFactory;
 private:
-    bool cache_all_;
+    bool cacheAll() const;
+    
+private:
     std::set<std::string> cache_args_;
 };
 
@@ -123,8 +125,7 @@ class QuerySubCacheStrategyFactory : public SubCacheStrategyFactory {
             value = config->as<std::string>(path);
         }
         catch(const std::exception &e) {
-            query_strategy->cache_all_ = true;
-            return strategy;
+            return std::auto_ptr<SubCacheStrategy>();
         }
 
         typedef boost::char_separator<char> Separator;
@@ -138,21 +139,22 @@ class QuerySubCacheStrategyFactory : public SubCacheStrategyFactory {
     }
 };
 
-QuerySubCacheStrategy::QuerySubCacheStrategy() : cache_all_(false)
+QuerySubCacheStrategy::QuerySubCacheStrategy()
 {}
+
+bool
+QuerySubCacheStrategy::cacheAll() const {
+    return cache_args_.empty();
+}
 
 std::string
 QuerySubCacheStrategy::createKey(const Context *ctx) {
     
-    if (cache_all_) {
+    if (cacheAll()) {
         const std::string& query = ctx->request()->getQueryString();
         if (!query.empty()) {
             return "?" + query;
         }
-        return StringUtils::EMPTY_STRING;
-    }
-       
-    if (cache_args_.empty()) {
         return StringUtils::EMPTY_STRING;
     }
     

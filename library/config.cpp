@@ -89,10 +89,7 @@ Config::startup() {
     
     Loader::instance()->init(this);
     log()->debug("loader started");
-    
-    CacheStrategyCollector::instance()->init(this);
-    log()->debug("doc and page cache started");
-    
+       
     StatusInfo::instance()->init(this);
     log()->debug("status info started");
 
@@ -124,6 +121,9 @@ Config::startup() {
 
     ExtensionList::instance()->init(this);
     log()->debug("extension list started");
+    
+    CacheStrategyCollector::instance()->init(this);
+    log()->debug("doc and page cache started");
 }
 
 std::auto_ptr<Config>
