@@ -17,6 +17,7 @@ class Stylesheet;
 class OperationMode {
 public:
     static void processError(const std::string& message);
+    static void processCriticalInvokeError(const std::string& message);
     static void sendError(Response* response, unsigned short status, const std::string& message);
     static bool isProduction();
     static void assignBlockError(Context *ctx, const Block *block, const std::string &error);
@@ -29,6 +30,7 @@ public:
     static void checkRemoteTimeout(RemoteTaggedBlock *block);
     
     static const std::string PROCESS_ERROR_METHOD;
+    static const std::string PROCESS_CRITICAL_INVOKE_ERROR_METHOD;
     static const std::string SEND_ERROR_METHOD;
     static const std::string IS_PRODUCTION_METHOD;
     static const std::string ASSIGN_BLOCK_ERROR_METHOD;

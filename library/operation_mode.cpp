@@ -22,6 +22,7 @@
 namespace xscript {
 
 const std::string OperationMode::PROCESS_ERROR_METHOD = "OPERATION_MODE_PROCESS_ERROR";
+const std::string OperationMode::PROCESS_CRITICAL_INVOKE_ERROR_METHOD = "OPERATION_MODE_PROCESS_CRITICAL_INVOKE_ERROR";
 const std::string OperationMode::SEND_ERROR_METHOD = "OPERATION_MODE_SEND_ERROR";
 const std::string OperationMode::IS_PRODUCTION_METHOD = "OPERATION_MODE_IS_PRODUCTION";
 const std::string OperationMode::ASSIGN_BLOCK_ERROR_METHOD = "OPERATION_MODE_ASSIGN_BLOCK_ERROR";
@@ -44,6 +45,19 @@ OperationMode::processError(const std::string &message) {
     MessageResultBase result;
   
     MessageProcessor::instance()->process(PROCESS_ERROR_METHOD, params, result);
+}
+
+void
+OperationMode::processCriticalInvokeError(const std::string &message) {
+    MessageParam<const std::string> message_param(&message);
+    
+    MessageParamBase* param_list[1];
+    param_list[0] = &message_param;
+    
+    MessageParams params(1, param_list);
+    MessageResultBase result;
+  
+    MessageProcessor::instance()->process(PROCESS_CRITICAL_INVOKE_ERROR_METHOD, params, result);
 }
 
 void
@@ -203,6 +217,14 @@ class ProcessErrorHandler : public MessageHandler {
     }
 };
 
+class ProcessCriticalInvokeErrorHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+        (void)result;
+        const std::string& message = params.get<const std::string>(0);
+        throw InvokeError(message);
+    }
+};
+
 class SendErrorHandler : public MessageHandler {
     Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
@@ -309,6 +331,8 @@ struct HandlerRegisterer {
     HandlerRegisterer() {
         MessageProcessor::instance()->registerBack(OperationMode::PROCESS_ERROR_METHOD,
                 boost::shared_ptr<MessageHandler>(new ProcessErrorHandler()));
+        MessageProcessor::instance()->registerBack(OperationMode::PROCESS_CRITICAL_INVOKE_ERROR_METHOD,
+                boost::shared_ptr<MessageHandler>(new ProcessCriticalInvokeErrorHandler()));
         MessageProcessor::instance()->registerBack(OperationMode::SEND_ERROR_METHOD,
                 boost::shared_ptr<MessageHandler>(new SendErrorHandler()));
         MessageProcessor::instance()->registerBack(OperationMode::IS_PRODUCTION_METHOD,

@@ -31,6 +31,14 @@ class ProcessErrorHandler : public MessageHandler {
     }
 };
 
+class ProcessCriticalInvokeErrorHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+        (void)result;
+        const std::string& message = params.get<const std::string>(0);
+        throw CriticalInvokeError(message);
+    }
+};
+
 class SendErrorHandler : public MessageHandler {
     Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
@@ -193,6 +201,8 @@ struct HandlerRegisterer {
     HandlerRegisterer() {
         MessageProcessor::instance()->registerFront(OperationMode::PROCESS_ERROR_METHOD,
                 boost::shared_ptr<MessageHandler>(new ProcessErrorHandler()));
+        MessageProcessor::instance()->registerFront(OperationMode::PROCESS_CRITICAL_INVOKE_ERROR_METHOD,
+                boost::shared_ptr<MessageHandler>(new ProcessCriticalInvokeErrorHandler()));
         MessageProcessor::instance()->registerFront(OperationMode::SEND_ERROR_METHOD,
                 boost::shared_ptr<MessageHandler>(new SendErrorHandler()));
         MessageProcessor::instance()->registerFront(OperationMode::IS_PRODUCTION_METHOD,

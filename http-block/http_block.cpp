@@ -441,7 +441,7 @@ HttpBlock::response(const HttpHelper &helper) const {
             std::string error = "Invalid sanitized text/html document. Url: " + helper.url() + ". Error: ";
             std::string xml_error = XmlUtils::getXMLError();
             xml_error.empty() ? error.append("Unknown XML error") : error.append(xml_error);
-            OperationMode::processError(error);
+            OperationMode::processCriticalInvokeError(error);
         }
         
         return doc;

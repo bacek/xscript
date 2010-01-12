@@ -1,3 +1,9 @@
+xscript (5.70-15) unstable; urgency=low
+
+  * processCriticalInvokeError added to OperationMode
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 12 Jan 2010 12:38:43 +0300
+
 xscript (5.70-14) unstable; urgency=low
 
   * make invalid sanitized content critical in development
