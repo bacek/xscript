@@ -366,6 +366,63 @@ luaGetVHostArg(lua_State *lua) {
     return 0;
 }
 
+static void
+append2Query(const std::string &part, Encoder *encoder, std::string &query) {
+    std::string encoded;
+    if (NULL != encoder) {
+        encoder->encode(createRange(part), encoded);
+    }
+    else {
+        encoded = part;
+    }
+    query.append(StringUtils::urlencode(encoded));
+}
+
+static int
+luaBuildQueryString(lua_State *lua) {
+    try {
+        luaCheckStackSize(lua, 1);
+        std::string encoding = luaReadStack<std::string>(lua, 1);
+        
+        Context *ctx = getContext(lua);
+        
+        std::auto_ptr<Encoder> encoder(NULL);
+        if (strncasecmp(encoding.c_str(), "utf-8", sizeof("utf-8") - 1) != 0) {
+            encoder = std::auto_ptr<Encoder>(Encoder::createEscaping("utf-8", encoding.c_str()));
+        }
+        
+        const std::vector<StringUtils::NamedValue>& args = ctx->request()->args();
+        std::string query;
+        
+        if (!args.empty()) {
+            bool is_first = true;
+            for(std::vector<StringUtils::NamedValue>::const_iterator it = args.begin(), end = args.end();
+                it != end;
+                ++it) {
+                if (is_first) {
+                    is_first = false;
+                }
+                else {
+                    query.push_back('&');
+                }
+                
+                append2Query(it->first, encoder.get(), query);            
+                query.push_back('=');
+                append2Query(it->second, encoder.get(), query);
+            }
+        }
+        
+        lua_pushstring(lua, query.c_str());
+        // Our value on stack
+        return 1;
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:buildQueryString]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
 static int
 luaStrSplit(lua_State *lua) {
     try {
@@ -462,6 +519,9 @@ setupXScript(lua_State *lua, std::string * buf, Context *ctx, Block *block) {
     
     lua_pushcfunction(lua, &luaStrSplit);
     lua_setfield(lua, -2, "strsplit");
+    
+    lua_pushcfunction(lua, &luaBuildQueryString);
+    lua_setfield(lua, -2, "buildQueryString");
     
     lua_pop(lua, 2); // pop _G and xscript
 

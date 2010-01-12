@@ -1,3 +1,9 @@
+xscript (5.70-17) unstable; urgency=low
+
+  * lua buildQueryString added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 12 Jan 2010 17:57:34 +0300
+
 xscript (5.70-16) unstable; urgency=low
 
   * query cache strategy fixed
