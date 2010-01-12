@@ -144,12 +144,10 @@ QuerySubCacheStrategy::QuerySubCacheStrategy() : cache_all_(false)
 std::string
 QuerySubCacheStrategy::createKey(const Context *ctx) {
     
-    std::string key("?");
     if (cache_all_) {
         const std::string& query = ctx->request()->getQueryString();
         if (!query.empty()) {
-            key.append(query);
-            return key;
+            return "?" + query;
         }
         return StringUtils::EMPTY_STRING;
     }
@@ -162,6 +160,7 @@ QuerySubCacheStrategy::createKey(const Context *ctx) {
     std::vector<std::string> names;
     request->argNames(names);
     
+    std::string key;
     bool is_first = true;
     for(std::vector<std::string>::const_iterator i = names.begin(), end = names.end();
         i != end;
@@ -187,7 +186,11 @@ QuerySubCacheStrategy::createKey(const Context *ctx) {
         }
     }
     
-    return key;
+    if (key.empty()) {
+        return StringUtils::EMPTY_STRING;
+    }
+    
+    return "?" + key;
 }
 
 class CookieSubCacheStrategy : public SubCacheStrategy {

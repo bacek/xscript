@@ -429,9 +429,19 @@ HttpBlock::response(const HttpHelper &helper) const {
     }
     if (helper.contentType() == "text/html") {
         std::string data = XmlUtils::sanitize(*str, StringUtils::EMPTY_STRING, 0);
-        return XmlDocHelper(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
-                                          helper.charset().c_str(),
-                                          XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        if (data.empty()) {
+            throw InvokeError("Empty sanitized text/html document");
+        }
+        
+        XmlDocHelper doc(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
+                helper.charset().c_str(), XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        
+        if (NULL == doc.get()) {
+            log()->error("Invalid sanitized text/html document. Url: %s", helper.url().c_str());
+            XmlUtils::throwUnless(false);
+        }
+        
+        return doc;
     }
     throw InvokeError("format is not recognized: " + helper.contentType(), "url", helper.url());
 }
