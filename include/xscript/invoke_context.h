@@ -35,6 +35,7 @@ public:
      
     bool error() const;
     bool success() const;
+    bool noCache() const;
 
 private:
     struct ContextData;

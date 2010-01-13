@@ -103,4 +103,9 @@ InvokeContext::success() const {
     return SUCCESS == ctx_data_->result_type_;
 }
 
+bool
+InvokeContext::noCache() const {
+    return NO_CACHE == ctx_data_->result_type_;
+}
+
 } // namespace xscript

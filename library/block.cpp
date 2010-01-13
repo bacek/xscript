@@ -384,8 +384,13 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     }
     
     if (!result->success()) {
-        ctx->rootContext()->setNoCache();
+        Context *local_ctx = ctx.get();
+        while (local_ctx) {
+            local_ctx->setNoCache();
+            local_ctx = local_ctx->parentContext();
+        }
     }
+    
     return result;
 }
 
@@ -444,8 +449,10 @@ Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeC
         success = applyStylesheet(ctx, doc);
     }
 
-    InvokeContext::ResultType type = !is_error_doc && success ?
-            InvokeContext::SUCCESS : InvokeContext::NO_CACHE;
+    InvokeContext::ResultType type = InvokeContext::SUCCESS;    
+    if (is_error_doc || !success || invoke_ctx->noCache()) {
+        type = InvokeContext::NO_CACHE;
+    }
     
     invoke_ctx->resultType(type);
     invoke_ctx->resultDoc(doc);

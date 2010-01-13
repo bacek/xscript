@@ -9,7 +9,8 @@
 namespace xscript {
 class FileBlock;
 
-typedef XmlDocHelper (FileBlock::*Method)(const std::string&, boost::shared_ptr<Context>);
+typedef XmlDocHelper (FileBlock::*Method)(const std::string&,
+        boost::shared_ptr<Context>, boost::shared_ptr<InvokeContext>);
 
 /**
  * x:file block. Loading local files with <s>jackpot and hookers</s> with
@@ -35,15 +36,18 @@ private:
     /**
      * Loading file with optional xinclude processing.
      */
-    XmlDocHelper loadFile(const std::string &file_name, boost::shared_ptr<Context> ctx);
+    XmlDocHelper loadFile(const std::string &file_name,
+            boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
 
     /**
      * Create full filename based on relative name in first arg.
      */
 
-    XmlDocHelper invokeFile(const std::string &file_name, boost::shared_ptr<Context> ctx);
+    XmlDocHelper invokeFile(const std::string &file_name,
+            boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     
-    XmlDocHelper invokeMethod(const std::string &file_name, boost::shared_ptr<Context> ctx);
+    XmlDocHelper invokeMethod(const std::string &file_name,
+            boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     
     XmlDocHelper testFileDoc(bool result, const std::string &file);
     
