@@ -1,3 +1,9 @@
+xscript (5.70-20) unstable; urgency=low
+
+  * fixed incorrect caching of error doc in file::invoke
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 13 Jan 2010 14:29:36 +0300
+
 xscript (5.70-19) unstable; urgency=low
 
   * make encoding optional in lua buildQueryString

@@ -149,50 +149,33 @@ QuerySubCacheStrategy::cacheAll() const {
 
 std::string
 QuerySubCacheStrategy::createKey(const Context *ctx) {
-    
-    if (cacheAll()) {
-        const std::string& query = ctx->request()->getQueryString();
-        if (!query.empty()) {
-            return "?" + query;
-        }
-        return StringUtils::EMPTY_STRING;
-    }
-    
-    Request *request = ctx->request();
-    std::vector<std::string> names;
-    request->argNames(names);
-    
     std::string key;
-    bool is_first = true;
-    for(std::vector<std::string>::const_iterator i = names.begin(), end = names.end();
-        i != end;
-        ++i) {
-        std::string name = *i;
-        std::vector<std::string> values;
-        if (name.empty() || cache_args_.end() == cache_args_.find(name)) {            
-            continue;
-        }
-        request->getArg(name, values);
-        for(std::vector<std::string>::const_iterator it = values.begin(), end = values.end();
+    if (cacheAll()) {
+        key = ctx->request()->getQueryString();
+    }
+    else {        
+        const std::vector<StringUtils::NamedValue>& args = ctx->request()->args();
+        for(std::vector<StringUtils::NamedValue>::const_iterator it = args.begin(), end = args.end();
             it != end;
             ++it) {
-            if (is_first) {
-                is_first = false;
+            const std::string& name = it->first;
+            if (name.empty() || cache_args_.end() == cache_args_.find(name)) {            
+                continue;
             }
-            else {
+            if (!key.empty()) {
                 key.push_back('&');
             }
             key.append(name);
             key.push_back('=');
-            key.append(*it);
+            key.append(it->second);
         }
     }
     
-    if (key.empty()) {
-        return StringUtils::EMPTY_STRING;
+    if (!key.empty()) {
+        key.insert((std::string::size_type)0, 1, '?');
     }
     
-    return "?" + key;
+    return key;
 }
 
 class CookieSubCacheStrategy : public SubCacheStrategy {
