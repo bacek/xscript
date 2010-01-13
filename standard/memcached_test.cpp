@@ -41,7 +41,7 @@ private:
         std::auto_ptr<Config> config = Config::create("test.conf");
         config->startup();
 
-        boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-local-tagged.xml");
+        boost::shared_ptr<Context> ctx = TestUtils::createEnv("file-local-tagged.xml");
         ContextStopper ctx_stopper(ctx);        
         XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
         CPPUNIT_ASSERT(NULL != doc->get());

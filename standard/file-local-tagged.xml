@@ -2,9 +2,9 @@
 <?xml-stylesheet type="text/xsl" href="object.xsl"?>
 <page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
   <xscript all-threaded="no"/>
-  <x:http>
-    <method>getHttp</method>
-    <param type="string">file://include.xml</param>
+  <x:file>
+    <method>load</method>
+    <param type="string">include.xml</param>
     <param type="tag">5</param>
-  </x:http>
+  </x:file>
 </page>

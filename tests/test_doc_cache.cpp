@@ -109,7 +109,7 @@ DocCacheTest::testStoreLoad() {
 void
 DocCacheTest::testGetLocalTagged() {
     using namespace xscript;
-    boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-local-tagged.xml");
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("file-local-tagged.xml");
     ContextStopper ctx_stopper(ctx);
 
     const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(ctx->script()->block(0));
@@ -153,7 +153,7 @@ DocCacheTest::testGetLocalTagged() {
 void
 DocCacheTest::testGetLocalTaggedPrefetch() {
     using namespace xscript;
-    boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-local-tagged.xml");
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("file-local-tagged.xml");
     ContextStopper ctx_stopper(ctx);
 
     const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(ctx->script()->block(0));
