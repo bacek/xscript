@@ -1137,6 +1137,7 @@ Script::createTagKey(const Context *ctx, bool page_cache) const {
     if (page_cache) {
         key = data_->cachedUrl(ctx);
         if (strategy) {
+            key.push_back('|');
             key.append(strategy->createKey(ctx));
         }
         else {
