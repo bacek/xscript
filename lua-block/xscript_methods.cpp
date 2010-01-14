@@ -388,7 +388,7 @@ luaBuildQueryString(lua_State *lua) {
         std::auto_ptr<Encoder> encoder(NULL);
         if (stack_size == 1) {
             std::string encoding = luaReadStack<std::string>(lua, 1);
-            if (strncasecmp(encoding.c_str(), "utf-8", sizeof("utf-8") - 1) != 0) {
+            if (strcasecmp(encoding.c_str(), "utf-8") != 0) {
                 encoder = std::auto_ptr<Encoder>(Encoder::createEscaping("utf-8", encoding.c_str()));
             }
         }

@@ -1,3 +1,9 @@
+xscript (5.70-21) unstable; urgency=low
+
+  * entity resolver fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 14 Jan 2010 13:27:59 +0300
+
 xscript (5.70-20) unstable; urgency=low
 
   * fixed incorrect caching of error doc in file::invoke
