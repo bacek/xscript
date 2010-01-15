@@ -1,3 +1,9 @@
+xscript (5.70-22) unstable; urgency=low
+
+  * added sort for query page cache strategy
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 15 Jan 2010 15:52:11 +0300
+
 xscript (5.70-21) unstable; urgency=low
 
   * entity resolver fixed

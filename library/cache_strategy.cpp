@@ -109,10 +109,19 @@ public:
     
     friend class QuerySubCacheStrategyFactory;
 private:
+    typedef std::vector<StringUtils::NamedValue>::const_iterator arg_iterator;
+    struct ArgLess : public std::binary_function<const arg_iterator&, const arg_iterator&, bool> {
+        bool operator() (const arg_iterator &arg1, const arg_iterator &arg2) const {
+            return *arg1 < *arg2;
+        }
+    };
+
+private:
     bool cacheAll() const;
     
 private:
     std::set<std::string> cache_args_;
+    bool sort_;
 };
 
 class QuerySubCacheStrategyFactory : public SubCacheStrategyFactory {
@@ -128,6 +137,17 @@ class QuerySubCacheStrategyFactory : public SubCacheStrategyFactory {
             return std::auto_ptr<SubCacheStrategy>();
         }
 
+        std::string sort_value = config->as<std::string>(path + "/@sort", "yes");
+        if (0 == strcasecmp(sort_value.c_str(), "yes")) {
+        }
+        else if (0 == strcasecmp(sort_value.c_str(), "no")) {
+            query_strategy->sort_ = false;
+        }
+        else {
+            throw std::runtime_error(
+                "incorrect value for sort attribute in query cache strategy: " + sort_value);
+        }
+        
         typedef boost::char_separator<char> Separator;
         typedef boost::tokenizer<Separator> Tokenizer;
         Tokenizer tok(value, Separator(", "));
@@ -139,7 +159,7 @@ class QuerySubCacheStrategyFactory : public SubCacheStrategyFactory {
     }
 };
 
-QuerySubCacheStrategy::QuerySubCacheStrategy()
+QuerySubCacheStrategy::QuerySubCacheStrategy() : sort_(true)
 {}
 
 bool
@@ -149,30 +169,35 @@ QuerySubCacheStrategy::cacheAll() const {
 
 std::string
 QuerySubCacheStrategy::createKey(const Context *ctx) {
-    std::string key;
-    if (cacheAll()) {
-        key = ctx->request()->getQueryString();
-    }
-    else {        
-        const std::vector<StringUtils::NamedValue>& args = ctx->request()->args();
-        for(std::vector<StringUtils::NamedValue>::const_iterator it = args.begin(), end = args.end();
-            it != end;
-            ++it) {
-            const std::string& name = it->first;
-            if (name.empty() || cache_args_.end() == cache_args_.find(name)) {            
-                continue;
-            }
-            if (!key.empty()) {
-                key.push_back('&');
-            }
-            key.append(name);
-            key.push_back('=');
-            key.append(it->second);
+    std::vector<arg_iterator> keys;    
+    const std::vector<StringUtils::NamedValue>& args = ctx->request()->args();
+    for(std::vector<StringUtils::NamedValue>::const_iterator it = args.begin(), end = args.end();
+        it != end;
+        ++it) {
+        const std::string& name = it->first;
+        if (name.empty()) {
+            continue;
+        }
+        
+        if (cacheAll() || cache_args_.end() != cache_args_.find(name)) {            
+            keys.push_back(it);
         }
     }
-    
-    if (!key.empty()) {
-        key.insert((std::string::size_type)0, 1, '?');
+
+    if (sort_) {
+        std::sort(keys.begin(), keys.end(), ArgLess());
+    }
+
+    std::string key;
+    for(std::vector<arg_iterator>::const_iterator it = keys.begin(), end = keys.end();
+        it != end;
+        ++it) {
+        if (!key.empty()) {
+            key.push_back('&');
+        }
+        key.append((*it)->first);
+        key.push_back('=');
+        key.append((*it)->second);
     }
     
     return key;
