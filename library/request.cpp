@@ -196,9 +196,7 @@ Request::hasArg(const std::string &name) const {
 const std::string&
 Request::getArg(const std::string &name) const {
     for(std::vector<StringUtils::NamedValue>::const_iterator i = data_->args_.begin(),
-            end = data_->args_.end();
-        i != end;
-        ++i) {
+        end = data_->args_.end(); i != end; ++i) {
         if (i->first == name) {
             return i->second;
         }

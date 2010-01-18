@@ -13,6 +13,8 @@
 
 #include <lua.hpp>
 
+#include "xscript/string_utils.h"
+
 namespace xscript {
 
 class Request;
@@ -92,7 +94,6 @@ luaReadStack<std::string>(lua_State *lua, int index) {
     return std::string(lua_tostring(lua, index));
 }
 
-
 template<typename Type>
 void luaPushStack(lua_State* lua, Type t) {
     // We should specify how to push value
@@ -108,6 +109,7 @@ template<>
 inline void luaPushStack(lua_State* lua, const std::string &str) {
     lua_pushstring(lua, str.c_str());
 }
+
 
 template<>
 inline void luaPushStack(lua_State* lua, bool b) {
@@ -160,6 +162,26 @@ inline void luaPushStack(lua_State* lua, std::auto_ptr<std::map<std::string, std
         lua_pushstring(lua, it->first.c_str());
         lua_pushstring(lua, it->second.c_str());
         lua_settable(lua, table);
+    }
+}
+
+template<>
+inline void luaPushStack(lua_State* lua, const std::vector<StringUtils::NamedValue> *args) {
+    int size = args->size();
+    lua_createtable(lua, size, 0);
+    if (size <= 0) {
+        return;
+    }
+
+    int main_table = lua_gettop(lua);
+    for(int i = 0; i < size; ++i) {
+        lua_newtable(lua);
+        int table = lua_gettop(lua);
+        const StringUtils::NamedValue& arg = args->at(i);
+        lua_pushstring(lua, arg.first.c_str());
+        lua_pushstring(lua, arg.second.c_str());
+        lua_settable(lua, table);
+        lua_rawseti(lua, main_table, i + 1);
     }
 }
 

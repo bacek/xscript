@@ -29,7 +29,7 @@ struct lua_request_method<1> {
     static int invoke(lua_State *lua, Func func) {
         try {
             luaCheckStackSize(lua, 1);
-            Request *req = luaReadStack<Request>(lua, "xscript.request", 1);
+            Request *req = luaReadStack<Request>(lua, "xscript.request", 1);           
             luaPushStack(lua, func(req));
             return 1;
         }
@@ -95,14 +95,13 @@ luaRequestGetArg(lua_State *lua) throw () {
 static std::auto_ptr<std::vector<std::string> >
 get_args(Request *request, const std::string &name) {
     std::auto_ptr<std::vector<std::string> > args(new std::vector<std::string>);
-    std::vector<std::string> names;
     request->getArg(name, *args);
     return args;
 }
 
 
 static std::auto_ptr<std::map<std::string, std::string> > 
-get_args_all(Request *request) { 
+get_unique_args(Request *request) { 
     std::auto_ptr<std::map<std::string, std::string> > args(new std::map<std::string, std::string>); 
     std::vector<std::string> names; 
     request->argNames(names); 
@@ -110,15 +109,24 @@ get_args_all(Request *request) {
         args->insert(std::make_pair(*i, request->getArg(*i))); 
     } 
     return args; 
-} 
+}
 
+static const std::vector<StringUtils::NamedValue>*
+get_all_args(Request *request) {
+    return &(request->args());
+}
 
 extern "C" int
 luaRequestGetArgs(lua_State *lua) throw () {
     if (lua_gettop(lua) == 2) {
         return lua_request_method<2>::invoke(lua, get_args);
     }
-    return lua_request_method<1>::invoke(lua, get_args_all);
+    return lua_request_method<1>::invoke(lua, get_unique_args);
+}
+
+extern "C" int
+luaRequestGetAllArgs(lua_State *lua) throw () {
+    return lua_request_method<1>::invoke(lua, get_all_args);
 }
 
 extern "C" int
@@ -248,6 +256,7 @@ luaGetDocumentRoot(lua_State *lua) throw () {
 static const struct luaL_reg requestlib [] = {
     {"getArg",        luaRequestGetArg},
     {"getArgs",       luaRequestGetArgs},
+    {"getAllArgs",    luaRequestGetAllArgs},
     {"getHeader",     luaRequestGetHeader},
     {"getCookie",     luaRequestGetCookie},
     {"hasArg",        luaRequestHasArg},
