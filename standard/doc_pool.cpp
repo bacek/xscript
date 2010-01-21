@@ -29,9 +29,9 @@ DocPool::getCounter() const {
 }
 
 bool
-DocPool::loadDoc(const TagKey &key, Tag &tag, XmlDocSharedHelper &doc) {
+DocPool::loadDoc(const TagKey &key, Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
     const std::string &keyStr = key.asString();
-    DocPool::LoadResult res = loadDocImpl(keyStr, tag, doc);
+    DocPool::LoadResult res = loadDocImpl(keyStr, tag, cache_data);
 
     switch (res) {
     case DocPool::LOAD_NOT_FOUND:
@@ -47,11 +47,11 @@ DocPool::loadDoc(const TagKey &key, Tag &tag, XmlDocSharedHelper &doc) {
         break;
     }
 
-    return res == DocPool::LOAD_SUCCESSFUL;
+    return DocPool::LOAD_SUCCESSFUL == res;
 }
 
 DocPool::LoadResult
-DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocSharedHelper &doc) {
+DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
     log()->debug("%s, key: %s", BOOST_CURRENT_FUNCTION, keyStr.c_str());
 
     boost::mutex::scoped_lock lock(mutex_);
@@ -79,9 +79,9 @@ DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocSharedHelper &do
         data.prefetch_marked = true;
         return LOAD_NEED_PREFETCH;
     }
-
+   
     tag = data.tag;
-    doc = data.doc;
+    cache_data = data.data;
 
     if (data.pos != list_.end()) {
         list_.erase(data.pos);
@@ -93,9 +93,9 @@ DocPool::loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocSharedHelper &do
 }
 
 bool
-DocPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocSharedHelper &doc) {
+DocPool::saveDoc(const TagKey &key, const Tag& tag, const boost::shared_ptr<CacheData> &cache_data) {
     const std::string &keyStr = key.asString();
-    DocPool::SaveResult res = saveDocImpl(keyStr, tag, doc);
+    DocPool::SaveResult res = saveDocImpl(keyStr, tag, cache_data);
     switch (res) {
     case DocPool::SAVE_STORED:
         log()->info("%s: key: %s, stored", BOOST_CURRENT_FUNCTION, keyStr.c_str());
@@ -109,7 +109,7 @@ DocPool::saveDoc(const TagKey &key, const Tag& tag, const XmlDocSharedHelper &do
 }
 
 DocPool::SaveResult
-DocPool::saveDocImpl(const std::string &keyStr, const Tag& tag, const XmlDocSharedHelper &doc) {
+DocPool::saveDocImpl(const std::string &keyStr, const Tag& tag, const boost::shared_ptr<CacheData> &cache_data) {
 
     log()->debug("%s, key: %s", BOOST_CURRENT_FUNCTION, keyStr.c_str());
 
@@ -117,27 +117,27 @@ DocPool::saveDocImpl(const std::string &keyStr, const Tag& tag, const XmlDocShar
 
     counter_->incStored();
 
-    SaveResult res = SAVE_STORED;
+    SaveResult res = SAVE_UPDATED;
     Key2Data::iterator i = key2data_.find(keyStr);
     if (i == key2data_.end()) {
         shrink();
         i = key2data_.insert(std::make_pair(keyStr, DocData(list_.end()))).first;
-        res = SAVE_UPDATED;
+        res = SAVE_STORED;
     }
 
-    saveAtIterator(i, tag, doc);
+    saveAtIterator(i, tag, cache_data);
     return res;
 }
 
 
 void
-DocPool::saveAtIterator(const Key2Data::iterator &i, const Tag &tag, const XmlDocSharedHelper &doc) {
+DocPool::saveAtIterator(const Key2Data::iterator &i, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
     DocData &data = i->second;
 
     if (data.pos != list_.end()) {
         list_.erase(data.pos);
     }
-    data.assign(tag, doc);
+    data.assign(tag, cache_data);
     data.pos = list_.insert(list_.end(), i);
 }
 
@@ -207,8 +207,6 @@ DocPool::removeExpiredDocuments() {
     }
 }
 
-
-
 DocPool::DocData::DocData() : tag(), pos(), prefetch_marked(false) {
 }
 
@@ -217,13 +215,12 @@ DocPool::DocData::DocData(LRUList::iterator list_pos) :
 }
 
 void
-DocPool::DocData::assign(const Tag &t, const XmlDocSharedHelper &elem) {
-    assert(NULL != elem.get());
-    assert(NULL != elem->get());
+DocPool::DocData::assign(const Tag &t, const boost::shared_ptr<CacheData> &cache_data) {
+    assert(NULL != cache_data.get());
     clearDoc();
 
     tag = t;
-    doc = elem;
+    data = cache_data;
 
     stored_time = time(NULL);
     prefetch_marked = false;
@@ -231,7 +228,7 @@ DocPool::DocData::assign(const Tag &t, const XmlDocSharedHelper &elem) {
 
 void
 DocPool::DocData::clearDoc() {
-    doc.reset();
+    data.reset();
 }
 
 } // namespace xscript

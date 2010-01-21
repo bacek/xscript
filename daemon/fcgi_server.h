@@ -43,15 +43,6 @@ private:
 private:
     class RequestAcceptor;
 
-    class ResponseDetacher {
-    public:
-        explicit ResponseDetacher(ServerResponse *resp);
-        ~ResponseDetacher();
-
-    private:
-        ServerResponse *resp_;
-    };
-
     int socket_;
     int inbuf_size_, outbuf_size_;
 

@@ -64,16 +64,17 @@ OfflineServer::renderBuffer(const std::string &url,
     }
     
     std::stringstream buffer;
-    
+
+    boost::shared_ptr<Context> ctx;
     boost::shared_ptr<Request> request(new OfflineRequest(root_));
     boost::shared_ptr<Response> response(new OfflineResponse(&buffer, &buffer, true));
+    ResponseDetacher response_detacher(response.get(), ctx);
     
     OfflineRequest* offline_request = dynamic_cast<OfflineRequest*>(request.get());
 
     try {
         offline_request->attach(url, xml, body, header_list, var_list);        
 
-        boost::shared_ptr<Context> ctx;
         handleRequest(request, response, ctx);
     }
     catch (const BadRequestError &e) {

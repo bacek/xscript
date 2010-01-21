@@ -21,11 +21,12 @@
 #include <openssl/evp.h>
 #include <openssl/md5.h>
 
-#include "xscript/util.h"
-#include "xscript/string_utils.h"
-#include "xscript/xml_util.h"
-#include "xscript/logger.h"
+#include "xscript/cookie.h"
 #include "xscript/encoder.h"
+#include "xscript/logger.h"
+#include "xscript/string_utils.h"
+#include "xscript/util.h"
+#include "xscript/xml_util.h"
 
 #include "internal/algorithm.h"
 
@@ -89,6 +90,17 @@ HttpDateUtils::parse(const char *value) {
         }
     }
     return static_cast<time_t>(0);
+}
+
+boost::int32_t
+HttpDateUtils::expires(boost::int32_t delta) {
+    boost::int32_t now = (boost::int32_t)time(NULL);
+    boost::int32_t max = Cookie::MAX_LIVE_TIME;
+    boost::int32_t expires =
+        (boost::int64_t)now + (boost::int64_t)delta > (boost::int64_t)max ?
+            max : now + delta;
+        
+    return expires;
 }
 
 HashUtils::HashUtils() {

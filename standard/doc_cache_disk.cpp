@@ -59,17 +59,17 @@ public:
 
     virtual CachedObject::Strategy strategy() const;
     
-protected:
-    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
-    virtual bool saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy);
+    virtual bool loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data);
+    virtual bool saveDoc(const TagKey *key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
     
 private:
     static void makeDir(const std::string &name);
     static void createDir(const std::string &name);
 
-    static bool load(const std::string &path, const std::string &key, Tag &tag, std::vector<char> &doc_data);
-    static bool save(const std::string &path, const std::string &key, const Tag &tag, xmlDocPtr doc);
-
+    static bool load(const std::string &path, const std::string &key, Tag &tag,
+            boost::shared_ptr<CacheData> &cache_data);
+    static bool save(const std::string &path, const std::string &key, const Tag &tag,
+            const boost::shared_ptr<CacheData> &cache_data);
 
     static const time_t DEFAULT_CACHE_TIME;
     static const boost::uint32_t VERSION_SIGNATURE_UNMARKED;
@@ -190,8 +190,7 @@ DocCacheDisk::strategy() const {
 }
 
 bool
-DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) {
-    (void)need_copy;
+DocCacheDisk::loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
     log()->debug("loading doc in disk cache");
     
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
@@ -201,10 +200,9 @@ DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, 
     path.append(dkey->filename());
 
     const std::string &key_str = key->asString();
-    std::vector<char> vec;
     try {
         //boost::mutex::scoped_lock sl(mutexes_[dkey->number()]);
-        if (!load(path, key_str, tag, vec)) {
+        if (!load(path, key_str, tag, cache_data)) {
             return false;
         }
     }
@@ -213,25 +211,11 @@ DocCacheDisk::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, 
         return false;
     }
 
-    try {
-        XmlDocHelper newdoc(xmlReadMemory(&vec[0], vec.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
-        XmlUtils::throwUnless(NULL != newdoc.get());
-        if (NULL == xmlDocGetRootElement(newdoc.get())) {
-            log()->warn("get document with no root from disk cache");
-            return false;
-        }
-        doc.reset(new XmlDocHelper(newdoc));
-        return true;
-    }
-    catch (const std::exception &e) {
-        log()->error("error while parsing doc from disk cache: %s", e.what());
-        return false;
-    }
+    return true;
 }
 
 bool
-DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy) {
-    (void)need_copy;
+DocCacheDisk::saveDoc(const TagKey *key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
     log()->debug("saving doc in disk cache");
     
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
@@ -258,7 +242,7 @@ DocCacheDisk::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedH
 
         close(fd);
 
-        if (!save(buf, key_str, tag, doc->get())) {
+        if (!save(buf, key_str, tag, cache_data)) {
             log()->error("can not create doc in disk cache: %s, key: %s", path.c_str(), key_str.c_str());
             return false;
         }
@@ -299,7 +283,8 @@ DocCacheDisk::createDir(const std::string &path) {
 }
 
 bool
-DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag, std::vector<char> &doc_data) {
+DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag,
+        boost::shared_ptr<CacheData> &cache_data) {
 
     std::fstream is(path.c_str(), std::ios::in | std::ios::out);
     if (!is) {
@@ -363,8 +348,11 @@ DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag, st
             throw std::runtime_error("can not find doc end signature");
         }
         doclen = (boost::uint32_t)(size) - sizeof(boost::uint32_t);
-        doc_data.resize(doclen);
+        std::vector<char> doc_data(doclen);
         is.read(&doc_data[0], doclen);
+        if (!cache_data->parse(&doc_data[0], doclen)) {
+            return false;
+        }
         is.exceptions(std::ios::badbit);
         is.read((char*) &sig, sizeof(boost::uint32_t));
         if (DOC_SIGNATURE_END != sig) {
@@ -381,7 +369,8 @@ DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag, st
 }
 
 bool
-DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &tag, xmlDocPtr doc) {
+DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &tag,
+        const boost::shared_ptr<CacheData> &cache_data) {
 
     log()->debug("saving %s, key: %s", path.c_str(), key.c_str());
 
@@ -403,7 +392,9 @@ DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &t
         wf.write(key.data(), key_size);
 
         wf.write(&DOC_SIGNATURE_START, sizeof(boost::uint32_t));
-        xmlDocDump(f, doc);
+        std::string buffer;
+        cache_data->serialize(buffer);
+        wf.write(buffer.c_str(), buffer.size());
         wf.write(&DOC_SIGNATURE_END, sizeof(boost::uint32_t));
 
         return true;

@@ -49,14 +49,11 @@ public:
 
 private:
     virtual bool suppressBody(const Request *req) const;
-    virtual void writeBuffer(const char *buf, std::streamsize size);
     virtual void writeError(unsigned short status, const std::string &message);
-    virtual void writeByWriter(const BinaryWriter *writer);
     virtual void writeHeaders();
     
 private:
-    std::ostream *data_stream_;
-    std::ostream *error_stream_;
+    std::ostream* error_stream_;
     bool need_output_;
 };
 

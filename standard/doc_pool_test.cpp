@@ -31,13 +31,15 @@ public:
         std::string key("1");
 
         XmlDocSharedHelper doc1(new XmlDocHelper(xmlNewDoc((const xmlChar*) "1.0")));
-
+        boost::shared_ptr<CacheData> saved(new BlockCacheData(doc1));
+        
         time_t t = time(0);
         Tag tag(false, t, t+6);
 
-        pool.saveDocImpl(key, tag, doc1);
+        pool.saveDocImpl(key, tag, saved);
 
-        XmlDocSharedHelper loaded;
+        boost::shared_ptr<CacheData> loaded(new BlockCacheData());
+        
         DocPool::LoadResult res = pool.loadDocImpl(key, tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("First load successful", DocPool::LOAD_SUCCESSFUL, res);
 
@@ -62,15 +64,17 @@ public:
         time_t t = time(0);
         Tag tag(false, t, t+6);
 
-        pool.saveDocImpl("1", tag, doc1);
+        boost::shared_ptr<CacheData> saved(new BlockCacheData(doc1));
+        
+        pool.saveDocImpl("1", tag, saved);
 
-        XmlDocSharedHelper loaded;
+        boost::shared_ptr<CacheData> loaded(new BlockCacheData());
 
         DocPool::LoadResult res = pool.loadDocImpl("1", tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("First load successful", DocPool::LOAD_SUCCESSFUL, res);
 
-        pool.saveDocImpl("2", tag, doc1);
-        pool.saveDocImpl("3", tag, doc1);
+        pool.saveDocImpl("2", tag, saved);
+        pool.saveDocImpl("3", tag, saved);
 
         // First doc should be removed from cache
         res = pool.loadDocImpl("1", tag, loaded);
@@ -85,7 +89,7 @@ public:
         res = pool.loadDocImpl("2", tag, loaded);
 
         // Save new doc. Third doc should be removed.
-        pool.saveDocImpl("4", tag, doc1);
+        pool.saveDocImpl("4", tag, saved);
 
         res = pool.loadDocImpl("2", tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Load of second document successful", DocPool::LOAD_SUCCESSFUL, res);

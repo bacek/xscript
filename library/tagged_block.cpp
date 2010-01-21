@@ -119,7 +119,12 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
     Tag cache_tag(true, 1, 1); // fake undefined Tag
     try {
         CacheContext cache_ctx(this, this->allowDistributed());
-        have_cached_doc = DocCache::instance()->loadDoc(ctx.get(), &cache_ctx, cache_tag, doc);
+        boost::shared_ptr<BlockCacheData> cache_data = 
+            DocCache::instance()->loadDoc(ctx.get(), &cache_ctx, cache_tag);
+        if (NULL != cache_data.get()) {
+            doc = cache_data->doc();
+            have_cached_doc = (NULL != doc->get()); 
+        }
     }
     catch (const std::exception &e) {
         log()->error("caught exception while fetching cached doc: %s", e.what());
@@ -188,7 +193,8 @@ TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
 
     if (can_store) {
         CacheContext cache_ctx(this, this->allowDistributed());
-        cache->saveDoc(ctx, &cache_ctx, tag, invoke_ctx->resultDoc());
+        boost::shared_ptr<BlockCacheData> cache_data(new BlockCacheData(invoke_ctx->resultDoc()));
+        cache->saveDoc(ctx, &cache_ctx, tag, cache_data);
     }
 }
 

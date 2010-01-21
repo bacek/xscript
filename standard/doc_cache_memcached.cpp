@@ -53,9 +53,8 @@ public:
     
     virtual CachedObject::Strategy strategy() const;
     
-protected:
-    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
-    virtual bool saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy);
+    virtual bool loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data);
+    virtual bool saveDoc(const TagKey *key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
 
 private:
     boost::uint32_t max_size_;
@@ -320,8 +319,7 @@ memcacheCloseFunc(void *ctx) {
 }
 
 bool 
-DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy) {
-    (void)need_copy;
+DocCacheMemcached::saveDoc(const TagKey *key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
     log()->debug("saving doc in memcached");
     
     std::string mc_key = key->asString();
@@ -331,11 +329,10 @@ DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSh
     val.append((char*)&tag.last_modified, sizeof(tag.last_modified));
     val.append((char*)&tag.expire_time, sizeof(tag.expire_time));
 
-    xmlOutputBufferPtr buf = NULL;
-    buf = xmlOutputBufferCreateIO(&memcacheWriteFunc, &memcacheCloseFunc, &val, NULL);
-
-    xmlSaveFormatFileTo(buf, doc->get(), "UTF-8", 0);
-
+    std::string buf;
+    cache_data->serialize(buf);
+    val.append(buf);
+    
     boost::uint32_t size = val.length();
     if (size > max_size_) {
         log()->info("object size %d exceeds limit %d", size, max_size_);
@@ -357,9 +354,8 @@ DocCacheMemcached::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSh
     return true;
 }
 
-bool 
-DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) {
-    (void)need_copy;
+bool
+DocCacheMemcached::loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
     log()->debug("loading doc in memcached");
     
     std::string mc_key = key->asString();
@@ -402,14 +398,10 @@ DocCacheMemcached::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &
             return false;
         }
         
-        XmlDocHelper newdoc(xmlReadMemory(value, vallen, "", "UTF-8", XML_PARSE_DTDATTR | XML_PARSE_NOENT));
-        log()->debug("Parsed %p", newdoc.get());
-        XmlUtils::throwUnless(NULL != newdoc.get());
-        if (NULL == xmlDocGetRootElement(newdoc.get())) {
-            log()->warn("get document with no root from memcached");
+        if (!cache_data->parse(value, vallen)) {
             return false;
         }
-        doc.reset(new XmlDocHelper(newdoc));
+        
         return true;
     }
     catch (const std::exception &e) {

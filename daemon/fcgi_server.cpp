@@ -184,24 +184,23 @@ FCGIServer::handle() {
                 std::ostream os(&outbuf);
 
                 boost::shared_ptr<Request> request(new Request());
-                boost::shared_ptr<Response> response(new ServerResponse(&os));
-                ServerResponse *server_response = dynamic_cast<ServerResponse*>(response.get());
-                ResponseDetacher response_detacher(server_response);
-                    
-                try {
-                    request->attach(&is, req.envp);
-                    PROFILER_CHECK_POINT("request read and parse");
-                    
-                    const std::string &script_name = request->getScriptFilename();
-                    PROFILER_SET_INFO("overall time for " + script_name);
-                    log()->info("requested file: %s", script_name.c_str());
-                    
-                    handleRequest(request, response, ctx);
+                boost::shared_ptr<Response> response(new Response(&os));
+                {
+                    ResponseDetacher response_detacher(response.get(), ctx);
+                    try {
+                        request->attach(&is, req.envp);
+                        PROFILER_CHECK_POINT("request read and parse");
+                        
+                        const std::string& script_name = request->getScriptFilename();
+                        PROFILER_SET_INFO("overall time for " + script_name);
+                        log()->info("requested file: %s", script_name.c_str());
+                        
+                        handleRequest(request, response, ctx);
+                    }
+                    catch (const BadRequestError &e) {
+                        OperationMode::sendError(response.get(), 400, e.what());
+                    }
                 }
-                catch (const BadRequestError &e) {
-                    OperationMode::sendError(response.get(), 400, e.what());
-                }
-
                 ctx.get() ? responseCounter_->add(ctx.get(), PROFILER_RELEASE()) :
                     responseCounter_->add(response.get(), PROFILER_RELEASE());
             }
@@ -241,14 +240,5 @@ FCGIServer::RequestAcceptor::~RequestAcceptor() {
         FCGX_Finish_r(req_);
     }
 }
-
-FCGIServer::ResponseDetacher::ResponseDetacher(ServerResponse *resp) : resp_(resp) {
-    assert(NULL != resp);
-}
-
-FCGIServer::ResponseDetacher::~ResponseDetacher() {
-    resp_->detach();
-}
-
 
 } // namespace xscript

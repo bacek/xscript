@@ -4,6 +4,7 @@
 #include <boost/current_function.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include "xscript/algorithm.h"
 #include "xscript/average_counter.h"
 #include "xscript/context.h"
 #include "xscript/doc_cache.h"
@@ -171,30 +172,6 @@ DocCacheBase::checkTag(const Context *ctx, const Tag &tag, const char *operation
 }
 
 bool
-DocCacheBase::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc) {
-    bool res = loadDocImpl(ctx, cache_ctx, tag, doc, false);
-    if (!res) {
-        checkTag(ctx, tag, "loading doc from tagged cache");
-    }
-    return res;
-}
-
-bool
-DocCacheBase::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag, const XmlDocSharedHelper &doc) {
-    if (NULL == doc->get() || NULL == xmlDocGetRootElement(doc->get())) {
-        log()->warn("cannot save empty document or document with no root to tagged cache. Url: %s",
-            ctx->request()->getOriginalUrl().c_str());
-        return false;
-    }
-    
-    if (!checkTag(ctx, tag, "saving doc from tagged cache")) {
-        return false;
-    }
-    
-    return saveDocImpl(ctx, cache_ctx, tag, doc, false);
-}
-
-bool
 DocCacheBase::allow(const DocCacheStrategy* strategy, const CacheContext *cache_ctx) const {
     CachedObject::Strategy cache_strategy = strategy->strategy();
     if (CachedObject::UNKNOWN == cache_strategy) {
@@ -210,15 +187,18 @@ DocCacheBase::allow(const DocCacheStrategy* strategy, const CacheContext *cache_
 }
 
 bool
-DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) {
-    // FIXME Add saving of loaded doc into higher-order caches.
+DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag &tag,
+        boost::shared_ptr<CacheData> &cache_data) {
+    
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
-    bool loaded = false;
+    
     typedef std::vector<std::pair<
         DocCacheData::StrategyMap::iterator, boost::shared_ptr<TagKey> > > KeyMapType;
     KeyMapType missed_keys;
+    
+    bool loaded = false;
     DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
-    while ( !loaded && i != data_->strategies_.end()) {
+    while(!loaded && i != data_->strategies_.end()) {
         DocCacheStrategy* strategy = i->first;
         if (!allow(strategy, cache_ctx)) {
             ++i;
@@ -227,9 +207,8 @@ DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag
         
         std::auto_ptr<TagKey> key = strategy->createKey(ctx, cache_ctx->object());
         
-        boost::function<bool()> f =
-            boost::bind(&DocCacheStrategy::loadDoc, strategy,
-                    boost::cref(key.get()), boost::ref(tag), boost::ref(doc), need_copy);
+        boost::function<bool()> f = boost::bind(&DocCacheStrategy::loadDoc,
+                strategy, boost::cref(key.get()), boost::ref(tag), boost::ref(cache_data));
         
         std::pair<bool, uint64_t> res = profile(f);
         
@@ -247,24 +226,33 @@ DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag
         ++i;
     }
 
-    if (loaded) {
+    if (!loaded) {
+        checkTag(ctx, tag, "loading doc from tagged cache");
+    }
+    else {
         for(KeyMapType::iterator it = missed_keys.begin();
             it != missed_keys.end();
             ++it) {
             DocCacheStrategy* strategy = it->first->first;
             TagKey* key = it->second.get();
             boost::function<bool()> f = boost::bind(&DocCacheStrategy::saveDoc, strategy,
-                boost::cref(key), boost::cref(tag), boost::cref(doc), need_copy);
+                boost::cref(key), boost::cref(tag), boost::cref(cache_data));
             std::pair<bool, uint64_t> res = profile(f);
             i->second->saveCounter_->add(res.second);  
         }
     }
-
+    
     return loaded;
 }
 
 bool
-DocCacheBase::saveDocImpl(const Context *ctx, const CacheContext *cache_ctx, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy) {
+DocCacheBase::saveDocImpl(const Context *ctx, const CacheContext *cache_ctx, const Tag& tag,
+    const boost::shared_ptr<CacheData> &cache_data) {
+    
+    if (!checkTag(ctx, tag, "saving doc from tagged cache")) {
+        return false;
+    }
+    
     bool saved = false;
     for (DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
          i != data_->strategies_.end();
@@ -277,7 +265,7 @@ DocCacheBase::saveDocImpl(const Context *ctx, const CacheContext *cache_ctx, con
         
         boost::function<bool()> f =
             boost::bind(&DocCacheStrategy::saveDoc, strategy,
-                    boost::cref(key.get()), boost::cref(tag), boost::cref(doc), need_copy);
+                    boost::cref(key.get()), boost::cref(tag), boost::cref(cache_data));
         
         std::pair<bool, uint64_t> res = profile(f);
         i->second->saveCounter_->add(res.second); 
@@ -309,6 +297,30 @@ DocCache::name() const {
     return "block-cache";
 }
 
+boost::shared_ptr<BlockCacheData>
+DocCache::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag) {
+    boost::shared_ptr<CacheData> cache_data(new BlockCacheData());
+    bool res = loadDocImpl(ctx, cache_ctx, tag, cache_data);
+    if (!res) {
+        return boost::shared_ptr<BlockCacheData>();
+    }
+    return boost::dynamic_pointer_cast<BlockCacheData>(cache_data);
+}
+
+bool
+DocCache::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag,
+    const boost::shared_ptr<BlockCacheData> &cache_data) {
+    
+    xmlDocPtr doc = cache_data->doc()->get();
+    if (NULL == doc || NULL == xmlDocGetRootElement(doc)) {
+        log()->warn("cannot save empty document or document with no root to tagged cache. Url: %s",
+            ctx->request()->getOriginalUrl().c_str());
+        return false;
+    }
+    
+    return saveDocImpl(ctx, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
+}
+
 PageCache::PageCache() {
 }
 
@@ -331,14 +343,20 @@ PageCache::name() const {
     return "page-cache";
 }
 
-bool
-PageCache::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag, XmlDocSharedHelper &doc) {
-    return loadDocImpl(ctx, cache_ctx, tag, doc, true);
+boost::shared_ptr<PageCacheData>
+PageCache::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag) {
+    boost::shared_ptr<CacheData> cache_data(new PageCacheData());
+    bool res = loadDocImpl(ctx, cache_ctx, tag, cache_data);
+    if (!res) {
+        return boost::shared_ptr<PageCacheData>();
+    }
+    return boost::dynamic_pointer_cast<PageCacheData>(cache_data);
 }
 
 bool
-PageCache::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag, const XmlDocSharedHelper &doc) {
-    return saveDocImpl(ctx, cache_ctx, tag, doc, true);
+PageCache::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag,
+        const boost::shared_ptr<PageCacheData> &cache_data) {
+    return saveDocImpl(ctx, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
 }
 
 CacheContext::CacheContext(const CachedObject *obj) :
@@ -362,6 +380,191 @@ CacheContext::allowDistributed() const {
 void
 CacheContext::allowDistributed(bool flag) {
     allow_distributed_ = flag;
+}
+
+CacheData::CacheData()
+{}
+
+CacheData::~CacheData()
+{}
+
+PageCacheData::PageCacheData() : expire_time_delta_(0)
+{}
+
+PageCacheData::PageCacheData(const char *buf, std::streamsize size) :
+    data_(buf, size), expire_time_delta_(0)
+{}
+
+PageCacheData::~PageCacheData()
+{}
+       
+void
+PageCacheData::append(const char *buf, std::streamsize size) {
+    data_.append(buf, size);
+}
+
+void
+PageCacheData::addHeader(const std::string &name, const std::string &value) {
+    headers_.push_back(std::make_pair(name, value));
+}
+
+void
+PageCacheData::expireTimeDelta(boost::uint32_t delta) {
+    expire_time_delta_ = delta;
+}
+
+bool
+PageCacheData::parse(const char *buf, boost::uint32_t size) {
+    if (size < 2*sizeof(boost::uint32_t)) {
+        log()->error("error while parsing page cache data: incorrect length");
+        return false;
+    }
+    
+    boost::uint32_t sign = *((boost::uint32_t*)buf);
+    if (SIGNATURE != sign) {
+        log()->error("error while parsing page cache data: incorrect sign: %d", sign);
+        return false;
+    }
+    
+    data_.clear();
+    headers_.clear();
+    
+    buf += sizeof(boost::uint32_t);
+    expire_time_delta_ = *((boost::uint32_t*)buf);
+    buf += sizeof(boost::uint32_t);
+    
+    Range data(buf, buf + size - 2*sizeof(boost::uint32_t));
+    Range delim("\r\n");
+    while(!data.empty()) {
+        Range header;
+        split(data, delim, header, data);
+        if (header.empty()) {
+            data_.assign(data.begin(), data.size());
+            break;
+        }
+        
+        Range name, value;
+        split(header, ':', name, value);
+        if (name.empty()) {
+            log()->warn("Empty header name while parsing page cache data");
+            continue;
+        }
+        
+        headers_.push_back(std::make_pair(
+            std::string(name.begin(), name.size()),
+            std::string(value.begin(), value.size())));
+    }
+    
+    return true;
+}
+
+void
+PageCacheData::serialize(std::string &buf) {
+    buf.clear();
+    buf.append((char*)&SIGNATURE, sizeof(SIGNATURE));
+    buf.append((char*)&expire_time_delta_, sizeof(expire_time_delta_));
+    for(std::vector<std::pair<std::string, std::string> >::iterator it = headers_.begin();
+        it != headers_.end();
+        ++it) {
+        buf.append(it->first);
+        buf.push_back(':');
+        buf.append(it->second);
+        buf.append("\r\n");
+    }
+    buf.append("\r\n");
+    buf.append(data_);
+}
+
+
+void
+PageCacheData::write(std::ostream *os) const {
+    typedef std::vector<std::pair<std::string, std::string> > HeaderMap;
+    for(HeaderMap::const_iterator it = headers_.begin(), end = headers_.end();
+        it != end;
+        ++it) {       
+        (*os) << it->first << ": " << it->second << "\r\n";
+    }
+    
+    boost::int32_t expires = HttpDateUtils::expires(expire_time_delta_);
+    (*os) << "Expires: " << HttpDateUtils::format(expires) << "\r\n\r\n";
+    
+    os->write(data_.c_str(), data_.size());
+}
+
+std::streamsize
+PageCacheData::size() const {
+    return 0;
+}
+
+const boost::uint32_t BlockCacheData::SIGNATURE = 0xffffff0a;
+const boost::uint32_t PageCacheData::SIGNATURE = 0xffffff0b;
+
+BlockCacheData::BlockCacheData()
+{}
+
+BlockCacheData::BlockCacheData(XmlDocSharedHelper doc) : doc_(doc)
+{}
+
+BlockCacheData::~BlockCacheData()
+{}
+
+const XmlDocSharedHelper&
+BlockCacheData::doc() const {
+    return doc_;
+}
+
+bool
+BlockCacheData::parse(const char *buf, boost::uint32_t size) {
+    try {
+        if (size < sizeof(boost::uint32_t)) {
+            log()->error("error while parsing block cache data: incorrect length");
+            return false;
+        }
+        
+        boost::uint32_t sign = *((boost::uint32_t*)buf);
+        if (SIGNATURE != sign) {
+            log()->error("error while parsing block cache data: incorrect sign: %d", sign);
+            return false;
+        }
+        
+        buf += sizeof(boost::uint32_t);
+        size -= sizeof(boost::uint32_t);
+        
+        XmlDocHelper newdoc(xmlReadMemory(buf, size, "", "UTF-8", XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        XmlUtils::throwUnless(NULL != newdoc.get());
+        if (NULL == xmlDocGetRootElement(newdoc.get())) {
+            log()->warn("get document with no root while parsing block cache data");
+            return false;
+        }
+        doc_.reset(new XmlDocHelper(newdoc));
+        return true;
+    }
+    catch (const std::exception &e) {
+        log()->error("error while parsing block cache data: %s", e.what());
+        return false;
+    }
+}
+
+extern "C" int
+cacheWriteFunc(void *ctx, const char *data, int len) {
+    std::string * str = static_cast<std::string*>(ctx);
+    str->append(data, len);
+    return len;
+}
+
+extern "C" int
+cacheCloseFunc(void *ctx) {
+    (void) ctx;
+    return 0;
+}
+
+void
+BlockCacheData::serialize(std::string &buf) {
+    buf.clear();
+    buf.append((char*)&SIGNATURE, sizeof(SIGNATURE));
+    xmlOutputBufferPtr buffer = NULL;
+    buffer = xmlOutputBufferCreateIO(&cacheWriteFunc, &cacheCloseFunc, &buf, NULL);
+    xmlSaveFormatFileTo(buffer, doc_->get(), "UTF-8", 0);
 }
 
 } // namespace xscript

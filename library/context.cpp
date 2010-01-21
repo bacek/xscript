@@ -444,7 +444,7 @@ Context::setNoCache() {
 
 bool
 Context::suppressBody() const {
-    return request()->suppressBody() || ctx_data_->flag(ContextData::SUPPRESS_BODY);
+    return response()->suppressBody(request()) || ctx_data_->flag(ContextData::SUPPRESS_BODY);
 }
 
 void

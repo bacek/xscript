@@ -54,9 +54,8 @@ public:
     
     virtual CachedObject::Strategy strategy() const;
 
-protected:
-    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
-    virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy);
+    virtual bool loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data);
+    virtual bool saveDoc(const TagKey *key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
 
 private:
     DocPool* pool(const TagKey *key) const;
@@ -142,35 +141,27 @@ DocCacheMemory::strategy() const {
 }
 
 bool
-DocCacheMemory::loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) {
+DocCacheMemory::loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
     log()->debug("loading doc in memory cache");
     DocPool *mpool = pool(key);
     assert(NULL != mpool);
-    if (!mpool->loadDoc(*key, tag, doc)) {
+    if (!mpool->loadDoc(*key, tag, cache_data)) {
         return false;
     }
+
     if (!DocCacheBase::checkTag(NULL, tag, "loading doc from memory cache")) {
         return false;
     }
-    if (need_copy) {
-        XmlDocSharedHelper res_doc(new XmlDocHelper(xmlCopyDoc(doc->get(), 1)));
-        doc = res_doc;
-    }
+    
     return true;
 }
 
 bool
-DocCacheMemory::saveDocImpl(const TagKey *key, const Tag &tag, const XmlDocSharedHelper &doc, bool need_copy) {
+DocCacheMemory::saveDoc(const TagKey *key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
     log()->debug("saving doc in memory cache");
     DocPool *mpool = pool(key);
     assert(NULL != mpool);
-    
-    XmlDocSharedHelper res_doc = doc;
-    if (need_copy) {
-        res_doc = XmlDocSharedHelper(new XmlDocHelper(xmlCopyDoc(doc->get(), 1)));
-    }
-    
-    return mpool->saveDoc(*key, tag, res_doc);
+    return mpool->saveDoc(*key, tag, cache_data);
 }
 
 unsigned int

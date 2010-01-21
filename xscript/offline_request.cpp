@@ -257,27 +257,15 @@ OfflineRequest::processPathInfo(const std::string &path,
 OfflineResponse::OfflineResponse(std::ostream *data_stream,
                                  std::ostream *error_stream,
                                  bool need_output) :
-    data_stream_(data_stream),
-    error_stream_(error_stream),
-    need_output_(need_output) {
+    Response(data_stream), error_stream_(error_stream), need_output_(need_output) {
 }
 
 OfflineResponse::~OfflineResponse() {
 }
 
 void
-OfflineResponse::writeBuffer(const char *buf, std::streamsize size) {
-    data_stream_->write(buf, size);
-}
-
-void
 OfflineResponse::writeError(unsigned short status, const std::string &message) {
-    *error_stream_ << status << std::endl << message << std::endl;
-}
-
-void
-OfflineResponse::writeByWriter(const BinaryWriter *writer) {
-    writer->write(data_stream_);
+    *(error_stream_) << status << std::endl << message << std::endl;
 }
 
 void

@@ -23,7 +23,8 @@ class HttpDateUtils : private boost::noncopyable {
 public:
     static time_t parse(const char *value);
     static std::string format(time_t value);
-
+    static boost::int32_t expires(boost::int32_t delta);
+    
 private:
     HttpDateUtils();
     virtual ~HttpDateUtils();

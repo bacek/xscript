@@ -8,6 +8,7 @@
 #include <xscript/cached_object.h>
 #include <xscript/cache_strategy.h>
 #include <xscript/component.h>
+#include <xscript/doc_cache.h>
 #include <xscript/xml_helpers.h>
 
 namespace xscript {
@@ -36,16 +37,14 @@ public:
     virtual std::string name() const = 0;
     virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CachedObject *obj) const = 0;
 
-    virtual bool loadDoc(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy);
-    virtual bool saveDoc(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy);
+    virtual bool loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data) = 0;
+    virtual bool saveDoc(const TagKey *key, const Tag& tag, const boost::shared_ptr<CacheData> &cache_data) = 0;
     
     virtual void fillStatBuilder(StatBuilder *builder);
     
     virtual CachedObject::Strategy strategy() const = 0;
 
 protected:
-    virtual bool loadDocImpl(const TagKey *key, Tag &tag, XmlDocSharedHelper &doc, bool need_copy) = 0;
-    virtual bool saveDocImpl(const TagKey *key, const Tag& tag, const XmlDocSharedHelper &doc, bool need_copy) = 0;
     
     virtual void insert2Cache(const std::string &no_cache);
 };

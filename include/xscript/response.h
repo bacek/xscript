@@ -3,6 +3,8 @@
 
 #include <memory>
 #include <string>
+
+#include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 
 #include "xscript/types.h"
@@ -10,12 +12,15 @@
 namespace xscript {
 
 class BinaryWriter;
+class Context;
 class Cookie;
+class PageCacheData;
 class Request;
 
 class Response : private boost::noncopyable {
 public:
     Response();
+    Response(std::ostream *stream);    
     virtual ~Response();
 
     void setCookie(const Cookie &cookie);
@@ -40,10 +45,13 @@ public:
     const HeaderMap& outHeaders() const;
     const CookieSet& outCookies() const;
     
-    void detach();
+    void detach(const Context *ctx);
+    void setCacheable(const Context *ctx,
+        boost::shared_ptr<PageCacheData> cache_data = boost::shared_ptr<PageCacheData>());
+    
+    virtual bool suppressBody(const Request *req) const;
     
 protected:
-    virtual bool suppressBody(const Request *req) const;
     virtual void writeBuffer(const char *buf, std::streamsize size);
     virtual void writeByWriter(const BinaryWriter *writer);
     virtual void writeError(unsigned short status, const std::string &message);
@@ -53,6 +61,16 @@ private:
     class ResponseData;
     friend class ResponseData;
     ResponseData *data_;
+};
+
+class ResponseDetacher {
+public:
+    explicit ResponseDetacher(Response *resp, const boost::shared_ptr<Context> &ctx);
+    ~ResponseDetacher();
+
+private:
+    Response *resp_;
+    const boost::shared_ptr<Context>& ctx_;
 };
 
 } // namespace xscript

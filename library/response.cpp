@@ -6,12 +6,17 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include "xscript/logger.h"
+#include "xscript/context.h"
+#include "xscript/doc_cache.h"
 #include "xscript/http_utils.h"
+#include "xscript/logger.h"
 #include "xscript/request.h"
 #include "xscript/response.h"
+#include "xscript/script.h"
+#include "xscript/tag.h"
 #include "xscript/vhost_data.h"
 #include "xscript/writer.h"
+#include "xscript/xml_util.h"
 
 #include "internal/parser.h"
 
@@ -23,14 +28,17 @@ namespace xscript {
 
 class Response::ResponseData {
 public:
-    ResponseData(Response *response);
+    ResponseData(Response *response, std::ostream *stream);
     ~ResponseData();
     
-    void sendHeadersInternal();
-    bool isBinaryInternal() const;
+    void sendHeaders();
+    bool isBinary() const;
+    bool cacheable() const;
     
     Response *response_;
 
+    std::ostream *stream_;
+    
     HeaderMap out_headers_;
     CookieSet out_cookies_;
     
@@ -40,18 +48,20 @@ public:
     unsigned short status_;
     bool detached_, stream_locked_;
     mutable boost::mutex write_mutex_, resp_mutex_;
+    boost::shared_ptr<PageCacheData> cache_data_;
+    bool have_cached_copy_;
 };
 
-Response::ResponseData::ResponseData(Response *response) :
-    response_(response), writer_(NULL), headers_sent_(false),
-    status_(200), detached_(false), stream_locked_(false)
+Response::ResponseData::ResponseData(Response *response, std::ostream *stream) :
+    response_(response), stream_(stream), writer_(NULL), headers_sent_(false), status_(200),
+    detached_(false), stream_locked_(false), have_cached_copy_(false)
 {}
 
 Response::ResponseData::~ResponseData()
 {}
 
 void
-Response::ResponseData::sendHeadersInternal() {
+Response::ResponseData::sendHeaders() {
     boost::mutex::scoped_lock sl(resp_mutex_);
     std::stringstream stream;
     if (!headers_sent_) {
@@ -64,11 +74,21 @@ Response::ResponseData::sendHeadersInternal() {
 }
 
 bool
-Response::ResponseData::isBinaryInternal() const {
+Response::ResponseData::isBinary() const {
     return NULL != writer_.get();
 }
 
-Response::Response() : data_(new ResponseData(this)){
+bool
+Response::ResponseData::cacheable() const {
+    return NULL != cache_data_.get();
+}
+
+Response::Response() : data_(new ResponseData(this, NULL)) {
+}
+
+Response::Response(std::ostream *stream) :
+    data_(new ResponseData(this, stream)) {
+    stream->exceptions(std::ios::badbit);
 }
 
 Response::~Response() {
@@ -80,9 +100,12 @@ Response::setCookie(const Cookie &cookie) {
     if (!cookie.check()) {
         const Request *request = VirtualHostData::instance()->get();
         std::string url = request ? request->getOriginalUrl() : StringUtils::EMPTY_STRING;
-        log()->warn("Incorrect cookie. Skipped. Url: %s Name: %s; value: %s; domain: %s; path: %s", url.c_str(),
-                StringUtils::urlencode(cookie.name()).c_str(), StringUtils::urlencode(cookie.value()).c_str(),
-                StringUtils::urlencode(cookie.domain()).c_str(), StringUtils::urlencode(cookie.path()).c_str());
+        log()->warn("Incorrect cookie. Skipped. Url: %s Name: %s; value: %s; domain: %s; path: %s",
+                url.c_str(),
+                StringUtils::urlencode(cookie.name()).c_str(),
+                StringUtils::urlencode(cookie.value()).c_str(),
+                StringUtils::urlencode(cookie.domain()).c_str(),
+                StringUtils::urlencode(cookie.path()).c_str());
         return;
     }
     boost::mutex::scoped_lock sl(data_->resp_mutex_);
@@ -126,10 +149,10 @@ Response::sendError(unsigned short status, const std::string &message) {
         return;
     }
 
-    if (data_->stream_locked_ || data_->isBinaryInternal()) {
+    if (data_->stream_locked_ || data_->isBinary()) {
         throw std::runtime_error("Cannot write data. Output stream is already occupied");
     }
-    data_->sendHeadersInternal();
+    data_->sendHeaders();
     writeError(status, message);
 }
 
@@ -152,12 +175,14 @@ Response::setHeader(const std::string &name, const std::string &value) {
 std::streamsize
 Response::write(const char *buf, std::streamsize size, Request *request) {
     boost::mutex::scoped_lock wl(data_->write_mutex_);
-    if (data_->isBinaryInternal()) {
+    if (data_->isBinary()) {
         throw std::runtime_error("Cannot write data. Output stream is already occupied");
     }
 
-    data_->stream_locked_ = true;
-    data_->sendHeadersInternal();
+    if (!data_->cacheable()) {
+        data_->stream_locked_ = true;
+    }
+    data_->sendHeaders();
     if (!request->suppressBody()) {
         if (data_->detached_) {
             return 0;
@@ -174,7 +199,7 @@ Response::write(std::auto_ptr<BinaryWriter> writer) {
         return 0;
     }
 
-    if (data_->stream_locked_ || data_->isBinaryInternal()) {
+    if (data_->stream_locked_ || data_->isBinary()) {
         throw std::runtime_error("Cannot write data. Output stream is already occupied");
     }
 
@@ -191,21 +216,45 @@ Response::outputHeader(const std::string &name) const {
 void
 Response::sendHeaders() {
     boost::mutex::scoped_lock sl(data_->write_mutex_);
-    data_->sendHeadersInternal();
+    data_->sendHeaders();
 }
 
 void
-Response::detach() {
+Response::detach(const Context *ctx) {
     boost::mutex::scoped_lock wl(data_->write_mutex_);
-    if (!data_->stream_locked_ && data_->isBinaryInternal()) {   
+    bool cacheable = data_->cacheable();
+    
+    if (data_->stream_locked_) {
+        data_->sendHeaders();
+    }
+    else if (cacheable) {
+        writeByWriter(data_->cache_data_.get());
+    }
+    else if (data_->isBinary()) {
         setHeader("Content-length", boost::lexical_cast<std::string>(data_->writer_->size()));
-        data_->sendHeadersInternal();
+        data_->sendHeaders();
         writeByWriter(data_->writer_.get());
     }
     else {
-        data_->sendHeadersInternal();
+        data_->sendHeaders();
     }
+
     data_->detached_ = true;
+    
+    (*data_->stream_) << std::flush;
+    
+    if (cacheable && !data_->have_cached_copy_ && ctx) {
+        try {
+            Tag tag;
+            Script* script = ctx->script().get();
+            tag.expire_time = time(NULL) + script->cacheTime();
+            CacheContext cache_ctx(script, script->allowDistributed());
+            PageCache::instance()->saveDoc(ctx, &cache_ctx, tag, data_->cache_data_);
+        }
+        catch(const std::exception &e) {
+            log()->error("Error in saving page to cache: %s", e.what());
+        }
+    }
 }
 
 bool
@@ -215,23 +264,54 @@ Response::suppressBody(const Request *req) const {
 
 void
 Response::writeBuffer(const char *buf, std::streamsize size) {
-    (void)buf;
-    (void)size;
+    if (data_->cacheable()) {
+        data_->cache_data_->append(buf, size);
+    }
+    else {
+        data_->stream_->write(buf, size);
+    }
 }
 
 void
 Response::writeByWriter(const BinaryWriter *writer) {
-    (void)writer;
+    writer->write(data_->stream_);
 }
 
 void
 Response::writeError(unsigned short status, const std::string &message) {
-    (void)status;
-    (void)message;
+    (*data_->stream_) << "<html><body><h1>" << status << " " << HttpUtils::statusToString(status) << "<br><br>"
+    << XmlUtils::escape(createRange(message)) << "</h1></body></html>";
 }
 
 void
 Response::writeHeaders() {
+    bool cacheable = data_->cacheable();
+    const HeaderMap& headers = outHeaders();
+    for (HeaderMap::const_iterator i = headers.begin(), end = headers.end(); i != end; ++i) {       
+        if (cacheable) {
+            if (strcasecmp(i->first.c_str(), "expires") == 0) {
+                continue;
+            }
+            data_->cache_data_->addHeader(i->first, i->second);
+        }
+        else {
+            (*data_->stream_) << i->first << ": " << i->second << "\r\n";
+        }
+    }
+    const CookieSet& cookies = outCookies();
+    for (CookieSet::const_iterator i = cookies.begin(), end = cookies.end(); i != end; ++i) {
+        std::string cookie_value = i->toString();
+        if (cacheable) {
+            data_->cache_data_->addHeader("Set-Cookie", cookie_value);
+        }
+        else {
+            (*data_->stream_) << "Set-Cookie: " << cookie_value << "\r\n";
+        }
+    }
+    
+    if (!cacheable) {
+        (*data_->stream_) << "\r\n";
+    }
 }
 
 const HeaderMap&
@@ -246,7 +326,7 @@ Response::outCookies() const {
 bool
 Response::isBinary() const {
     boost::mutex::scoped_lock wl(data_->write_mutex_);
-    return data_->isBinaryInternal();
+    return data_->isBinary();
 }
 
 unsigned short
@@ -276,6 +356,25 @@ Response::setContentEncoding(const std::string &encoding) {
     setHeader("Content-encoding", encoding);
 }
 
+void
+Response::setCacheable(const Context *ctx, boost::shared_ptr<PageCacheData> cache_data) {
+    if (NULL != cache_data.get()) {
+        data_->have_cached_copy_ = true;
+        data_->cache_data_ = cache_data;
+    }
+    else {
+        data_->cache_data_ = boost::shared_ptr<PageCacheData>(new PageCacheData());
+    }
+    data_->cache_data_->expireTimeDelta(ctx->expireTimeDelta());
+}
 
+ResponseDetacher::ResponseDetacher(Response *resp, const boost::shared_ptr<Context> &ctx) :
+    resp_(resp), ctx_(ctx) {
+    assert(NULL != resp);
+}
+
+ResponseDetacher::~ResponseDetacher() {
+    resp_->detach(ctx_.get());
+}
 
 } // namespace xscript

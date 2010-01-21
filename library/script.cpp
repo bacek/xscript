@@ -867,7 +867,7 @@ Script::CachableHandler::process(const MessageParams &params,
         return CONTINUE;
     }
     
-    if (ctx->noCache()) {
+    if (ctx->noCache() || ctx->suppressBody()) {
         log()->debug("Cannot cache script. Context is not cachable");
         result.set(false);
         return CONTINUE;
@@ -1104,17 +1104,10 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc)
 }
 
 void
-Script::addExpiresHeader(const Context *ctx) const {   
-    boost::int32_t now = (boost::int32_t)time(NULL);
-    boost::int32_t max = Cookie::MAX_LIVE_TIME;
-    
-    boost::int32_t expires =
-        (boost::int64_t)now + (boost::int64_t)ctx->expireTimeDelta() > (boost::int64_t)max ?
-            max : now + ctx->expireTimeDelta();
-       
+Script::addExpiresHeader(const Context *ctx) const {
+    boost::int32_t expires = HttpDateUtils::expires(ctx->expireTimeDelta());
     ctx->response()->setHeader("Expires", HttpDateUtils::format(expires));
 }
-
 
 void
 Script::postParse() {

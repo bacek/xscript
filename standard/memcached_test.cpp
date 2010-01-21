@@ -52,22 +52,27 @@ private:
         DocCache* tcache = DocCache::instance();
 
         Tag tag_load;
-        XmlDocSharedHelper doc_load;
     
         time_t now = time(NULL);
         Tag tag(true, now, now + 2);
 
         // check save
+        
+        boost::shared_ptr<BlockCacheData> saved(new BlockCacheData(doc));
+        
         CacheContext cache_ctx(block);
-        CPPUNIT_ASSERT(tcache->saveDoc(ctx.get(), &cache_ctx, tag, doc));
+        CPPUNIT_ASSERT(tcache->saveDoc(ctx.get(), &cache_ctx, tag, saved));
         CPPUNIT_ASSERT(NULL != doc->get());
 
         // check load
-        CPPUNIT_ASSERT(tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
-        CPPUNIT_ASSERT(NULL != doc_load->get());
+        
+        boost::shared_ptr<BlockCacheData> loaded = tcache->loadDoc(ctx.get(), &cache_ctx, tag_load);
+        CPPUNIT_ASSERT(NULL != loaded.get());
+        CPPUNIT_ASSERT(NULL != loaded->doc()->get());
 
         sleep(3);
-        CPPUNIT_ASSERT(!tcache->loadDoc(ctx.get(), &cache_ctx, tag_load, doc_load));
+        loaded = tcache->loadDoc(ctx.get(), &cache_ctx, tag_load);
+        CPPUNIT_ASSERT(NULL == loaded.get());
     }
 };
 

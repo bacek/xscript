@@ -42,8 +42,8 @@ public:
         LOAD_NEED_PREFETCH,
     };
 
-    bool loadDoc(const TagKey &key, Tag &tag, XmlDocSharedHelper &doc);
-    LoadResult loadDocImpl(const std::string &keyStr, Tag &tag, XmlDocSharedHelper &doc);
+    bool loadDoc(const TagKey &key, Tag &tag, boost::shared_ptr<CacheData> &cache_data);
+    LoadResult loadDocImpl(const std::string &keyStr, Tag &tag, boost::shared_ptr<CacheData> &cache_data);
 
     /**
      * Result of saving doc.
@@ -53,11 +53,10 @@ public:
         SAVE_UPDATED,
     };
 
-    bool saveDoc(const TagKey &key, const Tag& tag, const XmlDocSharedHelper &doc);
-    SaveResult saveDocImpl(const std::string &keyStr, const Tag& tag, const XmlDocSharedHelper &doc);
+    bool saveDoc(const TagKey &key, const Tag& tag, const boost::shared_ptr<CacheData> &cache_data);
+    SaveResult saveDocImpl(const std::string &keyStr, const Tag& tag, const boost::shared_ptr<CacheData> &cache_data);
 
     void clear();
-
     const CacheCounter* getCounter() const;
 
 private:
@@ -69,34 +68,30 @@ private:
     public:
         DocData();
         explicit DocData(LRUList::iterator list_pos);
-
-        void assign(const Tag &tag, const XmlDocSharedHelper &elem);
-
-//        xmlDocPtr copyDoc() const;
-
+        void assign(const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
         void clearDoc();
-
     public:
-        Tag                 tag;
-        XmlDocSharedHelper  doc;
-        LRUList::iterator   pos;
-        time_t              stored_time;
-        bool                prefetch_marked;
+        Tag tag;
+        boost::shared_ptr<CacheData> data;
+        LRUList::iterator pos;
+        time_t stored_time;
+        bool prefetch_marked;
     };
 
     void shrink();
     void removeExpiredDocuments();
 
-    void saveAtIterator(const Key2Data::iterator &i, const Tag &tag, const XmlDocSharedHelper &doc);
+    void saveAtIterator(const Key2Data::iterator &i, const Tag &tag,
+            const boost::shared_ptr<CacheData> &cache_data);
 
 private:
-    size_t          capacity_;
-    std::auto_ptr<CacheCounter>     counter_;
+    size_t capacity_;
+    std::auto_ptr<CacheCounter> counter_;
 
-    boost::mutex    mutex_;
+    boost::mutex mutex_;
 
-    Key2Data        key2data_;
-    LRUList         list_;
+    Key2Data key2data_;
+    LRUList list_;
 };
 
 
