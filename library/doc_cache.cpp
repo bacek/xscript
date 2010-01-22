@@ -16,6 +16,8 @@
 #include "xscript/tagged_cache_usage_counter.h"
 #include "xscript/xml_util.h"
 
+#include "internal/parser.h"
+
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
@@ -434,10 +436,9 @@ PageCacheData::parse(const char *buf, boost::uint32_t size) {
     buf += sizeof(boost::uint32_t);
     
     Range data(buf, buf + size - 2*sizeof(boost::uint32_t));
-    Range delim("\r\n");
     while(!data.empty()) {
         Range header;
-        split(data, delim, header, data);
+        split(data, Parser::RN_RANGE, header, data);
         if (header.empty()) {
             data_.assign(data.begin(), data.size());
             break;

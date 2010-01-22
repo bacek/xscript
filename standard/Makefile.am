@@ -111,7 +111,7 @@ if HAVE_GLIB
 test_SOURCES += xslt_extension_test.cpp
 endif
 
-test_LDADD = ../library/libxscript.la libtest.la
+test_LDADD = ../library/libxscript.la libtest.la -L@top_srcdir@/library/.libs
 if HAVE_XSLT_STANDARD
 if HAVE_PCRE
 test_LDADD += pcre/libpcre.la

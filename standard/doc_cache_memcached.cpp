@@ -398,11 +398,7 @@ DocCacheMemcached::loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheD
             return false;
         }
         
-        if (!cache_data->parse(value, vallen)) {
-            return false;
-        }
-        
-        return true;
+        return cache_data->parse(value, vallen);
     }
     catch (const std::exception &e) {
         log()->error("error while parsing doc from memcached: %s", e.what());

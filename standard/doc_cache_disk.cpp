@@ -95,8 +95,8 @@ private:
 };
 
 const time_t DocCacheDisk::DEFAULT_CACHE_TIME = 5; // sec
-const boost::uint32_t DocCacheDisk::VERSION_SIGNATURE_UNMARKED = 0xdfc00201;
-const boost::uint32_t DocCacheDisk::VERSION_SIGNATURE_MARKED = 0xdfc00202;
+const boost::uint32_t DocCacheDisk::VERSION_SIGNATURE_UNMARKED = 0xdfc00203;
+const boost::uint32_t DocCacheDisk::VERSION_SIGNATURE_MARKED = 0xdfc00204;
 const boost::uint32_t DocCacheDisk::DOC_SIGNATURE_START = 0x0a0b0d0a;
 const boost::uint32_t DocCacheDisk::DOC_SIGNATURE_END = 0x0a0e0d0a;
 
@@ -350,13 +350,14 @@ DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag,
         doclen = (boost::uint32_t)(size) - sizeof(boost::uint32_t);
         std::vector<char> doc_data(doclen);
         is.read(&doc_data[0], doclen);
-        if (!cache_data->parse(&doc_data[0], doclen)) {
-            return false;
-        }
         is.exceptions(std::ios::badbit);
         is.read((char*) &sig, sizeof(boost::uint32_t));
         if (DOC_SIGNATURE_END != sig) {
             throw std::runtime_error("bad doc end signature");
+        }
+        
+        if (!cache_data->parse(&doc_data[0], doclen)) {
+            return false;
         }
 
         return true;
