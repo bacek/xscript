@@ -178,7 +178,10 @@ inline void luaPushStack(lua_State* lua, const std::vector<StringUtils::NamedVal
         lua_newtable(lua);
         int table = lua_gettop(lua);
         const StringUtils::NamedValue& arg = args->at(i);
+        lua_pushstring(lua, "name");
         lua_pushstring(lua, arg.first.c_str());
+        lua_settable(lua, table);
+        lua_pushstring(lua, "value");
         lua_pushstring(lua, arg.second.c_str());
         lua_settable(lua, table);
         lua_rawseti(lua, main_table, i + 1);

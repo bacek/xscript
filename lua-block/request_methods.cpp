@@ -112,7 +112,7 @@ get_unique_args(Request *request) {
 }
 
 static const std::vector<StringUtils::NamedValue>*
-get_all_args(Request *request) {
+get_query_args(Request *request) {
     return &(request->args());
 }
 
@@ -125,8 +125,8 @@ luaRequestGetArgs(lua_State *lua) throw () {
 }
 
 extern "C" int
-luaRequestGetAllArgs(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, get_all_args);
+luaRequestGetQueryArgs(lua_State *lua) throw () {
+    return lua_request_method<1>::invoke(lua, get_query_args);
 }
 
 extern "C" int
@@ -256,7 +256,7 @@ luaGetDocumentRoot(lua_State *lua) throw () {
 static const struct luaL_reg requestlib [] = {
     {"getArg",        luaRequestGetArg},
     {"getArgs",       luaRequestGetArgs},
-    {"getAllArgs",    luaRequestGetAllArgs},
+    {"getQueryArgs",  luaRequestGetQueryArgs},
     {"getHeader",     luaRequestGetHeader},
     {"getCookie",     luaRequestGetCookie},
     {"hasArg",        luaRequestHasArg},
