@@ -52,19 +52,12 @@ public:
         domain_ = value;
     }
 
-    inline time_t permanent() const {
-        return expires_ == MAX_LIVE_TIME;
-    }
+    time_t permanent() const;
 
-    inline void permanent(bool value) {
-        expires_ = value ? MAX_LIVE_TIME : 0;
-    }
+    void permanent(bool value);
 
     std::string toString() const;
     bool check() const;
-
-public:
-    static const time_t MAX_LIVE_TIME;
 
 private:
     bool secure_;

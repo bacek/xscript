@@ -3,7 +3,7 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
-#include "xscript/util.h"
+#include "xscript/http_utils.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>

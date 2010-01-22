@@ -28,6 +28,7 @@
 #include "xscript/context.h"
 #include "xscript/doc_cache.h"
 #include "xscript/extension.h"
+#include "xscript/http_utils.h"
 #include "xscript/logger.h"
 #include "xscript/message_interface.h"
 #include "xscript/operation_mode.h"

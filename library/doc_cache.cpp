@@ -9,6 +9,7 @@
 #include "xscript/context.h"
 #include "xscript/doc_cache.h"
 #include "xscript/doc_cache_strategy.h"
+#include "xscript/http_utils.h"
 #include "xscript/logger.h"
 #include "xscript/profiler.h"
 #include "xscript/stat_builder.h"

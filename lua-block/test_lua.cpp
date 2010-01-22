@@ -6,6 +6,7 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
+#include "xscript/http_utils.h"
 #include "xscript/xml_util.h"
 #include "xscript/test_utils.h"
 
@@ -269,7 +270,7 @@ LuaTest::testCookie() {
     Cookie cookie2("baz", "");
     cookie_it = cookies.find(cookie2);
     CPPUNIT_ASSERT(cookies.end() != cookie_it);
-    CPPUNIT_ASSERT_EQUAL(time_t(Cookie::MAX_LIVE_TIME), cookie_it->expires());
+    CPPUNIT_ASSERT_EQUAL(time_t(HttpDateUtils::MAX_LIVE_TIME), cookie_it->expires());
 }
 
 

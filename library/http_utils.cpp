@@ -25,16 +25,16 @@ static const char httpDateUtilsShortMonths [12] [4] = {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
-const std::string HttpUtils::NORMALIZE_HEADER_METHOD = "HTTP_UTILS_NORMALIZE_HEADER_METHOD";
+const time_t HttpDateUtils::MAX_LIVE_TIME = std::numeric_limits<boost::int32_t>::max();
 
-HttpUtils::HttpUtils() {
+HttpDateUtils::HttpDateUtils() {
 }
 
-HttpUtils::~HttpUtils() {
+HttpDateUtils::~HttpDateUtils() {
 }
 
 std::string
-HttpUtils::formatDate(time_t value) {
+HttpDateUtils::format(time_t value) {
 
     struct tm ts;
     memset(&ts, 0, sizeof(struct tm));
@@ -61,7 +61,7 @@ HttpUtils::formatDate(time_t value) {
 }
 
 time_t
-HttpUtils::parseDate(const char *value) {
+HttpDateUtils::parse(const char *value) {
 
     struct tm ts;
     memset(&ts, 0, sizeof(struct tm));
@@ -73,6 +73,31 @@ HttpUtils::parseDate(const char *value) {
         }
     }
     return static_cast<time_t>(0);
+}
+
+time_t
+HttpDateUtils::expires(boost::uint32_t delta) {
+    time_t now = time(NULL);
+    if (0 == delta) {
+        return now;
+    }
+    time_t max = MAX_LIVE_TIME;
+    
+    boost::uint64_t result = (boost::uint64_t)now + (boost::uint64_t)delta;
+    
+    if (result >= (boost::uint64_t)max) {
+        return max;
+    }
+    
+    return (time_t)result;
+}
+
+const std::string HttpUtils::NORMALIZE_HEADER_METHOD = "HTTP_UTILS_NORMALIZE_HEADER_METHOD";
+
+HttpUtils::HttpUtils() {
+}
+
+HttpUtils::~HttpUtils() {
 }
 
 const char*

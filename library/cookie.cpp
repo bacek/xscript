@@ -4,16 +4,14 @@
 #include <exception>
 
 #include "xscript/cookie.h"
+#include "xscript/http_utils.h"
 #include "xscript/string_utils.h"
-#include "xscript/util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
 
 namespace xscript {
-
-const time_t Cookie::MAX_LIVE_TIME = std::numeric_limits<boost::int32_t>::max();
 
 Cookie::Cookie() {
 }
@@ -26,6 +24,16 @@ Cookie::Cookie(const std::string &name, const std::string &value) :
 }
 
 Cookie::~Cookie() {
+}
+
+time_t
+Cookie::permanent() const {
+    return expires_ == HttpDateUtils::MAX_LIVE_TIME;
+}
+
+void
+Cookie::permanent(bool value) {
+    expires_ = value ? HttpDateUtils::MAX_LIVE_TIME : 0;
 }
 
 std::string

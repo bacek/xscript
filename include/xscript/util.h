@@ -1,8 +1,6 @@
 #ifndef _XSCRIPT_UTIL_H_
 #define _XSCRIPT_UTIL_H_
 
-#include <sys/time.h>
-#include <ctime>
 #include <map>
 #include <string>
 #include <vector>
@@ -18,17 +16,6 @@
 #include <xscript/xml_helpers.h>
 
 namespace xscript {
-
-class HttpDateUtils : private boost::noncopyable {
-public:
-    static time_t parse(const char *value);
-    static std::string format(time_t value);
-    static boost::int32_t expires(boost::int32_t delta);
-    
-private:
-    HttpDateUtils();
-    virtual ~HttpDateUtils();
-};
 
 class HashUtils : private boost::noncopyable {
 public:

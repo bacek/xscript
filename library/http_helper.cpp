@@ -13,13 +13,15 @@
 #include <boost/thread/once.hpp>
 
 #include "xscript/http_helper.h"
-#include "xscript/policy.h"
-#include "xscript/util.h"
-#include "xscript/string_utils.h"
-#include "xscript/range.h"
+#include "xscript/http_utils.h"
 #include "xscript/logger.h"
+#include "xscript/policy.h"
+#include "xscript/range.h"
 #include "xscript/remote_tagged_block.h"
 #include "xscript/request.h"
+#include "xscript/string_utils.h"
+#include "xscript/util.h"
+
 #include "internal/algorithm.h"
 
 #include <curl/curl.h>

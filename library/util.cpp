@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include <sys/stat.h>
+#include <sys/time.h>
 
 #include <boost/crc.hpp>
 #include <boost/cstdint.hpp>
@@ -35,73 +36,6 @@
 #endif
 
 namespace xscript {
-
-HttpDateUtils::HttpDateUtils() {
-}
-
-HttpDateUtils::~HttpDateUtils() {
-}
-
-static const char httpDateUtilsShortWeekdays [7] [4] = {
-    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-};
-static const char httpDateUtilsShortMonths [12] [4] = {
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-};
-
-std::string
-HttpDateUtils::format(time_t value) {
-
-    struct tm ts;
-    memset(&ts, 0, sizeof(struct tm));
-
-    if (NULL != gmtime_r(&value, &ts)) {
-        char buf[255];
-
-        //int res = strftime(buf, sizeof(buf), "%a, %d %b %Y %T GMT", &ts);
-        int res = snprintf(buf, sizeof(buf) - 1, "%s, %02d %s %04d %02d:%02d:%02d GMT",
-                           httpDateUtilsShortWeekdays[ts.tm_wday],
-                           ts.tm_mday, httpDateUtilsShortMonths[ts.tm_mon], ts.tm_year + 1900,
-                           ts.tm_hour, ts.tm_min, ts.tm_sec);
-
-        if (0 < res) {
-            return std::string(buf, buf + res);
-        }
-        else {
-            std::stringstream stream;
-            StringUtils::report("format date failed: ", errno, stream);
-            throw std::runtime_error(stream.str());
-        }
-    }
-    throw std::runtime_error("format date failed. Value: " + boost::lexical_cast<std::string>(value));
-}
-
-time_t
-HttpDateUtils::parse(const char *value) {
-
-    struct tm ts;
-    memset(&ts, 0, sizeof(struct tm));
-
-    const char *formats[] = { "%a, %d %b %Y %T GMT", "%A, %d-%b-%y %T GMT", "%a %b %d %T %Y" };
-    for (unsigned int i = 0; i < sizeof(formats)/sizeof(const char*); ++i) {
-        if (NULL != strptime(value, formats[i], &ts)) {
-            return timegm(&ts); // mktime(&ts) - timezone;
-        }
-    }
-    return static_cast<time_t>(0);
-}
-
-boost::int32_t
-HttpDateUtils::expires(boost::int32_t delta) {
-    boost::int32_t now = (boost::int32_t)time(NULL);
-    boost::int32_t max = Cookie::MAX_LIVE_TIME;
-    boost::int32_t expires =
-        (boost::int64_t)now + (boost::int64_t)delta > (boost::int64_t)max ?
-            max : now + delta;
-        
-    return expires;
-}
 
 HashUtils::HashUtils() {
 }
