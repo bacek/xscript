@@ -122,7 +122,6 @@ test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic
 
 if HAVE_MEMCACHE
 test_SOURCES += memcached_test.cpp
-test_LDFLAGS += -lmemcached
 endif
 
 endif

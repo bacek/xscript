@@ -1,3 +1,9 @@
+xscript (5.70-25) unstable; urgency=low
+
+  * version up
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 25 Jan 2010 11:29:16 +0300
+
 xscript (5.70-24) unstable; urgency=low
 
   * cache system refactored
