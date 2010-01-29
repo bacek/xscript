@@ -71,13 +71,9 @@ public:
     void save(const Key &key, const Data &data, const Tag &tag);
     
 private:
-    void insert(const Key &key, const Data &data, const Tag &tag, boost::mutex::scoped_lock &lock);
-
     void erase(iterator it);
     void erase(const Key &key);
-    
-    bool loadImpl(const Key &key, Data &data, Tag &tag, boost::mutex::scoped_lock &lock);
-    bool saveImpl(const Key &key, const Data &data, const Tag &tag, boost::mutex::scoped_lock &lock);
+
     void push_front(const Key &key, const Data &data, const Tag &tag);
     typename List::iterator getShrinked();
 };
@@ -111,8 +107,8 @@ LRUCache<Key, Data, ExpireFunc>::erase(const Key &key) {
 
 template<typename Key, typename Data, typename ExpireFunc>
 void
-LRUCache<Key, Data, ExpireFunc>::insert(
-        const Key &key, const Data &data, const Tag &tag, boost::mutex::scoped_lock &lock) {
+LRUCache<Key, Data, ExpireFunc>::save(const Key &key, const Data &data, const Tag &tag) {
+    boost::mutex::scoped_lock lock(mutex_);
     
     if (key2data_.empty()) {
         push_front(key, data, tag);
@@ -188,14 +184,7 @@ template<typename Key, typename Data, typename ExpireFunc>
 bool
 LRUCache<Key, Data, ExpireFunc>::load(const Key &key, Data &data, Tag &tag) {
     boost::mutex::scoped_lock lock(mutex_);
-    return loadImpl(key, data, tag, lock);
-}
-
-template<typename Key, typename Data, typename ExpireFunc>
-bool
-LRUCache<Key, Data, ExpireFunc>::loadImpl(
-        const Key &key, Data &data, Tag &tag, boost::mutex::scoped_lock &lock) {
-
+    
     iterator it = key2data_.find(key);
     if (key2data_.end() == it) {
         return false;
@@ -229,21 +218,6 @@ LRUCache<Key, Data, ExpireFunc>::loadImpl(
     
     counter_.incLoaded();
     
-    return true;
-}
-
-template<typename Key, typename Data, typename ExpireFunc>
-void
-LRUCache<Key, Data, ExpireFunc>::save(const Key &key, const Data &data, const Tag &tag) {
-    boost::mutex::scoped_lock lock(mutex_);   
-    saveImpl(key, data, tag, lock);
-}
-
-template<typename Key, typename Data, typename ExpireFunc>
-bool
-LRUCache<Key, Data, ExpireFunc>::saveImpl(
-        const Key &key, const Data &data, const Tag &tag, boost::mutex::scoped_lock &lock) {
-    insert(key, data, tag, lock);
     return true;
 }
 

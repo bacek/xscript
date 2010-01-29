@@ -60,34 +60,7 @@ typedef __gnu_cxx::hash_set<std::string, details::StringHash> StringSet;
 typedef std::hash_set<std::string, details::StringHash> StringSet;
 #endif
 
-class XmlStorage : private boost::noncopyable {
-public:
-    XmlStorage(unsigned int size);
-    virtual ~XmlStorage();
-
-    void clear();
-
-    boost::shared_ptr<Xml> fetch(const std::string &key);
-    void store(const std::string &key, const boost::shared_ptr<Xml> &xml);
-
-    const CacheCounter* getCounter() const;
-
-private:
-    struct Element {
-        Element() : checked_(0) {}
-        Element(boost::shared_ptr<Xml> xml, time_t checked) : xml_(xml), checked_(checked) {}
-        boost::shared_ptr<Xml> xml_;
-        time_t checked_;
-    };
-
-    struct XmlExpiredFunc {
-        bool operator() (Element &element, const Tag &tag) const;
-    };
-    
-    typedef LRUCache<std::string, Element, XmlExpiredFunc> CacheType;
-    std::auto_ptr<CacheCounter> counter_;
-    std::auto_ptr<CacheType> cache_;
-};
+class XmlStorage;
 
 class XmlCache {
 public:
@@ -119,6 +92,35 @@ private:
     private:
         std::vector<XmlStorage*>* storages_;
     };
+};
+
+class XmlStorage : private boost::noncopyable {
+public:
+    XmlStorage(unsigned int size);
+    virtual ~XmlStorage();
+
+    void clear();
+
+    boost::shared_ptr<Xml> fetch(const std::string &key);
+    void store(const std::string &key, const boost::shared_ptr<Xml> &xml);
+
+    const CacheCounter* getCounter() const;
+
+private:
+    struct Element {
+        Element() : checked_(0) {}
+        Element(boost::shared_ptr<Xml> xml) : xml_(xml), checked_(time(NULL) + XmlCache::delay()) {}
+        boost::shared_ptr<Xml> xml_;
+        time_t checked_;
+    };
+
+    struct XmlExpiredFunc {
+        bool operator() (Element &element, const Tag &tag) const;
+    };
+    
+    typedef LRUCache<std::string, Element, XmlExpiredFunc> CacheType;
+    std::auto_ptr<CacheCounter> counter_;
+    std::auto_ptr<CacheType> cache_;
 };
 
 class StandardScriptCache : public XmlCache, public ScriptCache {
@@ -190,7 +192,7 @@ void
 XmlStorage::store(const std::string &key, const boost::shared_ptr<Xml> &xml) {
     log()->debug("trying to store %s into storage", key.c_str());
     Tag tag;
-    Element element(xml, time(NULL));
+    Element element(xml);
     cache_->save(key, element, tag);
     log()->debug("storing of %s succeeded", key.c_str());
 }
@@ -206,11 +208,11 @@ XmlStorage::XmlExpiredFunc::operator() (Element &element, const Tag &tag) const 
     log()->debug("checking whether xml expired");
 
     time_t now = time(NULL);
-    time_t checked = element.checked_;
-    element.checked_ = now;
-    if (checked > now - XmlCache::delay()) {
+    if (now < element.checked_) {
         return false;
     }
+    
+    element.checked_ = now + XmlCache::delay();
 
     const Xml::TimeMapType& modified_info = element.xml_->modifiedInfo();
     for(Xml::TimeMapType::const_iterator it = modified_info.begin(), end = modified_info.end();
