@@ -1,3 +1,9 @@
+xscript (5.70-26) unstable; urgency=low
+
+  * lru cache refactored
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 29 Jan 2010 12:06:57 +0300
+
 xscript (5.70-25) unstable; urgency=low
 
   * version up
