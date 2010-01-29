@@ -7,13 +7,15 @@
 
 namespace xscript {
 
+class AverageCounter;
+
 /**
  * Counter for measure cache statistic.
  * Trivial set of (loaded, stored, removed) counters.
  */
 class CacheCounterImpl : public CacheCounter, private CounterImpl {
 public:
-    CacheCounterImpl(const std::string& name);
+    CacheCounterImpl(const std::string &name);
     virtual XmlNodeHelper createReport() const;
 
     void incUsedMemory(size_t amount);
@@ -21,12 +23,14 @@ public:
 
     void incLoaded();
     void incStored();
-    void incRemoved();
+    void incExcluded();
+    void incExpired();
 
 private:
     size_t stored_;
     size_t loaded_;
-    size_t removed_;
+    size_t expired_;
+    size_t excluded_;
 };
 }
 

@@ -9,21 +9,34 @@
 
 namespace xscript {
 
-void DummyCacheCounter::incUsedMemory(size_t amount) {
+void
+DummyCacheCounter::incUsedMemory(size_t amount) {
     (void)amount;
 }
 
-void DummyCacheCounter::decUsedMemory(size_t amount) {
+void
+DummyCacheCounter::decUsedMemory(size_t amount) {
     (void)amount;
 }
 
+void
+DummyCacheCounter::incLoaded() {
+}
 
-void DummyCacheCounter::incLoaded() { }
-void DummyCacheCounter::incStored() { }
-void DummyCacheCounter::incRemoved() { }
+void
+DummyCacheCounter::incStored() {
+}
 
+void 
+DummyCacheCounter::incExpired() {
+}
 
-XmlNodeHelper DummyCacheCounter::createReport() const {
+void
+DummyCacheCounter::incExcluded() {
+}
+
+XmlNodeHelper
+DummyCacheCounter::createReport() const {
     return XmlNodeHelper(xmlNewNode(0, (const xmlChar*) "dummy"));
 }
 

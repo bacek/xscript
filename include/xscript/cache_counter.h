@@ -4,6 +4,8 @@
 #include <string>
 #include <cstddef>
 
+#include <boost/cstdint.hpp>
+
 #include <xscript/counter_base.h>
 #include <xscript/component.h>
 
@@ -20,7 +22,8 @@ public:
 
     virtual void incLoaded() = 0;
     virtual void incStored() = 0;
-    virtual void incRemoved() = 0;
+    virtual void incExcluded() = 0;
+    virtual void incExpired() = 0;
 };
 
 

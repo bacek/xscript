@@ -1,17 +1,8 @@
 #ifndef _XSCRIPT_INTERNAL_LRUCACHE_H_
 #define _XSCRIPT_INTERNAL_LRUCACHE_H_
 
-#include <list>
-#include <map>
 #include <stdexcept>
-
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-#include <boost/thread/mutex.hpp>
-
-#include "xscript/cache_counter.h"
-#include "xscript/profiler.h"
-#include "xscript/tag.h"
+#include "xscript/cache_usage_counter.h"
 
 namespace xscript {
 
@@ -67,20 +58,21 @@ public:
 
     void clear();
 
-    bool load(const Key &key, Data &data, Tag &tag);
+    bool load(const Key &key, Data &data, const Tag &tag);
     void save(const Key &key, const Data &data, const Tag &tag);
     
-    const CacheCounter* counter() const;
+    const CounterBase* counter() const;
     
 private:
+    iterator fetch(const Key &key);
     void insert(const Key &key, const Data &data, const Tag &tag, boost::mutex::scoped_lock &lock);
 
     void erase(iterator it);
     void erase(const Key &key);
     
-    bool loadImpl(const Key &key, Data &data, Tag &tag, boost::mutex::scoped_lock &lock);
-    bool saveImpl(const Key &key, const Data &data, const Tag &tag, boost::mutex::scoped_lock &lock);
-    void push_front(const Key &key, const Data &data, const Tag &tag);
+    bool loadImpl(const Key &key, Data &data, const Tag &tag, boost::mutex::scoped_lock &lock);
+    void saveImpl(const Key &key, const Data &data, const Tag &tag, boost::mutex::scoped_lock &lock);
+    void push_front(const Key &key, Data &data, const Tag &tag);
 };
 
 
@@ -112,9 +104,23 @@ LRUCache<Key, Data, ExpireFunc>::erase(const Key &key) {
 }
 
 template<typename Key, typename Data, typename ExpireFunc>
+typename LRUCache<Key, Data, ExpireFunc>::iterator
+LRUCache<Key, Data, ExpireFunc>::fetch(const Key &key) {
+    iterator map_it = key2data_.find(key);
+    if (key2data_.end() != map_it) {
+        typename List::iterator list_it = map_it->second;
+        if (data_.begin() != list_it && data_.end() != list_it) {
+            data_.splice(data_.begin(), data_, list_it);
+            map_it->second = data_.begin();
+	}
+    }
+    return map_it;
+}
+
+template<typename Key, typename Data, typename ExpireFunc>
 void
 LRUCache<Key, Data, ExpireFunc>::insert(
-        const Key &key, const Data &data, const Tag &tag, boost::mutex::scoped_lock &lock) {
+        const Key &key, const Data &data, const Tag &tag, boost::scoped_lock &lock) {
     
     if (key2data_.empty()) {
         push_front(key, data, tag);
@@ -136,11 +142,11 @@ LRUCache<Key, Data, ExpireFunc>::insert(
         return;
     }
     
-    typename List::reverse_iterator delete_it = data_.rbegin();
+    List::reverse_iterator delete_it = data_.rbegin();
     
     bool expired_found = false;
     if (check_expire_) {
-        for(typename List::reverse_iterator it = data_.rbegin();
+        for(List::reverse_iterator it = data_.rbegin();
             it != data_.rend();
             ++it) {
             if (expired_(it->data_, it->tag_)) {
@@ -158,11 +164,9 @@ LRUCache<Key, Data, ExpireFunc>::insert(
         counter_->incExcluded();
     }
     
-    typename List::iterator erase_it = delete_it->map_iterator_->second;
-    
-    Data data_tmp = erase_it->data_;
-    key2data_.erase(erase_it->map_iterator_);
-    data_.erase(erase_it);
+    Data data_tmp = delete_it->data_;
+    key2data_.erase(delete_it->map_iterator_);
+    data_.erase(delete_it);
 
     push_front(key, data, tag);
 
@@ -171,7 +175,7 @@ LRUCache<Key, Data, ExpireFunc>::insert(
 
 template<typename Key, typename Data, typename ExpireFunc>
 void
-LRUCache<Key, Data, ExpireFunc>::push_front(const Key &key, const Data &data, const Tag &tag) {
+LRUCache<Key, Data, ExpireFunc>::push_front(const Key &key, Data &data, const Tag &tag) {
     data_.push_front(ListElement(data, tag, key2data_.end()));
     std::pair<iterator, bool> res = key2data_.insert(std::make_pair(key, data_.begin()));
     data_.begin()->map_iterator_ = res.first;
@@ -179,17 +183,30 @@ LRUCache<Key, Data, ExpireFunc>::push_front(const Key &key, const Data &data, co
 
 template<typename Key, typename Data, typename ExpireFunc>
 bool
-LRUCache<Key, Data, ExpireFunc>::load(const Key &key, Data &data, Tag &tag) {
+LRUCache<Key, Data, ExpireFunc>::load(const Key &key, Data &data, const Tag &tag) {
     boost::mutex::scoped_lock lock(mutex_);
-    return loadImpl(key, data, tag, lock);
+    
+    boost::function<bool()> f = boost::bind(&LRUCache<Key, Data, ExpireFunc>::loadImpl,
+            this, boost::cref(key), boost::ref(data), boost::cref(tag));
+    
+    std::pair<bool, uint64_t> res = profile(f);
+    
+    if (res.first) {
+        counter_->addHit(res.second);
+    }
+    else {
+        counter_->addMiss(res.second);
+    }
+    
+    return res.first;
 }
 
 template<typename Key, typename Data, typename ExpireFunc>
 bool
 LRUCache<Key, Data, ExpireFunc>::loadImpl(
-        const Key &key, Data &data, Tag &tag, boost::mutex::scoped_lock &lock) {
+        const Key &key, Data &data, const Tag &tag, boost::mutex::scoped_lock &lock) {
 
-    iterator it = key2data_.find(key);
+    iterator it = find(key);
     if (key2data_.end() == it) {
         return false;
     }
@@ -214,29 +231,27 @@ LRUCache<Key, Data, ExpireFunc>::loadImpl(
     
     counter_->incLoaded();
     
-    typename List::iterator list_it = it->second;
-    if (data_.begin() != list_it && data_.end() != list_it) {
-        data_.splice(data_.begin(), data_, list_it);
-        it->second = data_.begin();
-    }
-    
     return true;
 }
 
 template<typename Key, typename Data, typename ExpireFunc>
 void
 LRUCache<Key, Data, ExpireFunc>::save(const Key &key, const Data &data, const Tag &tag) {
-    boost::mutex::scoped_lock lock(mutex_);   
-    saveImpl(key, data, tag, lock);
+    boost::mutex::scoped_lock lock(mutex_);
+    
+    boost::function<void()> f = boost::bind(&LRUCache<Key, Data, ExpireFunc>::saveImpl,
+            this, boost::cref(key), boost::cref(data), boost::cref(tag), boost::ref(lock));
+    
+    std::pair<void, uint64_t> res = profile(f);
+    counter_->addSave(res.second);
 }
 
 template<typename Key, typename Data, typename ExpireFunc>
-bool
+void
 LRUCache<Key, Data, ExpireFunc>::saveImpl(
         const Key &key, const Data &data, const Tag &tag, boost::mutex::scoped_lock &lock) {
     insert(key, data, tag, lock);
     counter_->incStored();
-    return true;
 }
 
 template<typename Key, typename Data, typename ExpireFunc>
@@ -251,7 +266,7 @@ LRUCache<Key, Data, ExpireFunc>::clear() {
 }
 
 template<typename Key, typename Data, typename ExpireFunc>
-const CacheCounter*
+const CounterBase*
 LRUCache<Key, Data, ExpireFunc>::counter() const {
     return counter_.get();
 }

@@ -18,7 +18,6 @@ public:
     StylesheetCache();
 
     virtual void clear();
-    virtual void erase(const std::string &name);
 
     virtual boost::shared_ptr<Stylesheet> fetch(const std::string &name);
     virtual void store(const std::string &name, const boost::shared_ptr<Stylesheet> &stylesheet);

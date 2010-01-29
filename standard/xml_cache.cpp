@@ -62,37 +62,29 @@ typedef std::hash_set<std::string, details::StringHash> StringSet;
 
 class XmlStorage : private boost::noncopyable {
 public:
-    XmlStorage(unsigned int max_size, time_t refresh_delay);
+    XmlStorage(unsigned int size);
     virtual ~XmlStorage();
 
     void clear();
-    void enable();
 
-    void erase(const std::string &key);
     boost::shared_ptr<Xml> fetch(const std::string &key);
     void store(const std::string &key, const boost::shared_ptr<Xml> &xml);
 
-    const CacheUsageCounter* getCounter() const;
+    const CacheCounter* getCounter() const;
 
 private:
     struct Element {
-        Element(boost::shared_ptr<Xml> xml, time_t checked) : xml_(xml), checked_(checked)
-        {}
+        Element() : checked_(0) {}
+        Element(boost::shared_ptr<Xml> xml, time_t checked) : xml_(xml), checked_(checked) {}
         boost::shared_ptr<Xml> xml_;
         time_t checked_;
     };
 
-    bool expired(const Element &element) const;
-
-private:
-    boost::mutex mutex_;
-    bool enabled_;
-
-    typedef LRUCache<std::string, Element> CacheType;
-    CacheType cache_;
-    time_t refresh_delay_;
-
-    std::auto_ptr<CacheUsageCounter> counter_;
+    struct XmlExpiredFunc {
+        bool operator() (const Element &element, const Tag &tag) const;
+    };
+    
+    LRUCache<std::string, Element, XmlExpiredFunc> cache_;
 };
 
 class XmlCache {
@@ -101,19 +93,20 @@ public:
     virtual ~XmlCache();
 
     virtual void clear();
-    virtual void erase(const std::string &name);
 
     virtual void init(const Config *config, StatBuilder &statBuilder);
 
     virtual boost::shared_ptr<Xml> fetchXml(const std::string &name);
     virtual void storeXml(const std::string &name, const boost::shared_ptr<Xml> &xml);
 
+    static time_t delay();
 protected:
     XmlStorage* findStorage(const std::string &name) const;
 
 private:
     StringSet denied_;
     std::vector<XmlStorage*> storages_;
+    static time_t delay_;
 
     class StorageContainerHolder {
     public:
@@ -134,7 +127,6 @@ public:
     virtual void init(const Config *config);
 
     virtual void clear();
-    virtual void erase(const std::string &name);
 
     virtual boost::shared_ptr<Script> fetch(const std::string &name);
     virtual void store(const std::string &name, const boost::shared_ptr<Script> &script);
@@ -154,7 +146,6 @@ public:
     virtual void init(const Config *config);
 
     virtual void clear();
-    virtual void erase(const std::string &name);
 
     virtual boost::shared_ptr<Stylesheet> fetch(const std::string &name);
     virtual void store(const std::string &name, const boost::shared_ptr<Stylesheet> &stylesheet);
@@ -166,106 +157,50 @@ private:
     boost::mutex mutexes_[NUMBER_OF_MUTEXES];
 };
 
-XmlStorage::XmlStorage(unsigned int max_size, time_t refresh_delay) :
-        enabled_(true), cache_(max_size), refresh_delay_(refresh_delay),
-        counter_(CacheUsageCounterFactory::instance()->createCounter("xml-storage")) {
-    counter_->max(max_size);
+XmlStorage::XmlStorage(unsigned int size) : cache_(size, false, "xml-storage") {
 }
 
 XmlStorage::~XmlStorage() {
-    boost::mutex::scoped_lock sl(mutex_);
 }
 
 void
 XmlStorage::clear() {
-
     log()->debug("disabling storage");
-    boost::mutex::scoped_lock sl(mutex_);
-    if (!enabled_) {
-        return;
-    }
     cache_.clear();
-    enabled_ = false;
-
-    counter_->reset();
-}
-
-void
-XmlStorage::enable() {
-    log()->debug("enabling storage");
-    boost::mutex::scoped_lock sl(mutex_);
-    enabled_ = true;
-}
-
-void
-XmlStorage::erase(const std::string &key) {
-
-    log()->debug("erasing %s from storage", key.c_str());
-
-    boost::mutex::scoped_lock sl(mutex_);
-    if (!enabled_) {
-        log()->debug("erasing from disabled storage");
-        return;
-    }
-
-    cache_.erase(key);
-    counter_->removed(key);
 }
 
 boost::shared_ptr<Xml>
 XmlStorage::fetch(const std::string &key) {
-
     log()->debug("trying to fetch %s from storage", key.c_str());
-
-    boost::mutex::scoped_lock sl(mutex_);
-    if (!enabled_) {
-        log()->debug("fetching from disabled storage");
-        return boost::shared_ptr<Xml>();
-    }
-
-    CacheType::iterator it = cache_.fetch(key);
-    if (cache_.end() == it) {
-        return boost::shared_ptr<Xml>();
-    }
-
-    const Element &cached_data = cache_.data(it);
-    boost::shared_ptr<Xml> xml = cached_data.xml_;
-
-    if (expired(cached_data)) {
-        cache_.erase(it);
-        counter_->removed(key);
-        sl.unlock(); // cleanup xml after unlock
-        return boost::shared_ptr<Xml>();
-    }
-
-    counter_->fetched(key);
-    sl.unlock();
+    Element element;
+    Tag tag;
+    if (!cache_.load(key, element, tag)) {
+        return boost::shared_ptr<Xml>(); 
+    }    
     log()->debug("%s found in storage", key.c_str());
-    return xml;
+    return element.xml_;
 }
 
 void
 XmlStorage::store(const std::string &key, const boost::shared_ptr<Xml> &xml) {
-
     log()->debug("trying to store %s into storage", key.c_str());
-
-    boost::mutex::scoped_lock sl(mutex_);
-    if (!enabled_) {
-        log()->debug("storing into disabled storage");
-        return;
-    }
-
-    cache_.insert(key, Element(xml, time(NULL)), counter_.get());
-    counter_->stored(key);
+    Tag tag;
+    Element element(xml, time(NULL));
+    cache_.save(key, element, tag);
     log()->debug("storing of %s succeeded", key.c_str());
 }
 
-bool
-XmlStorage::expired(const Element &element) const {
+const CacheCounter*
+XmlStorage::getCounter() const {
+    return cache_.counter();
+}
 
+bool
+XmlStorage::XmlExpiredFunc::operator() (const Element &element, const Tag &tag) const {
+    (void)tag;
     log()->debug("checking whether xml expired");
 
-    if (element.checked_ > time(NULL) - refresh_delay_) {
+    if (element.checked_ > time(NULL) - XmlCache::delay()) {
         return false;
     }
 
@@ -289,14 +224,10 @@ XmlStorage::expired(const Element &element) const {
             return true;
         }
     }
-
     return false;
 }
 
-const CacheUsageCounter*
-XmlStorage::getCounter() const {
-    return counter_.get();
-}
+time_t XmlCache::delay_ = 0;
 
 XmlCache::XmlCache() {
 }
@@ -308,16 +239,6 @@ XmlCache::~XmlCache() {
 void
 XmlCache::clear() {
     std::for_each(storages_.begin(), storages_.end(), boost::bind(&XmlStorage::clear, _1));
-    std::for_each(storages_.begin(), storages_.end(), boost::bind(&XmlStorage::enable, _1));
-}
-
-void
-XmlCache::erase(const std::string &name) {
-    StringSet::const_iterator i = denied_.find(name);
-    if (denied_.end() == i) {
-        std::string cache_name = Policy::getKey(NULL, name);
-        findStorage(name)->erase(cache_name);
-    }
 }
 
 void
@@ -330,15 +251,14 @@ XmlCache::init(const Config *config, StatBuilder &statBuilder) {
     int buckets = config->as<int>(std::string("/xscript/").append(name).append("/buckets"), 10);
     int bucksize = config->as<int>(std::string("/xscript/").append(name).append("/bucket-size"), 200);
 
-    time_t delay = 0;
     if (OperationMode::isProduction()) {
-        delay = config->as<time_t>(std::string("/xscript/").append(name).append("/refresh-delay"), 5);
+        delay_ = config->as<time_t>(std::string("/xscript/").append(name).append("/refresh-delay"), 5);
     }
 
     StorageContainerHolder holder(storages_);
     storages_.reserve(buckets);
     for (int i = 0; i < buckets; ++i) {
-        storages_.push_back(new XmlStorage(bucksize, delay));
+        storages_.push_back(new XmlStorage(bucksize));
     }
     std::vector<std::string> names;
     config->subKeys(std::string("/xscript/").append(name).append("/deny"), names);
@@ -352,6 +272,11 @@ XmlCache::init(const Config *config, StatBuilder &statBuilder) {
         ++it) {
         statBuilder.addCounter((*it)->getCounter());
     }
+}
+
+time_t
+XmlCache::delay() {
+    return delay_;
 }
 
 boost::shared_ptr<Xml>
@@ -416,11 +341,6 @@ StandardScriptCache::clear() {
     XmlCache::clear();
 }
 
-void
-StandardScriptCache::erase(const std::string &name) {
-    XmlCache::erase(name);
-}
-
 boost::shared_ptr<Script>
 StandardScriptCache::fetch(const std::string &name) {
     return boost::dynamic_pointer_cast<Script>(fetchXml(name));
@@ -451,11 +371,6 @@ StandardStylesheetCache::init(const Config *config) {
 void
 StandardStylesheetCache::clear() {
     XmlCache::clear();
-}
-
-void
-StandardStylesheetCache::erase(const std::string &name) {
-    XmlCache::erase(name);
 }
 
 boost::shared_ptr<Stylesheet>

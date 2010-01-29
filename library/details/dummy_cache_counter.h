@@ -14,9 +14,10 @@ public:
 
     void incLoaded();
     void incStored();
-    void incRemoved();
-
-    virtual XmlNodeHelper createReport() const;
+    void incExpired();
+    void incExcluded();
+    
+    XmlNodeHelper createReport() const;
 };
 
 

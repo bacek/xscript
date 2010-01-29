@@ -18,7 +18,6 @@ public:
     ScriptCache();
 
     virtual void clear();
-    virtual void erase(const std::string &name);
 
     virtual boost::shared_ptr<Script> fetch(const std::string &name);
     virtual void store(const std::string &name, const boost::shared_ptr<Script> &xml);

@@ -23,11 +23,6 @@ void
 ScriptCache::clear() {
 }
 
-void
-ScriptCache::erase(const std::string &name) {
-    (void)name;
-}
-
 boost::shared_ptr<Script>
 ScriptCache::fetch(const std::string &name) {
     (void)name;

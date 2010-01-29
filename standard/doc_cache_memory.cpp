@@ -145,7 +145,7 @@ DocCacheMemory::loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData
     log()->debug("loading doc in memory cache");
     DocPool *mpool = pool(key);
     assert(NULL != mpool);
-    if (!mpool->loadDoc(*key, tag, cache_data)) {
+    if (!mpool->loadDoc(key->asString(), tag, cache_data)) {
         return false;
     }
 
@@ -161,7 +161,7 @@ DocCacheMemory::saveDoc(const TagKey *key, const Tag &tag, const boost::shared_p
     log()->debug("saving doc in memory cache");
     DocPool *mpool = pool(key);
     assert(NULL != mpool);
-    return mpool->saveDoc(*key, tag, cache_data);
+    return mpool->saveDoc(key->asString(), tag, cache_data);
 }
 
 unsigned int

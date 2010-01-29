@@ -23,11 +23,6 @@ void
 StylesheetCache::clear() {
 }
 
-void
-StylesheetCache::erase(const std::string &name) {
-    (void)name;
-}
-
 boost::shared_ptr<Stylesheet>
 StylesheetCache::fetch(const std::string &name) {
     (void)name;
