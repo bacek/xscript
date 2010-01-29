@@ -118,6 +118,7 @@ LRUCache<Key, Data, ExpireFunc>::insert(
     
     if (key2data_.empty()) {
         push_front(key, data, tag);
+        counter_->incInserted();
         return;
     }
     
@@ -128,11 +129,13 @@ LRUCache<Key, Data, ExpireFunc>::insert(
         data_.push_front(ListElement(data, tag, it));
         it->second = data_.begin();
         lock.unlock();
+        counter_->incUpdated();
         return;
     }
 
     if (key2data_.size() < max_size_) {
         push_front(key, data, tag);
+        counter_->incInserted();
         return;
     }
     
@@ -167,6 +170,8 @@ LRUCache<Key, Data, ExpireFunc>::insert(
     push_front(key, data, tag);
 
     lock.unlock();
+    
+    counter_->incInserted();
 }
 
 template<typename Key, typename Data, typename ExpireFunc>
@@ -235,7 +240,6 @@ bool
 LRUCache<Key, Data, ExpireFunc>::saveImpl(
         const Key &key, const Data &data, const Tag &tag, boost::mutex::scoped_lock &lock) {
     insert(key, data, tag, lock);
-    counter_->incStored();
     return true;
 }
 

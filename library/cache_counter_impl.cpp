@@ -13,7 +13,7 @@
 namespace xscript {
 
 CacheCounterImpl::CacheCounterImpl(const std::string& name)
-        : CounterImpl(name), stored_(0), loaded_(0), expired_(0), excluded_(0)
+        : CounterImpl(name), inserted_(0), updated_(0), loaded_(0), expired_(0), excluded_(0)
 {}
 
 // FIXME We should use atomic_increment in this methods
@@ -34,9 +34,15 @@ CacheCounterImpl::incLoaded() {
 }
 
 void
-CacheCounterImpl::incStored() {
+CacheCounterImpl::incInserted() {
     boost::mutex::scoped_lock lock(mtx_);
-    ++stored_;
+    ++inserted_;
+}
+
+void
+CacheCounterImpl::incUpdated() {
+    boost::mutex::scoped_lock lock(mtx_);
+    ++updated_;
 }
 
 void
@@ -55,8 +61,10 @@ XmlNodeHelper CacheCounterImpl::createReport() const {
     XmlNodeHelper report(xmlNewNode(0, (const xmlChar*) name_.c_str()));
 
     boost::mutex::scoped_lock lock(mtx_);
-    xmlSetProp(report.get(), (const xmlChar*) "stored",
-            (const xmlChar*) boost::lexical_cast<std::string>(stored_).c_str());
+    xmlSetProp(report.get(), (const xmlChar*) "inserted",
+            (const xmlChar*) boost::lexical_cast<std::string>(inserted_).c_str());
+    xmlSetProp(report.get(), (const xmlChar*) "updated",
+            (const xmlChar*) boost::lexical_cast<std::string>(updated_).c_str());
     xmlSetProp(report.get(), (const xmlChar*) "loaded",
             (const xmlChar*) boost::lexical_cast<std::string>(loaded_).c_str());
     xmlSetProp(report.get(), (const xmlChar*) "expired",

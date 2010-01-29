@@ -13,7 +13,8 @@ public:
     void decUsedMemory(size_t amount);
 
     void incLoaded();
-    void incStored();
+    void incInserted();
+    void incUpdated();
     void incExpired();
     void incExcluded();
     

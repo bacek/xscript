@@ -24,7 +24,11 @@ DummyCacheCounter::incLoaded() {
 }
 
 void
-DummyCacheCounter::incStored() {
+DummyCacheCounter::incInserted() {
+}
+
+void
+DummyCacheCounter::incUpdated() {
 }
 
 void 

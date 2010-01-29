@@ -21,7 +21,8 @@ public:
     virtual void decUsedMemory(std::size_t amount) = 0;
 
     virtual void incLoaded() = 0;
-    virtual void incStored() = 0;
+    virtual void incInserted() = 0;
+    virtual void incUpdated() = 0;
     virtual void incExcluded() = 0;
     virtual void incExpired() = 0;
 };

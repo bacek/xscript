@@ -22,12 +22,14 @@ public:
     void decUsedMemory(size_t amount);
 
     void incLoaded();
-    void incStored();
+    void incInserted();
+    void incUpdated();
     void incExcluded();
     void incExpired();
 
 private:
-    size_t stored_;
+    size_t inserted_;
+    size_t updated_;
     size_t loaded_;
     size_t expired_;
     size_t excluded_;
