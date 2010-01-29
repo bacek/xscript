@@ -206,8 +206,8 @@ LRUCache<Key, Data, ExpireFunc>::loadImpl(
     if (expired_(element.data_, element.tag_)) {
         Data data_tmp = element.data_;
         erase(it);
-        counter_.incExpired();
         lock.unlock();
+        counter_.incExpired();
         return false;
     }
     
@@ -219,13 +219,15 @@ LRUCache<Key, Data, ExpireFunc>::loadImpl(
     data = element.data_;
     tag = element.tag_;
     
-    counter_.incLoaded();
-    
     typename List::iterator list_it = it->second;
     if (data_.begin() != list_it && data_.end() != list_it) {
         data_.splice(data_.begin(), data_, list_it);
         it->second = data_.begin();
     }
+    
+    lock.unlock();
+    
+    counter_.incLoaded();
     
     return true;
 }
