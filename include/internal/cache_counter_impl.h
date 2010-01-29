@@ -34,6 +34,7 @@ private:
     size_t expired_;
     size_t excluded_;
 };
+
 }
 
 #endif

@@ -81,10 +81,12 @@ private:
     };
 
     struct XmlExpiredFunc {
-        bool operator() (const Element &element, const Tag &tag) const;
+        bool operator() (Element &element, const Tag &tag) const;
     };
     
-    LRUCache<std::string, Element, XmlExpiredFunc> cache_;
+    typedef LRUCache<std::string, Element, XmlExpiredFunc> CacheType;
+    std::auto_ptr<CacheCounter> counter_;
+    std::auto_ptr<CacheType> cache_;
 };
 
 class XmlCache {
@@ -157,7 +159,10 @@ private:
     boost::mutex mutexes_[NUMBER_OF_MUTEXES];
 };
 
-XmlStorage::XmlStorage(unsigned int size) : cache_(size, false, "xml-storage") {
+XmlStorage::XmlStorage(unsigned int size) :
+    counter_(CacheCounterFactory::instance()->createCounter("xml-storage"))
+{
+    cache_ = std::auto_ptr<CacheType>(new CacheType(size, false, *counter_));
 }
 
 XmlStorage::~XmlStorage() {
@@ -166,7 +171,7 @@ XmlStorage::~XmlStorage() {
 void
 XmlStorage::clear() {
     log()->debug("disabling storage");
-    cache_.clear();
+    cache_->clear();
 }
 
 boost::shared_ptr<Xml>
@@ -174,7 +179,7 @@ XmlStorage::fetch(const std::string &key) {
     log()->debug("trying to fetch %s from storage", key.c_str());
     Element element;
     Tag tag;
-    if (!cache_.load(key, element, tag)) {
+    if (!cache_->load(key, element, tag)) {
         return boost::shared_ptr<Xml>(); 
     }    
     log()->debug("%s found in storage", key.c_str());
@@ -186,21 +191,24 @@ XmlStorage::store(const std::string &key, const boost::shared_ptr<Xml> &xml) {
     log()->debug("trying to store %s into storage", key.c_str());
     Tag tag;
     Element element(xml, time(NULL));
-    cache_.save(key, element, tag);
+    cache_->save(key, element, tag);
     log()->debug("storing of %s succeeded", key.c_str());
 }
 
 const CacheCounter*
 XmlStorage::getCounter() const {
-    return cache_.counter();
+    return counter_.get();
 }
 
 bool
-XmlStorage::XmlExpiredFunc::operator() (const Element &element, const Tag &tag) const {
+XmlStorage::XmlExpiredFunc::operator() (Element &element, const Tag &tag) const {
     (void)tag;
     log()->debug("checking whether xml expired");
 
-    if (element.checked_ > time(NULL) - XmlCache::delay()) {
+    time_t now = time(NULL);
+    time_t checked = element.checked_;
+    element.checked_ = now;
+    if (checked > now - XmlCache::delay()) {
         return false;
     }
 

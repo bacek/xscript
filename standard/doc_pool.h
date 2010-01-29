@@ -30,8 +30,10 @@ public:
     void clear();
     const CacheCounter* getCounter() const;
 
-private:    
-    LRUCache<std::string, boost::shared_ptr<CacheData> > cache_;
+private:
+    typedef LRUCache<std::string, boost::shared_ptr<CacheData> > CacheType;
+    std::auto_ptr<CacheCounter> counter_;
+    std::auto_ptr<CacheType> cache_;
 };
 
 

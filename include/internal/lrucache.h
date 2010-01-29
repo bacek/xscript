@@ -59,18 +59,16 @@ private:
     boost::mutex mutex_;
     ExpireFunc expired_;
 
-    std::auto_ptr<CacheCounter> counter_;
+    CacheCounter& counter_;
     
 public:
-    explicit LRUCache(unsigned int size, bool check_expire, const std::string &name);
+    explicit LRUCache(unsigned int size, bool check_expire, CacheCounter &counter);
     ~LRUCache();
 
     void clear();
 
     bool load(const Key &key, Data &data, Tag &tag);
     void save(const Key &key, const Data &data, const Tag &tag);
-    
-    const CacheCounter* counter() const;
     
 private:
     void insert(const Key &key, const Data &data, const Tag &tag, boost::mutex::scoped_lock &lock);
@@ -81,13 +79,13 @@ private:
     bool loadImpl(const Key &key, Data &data, Tag &tag, boost::mutex::scoped_lock &lock);
     bool saveImpl(const Key &key, const Data &data, const Tag &tag, boost::mutex::scoped_lock &lock);
     void push_front(const Key &key, const Data &data, const Tag &tag);
+    typename List::iterator getShrinked();
 };
 
 
 template<typename Key, typename Data, typename ExpireFunc>
-LRUCache<Key, Data, ExpireFunc>::LRUCache(unsigned int size, bool check_expire, const std::string &name) :
-    max_size_(size), check_expire_(check_expire),
-    counter_(CacheCounterFactory::instance()->createCounter(name))
+LRUCache<Key, Data, ExpireFunc>::LRUCache(unsigned int size, bool check_expire, CacheCounter &counter) :
+    max_size_(size), check_expire_(check_expire), counter_(counter)
 {}
 
 template<typename Key, typename Data, typename ExpireFunc>
@@ -118,7 +116,7 @@ LRUCache<Key, Data, ExpireFunc>::insert(
     
     if (key2data_.empty()) {
         push_front(key, data, tag);
-        counter_->incInserted();
+        counter_.incInserted();
         return;
     }
     
@@ -129,18 +127,31 @@ LRUCache<Key, Data, ExpireFunc>::insert(
         data_.push_front(ListElement(data, tag, it));
         it->second = data_.begin();
         lock.unlock();
-        counter_->incUpdated();
+        counter_.incUpdated();
         return;
     }
 
     if (key2data_.size() < max_size_) {
         push_front(key, data, tag);
-        counter_->incInserted();
+        lock.unlock();
+        counter_.incInserted();
         return;
     }
+
+    typename List::iterator erase_it = getShrinked();    
+    Data data_tmp = erase_it->data_;
+    key2data_.erase(erase_it->map_iterator_);
+    data_.erase(erase_it);
+    push_front(key, data, tag);
     
+    lock.unlock();
+    counter_.incInserted();
+}
+
+template<typename Key, typename Data, typename ExpireFunc>
+typename LRUCache<Key, Data, ExpireFunc>::List::iterator
+LRUCache<Key, Data, ExpireFunc>::getShrinked() {
     typename List::reverse_iterator delete_it = data_.rbegin();
-    
     bool expired_found = false;
     if (check_expire_) {
         for(typename List::reverse_iterator it = data_.rbegin();
@@ -155,23 +166,13 @@ LRUCache<Key, Data, ExpireFunc>::insert(
     }
     
     if (expired_found) {
-        counter_->incExpired();
+        counter_.incExpired();
     }
     else {
-        counter_->incExcluded();
+        counter_.incExcluded();
     }
     
-    typename List::iterator erase_it = delete_it->map_iterator_->second;
-    
-    Data data_tmp = erase_it->data_;
-    key2data_.erase(erase_it->map_iterator_);
-    data_.erase(erase_it);
-
-    push_front(key, data, tag);
-
-    lock.unlock();
-    
-    counter_->incInserted();
+    return (++delete_it).base();
 }
 
 template<typename Key, typename Data, typename ExpireFunc>
@@ -204,7 +205,7 @@ LRUCache<Key, Data, ExpireFunc>::loadImpl(
     if (expired_(element.data_, element.tag_)) {
         Data data_tmp = element.data_;
         erase(it);
-        counter_->incExpired();
+        counter_.incExpired();
         lock.unlock();
         return false;
     }
@@ -217,7 +218,7 @@ LRUCache<Key, Data, ExpireFunc>::loadImpl(
     data = element.data_;
     tag = element.tag_;
     
-    counter_->incLoaded();
+    counter_.incLoaded();
     
     typename List::iterator list_it = it->second;
     if (data_.begin() != list_it && data_.end() != list_it) {
@@ -246,18 +247,11 @@ LRUCache<Key, Data, ExpireFunc>::saveImpl(
 template<typename Key, typename Data, typename ExpireFunc>
 void
 LRUCache<Key, Data, ExpireFunc>::clear() {
-    boost::mutex::scoped_lock lock(mutex_);
     Map key2data_tmp;
     List data_tmp;
+    boost::mutex::scoped_lock lock(mutex_);
     key2data_.swap(key2data_tmp);
     data_.swap(data_tmp);
-    lock.unlock();
-}
-
-template<typename Key, typename Data, typename ExpireFunc>
-const CacheCounter*
-LRUCache<Key, Data, ExpireFunc>::counter() const {
-    return counter_.get();
 }
 
 } // namespace xscript
