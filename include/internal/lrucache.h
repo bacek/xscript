@@ -116,6 +116,7 @@ LRUCache<Key, Data, ExpireFunc>::insert(
     
     if (key2data_.empty()) {
         push_front(key, data, tag);
+        lock.unlock();
         counter_.incInserted();
         return;
     }
