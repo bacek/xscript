@@ -379,51 +379,6 @@ append2Query(const std::string &part, Encoder *encoder, std::string &query) {
 }
 
 static int
-luaBuildQueryString(lua_State *lua) {
-    try {
-        int stack_size = lua_gettop(lua);
-        if (stack_size < 0 || stack_size > 1) 
-            throw BadArgCount(stack_size);
-
-        std::auto_ptr<Encoder> encoder(NULL);
-        if (stack_size == 1) {
-            std::string encoding = luaReadStack<std::string>(lua, 1);
-            if (strcasecmp(encoding.c_str(), "utf-8") != 0) {
-                encoder = std::auto_ptr<Encoder>(Encoder::createEscaping("utf-8", encoding.c_str()));
-            }
-        }
-        
-        Context *ctx = getContext(lua);
-        
-        const std::vector<StringUtils::NamedValue>& args = ctx->request()->args();
-        std::string query;
-        
-        if (!args.empty()) {
-            for(std::vector<StringUtils::NamedValue>::const_iterator it = args.begin(), end = args.end();
-                it != end;
-                ++it) {
-                if (!query.empty()) {
-                    query.push_back('&');
-                }
-                
-                append2Query(it->first, encoder.get(), query);            
-                query.push_back('=');
-                append2Query(it->second, encoder.get(), query);
-            }
-        }
-        
-        lua_pushstring(lua, query.c_str());
-        // Our value on stack
-        return 1;
-    }
-    catch (const std::exception &e) {
-        log()->error("caught exception in [xscript:buildQueryString]: %s", e.what());
-        luaL_error(lua, e.what());
-    }
-    return 0;
-}
-
-static int
 luaStrSplit(lua_State *lua) {
     try {
         luaCheckStackSize(lua, 2);
@@ -519,9 +474,6 @@ setupXScript(lua_State *lua, std::string * buf, Context *ctx, Block *block) {
     
     lua_pushcfunction(lua, &luaStrSplit);
     lua_setfield(lua, -2, "strsplit");
-    
-    lua_pushcfunction(lua, &luaBuildQueryString);
-    lua_setfield(lua, -2, "buildQueryString");
     
     lua_pop(lua, 2); // pop _G and xscript
 
