@@ -108,10 +108,14 @@ public:
 
 private:
     struct Element {
-        Element() : checked_(0) {}
-        Element(boost::shared_ptr<Xml> xml) : xml_(xml), checked_(time(NULL) + XmlCache::delay()) {}
+        Element() : checked_(0), modified_(false) {}
+        Element(boost::shared_ptr<Xml> xml) : xml_(xml), checked_(time(NULL) + XmlCache::delay()), modified_(false) {}
+
         boost::shared_ptr<Xml> xml_;
         time_t checked_;
+        bool modified_;
+
+        bool checkModified() const;
     };
 
     struct XmlExpiredFunc {
@@ -207,14 +211,20 @@ XmlStorage::XmlExpiredFunc::operator() (Element &element, const Tag &tag) const 
     (void)tag;
     log()->debug("checking whether xml expired");
 
-    time_t now = time(NULL);
-    if (now < element.checked_) {
-        return false;
+    if (!element.modified_) {
+        time_t now = time(NULL);
+        if (now >= element.checked_) {
+            if (element.checkModified()) {
+                element.modified_ = true;
+            }
+            element.checked_ = now + XmlCache::delay();
+        }
     }
-    
-    element.checked_ = now + XmlCache::delay();
+    return element.modified_;
+}
 
-    const Xml::TimeMapType& modified_info = element.xml_->modifiedInfo();
+bool XmlStorage::Element::checkModified() const {
+    const Xml::TimeMapType& modified_info = xml_->modifiedInfo();
     for(Xml::TimeMapType::const_iterator it = modified_info.begin(), end = modified_info.end();
         it != end;
         ++it) {
