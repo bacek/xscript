@@ -71,9 +71,6 @@ public:
     void save(const Key &key, const Data &data, const Tag &tag);
     
 private:
-    void erase(iterator it);
-    void erase(const Key &key);
-
     void push_front(const Key &key, const Data &data, const Tag &tag);
     typename List::iterator getShrinked();
 };
@@ -86,23 +83,6 @@ LRUCache<Key, Data, ExpireFunc>::LRUCache(unsigned int size, bool check_expire, 
 
 template<typename Key, typename Data, typename ExpireFunc>
 LRUCache<Key, Data, ExpireFunc>::~LRUCache() {
-}
-
-template<typename Key, typename Data, typename ExpireFunc>
-void
-LRUCache<Key, Data, ExpireFunc>::erase(iterator it) {
-    if (key2data_.end() == it) {
-        throw std::out_of_range("invalid iterator in LRUCache");
-    }
-    data_.erase(it->second);
-    key2data_.erase(it);
-}
-
-template<typename Key, typename Data, typename ExpireFunc>
-void
-LRUCache<Key, Data, ExpireFunc>::erase(const Key &key) {
-    iterator it = key2data_.find(key);
-    erase(it);
 }
 
 template<typename Key, typename Data, typename ExpireFunc>
@@ -193,8 +173,9 @@ LRUCache<Key, Data, ExpireFunc>::load(const Key &key, Data &data, Tag &tag) {
     ListElement& element = *(it->second);
     
     if (expired_(element.data_, element.tag_)) {
-        Data data_tmp = element.data_;
-        erase(it);
+        Data data_tmp = element.data_;       
+        data_.erase(it->second);
+        key2data_.erase(it);
         lock.unlock();
         counter_.incExpired();
         return false;
