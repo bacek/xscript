@@ -366,18 +366,6 @@ luaGetVHostArg(lua_State *lua) {
     return 0;
 }
 
-static void
-append2Query(const std::string &part, Encoder *encoder, std::string &query) {
-    std::string encoded;
-    if (NULL != encoder) {
-        encoder->encode(createRange(part), encoded);
-    }
-    else {
-        encoded = part;
-    }
-    query.append(StringUtils::urlencode(encoded));
-}
-
 static int
 luaStrSplit(lua_State *lua) {
     try {
