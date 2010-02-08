@@ -236,12 +236,12 @@ DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag
         for(KeyMapType::iterator it = missed_keys.begin();
             it != missed_keys.end();
             ++it) {
-            DocCacheStrategy* strategy = it->first->first;
+            DocCacheData::StrategyMap::iterator iter = it->first;
             TagKey* key = it->second.get();
-            boost::function<bool()> f = boost::bind(&DocCacheStrategy::saveDoc, strategy,
+            boost::function<bool()> f = boost::bind(&DocCacheStrategy::saveDoc, iter->first,
                 boost::cref(key), boost::cref(tag), boost::cref(cache_data));
             std::pair<bool, uint64_t> res = profile(f);
-            i->second->saveCounter_->add(res.second);  
+            iter->second->saveCounter_->add(res.second);  
         }
     }
     
