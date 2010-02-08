@@ -1,3 +1,9 @@
+xscript (5.70-30) unstable; urgency=low
+
+  * doc cache fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 08 Feb 2010 18:21:25 +0300
+
 xscript (5.70-29) unstable; urgency=low
 
   * buildQueryString removed from lua
