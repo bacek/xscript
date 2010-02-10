@@ -25,7 +25,6 @@
 #include <libxslt/xsltutils.h>
 
 #include "fcgi_server.h"
-#include "server_response.h"
 
 #include "xscript/authorizer.h"
 #include "xscript/config.h"
