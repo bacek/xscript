@@ -42,6 +42,13 @@ XmlDocHelper
 LocalBlock::call(boost::shared_ptr<Context> ctx,
     boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
 
+    if (invoke_ctx->haveCachedCopy()) {
+        Tag local_tag = invoke_ctx->tag();
+        local_tag.modified = false;
+        invoke_ctx->tag(local_tag);
+        return XmlDocHelper();
+    }
+    
     const std::vector<Param*>& params = this->params();
     TypedMap local_params;
     LocalArgList param_list;
@@ -77,9 +84,12 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
         }
     }
 
-    if (!proxy_ && tagged()) {
+    if (tagged()) {
         Tag tag;
-        tag.expire_time = time(NULL) + local_ctx->response()->expireDelta();
+        tag.last_modified = time(NULL);
+        if (!proxy_) {
+            tag.expire_time = tag.last_modified + local_ctx->response()->expireDelta();
+        }
         invoke_ctx->tag(tag);
     }
     

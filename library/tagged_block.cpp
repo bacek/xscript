@@ -183,7 +183,7 @@ TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
         }
     }
     else if (Tag::UNDEFINED_TIME == tag.expire_time) {
-        can_store = Tag::UNDEFINED_TIME != tag.last_modified;
+        can_store = Tag::UNDEFINED_TIME != tag.last_modified && !invoke_ctx->haveCachedCopy();
     }
     else {
         can_store = tag.expire_time >= now + cache->minimalCacheTime();
