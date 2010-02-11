@@ -108,7 +108,7 @@ OfflineServer::getScript(Request *request) {
         return Server::getScript(request);
     }
     
-    return ScriptFactory::createScript(request->getScriptFilename(), xml);
+    return ScriptFactory::createScriptFromXml(request->getScriptFilename(), xml);
 }
 
 }

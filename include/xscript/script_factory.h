@@ -15,8 +15,8 @@ public:
     virtual ~ScriptFactory();
 
     static boost::shared_ptr<Script> createScript(const std::string &name);
-    static boost::shared_ptr<Script> createScript(const std::string &name, const std::string &xml);
-    static boost::shared_ptr<Script> createScript(xmlNodePtr node);
+    static boost::shared_ptr<Script> createScriptFromXml(const std::string &name, const std::string &xml);
+    static boost::shared_ptr<Script> createScriptFromXmlNode(xmlNodePtr node);
     
 protected:
     virtual boost::shared_ptr<Script> create(const std::string &name);

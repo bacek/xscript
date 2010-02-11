@@ -231,8 +231,8 @@ FileBlock::invokeFile(const std::string &file_name,
         tmp_ctx = tmp_ctx->parentContext();
     }
 
-    boost::shared_ptr<Script> (*func)(const std::string &) = ScriptFactory::createScript;
-    boost::function<boost::shared_ptr<Script>()> script_creator = boost::bind(func, file_name);
+    boost::function<boost::shared_ptr<Script>()> script_creator =
+        boost::bind(&ScriptFactory::createScript, file_name);
 
     boost::shared_ptr<Script> script;
     if (tagged()) {
@@ -311,8 +311,8 @@ FileBlock::createTagKey(const Context *ctx) const {
         return key;
     }
 
-    boost::shared_ptr<Script> (*func)(const std::string &) = ScriptFactory::createScript;
-    boost::function<boost::shared_ptr<Script>()> script_creator = boost::bind(func, filename);
+    boost::function<boost::shared_ptr<Script>()> script_creator =
+        boost::bind(&ScriptFactory::createScript, filename);
 
     std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
     boost::shared_ptr<Script> script =

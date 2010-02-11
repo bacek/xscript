@@ -108,7 +108,7 @@ LocalBlock::parseSubNode(xmlNodePtr node) {
         root_name_.assign(root);
     }
     
-    script_ = ScriptFactory::createScript(node);
+    script_ = ScriptFactory::createScriptFromXmlNode(node);
 }
 
 void
