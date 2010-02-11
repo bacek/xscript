@@ -1,3 +1,9 @@
+xscript (5.70-31) unstable; urgency=low
+
+  * local block added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 11 Feb 2010 18:16:24 +0300
+
 xscript (5.70-30) unstable; urgency=low
 
   * doc cache fixed
