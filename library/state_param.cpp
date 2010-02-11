@@ -4,9 +4,10 @@
 #include <stdexcept>
 
 #include "xscript/args.h"
+#include "xscript/context.h"
 #include "xscript/param.h"
 #include "xscript/state.h"
-#include "xscript/context.h"
+#include "xscript/typed_map.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -42,12 +43,14 @@ std::string
 StateParam::asString(const Context *ctx) const {
 
     std::stringstream stream;
-    std::map<std::string, StateValue> vals;
+    std::map<std::string, TypedValue> vals;
 
     State* state = ctx->state();
     state->values(vals);
 
-    for (std::map<std::string, StateValue>::iterator i = vals.begin(), end = vals.end(); i != end; ++i) {
+    for(std::map<std::string, TypedValue>::iterator i = vals.begin(), end = vals.end();
+        i != end;
+        ++i) {
         stream << i->first << ":" << i->second.value() << std::endl;
     }
     return stream.str();

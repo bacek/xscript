@@ -10,17 +10,9 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
 
-#include "internal/hash.h"
-#include "internal/hashmap.h"
-#include "xscript/state_value.h"
+#include "xscript/typed_map.h"
 
 namespace xscript {
-
-#ifndef HAVE_HASHMAP
-typedef std::map<std::string, StateValue> StateValueMap;
-#else
-typedef details::hash_map<std::string, StateValue, details::StringHash> StateValueMap;
-#endif
 
 class StateImpl : private boost::noncopyable {
 public:
@@ -29,118 +21,105 @@ public:
 
     inline void clear() {
         boost::mutex::scoped_lock sl(mutex_);
-        values_.clear();
+        data_.clear();
     }
 
     inline void erase(const std::string &key) {
         boost::mutex::scoped_lock sl(mutex_);
-        values_.erase(key);
+        data_.erase(key);
     }
 
     void erasePrefix(const std::string &prefix);
 
     inline boost::int32_t asLong(const std::string &name) const {
         boost::mutex::scoped_lock sl(mutex_);
-        return as<boost::int32_t>(name);
+        return data_.asLong(name);
     }
 
     inline void setLong(const std::string &name, boost::int32_t value) {
         boost::mutex::scoped_lock sl(mutex_);
-        set(name, StateValue::TYPE_LONG, boost::lexical_cast<std::string>(value));
+        data_.setLong(name, value);
     }
 
     inline boost::int64_t asLongLong(const std::string &name) const {
         boost::mutex::scoped_lock sl(mutex_);
-        return as<boost::int64_t>(name);
+        return data_.asLongLong(name);
     }
 
     inline void setLongLong(const std::string &name, boost::int64_t value) {
         boost::mutex::scoped_lock sl(mutex_);
-        set(name, StateValue::TYPE_LONGLONG, boost::lexical_cast<std::string>(value));
+        data_.setLongLong(name, value);
     }
 
     inline boost::uint32_t asULong(const std::string &name) const {
         boost::mutex::scoped_lock sl(mutex_);
-        return as<boost::uint32_t>(name);
+        return data_.asULong(name);
     }
 
     inline void setULong(const std::string &name, boost::uint32_t value) {
         boost::mutex::scoped_lock sl(mutex_);
-        set(name, StateValue::TYPE_ULONG, boost::lexical_cast<std::string>(value));
+        data_.setULong(name, value);
     }
 
     inline boost::uint64_t asULongLong(const std::string &name) const {
         boost::mutex::scoped_lock sl(mutex_);
-        return as<boost::uint64_t>(name);
+        return data_.asULongLong(name);
     }
 
     inline void setULongLong(const std::string &name, boost::uint64_t value) {
         boost::mutex::scoped_lock sl(mutex_);
-        set(name, StateValue::TYPE_ULONGLONG, boost::lexical_cast<std::string>(value));
+        data_.setULongLong(name, value);
     }
 
     inline double asDouble(const std::string &name) const {
         boost::mutex::scoped_lock sl(mutex_);
-        return as<double>(name);
+        return data_.asDouble(name);
     }
 
     inline void setDouble(const std::string &name, double value) {
         boost::mutex::scoped_lock sl(mutex_);
-        set(name, StateValue::TYPE_DOUBLE, boost::lexical_cast<std::string>(value));
+        data_.setDouble(name, value);
     }
 
     inline std::string asString(const std::string &name) const {
         boost::mutex::scoped_lock sl(mutex_);
-        return find(name).value();
+        return data_.asString(name);
     }
 
     std::string asString(const std::string &name, const std::string &default_value) const;
     
     inline void setString(const std::string &name, const std::string &value) {
         boost::mutex::scoped_lock sl(mutex_);
-        set(name, StateValue::TYPE_STRING, value);
+        data_.setString(name, value);
     }
 
-    bool asBool(const std::string &name) const;
-    void setBool(const std::string &name, bool value);
+    inline bool asBool(const std::string &name) const {
+        boost::mutex::scoped_lock sl(mutex_);
+        return data_.asBool(name);
+    }
+    
+    inline void setBool(const std::string &name, bool value) {
+        boost::mutex::scoped_lock sl(mutex_);
+        data_.setBool(name, value);
+    }
 
     bool has(const std::string &name) const;
     void keys(std::vector<std::string> &v) const;
 
-    void values(std::map<std::string, StateValue> &m) const;
+    void values(std::map<std::string, TypedValue> &v) const;
     void copy(const std::string &src, const std::string &dest);
 
-    void checkName(const std::string &name) const;
-
-    inline StateValue typedValue(const std::string& name) const {
+    inline TypedValue typedValue(const std::string& name) const {
         boost::mutex::scoped_lock sl(mutex_);
-        return find(name);
+        return data_.find(name);
     }
 
     bool is(const std::string &name) const;
 
-protected:
-    const StateValue& find(const std::string &name) const;
-
-    inline void set(const std::string &name, int type, const std::string &value) {
-        values_[name] = StateValue(type, value);
-    }
-
-    template<typename T> T as(const std::string &name) const;
-
 private:
-    StateValueMap values_;
+    TypedMap data_;
     mutable boost::mutex mutex_;
 };
-
-template<typename T> inline T
-StateImpl::as(const std::string &name) const {
-    const StateValue &val = find(name);
-    if (val.value().empty()) {
-        return static_cast<T>(0);
-    }
-    return boost::lexical_cast<T>(val.value());
-}
 
 } // namespace xscript
 

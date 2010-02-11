@@ -12,6 +12,7 @@
 #include <xscript/param.h>
 #include <xscript/state.h>
 #include <xscript/string_utils.h>
+#include <xscript/typed_map.h>
 #include <xscript/util.h>
 #include <xscript/xml_util.h>
 #include <xscript/xslt_extension.h>
@@ -666,11 +667,12 @@ MistWorker::dumpState(Context *ctx, const std::vector<std::string> &params) {
     
     XmlNode node("state_dump");
 
-    std::map<std::string, StateValue> state_info;
+    std::map<std::string, TypedValue> state_info;
     state->values(state_info);
 
-    for (std::map<std::string, StateValue>::const_iterator it = state_info.begin();
-            it != state_info.end(); ++it) {
+    for(std::map<std::string, TypedValue>::const_iterator it = state_info.begin();
+        it != state_info.end();
+        ++it) {
         XmlChildNode child(node.getNode(), "param", it->second.value().c_str());
         child.setProperty("name", it->first.c_str());
         child.setProperty("type", it->second.stringType().c_str());

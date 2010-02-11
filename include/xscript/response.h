@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 
+#include <boost/cstdint.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 
@@ -27,6 +28,8 @@ public:
     void setStatus(unsigned short status);
     void sendError(unsigned short status, const std::string &message);
     void setHeader(const std::string &name, const std::string &value);
+    void setExpireDelta(boost::uint32_t delta);
+    void setSuppressBody(bool value);
 
     std::streamsize write(const char *buf, std::streamsize size, Request *request);
     std::streamsize write(std::auto_ptr<BinaryWriter> buf);
@@ -44,9 +47,10 @@ public:
     unsigned short status() const; 
     const HeaderMap& outHeaders() const;
     const CookieSet& outCookies() const;
+    boost::uint32_t expireDelta() const;
     
     void detach(const Context *ctx);
-    void setCacheable(const Context *ctx,
+    void setCacheable(
         boost::shared_ptr<PageCacheData> cache_data = boost::shared_ptr<PageCacheData>());
     
     virtual bool suppressBody(const Request *req) const;

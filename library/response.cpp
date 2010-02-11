@@ -26,6 +26,8 @@
 
 namespace xscript {
 
+static const boost::uint32_t DEFAULT_EXPIRE_TIME_DELTA = 300;
+
 class Response::ResponseData {
 public:
     ResponseData(Response *response, std::ostream *stream);
@@ -50,11 +52,14 @@ public:
     mutable boost::mutex write_mutex_, resp_mutex_;
     boost::shared_ptr<PageCacheData> cache_data_;
     bool have_cached_copy_;
+    bool suppress_body_;
+    boost::uint32_t expire_delta_;
 };
 
 Response::ResponseData::ResponseData(Response *response, std::ostream *stream) :
     response_(response), stream_(stream), writer_(NULL), headers_sent_(false), status_(200),
-    detached_(false), stream_locked_(false), have_cached_copy_(false)
+    detached_(false), stream_locked_(false), have_cached_copy_(false),
+    suppress_body_(false), expire_delta_(DEFAULT_EXPIRE_TIME_DELTA)
 {}
 
 Response::ResponseData::~ResponseData()
@@ -172,6 +177,18 @@ Response::setHeader(const std::string &name, const std::string &value) {
     }
 }
 
+void
+Response::setExpireDelta(boost::uint32_t delta) {
+    boost::mutex::scoped_lock sl(data_->resp_mutex_);
+    data_->expire_delta_ = delta;
+}
+
+void
+Response::setSuppressBody(bool value) {
+    boost::mutex::scoped_lock sl(data_->resp_mutex_);
+    data_->suppress_body_ = value;
+}
+
 std::streamsize
 Response::write(const char *buf, std::streamsize size, Request *request) {
     boost::mutex::scoped_lock wl(data_->write_mutex_);
@@ -259,7 +276,9 @@ Response::detach(const Context *ctx) {
 
 bool
 Response::suppressBody(const Request *req) const {
-    return req->suppressBody() || 204 == data_->status_ || 304 == data_->status_;
+    boost::mutex::scoped_lock sl(data_->resp_mutex_);
+    return data_->suppress_body_ || req->suppressBody() ||
+        204 == data_->status_ || 304 == data_->status_;
 }
 
 void
@@ -323,6 +342,12 @@ Response::outCookies() const {
     return data_->out_cookies_;
 }
 
+boost::uint32_t
+Response::expireDelta() const {
+    boost::mutex::scoped_lock sl(data_->resp_mutex_);
+    return data_->expire_delta_;
+}
+
 bool
 Response::isBinary() const {
     boost::mutex::scoped_lock wl(data_->write_mutex_);
@@ -357,7 +382,7 @@ Response::setContentEncoding(const std::string &encoding) {
 }
 
 void
-Response::setCacheable(const Context *ctx, boost::shared_ptr<PageCacheData> cache_data) {
+Response::setCacheable(boost::shared_ptr<PageCacheData> cache_data) {
     if (NULL != cache_data.get()) {
         data_->have_cached_copy_ = true;
         data_->cache_data_ = cache_data;
@@ -365,7 +390,7 @@ Response::setCacheable(const Context *ctx, boost::shared_ptr<PageCacheData> cach
     else {
         data_->cache_data_ = boost::shared_ptr<PageCacheData>(new PageCacheData());
     }
-    data_->cache_data_->expireTimeDelta(ctx->expireTimeDelta());
+    data_->cache_data_->expireTimeDelta(expireDelta());
 }
 
 ResponseDetacher::ResponseDetacher(Response *resp, const boost::shared_ptr<Context> &ctx) :

@@ -28,91 +28,49 @@ StateImpl::~StateImpl() {
 
 void
 StateImpl::erasePrefix(const std::string &prefix) {
-
     boost::mutex::scoped_lock sl(mutex_);
-    for (StateValueMap::iterator i = values_.begin(), end = values_.end(); i != end; ) {
-        if (strncmp(i->first.c_str(), prefix.c_str(), prefix.size()) == 0) {
-            values_.erase(i++);
-        }
-        else {
-            ++i;
-        }
-    }
-}
-
-bool
-StateImpl::asBool(const std::string &name) const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return find(name).asBool();
-}
-
-void
-StateImpl::setBool(const std::string &name, bool value) {
-    boost::mutex::scoped_lock sl(mutex_);
-    std::string v = value ? "1" : "0";
-    set(name, StateValue::TYPE_BOOL, v);
+    data_.erasePrefix(prefix);
 }
 
 bool
 StateImpl::has(const std::string &name) const {
     boost::mutex::scoped_lock sl(mutex_);
-    StateValueMap::const_iterator i = values_.find(name);
-    return (values_.end() != i);
+    return data_.has(name);
 }
 
 void
 StateImpl::keys(std::vector<std::string> &v) const {
-
     std::vector<std::string> local;
-    boost::mutex::scoped_lock sl(mutex_);
-    for (StateValueMap::const_iterator i = values_.begin(), end = values_.end(); i != end; ++i) {
-        local.push_back(i->first);
+    {
+        boost::mutex::scoped_lock sl(mutex_);
+        data_.keys(local);
     }
     v.swap(local);
 }
 
 void
-StateImpl::values(std::map<std::string, StateValue> &v) const {
-    std::map<std::string, StateValue> local;
+StateImpl::values(std::map<std::string, TypedValue> &v) const {
     boost::mutex::scoped_lock sl(mutex_);
-    std::copy(values_.begin(), values_.end(), std::inserter(local, local.begin()));
-    local.swap(v);
+    data_.values(v);
 }
 
 void
 StateImpl::copy(const std::string &src, const std::string &dest) {
     boost::mutex::scoped_lock sl(mutex_);
-    const StateValue &val = find(src);
-    set(dest, val.type(), val.value());
-}
-
-const StateValue&
-StateImpl::find(const std::string &name) const {
-    StateValueMap::const_iterator i = values_.find(name);
-    if (values_.end() == i) {
-        throw std::invalid_argument("nonexistent state param " + name);
-    }
-    return i->second;
+    const TypedValue &val = data_.find(src);
+    data_.insert(dest, val);
 }
 
 std::string
 StateImpl::asString(const std::string &name, const std::string &default_value) const {
     boost::mutex::scoped_lock sl(mutex_);
-    StateValueMap::const_iterator i = values_.find(name);
-    if (values_.end() != i) {
-        return i->second.value();
-    }
-    return default_value;
+    return data_.asString(name, default_value);
 }
 
 bool
 StateImpl::is(const std::string &name) const {
     boost::mutex::scoped_lock sl(mutex_);
-    StateValueMap::const_iterator i = values_.find(name);
-    if (values_.end() != i) {
-        return i->second.asBool();
-    }
-    return false;
+    return data_.is(name);
 }
 
 } // namespace xscript

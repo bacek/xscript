@@ -2,13 +2,18 @@
 #define _XSCRIPT_CACHE_OBJECT_H_
 
 #include <string>
+#include <vector>
 
 #include <boost/noncopyable.hpp>
 
+#include "xscript/xml.h"
+
 namespace xscript {
 
+class Block;
 class CacheStrategy;
 class Context;
+class Param;
 
 class CachedObject : private boost::noncopyable {
 public:
@@ -34,6 +39,12 @@ public:
     
     static void addDefaultStrategy(Strategy strategy);
     static void clearDefaultStrategy(Strategy strategy);
+    
+    static std::string fileModifiedKey(const std::string &filename);
+    static std::string blocksModifiedKey(const std::vector<Block*> &blocks);
+    static std::string modifiedKey(const Xml::TimeMapType &modified_info);
+    static std::string paramsKey(const std::vector<Param*> &params, const Context *ctx);
+    static std::string paramsIdKey(const std::vector<Param*> &params, const Context *ctx);
     
     static const time_t CACHE_TIME_UNDEFINED;
     

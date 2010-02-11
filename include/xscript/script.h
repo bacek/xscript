@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <boost/cstdint.hpp>
+#include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
 
 #include <xscript/cached_object.h>
@@ -42,6 +43,7 @@ public:
     const Block* block(unsigned int n) const;
     const Block* block(const std::string &id, bool throw_error = true) const;
     unsigned int blocksNumber() const;
+    const std::vector<Block*>& blocks() const;
     const std::map<std::string, std::string>& headers() const;
     const std::string& extensionProperty(const std::string &name) const;
     
@@ -67,7 +69,11 @@ protected:
     
     Script(const std::string &name);
 
-    void parse(const std::string &xml);
+    void parse();
+    void parseFromXml(const std::string &xml);
+    void parseFromXml(xmlNodePtr node); 
+    void parseInternal(const boost::function<xmlDocPtr()> &parserFunc);    
+    void parseXScript();
     
     virtual void postParse();
     

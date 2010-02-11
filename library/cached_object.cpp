@@ -5,14 +5,18 @@
 
 #include <boost/lexical_cast.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 
 #include "xscript/algorithm.h"
+#include "xscript/block.h"
 #include "xscript/cached_object.h"
 #include "xscript/doc_cache_strategy.h"
-#include "xscript/operation_mode.h"
-#include "xscript/range.h"
-
 #include "xscript/logger.h"
+#include "xscript/operation_mode.h"
+#include "xscript/param.h"
+#include "xscript/range.h"
+#include "xscript/string_utils.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -162,6 +166,79 @@ CachedObject::clearDefaultStrategy(Strategy strategy) {
 CacheStrategy*
 CachedObject::cacheStrategy() const {
     return data_->cache_strategy_.get();
+}
+
+std::string
+CachedObject::fileModifiedKey(const std::string &filename) {
+    if (filename.empty()) {
+        return StringUtils::EMPTY_STRING;
+    }
+    
+    namespace fs = boost::filesystem;
+    fs::path path(filename);
+    if (fs::exists(path) && !fs::is_directory(path)) {
+        return boost::lexical_cast<std::string>(fs::last_write_time(path));
+    }
+    
+    throw std::runtime_error("Cannot stat filename " + filename);
+}
+
+std::string
+CachedObject::modifiedKey(const Xml::TimeMapType &modified_info) {
+    std::string key;
+    for(Xml::TimeMapType::const_iterator it = modified_info.begin();
+        it != modified_info.end();
+        ++it) {
+        if (!key.empty()) {
+            key.push_back('|');
+        }
+        key.append(boost::lexical_cast<std::string>(it->second));
+    }
+    return key;
+}
+
+std::string
+CachedObject::blocksModifiedKey(const std::vector<Block*> &blocks) {
+    std::string key;
+    for(std::vector<Block*>::const_iterator it = blocks.begin();
+        it != blocks.end();
+        ++it) {
+        if (!key.empty()) {
+            key.push_back('|');
+        }
+        key.append(fileModifiedKey((*it)->xsltName()));
+    }
+    return key;
+}
+
+std::string
+CachedObject::paramsKey(const std::vector<Param*> &params, const Context *ctx) {
+    std::string key;
+    for(std::vector<Param*>::const_iterator it = params.begin();
+        it != params.end();
+        ++it) {
+        if (!key.empty()) {
+            key.push_back(':');
+        }
+        key.append((*it)->asString(ctx));
+    }
+    return key;
+}
+
+std::string
+CachedObject::paramsIdKey(const std::vector<Param*> &params, const Context *ctx) {
+    std::string key;
+    for(std::vector<Param*>::const_iterator it = params.begin();
+        it != params.end();
+        ++it) {
+        if (!key.empty()) {
+            key.push_back(':');
+        }
+        key.append((*it)->id());
+        key.push_back(':');
+        key.append((*it)->asString(ctx));
+    }
+    return key;
 }
 
 } // namespace xscript

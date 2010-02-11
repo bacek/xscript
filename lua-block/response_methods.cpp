@@ -140,7 +140,7 @@ luaResponseSetExpireTimeDelta(lua_State *lua) throw () {
         if (expire_time_delta < 0) {
             throw std::runtime_error("negative expire time delta is not allowed");
         }
-        ctx->rootContext()->expireTimeDelta((boost::uint32_t)expire_time_delta);
+        ctx->response()->setExpireDelta((boost::uint32_t)expire_time_delta);
         return 0;
     }
     catch (const LuaError &e) {

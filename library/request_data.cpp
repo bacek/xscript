@@ -2,8 +2,10 @@
 
 #include <cassert>
 
-#include "xscript/state.h"
+#include "xscript/request.h"
 #include "xscript/request_data.h"
+#include "xscript/response.h"
+#include "xscript/state.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -11,8 +13,8 @@
 
 namespace xscript {
 
-RequestData::RequestData() : request_(boost::shared_ptr<Request>()),
-                             response_(boost::shared_ptr<Response>()),
+RequestData::RequestData() : request_(boost::shared_ptr<Request>(new Request())),
+                             response_(boost::shared_ptr<Response>(new Response())),
                              state_(new State()) {
 }
 

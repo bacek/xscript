@@ -60,14 +60,13 @@ Authorizer::init(const Config *config) {
 }
 
 boost::shared_ptr<AuthContext>
-Authorizer::checkAuth(const boost::shared_ptr<Context> &ctx) {
+Authorizer::checkAuth(Context *ctx) {
     (void)ctx;
     return boost::shared_ptr<AuthContext>(new AuthContext());
 }
 
 void
-Authorizer::redirectToAuth(const boost::shared_ptr<Context> &ctx, const AuthContext *auth) const {
-    (void)ctx;
+Authorizer::redirectToAuth(const Context *ctx, const AuthContext *auth) const {
     (void)auth;
     ctx->response()->redirectToPath("/");
 }

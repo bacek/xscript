@@ -29,7 +29,8 @@ createEnv(const std::string &script_name, char *env[]) {
     }
     
     boost::shared_ptr<Script> script = ScriptFactory::createScript(script_name);
-    return boost::shared_ptr<Context>(new Context(script, state, request, response));
+    return boost::shared_ptr<Context>(
+            new Context(script, state, request, response));
 }
 
 static boost::shared_ptr<Context>

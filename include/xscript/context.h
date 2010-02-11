@@ -29,6 +29,8 @@ class DocumentWriter;
 class Script;
 class State;
 class Stylesheet;
+class TypedMap;
+class TypedValue;
 
 /**
  * Class for storing Context during single page processing.
@@ -45,7 +47,10 @@ public:
     virtual ~Context();
 
     static boost::shared_ptr<Context> createChildContext(
-            const boost::shared_ptr<Script> &script, const boost::shared_ptr<Context> &ctx);
+            const boost::shared_ptr<Script> &script,
+            const boost::shared_ptr<Context> &ctx,
+            const TypedMap &local_params,
+            bool proxy);
     
     void wait(int millis);
     void expect(unsigned int count);
@@ -64,13 +69,12 @@ public:
 
     Context* parentContext() const;
     Context* rootContext() const;
+    Context* originalContext() const;
     bool isRoot() const;
+    bool isProxy() const;
 
     std::string xsltName() const;
     void xsltName(const std::string &value);
-
-    boost::uint32_t expireTimeDelta() const;
-    void expireTimeDelta(boost::uint32_t value);
     
     const boost::shared_ptr<AuthContext>& authContext() const;
 
@@ -94,13 +98,9 @@ public:
     bool forceNoThreaded() const;
     void forceNoThreaded(bool value);
     bool noXsltPort() const;
-    void noXsltPort(bool value);
     bool noMainXsltPort() const;
-    void noMainXsltPort(bool value);
     bool noCache() const;
     void setNoCache();
-    bool suppressBody() const;
-    void suppressBody(bool value);
     bool skipNextBlocks() const;
     void skipNextBlocks(bool value);
     bool stopBlocks() const;
@@ -116,16 +116,24 @@ public:
     bool xsltChanged(const Script *script) const;
     
     const std::string& key() const;
-    void key(const std::string &key);
+    void key(const std::string &value);
     void appendKey(const std::string &value);
     
     boost::int32_t pageRandom() const;
     void pageRandom(boost::int32_t value);
 
+    bool hasLocalParam(const std::string &name) const;
+    bool localParamIs(const std::string &name) const;
+    const TypedValue& getLocalParam(const std::string &name) const;
+    std::string getLocalParam(const std::string &name, const std::string &default_value) const;
+    
     friend class ContextStopper;
 
 private:
-    Context(const boost::shared_ptr<Script> &script, const boost::shared_ptr<Context> &ctx);
+    Context(const boost::shared_ptr<Script> &script,
+            const boost::shared_ptr<Context> &ctx,
+            const TypedMap &local_params,
+            bool proxy);
     void init();
     bool insertParam(const std::string &key, const boost::any &value);
     bool findParam(const std::string &key, boost::any &value) const;

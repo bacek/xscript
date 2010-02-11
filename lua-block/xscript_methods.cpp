@@ -303,7 +303,7 @@ luaSuppressBody(lua_State *lua) {
         if (NULL == ctx) {
             throw std::runtime_error("Undefined context");
         }
-        ctx->rootContext()->suppressBody(true);
+        ctx->response()->setSuppressBody(true);
     }
     catch (const std::exception &e) {
         log()->error("caught exception in [xscript:suppressBody]: %s", e.what());

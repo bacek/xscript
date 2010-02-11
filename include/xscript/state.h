@@ -10,11 +10,10 @@
 #include <boost/utility.hpp>
 #include <boost/lexical_cast.hpp>
 
-#include <xscript/state_value.h>
-
 namespace xscript {
 
 class StateImpl;
+class TypedValue;
 
 class State : private boost::noncopyable {
 public:
@@ -53,10 +52,10 @@ public:
     bool has(const std::string &name) const;
     void keys(std::vector<std::string> &v) const;
 
-    void values(std::map<std::string, StateValue> &v) const;
+    void values(std::map<std::string, TypedValue> &v) const;
     void copy(const std::string &src, const std::string &dest);
 
-    StateValue typedValue(const std::string& name) const;
+    TypedValue typedValue(const std::string& name) const;
 
     void checkName(const std::string &name) const;
 

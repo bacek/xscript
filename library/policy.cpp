@@ -34,7 +34,6 @@ const std::string Policy::IS_SKIPPED_PROXY_HEADER_METHOD = "POLICY_IS_SKIPPED_PR
 const std::string Policy::IS_ERROR_DOC_METHOD = "POLICY_IS_ERROR_DOC";
 const std::string Policy::GET_CACHE_COOKIE_METHOD = "POLICY_GET_CACHE_COOKIE";
 
-
 class ProxyHeadersHelper {
 public:
     static bool skipped(const char* name);

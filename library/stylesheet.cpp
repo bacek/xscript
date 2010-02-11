@@ -40,6 +40,7 @@
 #include <libxslt/xsltutils.h>
 
 #include <libxml/uri.h>
+#include <libxml/xinclude.h>
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -415,6 +416,16 @@ Stylesheet::parse() {
         XmlUtils::throwUnless(NULL != doc.get());
         log()->debug("%s stylesheet %s document parsed", BOOST_CURRENT_FUNCTION, name().c_str());
 
+        if (NULL == doc->children) {
+            throw std::runtime_error("got empty xml doc");
+        }
+
+        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT) >= 0);
+
+        if (NULL == xmlDocGetRootElement(doc.get())) {
+            throw std::runtime_error("got xml doc with no root");
+        }
+        
         std::string type = data_->detectContentType(doc);
         if (!type.empty()) {
             data_->content_type_ = type;

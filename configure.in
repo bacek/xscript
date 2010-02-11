@@ -261,6 +261,6 @@ AC_CONFIG_FILES([Makefile
 	include/Makefile include/xscript/Makefile include/internal/Makefile
 	library/Makefile library/details/Makefile standard/Makefile standard/pcre/Makefile
 	daemon/Makefile xscript/Makefile python/Makefile lua-block/Makefile mist-block/Makefile
-	http-block/Makefile file-block/Makefile tests/Makefile])
+	http-block/Makefile file-block/Makefile local-block/Makefile tests/Makefile])
 
 AC_OUTPUT

@@ -126,7 +126,7 @@ State::keys(std::vector<std::string> &v) const {
 }
 
 void
-State::values(std::map<std::string, StateValue> &v) const {
+State::values(std::map<std::string, TypedValue> &v) const {
     impl_->values(v);
 }
 
@@ -135,7 +135,7 @@ State::copy(const std::string &src, const std::string &dest) {
     impl_->copy(src, dest);
 }
 
-StateValue
+TypedValue
 State::typedValue(const std::string &name) const {
     return impl_->typedValue(name);
 }

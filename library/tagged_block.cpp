@@ -1,8 +1,6 @@
 #include "settings.h"
 
 #include <boost/current_function.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
 #include <boost/tokenizer.hpp>
 
 #include <limits>
@@ -350,49 +348,33 @@ TaggedBlock::info(const Context *ctx) const {
 
 std::string
 TaggedBlock::createTagKey(const Context *ctx) const {
-    return processMainKey(ctx) + processParamsKey(ctx);
+    std::string key(processMainKey(ctx));
+    key.push_back('|');
+    key.append(processParamsKey(ctx));
+    return key;
 }
 
 std::string
 TaggedBlock::processMainKey(const Context *ctx) const {
     std::string key;
-    
     const std::string& xslt = xsltName();
     if (!xslt.empty()) {
         key.assign(xslt);
         key.push_back('|');
-        
-        namespace fs = boost::filesystem;
-        fs::path path(xslt);
-        if (fs::exists(path) && !fs::is_directory(path)) {
-            key.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
-            key.push_back('|');
-        }
-        else {
-            throw std::runtime_error("Cannot stat stylesheet " + xslt);
-        }
+        key.append(fileModifiedKey(xslt));
+        key.push_back('|');
     }
     key.append(boost::lexical_cast<std::string>(cacheTime()));
     key.push_back('|');
     key.append(canonicalMethod(ctx));
-    
-    const std::vector<Param*> &xslt_params = xsltParams();
-    for (unsigned int i = 0, n = xslt_params.size(); i < n; ++i) {
-        key.append(1, ':').append(xslt_params[i]->id());
-        key.append(1, ':').append(xslt_params[i]->asString(ctx));
-    }
-    
+    key.push_back('|');
+    key.append(paramsIdKey(xsltParams(), ctx));
     return key;
 }
 
 std::string
 TaggedBlock::processParamsKey(const Context *ctx) const {
-    std::string key;
-    const std::vector<Param*> &block_params = params();
-    for (unsigned int i = 0, n = block_params.size(); i < n; ++i) {
-        key.append(1, ':').append(block_params[i]->asString(ctx));
-    }
-    return key;
+    return paramsKey(params(), ctx);
 }
 
 } // namespace xscript

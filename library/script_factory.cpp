@@ -23,16 +23,6 @@ ScriptFactory::create(const std::string &name) {
 
 boost::shared_ptr<Script>
 ScriptFactory::createScript(const std::string &name) {
-    return createScript(name, StringUtils::EMPTY_STRING);
-}
-
-boost::shared_ptr<Script>
-ScriptFactory::createScript(const std::string &name, const std::string &xml) {
-
-    if (!xml.empty()) {
-        return createWithParse(name, xml);
-    }
-    
     ScriptCache *cache = ScriptCache::instance();
     boost::shared_ptr<Script> script = cache->fetch(name);
     if (NULL != script.get()) {
@@ -41,7 +31,7 @@ ScriptFactory::createScript(const std::string &name, const std::string &xml) {
   
     boost::mutex *mutex = cache->getMutex(name);
     if (NULL == mutex) {
-        return createWithParse(name, xml);
+        return createWithParse(name);
     }
     
     boost::mutex::scoped_lock lock(*mutex);
@@ -50,16 +40,29 @@ ScriptFactory::createScript(const std::string &name, const std::string &xml) {
         return script;
     }
 
-    return createWithParse(name, xml);
+    return createWithParse(name);
 }
 
 boost::shared_ptr<Script>
-ScriptFactory::createWithParse(const std::string &name, const std::string &xml) {
+ScriptFactory::createScript(const std::string &name, const std::string &xml) {
     boost::shared_ptr<Script> script = ScriptFactory::instance()->create(name);
-    script->parse(xml);
-    if (xml.empty()) {
-        ScriptCache::instance()->store(name, script);
-    }
+    script->parseFromXml(xml);
+    return script;
+}
+
+boost::shared_ptr<Script>
+ScriptFactory::createScript(xmlNodePtr node) {
+    boost::shared_ptr<Script> script =
+        ScriptFactory::instance()->create(StringUtils::EMPTY_STRING);
+    script->parseFromXml(node);
+    return script;
+}
+
+boost::shared_ptr<Script>
+ScriptFactory::createWithParse(const std::string &name) {
+    boost::shared_ptr<Script> script = ScriptFactory::instance()->create(name);
+    script->parse();
+    ScriptCache::instance()->store(name, script);
     return script;
 }
 

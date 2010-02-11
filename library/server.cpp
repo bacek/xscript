@@ -118,13 +118,13 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
         ctx = boost::shared_ptr<Context>(createContext(script, state, request, response));
         ContextStopper ctx_stopper(ctx);
         Authorizer *authorizer = Authorizer::instance();
-        boost::shared_ptr<AuthContext> auth = authorizer->checkAuth(ctx);
+        boost::shared_ptr<AuthContext> auth = authorizer->checkAuth(ctx.get());
         assert(NULL != auth.get());
 
         ctx->authContext(auth);
         
         if (!auth->authorized()) {
-            authorizer->redirectToAuth(ctx, auth.get());
+            authorizer->redirectToAuth(ctx.get(), auth.get());
             response->sendHeaders();
             return;
         }
@@ -143,15 +143,16 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
                 return;
             }
             
+            bool result = true;
             if (script->forceStylesheet() && !ctx->noMainXsltPort()) {
-                script->applyStylesheet(ctx, doc);
+                result = script->applyStylesheet(ctx, doc);
                 if (response->isBinary()) {
                     return;
                 }
             }
             
-            if (cachable && script->cachable(ctx.get(), true)) {
-                ctx->response()->setCacheable(ctx.get());
+            if (result && cachable && script->cachable(ctx.get(), true)) {
+                ctx->response()->setCacheable();
             }
 
             sendResponse(ctx.get(), doc);
@@ -183,7 +184,7 @@ Server::processCachedDoc(Context *ctx, const Script *script) {
             return false;
         }
 
-        ctx->response()->setCacheable(ctx, cache_data);
+        ctx->response()->setCacheable(cache_data);
     }
     catch(const std::exception &e) {
         log()->error("Error in loading cached page: %s", e.what());
@@ -196,7 +197,7 @@ Server::processCachedDoc(Context *ctx, const Script *script) {
 void
 Server::sendResponse(Context *ctx, XmlDocSharedHelper doc) {
     sendHeaders(ctx);
-    if (ctx->suppressBody()) {
+    if (ctx->response()->suppressBody(ctx->request())) {
         return;
     } 
 

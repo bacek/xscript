@@ -18,6 +18,7 @@
 #include "xscript/server.h"
 #include "xscript/state.h"
 #include "xscript/stylesheet.h"
+#include "xscript/typed_map.h"
 #include "xscript/vhost_data.h"
 #include "xscript/xml_util.h"
 
@@ -42,33 +43,65 @@ private:
     MapType params_;
 };
 
+struct CommonData {
+    CommonData(const boost::shared_ptr<RequestData> &request_data,
+               const std::string &xslt_name) :
+        request_data_(request_data), params_(new ParamsMap()),
+        xslt_name_(xslt_name), page_random_(-1), no_xslt_(false), no_main_xslt_(false)
+    {}
+    
+    CommonData(const boost::shared_ptr<RequestData> &request_data,
+               const boost::shared_ptr<ParamsMap> &params,
+               const boost::shared_ptr<AuthContext> &auth,
+               const std::string &xslt_name) :
+        request_data_(request_data), params_(params), auth_(auth),
+        xslt_name_(xslt_name), page_random_(-1), no_xslt_(false), no_main_xslt_(false)
+    {}
+    ~CommonData() {}
+    
+    mutable boost::mutex mutex_;
+    boost::shared_ptr<RequestData> request_data_;
+    boost::shared_ptr<ParamsMap> params_;
+    boost::shared_ptr<AuthContext> auth_;
+    std::string xslt_name_;
+    std::string key_;
+    boost::int32_t page_random_;
+    std::auto_ptr<DocumentWriter> writer_;
+    bool no_xslt_;
+    bool no_main_xslt_;
+};
+
 struct Context::ContextData {
-    ContextData(const boost::shared_ptr<Script> &script,
-                const boost::shared_ptr<State> &state,
-                const boost::shared_ptr<Request> &request,
-                const boost::shared_ptr<Response> &response) :
-        stopped_(false), script_(script),
-        request_data_(new RequestData(request, response, state)),
-        xslt_name_(script->xsltName()), flags_(0), page_random_(-1),
-        params_(boost::shared_ptr<ParamsMap>(new ParamsMap())) 
+    ContextData(const boost::shared_ptr<RequestData> request_data,
+                const boost::shared_ptr<Script> &script) :
+        stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
+        script_(script), flags_(0)
     {
-        expire_time_delta_ = script->expireTimeDeltaUndefined() ?
-                DEFAULT_EXPIRE_TIME_DELTA : script->expireTimeDelta();
+        if (!script->expireTimeDeltaUndefined()) {
+            requestData()->response()->setExpireDelta(script->expireTimeDelta());
+        }
+    }
+    
+    ContextData(const boost::shared_ptr<RequestData> request_data,
+                const boost::shared_ptr<Script> &script,
+                const TypedMap &local_params) :
+        stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
+        script_(script), flags_(0), local_params_(local_params)
+    {
+        if (!script->expireTimeDeltaUndefined()) {
+            requestData()->response()->setExpireDelta(script->expireTimeDelta());
+        }
     }
     
     ContextData(const boost::shared_ptr<Script> &script,
                 const boost::shared_ptr<Context> &ctx,
-                const boost::shared_ptr<ParamsMap> &params) :
-        stopped_(false), script_(script), request_data_(ctx->requestData()), parent_context_(ctx),
-        xslt_name_(script->xsltName()), auth_(ctx->authContext()), flags_(0), page_random_(-1),
-        params_(params)
-    {
-        if (script->expireTimeDeltaUndefined()) {
-            expire_time_delta_ = DEFAULT_EXPIRE_TIME_DELTA;
-        }
-        else {
-            expire_time_delta_ = script->expireTimeDelta();
-            ctx->rootContext()->expireTimeDelta(expire_time_delta_);
+                const boost::shared_ptr<CommonData> &common_data,
+                const TypedMap &local_params) :
+        stopped_(false), common_data_(common_data), script_(script), parent_context_(ctx),
+        flags_(0), local_params_(local_params)
+    {       
+        if (!script->expireTimeDeltaUndefined()) {
+            requestData()->response()->setExpireDelta(script->expireTimeDelta());
         }
         timer_.reset(ctx->timer().remained());
     }
@@ -77,6 +110,26 @@ struct Context::ContextData {
         std::for_each(clear_node_list_.begin(),
                       clear_node_list_.end(),
                       boost::bind(&xmlFreeNode, _1));
+    }
+    
+    const boost::shared_ptr<RequestData>& requestData() const {
+        return common_data_->request_data_;
+    }
+    
+    DocumentWriter* documentWriter() const {
+        return common_data_->writer_.get();
+    }
+    
+    void documentWriter(std::auto_ptr<DocumentWriter> writer) {
+        common_data_->writer_ = writer;
+    }
+    
+    const boost::shared_ptr<AuthContext>& authContext() const {
+        return common_data_->auth_;
+    }
+    
+    void authContext(const boost::shared_ptr<AuthContext> &auth) {
+        common_data_->auth_ = auth;
     }
     
     void flag(unsigned int type, bool value) {
@@ -109,56 +162,95 @@ struct Context::ContextData {
     }
     
     boost::int32_t pageRandom() {
-        if (page_random_ < 0) {
+        if (common_data_->page_random_ < 0) {
             boost::int32_t random_max = script_->pageRandomMax();
             boost::int32_t rand = random();
             if (random_max > 0) {
-                page_random_ = random_max < RAND_MAX ? rand % (random_max + 1) : rand;
+                common_data_->page_random_ =
+                    random_max < RAND_MAX ? rand % (random_max + 1) : rand;
             }
             else {
-                page_random_ = 0;
+                common_data_->page_random_ = 0;
             }
         }
-        return page_random_;
+        return common_data_->page_random_;
     }
     
+    void pageRandom(boost::int32_t value) {
+        common_data_->page_random_ = value;
+    }
+    
+    bool noXsltPort() const {
+        boost::mutex::scoped_lock lock(common_data_->mutex_);
+        return common_data_->no_xslt_;
+    }
+
+    void noXsltPort(bool value) {
+        boost::mutex::scoped_lock lock(common_data_->mutex_);
+        common_data_->no_xslt_ = value;
+    }
+
+    bool noMainXsltPort() const {
+        boost::mutex::scoped_lock lock(common_data_->mutex_);
+        return common_data_->no_main_xslt_;
+    }
+
+    void noMainXsltPort(bool value) {
+        boost::mutex::scoped_lock lock(common_data_->mutex_);
+        common_data_->no_main_xslt_ = value;
+    }
+    
+    const std::string& key() const {
+        return common_data_->key_;
+    }
+
+    void key(const std::string &key) {
+        common_data_->key_ = key;
+    }
+    
+    std::string xsltName() const {
+        boost::mutex::scoped_lock lock(common_data_->mutex_);
+        return common_data_->xslt_name_;
+    }
+    
+    void xsltName(const std::string &value) {
+        boost::mutex::scoped_lock lock(common_data_->mutex_);
+        common_data_->xslt_name_ = value;
+    }
+    
+    bool insertParam(const std::string &key, const boost::any &value) {
+        return common_data_->params_->insert(key, value);
+    }
+
+    bool findParam(const std::string &key, boost::any &value) const {
+        return common_data_->params_->find(key, value);
+    }
+ 
     volatile bool stopped_;
+    boost::shared_ptr<CommonData> common_data_;
     boost::shared_ptr<Script> script_;
-    boost::shared_ptr<RequestData> request_data_;
     boost::shared_ptr<Context> parent_context_;
-    std::string xslt_name_;
     std::vector<boost::shared_ptr<InvokeContext> > results_;
     std::list<xmlNodePtr> clear_node_list_;
 
     boost::condition condition_;
 
-    boost::shared_ptr<AuthContext> auth_;
-    std::auto_ptr<DocumentWriter> writer_;
-    
-    std::string key_;
-
     unsigned int flags_;
-    boost::uint32_t expire_time_delta_;
-    boost::int32_t page_random_;
 
     std::map<const Block*, std::string> runtime_errors_;
     TimeoutCounter timer_;
 
-    boost::shared_ptr<ParamsMap> params_;
+    TypedMap local_params_;
     
     static boost::thread_specific_ptr<std::list<TimeoutCounter> > block_timers_;
     
     mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_;
     
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
-    static const unsigned int FLAG_NO_XSLT_PORT = 1 << 1;
-    static const unsigned int FLAG_NO_MAIN_XSLT_PORT = 1 << 2;
     static const unsigned int FLAG_NO_CACHE = 1 << 3;
-    static const unsigned int SUPPRESS_BODY = 1 << 4;
-    static const unsigned int SKIP_NEXT_BLOCKS = 1 << 5;
-    static const unsigned int STOP_BLOCKS = 1 << 6;
+    static const unsigned int SKIP_NEXT_BLOCKS = 1 << 4;
+    static const unsigned int STOP_BLOCKS = 1 << 5;
     
-    static const boost::uint32_t DEFAULT_EXPIRE_TIME_DELTA = 300;
 };
 
 boost::thread_specific_ptr<std::list<TimeoutCounter> > Context::ContextData::block_timers_;
@@ -166,11 +258,13 @@ boost::thread_specific_ptr<std::list<TimeoutCounter> > Context::ContextData::blo
 Context::Context(const boost::shared_ptr<Script> &script,
                  const boost::shared_ptr<State> &state,
                  const boost::shared_ptr<Request> &request,
-                 const boost::shared_ptr<Response> &response) : ctx_data_(NULL)
+                 const boost::shared_ptr<Response> &response) :
+    ctx_data_(NULL)
 {
     assert(script.get());
-    ctx_data_ = new ContextData(script, state, request, response);
-    ExtensionList::instance()->initContext(this);
+    boost::shared_ptr<RequestData> request_data(
+            new RequestData(request, response, state));
+    ctx_data_ = new ContextData(request_data, script);
     init();
     if (NULL == script->cacheStrategy()) {
         appendKey(boost::lexical_cast<std::string>(pageRandom()));
@@ -178,12 +272,22 @@ Context::Context(const boost::shared_ptr<Script> &script,
 }
 
 Context::Context(const boost::shared_ptr<Script> &script,
-                 const boost::shared_ptr<Context> &ctx) : ctx_data_(NULL)
+                 const boost::shared_ptr<Context> &ctx,
+                 const TypedMap &local_params,
+                 bool proxy) : ctx_data_(NULL)
 {
     assert(script.get());
     assert(ctx.get());
-    ctx_data_ = new ContextData(script, ctx, ctx->ctx_data_->params_);
-    init();
+    
+    if (proxy) {
+        ctx_data_ = new ContextData(script, ctx, ctx->ctx_data_->common_data_, local_params);
+    }
+    else {
+        boost::shared_ptr<RequestData> request_data(new RequestData());
+        ctx_data_ = new ContextData(request_data, script, local_params);
+        ctx_data_->authContext(Authorizer::instance()->checkAuth(this));
+        init();
+    }
 }
 
 Context::~Context() {
@@ -197,10 +301,11 @@ Context::~Context() {
 
 void
 Context::init() {
+    ExtensionList::instance()->initContext(this);    
     const Server *server = VirtualHostData::instance()->getServer();
     if (NULL != server) {
-        noXsltPort(!server->needApplyPerblockStylesheet(request()));
-        noMainXsltPort(!server->needApplyMainStylesheet(request()));
+        ctx_data_->noXsltPort(!server->needApplyPerblockStylesheet(request()));
+        ctx_data_->noMainXsltPort(!server->needApplyMainStylesheet(request()));
     }
     CacheStrategy *strategy = script()->cacheStrategy();
     if (NULL != strategy) {
@@ -210,28 +315,30 @@ Context::init() {
 
 boost::shared_ptr<Context>
 Context::createChildContext(const boost::shared_ptr<Script> &script,
-                            const boost::shared_ptr<Context> &ctx) {
-    return boost::shared_ptr<Context>(new Context(script, ctx));
+                            const boost::shared_ptr<Context> &ctx,
+                            const TypedMap &local_params,
+                            bool proxy) {
+    return boost::shared_ptr<Context>(new Context(script, ctx, local_params, proxy));
 }
 
 const boost::shared_ptr<RequestData>&
 Context::requestData() const {
-    return ctx_data_->request_data_;
+    return ctx_data_->requestData();
 }
 
 Request*
 Context::request() const {
-    return ctx_data_->request_data_->request();
+    return requestData()->request();
 }
 
 Response*
 Context::response() const {
-    return ctx_data_->request_data_->response();
+    return requestData()->response();
 }
 
 State*
 Context::state() const {
-    return ctx_data_->request_data_->state();
+    return requestData()->state();
 }
 
 const boost::shared_ptr<Script>&
@@ -241,7 +348,7 @@ Context::script() const {
 
 const boost::shared_ptr<AuthContext>&
 Context::authContext() const {
-    return ctx_data_->auth_;
+    return ctx_data_->authContext();
 }
 
 void
@@ -349,55 +456,43 @@ Context::result(unsigned int n) const {
 std::string
 Context::xsltName() const {
     boost::mutex::scoped_lock sl(ctx_data_->attr_mutex_);
-    return ctx_data_->xslt_name_;
+    return ctx_data_->xsltName();
 }
 
 void
 Context::xsltName(const std::string &value) {
     boost::mutex::scoped_lock sl(ctx_data_->attr_mutex_);
     if (value.empty()) {
-        ctx_data_->xslt_name_.erase();
+        ctx_data_->xsltName(value);
     }
     else {
-        ctx_data_->xslt_name_ = ctx_data_->script_->fullName(value);
+        ctx_data_->xsltName(script()->fullName(value));
     }
-}
-
-boost::uint32_t
-Context::expireTimeDelta() const {
-    boost::mutex::scoped_lock sl(ctx_data_->attr_mutex_);
-    return ctx_data_->expire_time_delta_;
-}
-
-void
-Context::expireTimeDelta(boost::uint32_t value) {
-    boost::mutex::scoped_lock sl(ctx_data_->attr_mutex_);
-    ctx_data_->expire_time_delta_ = value;
 }
 
 void
 Context::authContext(const boost::shared_ptr<AuthContext> &auth) {
-    ctx_data_->auth_ = auth;
+    ctx_data_->authContext(auth);
 }
 
 DocumentWriter*
 Context::documentWriter() {
-    if (NULL == ctx_data_->writer_.get()) {
-        ctx_data_->writer_ = std::auto_ptr<DocumentWriter>(
-            new XmlWriter(Policy::getOutputEncoding(request())));
+    if (NULL == ctx_data_->documentWriter()) {
+        ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(
+            new XmlWriter(Policy::getOutputEncoding(request()))));
     }
 
-    return ctx_data_->writer_.get();
+    return ctx_data_->documentWriter();
 }
 
 void
 Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
     if (sh->outputMethod() == "xml" && !sh->haveOutputInfo()) {
-        ctx_data_->writer_ = std::auto_ptr<DocumentWriter>(new XmlWriter(sh->outputEncoding()));
+        ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new XmlWriter(sh->outputEncoding())));
         log()->debug("xml writer created");
     }
     else {
-        ctx_data_->writer_ = std::auto_ptr<DocumentWriter>(new HtmlWriter(sh));
+        ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new HtmlWriter(sh)));
         log()->debug("html writer created");
     }
 }
@@ -414,22 +509,12 @@ Context::forceNoThreaded(bool value) {
 
 bool
 Context::noXsltPort() const {
-    return ctx_data_->flag(ContextData::FLAG_NO_XSLT_PORT);
-}
-
-void
-Context::noXsltPort(bool value) {
-    ctx_data_->flag(ContextData::FLAG_NO_XSLT_PORT, value);
+    return ctx_data_->noXsltPort();
 }
 
 bool
 Context::noMainXsltPort() const {
-    return ctx_data_->flag(ContextData::FLAG_NO_MAIN_XSLT_PORT);
-}
-
-void
-Context::noMainXsltPort(bool value) {
-    ctx_data_->flag(ContextData::FLAG_NO_MAIN_XSLT_PORT, value);
+    return ctx_data_->noMainXsltPort();
 }
 
 bool
@@ -440,16 +525,6 @@ Context::noCache() const {
 void
 Context::setNoCache() {
     ctx_data_->flag(ContextData::FLAG_NO_CACHE, true);
-}
-
-bool
-Context::suppressBody() const {
-    return response()->suppressBody(request()) || ctx_data_->flag(ContextData::SUPPRESS_BODY);
-}
-
-void
-Context::suppressBody(bool value) {
-    ctx_data_->flag(ContextData::SUPPRESS_BODY, value);
 }
 
 bool
@@ -496,9 +571,29 @@ Context::rootContext() const {
     return const_cast<Context*>(ctx);
 }
 
+Context*
+Context::originalContext() const {
+    const Context* ctx = this;
+    while(ctx->isProxy()) {
+        ctx = ctx->parentContext();
+        if (NULL == ctx) {
+            throw std::logic_error("NULL original context");
+        }
+    }
+    return const_cast<Context*>(ctx); 
+}
+
 bool
 Context::isRoot() const {
     return parentContext() == NULL;
+}
+
+bool
+Context::isProxy() const {
+    if (isRoot()) {
+        return false;
+    }
+    return request() == parentContext()->request();
 }
 
 bool
@@ -517,12 +612,12 @@ Context::xsltChanged(const Script *script) const {
 
 const std::string&
 Context::key() const {
-    return ctx_data_->key_;
+    return ctx_data_->key();
 }
 
 void
-Context::key(const std::string &key) {
-    ctx_data_->key_ = key;
+Context::key(const std::string &value) {
+    ctx_data_->key(value);
 }
 
 void
@@ -542,7 +637,7 @@ Context::pageRandom() const {
 
 void
 Context::pageRandom(boost::int32_t value) {
-    ctx_data_->page_random_ = value;
+    ctx_data_->pageRandom(value);
 }
 
 const TimeoutCounter&
@@ -589,12 +684,32 @@ Context::stopTimer() {
 
 bool
 Context::insertParam(const std::string &key, const boost::any &value) {
-    return ctx_data_->params_->insert(key, value);
+    return ctx_data_->insertParam(key, value);
 }
 
 bool
 Context::findParam(const std::string &key, boost::any &value) const {
-    return ctx_data_->params_->find(key, value);
+    return ctx_data_->findParam(key, value);
+}
+
+bool
+Context::hasLocalParam(const std::string &name) const {
+    return ctx_data_->local_params_.has(name);
+}
+
+bool
+Context::localParamIs(const std::string &name) const {
+    return ctx_data_->local_params_.is(name);
+}
+
+const TypedValue&
+Context::getLocalParam(const std::string &name) const {
+    return ctx_data_->local_params_.find(name);
+}
+
+std::string
+Context::getLocalParam(const std::string &name, const std::string &default_value) const {
+    return ctx_data_->local_params_.asString(name, default_value);
 }
 
 bool
@@ -623,10 +738,11 @@ ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {
 }
 
 ContextStopper::~ContextStopper() {
-    if (ctx_->isRoot()) {
+    if (!ctx_->isProxy()) {
         ExtensionList::instance()->stopContext(ctx_.get());
     }
-    else if (ctx_->noCache() || !ctx_->ctx_data_->runtime_errors_.empty()) {
+    
+    if (!ctx_->isRoot() && (ctx_->noCache() || !ctx_->ctx_data_->runtime_errors_.empty())) {
         ctx_->rootContext()->setNoCache();
     }
     

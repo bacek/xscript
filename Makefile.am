@@ -20,6 +20,8 @@ EXTRA_DIST = ChangeLog Doxyfile AUTHORS COPYING INSTALL NEWS README \
 	extra/xscript-cache-clean extra/xscriptcacheclean.sh \
 	extra/xscriptstart.sh extra/xscript-fix-shlibdeps.sh
 
+SUBDIRS += local-block
+
 if HAVE_LUA_BLOCK
 SUBDIRS += lua-block
 endif

@@ -18,6 +18,7 @@
 #include <xscript/script.h>
 #include <xscript/script_factory.h>
 #include <xscript/string_utils.h>
+#include <xscript/typed_map.h>
 #include <xscript/util.h>
 #include <xscript/xml.h>
 #include <xscript/xml_util.h>
@@ -230,8 +231,10 @@ FileBlock::invokeFile(const std::string &file_name,
         tmp_ctx = tmp_ctx->parentContext();
     }
 
+    boost::shared_ptr<Script> (*func)(const std::string &) = ScriptFactory::createScript;
+    boost::function<boost::shared_ptr<Script>()> script_creator = boost::bind(func, file_name);
+
     boost::shared_ptr<Script> script;
-    boost::function<boost::shared_ptr<Script>()> script_creator = boost::bind(&ScriptFactory::createScript, file_name);
     if (tagged()) {
         std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
         Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);
@@ -244,7 +247,8 @@ FileBlock::invokeFile(const std::string &file_name,
     if (NULL == script.get()) {
         throw InvokeError("Cannot create script", "file", file_name);
     }
-    boost::shared_ptr<Context> local_ctx = Context::createChildContext(script, ctx);
+    boost::shared_ptr<Context> local_ctx =
+        Context::createChildContext(script, ctx, TypedMap(), true);
 
     if (threaded() || ctx->forceNoThreaded()) {
         local_ctx->forceNoThreaded(true);
@@ -300,14 +304,16 @@ FileBlock::createTagKey(const Context *ctx) const {
         return key;
     }
 
-    key.append(1, ':').append(filename);
+    key.push_back('|');
+    key.append(filename);
 
     if (!isInvoke()) {
         return key;
     }
 
-    boost::function<boost::shared_ptr<Script>()> script_creator =
-        boost::bind(&ScriptFactory::createScript, filename);
+    boost::shared_ptr<Script> (*func)(const std::string &) = ScriptFactory::createScript;
+    boost::function<boost::shared_ptr<Script>()> script_creator = boost::bind(func, filename);
+
     std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
     boost::shared_ptr<Script> script =
         const_cast<Context*>(ctx)->param(script_param_name, script_creator, *mutex);

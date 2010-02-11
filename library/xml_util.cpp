@@ -492,6 +492,36 @@ XmlUtils::processXPointer(const Block *block,
     }
 }
 
+static bool
+traverseNode(xmlNodePtr target, xmlNodePtr node, boost::int32_t &count) {
+    while(node) {
+        ++count;
+        if (node == target) {
+            return true;
+        }
+        if (node->children) {
+            bool res = traverseNode(target, node->children, count);
+            if (res) {
+                return true;
+            }
+        }
+        node = node->next;
+    }
+    return false;
+}
+
+boost::int32_t
+XmlUtils::getNodeCount(xmlNodePtr node) {
+    xmlNodePtr root = node;
+    while(root->parent) {
+        root = root->parent;
+    };
+    
+    boost::int32_t count = 0;
+    bool res = traverseNode(node, root, count);
+    return res ? count : -1;
+}
+
 XmlInfoCollector::XmlInfoCollector() {
 }
 

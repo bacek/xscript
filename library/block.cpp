@@ -485,7 +485,6 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) 
         
     bool result = true;
     if (XmlUtils::hasXMLError()) {
-        ctx->rootContext()->setNoCache();
         result = false;
     }
                 

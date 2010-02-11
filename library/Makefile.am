@@ -7,7 +7,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp cached_o
 	query_arg_param.cpp request.cpp request_param.cpp request_data.cpp \
 	request_data_param.cpp response.cpp \
 	sanitizer.cpp script.cpp script_factory.cpp state.cpp policy.cpp \
-	state_arg_param.cpp state_impl.cpp state_param.cpp state_value.cpp \
+	state_arg_param.cpp state_impl.cpp state_param.cpp \
 	stylesheet.cpp stylesheet_factory.cpp tag.cpp \
 	tag_param.cpp tagged_block.cpp remote_tagged_block.cpp \
 	threaded_block.cpp util.cpp xml_util.cpp writer.cpp xml.cpp xslt_extension.cpp \
@@ -32,7 +32,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp cached_o
 	page_random_param.cpp message_interface.cpp message_errors.cpp exception.cpp \
 	parser.cpp request_impl.cpp http_utils.cpp \
 	dummy_response_time_counter.cpp response_time_counter_impl.cpp response_time_counter_factory.cpp \
-	response_time_counter_block.cpp invoke_context.cpp
+	response_time_counter_block.cpp invoke_context.cpp typed_map.cpp local_arg_param.cpp
 
 libxscript_la_LDFLAGS = @VERSION_INFO@ -lcurl
 

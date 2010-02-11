@@ -1,0 +1,43 @@
+#ifndef _XSCRIPT_LOCAL_BLOCK_H_
+#define _XSCRIPT_LOCAL_BLOCK_H_
+
+#include <string>
+#include <vector>
+
+#include <boost/shared_ptr.hpp>
+
+#include "xscript/tagged_block.h"
+#include "xscript/threaded_block.h"
+
+namespace xscript {
+
+class Script;
+
+class LocalBlock : public ThreadedBlock, public TaggedBlock {
+public:
+    LocalBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    virtual ~LocalBlock();
+
+    virtual std::string createTagKey(const Context *ctx) const;
+protected:
+    virtual void parseSubNode(xmlNodePtr node);
+    virtual void postParse();
+
+private:
+    LocalBlock(const LocalBlock &);
+    LocalBlock& operator = (const LocalBlock &);
+
+    virtual void property(const char *name, const char *value);
+    virtual XmlDocHelper call(boost::shared_ptr<Context> ctx,
+        boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception);
+
+private:
+    bool proxy_;
+    std::string root_name_;
+    boost::shared_ptr<Script> script_;
+    std::string node_count_;
+};
+
+} // namespace xscript
+
+#endif // _XSCRIPT_LOCAL_BLOCK_H_

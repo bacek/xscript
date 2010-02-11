@@ -20,8 +20,8 @@
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include <libxml/xinclude.h>
 #include <libxml/uri.h>
+#include <libxml/xinclude.h>
 
 #include "xscript/block.h"
 #include "xscript/cache_strategy.h"
@@ -148,7 +148,7 @@ class Script::CachableHandler : public MessageHandler {
 };
 
 Script::ScriptData::ScriptData(Script *owner) :
-    owner_(owner), doc_(NULL), flags_(FLAG_FORCE_STYLESHEET),
+    owner_(owner), flags_(FLAG_FORCE_STYLESHEET),
     expire_time_delta_(EXPIRE_TIME_DELTA_UNDEFINED),
     page_random_max_(0) {
 }
@@ -552,15 +552,15 @@ Script::ScriptData::fetchResults(Context *ctx) {
 
     XmlDocSharedHelper newdoc(new XmlDocHelper(xmlCopyDoc(doc_.get(), 1)));
     XmlUtils::throwUnless(NULL != newdoc->get());
-
+     
     unsigned int count = 0, xscript_count = 0;
-
+     
     xmlNodePtr node = xmlDocGetRootElement(doc_.get());
     assert(node);
-    
+        
     xmlNodePtr newnode = xmlDocGetRootElement(newdoc->get());
     assert(newnode);
-    
+        
     fetchRecursive(ctx, node, newnode, count, xscript_count);
     return newdoc;
 }
@@ -868,7 +868,7 @@ Script::CachableHandler::process(const MessageParams &params,
         return CONTINUE;
     }
     
-    if (ctx->noCache() || ctx->suppressBody()) {
+    if (ctx->noCache() || ctx->response()->suppressBody(ctx->request())) {
         log()->debug("Cannot cache script. Context is not cachable");
         result.set(false);
         return CONTINUE;
@@ -968,38 +968,22 @@ Script::block(const std::string &id, bool throw_error) const {
     return data_->block(id, throw_error);
 }
 
+const std::vector<Block*>&
+Script::blocks() const {
+    return data_->blocks();
+}
+
 const std::map<std::string, std::string>&
 Script::headers() const {
     return data_->headers();
 }
 
 void
-Script::parse(const std::string &xml) {
-
-    XmlCharHelper canonic_path;
-    bool read_from_disk = xml.empty();
-    if (read_from_disk) {
-        namespace fs = boost::filesystem;
-        fs::path path(name());
-        if (!fs::exists(path) || fs::is_directory(path)) {
-            std::stringstream stream;
-            stream << "can not open " << path.native_file_string();
-            throw std::runtime_error(stream.str());
-        }
-        canonic_path = XmlCharHelper(xmlCanonicPath((const xmlChar *) path.native_file_string().c_str()));
-    }
-
+Script::parseInternal(const boost::function<xmlDocPtr()> &parserFunc) {
     XmlDocHelper doc(NULL);
     {
         XmlInfoCollector::Starter starter;
-        if (!read_from_disk) {
-            doc = XmlDocHelper(xmlReadMemory(xml.c_str(), xml.size(), StringUtils::EMPTY_STRING.c_str(),
-                                    NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
-        }
-        else {
-            doc = XmlDocHelper(xmlReadFile((const char*) canonic_path.get(),
-                                    NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
-        }
+        doc = XmlDocHelper(parserFunc());
 
         XmlUtils::throwUnless(NULL != doc.get());
         if (NULL == doc->children) {
@@ -1024,13 +1008,53 @@ Script::parse(const std::string &xml) {
         OperationMode::processXmlError(name());
     }
 
+    data_->doc_ = doc;
+    parseXScript();
+}
+
+void
+Script::parseXScript() {
     std::vector<xmlNodePtr> xscript_nodes;
-    data_->parseNode(doc->children, xscript_nodes);
+    data_->parseNode(data_->doc_->children, xscript_nodes);
     data_->parseXScriptNodes(xscript_nodes);
     data_->parseBlocks();
     data_->buildXScriptNodeSet(xscript_nodes);
     postParse();
-    data_->doc_ = doc;
+}
+
+void
+Script::parse() {
+    namespace fs = boost::filesystem;
+    fs::path path(name());
+    if (!fs::exists(path) || fs::is_directory(path)) {
+        std::stringstream stream;
+        stream << "can not open " << path.native_file_string();
+        throw std::runtime_error(stream.str());
+    }
+    XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar*)path.native_file_string().c_str()));
+
+    boost::function<xmlDocPtr()> parserFunc =
+        boost::bind(&xmlReadFile, (const char*)canonic_path.get(),
+            (const char*)NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT);
+    
+    parseInternal(parserFunc);
+}
+
+void
+Script::parseFromXml(const std::string &xml) {
+    boost::function<xmlDocPtr()> parserFunc =
+        boost::bind(&xmlReadMemory, xml.c_str(), xml.size(), StringUtils::EMPTY_STRING.c_str(),
+            (const char*)NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT);
+    
+    parseInternal(parserFunc);
+}
+
+void
+Script::parseFromXml(xmlNodePtr node) {
+    data_->doc_ = XmlDocHelper(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlNodeHelper root_node(xmlCopyNode(node, 1));
+    xmlDocSetRootElement(data_->doc_.get(), root_node.release());
+    parseXScript();
 }
 
 std::string
@@ -1096,7 +1120,6 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc)
     
     bool result = true;
     if (XmlUtils::hasXMLError()) {
-        ctx->rootContext()->setNoCache();
         result = false;
     }
 		    
@@ -1106,7 +1129,7 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc)
 
 void
 Script::addExpiresHeader(const Context *ctx) const {
-    boost::int32_t expires = HttpDateUtils::expires(ctx->expireTimeDelta());
+    boost::int32_t expires = HttpDateUtils::expires(ctx->response()->expireDelta());
     ctx->response()->setHeader("Expires", HttpDateUtils::format(expires));
 }
 
@@ -1152,50 +1175,19 @@ Script::createTagKey(const Context *ctx, bool page_cache) const {
             }
         }
         
-        const std::string &xslt = xsltName();
-        if (!xslt.empty()) {
-            namespace fs = boost::filesystem;
-            fs::path path(xslt);
-            if (fs::exists(path) && !fs::is_directory(path)) {
-                key.push_back('|');
-                key.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
-            }
-            else {
-                throw std::runtime_error("Cannot stat stylesheet " + xslt);
-            }
-        }
+        key.push_back('|');
+        key.append(fileModifiedKey(xsltName()));
     }
     else {
         key = name();
     }
     
-    const TimeMapType& modified_info = modifiedInfo();
-    for(TimeMapType::const_iterator it = modified_info.begin();
-        it != modified_info.end();
-        ++it) {
-        key.push_back('|');
-        key.append(boost::lexical_cast<std::string>(it->second));
-    }
-    
-    std::vector<Block*> &blocks = data_->blocks();
-    for(std::vector<Block*>::iterator it = blocks.begin();
-        it != blocks.end();
-        ++it) {
-        Block *block = *it;
-        const std::string& xslt_name = block->xsltName();
-        if (!xslt_name.empty()) {              
-            namespace fs = boost::filesystem;
-            fs::path path(xslt_name);
-            if (fs::exists(path) && !fs::is_directory(path)) {
-                key.push_back('|');
-                key.append(boost::lexical_cast<std::string>(fs::last_write_time(path)));
-            }
-            else {
-                throw std::runtime_error("Cannot stat stylesheet " + xslt_name);
-            }                
-        }            
-    }
-    
+    key.push_back('|');
+    key.append(modifiedKey(modifiedInfo()));
+
+    key.push_back('|');
+    key.append(blocksModifiedKey(data_->blocks()));
+        
     if (NULL == strategy) {
         const std::string& ctx_key = ctx->key();
         if (!ctx_key.empty()) {

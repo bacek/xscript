@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include <boost/cstdint.hpp>
 #include <boost/utility.hpp>
 
 #include <xscript/range.h>
@@ -60,6 +61,8 @@ public:
     
     static void processXPointer(const Block *block, xmlDocPtr doc,
                                 xmlNodePtr insert_node, bool replace);
+    
+    static boost::int32_t getNodeCount(xmlNodePtr node);
     
     static const char * const XSCRIPT_NAMESPACE;
 };
