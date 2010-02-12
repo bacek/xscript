@@ -84,9 +84,10 @@ struct Context::ContextData {
     
     ContextData(const boost::shared_ptr<RequestData> request_data,
                 const boost::shared_ptr<Script> &script,
+                const boost::shared_ptr<Context> &ctx,
                 const TypedMap &local_params) :
         stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
-        script_(script), flags_(0), local_params_(local_params)
+        script_(script), parent_context_(ctx), flags_(0), local_params_(local_params)
     {
         if (!script->expireTimeDeltaUndefined()) {
             requestData()->response()->setExpireDelta(script->expireTimeDelta());
@@ -284,7 +285,7 @@ Context::Context(const boost::shared_ptr<Script> &script,
     }
     else {
         boost::shared_ptr<RequestData> request_data(new RequestData());
-        ctx_data_ = new ContextData(request_data, script, local_params);
+        ctx_data_ = new ContextData(request_data, script, ctx, local_params);
         ctx_data_->authContext(Authorizer::instance()->checkAuth(this));
         init();
     }
