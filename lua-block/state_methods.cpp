@@ -82,13 +82,19 @@ int
 luaStateGet(lua_State *lua) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
-        luaCheckStackSize(lua, 2);
-
+        int count = lua_gettop(lua);
+        if (count < 2 || count > 3) {
+            throw BadArgCount(count);
+        }
+        
         State* s = luaReadStack<State>(lua, "xscript.state", 1);
         std::string key = luaReadStack<std::string>(lua, 2);
         log()->debug("luaStateGet: %s", key.c_str());
-        
-        lua_pushstring(lua, s->asString(key, "").c_str());
+        std::string def_value;
+        if (3 == count) {
+            def_value = luaReadStack<std::string>(lua, 3);
+        }
+        lua_pushstring(lua, s->asString(key, def_value).c_str());
         return 1;
     }
     catch (const LuaError &e) {

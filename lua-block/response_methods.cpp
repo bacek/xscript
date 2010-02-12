@@ -44,9 +44,9 @@ luaResponseSetStatus(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
-        Context *ctx = luaReadStack<Context>(lua, "xscript.response", 1);
+        Response *response = luaReadStack<Response>(lua, "xscript.response", 1);
         unsigned short status = luaReadStack<boost::uint32_t>(lua, 2);
-        ctx->response()->setStatus(status);
+        response->setStatus(status);
         return 0;
     }
     catch (const LuaError &e) {
@@ -62,8 +62,8 @@ luaResponseSetHeader(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 3);
-        Context *ctx = luaReadStack<Context>(lua, "xscript.response", 1);
-        ctx->response()->setHeader(
+        Response *response = luaReadStack<Response>(lua, "xscript.response", 1);
+        response->setHeader(
             luaReadStack<std::string>(lua, 2), luaReadStack<std::string>(lua, 3));
         return 0;
     }
@@ -80,9 +80,9 @@ luaResponseRedirectToPath(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
-        Context *ctx = luaReadStack<Context>(lua, "xscript.response", 1);
+        Response *response = luaReadStack<Response>(lua, "xscript.response", 1);
         std::string value = luaReadStack<std::string>(lua, 2);
-        ctx->response()->redirectToPath(value);
+        response->redirectToPath(value);
         return 0;
     }
     catch (const LuaError &e) {
@@ -98,9 +98,9 @@ luaResponseSetContentType(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
-        Context *ctx = luaReadStack<Context>(lua, "xscript.response", 1);
+        Response *response = luaReadStack<Response>(lua, "xscript.response", 1);
         std::string value = luaReadStack<std::string>(lua, 2);
-        ctx->response()->setContentType(value);
+        response->setContentType(value);
         return 0;
     }
     catch (const LuaError &e) {
@@ -116,9 +116,9 @@ luaResponseSetCookie(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
-        Context *ctx = luaReadStack<Context>(lua, "xscript.response", 1);
+        Response *response = luaReadStack<Response>(lua, "xscript.response", 1);
         Cookie * c = luaReadStack<Cookie>(lua, "xscript.cookie", 2);
-        ctx->response()->setCookie(*c);
+        response->setCookie(*c);
         return 0;
     }
     catch (const LuaError &e) {
@@ -135,12 +135,12 @@ luaResponseSetExpireTimeDelta(lua_State *lua) throw () {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
-        Context *ctx = luaReadStack<Context>(lua, "xscript.response", 1);
+        Response *response = luaReadStack<Response>(lua, "xscript.response", 1);
         boost::int32_t expire_time_delta = luaReadStack<boost::int32_t>(lua, 2);
         if (expire_time_delta < 0) {
             throw std::runtime_error("negative expire time delta is not allowed");
         }
-        ctx->response()->setExpireDelta((boost::uint32_t)expire_time_delta);
+        response->setExpireDelta((boost::uint32_t)expire_time_delta);
         return 0;
     }
     catch (const LuaError &e) {

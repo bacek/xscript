@@ -17,6 +17,7 @@
 
 #include "stack.h"
 #include "lua_block.h"
+#include "local_methods.h"
 #include "xscript_methods.h"
 #include "state_methods.h"
 #include "request_methods.h"
@@ -148,7 +149,8 @@ LuaSharedContext create_lua(Context *ctx, Block *block) {
 
     setupUserdata(lua, ctx->request(), "request", getRequestLib());
     setupUserdata(lua, ctx->state(), "state", getStateLib());
-    setupUserdata(lua, ctx, "response", getResponseLib());
+    setupUserdata(lua, ctx->response(), "response", getResponseLib());
+    setupUserdata(lua, ctx, "localargs", getLocalLib());
 
     registerCookieMethods(lua);
     registerLoggerMethods(lua);
