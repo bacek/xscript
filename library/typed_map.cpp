@@ -243,6 +243,15 @@ TypedMap::asString(const std::string &name, const std::string &default_value) co
     return default_value;
 }
 
+const TypedValue&
+TypedMap::find(const std::string &name, const TypedValue &default_value) const {
+    TypedValueMap::const_iterator i = values_.find(name);
+    if (values_.end() != i) {
+        return i->second;
+    }
+    return default_value;
+}
+
 bool
 TypedMap::is(const std::string &name) const {
     TypedValueMap::const_iterator i = values_.find(name);

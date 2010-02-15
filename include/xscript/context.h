@@ -125,6 +125,7 @@ public:
     bool hasLocalParam(const std::string &name) const;
     bool localParamIs(const std::string &name) const;
     const TypedValue& getLocalParam(const std::string &name) const;
+    const TypedValue& getLocalParam(const std::string &name, const TypedValue &default_value) const;
     std::string getLocalParam(const std::string &name, const std::string &default_value) const;
     
     friend class ContextStopper;

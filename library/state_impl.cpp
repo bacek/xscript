@@ -73,4 +73,16 @@ StateImpl::is(const std::string &name) const {
     return data_.is(name);
 }
 
+TypedValue
+StateImpl::typedValue(const std::string &name) const {
+    boost::mutex::scoped_lock sl(mutex_);
+    return data_.find(name);
+}
+
+TypedValue
+StateImpl::typedValue(const std::string &name, const TypedValue &value) const {
+    boost::mutex::scoped_lock sl(mutex_);
+    return data_.find(name, value);
+}
+
 } // namespace xscript

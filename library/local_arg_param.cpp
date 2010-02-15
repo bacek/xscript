@@ -4,6 +4,7 @@
 #include "xscript/context.h"
 #include "xscript/guard_checker.h"
 #include "xscript/param.h"
+#include "xscript/typed_map.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -46,13 +47,9 @@ LocalArgParam::asString(const Context *ctx) const {
 void
 LocalArgParam::add(const Context *ctx, ArgList &al) const {
     const std::string& as = ConvertedParam::as();
-    const std::string& val = value();
-    if (ctx->hasLocalParam(val)) {
-        al.addAs(as, ctx->getLocalParam(val));
-    }
-    else {
-        al.addAs(as, asString(ctx));
-    }
+    const std::string& name = value();
+    TypedValue default_value;
+    al.addAs(as, ctx->getLocalParam(name, default_value));
 }
 
 std::auto_ptr<Param>

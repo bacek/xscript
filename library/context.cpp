@@ -708,6 +708,11 @@ Context::getLocalParam(const std::string &name) const {
     return ctx_data_->local_params_.find(name);
 }
 
+const TypedValue&
+Context::getLocalParam(const std::string &name, const TypedValue &default_value) const {
+    return ctx_data_->local_params_.find(name, default_value);
+}
+
 std::string
 Context::getLocalParam(const std::string &name, const std::string &default_value) const {
     return ctx_data_->local_params_.asString(name, default_value);

@@ -55,7 +55,8 @@ public:
     void values(std::map<std::string, TypedValue> &v) const;
     void copy(const std::string &src, const std::string &dest);
 
-    TypedValue typedValue(const std::string& name) const;
+    TypedValue typedValue(const std::string &name) const;
+    TypedValue typedValue(const std::string &name, const TypedValue &default_value) const;
 
     void checkName(const std::string &name) const;
 

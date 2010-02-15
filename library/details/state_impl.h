@@ -109,10 +109,8 @@ public:
     void values(std::map<std::string, TypedValue> &v) const;
     void copy(const std::string &src, const std::string &dest);
 
-    inline TypedValue typedValue(const std::string& name) const {
-        boost::mutex::scoped_lock sl(mutex_);
-        return data_.find(name);
-    }
+    TypedValue typedValue(const std::string &name) const;
+    TypedValue typedValue(const std::string &name, const TypedValue &default_value) const;
 
     bool is(const std::string &name) const;
 
