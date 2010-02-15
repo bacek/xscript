@@ -56,6 +56,16 @@ LocalArgList::add(const std::string &value) {
 }
 
 void
+LocalArgList::addAs(const std::string &type, const TypedValue &value) {
+    if (type.empty()) {
+        value_ = value;
+    }
+    else {
+        ArgList::addAs(type, value);
+    }
+}
+
+void
 LocalArgList::addState(const Context *ctx) {
     (void)ctx;
     throw CriticalInvokeError("State param is not allowed in this context");

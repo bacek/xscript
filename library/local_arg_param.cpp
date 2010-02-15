@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include "xscript/args.h"
 #include "xscript/context.h"
 #include "xscript/guard_checker.h"
 #include "xscript/param.h"
@@ -44,7 +45,14 @@ LocalArgParam::asString(const Context *ctx) const {
 
 void
 LocalArgParam::add(const Context *ctx, ArgList &al) const {
-    ConvertedParam::add(ctx, al);
+    const std::string& as = ConvertedParam::as();
+    const std::string& val = value();
+    if (ctx->hasLocalParam(val)) {
+        al.addAs(as, ctx->getLocalParam(val));
+    }
+    else {
+        al.addAs(as, asString(ctx));
+    }
 }
 
 std::auto_ptr<Param>

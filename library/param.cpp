@@ -291,7 +291,7 @@ TypedParam::add(const Context *ctx, ArgList &al) const {
         al.add(asString(ctx));
     }
     else {
-        al.addAs(as, asString(ctx));
+        ConvertedParam::add(ctx, al);
     }
 }
 

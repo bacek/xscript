@@ -23,7 +23,9 @@ public:
     virtual void add(boost::uint64_t value);
     
     virtual void add(const std::string &value);
-        
+
+    virtual void addAs(const std::string &type, const TypedValue &value);
+    
     virtual void addState(const Context *ctx);
     virtual void addRequest(const Context *ctx);
     virtual void addRequestData(const Context *ctx);

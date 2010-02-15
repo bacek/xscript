@@ -5,6 +5,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "xscript/args.h"
+#include "xscript/typed_map.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -80,6 +81,11 @@ ArgList::addAs(const std::string &type, const std::string &value) {
     else {
         add(value);
     }
+}
+
+void
+ArgList::addAs(const std::string &type, const TypedValue &value) {
+    addAs(type.empty() ? value.stringType() : type, value.value());
 }
 
 } // namespace xscript

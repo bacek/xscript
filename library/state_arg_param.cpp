@@ -1,10 +1,12 @@
 #include "settings.h"
 
+#include "xscript/args.h"
 #include "xscript/context.h"
 #include "xscript/guard_checker.h"
 #include "xscript/param.h"
 #include "xscript/string_utils.h"
 #include "xscript/state.h"
+#include "xscript/typed_map.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -46,7 +48,14 @@ StateArgParam::asString(const Context *ctx) const {
 
 void
 StateArgParam::add(const Context *ctx, ArgList &al) const {
-    ConvertedParam::add(ctx, al);
+    const std::string& as = ConvertedParam::as();
+    const std::string& val = value();
+    if (ctx->state()->has(val)) {
+        al.addAs(as, ctx->state()->typedValue(val));
+    }
+    else {
+        al.addAs(as, asString(ctx));
+    }
 }
 
 std::auto_ptr<Param>
