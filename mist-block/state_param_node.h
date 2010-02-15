@@ -7,12 +7,15 @@
 
 namespace xscript {
 
+class TypedValue;
+
 class StateParamNode {
 public:
     StateParamNode(xmlNodePtr parent, const char *name);
     virtual ~StateParamNode();
 
     void createSubNode(const char *val) const;
+    void createSubNode(const TypedValue &value) const;
     void createSubNodes(const std::vector<std::string> &v) const;
 
     static bool checkName(const char *name);

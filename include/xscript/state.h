@@ -46,6 +46,8 @@ public:
     std::string asString(const std::string &name, const std::string &default_value) const;
     void setString(const std::string &name, const std::string &value);
 
+    void setTypedValue(const std::string &name, const TypedValue &value);
+    
     template<typename Type> Type as(const std::string &name) const;
     template<typename Type> void set(const std::string &name, Type val);
 

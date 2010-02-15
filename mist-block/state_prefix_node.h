@@ -16,8 +16,9 @@ class StatePrefixNode : public StateNode {
 public:
     StatePrefixNode(const std::string& prefix, const char* type_str, State* state);
 
-    void setParameter(const char* name, const std::string& val);
-    void setParameters(const char* name, const std::vector<std::string>& v);
+    void setParameter(const char* name, const std::string &val);
+    void setParameter(const char* name, const TypedValue &val);
+    void setParameters(const char* name, const std::vector<std::string> &v);
 
 private:
     const std::string& prefix_;
@@ -64,6 +65,12 @@ public:
     void build(Context* ctx);
 };
 
+class StateLocalNode : public StatePrefixNode {
+public:
+    StateLocalNode(const std::string& prefix, State* state);
+
+    void build(const Context* ctx);
+};
 
 } // namespace xscript
 

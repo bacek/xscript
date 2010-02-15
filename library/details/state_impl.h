@@ -103,6 +103,11 @@ public:
         data_.setBool(name, value);
     }
 
+    inline void set(const std::string &name, const TypedValue &value) {
+        boost::mutex::scoped_lock sl(mutex_);
+        data_.set(name, value);
+    }
+    
     bool has(const std::string &name) const;
     void keys(std::vector<std::string> &v) const;
 

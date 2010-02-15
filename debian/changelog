@@ -1,3 +1,9 @@
+xscript (5.70-34) unstable; urgency=low
+
+  * set_state_by_local_args, dump_local_args added to mist
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 15 Feb 2010 18:20:06 +0300
+
 xscript (5.70-33) unstable; urgency=low
 
   * StateArg and LocalArg passing to ArgList fixed

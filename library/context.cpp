@@ -718,6 +718,11 @@ Context::getLocalParam(const std::string &name, const std::string &default_value
     return ctx_data_->local_params_.asString(name, default_value);
 }
 
+void
+Context::localParams(std::map<std::string, TypedValue> &params) const {
+    ctx_data_->local_params_.values(params);
+}
+
 bool
 ParamsMap::insert(const std::string &name, const boost::any &value) {
     boost::mutex::scoped_lock sl(mutex_);

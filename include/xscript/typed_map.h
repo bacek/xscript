@@ -95,10 +95,10 @@ public:
 
     const TypedValue& find(const std::string &name) const;
     const TypedValue& find(const std::string &name, const TypedValue &default_value) const;
-protected:
 
     void set(const std::string &name, const TypedValue &value);
 
+protected:
     template<typename T> T as(const std::string &name) const;
 
 private:

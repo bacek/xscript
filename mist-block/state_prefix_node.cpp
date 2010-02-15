@@ -8,6 +8,7 @@
 #include "xscript/request.h"
 #include "xscript/util.h"
 #include "xscript/string_utils.h"
+#include "xscript/typed_map.h"
 
 #include "state_param_node.h"
 #include "state_prefix_node.h"
@@ -31,6 +32,16 @@ StatePrefixNode::setParameter(const char* name, const std::string& val) {
 
     if (NULL != state_) {
         state_->setString(prefix_ + name, val);
+    }
+}
+
+void
+StatePrefixNode::setParameter(const char *name, const TypedValue &val) {
+    StateParamNode stateParamNode(getNode(), name);
+    stateParamNode.createSubNode(val);
+
+    if (NULL != state_) {
+        state_->setTypedValue(prefix_ + name, val);
     }
 }
 
@@ -207,8 +218,8 @@ StateProtocolNode::build(Context* ctx) {
         setParameter(Protocol::REAL_PATH.c_str(), script_filename);
     }
 
-    setParameter(Protocol::SECURE.c_str(), ctx->request()->isSecure() ? "yes" : "no");
-    setParameter(Protocol::BOT.c_str(), ctx->request()->isBot() ? "yes" : "no");
+    setParameter(Protocol::SECURE.c_str(), std::string(ctx->request()->isSecure() ? "yes" : "no"));
+    setParameter(Protocol::BOT.c_str(), std::string(ctx->request()->isBot() ? "yes" : "no"));
     setParameter(Protocol::METHOD.c_str(), ctx->request()->getRequestMethod());
 
     const std::string& user = ctx->request()->getRemoteUser();
@@ -237,5 +248,23 @@ StateProtocolNode::build(Context* ctx) {
     }
 }
 
+StateLocalNode::StateLocalNode(const std::string& prefix, State* state) :
+        StatePrefixNode(prefix, "Local", state) {
+}
+
+void
+StateLocalNode::build(const Context* ctx) {
+    if (NULL == ctx) {
+        return;
+    }
+    
+    std::map<std::string, TypedValue> params;
+    ctx->localParams(params);
+    for(std::map<std::string, TypedValue>::const_iterator it = params.begin();
+        it != params.end();
+        ++it) {
+        setParameter(it->first.c_str(), it->second);
+    }
+}
 
 } // namespace xscript

@@ -115,6 +115,11 @@ State::setString(const std::string &name, const std::string &value) {
     impl_->setString(name, value);
 }
 
+void
+State::setTypedValue(const std::string &name, const TypedValue &value) {
+    impl_->set(name, value);
+}
+
 bool
 State::has(const std::string &name) const {
     return impl_->has(name);
