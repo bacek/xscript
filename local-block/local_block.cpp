@@ -21,7 +21,7 @@ namespace xscript {
 
 LocalBlock::LocalBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
     Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node),
-    proxy_(false), root_name_("root"),
+    proxy_(false),
     node_count_(boost::lexical_cast<std::string>(XmlUtils::getNodeCount(node))) {
 }
 
@@ -74,15 +74,6 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
     if (local_ctx->noCache()) {
         invoke_ctx->resultType(InvokeContext::NO_CACHE);
     }
-    
-    xmlNodePtr root = xmlDocGetRootElement(doc->get());
-    if (root && xmlStrcasecmp(root->name, (const xmlChar*)root_name_.c_str()) != 0) {
-        xmlNodeSetName(root, (const xmlChar*)root_name_.c_str());
-        xmlAttrPtr attr = xmlHasProp(root, (const xmlChar*)"name");
-        if (NULL != attr) {
-            xmlRemoveProp(attr);
-        }
-    }
 
     if (tagged()) {
         Tag tag;
@@ -103,9 +94,13 @@ LocalBlock::parseSubNode(xmlNodePtr node) {
         return;
     }
     
-    const char* root = XmlUtils::attrValue(node, "name");
-    if (root) {
-        root_name_.assign(root);
+    xmlAttrPtr name_attr = xmlHasProp(node, (const xmlChar*)"name");
+    if (name_attr) {
+        const xmlChar* value = (const xmlChar*)XmlUtils::value(name_attr);
+        if (NULL != value) {
+            xmlNodeSetName(node, value);
+        }
+        xmlRemoveProp(name_attr);
     }
     
     script_ = ScriptFactory::createScriptFromXmlNode(node);

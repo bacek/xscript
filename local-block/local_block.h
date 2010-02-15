@@ -33,7 +33,6 @@ private:
 
 private:
     bool proxy_;
-    std::string root_name_;
     boost::shared_ptr<Script> script_;
     std::string node_count_;
 };
