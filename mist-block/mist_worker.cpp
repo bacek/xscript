@@ -678,17 +678,6 @@ MistWorker::dropState(Context *ctx, const std::vector<std::string> &params) {
     return XmlNodeHelper(node.releaseNode());
 }
 
-static void
-appendParams(xmlNodePtr root, const std::map<std::string, TypedValue> &params) {
-    for(std::map<std::string, TypedValue>::const_iterator it = params.begin();
-        it != params.end();
-        ++it) {
-        XmlChildNode child(root, "param", it->second.value().c_str());
-        child.setProperty("name", it->first.c_str());
-        child.setProperty("type", it->second.stringType().c_str());
-    }
-}
-
 XmlNodeHelper
 MistWorker::dumpState(Context *ctx, const std::vector<std::string> &params) {
     if (!params.empty()) {
