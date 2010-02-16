@@ -19,6 +19,13 @@ Depends: libxscript (=${Source-Version}), libboost-thread-dev, libxml2-dev, libx
 Description: Xscript is xml-based application server. 
  Headers and libraries to develop XScript extensions.
 
+Package: xscript-development
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, libxscript (=${Source-Version})
+Description: XScript is xml-based application server written in C++. 
+ Xscript development module.
+
 Package: xscript-standard
 Section: libs
 Architecture: any

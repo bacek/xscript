@@ -1,3 +1,9 @@
+xscript (5.70-35) unstable; urgency=low
+
+  * xscript-development package added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 16 Feb 2010 11:54:22 +0300
+
 xscript (5.70-34) unstable; urgency=low
 
   * set_state_by_local_args, dump_local_args added to mist
