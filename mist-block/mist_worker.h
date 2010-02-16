@@ -76,7 +76,6 @@ private:
     static XmlNodeHelper setStateConcatString(Context *ctx, const std::vector<std::string> &params);
     static XmlNodeHelper dropState(Context *ctx, const std::vector<std::string> &params);
     static XmlNodeHelper dumpState(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper dumpLocalArgs(Context *ctx, const std::vector<std::string> &params);
     static XmlNodeHelper attachStylesheet(Context *ctx, const std::vector<std::string> &params);
     static XmlNodeHelper location(Context *ctx, const std::vector<std::string> &params);
     static XmlNodeHelper setStatus(Context *ctx, const std::vector<std::string> &params);

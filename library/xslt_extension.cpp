@@ -231,6 +231,61 @@ xscriptXsltGetStateArg(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltGetLocalArg(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:get-local-arg");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (nargs < 1 || nargs > 2) {
+        XmlUtils::reportXsltError("xscript:get-local-arg: bad param count", ctxt);
+        return;
+    }
+
+    const char* str = params.str(0);
+    if (NULL == str) {
+        XmlUtils::reportXsltError("xscript:get-local-arg: bad first parameter", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    const char* default_value = "";
+    if (nargs == 2) {
+        default_value = params.str(1);
+        if (NULL == default_value) {
+            XmlUtils::reportXsltError("xscript:get-local-arg: bad second parameter", ctxt);
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
+    }
+
+    xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
+    if (NULL == tctx) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        boost::shared_ptr<Context> ctx = Stylesheet::getContext(tctx);
+        std::string name(str);
+        valuePush(ctxt, xmlXPathNewCString(ctx->getLocalParam(name, default_value).c_str()));
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:get-local-arg: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:get-local-arg: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
 xscriptXsltGetProtocolArg(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:get-protocol-arg");
@@ -1746,6 +1801,7 @@ XsltExtensions::XsltExtensions() {
 
     XsltFunctionRegisterer("get-state-arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetStateArg);
     XsltFunctionRegisterer("get_state_arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetStateArg);
+    XsltFunctionRegisterer("get-local-arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetLocalArg);
     XsltFunctionRegisterer("get-protocol-arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetProtocolArg);
     XsltFunctionRegisterer("get-query-arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetQueryArg);
     XsltFunctionRegisterer("get-vhost-arg", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltGetVHostArg);

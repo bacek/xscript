@@ -699,23 +699,15 @@ MistWorker::dumpState(Context *ctx, const std::vector<std::string> &params) {
 
     std::map<std::string, TypedValue> state_info;
     ctx->state()->values(state_info);
-
-    appendParams(node.getNode(), state_info);
-    return XmlNodeHelper(node.releaseNode());
-}
-
-XmlNodeHelper
-MistWorker::dumpLocalArgs(Context *ctx, const std::vector<std::string> &params) {
-    if (!params.empty()) {
-        throw std::invalid_argument("bad arity");
+    
+    for(std::map<std::string, TypedValue>::const_iterator it = state_info.begin();
+        it != state_info.end();
+        ++it) {
+        XmlChildNode child(node.getNode(), "param", it->second.value().c_str());
+        child.setProperty("name", it->first.c_str());
+        child.setProperty("type", it->second.stringType().c_str());
     }
     
-    XmlNode node("local_args_dump");
-
-    std::map<std::string, TypedValue> local_params;
-    ctx->localParams(local_params);
-
-    appendParams(node.getNode(), local_params);
     return XmlNodeHelper(node.releaseNode());
 }
 
@@ -874,9 +866,6 @@ MistWorkerMethodRegistrator::MistWorkerMethodRegistrator() {
 
     MistWorker::registerMethod("dumpState", &MistWorker::dumpState);
     MistWorker::registerMethod("dump_state", &MistWorker::dumpState);
-
-    MistWorker::registerMethod("dumpLocalArgs", &MistWorker::dumpLocalArgs);
-    MistWorker::registerMethod("dump_local_args", &MistWorker::dumpLocalArgs);
     
     MistWorker::registerMethod("attachStylesheet", &MistWorker::attachStylesheet);
     MistWorker::registerMethod("attach_stylesheet", &MistWorker::attachStylesheet);

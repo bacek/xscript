@@ -1,3 +1,10 @@
+xscript (5.70-36) unstable; urgency=low
+
+  * xsl-function get-local-arg added
+  * mist::dumpLocalArg removed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 16 Feb 2010 14:57:35 +0300
+
 xscript (5.70-35) unstable; urgency=low
 
   * xscript-development package added
