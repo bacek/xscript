@@ -94,7 +94,7 @@ public:
     bool is(const std::string &name) const;
 
     const TypedValue& find(const std::string &name) const;
-    const TypedValue& find(const std::string &name, const TypedValue &default_value) const;
+    bool find(const std::string &name, TypedValue &result) const;
 
     void set(const std::string &name, const TypedValue &value);
 

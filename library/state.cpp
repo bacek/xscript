@@ -145,9 +145,9 @@ State::typedValue(const std::string &name) const {
     return impl_->typedValue(name);
 }
 
-TypedValue
-State::typedValue(const std::string &name, const TypedValue &default_value) const {
-    return impl_->typedValue(name, default_value);
+bool
+State::typedValue(const std::string &name, TypedValue &result) const {
+    return impl_->typedValue(name, result);
 }
 
 void

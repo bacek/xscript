@@ -79,10 +79,10 @@ StateImpl::typedValue(const std::string &name) const {
     return data_.find(name);
 }
 
-TypedValue
-StateImpl::typedValue(const std::string &name, const TypedValue &value) const {
+bool
+StateImpl::typedValue(const std::string &name, TypedValue &result) const {
     boost::mutex::scoped_lock sl(mutex_);
-    return data_.find(name, value);
+    return data_.find(name, result);
 }
 
 } // namespace xscript

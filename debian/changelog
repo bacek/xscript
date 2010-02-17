@@ -1,3 +1,9 @@
+xscript (5.70-37) unstable; urgency=low
+
+  * default value fixed in LocalArg and StateArg
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 17 Feb 2010 12:00:47 +0300
+
 xscript (5.70-36) unstable; urgency=low
 
   * xsl-function get-local-arg added

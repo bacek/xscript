@@ -49,9 +49,14 @@ StateArgParam::asString(const Context *ctx) const {
 void
 StateArgParam::add(const Context *ctx, ArgList &al) const {
     const std::string& as = ConvertedParam::as();
-    const std::string& name = value();
-    TypedValue default_value;
-    al.addAs(as, ctx->state()->typedValue(name, default_value));
+    const std::string& name = value();   
+    TypedValue value;
+    if (ctx->state()->typedValue(name, value)) {
+        al.addAs(as, value);
+    }
+    else {
+        al.addAs(as, defaultValue());
+    }
 }
 
 std::auto_ptr<Param>

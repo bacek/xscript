@@ -125,7 +125,7 @@ public:
     bool hasLocalParam(const std::string &name) const;
     bool localParamIs(const std::string &name) const;
     const TypedValue& getLocalParam(const std::string &name) const;
-    const TypedValue& getLocalParam(const std::string &name, const TypedValue &default_value) const;
+    bool getLocalParam(const std::string &name, TypedValue &result) const;
     std::string getLocalParam(const std::string &name, const std::string &default_value) const;
     void localParams(std::map<std::string, TypedValue> &params) const;
     

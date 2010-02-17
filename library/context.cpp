@@ -708,9 +708,9 @@ Context::getLocalParam(const std::string &name) const {
     return ctx_data_->local_params_.find(name);
 }
 
-const TypedValue&
-Context::getLocalParam(const std::string &name, const TypedValue &default_value) const {
-    return ctx_data_->local_params_.find(name, default_value);
+bool
+Context::getLocalParam(const std::string &name, TypedValue &result) const {
+    return ctx_data_->local_params_.find(name, result);
 }
 
 std::string
