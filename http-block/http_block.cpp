@@ -405,12 +405,11 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, InvokeConte
 
 XmlDocHelper
 HttpBlock::response(const HttpHelper &helper) const {
-	XmlDocHelper result;
+    XmlDocHelper result;
     boost::shared_ptr<std::string> str = helper.content();
     if (helper.isXml()) {
-    	result = XmlDocHelper(xmlReadMemory(str->c_str(), str->size(), "",
-    			charset_.empty() ? NULL : charset_.c_str(),
-    			XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        result = XmlDocHelper(xmlReadMemory(str->c_str(), str->size(), "",
+            charset_.empty() ? NULL : charset_.c_str(), XML_PARSE_DTDATTR | XML_PARSE_NOENT));
     }
     else if (helper.contentType() == "text/plain") {
         if (str->empty()) {
@@ -423,10 +422,10 @@ HttpBlock::response(const HttpHelper &helper) const {
             }
         }
         else {
-        	std::string res;
-        	res.append("<text>").append(XmlUtils::escape(*str)).append("</text>");
-        	result = XmlDocHelper(xmlReadMemory(
-        			res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+            std::string res;
+            res.append("<text>").append(XmlUtils::escape(*str)).append("</text>");
+            result = XmlDocHelper(xmlReadMemory(
+                    res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
         }
     }
     else if (helper.contentType() == "text/html") {
@@ -434,10 +433,10 @@ HttpBlock::response(const HttpHelper &helper) const {
         if (data.empty()) {
             throw InvokeError("Empty sanitized text/html document");
         }
-        
+
         result = XmlDocHelper(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
                 helper.charset().c_str(), XML_PARSE_DTDATTR | XML_PARSE_NOENT));
-        
+
         if (NULL == result.get()) {
             log()->error("Invalid sanitized text/html document. Url: %s", helper.url().c_str());
             std::string error = "Invalid sanitized text/html document. Url: " + helper.url() + ". Error: ";
@@ -447,11 +446,11 @@ HttpBlock::response(const HttpHelper &helper) const {
         }
     }
     else {
-    	throw InvokeError("format is not recognized: " + helper.contentType(), "url", helper.url());
+        throw InvokeError("format is not recognized: " + helper.contentType(), "url", helper.url());
     }
     
     if (NULL == result.get()) {
-    	throw InvokeError("got empty document", "url", helper.url());
+        throw InvokeError("got empty document", "url", helper.url());
     }
     
     return result;

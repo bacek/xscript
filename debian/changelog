@@ -1,3 +1,9 @@
+xscript (5.70-38) unstable; urgency=low
+
+  * loadText and loadBinary added to file block
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 19 Feb 2010 13:02:02 +0300
+
 xscript (5.70-37) unstable; urgency=low
 
   * default value fixed in LocalArg and StateArg
