@@ -39,6 +39,9 @@ private:
     XmlDocHelper loadText(const std::string &file_name,
             boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
 
+    XmlDocHelper loadBinary(const std::string &file_name,
+            boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+    
     XmlDocHelper invokeFile(const std::string &file_name,
             boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     

@@ -21,6 +21,7 @@
 #include <xscript/string_utils.h>
 #include <xscript/typed_map.h>
 #include <xscript/util.h>
+#include <xscript/writer.h>
 #include <xscript/xml.h>
 #include <xscript/xml_util.h>
 
@@ -37,6 +38,26 @@ const std::string FileBlock::FILENAME_PARAMNAME = "FILEBLOCK_FILENAME_PARAMNAME"
 const std::string FileBlock::INVOKE_SCRIPT_PARAMNAME = "FILEBLOCK_INVOKE_SCRIPT_PARAMNAME";
 
 namespace fs = boost::filesystem;
+
+class FStreamBinaryWriter : public BinaryWriter {
+public:
+	FStreamBinaryWriter(boost::shared_ptr<std::ifstream> is, std::streamsize size) :
+		is_(is), size_(size)
+	{}
+
+    void write(std::ostream *os) const {
+        *os << is_->rdbuf();
+    }
+
+    std::streamsize size() const {
+        return size_;
+    }
+    
+    virtual ~FStreamBinaryWriter() {}
+private:
+    boost::shared_ptr<std::ifstream> is_;
+    std::streamsize size_;
+};
 
 FileBlock::FileBlock(const Extension *ext, Xml *owner, xmlNodePtr node)
     : Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node),
@@ -74,6 +95,9 @@ FileBlock::postParse() {
     }
     else if (0 == strcasecmp(met.c_str(), "loadText")) {
         method_ = &FileBlock::loadText;
+    }
+    else if (0 == strcasecmp(met.c_str(), "loadBinary")) {
+        method_ = &FileBlock::loadBinary;
     }
     else if (0 == strcasecmp(met.c_str(), "invoke")) {
         method_ = &FileBlock::invokeFile;
@@ -254,6 +278,45 @@ FileBlock::loadText(const std::string &file_name,
     res.append(XmlUtils::escape(doc_data)).append("</text>");
     return XmlDocHelper(xmlReadMemory(
         res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+}
+
+XmlDocHelper
+FileBlock::loadBinary(const std::string &file_name,
+        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+    (void)ctx;
+    (void)invoke_ctx;
+    log()->debug("%s: loading binary file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
+
+    PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
+
+    boost::shared_ptr<std::ifstream> is(new std::ifstream(file_name.c_str(), std::ios::in));
+    if (!is.get()) {
+        throw InvokeError("Cannot open file", "file", file_name);
+    }
+    is->exceptions(std::ios::badbit | std::ios::eofbit);
+
+    std::ifstream::pos_type size = 0;
+    if (!is->seekg(0, std::ios::end)) {
+        throw InvokeError("Seek error", "file", file_name);
+    }
+    size = is->tellg();
+    if (!is->seekg(0, std::ios::beg)) {
+        throw InvokeError("Seek error", "file", file_name);
+    }
+
+    ctx->response()->write(
+        std::auto_ptr<BinaryWriter>(new FStreamBinaryWriter(is, size)));
+    
+    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlUtils::throwUnless(NULL != doc.get());
+    
+    XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"success", (const xmlChar*)"1"));
+    XmlUtils::throwUnless(NULL != node.get());
+          
+    xmlNewProp(node.get(), (const xmlChar*)"file", (const xmlChar*)XmlUtils::escape(file_name).c_str());
+    xmlDocSetRootElement(doc.get(), node.release());
+
+    return doc;
 }
 
 XmlDocHelper
