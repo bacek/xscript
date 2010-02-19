@@ -1,3 +1,10 @@
+xscript (5.70-39) unstable; urgency=low
+
+  * error checking improved for file::loadText and http-block
+  * passing VHostArg to child context fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 19 Feb 2010 18:49:35 +0300
+
 xscript (5.70-38) unstable; urgency=low
 
   * loadText and loadBinary added to file block

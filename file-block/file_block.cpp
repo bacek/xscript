@@ -248,17 +248,17 @@ FileBlock::loadText(const std::string &file_name,
 
     std::ifstream is(file_name.c_str(), std::ios::in);
     if (!is) {
-        throw InvokeError("Cannot open file", "file", file_name);
+        throw InvokeError("Cannot open file");
     }
     is.exceptions(std::ios::badbit | std::ios::eofbit);
 
     std::ifstream::pos_type size = 0;
     if (!is.seekg(0, std::ios::end)) {
-        throw InvokeError("Seek error", "file", file_name);
+        throw InvokeError("Seek error");
     }
     size = is.tellg();
     if (!is.seekg(0, std::ios::beg)) {
-        throw InvokeError("Seek error", "file", file_name);
+        throw InvokeError("Seek error");
     }
 
     std::vector<char> doc_data(size);
@@ -280,7 +280,7 @@ FileBlock::loadText(const std::string &file_name,
 
     XmlDocHelper result(xmlReadMemory(
         res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
-    XmlUtils::throwUnless(NULL != result.get(), "file", file_name.c_str());
+    XmlUtils::throwUnless(NULL != result.get());
     return result;
     
 }
@@ -296,17 +296,17 @@ FileBlock::loadBinary(const std::string &file_name,
 
     boost::shared_ptr<std::ifstream> is(new std::ifstream(file_name.c_str(), std::ios::in));
     if (!is.get()) {
-        throw InvokeError("Cannot open file", "file", file_name);
+        throw InvokeError("Cannot open file");
     }
     is->exceptions(std::ios::badbit | std::ios::eofbit);
 
     std::ifstream::pos_type size = 0;
     if (!is->seekg(0, std::ios::end)) {
-        throw InvokeError("Seek error", "file", file_name);
+        throw InvokeError("Seek error");
     }
     size = is->tellg();
     if (!is->seekg(0, std::ios::beg)) {
-        throw InvokeError("Seek error", "file", file_name);
+        throw InvokeError("Seek error");
     }
 
     ctx->response()->write(

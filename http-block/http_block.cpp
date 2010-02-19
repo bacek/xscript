@@ -423,10 +423,7 @@ HttpBlock::response(const HttpHelper &helper) const {
             xmlDocSetRootElement(result.get(), node.release());
             return result;
         }
-        
-        if (!xmlCheckUTF8((const xmlChar*)str->c_str())) {
-            OperationMode::processError("Not UTF-8 data. Url: " + helper.url());
-        }
+
         std::string res;
         res.append("<text>").append(XmlUtils::escape(*str)).append("</text>");
         XmlDocHelper result(xmlReadMemory(
