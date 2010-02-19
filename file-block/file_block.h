@@ -33,15 +33,11 @@ private:
     virtual void postParse();
     virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception); 
 
-    /**
-     * Loading file with optional xinclude processing.
-     */
     XmlDocHelper loadFile(const std::string &file_name,
             boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
 
-    /**
-     * Create full filename based on relative name in first arg.
-     */
+    XmlDocHelper loadText(const std::string &file_name,
+            boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
 
     XmlDocHelper invokeFile(const std::string &file_name,
             boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);

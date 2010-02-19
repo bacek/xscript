@@ -2,6 +2,7 @@
 
 #include <sys/stat.h>
 #include <cerrno>
+#include <fstream>
 
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
@@ -57,27 +58,30 @@ FileBlock::property(const char *name, const char *value) {
 
 void
 FileBlock::postParse() {
-
     ThreadedBlock::postParse();
     TaggedBlock::postParse();
 
     createCanonicalMethod("file.");
 
-    if (method() == "include") {
+    const std::string& met = method();
+    if (0 == strcasecmp(met.c_str(), "include")) {
         method_ = &FileBlock::loadFile;
         processXInclude_ = true;
     }
-    else if (method() == "load") {
+    else if (0 == strcasecmp(met.c_str(), "load")) {
         method_ = &FileBlock::loadFile;
         processXInclude_ = false;
     }
-    else if (method() == "invoke") {
+    else if (0 == strcasecmp(met.c_str(), "loadText")) {
+        method_ = &FileBlock::loadText;
+    }
+    else if (0 == strcasecmp(met.c_str(), "invoke")) {
         method_ = &FileBlock::invokeFile;
     }
-    else if (method() == "test") {
+    else if (0 == strcasecmp(met.c_str(), "test")) {
     }
     else {
-        throw std::invalid_argument("Unknown method for file-block: " + method());
+        throw std::invalid_argument("Unknown method for file-block: " + met);
     }
 }
 
@@ -207,6 +211,49 @@ FileBlock::loadFile(const std::string &file_name,
     OperationMode::processXmlError(file_name);
     
     return doc;
+}
+
+XmlDocHelper
+FileBlock::loadText(const std::string &file_name,
+        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+    (void)ctx;
+    (void)invoke_ctx;
+    log()->debug("%s: loading text file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
+
+    PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
+
+    std::ifstream is(file_name.c_str(), std::ios::in);
+    if (!is) {
+        throw InvokeError("Cannot open file", "file", file_name);
+    }
+    is.exceptions(std::ios::badbit | std::ios::eofbit);
+
+    std::ifstream::pos_type size = 0;
+    if (!is.seekg(0, std::ios::end)) {
+        throw InvokeError("Seek error", "file", file_name);
+    }
+    size = is.tellg();
+    if (!is.seekg(0, std::ios::beg)) {
+        throw InvokeError("Seek error", "file", file_name);
+    }
+
+    std::vector<char> doc_data(size);
+    is.read(&doc_data[0], size);
+
+    if (doc_data.empty()) {
+        XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+        if (NULL != doc.get()) {
+            XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"text", NULL));
+            if (node.get() != NULL) {
+                xmlDocSetRootElement(doc.get(), node.release());
+            }
+        }
+        return doc;
+    }
+    std::string res("<text>");
+    res.append(XmlUtils::escape(doc_data)).append("</text>");
+    return XmlDocHelper(xmlReadMemory(
+        res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
 }
 
 XmlDocHelper
