@@ -103,7 +103,7 @@ LocalBlock::parseSubNode(xmlNodePtr node) {
         xmlRemoveProp(name_attr);
     }
     
-    script_ = ScriptFactory::createScriptFromXmlNode(node);
+    script_ = ScriptFactory::createScriptFromXmlNode(owner()->name(), node);
 }
 
 void

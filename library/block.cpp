@@ -784,7 +784,7 @@ Block::callInternal(boost::shared_ptr<Context> ctx, unsigned int slot) {
 void
 Block::callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
     XmlUtils::registerReporters();
-    VirtualHostData::instance()->set(ctx->request());
+    VirtualHostData::instance()->set(ctx->rootContext()->request());
     Context::resetTimer();
     callInternal(ctx, slot);
 }

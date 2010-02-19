@@ -51,9 +51,8 @@ ScriptFactory::createScriptFromXml(const std::string &name, const std::string &x
 }
 
 boost::shared_ptr<Script>
-ScriptFactory::createScriptFromXmlNode(xmlNodePtr node) {
-    boost::shared_ptr<Script> script =
-        ScriptFactory::instance()->create(StringUtils::EMPTY_STRING);
+ScriptFactory::createScriptFromXmlNode(const std::string &name, xmlNodePtr node) {
+    boost::shared_ptr<Script> script = ScriptFactory::instance()->create(name);
     script->parseFromXml(node);
     return script;
 }
