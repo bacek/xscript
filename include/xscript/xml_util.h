@@ -28,6 +28,7 @@ public:
     static void registerReporters();
     static void resetReporter();
     static void throwUnless(bool value);
+    static void throwUnless(bool value, const char *attr, const char *attr_value);
     static bool hasXMLError();
     static std::string getXMLError();
     static void printXMLError(const std::string& postfix);

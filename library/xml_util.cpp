@@ -158,6 +158,21 @@ XmlUtils::throwUnless(bool value) {
     }
 }
 
+void
+XmlUtils::throwUnless(bool value, const char *attr, const char *attr_value) {
+    try {
+        throwUnless(value);
+    }
+    catch(UnboundRuntimeError &error) {
+        std::string message(" ");
+        message.append(attr);
+        message.append(": ");
+        message.append(attr_value);
+        error.append(message);
+        throw error;
+    }
+}
+
 bool
 XmlUtils::hasXMLError() {
     return XmlErrorReporter::reporter()->hasError();

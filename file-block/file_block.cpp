@@ -266,18 +266,23 @@ FileBlock::loadText(const std::string &file_name,
 
     if (doc_data.empty()) {
         XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
-        if (NULL != doc.get()) {
-            XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"text", NULL));
-            if (node.get() != NULL) {
-                xmlDocSetRootElement(doc.get(), node.release());
-            }
-        }
+        XmlUtils::throwUnless(NULL != doc.get());
+        
+        XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"text", NULL));
+        XmlUtils::throwUnless(NULL != node.get());
+
+        xmlDocSetRootElement(doc.get(), node.release());
         return doc;
     }
+       
     std::string res("<text>");
     res.append(XmlUtils::escape(doc_data)).append("</text>");
-    return XmlDocHelper(xmlReadMemory(
+
+    XmlDocHelper result(xmlReadMemory(
         res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+    XmlUtils::throwUnless(NULL != result.get(), "file", file_name.c_str());
+    return result;
+    
 }
 
 XmlDocHelper
