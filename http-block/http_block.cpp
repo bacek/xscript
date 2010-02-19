@@ -405,48 +405,56 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, InvokeConte
 
 XmlDocHelper
 HttpBlock::response(const HttpHelper &helper) const {
-
+	XmlDocHelper result;
     boost::shared_ptr<std::string> str = helper.content();
     if (helper.isXml()) {
-        return XmlDocHelper(xmlReadMemory(str->c_str(), str->size(), "",
-                                          charset_.empty() ? NULL : charset_.c_str(),
-                                          XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+    	result = XmlDocHelper(xmlReadMemory(str->c_str(), str->size(), "",
+    			charset_.empty() ? NULL : charset_.c_str(),
+    			XML_PARSE_DTDATTR | XML_PARSE_NOENT));
     }
-    if (helper.contentType() == "text/plain") {
+    else if (helper.contentType() == "text/plain") {
         if (str->empty()) {
-            XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
-            if (NULL != doc.get()) {
-                XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"text", NULL));
+        	result = XmlDocHelper(xmlNewDoc((const xmlChar*) "1.0"));
+            if (NULL != result.get()) {
+                XmlNodeHelper node(xmlNewDocNode(result.get(), NULL, (const xmlChar*)"text", NULL));
                 if (node.get() != NULL) {
-                    xmlDocSetRootElement(doc.get(), node.release());
+                    xmlDocSetRootElement(result.get(), node.release());
                 }
             }
-            return doc;
         }
-        std::string res;
-        res.append("<text>").append(XmlUtils::escape(*str)).append("</text>");
-        return XmlDocHelper(xmlReadMemory(res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        else {
+        	std::string res;
+        	res.append("<text>").append(XmlUtils::escape(*str)).append("</text>");
+        	result = XmlDocHelper(xmlReadMemory(
+        			res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        }
     }
-    if (helper.contentType() == "text/html") {
+    else if (helper.contentType() == "text/html") {
         std::string data = XmlUtils::sanitize(*str, StringUtils::EMPTY_STRING, 0);
         if (data.empty()) {
             throw InvokeError("Empty sanitized text/html document");
         }
         
-        XmlDocHelper doc(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
+        result = XmlDocHelper(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
                 helper.charset().c_str(), XML_PARSE_DTDATTR | XML_PARSE_NOENT));
         
-        if (NULL == doc.get()) {
+        if (NULL == result.get()) {
             log()->error("Invalid sanitized text/html document. Url: %s", helper.url().c_str());
             std::string error = "Invalid sanitized text/html document. Url: " + helper.url() + ". Error: ";
             std::string xml_error = XmlUtils::getXMLError();
             xml_error.empty() ? error.append("Unknown XML error") : error.append(xml_error);
             OperationMode::processCriticalInvokeError(error);
         }
-        
-        return doc;
     }
-    throw InvokeError("format is not recognized: " + helper.contentType(), "url", helper.url());
+    else {
+    	throw InvokeError("format is not recognized: " + helper.contentType(), "url", helper.url());
+    }
+    
+    if (NULL == result.get()) {
+    	throw InvokeError("got empty document", "url", helper.url());
+    }
+    
+    return result;
 }
 
 void
