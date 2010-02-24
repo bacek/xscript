@@ -7,6 +7,7 @@
 
 namespace xscript {
 
+class Context;
 class Tag;
 
 class InvokeContext : private boost::noncopyable {
@@ -36,6 +37,9 @@ public:
     bool error() const;
     bool success() const;
     bool noCache() const;
+    
+    void setLocalContext(const boost::shared_ptr<Context> &ctx);
+    const boost::shared_ptr<Context>& getLocalContext();
 
 private:
     struct ContextData;

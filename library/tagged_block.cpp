@@ -174,6 +174,12 @@ TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
     time_t now = time(NULL);
     DocCache *cache = DocCache::instance();
     Tag tag = invoke_ctx->tag();
+    
+    boost::shared_ptr<Context> local_ctx = invoke_ctx->getLocalContext();
+    if (local_ctx.get() && !local_ctx->expireDeltaUndefined()) {
+        tag.last_modified = time(NULL);
+        tag.expire_time = tag.last_modified + local_ctx->expireDelta();
+    }
 
     bool can_store = false;
     if (!cacheTimeUndefined()) {

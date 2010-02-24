@@ -1,3 +1,10 @@
+xscript (5.70-40) unstable; urgency=low
+
+  * LocalArgs fixed for perblock stylesheets
+  * luaSetExpireDelta added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 24 Feb 2010 17:15:30 +0300
+
 xscript (5.70-39) unstable; urgency=low
 
   * error checking improved for file::loadText and http-block

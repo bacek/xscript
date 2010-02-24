@@ -386,6 +386,26 @@ luaStrSplit(lua_State *lua) {
     return 0;
 }
 
+static int
+luaSetExpireDelta(lua_State *lua) throw () {
+    try {
+        luaCheckStackSize(lua, 1);
+        Context *ctx = getContext(lua);
+        boost::int32_t expire_time_delta = luaReadStack<boost::int32_t>(lua, 1);
+        if (expire_time_delta < 0) {
+            throw std::runtime_error("negative expire time delta is not allowed");
+        }
+        ctx->setExpireDelta((boost::uint32_t)expire_time_delta);
+        return 0;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        return luaL_error(lua, "caught exception in [xscript:setExpireDelta]: %s", e.what());
+    }
+}
+
 void
 setupXScript(lua_State *lua, std::string * buf, Context *ctx, Block *block) {
     log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
@@ -462,6 +482,9 @@ setupXScript(lua_State *lua, std::string * buf, Context *ctx, Block *block) {
     
     lua_pushcfunction(lua, &luaStrSplit);
     lua_setfield(lua, -2, "strsplit");
+    
+    lua_pushcfunction(lua, &luaSetExpireDelta);
+    lua_setfield(lua, -2, "setExpireDelta");
     
     lua_pop(lua, 2); // pop _G and xscript
 

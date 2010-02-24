@@ -365,20 +365,26 @@ FileBlock::invokeFile(const std::string &file_name,
     boost::shared_ptr<Context> local_ctx =
         Context::createChildContext(script, ctx, TypedMap(), true);
 
-    if (threaded() || ctx->forceNoThreaded()) {
-        local_ctx->forceNoThreaded(true);
-    }
+    try {
+        invoke_ctx->setLocalContext(local_ctx);
+        
+        if (threaded() || ctx->forceNoThreaded()) {
+            local_ctx->forceNoThreaded(true);
+        }
 
-    ContextStopper ctx_stopper(local_ctx);
-    
-    XmlDocSharedHelper doc = script->invoke(local_ctx);
-    XmlUtils::throwUnless(NULL != doc->get());
-    
-    if (local_ctx->noCache()) {
-        invoke_ctx->resultType(InvokeContext::NO_CACHE);
+        XmlDocSharedHelper doc = script->invoke(local_ctx);
+        XmlUtils::throwUnless(NULL != doc->get());
+        
+        if (local_ctx->noCache()) {
+            invoke_ctx->resultType(InvokeContext::NO_CACHE);
+        }
+        
+        return *doc;
     }
-    
-    return *doc;
+    catch(...) {
+        ContextStopper ctx_stopper(local_ctx);
+        throw;
+    }
 }
 
 

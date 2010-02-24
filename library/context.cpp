@@ -75,7 +75,7 @@ struct Context::ContextData {
     ContextData(const boost::shared_ptr<RequestData> request_data,
                 const boost::shared_ptr<Script> &script) :
         stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
-        script_(script), flags_(0)
+        script_(script), expire_delta_(-1), flags_(0)
     {
         if (!script->expireTimeDeltaUndefined()) {
             requestData()->response()->setExpireDelta(script->expireTimeDelta());
@@ -87,7 +87,8 @@ struct Context::ContextData {
                 const boost::shared_ptr<Context> &ctx,
                 const TypedMap &local_params) :
         stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
-        script_(script), parent_context_(ctx), flags_(0), local_params_(local_params)
+        script_(script), parent_context_(ctx), expire_delta_(-1), flags_(0),
+        local_params_(local_params)
     {
         if (!script->expireTimeDeltaUndefined()) {
             requestData()->response()->setExpireDelta(script->expireTimeDelta());
@@ -99,7 +100,7 @@ struct Context::ContextData {
                 const boost::shared_ptr<CommonData> &common_data,
                 const TypedMap &local_params) :
         stopped_(false), common_data_(common_data), script_(script), parent_context_(ctx),
-        flags_(0), local_params_(local_params)
+        expire_delta_(-1), flags_(0), local_params_(local_params)
     {       
         if (!script->expireTimeDeltaUndefined()) {
             requestData()->response()->setExpireDelta(script->expireTimeDelta());
@@ -233,6 +234,7 @@ struct Context::ContextData {
     boost::shared_ptr<Context> parent_context_;
     std::vector<boost::shared_ptr<InvokeContext> > results_;
     std::list<xmlNodePtr> clear_node_list_;
+    boost::int32_t expire_delta_;
 
     boost::condition condition_;
 
@@ -397,6 +399,14 @@ Context::result(unsigned int n, boost::shared_ptr<InvokeContext> result) {
     log()->debug("%s: %d, result of %u block: %p", BOOST_CURRENT_FUNCTION,
                  static_cast<int>(stopped()), n, result->resultDoc()->get());
     
+    if (result.get()) {
+        boost::shared_ptr<Context> local_ctx = result->getLocalContext();
+        result->setLocalContext(boost::shared_ptr<Context>()); // circle reference removed
+        if (local_ctx.get()) {
+            ContextStopper ctx_stopper(local_ctx);
+        }
+    }
+    
     boost::mutex::scoped_lock sl(ctx_data_->results_mutex_);
     if (!stopped() && ctx_data_->results_.size() != 0) {
         if (NULL == ctx_data_->results_[n].get()) {
@@ -546,6 +556,21 @@ Context::stopBlocks() const {
 void
 Context::stopBlocks(bool value) {
     ctx_data_->flag(ContextData::STOP_BLOCKS, value);
+}
+
+void
+Context::setExpireDelta(boost::int32_t delta) {
+    ctx_data_->expire_delta_ = delta;
+}
+
+boost::int32_t
+Context::expireDelta() const {
+    return ctx_data_->expire_delta_;
+}
+
+bool
+Context::expireDeltaUndefined() const {
+    return ctx_data_->expire_delta_ == -1;
 }
 
 std::string

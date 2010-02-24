@@ -20,6 +20,7 @@ struct InvokeContext::ContextData {
     Tag tag_;
     ResultType result_type_;
     bool have_cached_copy_;
+    boost::shared_ptr<Context> local_context_;
 };
 
 InvokeContext::InvokeContext() : ctx_data_(new ContextData()) {
@@ -106,6 +107,16 @@ InvokeContext::success() const {
 bool
 InvokeContext::noCache() const {
     return NO_CACHE == ctx_data_->result_type_;
+}
+
+void
+InvokeContext::setLocalContext(const boost::shared_ptr<Context> &ctx) {
+    ctx_data_->local_context_ = ctx;
+}
+
+const boost::shared_ptr<Context>&
+InvokeContext::getLocalContext() {
+    return ctx_data_->local_context_;
 }
 
 } // namespace xscript

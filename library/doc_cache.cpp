@@ -165,7 +165,7 @@ DocCacheBase::checkTag(const Context *ctx, const Tag &tag, const char *operation
     
     if (ctx) {
         log()->warn("Tag is not valid while %s. Url: %s", operation,
-            ctx->request()->getOriginalUrl().c_str());
+            ctx->rootContext()->request()->getOriginalUrl().c_str());
     }
     else {
         log()->warn("Tag is not valid while %s.", operation);

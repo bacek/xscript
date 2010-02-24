@@ -443,10 +443,12 @@ Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeC
     bool is_error_doc = Policy::isErrorDoc(doc->get());
     
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc->get());
+    
     bool need_perblock = !ctx->noXsltPort() && !xsltName().empty();
     bool success = true;
     if (need_perblock) {
-        success = applyStylesheet(ctx, doc);
+        boost::shared_ptr<Context> local_ctx = invoke_ctx->getLocalContext();
+        success = applyStylesheet(local_ctx.get() ? local_ctx: ctx, doc);
     }
 
     InvokeContext::ResultType type = InvokeContext::SUCCESS;    

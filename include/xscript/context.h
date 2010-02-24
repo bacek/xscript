@@ -122,6 +122,10 @@ public:
     boost::int32_t pageRandom() const;
     void pageRandom(boost::int32_t value);
 
+    void setExpireDelta(boost::int32_t delta);
+    boost::int32_t expireDelta() const;
+    bool expireDeltaUndefined() const;
+    
     bool hasLocalParam(const std::string &name) const;
     bool localParamIs(const std::string &name) const;
     const TypedValue& getLocalParam(const std::string &name) const;
