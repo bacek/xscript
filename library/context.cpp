@@ -163,6 +163,11 @@ struct Context::ContextData {
         runtime_errors_[block].assign(error_message);
     }
     
+    bool hasRuntimeError() const {
+        boost::mutex::scoped_lock lock(runtime_errors_mutex_);
+        return !runtime_errors_.empty();
+    }
+    
     boost::int32_t pageRandom() {
         if (common_data_->page_random_ < 0) {
             boost::int32_t random_max = script_->pageRandomMax();
@@ -403,7 +408,7 @@ Context::result(unsigned int n, boost::shared_ptr<InvokeContext> result) {
         boost::shared_ptr<Context> local_ctx = result->getLocalContext();
         result->setLocalContext(boost::shared_ptr<Context>()); // circle reference removed
         if (local_ctx.get()) {
-            ContextStopper ctx_stopper(local_ctx);
+            local_ctx->stop();
         }
     }
     
@@ -748,6 +753,19 @@ Context::localParams(std::map<std::string, TypedValue> &params) const {
     ctx_data_->local_params_.values(params);
 }
 
+void
+Context::stop() {
+    if (!isProxy()) {
+        ExtensionList::instance()->stopContext(this);
+    }
+       
+    if (!isRoot() && (noCache() || ctx_data_->hasRuntimeError())) {
+        rootContext()->setNoCache();
+    }
+    
+    ctx_data_->stopped_ = true;
+}
+
 bool
 ParamsMap::insert(const std::string &name, const boost::any &value) {
     boost::mutex::scoped_lock sl(mutex_);
@@ -774,15 +792,14 @@ ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {
 }
 
 ContextStopper::~ContextStopper() {
-    if (!ctx_->isProxy()) {
-        ExtensionList::instance()->stopContext(ctx_.get());
+    if (ctx_.get()) {
+        ctx_->stop();
     }
-    
-    if (!ctx_->isRoot() && (ctx_->noCache() || !ctx_->ctx_data_->runtime_errors_.empty())) {
-        ctx_->rootContext()->setNoCache();
-    }
-    
-    ctx_->ctx_data_->stopped_ = true;
+}
+
+void
+ContextStopper::reset() {
+    return ctx_.reset();
 }
 
 } // namespace xscript

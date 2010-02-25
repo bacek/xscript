@@ -288,13 +288,14 @@ FileBlock::loadText(const std::string &file_name,
 XmlDocHelper
 FileBlock::loadBinary(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
-    (void)ctx;
     (void)invoke_ctx;
     log()->debug("%s: loading binary file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
     PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
 
-    boost::shared_ptr<std::ifstream> is(new std::ifstream(file_name.c_str(), std::ios::in));
+    boost::shared_ptr<std::ifstream> is(
+        new std::ifstream(file_name.c_str(), std::ios::in | std::ios::binary));
+    
     if (!is.get()) {
         throw InvokeError("Cannot open file");
     }
@@ -365,26 +366,24 @@ FileBlock::invokeFile(const std::string &file_name,
     boost::shared_ptr<Context> local_ctx =
         Context::createChildContext(script, ctx, TypedMap(), true);
 
-    try {
-        invoke_ctx->setLocalContext(local_ctx);
+    ContextStopper ctx_stopper(local_ctx);
+    
+    invoke_ctx->setLocalContext(local_ctx);
         
-        if (threaded() || ctx->forceNoThreaded()) {
-            local_ctx->forceNoThreaded(true);
-        }
+    if (threaded() || ctx->forceNoThreaded()) {
+        local_ctx->forceNoThreaded(true);
+    }
 
-        XmlDocSharedHelper doc = script->invoke(local_ctx);
-        XmlUtils::throwUnless(NULL != doc->get());
-        
-        if (local_ctx->noCache()) {
-            invoke_ctx->resultType(InvokeContext::NO_CACHE);
-        }
-        
-        return *doc;
+    XmlDocSharedHelper doc = script->invoke(local_ctx);
+    XmlUtils::throwUnless(NULL != doc->get());
+    
+    if (local_ctx->noCache()) {
+        invoke_ctx->resultType(InvokeContext::NO_CACHE);
     }
-    catch(...) {
-        ContextStopper ctx_stopper(local_ctx);
-        throw;
-    }
+    
+    ctx_stopper.reset();
+    
+    return *doc;
 }
 
 

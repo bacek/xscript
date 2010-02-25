@@ -62,26 +62,24 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
     boost::shared_ptr<Context> local_ctx =
         Context::createChildContext(script_, ctx, local_params, proxy_);
 
-    try {
-        invoke_ctx->setLocalContext(local_ctx);
-        
-        if (threaded() || ctx->forceNoThreaded()) {
-            local_ctx->forceNoThreaded(true);
-        }
-        
-        XmlDocSharedHelper doc = script_->invoke(local_ctx);
-        XmlUtils::throwUnless(NULL != doc->get());
-        
-        if (local_ctx->noCache()) {
-            invoke_ctx->resultType(InvokeContext::NO_CACHE);
-        }
-        
-        return *doc;
+    ContextStopper ctx_stopper(local_ctx);
+    
+    invoke_ctx->setLocalContext(local_ctx);
+    
+    if (threaded() || ctx->forceNoThreaded()) {
+        local_ctx->forceNoThreaded(true);
     }
-    catch(...) {
-        ContextStopper ctx_stopper(local_ctx);
-        throw;
+    
+    XmlDocSharedHelper doc = script_->invoke(local_ctx);
+    XmlUtils::throwUnless(NULL != doc->get());
+    
+    if (local_ctx->noCache()) {
+        invoke_ctx->resultType(InvokeContext::NO_CACHE);
     }
+    
+    ctx_stopper.reset();
+    
+    return *doc;
 }
 
 void

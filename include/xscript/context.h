@@ -143,6 +143,7 @@ private:
     void init();
     bool insertParam(const std::string &key, const boost::any &value);
     bool findParam(const std::string &key, boost::any &value) const;
+    void stop();
 
 private:
     struct ContextData;
@@ -153,6 +154,8 @@ class ContextStopper {
 public:
     ContextStopper(boost::shared_ptr<Context> ctx);
     ~ContextStopper();
+    
+    void reset();
 private:
     boost::shared_ptr<Context> ctx_;
 };
