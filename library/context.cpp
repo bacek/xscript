@@ -384,6 +384,7 @@ Context::wait(int millis) {
             }
         }
     }
+    sl.unlock();
     
     if (no_cache) {
         setNoCache();
