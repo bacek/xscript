@@ -368,6 +368,7 @@ Context::wait(int millis) {
     boost::mutex::scoped_lock sl(ctx_data_->results_mutex_);
     bool timedout = !ctx_data_->condition_.timed_wait(sl, xt, boost::bind(&Context::resultsReady, this));
     
+    bool no_cache = false;
     bool save_result = timedout || stopBlocks();
     if (save_result) {
         for (unsigned int i = 0; i < ctx_data_->results_.size(); ++i) {
@@ -375,12 +376,17 @@ Context::wait(int millis) {
             if (NULL == result || NULL == result->resultDoc()->get()) {
                 if (timedout) {
                     ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult("timed out", false);
+                    no_cache = true;
                 }
                 else {
                     ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult("stopped", true);
                 }
             }
         }
+    }
+    
+    if (no_cache) {
+        setNoCache();
     }
 }
 
@@ -540,7 +546,11 @@ Context::noCache() const {
 
 void
 Context::setNoCache() {
-    ctx_data_->flag(ContextData::FLAG_NO_CACHE, true);
+    Context *local_ctx = this;
+    while(local_ctx) {
+        local_ctx->ctx_data_->flag(ContextData::FLAG_NO_CACHE, true);
+        local_ctx = local_ctx->parentContext();
+    }
 }
 
 bool
@@ -759,7 +769,7 @@ Context::stop() {
         ExtensionList::instance()->stopContext(this);
     }
        
-    if (!isRoot() && (noCache() || ctx_data_->hasRuntimeError())) {
+    if (noCache() || ctx_data_->hasRuntimeError()) {
         rootContext()->setNoCache();
     }
     

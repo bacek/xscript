@@ -411,24 +411,7 @@ HttpBlock::response(const HttpHelper &helper) const {
         XmlDocHelper result(xmlReadMemory(str->c_str(), str->size(), "",
             charset_.empty() ? NULL : charset_.c_str(), XML_PARSE_DTDATTR | XML_PARSE_NOENT));
         XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());
-        return result;
-    }
-    
-    if (helper.contentType() == "text/plain") {
-        if (str->empty()) {
-            XmlDocHelper result(xmlNewDoc((const xmlChar*) "1.0"));
-        	XmlUtils::throwUnless(NULL != result.get());
-            XmlNodeHelper node(xmlNewDocNode(result.get(), NULL, (const xmlChar*)"text", NULL));
-            XmlUtils::throwUnless(NULL != node.get());
-            xmlDocSetRootElement(result.get(), node.release());
-            return result;
-        }
-
-        std::string res;
-        res.append("<text>").append(XmlUtils::escape(*str)).append("</text>");
-        XmlDocHelper result(xmlReadMemory(
-                res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
-        XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());
+        OperationMode::processXmlError(helper.url());
         return result;
     }
     
@@ -449,6 +432,27 @@ HttpBlock::response(const HttpHelper &helper) const {
             OperationMode::processCriticalInvokeError(error);
         }
         
+        OperationMode::processXmlError(helper.url());
+        
+        return result;
+    }
+    
+    if (0 == strncmp(helper.contentType().c_str(), "text/", sizeof("text/") - 1)) {
+        if (str->empty()) {
+            XmlDocHelper result(xmlNewDoc((const xmlChar*) "1.0"));
+        	XmlUtils::throwUnless(NULL != result.get());
+            XmlNodeHelper node(xmlNewDocNode(result.get(), NULL, (const xmlChar*)"text", NULL));
+            XmlUtils::throwUnless(NULL != node.get());
+            xmlDocSetRootElement(result.get(), node.release());
+            return result;
+        }
+
+        std::string res;
+        res.append("<text>").append(XmlUtils::escape(*str)).append("</text>");
+        XmlDocHelper result(xmlReadMemory(res.c_str(), res.size(), "",
+                helper.charset().c_str(), XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());
+        OperationMode::processXmlError(helper.url());
         return result;
     }
 

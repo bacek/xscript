@@ -281,6 +281,9 @@ FileBlock::loadText(const std::string &file_name,
     XmlDocHelper result(xmlReadMemory(
         res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
     XmlUtils::throwUnless(NULL != result.get());
+    
+    OperationMode::processXmlError(file_name);
+    
     return result;
     
 }

@@ -384,11 +384,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     }
     
     if (!result->success()) {
-        Context *local_ctx = ctx.get();
-        while (local_ctx) {
-            local_ctx->setNoCache();
-            local_ctx = local_ctx->parentContext();
-        }
+        ctx->setNoCache();
     }
     
     return result;

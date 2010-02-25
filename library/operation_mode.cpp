@@ -275,7 +275,7 @@ class ProcessXmlErrorHandler : public MessageHandler {
         (void)result;
         if (XmlUtils::hasXMLError()) {
             const std::string& filename = params.get<const std::string>(0);
-            std::string postfix = "File: " + filename;
+            std::string postfix = "Resource: " + filename;
             XmlUtils::printXMLError(postfix);
         }
         return CONTINUE;
