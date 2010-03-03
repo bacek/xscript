@@ -109,7 +109,7 @@ ExtensionList::accepts(Extension *ext, const char *name, const char *ref, bool a
     }
     
     if (NULL == ref) {
-        if (!allow_empty_namespace) {
+        if (!allow_empty_namespace || !ext->allowEmptyNamespace()) {
             return false;
         } 
     }

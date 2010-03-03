@@ -43,6 +43,11 @@ public:
         static Extension* const DEFAULT_VALUE;
         static void destroy(Extension * ptr);
     };
+
+    bool allowEmptyNamespace() const;
+    
+    static const std::string ALLOW_EMPTY_NAMESPACE_METHOD;
+
     
 private:
     Logger * logger_;
