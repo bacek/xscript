@@ -1,3 +1,9 @@
+xscript (5.70-43) unstable; urgency=low
+
+  * context updating added to lua calls
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 12 Mar 2010 17:37:34 +0300
+
 xscript (5.70-42) unstable; urgency=low
 
   * strict xscript namespace added to local-block
