@@ -407,7 +407,7 @@ luaSetExpireDelta(lua_State *lua) throw () {
 }
 
 void
-setupXScript(lua_State *lua, std::string * buf, Context *ctx, Block *block) {
+setupXScript(lua_State *lua, std::string * buf, Block *block) {
     log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 
     lua_newtable(lua);
@@ -425,13 +425,6 @@ setupXScript(lua_State *lua, std::string * buf, Context *ctx, Block *block) {
     // Our userdata is on top of stack.
     // Assign it to '_buf'
     lua_setfield(lua, -2, "_buf");
-
-    pointer<Context> *pctx = (pointer<Context> *)lua_newuserdata(lua, sizeof(pointer<Context>));
-    pctx->ptr = ctx;
-
-    // Our userdata is on top of stack.
-    // Assign it to '_ctx'
-    lua_setfield(lua, -2, "_ctx");
 
     pointer<Block> *pblock = (pointer<Block> *)lua_newuserdata(lua, sizeof(pointer<Block>));
     pblock->ptr = block;

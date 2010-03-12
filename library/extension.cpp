@@ -50,6 +50,7 @@ Extension::allowEmptyNamespace() const {
 
 namespace ExtensionHandlers {
 
+//TODO: remove
 class AllowEmptyNamespaceHandler : public MessageHandler {
     Result process(const MessageParams &params, MessageResultBase &result) {
         (void)params;

@@ -140,22 +140,34 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
     log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 }
 
-LuaSharedContext create_lua(Context *ctx, Block *block) {
+LuaSharedContext
+create_lua(Context *orig_ctx, Block *block) {
     LuaSharedContext lua_context(new LuaState(luaL_newstate()));
     lua_State * lua = lua_context->lua.get();
     luaL_openlibs(lua);
 
-    setupXScript(lua, &(lua_context->buffer), ctx, block);
+    setupXScript(lua, &(lua_context->buffer), block);
 
-    setupUserdata(lua, ctx->request(), "request", getRequestLib());
-    setupUserdata(lua, ctx->state(), "state", getStateLib());
-    setupUserdata(lua, ctx->response(), "response", getResponseLib());
-    setupUserdata(lua, ctx, "localargs", getLocalLib());
+    setupUserdata(lua, orig_ctx->request(), "request", getRequestLib());
+    setupUserdata(lua, orig_ctx->state(), "state", getStateLib());
+    setupUserdata(lua, orig_ctx->response(), "response", getResponseLib());
 
     registerCookieMethods(lua);
     registerLoggerMethods(lua);
 
     return lua_context;
+}
+
+void
+setupLocalContext(lua_State * lua, Context *ctx) {
+    lua_getglobal(lua, "xscript");
+
+    pointer<Context> *pctx = (pointer<Context> *)lua_newuserdata(lua, sizeof(pointer<Context>));
+    pctx->ptr = ctx;
+
+    lua_setfield(lua, -2, "_ctx");
+    
+    setupUserdata(lua, ctx, "localargs", getLocalLib());
 }
 
 XmlDocHelper
@@ -164,7 +176,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
     log()->entering(BOOST_CURRENT_FUNCTION);    
     
     PROFILER(log(), "Lua block execution, " + owner()->name());
-
+    
     if (NULL == code_) {
         XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
         XmlUtils::throwUnless(NULL != doc.get());
@@ -174,21 +186,25 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
     }
     
     // Try to fetch previously created lua interpret. If failed - create new one.
-    boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, ctx.get(), this);
+    Context *orig_ctx = ctx->originalContext();
+    boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, orig_ctx, this);
 
-    Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(LUA_CONTEXT_MUTEX);
-    LuaSharedContext lua_context = ctx->param(XSCRIPT_LUA, creator, *mutex);
+    Context::MutexPtr mutex = orig_ctx->param<Context::MutexPtr>(LUA_CONTEXT_MUTEX);
+    LuaSharedContext lua_context = orig_ctx->param(XSCRIPT_LUA, creator, *mutex);
     lua_State * lua = lua_context->lua.get();
 
     // Lock interpreter during processing.
     boost::mutex::scoped_lock lock(lua_context->mutex);
+    
+    setupLocalContext(lua, ctx.get());
+    
     lua_context->buffer.clear();
 
     if (LUA_ERRMEM == luaL_loadstring(lua, code_)) {
         throw std::bad_alloc();
     }
-
-    int res = lua_pcall(lua, 0, LUA_MULTRET, 0);
+    
+    int res = lua_pcall(lua, 0, LUA_MULTRET, 0);    
     if (res != 0) {
         std::string msg(lua_tostring(lua, -1));
         lua_pop(lua, 1);
@@ -211,7 +227,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
     }
     xmlDocSetRootElement(doc.get(), node.get());
     node.release();
-
+    
     return doc;
 }
 

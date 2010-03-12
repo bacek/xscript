@@ -334,7 +334,7 @@ FileBlock::invokeFile(const std::string &file_name,
     log()->debug("%s: invoking file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
     PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
-
+    
     Context* tmp_ctx = ctx.get();
     unsigned int depth = 0;
     while (tmp_ctx) {
@@ -366,6 +366,7 @@ FileBlock::invokeFile(const std::string &file_name,
     if (NULL == script.get()) {
         throw InvokeError("Cannot create script", "file", file_name);
     }
+
     boost::shared_ptr<Context> local_ctx =
         Context::createChildContext(script, ctx, TypedMap(), true);
 
@@ -376,8 +377,8 @@ FileBlock::invokeFile(const std::string &file_name,
     if (threaded() || ctx->forceNoThreaded()) {
         local_ctx->forceNoThreaded(true);
     }
-
-    XmlDocSharedHelper doc = script->invoke(local_ctx);
+    
+    XmlDocSharedHelper doc = script->invoke(local_ctx);    
     XmlUtils::throwUnless(NULL != doc->get());
     
     if (local_ctx->noCache()) {
