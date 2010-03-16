@@ -10,7 +10,6 @@
 
 #include "internal/hash.h"
 #include "internal/hashmap.h"
-#include "internal/phoenix_singleton.h"
 
 #ifndef HAVE_HASHMAP
 #include <map>
@@ -27,13 +26,13 @@ typedef std::map<std::string, ParamCreator> CreatorMap;
 typedef details::hash_map<std::string, ParamCreator, details::StringHash> CreatorMap;
 #endif
 
-class ParamFactory :
-            private boost::noncopyable,
-            public PhoenixSingleton<ParamFactory> {
+class ParamFactory : private boost::noncopyable {
 public:
     ParamFactory();
     virtual ~ParamFactory();
 
+    static ParamFactory* instance();
+    
     void registerCreator(const char *name, ParamCreator c);
     std::auto_ptr<Param> param(Object *owner, xmlNodePtr node);
 

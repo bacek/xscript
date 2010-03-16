@@ -22,6 +22,12 @@
 
 namespace xscript {
 
+ParamFactory*
+ParamFactory::instance() {
+    static ParamFactory factory;
+    return &factory;
+}
+
 ParamFactory::ParamFactory() {
 }
 

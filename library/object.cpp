@@ -11,6 +11,7 @@
 #include "xscript/object.h"
 #include "xscript/param.h"
 #include "xscript/stylesheet.h"
+#include "xscript/util.h"
 #include "xscript/vhost_data.h"
 #include "xscript/xml_util.h"
 
