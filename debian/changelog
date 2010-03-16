@@ -1,3 +1,9 @@
+xscript (5.70-44) unstable; urgency=low
+
+  * tests fixed for intel compiler
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 16 Mar 2010 19:48:45 +0300
+
 xscript (5.70-43) unstable; urgency=low
 
   * context updating added to lua calls
