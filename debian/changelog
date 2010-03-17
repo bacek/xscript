@@ -1,3 +1,9 @@
+xscript (5.70-45) unstable; urgency=low
+
+  * version up
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 17 Mar 2010 18:33:19 +0300
+
 xscript (5.70-44) unstable; urgency=low
 
   * tests fixed for intel compiler
