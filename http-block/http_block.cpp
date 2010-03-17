@@ -404,7 +404,7 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, InvokeConte
 }
 
 XmlDocHelper
-HttpBlock::response(const HttpHelper &helper) const {
+HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
     XmlDocHelper result;
     boost::shared_ptr<std::string> str = helper.content();
     if (helper.isXml()) {
@@ -415,7 +415,7 @@ HttpBlock::response(const HttpHelper &helper) const {
         return result;
     }
     
-    if (helper.contentType() == "text/html") {
+    if (!error_mode && helper.contentType() == "text/html") {
         std::string data = XmlUtils::sanitize(*str, StringUtils::EMPTY_STRING, 0);
         if (data.empty()) {
             throw InvokeError("Empty sanitized text/html document");
@@ -456,6 +456,10 @@ HttpBlock::response(const HttpHelper &helper) const {
         return result;
     }
 
+    if (error_mode) {
+        return XmlDocHelper();
+    }
+        
     throw InvokeError("format is not recognized: " + helper.contentType(), "url", helper.url());
 }
 
@@ -486,8 +490,8 @@ HttpBlock::checkStatus(const HttpHelper &helper) {
         helper.checkStatus();
     }
     catch(const std::runtime_error &e) {
-        if (print_error_ && helper.content()->size() > 0) {
-            XmlDocHelper doc = response(helper);
+        if (print_error_ && 404 != helper.status() && helper.content()->size() > 0) {
+            XmlDocHelper doc = response(helper, true);
             if (NULL != doc.get()) {
                 xmlNodePtr root_node = xmlDocGetRootElement(doc.get());
                 if (root_node) {
@@ -495,6 +499,7 @@ HttpBlock::checkStatus(const HttpHelper &helper) {
                     RetryInvokeError error(e.what(), result_node);
                     error.addEscaped("url", helper.url());
                     error.add("status", boost::lexical_cast<std::string>(helper.status()));
+                    error.addEscaped("content-type", helper.contentType());
                     throw error;
                 }
             }
@@ -502,6 +507,7 @@ HttpBlock::checkStatus(const HttpHelper &helper) {
         
         RetryInvokeError error(e.what(), "url", helper.url());
         error.add("status", boost::lexical_cast<std::string>(helper.status()));
+        error.addEscaped("content-type", helper.contentType());
         throw error;
     }
 }

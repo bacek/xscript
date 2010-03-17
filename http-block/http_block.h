@@ -51,7 +51,7 @@ protected:
     XmlDocHelper postByRequest(Context *ctx, InvokeContext *invoke_ctx);
     XmlDocHelper getBinaryPage(Context *ctx, InvokeContext *invoke_ctx);
 
-    XmlDocHelper response(const HttpHelper &h) const;
+    XmlDocHelper response(const HttpHelper &h, bool error_mode = false) const;
     void appendHeaders(HttpHelper &helper, const Request *request, InvokeContext *invoke_ctx) const;
     void createTagInfo(const HttpHelper &h, InvokeContext *invoke_ctx) const;
 
