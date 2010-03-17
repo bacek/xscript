@@ -32,6 +32,7 @@
 #include "xscript/script.h"
 #include "xscript/stylesheet.h"
 #include "xscript/string_utils.h"
+#include "xscript/vhost_data.h"
 #include "xscript/xml_helpers.h"
 #include "xscript/xml_util.h"
 
@@ -375,6 +376,12 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
                 if ('\0' != *id) {
                     error.append(". ID: ").append(id);
                 }
+                
+                const Request* request = VirtualHostData::instance()->get();
+                if (NULL != request) {
+                    error.append(". Request URL: ").append(request->getOriginalUrl());
+                }
+                
                 Xml::TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
                 if (NULL != modified_info) {
                     boost::filesystem::path path(fileName);
