@@ -102,12 +102,12 @@ extern "C" void luaHook(lua_State * lua, lua_Debug *ar) {
  * name.
  * E.g. xscript::State::someMethod will be available as xscript.state:someMethod.
  */
-template<typename Type>
+template <typename Type>
 void
-setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_reg * lib) {
+registerLibs(lua_State *lua, const char *name, Type *type,
+        const struct luaL_reg *lib, const struct luaL_reg *named_lib) {
+    
     log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-
-    //lua_sethook(lua, luaHook, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE, 1);
 
     std::string tableName = "xscript.";
     tableName += name;
@@ -116,58 +116,64 @@ setupUserdata(lua_State *lua, Type * type, const char* name, const struct luaL_r
     lua_pushstring(lua, "__index");
     lua_pushvalue(lua, -2);  /* pushes the metatable */
     lua_settable(lua, -3);  /* metatable.__index = metatable */
+    
+    if (NULL != lib) {
+        luaL_openlib(lua, NULL, lib, NULL);
+    }
+    
+    if (NULL != named_lib) {
+        luaL_openlib(lua, tableName.c_str(), named_lib, NULL);
+    }
+    
+    if (type) {
+        // Get global xscript. We will set 'name' field later
+        lua_getglobal(lua, "xscript");
+             
+        pointer<Type> *p = (pointer<Type> *)lua_newuserdata(lua, sizeof(pointer<Type>));
+        p->ptr = type;
+             
+        luaL_getmetatable(lua, tableName.c_str());
+        lua_setmetatable(lua, -2); // points to new userdata
+             
+        // Our userdata is on top of stack.
+        // Assign it to 'name'
+        lua_setfield(lua, -2, name);
+             
+        // And remove it from stack
+        lua_remove(lua, -1);
+    }
 
-    luaL_openlib(lua, 0, lib, 0);
-    luaL_openlib(lua, tableName.c_str(), lib, 0);
-
-    // Get global xscript. We will set 'name' field later
-    lua_getglobal(lua, "xscript");
-
-    pointer<Type> *p = (pointer<Type> *)lua_newuserdata(lua, sizeof(pointer<Type>));
-    p->ptr = type;
-
-    luaL_getmetatable(lua, tableName.c_str());
-    lua_setmetatable(lua, -2); // points to new userdata
-
-    // Our userdata is on top of stack.
-    // Assign it to 'name'
-    lua_setfield(lua, -2, name);
-
-    // And remove it from stack
-    lua_remove(lua, -1);
-    lua_pop(lua, 2); // pop xscript, __metatable
-
+    lua_pop(lua, 2);
+    
     log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 }
 
 LuaSharedContext
-create_lua(Context *orig_ctx, Block *block) {
+create_lua() {
     LuaSharedContext lua_context(new LuaState(luaL_newstate()));
     lua_State * lua = lua_context->lua.get();
     luaL_openlibs(lua);
-
-    setupXScript(lua, &(lua_context->buffer), block);
-
-    setupUserdata(lua, orig_ctx->request(), "request", getRequestLib());
-    setupUserdata(lua, orig_ctx->state(), "state", getStateLib());
-    setupUserdata(lua, orig_ctx->response(), "response", getResponseLib());
-
-    registerCookieMethods(lua);
-    registerLoggerMethods(lua);
-
+    setupXScript(lua, &(lua_context->buffer));    
+    registerLibs(lua, "request", (void*)1, getRequestLib(), getRequestLib());   
+    registerLibs(lua, "state", (void*)1, getStateLib(), getStateLib());
+    registerLibs(lua, "response", (void*)1, getResponseLib(), getResponseLib());
+    registerLibs(lua, "localargs", (void*)1, getLocalLib(), getLocalLib());
+    registerLibs(lua, "cookie", (void*)NULL, getCookieLib(), getCookieNewLib());
+    registerLibs(lua, "logger", (void*)NULL, NULL, getLoggerLib());
     return lua_context;
 }
 
-void
-setupLocalContext(lua_State * lua, Context *ctx) {
+static void
+setupLocalData(lua_State * lua, Context *ctx, Block *block) {
     lua_getglobal(lua, "xscript");
 
     pointer<Context> *pctx = (pointer<Context> *)lua_newuserdata(lua, sizeof(pointer<Context>));
     pctx->ptr = ctx;
-
     lua_setfield(lua, -2, "_ctx");
     
-    setupUserdata(lua, ctx, "localargs", getLocalLib());
+    pointer<Block> *pblock = (pointer<Block> *)lua_newuserdata(lua, sizeof(pointer<Block>));
+    pblock->ptr = block;
+    lua_setfield(lua, -2, "_block");
 }
 
 XmlDocHelper
@@ -183,20 +189,20 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
         XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "lua", (const xmlChar*) ""));
         xmlDocSetRootElement(doc.get(), node.release());
         return doc;
-    }
+    }   
     
     // Try to fetch previously created lua interpret. If failed - create new one.
-    Context *orig_ctx = ctx->originalContext();
-    boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua, orig_ctx, this);
+    Context *root_ctx = ctx->rootContext();
+    boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua);
 
-    Context::MutexPtr mutex = orig_ctx->param<Context::MutexPtr>(LUA_CONTEXT_MUTEX);
-    LuaSharedContext lua_context = orig_ctx->param(XSCRIPT_LUA, creator, *mutex);
+    Context::MutexPtr mutex = root_ctx->param<Context::MutexPtr>(LUA_CONTEXT_MUTEX);
+    LuaSharedContext lua_context = root_ctx->param(XSCRIPT_LUA, creator, *mutex);
     lua_State * lua = lua_context->lua.get();
 
     // Lock interpreter during processing.
     boost::mutex::scoped_lock lock(lua_context->mutex);
     
-    setupLocalContext(lua, ctx.get());
+    setupLocalData(lua, ctx.get(), this);
     
     lua_context->buffer.clear();
 

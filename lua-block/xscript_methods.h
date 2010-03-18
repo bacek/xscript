@@ -6,8 +6,11 @@
 namespace xscript {
 
 class Block;
+class Context;
 
-void setupXScript(lua_State * lua, std::string * buf, Block *block);
+void setupXScript(lua_State *lua, std::string *buf);
+Context* getContext(lua_State *lua);
+Block* getBlock(lua_State *lua);
 
 } // namespace xscript
 

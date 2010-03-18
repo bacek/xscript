@@ -6,6 +6,7 @@
 #include <boost/function.hpp>
 #include <functional>
 
+#include "xscript/context.h"
 #include "xscript/logger.h"
 #include "xscript/request.h"
 
@@ -13,6 +14,7 @@
 #include "exception.h"
 #include "method_map.h"
 #include "request_methods.h"
+#include "xscript_methods.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -29,7 +31,8 @@ struct lua_request_method<1> {
     static int invoke(lua_State *lua, Func func) {
         try {
             luaCheckStackSize(lua, 1);
-            Request *req = luaReadStack<Request>(lua, "xscript.request", 1);           
+            luaReadStack<void>(lua, "xscript.request", 1);
+            Request *req = getContext(lua)->request();
             luaPushStack(lua, func(req));
             return 1;
         }
@@ -48,7 +51,8 @@ struct lua_request_method<2> {
     static int invoke(lua_State *lua, Func func) {
         try {
             luaCheckStackSize(lua, 2);
-            Request *req = luaReadStack<Request>(lua, "xscript.request", 1);
+            luaReadStack<void>(lua, "xscript.request", 1);
+            Request *req = getContext(lua)->request();
             std::string key = luaReadStack<std::string>(lua, 2);
             luaPushStack(lua, func(req, key));
             return 1;
@@ -292,6 +296,5 @@ static const struct luaL_reg requestlib [] = {
 const struct luaL_reg * getRequestLib() {
     return requestlib;
 }
-
 
 } // namespace xscript

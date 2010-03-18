@@ -5,7 +5,7 @@
 
 namespace xscript {
 
-void registerLoggerMethods(lua_State *lua);
+const struct luaL_reg * getLoggerLib();
 
 } // namespace xscript
 

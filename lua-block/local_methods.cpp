@@ -8,6 +8,7 @@
 #include "exception.h"
 #include "local_methods.h"
 #include "stack.h"
+#include "xscript_methods.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -39,8 +40,9 @@ luaLocalHas(lua_State *lua) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
-
-        Context *ctx = luaReadStack<Context>(lua, "xscript.localargs", 1);
+        luaReadStack<void>(lua, "xscript.localargs", 1);
+        
+        Context* ctx = getContext(lua);
         std::string key = luaReadStack<std::string>(lua, 2);
         log()->debug("luaLocalHas: %s", key.c_str());
         lua_pushboolean(lua, ctx->hasLocalParam(key));
@@ -63,7 +65,8 @@ luaLocalGet(lua_State *lua) {
         if (count < 2 || count > 3) {
             throw BadArgCount(count);
         }
-        Context* ctx = luaReadStack<Context>(lua, "xscript.localargs", 1);
+        luaReadStack<void>(lua, "xscript.localargs", 1);
+        Context* ctx = getContext(lua);
         std::string key = luaReadStack<std::string>(lua, 2);
         log()->debug("luaLocalGet: %s", key.c_str());
         std::string def_value;
@@ -87,8 +90,8 @@ luaLocalIs(lua_State *lua) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
-
-        Context* ctx = luaReadStack<Context>(lua, "xscript.localargs", 1);
+        luaReadStack<void>(lua, "xscript.localargs", 1);
+        Context* ctx = getContext(lua);
         std::string key = luaReadStack<std::string>(lua, 2);
         log()->debug("luaLocalIs: %s", key.c_str());
         lua_pushboolean(lua, ctx->localParamIs(key));

@@ -12,6 +12,8 @@
 #include <dmalloc.h>
 #endif
 
+namespace xscript {
+
 extern "C" {
     int luaCookieNew(lua_State *);
     int luaCookieName(lua_State *);
@@ -42,31 +44,6 @@ static const struct luaL_reg cookielib_m [] = {
     {"permanent",   luaCookiePermanent},
     {NULL, NULL}
 };
-
-namespace xscript {
-
-
-void registerCookieMethods(lua_State *lua) {
-    log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-
-    //lua_sethook(lua, luaHook, LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE, 1);
-
-    const char* tableName = "xscript.cookie";
-
-    luaL_newmetatable(lua, tableName);
-    lua_pushstring(lua, "__index");
-    lua_pushvalue(lua, -2);  /* pushes the metatable */
-    lua_settable(lua, -3);  /* metatable.__index = metatable */
-
-    luaL_openlib(lua, NULL, cookielib_m, 0);
-    luaL_openlib(lua, tableName, cookielib_f, 0);
-
-    lua_pop(lua, 2); // pop 
-
-    log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-    return;
-}
-
 
 extern "C" {
 
@@ -274,7 +251,14 @@ int luaCookiePermanent(lua_State * lua) {
     }
 }
 
-
 } // extern "C"
+
+const struct luaL_reg * getCookieNewLib() {
+    return cookielib_f;
+}
+
+const struct luaL_reg * getCookieLib() {
+    return cookielib_m;
+}
 
 }

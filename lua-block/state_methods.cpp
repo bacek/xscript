@@ -4,6 +4,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/current_function.hpp>
 
+#include "xscript/context.h"
 #include "xscript/logger.h"
 #include "xscript/state.h"
 #include "xscript/string_utils.h"
@@ -12,6 +13,7 @@
 #include "exception.h"
 #include "method_map.h"
 #include "state_methods.h"
+#include "xscript_methods.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -62,11 +64,11 @@ luaStateHas(lua_State *lua) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
-
-        State* s = luaReadStack<State>(lua, "xscript.state", 1);
+        luaReadStack<void>(lua, "xscript.state", 1);
+        State *state = getContext(lua)->state();
         std::string key = luaReadStack<std::string>(lua, 2);
         log()->debug("luaStateHas: %s", key.c_str());
-        lua_pushboolean(lua, s->has(key));
+        lua_pushboolean(lua, state->has(key));
         return 1;
     }
     catch (const LuaError &e) {
@@ -86,15 +88,15 @@ luaStateGet(lua_State *lua) {
         if (count < 2 || count > 3) {
             throw BadArgCount(count);
         }
-        
-        State* s = luaReadStack<State>(lua, "xscript.state", 1);
+        luaReadStack<void>(lua, "xscript.state", 1);
+        State *state = getContext(lua)->state();
         std::string key = luaReadStack<std::string>(lua, 2);
         log()->debug("luaStateGet: %s", key.c_str());
         std::string def_value;
         if (3 == count) {
             def_value = luaReadStack<std::string>(lua, 3);
         }
-        lua_pushstring(lua, s->asString(key, def_value).c_str());
+        lua_pushstring(lua, state->asString(key, def_value).c_str());
         return 1;
     }
     catch (const LuaError &e) {
@@ -113,12 +115,12 @@ template<typename Type> int
 luaStateSet(lua_State *lua) {
     try {
         luaCheckStackSize(lua, 3);
-
-        State* s = luaReadStack<State>(lua, "xscript.state", 1);
+        luaReadStack<void>(lua, "xscript.state", 1);
+        State *state = getContext(lua)->state();
         std::string key = luaReadStack<std::string>(lua, 2);
         Type value = luaReadStack<Type>(lua, 3);
         log()->debug("luaStateSet: %s", key.c_str());
-        s->set(key, value);
+        state->set(key, value);
         luaPushStack(lua, value);
         return 1;
     }
@@ -173,11 +175,11 @@ luaStateIs(lua_State *lua) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
-
-        State* s = luaReadStack<State>(lua, "xscript.state", 1);
+        luaReadStack<void>(lua, "xscript.state", 1);
+        State *state = getContext(lua)->state();
         std::string key = luaReadStack<std::string>(lua, 2);
         log()->debug("luaStateIs: %s", key.c_str());
-        lua_pushboolean(lua, s->is(key));
+        lua_pushboolean(lua, state->is(key));
         return 1;
     }
     catch (const LuaError &e) {
@@ -194,7 +196,8 @@ luaStateDrop(lua_State *lua) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         int count = luaCheckStackSize(lua, 1, 2);
-        State* state = luaReadStack<State>(lua, "xscript.state", 1);
+        luaReadStack<void>(lua, "xscript.state", 1);
+        State *state = getContext(lua)->state();
         std::string prefix = count == 2 ?
             luaReadStack<std::string>(lua, 2) : StringUtils::EMPTY_STRING;
         log()->debug("luaStateDrop: %s", prefix.c_str());

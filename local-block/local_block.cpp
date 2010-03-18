@@ -7,7 +7,7 @@
 #include <xscript/param.h>
 #include <xscript/script.h>
 #include <xscript/script_factory.h>
-#include "xscript/typed_map.h"
+#include <xscript/typed_map.h>
 #include <xscript/xml_util.h>
 
 #include "local_arg_list.h"
@@ -41,7 +41,7 @@ LocalBlock::property(const char *name, const char *value) {
 XmlDocHelper
 LocalBlock::call(boost::shared_ptr<Context> ctx,
     boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
-
+    
     if (invoke_ctx->haveCachedCopy()) {
         Tag local_tag = invoke_ctx->tag();
         local_tag.modified = false;
@@ -58,7 +58,7 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
         (*it)->add(ctx.get(), param_list);
         local_params.insert((*it)->id(), param_list.value());
     }
-    
+
     boost::shared_ptr<Context> local_ctx =
         Context::createChildContext(script_, ctx, local_params, proxy_);
 

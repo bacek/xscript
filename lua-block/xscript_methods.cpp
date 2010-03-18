@@ -26,7 +26,7 @@
 
 namespace xscript {
 
-static Context* getContext(lua_State *lua) {
+Context* getContext(lua_State *lua) {
     lua_getglobal(lua, "xscript");
     lua_getfield(lua, -1, "_ctx");
 
@@ -39,7 +39,7 @@ static Context* getContext(lua_State *lua) {
     return ctx;
 }
 
-static Block* getBlock(lua_State *lua) {
+Block* getBlock(lua_State *lua) {
     lua_getglobal(lua, "xscript");
     lua_getfield(lua, -1, "_block");
 
@@ -267,7 +267,7 @@ luaAttachStylesheet(lua_State *lua) {
             throw std::runtime_error("Undefined context");
         }
         xslt = getBlock(lua)->fullName(xslt);
-        ctx->rootContext()->xsltName(xslt);
+        ctx->originalContext()->xsltName(xslt);
     }
     catch (const std::exception &e) {
         log()->error("caught exception in [xscript:attachStylesheet]: %s", e.what());
@@ -285,7 +285,7 @@ luaDropStylesheet(lua_State *lua) {
         if (NULL == ctx) {
             throw std::runtime_error("Undefined context");
         }
-        ctx->rootContext()->xsltName(StringUtils::EMPTY_STRING);
+        ctx->originalContext()->xsltName(StringUtils::EMPTY_STRING);
     }
     catch (const std::exception &e) {
         log()->error("caught exception in [xscript:dropStylesheet]: %s", e.what());
@@ -407,7 +407,7 @@ luaSetExpireDelta(lua_State *lua) throw () {
 }
 
 void
-setupXScript(lua_State *lua, std::string * buf, Block *block) {
+setupXScript(lua_State *lua, std::string * buf) {
     log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 
     lua_newtable(lua);
@@ -425,13 +425,6 @@ setupXScript(lua_State *lua, std::string * buf, Block *block) {
     // Our userdata is on top of stack.
     // Assign it to '_buf'
     lua_setfield(lua, -2, "_buf");
-
-    pointer<Block> *pblock = (pointer<Block> *)lua_newuserdata(lua, sizeof(pointer<Block>));
-    pblock->ptr = block;
-
-    // Our userdata is on top of stack.
-    // Assign it to '_block'
-    lua_setfield(lua, -2, "_block");
     
     // Setup urlencode and urldecode
     lua_pushcfunction(lua, &luaUrlEncode);

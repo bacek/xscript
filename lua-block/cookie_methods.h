@@ -5,12 +5,8 @@
 
 namespace xscript {
 
-// Cookie is different from other objects. We are _really_ creates new
-// cookies in lua. So method:
-// const struct luaL_reg * getCookieLib();
-// doesn't exists. We have next method instead:
-
-void registerCookieMethods(lua_State *lua);
+const struct luaL_reg * getCookieNewLib();
+const struct luaL_reg * getCookieLib();
 
 } // namespace xscript
 
