@@ -323,6 +323,15 @@ XmlUtils::reportXsltError(const std::string &error, xsltTransformContextPtr tctx
     }
 }
 
+static std::string
+getOriginalUrl() {
+    const Request* request = VirtualHostData::instance()->get();
+    if (NULL == request) {
+        return StringUtils::EMPTY_STRING;
+    }
+    return request->getOriginalUrl();
+}
+
 xmlParserInputPtr
 XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt) {
     if (NULL == url) {
@@ -351,7 +360,8 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
         if ('\0' != *url) {
             if (strncasecmp(url, "http://", sizeof("http://") - 1) == 0 ||
                 strncasecmp(url, "https://", sizeof("https://") - 1) == 0) {
-                log()->warn("entityResolver: loading remote entity is forbidden. URL: %s. ID: %s", url, id);
+                log()->warn("entityResolver: loading remote entity is forbidden. URL: %s. ID: %s. Request URL: %s",
+                        url, id, getOriginalUrl().c_str());
                 return NULL;
             }
 
@@ -376,11 +386,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
                 if ('\0' != *id) {
                     error.append(". ID: ").append(id);
                 }
-                
-                const Request* request = VirtualHostData::instance()->get();
-                if (NULL != request) {
-                    error.append(". Request URL: ").append(request->getOriginalUrl());
-                }
+                error.append(". Request URL: ").append(getOriginalUrl());
                 
                 Xml::TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
                 if (NULL != modified_info) {
@@ -421,9 +427,13 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
             if ('\0' != *id) {
                 error.append(". ID: ").append(id);
             }
+            
+            error.append(". Request URL: ").append(getOriginalUrl());
+            
             if (error_info) {
                 error_info->insert(std::make_pair(fileName, error));
             }
+            
             log()->error("%s", error.c_str());
         }
         catch (...) {
@@ -431,6 +441,9 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
             if ('\0' != *id) {
                 error.append(". ID: ").append(id);
             }
+            
+            error.append(". Request URL: ").append(getOriginalUrl());
+            
             if (error_info) {
                 error_info->insert(std::make_pair(fileName, error));
             }
@@ -438,10 +451,10 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
         }
     }
     catch (const std::exception &e) {
-        log()->error("entityResolver error: %s. URL: %s. ID: %s", e.what(), url, id);
+        log()->error("entityResolver error: %s. URL: %s. ID: %s. Request URL: %s", e.what(), url, id, getOriginalUrl().c_str());
     }
     catch (...) {
-        log()->error("entityResolver unknown error. URL: %s. ID: %s", url, id);
+        log()->error("entityResolver unknown error. URL: %s. ID: %s. Request URL: %s", url, id, getOriginalUrl().c_str());
     }
 
     return NULL;
