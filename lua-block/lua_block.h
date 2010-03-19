@@ -8,7 +8,6 @@
 
 namespace xscript {
 
-class LuaExtension;
 class State;
 class Request;
 class Response;
