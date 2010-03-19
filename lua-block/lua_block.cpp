@@ -32,6 +32,8 @@
 namespace xscript {
 
 static const std::string LUA_CONTEXT_MUTEX = "LUA_CONTEXT_MUTEX";
+static const std::string XSCRIPT_LUA = "xscript.lua";
+static const std::string XSCRIPT_THREAD = "xscript.lua_thread";
 
 template<>
 inline void ResourceHolderTraits<lua_State*>::destroy(lua_State *state) {
@@ -40,21 +42,46 @@ inline void ResourceHolderTraits<lua_State*>::destroy(lua_State *state) {
 
 typedef ResourceHolder<lua_State*> LuaHolder;
 
-// Struct to store lua_State and mutex in Context
 struct LuaState {
-    // Buffer to store output from lua
     std::string buffer;
+    LuaHolder state;
 
-    LuaHolder       lua;
-    boost::mutex    mutex;
-
-    LuaState(lua_State * l) : lua(l) {
+    LuaState(lua_State *l) : state(l) {
     }
 };
 
 typedef boost::shared_ptr<LuaState> LuaSharedContext;
 
-const std::string LuaBlock::XSCRIPT_LUA = "xscript.lua";
+class LuaThread {
+public:
+    LuaThread(lua_State *parent) : parent_state_(parent) {
+        state_ = lua_newthread(parent);
+        lua_pushvalue(parent, -1);
+        thread_id_ = luaL_ref(parent, LUA_REGISTRYINDEX);
+        lua_newtable(parent);
+        lua_pushvalue(parent, -1);
+        lua_setmetatable(parent, -2);
+        lua_pushvalue(parent, LUA_GLOBALSINDEX);
+        lua_setfield(parent, -2, "__index");
+        lua_setfenv(parent, -2);
+        lua_pop(parent, 1);
+    }
+    
+    ~LuaThread() {
+        luaL_unref(parent_state_, LUA_REGISTRYINDEX, thread_id_);
+    }
+    
+    lua_State* get() const {
+        return state_;
+    }
+    
+private:
+    lua_State* parent_state_;
+    lua_State* state_;
+    int thread_id_;
+};
+
+typedef boost::shared_ptr<LuaThread> LuaSharedThread;
 
 LuaBlock::LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), code_(NULL) {
@@ -148,21 +175,6 @@ registerLibs(lua_State *lua, const char *name, Type *type,
     log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
 }
 
-LuaSharedContext
-create_lua() {
-    LuaSharedContext lua_context(new LuaState(luaL_newstate()));
-    lua_State * lua = lua_context->lua.get();
-    luaL_openlibs(lua);
-    setupXScript(lua, &(lua_context->buffer));    
-    registerLibs(lua, "request", (void*)1, getRequestLib(), getRequestLib());   
-    registerLibs(lua, "state", (void*)1, getStateLib(), getStateLib());
-    registerLibs(lua, "response", (void*)1, getResponseLib(), getResponseLib());
-    registerLibs(lua, "localargs", (void*)1, getLocalLib(), getLocalLib());
-    registerLibs(lua, "cookie", (void*)NULL, getCookieLib(), getCookieNewLib());
-    registerLibs(lua, "logger", (void*)NULL, NULL, getLoggerLib());
-    return lua_context;
-}
-
 static void
 setupLocalData(lua_State * lua, Context *ctx, Block *block) {
     lua_getglobal(lua, "xscript");
@@ -174,6 +186,26 @@ setupLocalData(lua_State * lua, Context *ctx, Block *block) {
     pointer<Block> *pblock = (pointer<Block> *)lua_newuserdata(lua, sizeof(pointer<Block>));
     pblock->ptr = block;
     lua_setfield(lua, -2, "_block");
+}
+
+static LuaSharedContext
+createLua() {
+    LuaSharedContext lua_context(new LuaState(luaL_newstate()));
+    lua_State *lua = lua_context->state.get();
+    luaL_openlibs(lua);
+    setupXScript(lua, &(lua_context->buffer));    
+    registerLibs(lua, "request", (void*)1, getRequestLib(), getRequestLib());   
+    registerLibs(lua, "state", (void*)1, getStateLib(), getStateLib());
+    registerLibs(lua, "response", (void*)1, getResponseLib(), getResponseLib());
+    registerLibs(lua, "localargs", (void*)1, getLocalLib(), getLocalLib());
+    registerLibs(lua, "cookie", (void*)NULL, getCookieLib(), getCookieNewLib());
+    registerLibs(lua, "logger", (void*)NULL, NULL, getLoggerLib());
+    return lua_context;
+}
+
+static LuaSharedThread
+createLuaThread(lua_State *parent) {
+    return LuaSharedThread(new LuaThread(parent));
 }
 
 XmlDocHelper
@@ -191,21 +223,22 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
         return doc;
     }   
     
-    // Try to fetch previously created lua interpret. If failed - create new one.
     Context *root_ctx = ctx->rootContext();
-    boost::function<LuaSharedContext ()> creator = boost::bind(&create_lua);
-
+    Context *orig_ctx = ctx->originalContext();
+    
     Context::MutexPtr mutex = root_ctx->param<Context::MutexPtr>(LUA_CONTEXT_MUTEX);
-    LuaSharedContext lua_context = root_ctx->param(XSCRIPT_LUA, creator, *mutex);
-    lua_State * lua = lua_context->lua.get();
-
-    // Lock interpreter during processing.
-    boost::mutex::scoped_lock lock(lua_context->mutex);
+    boost::function<LuaSharedContext ()> lua_creator(&createLua);
+    LuaSharedContext lua_context = ctx->param(XSCRIPT_LUA, lua_creator, *mutex);
+    
+    boost::function<LuaSharedThread ()> creator = boost::bind(&createLuaThread, lua_context->state.get());    
+    LuaSharedThread lua_thread = orig_ctx->param(XSCRIPT_THREAD, creator, *mutex);          
+    
+    boost::mutex::scoped_lock lock(*mutex);
+    lua_context->buffer.clear();
+    lua_State *lua = lua_thread->get();
     
     setupLocalData(lua, ctx.get(), this);
     
-    lua_context->buffer.clear();
-
     if (LUA_ERRMEM == luaL_loadstring(lua, code_)) {
         throw std::bad_alloc();
     }
@@ -242,7 +275,6 @@ LuaExtension::LuaExtension() {
 
 LuaExtension::~LuaExtension() {
 }
-
 
 const char*
 LuaExtension::name() const {

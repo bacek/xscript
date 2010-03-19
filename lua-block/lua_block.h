@@ -8,6 +8,7 @@
 
 namespace xscript {
 
+class LuaExtension;
 class State;
 class Request;
 class Response;
@@ -24,8 +25,7 @@ protected:
     virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception);
 
 private:
-    const char *code_;
-    static const std::string XSCRIPT_LUA;
+    const char* code_;
 };
 
 class LuaExtension : public Extension {
@@ -47,7 +47,6 @@ private:
     LuaExtension(const LuaExtension &);
     LuaExtension& operator = (const LuaExtension &);
 };
-
 
 } // namespace xscript
 
