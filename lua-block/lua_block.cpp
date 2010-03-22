@@ -228,7 +228,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
     
     Context::MutexPtr mutex = root_ctx->param<Context::MutexPtr>(LUA_CONTEXT_MUTEX);
     boost::function<LuaSharedContext ()> lua_creator(&createLua);
-    LuaSharedContext lua_context = ctx->param(XSCRIPT_LUA, lua_creator, *mutex);
+    LuaSharedContext lua_context = root_ctx->param(XSCRIPT_LUA, lua_creator, *mutex);
     
     boost::function<LuaSharedThread ()> creator = boost::bind(&createLuaThread, lua_context->state.get());    
     LuaSharedThread lua_thread = orig_ctx->param(XSCRIPT_THREAD, creator, *mutex);          
@@ -288,8 +288,10 @@ LuaExtension::nsref() const {
 
 void
 LuaExtension::initContext(Context *ctx) {
-    Context::MutexPtr context_mutex(new boost::mutex());
-    ctx->param(LUA_CONTEXT_MUTEX, context_mutex);
+    if (ctx->isRoot()) {
+        Context::MutexPtr context_mutex(new boost::mutex());
+        ctx->param(LUA_CONTEXT_MUTEX, context_mutex);
+    }
 }
 
 void
