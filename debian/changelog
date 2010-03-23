@@ -1,3 +1,9 @@
+xscript (5.70-50) unstable; urgency=low
+
+  * lua context thread safety possibly fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 23 Mar 2010 15:39:44 +0300
+
 xscript (5.70-49) unstable; urgency=low
 
   * lua context thread safety fixed 
