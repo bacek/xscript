@@ -89,6 +89,9 @@ public:
 
     // Get or create param
     typedef boost::shared_ptr<boost::mutex> MutexPtr;
+
+    template<typename T> T param(
+        const std::string &name, const boost::function<T ()> &creator);
     
     template<typename T> T param(
         const std::string &name, const boost::function<T ()> &creator, boost::mutex &mutex);
@@ -179,9 +182,8 @@ Context::param(const std::string &name, const T &t) {
 }
 
 template<typename T> inline T
-Context::param(const std::string &name, const boost::function<T ()> &creator, boost::mutex &mutex) {
+Context::param(const std::string &name, const boost::function<T ()> &creator) {
     boost::any value;
-    boost::mutex::scoped_lock lock(mutex);
     if (findParam(name, value)) {
         return boost::any_cast<T>(value);
     }
@@ -190,6 +192,12 @@ Context::param(const std::string &name, const boost::function<T ()> &creator, bo
         insertParam(name, boost::any(t));
         return t;
     }
+}
+
+template<typename T> inline T
+Context::param(const std::string &name, const boost::function<T ()> &creator, boost::mutex &mutex) {
+    boost::mutex::scoped_lock lock(mutex);
+    return param(name, creator);
 }
 
 } // namespace xscript

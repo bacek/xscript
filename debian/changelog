@@ -1,3 +1,9 @@
+xscript (5.70-49) unstable; urgency=low
+
+  * lua context thread safety fixed 
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 23 Mar 2010 10:23:24 +0300
+
 xscript (5.70-48) unstable; urgency=low
 
   * make global lua variables accessible in child context

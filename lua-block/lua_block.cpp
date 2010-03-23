@@ -223,21 +223,24 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
         return doc;
     }   
     
-    Context *root_ctx = ctx->rootContext();    
+    Context *root_ctx = ctx->rootContext();
+    Context *orig_ctx = ctx->originalContext();
+    
     Context::MutexPtr mutex = root_ctx->param<Context::MutexPtr>(LUA_CONTEXT_MUTEX);
     boost::function<LuaSharedContext ()> lua_creator(&createLua);
-    LuaSharedContext lua_context = root_ctx->param(XSCRIPT_LUA, lua_creator, *mutex);
     
-    Context *orig_ctx = ctx->originalContext();
+    boost::mutex::scoped_lock lock(*mutex);
+    
+    LuaSharedContext lua_context = root_ctx->param(XSCRIPT_LUA, lua_creator);    
     lua_State *lua = lua_context->state.get();
-    LuaSharedThread lua_thread;        
+    LuaSharedThread lua_thread;
+    
     if (orig_ctx != root_ctx) {
         boost::function<LuaSharedThread ()> creator = boost::bind(&createLuaThread, lua);    
-        lua_thread = orig_ctx->param(XSCRIPT_THREAD, creator, *mutex);
+        lua_thread = orig_ctx->param(XSCRIPT_THREAD, creator);
         lua = lua_thread->get();
     }
     
-    boost::mutex::scoped_lock lock(*mutex);
     lua_context->buffer.clear();
     
     setupLocalData(lua, ctx.get(), this);
