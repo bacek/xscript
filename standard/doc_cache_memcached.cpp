@@ -7,6 +7,7 @@
 #include <boost/thread/mutex.hpp>
 
 #include "xscript/doc_cache.h"
+#include "xscript/http_utils.h"
 #include "xscript/string_utils.h"
 #include "xscript/tag.h"
 #include "xscript/util.h"
@@ -326,8 +327,10 @@ DocCacheMemcached::saveDoc(const TagKey *key, const Tag &tag, const boost::share
     std::string val;
 
     // Adding Tag
-    val.append((char*)&tag.last_modified, sizeof(tag.last_modified));
-    val.append((char*)&tag.expire_time, sizeof(tag.expire_time));
+    boost::int32_t time = std::min(tag.last_modified, HttpDateUtils::MAX_LIVE_TIME);
+    val.append((char*)&time, sizeof(time));
+    time = std::min(tag.expire_time, HttpDateUtils::MAX_LIVE_TIME);
+    val.append((char*)&time, sizeof(time));
 
     std::string buf;
     cache_data->serialize(buf);
@@ -377,7 +380,7 @@ DocCacheMemcached::loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheD
         return false;
     }
 
-    if (vallen <= 2*sizeof(time_t)) {
+    if (vallen <= 2*sizeof(boost::int32_t)) {
         log()->warn("incorrect data length while memcached loading");
         return false;
     }
@@ -388,11 +391,11 @@ DocCacheMemcached::loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheD
 
         char* value = val.get();
 
-        tag.last_modified = *((time_t*)(value));
-        value += sizeof(time_t);
-        tag.expire_time = *((time_t*)(value));
-        value += sizeof(time_t);
-        vallen -= 2*sizeof(time_t);
+        tag.last_modified = *((boost::int32_t*)(value));
+        value += sizeof(boost::int32_t);
+        tag.expire_time = *((boost::int32_t*)(value));
+        value += sizeof(boost::int32_t);
+        vallen -= 2*sizeof(boost::int32_t);
         
         if (!DocCacheBase::checkTag(NULL, tag, "loading doc from memcached")) {
             return false;

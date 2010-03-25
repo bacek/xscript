@@ -9,6 +9,7 @@ namespace xscript {
 
 class Context;
 class Tag;
+class TagKey;
 
 class InvokeContext : private boost::noncopyable {
 public:
@@ -27,6 +28,7 @@ public:
     bool tagged() const;
     bool haveCachedCopy() const;
     void haveCachedCopy(bool flag);
+    void tagKey(const boost::shared_ptr<TagKey> &key);
     
     void resultDoc(const XmlDocSharedHelper &doc);
     void resultDoc(XmlDocHelper doc);
@@ -37,6 +39,7 @@ public:
     bool error() const;
     bool success() const;
     bool noCache() const;
+    TagKey* tagKey() const;
     
     void setLocalContext(const boost::shared_ptr<Context> &ctx);
     const boost::shared_ptr<Context>& getLocalContext();

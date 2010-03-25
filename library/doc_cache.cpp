@@ -14,6 +14,7 @@
 #include "xscript/profiler.h"
 #include "xscript/stat_builder.h"
 #include "xscript/tag.h"
+#include "xscript/tagged_block.h"
 #include "xscript/tagged_cache_usage_counter.h"
 #include "xscript/xml_util.h"
 
@@ -190,8 +191,8 @@ DocCacheBase::allow(const DocCacheStrategy* strategy, const CacheContext *cache_
 }
 
 bool
-DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag &tag,
-        boost::shared_ptr<CacheData> &cache_data) {
+DocCacheBase::loadDocImpl(const Context *ctx, InvokeContext *invoke_ctx,
+        const CacheContext *cache_ctx, Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
     
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     
@@ -200,6 +201,7 @@ DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag
     KeyMapType missed_keys;
     
     bool loaded = false;
+    bool check_tag_key = NULL != invoke_ctx;
     DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
     while(!loaded && i != data_->strategies_.end()) {
         DocCacheStrategy* strategy = i->first;
@@ -208,7 +210,7 @@ DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag
             continue;
         }
         
-        std::auto_ptr<TagKey> key = strategy->createKey(ctx, cache_ctx->object());
+        boost::shared_ptr<TagKey> key(strategy->createKey(ctx, cache_ctx->object()).release());
         
         boost::function<bool()> f = boost::bind(&DocCacheStrategy::loadDoc,
                 strategy, boost::cref(key.get()), boost::ref(tag), boost::ref(cache_data));
@@ -222,10 +224,15 @@ DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag
         else {
             i->second->usageCounter_->fetchedMiss(ctx, cache_ctx->object());
             i->second->missCounter_->add(res.second);
-            missed_keys.push_back(std::make_pair(i, boost::shared_ptr<TagKey>(key.release())));
+            missed_keys.push_back(std::make_pair(i, key));
         }
         
-        loaded = res.first; 
+        if (check_tag_key) {
+            check_tag_key = false;
+            invoke_ctx->tagKey(key);
+        }
+        
+        loaded = res.first;
         ++i;
     }
 
@@ -249,14 +256,15 @@ DocCacheBase::loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag
 }
 
 bool
-DocCacheBase::saveDocImpl(const Context *ctx, const CacheContext *cache_ctx, const Tag& tag,
-    const boost::shared_ptr<CacheData> &cache_data) {
+DocCacheBase::saveDocImpl(const Context *ctx, const InvokeContext *invoke_ctx,
+        const CacheContext *cache_ctx, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
     
     if (!checkTag(ctx, tag, "saving doc from tagged cache")) {
         return false;
     }
     
     bool saved = false;
+    bool check_tag_key = NULL != invoke_ctx;
     for (DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
          i != data_->strategies_.end();
          ++i) {
@@ -265,6 +273,22 @@ DocCacheBase::saveDocImpl(const Context *ctx, const CacheContext *cache_ctx, con
             continue;
         }
         std::auto_ptr<TagKey> key = strategy->createKey(ctx, cache_ctx->object());
+
+        if (check_tag_key) {
+            check_tag_key = false;
+            TagKey* load_key = invoke_ctx->tagKey();            
+            if (load_key && key->asString() != load_key->asString()) {
+                CachedObject* object = const_cast<CachedObject*>(cache_ctx->object());
+                TaggedBlock* block = dynamic_cast<TaggedBlock*>(object);
+                if (NULL == block) {
+                    throw std::logic_error("NULL block while saving it to cache");
+                }
+                log()->warn("Cache key modified during call. Block info: %s. Url: %s",
+                        block->info(ctx).c_str(), ctx->request()->getOriginalUrl().c_str());
+                block->tagged(false);
+                return false;
+            }
+        }
         
         boost::function<bool()> f =
             boost::bind(&DocCacheStrategy::saveDoc, strategy,
@@ -301,9 +325,9 @@ DocCache::name() const {
 }
 
 boost::shared_ptr<BlockCacheData>
-DocCache::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag) {
+DocCache::loadDoc(const Context *ctx, InvokeContext *invoke_ctx, const CacheContext *cache_ctx, Tag &tag) {
     boost::shared_ptr<CacheData> cache_data(new BlockCacheData());
-    bool res = loadDocImpl(ctx, cache_ctx, tag, cache_data);
+    bool res = loadDocImpl(ctx, invoke_ctx, cache_ctx, tag, cache_data);
     if (!res) {
         return boost::shared_ptr<BlockCacheData>();
     }
@@ -311,8 +335,8 @@ DocCache::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag) {
 }
 
 bool
-DocCache::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag,
-    const boost::shared_ptr<BlockCacheData> &cache_data) {
+DocCache::saveDoc(const Context *ctx, const InvokeContext *invoke_ctx,
+    const CacheContext *cache_ctx, const Tag &tag, const boost::shared_ptr<BlockCacheData> &cache_data) {
     
     xmlDocPtr doc = cache_data->doc()->get();
     if (NULL == doc || NULL == xmlDocGetRootElement(doc)) {
@@ -321,7 +345,7 @@ DocCache::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &
         return false;
     }
     
-    return saveDocImpl(ctx, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
+    return saveDocImpl(ctx, invoke_ctx, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
 }
 
 PageCache::PageCache() {
@@ -349,7 +373,7 @@ PageCache::name() const {
 boost::shared_ptr<PageCacheData>
 PageCache::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag) {
     boost::shared_ptr<CacheData> cache_data(new PageCacheData());
-    bool res = loadDocImpl(ctx, cache_ctx, tag, cache_data);
+    bool res = loadDocImpl(ctx, NULL, cache_ctx, tag, cache_data);
     if (!res) {
         return boost::shared_ptr<PageCacheData>();
     }
@@ -359,7 +383,7 @@ PageCache::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag) 
 bool
 PageCache::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag,
         const boost::shared_ptr<PageCacheData> &cache_data) {
-    return saveDocImpl(ctx, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
+    return saveDocImpl(ctx, NULL, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
 }
 
 CacheContext::CacheContext(const CachedObject *obj) :

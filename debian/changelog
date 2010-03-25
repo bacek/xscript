@@ -1,6 +1,13 @@
+xscript (5.70-51) unstable; urgency=low
+
+  * check tag key before and after call on equality
+  * tag saving fixed in memcached
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 25 Mar 2010 15:46:22 +0300
+
 xscript (5.70-50) unstable; urgency=low
 
-  * lua context thread safety possibly fixed
+  * lua context thread safety fixed
 
  -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 23 Mar 2010 15:39:44 +0300
 

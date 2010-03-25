@@ -1,8 +1,10 @@
 #include "settings.h"
 
+#include <memory>
 #include <string>
 #include <stdexcept>
 
+#include "xscript/doc_cache_strategy.h"
 #include "xscript/invoke_context.h"
 #include "xscript/tag.h"
 
@@ -21,6 +23,7 @@ struct InvokeContext::ContextData {
     ResultType result_type_;
     bool have_cached_copy_;
     boost::shared_ptr<Context> local_context_;
+    boost::shared_ptr<TagKey> key_;
 };
 
 InvokeContext::InvokeContext() : ctx_data_(new ContextData()) {
@@ -94,6 +97,11 @@ InvokeContext::resetTag() {
     ctx_data_->tagged_ = false;
 }
 
+void
+InvokeContext::tagKey(const boost::shared_ptr<TagKey> &key) {
+    ctx_data_->key_ = key;
+}
+
 bool
 InvokeContext::error() const {
     return ERROR == ctx_data_->result_type_;
@@ -107,6 +115,11 @@ InvokeContext::success() const {
 bool
 InvokeContext::noCache() const {
     return NO_CACHE == ctx_data_->result_type_;
+}
+
+TagKey*
+InvokeContext::tagKey() const {
+    return ctx_data_->key_.get();
 }
 
 void

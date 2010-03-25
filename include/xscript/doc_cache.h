@@ -17,6 +17,7 @@ class CachedObject;
 class Config;
 class Context;
 class DocCacheStrategy;
+class InvokeContext;
 class Tag;
 
 /**
@@ -97,10 +98,10 @@ public:
     static bool checkTag(const Context *ctx, const Tag &tag, const char *operation);
     
 protected:
-    bool loadDocImpl(const Context *ctx, const CacheContext *cache_ctx, Tag &tag,
-            boost::shared_ptr<CacheData> &cache_data);
-    bool saveDocImpl(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag,
-            const boost::shared_ptr<CacheData> &cache_data);
+    bool loadDocImpl(const Context *ctx, InvokeContext *invoke_ctx,
+            const CacheContext *cache_ctx, Tag &tag, boost::shared_ptr<CacheData> &cache_data);
+    bool saveDocImpl(const Context *ctx, const InvokeContext *invoke_ctx,
+            const CacheContext *cache_ctx, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
     
     bool allow(const DocCacheStrategy* strategy, const CacheContext *cache_ctx) const;
     
@@ -120,9 +121,10 @@ public:
     virtual ~DocCache();
     static DocCache* instance();
     
-    boost::shared_ptr<BlockCacheData> loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag);
-    bool saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag,
-            const boost::shared_ptr<BlockCacheData> &cache_data);
+    boost::shared_ptr<BlockCacheData> loadDoc(const Context *ctx, InvokeContext *invoke_ctx,
+            const CacheContext *cache_ctx, Tag &tag);
+    bool saveDoc(const Context *ctx, const InvokeContext *invoke_ctx,
+            const CacheContext *cache_ctx, const Tag &tag, const boost::shared_ptr<BlockCacheData> &cache_data);
 
 protected:
     DocCache();
