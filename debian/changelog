@@ -1,3 +1,9 @@
+xscript (5.70-52) unstable; urgency=low
+
+  * logging updated
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 25 Mar 2010 16:05:44 +0300
+
 xscript (5.70-51) unstable; urgency=low
 
   * check tag key before and after call on equality

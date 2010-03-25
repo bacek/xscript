@@ -284,7 +284,7 @@ DocCacheBase::saveDocImpl(const Context *ctx, const InvokeContext *invoke_ctx,
                     throw std::logic_error("NULL block while saving it to cache");
                 }
                 log()->warn("Cache key modified during call. Block info: %s. Url: %s",
-                        block->info(ctx).c_str(), ctx->request()->getOriginalUrl().c_str());
+                        block->info(ctx).c_str(), ctx->rootContext()->request()->getOriginalUrl().c_str());
                 block->tagged(false);
                 return false;
             }
