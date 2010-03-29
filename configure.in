@@ -53,7 +53,7 @@ AC_CHECK_HEADER([boost/thread/thread.hpp], [], [ac_have_boost="no"])
 AC_CHECK_HEADER([boost/thread/condition.hpp], [], [ac_have_boost="no"])
 
 AC_MSG_CHECKING([trying to link with boost threads])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/thread/once.hpp>]], [[ boost::once_flag flag; boost::call_once(&abort, flag); ]])],
+AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/thread/once.hpp> #include <stdlib.h>]], [[ boost::once_flag flag; boost::call_once(&abort, flag); ]])],
 	[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no);ac_have_boost="no"])
 
 AC_CHECK_HEADER([boost/filesystem/path.hpp], [], [ac_have_boost="no"])
