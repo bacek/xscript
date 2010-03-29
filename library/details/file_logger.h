@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <boost/thread.hpp>
+#include <boost/thread/condition.hpp>
 #include "xscript/logger.h"
 
 namespace xscript {

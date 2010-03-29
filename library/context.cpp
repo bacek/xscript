@@ -6,6 +6,7 @@
 
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
+#include <boost/thread/condition.hpp>
 #include <boost/thread.hpp>
 
 #include "xscript/authorizer.h"
