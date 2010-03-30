@@ -655,6 +655,8 @@ Script::PropertyHandler::process(const MessageParams &params,
     else if (strncasecmp(prop, "binary-page", sizeof("binary-page")) == 0) {
         script->data_->binaryPage(strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
+    else if (script->checkProperty(prop, value)) {
+    }
     else if (ExtensionList::instance()->checkScriptProperty(prop, value)) {
         script->data_->extensionProperty(prop, value);
     }
