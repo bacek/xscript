@@ -67,11 +67,8 @@ public:
     bool forceStylesheet() const;
     bool binaryPage() const;
     boost::uint32_t expireTimeDelta() const;
-    boost::int32_t pageRandomMax() const;
     bool expireTimeDeltaUndefined() const;
     bool allowMethod(const std::string &value) const;
-    bool cacheAllQuery() const;
-    bool cacheQueryParam(const std::string &value) const;
     
     const std::map<std::string, std::string>& headers() const;
     const std::string& extensionProperty(const std::string &name) const;
@@ -81,7 +78,6 @@ public:
     Block* block(unsigned int n) const;
     Block* block(const std::string &id, bool throw_error) const;
     std::vector<Block*>& blocks();
-    std::set<std::string>& cacheCookies() const;
     
     void addBlock(Block *block);
     void addXscriptNode(xmlNodePtr node);
@@ -92,11 +88,8 @@ public:
     void threaded(bool value);
     void forceStylesheet(bool value);
     void expireTimeDelta(boost::uint32_t value);
-    void pageRandomMax(boost::int32_t value);
     void binaryPage(bool value);
     void allowMethods(const char *value);
-    void cacheQuery(const char *value);
-    void cacheCookies(const char *value);
     void flag(unsigned int type, bool value);
     
     void parseNode(xmlNodePtr node, std::vector<xmlNodePtr> &xscript_nodes);
@@ -110,7 +103,6 @@ public:
     XmlDocSharedHelper fetchResults(Context *ctx);
     void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
                         unsigned int &count, unsigned int &xscript_count);
-    std::string cachedUrl(const Context *ctx) const;
     void parseXScriptNode(const xmlNodePtr node);
     void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx);
     void property(const char *name, const char *value);
@@ -121,12 +113,9 @@ public:
     std::vector<Block*> blocks_;
     unsigned int flags_;
     boost::uint32_t expire_time_delta_;
-    boost::int32_t page_random_max_;
     std::set<xmlNodePtr> xscript_node_set_;
     std::map<std::string, std::string> headers_;
     std::vector<std::string> allow_methods_;
-    std::set<std::string> cache_query_;
-    std::set<std::string> cache_cookies_;
     std::map<std::string, std::string, StringCILess> extension_properties_;
     
     static const unsigned int FLAG_THREADED = 1;
@@ -149,9 +138,8 @@ class Script::CachableHandler : public MessageHandler {
 
 Script::ScriptData::ScriptData(Script *owner) :
     owner_(owner), flags_(FLAG_FORCE_STYLESHEET),
-    expire_time_delta_(EXPIRE_TIME_DELTA_UNDEFINED),
-    page_random_max_(0) {
-}
+    expire_time_delta_(EXPIRE_TIME_DELTA_UNDEFINED)
+{}
 
 Script::ScriptData::~ScriptData() {
     std::for_each(blocks_.begin(), blocks_.end(), boost::checked_deleter<Block>());
@@ -177,29 +165,10 @@ Script::ScriptData::expireTimeDelta() const {
     return expire_time_delta_;
 }
 
-boost::int32_t
-Script::ScriptData::pageRandomMax() const {
-    return page_random_max_;
-}
-
 bool
 Script::ScriptData::allowMethod(const std::string &value) const {
     if (!allow_methods_.empty() &&
         std::find(allow_methods_.begin(), allow_methods_.end(), value) == allow_methods_.end()) {
-        return false;
-    }
-    return true;
-}
-
-bool
-Script::ScriptData::cacheAllQuery() const {
-    return cache_query_.empty();
-}
-
-bool
-Script::ScriptData::cacheQueryParam(const std::string &value) const {
-    if (!cache_query_.empty() &&
-        cache_query_.find(value) == cache_query_.end()) {
         return false;
     }
     return true;
@@ -241,11 +210,6 @@ Script::ScriptData::blocks() {
     return blocks_;
 }
 
-std::set<std::string>&
-Script::ScriptData::cacheCookies() const {
-    return const_cast<std::set<std::string>&>(cache_cookies_);
-}
-
 const std::map<std::string, std::string>&
 Script::ScriptData::headers() const {
     return headers_;
@@ -264,19 +228,6 @@ Script::ScriptData::forceStylesheet(bool value) {
 void
 Script::ScriptData::expireTimeDelta(boost::uint32_t value) {
     expire_time_delta_ = value;
-}
-
-void
-Script::ScriptData::pageRandomMax(boost::int32_t value) {
-    if (value < 0) {
-        throw std::runtime_error("negative page random max is not allowed");
-    }
-    
-    if (value > RAND_MAX) {
-        throw std::runtime_error("page random max exceeded maximum allowed value");
-    }
-    
-    page_random_max_ = value;
 }
 
 void
@@ -350,38 +301,6 @@ Script::ScriptData::allowMethods(const char *value) {
         std::vector<std::string>::reverse_iterator method = allow_methods_.rbegin();
         std::transform(method->begin(), method->end(), method->begin(),
                        boost::bind(&toupper, _1));
-    }
-}
-
-void
-Script::ScriptData::cacheQuery(const char *value) {
-    cache_query_.clear();
-    typedef boost::char_separator<char> Separator;
-    typedef boost::tokenizer<Separator> Tokenizer;
-    std::string param_list(value);
-    Tokenizer tok(param_list, Separator(", "));
-    for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
-        cache_query_.insert(*it);
-    }
-    if (cache_query_.empty()) {
-        cache_query_.insert(StringUtils::EMPTY_STRING);
-    }
-}
-
-void
-Script::ScriptData::cacheCookies(const char *value) {
-    cache_cookies_.clear();
-    typedef boost::char_separator<char> Separator;
-    typedef boost::tokenizer<Separator> Tokenizer;
-    std::string param_list(value);
-    Tokenizer tok(param_list, Separator(", "));
-    for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
-        if (!Policy::allowCachingInputCookie(it->c_str())) {
-            std::stringstream ss;
-            ss << "Cookie " << *it << " is not allowed in cache-cookies";
-            throw std::runtime_error(ss.str());
-        }
-        cache_cookies_.insert(*it);
     }
 }
 
@@ -607,56 +526,6 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
     }
 }
 
-std::string
-Script::ScriptData::cachedUrl(const Context *ctx) const {
-    std::string key(ctx->request()->getOriginalUrl());
-    if (owner_->cacheStrategy()) {
-        std::string::size_type pos = key.find('?');
-        if (std::string::npos != pos) {
-            key.erase(pos);
-        }
-        return key;
-    }
-    
-    if (!cacheAllQuery()) {
-        std::string::size_type pos = key.find('?');
-        if (std::string::npos != pos) {
-            key.erase(pos);
-        }
-        
-        Request *request = ctx->request();
-        std::vector<std::string> names;
-        request->argNames(names);
-        
-        bool first_param = true;
-        for(std::vector<std::string>::const_iterator i = names.begin(), end = names.end();
-            i != end;
-            ++i) {
-            std::string name = *i;
-            std::vector<std::string> values;
-            if (name.empty() || !cacheQueryParam(name)) {
-                continue;
-            }
-            request->getArg(name, values);
-            for(std::vector<std::string>::const_iterator it = values.begin(), end = values.end();
-                it != end;
-                ++it) {
-                if (first_param) {
-                    key.push_back('?');
-                    first_param = false;
-                }
-                else {
-                    key.push_back('&');
-                }
-                key.append(name);
-                key.push_back('=');
-                key.append(*it);
-            }
-        }
-    }
-    return key;
-}
-
 void
 Script::ScriptData::parseXScriptNode(const xmlNodePtr node) {
     MessageParam<Script> script_param(owner_);
@@ -765,14 +634,7 @@ Script::PropertyHandler::process(const MessageParams &params,
     
     log()->debug("%s, setting property: %s=%s", script->name().c_str(), prop, value);
 
-    if (script->checkProperty(prop, value)) {
-        if (NULL != script->cacheStrategy()) {
-            if (!script->data_->cache_query_.empty() || !script->data_->cache_cookies_.empty()) {
-                throw std::runtime_error("cache strategy and cache params are not allowed together");
-            }
-        }
-    }
-    else if (strncasecmp(prop, "all-threaded", sizeof("all-threaded")) == 0) {
+    if (strncasecmp(prop, "all-threaded", sizeof("all-threaded")) == 0) {
         script->data_->threaded(strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
     else if (strncasecmp(prop, "allow-methods", sizeof("allow-methods")) == 0) {
@@ -790,44 +652,8 @@ Script::PropertyHandler::process(const MessageParams &params,
                 std::string("cannot parse http-expire-time-delta value: ") + value);
         }
     }
-    else if (strncasecmp(prop, "cache-time", sizeof("cache-time")) == 0) {
-        if (NULL != script->cacheStrategy()) {
-            throw std::runtime_error("cache-time and cache-strategy are not allowed together");
-        }
-        try {
-            script->cacheTime(boost::lexical_cast<time_t>(value));
-        }
-        catch(const boost::bad_lexical_cast &e) {
-            throw std::runtime_error(
-                std::string("cannot parse cache-time value: ") + value);
-        }
-    }
     else if (strncasecmp(prop, "binary-page", sizeof("binary-page")) == 0) {
         script->data_->binaryPage(strncasecmp(value, "yes", sizeof("yes")) == 0);
-    }
-    else if (strncasecmp(prop, "page-random-max", sizeof("page-random-max")) == 0) {
-        try {
-            script->data_->pageRandomMax(boost::lexical_cast<boost::int32_t>(value));
-        }
-        catch(const boost::bad_lexical_cast &e) {
-            throw std::runtime_error(
-                std::string("cannot parse page-random-max value: ") + value);
-        }
-        if (NULL != script->cacheStrategy()) {
-            throw std::runtime_error("cache strategy and cache params are not allowed together");
-        }
-    }
-    else if (strncasecmp(prop, "cache-query", sizeof("cache-query")) == 0) {
-        script->data_->cacheQuery(value);
-        if (NULL != script->cacheStrategy()) {
-            throw std::runtime_error("cache strategy and cache params are not allowed together");
-        }
-    }
-    else if (strncasecmp(prop, "cache-cookies", sizeof("cache-cookies")) == 0) {
-        script->data_->cacheCookies(value);
-        if (NULL != script->cacheStrategy()) {
-            throw std::runtime_error("cache strategy and cache params are not allowed together");
-        }
     }
     else if (ExtensionList::instance()->checkScriptProperty(prop, value)) {
         script->data_->extensionProperty(prop, value);
@@ -863,7 +689,8 @@ Script::CachableHandler::process(const MessageParams &params,
     const Context* ctx = params.getPtr<const Context>(1);
     bool for_save = params.get<bool>(2);
     
-    if (script->cacheTimeUndefined() || script->cacheTime() < DocCache::instance()->minimalCacheTime()) {
+    if (NULL == script->cacheStrategy() || script->cacheTimeUndefined() ||
+            script->cacheTime() < DocCache::instance()->minimalCacheTime()) {
         result.set(false);
         return CONTINUE;
     }
@@ -941,11 +768,6 @@ Script::binaryPage() const {
 boost::uint32_t
 Script::expireTimeDelta() const {
     return data_->expireTimeDelta();
-}
-
-boost::int32_t
-Script::pageRandomMax() const {
-    return data_->pageRandomMax();
 }
 
 bool
@@ -1150,36 +972,23 @@ Script::expireTimeDeltaUndefined() const {
 std::string
 Script::createTagKey(const Context *ctx, bool page_cache) const {
     std::string key;
-    CacheStrategy* strategy = cacheStrategy();
     if (page_cache) {
-        key = data_->cachedUrl(ctx);
-        if (strategy) {
-            key.push_back('|');
-            key.append(strategy->createKey(ctx));
+        CacheStrategy* strategy = cacheStrategy();
+        if (NULL == strategy) {
+            throw std::logic_error("Cannot cache page without strategy");
         }
-        else {
-            std::set<std::string> &cache_cookies = data_->cacheCookies();
-            for(std::set<std::string>::iterator it = cache_cookies.begin();
-                it != cache_cookies.end();
-                ++it) {
-                
-                std::string cookie = Policy::getCacheCookie(ctx, *it);
-                if (cookie.empty()) {
-                    continue;
-                }
-        
-                key.push_back('|');
-                key.append(*it);
-                key.push_back(':');
-                key.append(cookie);
-            }
+        key.assign(ctx->request()->getOriginalUrl());
+        std::string::size_type pos = key.find('?');
+        if (std::string::npos != pos) {
+            key.erase(pos);
         }
-        
+        key.push_back('|');
+        key.append(strategy->createKey(ctx));
         key.push_back('|');
         key.append(fileModifiedKey(xsltName()));
     }
     else {
-        key = name();
+        key.assign(name());
     }
     
     key.push_back('|');
@@ -1187,14 +996,6 @@ Script::createTagKey(const Context *ctx, bool page_cache) const {
 
     key.push_back('|');
     key.append(blocksModifiedKey(data_->blocks()));
-        
-    if (NULL == strategy) {
-        const std::string& ctx_key = ctx->key();
-        if (!ctx_key.empty()) {
-            key.push_back('|');
-            key.append(ctx_key);
-        }
-    }
     
     return key;
 }

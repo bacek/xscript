@@ -117,13 +117,6 @@ public:
     static void resetTimer();
     
     bool xsltChanged(const Script *script) const;
-    
-    const std::string& key() const;
-    void key(const std::string &value);
-    void appendKey(const std::string &value);
-    
-    boost::int32_t pageRandom() const;
-    void pageRandom(boost::int32_t value);
 
     void setExpireDelta(boost::int32_t delta);
     boost::int32_t expireDelta() const;

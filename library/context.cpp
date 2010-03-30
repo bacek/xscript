@@ -48,7 +48,7 @@ struct CommonData {
     CommonData(const boost::shared_ptr<RequestData> &request_data,
                const std::string &xslt_name) :
         request_data_(request_data), params_(new ParamsMap()),
-        xslt_name_(xslt_name), page_random_(-1), no_xslt_(false), no_main_xslt_(false)
+        xslt_name_(xslt_name), no_xslt_(false), no_main_xslt_(false)
     {}
     
     CommonData(const boost::shared_ptr<RequestData> &request_data,
@@ -56,7 +56,7 @@ struct CommonData {
                const boost::shared_ptr<AuthContext> &auth,
                const std::string &xslt_name) :
         request_data_(request_data), params_(params), auth_(auth),
-        xslt_name_(xslt_name), page_random_(-1), no_xslt_(false), no_main_xslt_(false)
+        xslt_name_(xslt_name), no_xslt_(false), no_main_xslt_(false)
     {}
     ~CommonData() {}
     
@@ -65,8 +65,6 @@ struct CommonData {
     boost::shared_ptr<ParamsMap> params_;
     boost::shared_ptr<AuthContext> auth_;
     std::string xslt_name_;
-    std::string key_;
-    boost::int32_t page_random_;
     std::auto_ptr<DocumentWriter> writer_;
     bool no_xslt_;
     bool no_main_xslt_;
@@ -169,25 +167,6 @@ struct Context::ContextData {
         return !runtime_errors_.empty();
     }
     
-    boost::int32_t pageRandom() {
-        if (common_data_->page_random_ < 0) {
-            boost::int32_t random_max = script_->pageRandomMax();
-            boost::int32_t rand = random();
-            if (random_max > 0) {
-                common_data_->page_random_ =
-                    random_max < RAND_MAX ? rand % (random_max + 1) : rand;
-            }
-            else {
-                common_data_->page_random_ = 0;
-            }
-        }
-        return common_data_->page_random_;
-    }
-    
-    void pageRandom(boost::int32_t value) {
-        common_data_->page_random_ = value;
-    }
-    
     bool noXsltPort() const {
         boost::mutex::scoped_lock lock(common_data_->mutex_);
         return common_data_->no_xslt_;
@@ -206,14 +185,6 @@ struct Context::ContextData {
     void noMainXsltPort(bool value) {
         boost::mutex::scoped_lock lock(common_data_->mutex_);
         common_data_->no_main_xslt_ = value;
-    }
-    
-    const std::string& key() const {
-        return common_data_->key_;
-    }
-
-    void key(const std::string &key) {
-        common_data_->key_ = key;
     }
     
     std::string xsltName() const {
@@ -275,9 +246,6 @@ Context::Context(const boost::shared_ptr<Script> &script,
             new RequestData(request, response, state));
     ctx_data_ = new ContextData(request_data, script);
     init();
-    if (NULL == script->cacheStrategy()) {
-        appendKey(boost::lexical_cast<std::string>(pageRandom()));
-    }
 }
 
 Context::Context(const boost::shared_ptr<Script> &script,
@@ -651,36 +619,6 @@ Context::stopped() const {
 bool
 Context::xsltChanged(const Script *script) const {
     return script->xsltName() != xsltName();
-}
-
-const std::string&
-Context::key() const {
-    return ctx_data_->key();
-}
-
-void
-Context::key(const std::string &value) {
-    ctx_data_->key(value);
-}
-
-void
-Context::appendKey(const std::string &value) {
-    std::string key_str = key();
-    if (!key_str.empty()) {
-        key_str.push_back('|');
-    }
-    key_str.append(value);
-    key(key_str);
-}
-
-boost::int32_t
-Context::pageRandom() const {
-    return ctx_data_->pageRandom();
-}
-
-void
-Context::pageRandom(boost::int32_t value) {
-    ctx_data_->pageRandom(value);
 }
 
 const TimeoutCounter&

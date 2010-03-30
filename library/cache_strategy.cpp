@@ -268,58 +268,6 @@ CookieSubCacheStrategy::createKey(const Context *ctx) {
     return key; 
 }
 
-
-class RandomSubCacheStrategy : public SubCacheStrategy {
-public:
-    RandomSubCacheStrategy(boost::int32_t max_value);
-    virtual std::string createKey(const Context *ctx);
-    virtual void initContext(Context *ctx);
-    
-    friend class RandomSubCacheStrategyFactory;
-private:
-    boost::int32_t getRand() const;
-    
-private:
-    boost::int32_t max_value_;
-};
-
-class RandomSubCacheStrategyFactory : public SubCacheStrategyFactory {
-    std::auto_ptr<SubCacheStrategy> create(const Config *config, const std::string &path) {
-        boost::int32_t value;
-        try {
-            value = config->as<boost::int32_t>(path);
-        }
-        catch(const std::exception &e) {
-            return std::auto_ptr<SubCacheStrategy>();
-        }        
-        return std::auto_ptr<SubCacheStrategy>(new RandomSubCacheStrategy(value));
-    }
-};
-
-RandomSubCacheStrategy::RandomSubCacheStrategy(boost::int32_t max_value) :
-    max_value_(max_value)
-{}
-
-void
-RandomSubCacheStrategy::initContext(Context *ctx) {
-    ctx->pageRandom(getRand());
-}
-
-std::string
-RandomSubCacheStrategy::createKey(const Context *ctx) {
-    return boost::lexical_cast<std::string>(ctx->pageRandom());
-}
-
-boost::int32_t
-RandomSubCacheStrategy::getRand() const {
-    boost::int32_t value = 0;
-    if (max_value_ > 0) {
-        boost::int32_t rand = random();
-        value = max_value_ < RAND_MAX ? rand % (max_value_ + 1) : rand;
-    }
-    return value;
-}
-
 class CacheStrategyHandlersRegisterer {
 public:
     CacheStrategyHandlersRegisterer() {
@@ -327,8 +275,6 @@ public:
             "query", boost::shared_ptr<SubCacheStrategyFactory>(new QuerySubCacheStrategyFactory()));
         CacheStrategyCollector::instance()->addPageStrategyHandler(
             "cookie", boost::shared_ptr<SubCacheStrategyFactory>(new CookieSubCacheStrategyFactory()));
-        CacheStrategyCollector::instance()->addPageStrategyHandler(
-            "random", boost::shared_ptr<SubCacheStrategyFactory>(new RandomSubCacheStrategyFactory()));
     }
 };
 

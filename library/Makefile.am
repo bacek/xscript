@@ -29,7 +29,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp cached_o
 	dummy_tagged_cache_usage_counter.cpp \
 	validator_factory.cpp validator.cpp validator_exception.cpp \
 	string_utils.cpp refresher.cpp vhost_arg_param.cpp guard_checker.cpp \
-	page_random_param.cpp message_interface.cpp message_errors.cpp exception.cpp \
+	message_interface.cpp message_errors.cpp exception.cpp \
 	parser.cpp request_impl.cpp http_utils.cpp \
 	dummy_response_time_counter.cpp response_time_counter_impl.cpp response_time_counter_factory.cpp \
 	response_time_counter_block.cpp invoke_context.cpp typed_map.cpp local_arg_param.cpp

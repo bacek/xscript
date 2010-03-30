@@ -1,3 +1,9 @@
+xscript (5.70-53) unstable; urgency=low
+
+  * page random and page cache params removed
+
+ -- Ilya <golubtsov@golubtsov-laptop>  Tue, 30 Mar 2010 11:20:25 +0400
+
 xscript (5.70-52) unstable; urgency=low
 
   * logging updated
