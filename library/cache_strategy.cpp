@@ -246,11 +246,10 @@ std::string
 CookieSubCacheStrategy::createKey(const Context *ctx) {
     std::string key;
     bool is_first = true;
-    for(std::set<std::string>::iterator it = cache_cookies_.begin();
-        it != cache_cookies_.end();
-        ++it) {
-        
-        std::string cookie = Policy::getCacheCookie(ctx, *it);
+    for (std::set<std::string>::iterator it = cache_cookies_.begin();
+         it != cache_cookies_.end();
+         ++it) {
+        const std::string& cookie = ctx->request()->getCookie(*it);
         if (cookie.empty()) {
             continue;
         }

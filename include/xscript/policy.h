@@ -31,7 +31,6 @@ public:
     static bool isSkippedProxyHeader(const std::string &header);
     
     static bool isErrorDoc(xmlDocPtr doc);
-    static std::string getCacheCookie(const Context *ctx, const std::string &cookie);
     
     static const std::string REAL_IP_HEADER_NAME_METHOD;
     static const std::string GET_PATH_BY_SCHEME_METHOD;
@@ -45,7 +44,6 @@ public:
     static const std::string ALLOW_CACHING_OUTPUT_COOKIE_METHOD;
     static const std::string IS_SKIPPED_PROXY_HEADER_METHOD;
     static const std::string IS_ERROR_DOC_METHOD;
-    static const std::string GET_CACHE_COOKIE_METHOD;
 };
 
 } // namespace xscript

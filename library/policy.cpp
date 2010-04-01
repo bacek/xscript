@@ -32,7 +32,6 @@ const std::string Policy::ALLOW_CACHING_INPUT_COOKIE_METHOD = "POLICY_ALLOW_CACH
 const std::string Policy::ALLOW_CACHING_OUTPUT_COOKIE_METHOD = "POLICY_ALLOW_CACHING_OUTPUT_COOKIE";
 const std::string Policy::IS_SKIPPED_PROXY_HEADER_METHOD = "POLICY_IS_SKIPPED_PROXY_HEADER";
 const std::string Policy::IS_ERROR_DOC_METHOD = "POLICY_IS_ERROR_DOC";
-const std::string Policy::GET_CACHE_COOKIE_METHOD = "POLICY_GET_CACHE_COOKIE";
 
 class ProxyHeadersHelper {
 public:
@@ -234,22 +233,6 @@ Policy::isErrorDoc(xmlDocPtr doc) {
     return result.get();
 }
 
-std::string
-Policy::getCacheCookie(const Context *ctx, const std::string &cookie) {
-    MessageParam<const Context> context_param(ctx);
-    MessageParam<const std::string> cookie_param(&cookie);
-    
-    MessageParamBase* param_list[2];
-    param_list[0] = &context_param;
-    param_list[1] = &cookie_param;
-    
-    MessageParams params(2, param_list);
-    MessageResult<std::string> result;
-  
-    MessageProcessor::instance()->process(GET_CACHE_COOKIE_METHOD, params, result);
-    return result.get();
-}
-
 namespace PolicyHandlers {
 
 class RealIPHeaderNameHandler : public MessageHandler {
@@ -406,8 +389,6 @@ struct HandlerRegisterer {
                 boost::shared_ptr<MessageHandler>(new AllowCachingOutputCookieHandler()));
         MessageProcessor::instance()->registerBack(Policy::IS_ERROR_DOC_METHOD,
                 boost::shared_ptr<MessageHandler>(new IsErrorDocHandler()));
-        MessageProcessor::instance()->registerBack(Policy::GET_CACHE_COOKIE_METHOD,
-                boost::shared_ptr<MessageHandler>(new GetCacheCookieHandler()));
     }
 };
 
