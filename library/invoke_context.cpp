@@ -7,6 +7,7 @@
 #include "xscript/doc_cache_strategy.h"
 #include "xscript/invoke_context.h"
 #include "xscript/tag.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -36,6 +37,11 @@ InvokeContext::~InvokeContext() {
 XmlDocSharedHelper
 InvokeContext::resultDoc() const {
     return ctx_data_->doc_;
+}
+
+xmlDocPtr
+InvokeContext::resultDocPtr() const {
+    return ctx_data_->doc_->get();
 }
 
 InvokeContext::ResultType
@@ -133,8 +139,10 @@ InvokeContext::getLocalContext() {
 }
 
 bool
-InvokeContext::uniqueDoc() const {
-    return ctx_data_->doc_.unique();
+InvokeContext::moveableDoc() const {
+    return NULL == resultDocPtr()->dict &&
+        XmlUtils::xmlVersionNumber() >= 20619 &&
+            ctx_data_->doc_.unique();
 }
 
 } // namespace xscript

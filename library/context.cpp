@@ -342,7 +342,7 @@ Context::wait(int millis) {
     if (save_result) {
         for (unsigned int i = 0; i < ctx_data_->results_.size(); ++i) {
             InvokeContext* result = ctx_data_->results_[i].get();
-            if (NULL == result || NULL == result->resultDoc()->get()) {
+            if (NULL == result || NULL == result->resultDocPtr()) {
                 if (timedout) {
                     ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult("timed out", false);
                     no_cache = true;
@@ -378,7 +378,7 @@ Context::expect(unsigned int count) {
 void
 Context::result(unsigned int n, boost::shared_ptr<InvokeContext> result) {
     log()->debug("%s: %d, result of %u block: %p", BOOST_CURRENT_FUNCTION,
-                 static_cast<int>(stopped()), n, result->resultDoc()->get());
+                 static_cast<int>(stopped()), n, result->resultDocPtr());
     
     if (result.get()) {
         boost::shared_ptr<Context> local_ctx = result->getLocalContext();

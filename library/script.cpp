@@ -498,14 +498,13 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
         xmlNodePtr next = newnode->next;
         if (count < blocks_num && block(count)->node() == node) {
             boost::shared_ptr<InvokeContext> result = ctx->result(count);
-            xmlDocPtr doc = result->resultDoc()->get();
+            xmlDocPtr doc = result->resultDocPtr();
             assert(doc);
 
             xmlNodePtr result_doc_root_node = xmlDocGetRootElement(doc);
             if (result_doc_root_node) {
                 if (result->error() || !processXpointer(ctx, doc, newnode, count)) {
-                    if (XmlUtils::xmlVersionNumber() > 20616 && result->uniqueDoc() &&
-                            NULL == doc->dict) {
+                    if (result->moveableDoc()) {
                         xmlReplaceNode(newnode, result_doc_root_node);
                     }
                     else {

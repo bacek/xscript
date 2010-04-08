@@ -23,6 +23,7 @@ public:
     };
     
     XmlDocSharedHelper resultDoc() const;
+    xmlDocPtr resultDocPtr() const;
     ResultType resultType() const;
     const Tag& tag() const;
     bool tagged() const;
@@ -44,7 +45,7 @@ public:
     void setLocalContext(const boost::shared_ptr<Context> &ctx);
     const boost::shared_ptr<Context>& getLocalContext();
 
-    bool uniqueDoc() const;
+    bool moveableDoc() const;
 
 private:
     struct ContextData;
