@@ -504,7 +504,13 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
             xmlNodePtr result_doc_root_node = xmlDocGetRootElement(doc);
             if (result_doc_root_node) {
                 if (result->error() || !processXpointer(ctx, doc, newnode, count)) {
-                    xmlReplaceNode(newnode, xmlCopyNode(result_doc_root_node, 1));
+                    if (XmlUtils::xmlVersionNumber() > 20616 && result->uniqueDoc() &&
+                            NULL == doc->dict) {
+                        xmlReplaceNode(newnode, result_doc_root_node);
+                    }
+                    else {
+                        xmlReplaceNode(newnode, xmlCopyNode(result_doc_root_node, 1));
+                    }
                 }
             }
             else {

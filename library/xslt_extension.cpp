@@ -1450,7 +1450,7 @@ xscriptXsltLibxmlVersion(xmlXPathParserContextPtr ctxt, int nargs) {
     }
 
     try {
-        valuePush(ctxt, xmlXPathNewCString(xmlParserVersion));
+        valuePush(ctxt, xmlXPathNewCString(XmlUtils::xmlVersion()));
     }
     catch (const std::exception &e) {
         XmlUtils::reportXsltError("xscript:libxml-version: caught exception: " + std::string(e.what()), ctxt);
@@ -1480,7 +1480,7 @@ xscriptXsltLibxsltVersion(xmlXPathParserContextPtr ctxt, int nargs) {
     }
 
     try {
-        valuePush(ctxt, xmlXPathNewCString(xsltEngineVersion));
+        valuePush(ctxt, xmlXPathNewCString(XmlUtils::xsltVersion()));
     }
     catch (const std::exception &e) {
         XmlUtils::reportXsltError("xscript:libxslt-version: caught exception: " + std::string(e.what()), ctxt);
@@ -1510,7 +1510,7 @@ xscriptXsltLibexsltVersion(xmlXPathParserContextPtr ctxt, int nargs) {
     }
 
     try {
-        valuePush(ctxt, xmlXPathNewCString(exsltLibraryVersion));
+        valuePush(ctxt, xmlXPathNewCString(XmlUtils::exsltVersion()));
     }
     catch (const std::exception &e) {
         XmlUtils::reportXsltError("xscript:libexslt-version: caught exception: " + std::string(e.what()), ctxt);

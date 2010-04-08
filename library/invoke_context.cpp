@@ -132,4 +132,9 @@ InvokeContext::getLocalContext() {
     return ctx_data_->local_context_;
 }
 
+bool
+InvokeContext::uniqueDoc() const {
+    return ctx_data_->doc_.unique();
+}
+
 } // namespace xscript

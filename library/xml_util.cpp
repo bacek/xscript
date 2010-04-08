@@ -49,6 +49,9 @@ static xmlExternalEntityLoader external_entity_default_loader_ = NULL;
 static boost::thread_specific_ptr<Xml::TimeMapType> xml_info_collector_modified_info_;
 static boost::thread_specific_ptr<XmlInfoCollector::ErrorMapType> xml_info_collector_error_info_;
 
+static int xmlVersion = 0;
+static int xsltVersion = 0;
+static int exsltVersion = 0;
 
 XmlDocHelper
 XmlUtilCreateFakeDoc() {
@@ -115,6 +118,10 @@ XmlUtils::XmlUtils() {
     exsltCommonRegister();
 
     registerReporters();
+
+    xscript::xmlVersion = boost::lexical_cast<int>(xmlParserVersion);
+    xscript::xsltVersion = boost::lexical_cast<int>(xsltEngineVersion);
+    xscript::exsltVersion = boost::lexical_cast<int>(exsltLibraryVersion);
 }
 
 XmlUtils::~XmlUtils() {
@@ -555,6 +562,36 @@ XmlUtils::getNodeCount(xmlNodePtr node) {
     boost::int32_t count = 0;
     bool res = traverseNode(node, root, count);
     return res ? count : -1;
+}
+
+int
+XmlUtils::xmlVersionNumber() {
+    return xscript::xmlVersion;
+}
+
+int
+XmlUtils::xsltVersionNumber() {
+    return xscript::xsltVersion;
+}
+
+int
+XmlUtils::exsltVersionNumber() {
+    return xscript::exsltVersion;
+}
+
+const char*
+XmlUtils::xmlVersion() {
+    return xmlParserVersion;
+}
+
+const char*
+XmlUtils::xsltVersion() {
+    return xsltEngineVersion;
+}
+
+const char*
+XmlUtils::exsltVersion() {
+    return exsltLibraryVersion;
 }
 
 XmlInfoCollector::XmlInfoCollector() {

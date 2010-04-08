@@ -65,6 +65,14 @@ public:
     
     static boost::int32_t getNodeCount(xmlNodePtr node);
     
+    static int xmlVersionNumber();
+    static int xsltVersionNumber();
+    static int exsltVersionNumber();
+
+    static const char* xmlVersion();
+    static const char* xsltVersion();
+    static const char* exsltVersion();
+
     static const char * const XSCRIPT_NAMESPACE;
 };
 
