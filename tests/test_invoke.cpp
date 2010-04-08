@@ -25,6 +25,7 @@ public:
     void testNoBlocks();
     void testEmptyCDATA();
     void testEvalXPath();
+    void testEvalXPointer();
     void testCheckGuard();
     void testStylesheet();
 
@@ -37,6 +38,7 @@ private:
     CPPUNIT_TEST(testNoBlocks);
     CPPUNIT_TEST(testEmptyCDATA);
     CPPUNIT_TEST(testEvalXPath);
+    CPPUNIT_TEST(testEvalXPointer);
     CPPUNIT_TEST(testCheckGuard);
     CPPUNIT_TEST(testStylesheet);
     CPPUNIT_TEST_SUITE_END();
@@ -134,6 +136,18 @@ InvokeTest::testEvalXPath() {
     CPPUNIT_ASSERT_EQUAL(std::string("3"), ctx->state()->asString("test-xpath-number3"));
     CPPUNIT_ASSERT_EQUAL(std::string("4"), ctx->state()->asString("test-xpath-number4"));
     CPPUNIT_ASSERT_EQUAL(std::string("string"), ctx->state()->asString("test-xpath-string"));
+}
+
+void
+InvokeTest::testEvalXPointer() {
+    using namespace xscript;
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("file-load-xpointer.xml");
+    ContextStopper ctx_stopper(ctx);
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc->get());
+
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "/page/simple/item/id"));
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "/page/dynamic/item/id"));
 }
 
 void

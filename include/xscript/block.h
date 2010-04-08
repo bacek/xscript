@@ -34,10 +34,6 @@ public:
     virtual void threaded(bool value);
 
     virtual bool tagged() const;
-    bool disableOutput() const;
-    
-    bool xpointer(const Context* ctx) const;
-    XmlXPathObjectHelper evalXPointer(xmlDocPtr doc) const;
 
     const Param* param(unsigned int n) const;
     const Param* param(const std::string &id, bool throw_error = true) const;
@@ -61,6 +57,8 @@ public:
     virtual void startTimer(Context *ctx);
     virtual void stopTimer(Context *ctx);
     
+    bool processXPointer(const Context *ctx, xmlDocPtr doc, xmlNodePtr insert_node, bool replace) const;
+
 protected:
     virtual void invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void postParse();
@@ -74,17 +72,23 @@ protected:
     
     bool checkGuard(Context *ctx) const;
     void evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const;
+    XmlXPathObjectHelper evalXPathExpression(const std::string &expr, xmlXPathContextPtr context,
+            const std::map<std::string, std::string> &namespaces = std::map<std::string, std::string>()) const;
+
     void appendNodeValue(xmlNodePtr node, std::string &val) const;
 
     virtual bool xpathNode(const xmlNodePtr node) const;
     virtual bool guardNode(const xmlNodePtr node) const;
     virtual bool guardNotNode(const xmlNodePtr node) const;
     virtual bool paramNode(const xmlNodePtr node) const;
+    bool xpointerNode(const xmlNodePtr node) const;
 
     virtual void parseSubNode(xmlNodePtr node);
     virtual void parseXPathNode(const xmlNodePtr node);
     virtual void parseGuardNode(const xmlNodePtr node, bool is_not);
     virtual void parseParamNode(const xmlNodePtr node);
+    void parseXPointerNode(const xmlNodePtr node);
+    void parseXPointerExpr(const char *value);
     
     virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const;
     

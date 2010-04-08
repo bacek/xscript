@@ -472,68 +472,6 @@ XmlUtils::fakeXml() {
     return xml_fake_doc_.get();
 }
 
-void
-XmlUtils::processXPointer(const Block *block,
-                          xmlDocPtr doc,
-                          xmlNodePtr insert_node,
-                          bool replace) {
-   
-    if (block->disableOutput()) {
-        if (replace) {
-            xmlUnlinkNode(insert_node);
-        }
-        return;
-    } 
-    
-    XmlXPathObjectHelper xpathObj = block->evalXPointer(doc);
-
-    if (XPATH_BOOLEAN == xpathObj->type) {
-        const char *str = 0 != xpathObj->boolval ? "1" : "0";
-        xmlNodePtr text_node = xmlNewText((const xmlChar *)str);
-        replace ? xmlReplaceNode(insert_node, text_node) : xmlAddChild(insert_node, text_node);
-        return;
-    }
-    if (XPATH_NUMBER == xpathObj->type) {
-        char str[40];
-        snprintf(str, sizeof(str) - 1, "%f", xpathObj->floatval);
-        str[sizeof(str) - 1] = '\0';
-        xmlNodePtr text_node = xmlNewText((const xmlChar *)&str[0]);
-        replace ? xmlReplaceNode(insert_node, text_node) : xmlAddChild(insert_node, text_node);
-        return;
-    }
-    if (XPATH_STRING == xpathObj->type) {
-        xmlNodePtr text_node = xmlNewText((const xmlChar *)xpathObj->stringval);
-        replace ? xmlReplaceNode(insert_node, text_node) : xmlAddChild(insert_node, text_node);
-        return;
-    }
-
-    xmlNodeSetPtr nodeset = xpathObj->nodesetval;
-    if (NULL == nodeset || 0 == nodeset->nodeNr) {
-        if (replace) {
-            xmlUnlinkNode(insert_node);
-        }
-        return;
-    }
-    
-    xmlNodePtr current_node = nodeset->nodeTab[0];    
-    if (XML_ATTRIBUTE_NODE == current_node->type) {
-        current_node = current_node->children;
-    }    
-    xmlNodePtr last_input_node = xmlCopyNode(current_node, 1);         
-    replace ? xmlReplaceNode(insert_node, last_input_node) :
-        xmlAddChild(insert_node, last_input_node);
-    
-    for (int i = 1; i < nodeset->nodeNr; ++i) {
-        xmlNodePtr current_node = nodeset->nodeTab[i];    
-        if (XML_ATTRIBUTE_NODE == current_node->type) {
-            current_node = current_node->children;
-        }                
-        xmlNodePtr insert_node = xmlCopyNode(current_node, 1);         
-        xmlAddNextSibling(last_input_node, insert_node);
-        last_input_node = insert_node;
-    }
-}
-
 static bool
 traverseNode(xmlNodePtr target, xmlNodePtr node, boost::int32_t &count) {
     while(node) {

@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<!--<?xml-stylesheet type="text/xsl" href="object.xsl"?>-->
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xscript all-threaded="yes"/>
+  <simple>
+    <x:file xpointer="/include-data/item">
+      <method>load</method>
+      <param type="string">include.xml</param>
+    </x:file>
+  </simple>
+  <x:mist method="set_state_string">
+      <param type="String">xp</param>
+      <param type="String">/include-data/item</param>
+  </x:mist>
+  <dynamic>
+    <x:file>
+      <xpointer type="StateArg">xp</xpointer>
+      <method>load</method>
+      <param type="String">include.xml</param>
+    </x:file>
+  </dynamic>
+</page>

@@ -60,9 +60,6 @@ public:
 
     static bool validate(const std::string &data);
     
-    static void processXPointer(const Block *block, xmlDocPtr doc,
-                                xmlNodePtr insert_node, bool replace);
-    
     static boost::int32_t getNodeCount(xmlNodePtr node);
     
     static int xmlVersionNumber();

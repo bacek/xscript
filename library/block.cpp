@@ -88,6 +88,7 @@ struct Block::BlockData {
     std::vector<Guard> guards_;
     std::string id_, method_;
     std::string xpointer_expr_;
+    bool xpointer_from_state_;
     std::string base_;
     std::map<std::string, std::string> namespaces_;
     bool disable_output_;
@@ -100,7 +101,8 @@ const std::string Block::BlockData::XSCRIPT_INVOKE_FAILED = "xscript_invoke_fail
 const std::string Block::BlockData::XSCRIPT_INVOKE_INFO = "xscript_invoke_info";
 
 Block::BlockData::BlockData(const Extension *ext, Xml *owner, xmlNodePtr node, Block *block) :
-    extension_(ext), owner_(owner), node_(node), block_(block), disable_output_(false)
+    extension_(ext), owner_(owner), node_(node), block_(block),
+    xpointer_from_state_(false), disable_output_(false)
 {}
 
 Block::BlockData::~BlockData() {
@@ -152,16 +154,7 @@ Block::BlockData::property(const char *name, const char *value) {
         block_->xsltName(value);
     }
     else if (strncasecmp(name, "xpointer", sizeof("xpointer")) == 0) {
-        if (strncasecmp(value, "xpointer(", sizeof("xpointer(") - 1) == 0) {
-            xpointer_expr_.assign(value, sizeof("xpointer(") - 1, strlen(value) - sizeof("xpointer("));
-        }
-        else {
-            xpointer_expr_.assign(value);
-        }
-        
-        if ("/.." == xpointer_expr_) {
-            disable_output_ = true;
-        }
+        block_->parseXPointerExpr(value);
     }
     else {
         std::stringstream stream;
@@ -259,17 +252,110 @@ Block::tagged() const {
     return false;
 }
 
-bool
-Block::disableOutput() const {
-    return data_->disable_output_;
+XmlXPathObjectHelper
+Block::evalXPathExpression(const std::string &expr, xmlXPathContextPtr context,
+        const std::map<std::string, std::string> &namespaces) const {
+    try {
+        const std::map<std::string, std::string>& block_nslist = data_->namespaces_;
+        for(std::map<std::string, std::string>::const_iterator it_ns = block_nslist.begin();
+            it_ns != block_nslist.end();
+            ++it_ns) {
+            xmlXPathRegisterNs(context,
+                               (const xmlChar *)it_ns->first.c_str(),
+                               (const xmlChar *)it_ns->second.c_str());
+        }
+
+        for(std::map<std::string, std::string>::const_iterator it_ns = namespaces.begin();
+            it_ns != namespaces.end();
+            ++it_ns) {
+            xmlXPathRegisterNs(context,
+                               (const xmlChar *)it_ns->first.c_str(),
+                               (const xmlChar *)it_ns->second.c_str());
+        }
+
+        XmlXPathObjectHelper xpathObj(xmlXPathEvalExpression((const xmlChar *)expr.c_str(), context));
+        XmlUtils::throwUnless(NULL != xpathObj.get());
+        return xpathObj;
+    }
+    catch(const std::exception &e) {
+        std::string message = "XPath error with expression " + expr + " : ";
+        message.append(e.what());
+        throw std::runtime_error(message);
+    }
 }
 
 bool
-Block::xpointer(const Context* ctx) const {
-    if (data_->xpointer_expr_.empty()) {
+Block::processXPointer(const Context *ctx, xmlDocPtr doc, xmlNodePtr insert_node, bool replace) const {
+    if (ctx->noXsltPort() || data_->xpointer_expr_.empty()) {
         return false;
     }
-    return !ctx->noXsltPort();
+
+    std::string expr = data_->xpointer_from_state_ ?
+            ctx->state()->asString(data_->xpointer_expr_, StringUtils::EMPTY_STRING) :
+            data_->xpointer_expr_;
+
+    if (expr.empty()) {
+        return false;
+    }
+
+    if (data_->disable_output_ || "/.." == expr) {
+        if (replace) {
+            xmlUnlinkNode(insert_node);
+        }
+        return true;
+    }
+
+    XmlXPathContextHelper context(xmlXPathNewContext(doc));
+    XmlUtils::throwUnless(NULL != context.get());
+
+    XmlXPathObjectHelper xpathObj = evalXPathExpression(expr, context.get());
+    if (XPATH_BOOLEAN == xpathObj->type) {
+        const char *str = 0 != xpathObj->boolval ? "1" : "0";
+        xmlNodePtr text_node = xmlNewText((const xmlChar *)str);
+        replace ? xmlReplaceNode(insert_node, text_node) : xmlAddChild(insert_node, text_node);
+        return true;
+    }
+    if (XPATH_NUMBER == xpathObj->type) {
+        char str[40];
+        snprintf(str, sizeof(str) - 1, "%f", xpathObj->floatval);
+        str[sizeof(str) - 1] = '\0';
+        xmlNodePtr text_node = xmlNewText((const xmlChar *)&str[0]);
+        replace ? xmlReplaceNode(insert_node, text_node) : xmlAddChild(insert_node, text_node);
+        return true;
+    }
+    if (XPATH_STRING == xpathObj->type) {
+        xmlNodePtr text_node = xmlNewText((const xmlChar *)xpathObj->stringval);
+        replace ? xmlReplaceNode(insert_node, text_node) : xmlAddChild(insert_node, text_node);
+        return true;
+    }
+
+    xmlNodeSetPtr nodeset = xpathObj->nodesetval;
+    if (NULL == nodeset || 0 == nodeset->nodeNr) {
+        if (replace) {
+            xmlUnlinkNode(insert_node);
+        }
+        return true;
+    }
+
+    xmlNodePtr current_node = nodeset->nodeTab[0];
+    if (XML_ATTRIBUTE_NODE == current_node->type) {
+        current_node = current_node->children;
+    }
+    xmlNodePtr last_input_node = xmlCopyNode(current_node, 1);
+    replace ? xmlReplaceNode(insert_node, last_input_node) :
+        xmlAddChild(insert_node, last_input_node);
+
+    for (int i = 1; i < nodeset->nodeNr; ++i) {
+        xmlNodePtr current_node = nodeset->nodeTab[i];
+        if (XML_ATTRIBUTE_NODE == current_node->type) {
+            current_node = current_node->children;
+        }
+        xmlNodePtr insert_node = xmlCopyNode(current_node, 1);
+        xmlAddNextSibling(last_input_node, insert_node);
+        last_input_node = insert_node;
+    }
+
+    return true;
 }
 
 void
@@ -312,6 +398,9 @@ Block::parseSubNode(xmlNodePtr node) {
     if (node->name) {
         if (xpathNode(node)) {
             parseXPathNode(node);
+        }
+        else if (xpointerNode(node)) {
+            parseXPointerNode(node);
         }
         else if (paramNode(node)) {
             parseParamNode(node);
@@ -654,37 +743,7 @@ Block::evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const {
             continue;
         }
         
-        const std::map<std::string, std::string>& ns_list = iter->namespaces();
-        for(std::map<std::string, std::string>::const_iterator it_ns = ns_list.begin();
-            it_ns != ns_list.end();
-            ++it_ns) {
-            xmlXPathRegisterNs(xctx.get(),
-                               (const xmlChar *)it_ns->first.c_str(),
-                               (const xmlChar *)it_ns->second.c_str());
-        }
-
-        const std::map<std::string, std::string>& block_nslist = data_->namespaces_;
-        for(std::map<std::string, std::string>::const_iterator it_ns = block_nslist.begin();
-            it_ns != block_nslist.end();
-            ++it_ns) {
-            if (ns_list.end() == ns_list.find(it_ns->first)) {
-                xmlXPathRegisterNs(xctx.get(),
-                                   (const xmlChar *)it_ns->first.c_str(),
-                                   (const xmlChar *)it_ns->second.c_str());
-            }
-        }
-        
-        XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*)expr.c_str(), xctx.get()));
-        try {
-            XmlUtils::throwUnless(NULL != object.get());
-        }
-        catch(const std::exception &e) {
-            throw InvokeError(e.what(), "xpath", expr);
-        }
-
-        //log()->debug("%s, xpath: %s type=%d bool=%d float=%f str='%s'",
-        //    BOOST_CURRENT_FUNCTION, iter->expression().c_str(), object->type, object->boolval, object->floatval,
-        //    NULL !=object->stringval ? (const char *)object->stringval: "");
+        XmlXPathObjectHelper object = evalXPathExpression(expr, xctx.get(), iter->namespaces());
 
         if (XPATH_BOOLEAN == object->type) {
                 state->checkName(iter->result());
@@ -793,6 +852,11 @@ Block::xpathNode(const xmlNodePtr node) const {
 }
 
 bool
+Block::xpointerNode(const xmlNodePtr node) const {
+    return (xmlStrncasecmp(node->name, (const xmlChar*) "xpointer", sizeof("xpointer")) == 0);
+}
+
+bool
 Block::paramNode(const xmlNodePtr node) const {
     return (xmlStrncasecmp(node->name, (const xmlChar*) "param", sizeof("param")) == 0);
 }
@@ -823,6 +887,41 @@ Block::parseXPathNode(const xmlNodePtr node) {
             data_->xpath_.back().addNamespace((const char*)ns->prefix, (const char*)ns->href);
             ns = ns->next;
         }
+    }
+}
+
+void
+Block::parseXPointerNode(const xmlNodePtr node) {
+
+    if (!data_->xpointer_expr_.empty()) {
+        throw std::runtime_error("In block only one xpointer allowed");
+    }
+
+    parseXPointerExpr(XmlUtils::value(node));
+    const char *type = XmlUtils::attrValue(node, "type");
+    if (NULL == type) {
+        return;
+    }
+    if (strncasecmp(type, "statearg", sizeof("statearg")) != 0) {
+        throw std::runtime_error("StateArg type in xpointer node allowed only");
+    }
+    data_->xpointer_from_state_ = true;
+}
+
+void
+Block::parseXPointerExpr(const char *value) {
+    if (NULL == value) {
+        return;
+    }
+    if (strncasecmp(value, "xpointer(", sizeof("xpointer(") - 1) == 0) {
+        data_->xpointer_expr_.assign(value, sizeof("xpointer(") - 1, strlen(value) - sizeof("xpointer("));
+    }
+    else {
+        data_->xpointer_expr_.assign(value);
+    }
+
+    if ("/.." == data_->xpointer_expr_ && !data_->xpointer_from_state_) {
+        data_->disable_output_ = true;
     }
 }
 
@@ -877,34 +976,6 @@ Block::concatParams(const Context *ctx, unsigned int first, unsigned int last) c
     }
     
     return result;
-}
-
-XmlXPathObjectHelper
-Block::evalXPointer(xmlDocPtr doc) const {
-    try {
-        XmlXPathContextHelper context(xmlXPathNewContext(doc));
-        XmlUtils::throwUnless(NULL != context.get());
-        
-        const std::map<std::string, std::string>& block_nslist = data_->namespaces_;
-        for(std::map<std::string, std::string>::const_iterator it_ns = block_nslist.begin();
-            it_ns != block_nslist.end();
-            ++it_ns) {
-            xmlXPathRegisterNs(context.get(),
-                               (const xmlChar *)it_ns->first.c_str(),
-                               (const xmlChar *)it_ns->second.c_str());
-        }
-        
-        XmlXPathObjectHelper xpointerObj(
-            xmlXPathEvalExpression((const xmlChar *)data_->xpointer_expr_.c_str(), context.get()));
-        XmlUtils::throwUnless(NULL != xpointerObj.get());
-        
-        return xpointerObj;
-    }
-    catch(const std::exception &e) {
-        std::string message = "XPointer error with expression " + data_->xpointer_expr_ + " : ";
-        message.append(e.what());
-        throw std::runtime_error(message);
-    }
 }
 
 Guard::Guard(const char *expr, const char *type, const char *value, bool is_not) :

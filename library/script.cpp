@@ -98,7 +98,6 @@ public:
     void parseXScriptNodes(std::vector<xmlNodePtr> &xscript_nodes);
     void parseBlocks();
     void buildXScriptNodeSet(std::vector<xmlNodePtr> &xscript_nodes);
-    bool processXpointer(const Context *ctx, xmlDocPtr doc, xmlNodePtr newnode, unsigned int count) const;
     void addHeaders(Context *ctx);
     XmlDocSharedHelper fetchResults(Context *ctx);
     void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
@@ -442,19 +441,6 @@ Script::ScriptData::buildXScriptNodeSet(std::vector<xmlNodePtr>& xscript_nodes) 
     xscript_nodes.clear();
 }
 
-bool
-Script::ScriptData::processXpointer(const Context *ctx,
-                                    xmlDocPtr doc,
-                                    xmlNodePtr newnode,
-                                    unsigned int count) const {
-    const Block *blck = block(count);
-    if (!blck->xpointer(ctx)) {
-        return false;
-    }
-    
-    XmlUtils::processXPointer(blck, doc, newnode, true);
-    return true;
-}
 
 void
 Script::ScriptData::addHeaders(Context *ctx) {
@@ -487,10 +473,8 @@ Script::ScriptData::fetchResults(Context *ctx) {
 void
 Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
                                    unsigned int &count, unsigned int &xscript_count) {
-
     const std::set<xmlNodePtr>& xscript_node_set = xscriptNodes();
     unsigned int blocks_num = blocksNumber();
-    
     while (node && count + xscript_count != blocks_num + xscript_node_set.size()) {
         if (newnode == NULL) {
             throw std::runtime_error(std::string("internal error in node ") + (char*)node->name);
@@ -500,10 +484,9 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
             boost::shared_ptr<InvokeContext> result = ctx->result(count);
             xmlDocPtr doc = result->resultDocPtr();
             assert(doc);
-
             xmlNodePtr result_doc_root_node = xmlDocGetRootElement(doc);
             if (result_doc_root_node) {
-                if (result->error() || !processXpointer(ctx, doc, newnode, count)) {
+                if (result->error() || !block(count)->processXPointer(ctx, doc, newnode, true)) {
                     if (result->moveableDoc()) {
                         xmlReplaceNode(newnode, result_doc_root_node);
                     }
@@ -525,7 +508,6 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
         else if (node->children) {
             fetchRecursive(ctx, node->children, newnode->children, count, xscript_count);
         }
-
         node = node->next;
         newnode = next;
     }
@@ -929,6 +911,7 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
     OperationMode::processScriptError(ctx.get(), this);
     
     data_->addHeaders(ctx.get());
+
     return data_->fetchResults(ctx.get());
 }
 
