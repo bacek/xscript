@@ -39,6 +39,8 @@
 
 namespace xscript {
 
+const static std::map<std::string, std::string> EMPTY_MAP;
+
 class XPathExpr {
 public:
     XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type);
@@ -254,7 +256,7 @@ Block::tagged() const {
 
 XmlXPathObjectHelper
 Block::evalXPathExpression(const std::string &expr, xmlXPathContextPtr context,
-        const std::map<std::string, std::string> &namespaces) const {
+        const std::map<std::string, std::string> &ext_namespaces) const {
     try {
         const std::map<std::string, std::string>& block_nslist = data_->namespaces_;
         for(std::map<std::string, std::string>::const_iterator it_ns = block_nslist.begin();
@@ -265,8 +267,8 @@ Block::evalXPathExpression(const std::string &expr, xmlXPathContextPtr context,
                                (const xmlChar *)it_ns->second.c_str());
         }
 
-        for(std::map<std::string, std::string>::const_iterator it_ns = namespaces.begin();
-            it_ns != namespaces.end();
+        for(std::map<std::string, std::string>::const_iterator it_ns = ext_namespaces.begin();
+            it_ns != ext_namespaces.end();
             ++it_ns) {
             xmlXPathRegisterNs(context,
                                (const xmlChar *)it_ns->first.c_str(),
@@ -308,7 +310,7 @@ Block::processXPointer(const Context *ctx, xmlDocPtr doc, xmlNodePtr insert_node
     XmlXPathContextHelper context(xmlXPathNewContext(doc));
     XmlUtils::throwUnless(NULL != context.get());
 
-    XmlXPathObjectHelper xpathObj = evalXPathExpression(expr, context.get());
+    XmlXPathObjectHelper xpathObj = evalXPathExpression(expr, context.get(), EMPTY_MAP);
     if (XPATH_BOOLEAN == xpathObj->type) {
         const char *str = 0 != xpathObj->boolval ? "1" : "0";
         xmlNodePtr text_node = xmlNewText((const xmlChar *)str);

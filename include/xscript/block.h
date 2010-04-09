@@ -73,7 +73,7 @@ protected:
     bool checkGuard(Context *ctx) const;
     void evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const;
     XmlXPathObjectHelper evalXPathExpression(const std::string &expr, xmlXPathContextPtr context,
-            const std::map<std::string, std::string> &namespaces = std::map<std::string, std::string>()) const;
+            const std::map<std::string, std::string> &ext_namespaces) const;
 
     void appendNodeValue(xmlNodePtr node, std::string &val) const;
 
