@@ -1,4 +1,4 @@
-xscript (5.70-55ubuntu1) lucid; urgency=low
+xscript (5.70-56) unstable; urgency=low
 
   * dynamic xpointer added
   * removed copying while insert block result to script
