@@ -1,3 +1,10 @@
+xscript (5.70-55ubuntu1) lucid; urgency=low
+
+  * dynamic xpointer added
+  * removed copying while insert block result to script
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 09 Apr 2010 10:22:41 +0400
+
 xscript (5.70-55) unstable; urgency=low
 
   * unused policy method removed
