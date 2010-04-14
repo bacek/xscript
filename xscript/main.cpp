@@ -35,7 +35,8 @@ processUsage(std::ostream &os) {
     "  --profile | --norman\n"
     "  --stylesheet=<value>\n"
     "  --dont-apply-stylesheet | --dont-apply-stylesheet=all\n"
-    "  --dont-use-remote-call";
+    "  --dont-use-remote-call\n"
+    "  --noout";
     return os;
 }
 
