@@ -374,6 +374,11 @@ Block::detectBase() {
     }
 }
 
+const std::map<std::string, std::string>&
+Block::namespaces() const {
+    return data_->namespaces_;
+}
+
 void
 Block::parse() {
     try {       

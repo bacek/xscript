@@ -95,6 +95,8 @@ protected:
     void addParam(std::auto_ptr<Param> param);
     void detectBase();
     
+    const std::map<std::string, std::string>& namespaces() const;
+
 private:
     std::string errorMessage(const InvokeError &error) const;
     boost::shared_ptr<InvokeContext> errorResult(XmlDocHelper doc) const;

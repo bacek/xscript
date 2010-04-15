@@ -84,20 +84,51 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
 
 void
 LocalBlock::parseSubNode(xmlNodePtr node) {
-    if (!node->name || xmlStrncasecmp(node->name, (const xmlChar*)"root", sizeof("root")) != 0) {
+    if (NULL == node->name || 0 != xmlStrcasecmp(node->name, (const xmlChar*)"root")) {
         Block::parseSubNode(node);
         return;
     }
-    
+
+    const xmlChar* ref = node->ns ? node->ns->href : NULL;
+    if (NULL != ref && 0 != xmlStrcasecmp(ref, (const xmlChar*)XmlUtils::XSCRIPT_NAMESPACE)) {
+        Block::parseSubNode(node);
+        return;
+    }
+
     xmlAttrPtr name_attr = xmlHasProp(node, (const xmlChar*)"name");
     if (name_attr) {
-        const xmlChar* value = (const xmlChar*)XmlUtils::value(name_attr);
+        const char* value = XmlUtils::value(name_attr);
         if (NULL != value) {
-            xmlNodeSetName(node, value);
+            std::string name, prefix;
+            const char* ch = strchr(value, ':');
+            if (NULL == ch) {
+                name.assign(value);
+            }
+            else {
+                prefix.assign(value, ch - value);
+                name.assign(ch + 1);
+            }
+            if (name.empty()) {
+                throw std::runtime_error("Empty root node name is not allowed in local block");
+            }
+            xmlNodeSetName(node, (const xmlChar*)name.c_str());
+            xmlNsPtr ns = NULL;
+            if (!prefix.empty()) {
+                const std::map<std::string, std::string> names = namespaces();
+                std::map<std::string, std::string>::const_iterator it = names.find(prefix);
+                if (names.end() == it) {
+                    throw std::runtime_error("Unknown local block namespace: " + prefix);
+                }
+                ns = xmlSearchNsByHref(node->doc, node, (const xmlChar*)it->second.c_str());
+                if (NULL == ns) {
+                    throw std::runtime_error("Cannot find local block namespace: " + prefix);
+                }
+            }
+            xmlSetNs(node, ns);
         }
         xmlRemoveProp(name_attr);
     }
-    
+
     script_ = ScriptFactory::createScriptFromXmlNode(owner()->name(), node);
 }
 
