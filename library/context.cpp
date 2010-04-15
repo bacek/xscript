@@ -47,16 +47,14 @@ private:
 struct CommonData {
     CommonData(const boost::shared_ptr<RequestData> &request_data,
                const std::string &xslt_name) :
-        request_data_(request_data), params_(new ParamsMap()),
-        xslt_name_(xslt_name), no_xslt_(false), no_main_xslt_(false)
+        request_data_(request_data), params_(new ParamsMap()), xslt_name_(xslt_name)
     {}
     
     CommonData(const boost::shared_ptr<RequestData> &request_data,
                const boost::shared_ptr<ParamsMap> &params,
                const boost::shared_ptr<AuthContext> &auth,
                const std::string &xslt_name) :
-        request_data_(request_data), params_(params), auth_(auth),
-        xslt_name_(xslt_name), no_xslt_(false), no_main_xslt_(false)
+        request_data_(request_data), params_(params), auth_(auth), xslt_name_(xslt_name)
     {}
     ~CommonData() {}
     
@@ -66,8 +64,6 @@ struct CommonData {
     boost::shared_ptr<AuthContext> auth_;
     std::string xslt_name_;
     std::auto_ptr<DocumentWriter> writer_;
-    bool no_xslt_;
-    bool no_main_xslt_;
 };
 
 struct Context::ContextData {
@@ -78,6 +74,11 @@ struct Context::ContextData {
     {
         if (!script->expireTimeDeltaUndefined()) {
             requestData()->response()->setExpireDelta(script->expireTimeDelta());
+        }
+        const Server *server = VirtualHostData::instance()->getServer();
+        if (NULL != server) {
+            flag(FLAG_NO_XSLT, !server->needApplyPerblockStylesheet(request_data->request()));
+            flag(FLAG_NO_MAIN_XSLT, !server->needApplyMainStylesheet(request_data->request()));
         }
     }
     
@@ -166,27 +167,7 @@ struct Context::ContextData {
         boost::mutex::scoped_lock lock(runtime_errors_mutex_);
         return !runtime_errors_.empty();
     }
-    
-    bool noXsltPort() const {
-        boost::mutex::scoped_lock lock(common_data_->mutex_);
-        return common_data_->no_xslt_;
-    }
 
-    void noXsltPort(bool value) {
-        boost::mutex::scoped_lock lock(common_data_->mutex_);
-        common_data_->no_xslt_ = value;
-    }
-
-    bool noMainXsltPort() const {
-        boost::mutex::scoped_lock lock(common_data_->mutex_);
-        return common_data_->no_main_xslt_;
-    }
-
-    void noMainXsltPort(bool value) {
-        boost::mutex::scoped_lock lock(common_data_->mutex_);
-        common_data_->no_main_xslt_ = value;
-    }
-    
     std::string xsltName() const {
         boost::mutex::scoped_lock lock(common_data_->mutex_);
         return common_data_->xslt_name_;
@@ -227,6 +208,8 @@ struct Context::ContextData {
     mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_;
     
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
+    static const unsigned int FLAG_NO_XSLT = 1 << 1;
+    static const unsigned int FLAG_NO_MAIN_XSLT = 1 << 2;
     static const unsigned int FLAG_NO_CACHE = 1 << 3;
     static const unsigned int SKIP_NEXT_BLOCKS = 1 << 4;
     static const unsigned int STOP_BLOCKS = 1 << 5;
@@ -278,12 +261,7 @@ Context::~Context() {
 
 void
 Context::init() {
-    ExtensionList::instance()->initContext(this);    
-    const Server *server = VirtualHostData::instance()->getServer();
-    if (NULL != server) {
-        ctx_data_->noXsltPort(!server->needApplyPerblockStylesheet(request()));
-        ctx_data_->noMainXsltPort(!server->needApplyMainStylesheet(request()));
-    }
+    ExtensionList::instance()->initContext(this);
     CacheStrategy *strategy = script()->cacheStrategy();
     if (NULL != strategy) {
         strategy->initContext(this);
@@ -473,7 +451,6 @@ Context::documentWriter() {
         ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(
             new XmlWriter(Policy::getOutputEncoding(request()))));
     }
-
     return ctx_data_->documentWriter();
 }
 
@@ -501,12 +478,12 @@ Context::forceNoThreaded(bool value) {
 
 bool
 Context::noXsltPort() const {
-    return ctx_data_->noXsltPort();
+    return rootContext()->ctx_data_->flag(ContextData::FLAG_NO_XSLT);
 }
 
 bool
 Context::noMainXsltPort() const {
-    return ctx_data_->noMainXsltPort();
+    return rootContext()->ctx_data_->flag(ContextData::FLAG_NO_MAIN_XSLT);
 }
 
 bool
