@@ -150,7 +150,7 @@ struct Context::ContextData {
 
     void addDoc(XmlDocSharedHelper doc) {
         boost::mutex::scoped_lock sl(doc_list_mutex_);
-        clear_doc_list_.push_back(doc);
+        clear_doc_list_.push_front(doc);
     }
 
     std::string getRuntimeError(const Block *block) const {

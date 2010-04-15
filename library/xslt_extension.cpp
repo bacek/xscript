@@ -1721,6 +1721,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
         if (result->moveableDoc()) {
             xmlUnlinkNode(root);
             xmlAddChild(tctx->insert, root);
+            ctx->rootContext()->addDoc(result->resultDoc());
         }
         else {
             xmlAddChild(tctx->insert, xmlCopyNode(root, 1));
