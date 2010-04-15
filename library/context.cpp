@@ -110,8 +110,7 @@ struct Context::ContextData {
     
     ~ContextData() {
         std::for_each(clear_node_list_.begin(),
-                      clear_node_list_.end(),
-                      boost::bind(&xmlFreeNode, _1));
+                clear_node_list_.end(), boost::bind(&xmlFreeNode, _1));
     }
     
     const boost::shared_ptr<RequestData>& requestData() const {
@@ -147,6 +146,11 @@ struct Context::ContextData {
     void addNode(xmlNodePtr node) {
         boost::mutex::scoped_lock sl(node_list_mutex_);
         clear_node_list_.push_back(node);
+    }
+
+    void addDoc(XmlDocSharedHelper doc) {
+        boost::mutex::scoped_lock sl(doc_list_mutex_);
+        clear_doc_list_.push_back(doc);
     }
 
     std::string getRuntimeError(const Block *block) const {
@@ -192,6 +196,7 @@ struct Context::ContextData {
     boost::shared_ptr<Context> parent_context_;
     std::vector<boost::shared_ptr<InvokeContext> > results_;
     std::list<xmlNodePtr> clear_node_list_;
+    std::list<XmlDocSharedHelper> clear_doc_list_;
     boost::int32_t expire_delta_;
 
     boost::condition condition_;
@@ -205,7 +210,8 @@ struct Context::ContextData {
     
     static boost::thread_specific_ptr<std::list<TimeoutCounter> > block_timers_;
     
-    mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_, runtime_errors_mutex_;
+    mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_,
+        doc_list_mutex_, runtime_errors_mutex_;
     
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
     static const unsigned int FLAG_NO_XSLT = 1 << 1;
@@ -396,6 +402,11 @@ Context::resultsReady() const {
 void
 Context::addNode(xmlNodePtr node) {
     ctx_data_->addNode(node);
+}
+
+void
+Context::addDoc(XmlDocSharedHelper doc) {
+    ctx_data_->addDoc(doc);
 }
 
 boost::xtime

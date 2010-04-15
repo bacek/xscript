@@ -1,3 +1,9 @@
+xscript (5.70-59) unstable; urgency=low
+
+  * doc cleanup list added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 15 Apr 2010 13:37:15 +0400
+
 xscript (5.70-58) unstable; urgency=low
 
   * removed copying while insert block result to script

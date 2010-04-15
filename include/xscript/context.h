@@ -56,6 +56,7 @@ public:
     void expect(unsigned int count);
     void result(unsigned int n, boost::shared_ptr<InvokeContext> result);
     void addNode(xmlNodePtr node);
+    void addDoc(XmlDocSharedHelper doc);
 
     bool resultsReady() const;
     boost::xtime delay(int millis) const;
