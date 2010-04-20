@@ -26,48 +26,27 @@ AX_SET_VERSION_INFO(AC_PACKAGE_VERSION)
 
 PKG_CHECK_MODULES(yandex_platform, [yandex-platform], [], [AC_MSG_NOTICE(Yandex platform configuration not found)])
 
+LIBS="$LIBS $yplatform_LIBS"
+CPPFLAGS="$CPPFLAGS $yplatform_CFLAGS -pthread"
+
+AX_BOOST_BASE
+AX_BOOST_THREAD
+AX_BOOST_FILESYSTEM
+
 ac_have_boost="yes"
 ac_stored_libs=$LIBS
 ac_stored_cppflags=$CPPFLAGS
 ac_stored_cxxflags=$CXXFLAGS
 
-
- 
 LIBS="$ac_stored_libs -lboost_thread -lboost_filesystem $yandex_platform_LIBS"
-CPPFLAGS="$ac_stored_cppflags -pthread $yandex_platform_CFLAGS"
+CPPFLAGS="$ac_stored_cppflags -pthread $yandex_platform_CFLAGS -pthread"
 CXXFLAGS="$ac_stored_cxxflags -W -Wall -pthread"
 
 AC_SUBST(yandex_platform_LIBS)
 AC_SUBST(yandex_platform_CFLAGS)
 
-AC_CHECK_HEADER([boost/bind.hpp], [], [ac_have_boost="no"])
-AC_CHECK_HEADER([boost/function.hpp], [], [ac_have_boost="no"])
-AC_CHECK_HEADER([boost/shared_ptr.hpp], [], [ac_have_boost="no"])
-AC_CHECK_HEADER([boost/checked_delete.hpp], [], [ac_have_boost="no"])
-AC_CHECK_HEADER([boost/current_function.hpp], [], [ac_have_boost="no"])
-
-AC_CHECK_HEADER([boost/thread.hpp], [], [ac_have_boost="no"])
-AC_CHECK_HEADER([boost/thread/once.hpp], [], [ac_have_boost="no"])
-AC_CHECK_HEADER([boost/thread/mutex.hpp], [], [ac_have_boost="no"])
-AC_CHECK_HEADER([boost/thread/thread.hpp], [], [ac_have_boost="no"])
-AC_CHECK_HEADER([boost/thread/condition.hpp], [], [ac_have_boost="no"])
-
-AC_MSG_CHECKING([trying to link with boost threads])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/thread/once.hpp> #include <stdlib.h>]], [[ boost::once_flag flag; boost::call_once(&abort, flag); ]])],
-	[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no);ac_have_boost="no"])
-
-AC_CHECK_HEADER([boost/filesystem/path.hpp], [], [ac_have_boost="no"])
-AC_CHECK_HEADER([boost/filesystem/operations.hpp], [], [ac_have_boost="no"])
-AC_MSG_CHECKING([trying to link with boost filesystem])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <boost/filesystem/path.hpp>]], [[ boost::filesystem::path p; ]])],
-	[AC_MSG_RESULT(yes)],[AC_MSG_RESULT(no); ac_have_boost="no"])
-
 CPPFLAGS=$ac_stored_cppflags
 LIBS=$ac_stored_libs
-
-if test "f$ac_have_boost" != "fyes"; then
-	AC_MSG_ERROR([required boost libraries are not found])
-fi
 
 ac_have_fcgi="yes"
 ac_stored_libs=$LIBS

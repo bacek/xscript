@@ -4,12 +4,11 @@
 
 CXX = g++
 CPPFLAGS = -D_GNU_SOURCE 
-#CXXFLAGS = -I/usr/include/stlport
 LDFLAGS = -lm
 
 ACLOCAL = /usr/bin/aclocal-1.9
 AUTOMAKE = /usr/bin/automake-1.9
-ACLOCAL_OPTIONS = "-I config"
+ACLOCAL_OPTIONS = "-I config -I /usr/share/autoconf-archive"
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CXXFLAGS += -g -O0

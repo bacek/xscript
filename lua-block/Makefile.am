@@ -13,7 +13,7 @@ noinst_HEADERS = cookie_methods.h exception.h lua_block.h method_map.h \
 
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @lua_CFLAGS@ @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -W -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
-AM_LDFLAGS = -lboost_thread -lboost_filesystem @yandex_platform_LIBS@
+AM_LDFLAGS = @BOOST_THREAD_LDFLAGS@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@
 
 EXTRA_DIST = test.conf lua-badargcount.xml lua-badcode.xml lua-badtype.xml \
 	lua-cookie.xml lua-encode.xml lua-logger.xml lua-multi.xml lua-print.xml \
