@@ -13,6 +13,17 @@ AC_PROG_LIBTOOL
 AC_LANG([C++])
 AM_MAINTAINER_MODE
 
+AX_SET_VERSION_INFO(AC_PACKAGE_VERSION)
+
+PKG_CHECK_MODULES(yplatform, [yandex-platform], [], [AC_MSG_NOTICE([yandex platform configuration not found])])
+
+LIBS="$LIBS $yplatform_LIBS"
+CPPFLAGS="$CPPFLAGS $yplatform_CFLAGS -pthread"
+
+AX_BOOST_BASE
+AX_BOOST_THREAD
+AX_BOOST_FILESYSTEM
+
 AM_ICONV
 AM_ICONV_LINK
 
@@ -21,17 +32,6 @@ AC_SYS_LARGEFILE
 AC_CHECK_FUNCS(memcmp, [], [])
 AC_CHECK_FUNCS(memchr, [], [])
 AC_CHECK_FUNCS(memmem, [], [])
-
-AX_SET_VERSION_INFO(AC_PACKAGE_VERSION)
-
-PKG_CHECK_MODULES(yandex_platform, [yandex-platform], [], [AC_MSG_NOTICE(Yandex platform configuration not found)])
-
-LIBS="$LIBS $yplatform_LIBS"
-CPPFLAGS="$CPPFLAGS $yplatform_CFLAGS -pthread"
-
-AX_BOOST_BASE
-AX_BOOST_THREAD
-AX_BOOST_FILESYSTEM
 
 ac_have_boost="yes"
 ac_stored_libs=$LIBS
