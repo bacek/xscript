@@ -86,7 +86,8 @@ void
 Server::ServerData::getPorts(const std::string &node_name, unsigned short def,
     std::vector<unsigned short> &result) {
 
-    std::string ports = config_->as<std::string>(node_name, StringUtils::EMPTY_STRING);
+    std::string ports = config_->as<std::string>(
+            node_name, boost::lexical_cast<std::string>(def));
 
     typedef boost::char_separator<char> Separator;
     typedef boost::tokenizer<Separator> Tokenizer;
