@@ -1,3 +1,10 @@
+xscript (5.70-62) unstable; urgency=low
+
+  * original uri detection updated
+  * several noxslt and alternate ports can be specified
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 21 Apr 2010 16:41:36 +0400
+
 xscript (5.70-61) unstable; urgency=low
 
   * namespace specifying added for root node of local block

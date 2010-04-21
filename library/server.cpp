@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include <algorithm>
 #include <cerrno>
 #include <fstream>
 #include <sstream>
@@ -13,6 +14,7 @@
 
 #include <boost/filesystem/path.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/tokenizer.hpp>
 
 #include <unistd.h>
 #include <sys/stat.h>
@@ -61,9 +63,8 @@ class Server::ServerData {
 public:
     ServerData(Config *config) : config_(config) {
         config_->startup();
-
-        alternate_port_ = config_->as<unsigned short>("/xscript/alternate-port", 8080);
-        noxslt_port_ = config_->as<unsigned short>("/xscript/noxslt-port", 8079);
+        getPorts("/xscript/alternate-port", 8080, alternate_ports_);
+        getPorts("/xscript/noxslt-port", 8079, noxslt_ports_);
         
         char buf[256];
         int res = ::gethostname(buf, sizeof(buf));
@@ -72,11 +73,36 @@ public:
         }
     }
     ~ServerData() {}
+    void getPorts(const std::string &node_name, unsigned short def,
+            std::vector<unsigned short> &result);
     
     Config *config_;
-    unsigned short alternate_port_, noxslt_port_;
+    std::vector<unsigned short> alternate_ports_;
+    std::vector<unsigned short> noxslt_ports_;
     std::string hostname_;
 };
+
+void
+Server::ServerData::getPorts(const std::string &node_name, unsigned short def,
+    std::vector<unsigned short> &result) {
+
+    std::string ports = config_->as<std::string>(node_name);
+
+    typedef boost::char_separator<char> Separator;
+    typedef boost::tokenizer<Separator> Tokenizer;
+    Tokenizer tok(ports, Separator(", "));
+    try {
+        for (Tokenizer::iterator it = tok.begin(), it_end = tok.end();
+            it != it_end;
+            ++it) {
+            result.push_back(boost::lexical_cast<unsigned short>(*it));
+        }
+    }
+    catch(const std::exception &e) {
+        result.clear();
+        result.push_back(def);
+    }
+}
 
 Server::Server(Config *config) : data_(new ServerData(config)) {
     VirtualHostData::instance()->setServer(this);
@@ -229,14 +255,26 @@ Server::getScript(Request *request) {
 }
 
 bool
+Server::isAlternatePort(unsigned short port) const {
+    return data_->alternate_ports_.end() !=
+        std::find(data_->alternate_ports_.begin(), data_->alternate_ports_.end(), port);
+}
+
+bool
+Server::isNoXsltPort(unsigned short port) const {
+    return data_->noxslt_ports_.end() !=
+        std::find(data_->noxslt_ports_.begin(), data_->noxslt_ports_.end(), port);
+}
+
+bool
 Server::needApplyMainStylesheet(Request *request) const {
     unsigned short port = request->getServerPort();
-    return (port != data_->alternate_port_) && (port != data_->noxslt_port_);
+    return !isAlternatePort(port) && !isNoXsltPort(port);
 }
 
 bool
 Server::needApplyPerblockStylesheet(Request *request) const {
-    return (request->getServerPort() != data_->noxslt_port_);
+    return !isNoXsltPort(request->getServerPort());
 }
 
 Context*
@@ -289,12 +327,12 @@ Server::hostname() const {
 
 unsigned short
 Server::alternatePort() const {
-    return data_->alternate_port_;
+    return data_->alternate_ports_[0];
 }
 
 unsigned short
 Server::noXsltPort() const {
-    return data_->noxslt_port_;
+    return data_->noxslt_ports_[0];
 }
 
 extern "C" int

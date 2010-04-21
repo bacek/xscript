@@ -23,7 +23,9 @@ public:
 
     virtual bool needApplyMainStylesheet(Request *request) const;
     virtual bool needApplyPerblockStylesheet(Request *request) const;
+    //TODO: remove
     virtual unsigned short alternatePort() const;
+    //TODO: remove
     virtual unsigned short noXsltPort() const;
     virtual bool useXsltProfiler() const = 0;
     const std::string& hostname() const;
@@ -39,6 +41,9 @@ protected:
     static std::pair<std::string, bool> findScript(const std::string &name);
     void addHeaders(Context *ctx);
     void sendHeaders(Context *ctx);
+
+    bool isAlternatePort(unsigned short port) const;
+    bool isNoXsltPort(unsigned short port) const;
 
     virtual Context* createContext(const boost::shared_ptr<Script> &script,
                                    const boost::shared_ptr<State> &state,
