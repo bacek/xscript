@@ -460,7 +460,13 @@ class Request::RealIPHandler : public MessageHandler {
 class Request::OriginalURIHandler : public MessageHandler {
     Result process(const MessageParams &params, MessageResultBase &result) {
         const Request* request = params.getPtr<const Request>(0);
-        result.set(request->getRequestURI());
+        const std::string& uri = request->getRequestURI();
+        if (uri.empty()) {
+            result.set(request->getURI());
+        }
+        else {
+            result.set(uri);
+        }
         return CONTINUE;
     }
 };
