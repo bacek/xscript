@@ -38,6 +38,7 @@ public:
     const std::string& getQueryString() const;
     const std::string& getRequestMethod() const;
     std::string getURI() const;
+    const std::string& getRequestURI() const;
     std::string getOriginalURI() const;
     const std::string& getHost() const;
     const std::string& getOriginalHost() const;

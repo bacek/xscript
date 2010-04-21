@@ -113,6 +113,11 @@ Request::getURI() const {
     }
 }
 
+const std::string&
+Request::getRequestURI() const {
+    return Parser::get(data_->vars_, RequestImpl::REQUEST_URI_KEY);
+}
+
 std::string
 Request::getOriginalURI() const {
     MessageParam<const Request> request_param(this);
@@ -455,7 +460,7 @@ class Request::RealIPHandler : public MessageHandler {
 class Request::OriginalURIHandler : public MessageHandler {
     Result process(const MessageParams &params, MessageResultBase &result) {
         const Request* request = params.getPtr<const Request>(0);
-        result.set(request->getURI());
+        result.set(request->getRequestURI());
         return CONTINUE;
     }
 };

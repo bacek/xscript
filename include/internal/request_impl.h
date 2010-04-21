@@ -53,6 +53,7 @@ private:
     
     static const std::string QUERY_STRING_KEY;
     static const std::string REQUEST_METHOD_KEY;
+    static const std::string REQUEST_URI_KEY;
 };
 
 class File {

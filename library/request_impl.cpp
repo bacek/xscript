@@ -33,6 +33,7 @@ const std::string RequestImpl::REMOTE_ADDR_KEY("REMOTE_ADDR");
 
 const std::string RequestImpl::QUERY_STRING_KEY("QUERY_STRING");
 const std::string RequestImpl::REQUEST_METHOD_KEY("REQUEST_METHOD");
+const std::string RequestImpl::REQUEST_URI_KEY("REQUEST_URI");
 
 RequestImpl::RequestImpl() : is_bot_(false)
 {}
