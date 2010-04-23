@@ -118,10 +118,12 @@ private:
 
 private:
     bool cacheAll() const;
+    bool cacheableArg(const std::string &name) const;
     
 private:
     std::set<std::string> cache_args_;
     bool sort_;
+    bool except_;
 };
 
 class QuerySubCacheStrategyFactory : public SubCacheStrategyFactory {
@@ -148,6 +150,21 @@ class QuerySubCacheStrategyFactory : public SubCacheStrategyFactory {
                 "incorrect value for sort attribute in query cache strategy: " + sort_value);
         }
         
+        std::string except_value = config->as<std::string>(path + "/@except", "no");
+        if (0 == strcasecmp(except_value.c_str(), "yes")) {
+            if (value.empty()) {
+                throw std::runtime_error(
+                    "Except query arg list should be specified in query cache strategy");
+            }
+            query_strategy->except_ = true;
+        }
+        else if (0 == strcasecmp(except_value.c_str(), "no")) {
+        }
+        else {
+            throw std::runtime_error(
+                "incorrect value for except attribute in query cache strategy: " + except_value);
+        }
+
         typedef boost::char_separator<char> Separator;
         typedef boost::tokenizer<Separator> Tokenizer;
         Tokenizer tok(value, Separator(", "));
@@ -159,12 +176,20 @@ class QuerySubCacheStrategyFactory : public SubCacheStrategyFactory {
     }
 };
 
-QuerySubCacheStrategy::QuerySubCacheStrategy() : sort_(true)
+QuerySubCacheStrategy::QuerySubCacheStrategy() : sort_(true), except_(false)
 {}
 
 bool
 QuerySubCacheStrategy::cacheAll() const {
     return cache_args_.empty();
+}
+
+bool
+QuerySubCacheStrategy::cacheableArg(const std::string &name) const {
+    if (cache_args_.empty()) {
+        return true;
+    }
+    return except_ ^ cache_args_.end() != cache_args_.find(name);
 }
 
 std::string
@@ -179,7 +204,7 @@ QuerySubCacheStrategy::createKey(const Context *ctx) {
             continue;
         }
         
-        if (cacheAll() || cache_args_.end() != cache_args_.find(name)) {            
+        if (cacheableArg(name)) {
             keys.push_back(it);
         }
     }
