@@ -361,9 +361,6 @@ Context::expect(unsigned int count) {
 
 void
 Context::result(unsigned int n, boost::shared_ptr<InvokeContext> result) {
-    log()->debug("%s: %d, result of %u block: %p", BOOST_CURRENT_FUNCTION,
-                 static_cast<int>(stopped()), n, result->resultDocPtr());
-    
     if (result.get()) {
         boost::shared_ptr<Context> local_ctx = result->getLocalContext();
         result->setLocalContext(boost::shared_ptr<Context>()); // circle reference removed

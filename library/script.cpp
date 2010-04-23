@@ -968,11 +968,27 @@ Script::createTagKey(const Context *ctx, bool page_cache) const {
         if (NULL == strategy) {
             throw std::logic_error("Cannot cache page without strategy");
         }
+
         key.assign(ctx->request()->getOriginalUrl());
         std::string::size_type pos = key.find('?');
         if (std::string::npos != pos) {
             key.erase(pos);
         }
+
+        pos = key.find("://");
+        if (std::string::npos != pos) {
+            pos += 2;
+        }
+
+        while(std::string::npos != pos) {
+            std::string::size_type pos_prev = pos;
+            pos = key.find('/', pos + 1);
+            if (std::string::npos != pos && pos - pos_prev == 1) {
+                key.erase(pos, 1);
+                --pos;
+            }
+        }
+
         key.push_back('|');
         key.append(strategy->createKey(ctx));
         key.push_back('|');
