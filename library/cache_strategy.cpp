@@ -117,7 +117,6 @@ private:
     };
 
 private:
-    bool cacheAll() const;
     bool cacheableArg(const std::string &name) const;
     
 private:
@@ -180,16 +179,11 @@ QuerySubCacheStrategy::QuerySubCacheStrategy() : sort_(true), except_(false)
 {}
 
 bool
-QuerySubCacheStrategy::cacheAll() const {
-    return cache_args_.empty();
-}
-
-bool
 QuerySubCacheStrategy::cacheableArg(const std::string &name) const {
     if (cache_args_.empty()) {
         return true;
     }
-    return except_ ^ cache_args_.end() != cache_args_.find(name);
+    return except_ ^ (cache_args_.end() != cache_args_.find(name));
 }
 
 std::string
