@@ -1,3 +1,11 @@
+xscript (5.70.65-1) unstable; urgency=low
+
+  * on the fly update page cache strategy
+  * except attribute added to query page cache strategy
+  * removed duplicated slashes from url in script tag key
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 26 Apr 2010 16:51:23 +0400
+
 xscript (5.70-64) unstable; urgency=low
 
   * alternate and noxslt default ports fixed
