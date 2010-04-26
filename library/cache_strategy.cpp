@@ -245,7 +245,7 @@ QuerySubCacheStrategy::createKey(const Context *ctx) {
 std::string
 QuerySubCacheStrategy::key() const {
     std::string key;
-    for (std::set<std::string>::iterator it = cache_args_.begin();
+    for (std::set<std::string>::const_iterator it = cache_args_.begin();
          it != cache_args_.end();
          ++it) {
         key.append(*it);
@@ -323,7 +323,7 @@ CookieSubCacheStrategy::createKey(const Context *ctx) {
 std::string
 CookieSubCacheStrategy::key() const {
     std::string key;
-    for (std::set<std::string>::iterator it = cache_cookies_.begin();
+    for (std::set<std::string>::const_iterator it = cache_cookies_.begin();
          it != cache_cookies_.end();
          ++it) {
         key.append(*it);
