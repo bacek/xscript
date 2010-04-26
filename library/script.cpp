@@ -1038,6 +1038,12 @@ Script::cachable(const Context *ctx, bool for_save) const {
     return data_->cachable(ctx, for_save);
 }
 
+bool
+Script::valid() const {
+    CacheStrategy* strategy = cacheStrategy();
+    return strategy ? strategy->valid() : true;
+}
+
 class Script::HandlerRegisterer {
 public:
     HandlerRegisterer() {

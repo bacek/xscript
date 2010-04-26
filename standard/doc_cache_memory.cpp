@@ -14,6 +14,7 @@
 
 #include "xscript/average_counter.h"
 #include "xscript/cache_counter.h"
+#include "xscript/cache_strategy_collector.h"
 #include "xscript/config.h"
 #include "xscript/doc_cache.h"
 #include "xscript/doc_cache_strategy.h"

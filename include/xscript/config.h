@@ -27,10 +27,12 @@ public:
     static std::auto_ptr<Config> create(const char *file);
     static std::auto_ptr<Config> create(int &argc, char *argv[], bool dont_check = false, HelpFunc func = NULL);
     
+    //TODO: make these methods non-static
     static bool getCacheParam(const std::string &name, std::string &value);
     static void addCacheParam(const std::string &name, const std::string &value);
     static void addForbiddenKey(const std::string &key);
     static void stopCollectCache();
+    static const std::string& fileName();
 protected:
     virtual std::string value(const std::string &value) const = 0;
 };

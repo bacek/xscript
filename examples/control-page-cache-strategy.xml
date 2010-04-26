@@ -1,0 +1,5 @@
+<page xmlns:x="http://www.yandex.ru/xscript">
+    <x:control>
+        <method>update-page-cache-strategy</method>
+    </x:control>
+</page>

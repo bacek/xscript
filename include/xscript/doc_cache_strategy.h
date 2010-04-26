@@ -49,38 +49,6 @@ protected:
     virtual void insert2Cache(const std::string &no_cache);
 };
 
-class CacheStrategyCollector {
-public:
-    CacheStrategyCollector();
-    virtual ~CacheStrategyCollector();
-    
-    static CacheStrategyCollector* instance();
-    
-    void init(const Config *config);
-    
-    void addStrategy(DocCacheStrategy *strategy, const std::string &name);
-    
-    void addPageStrategyHandler(const std::string &tag,
-            const boost::shared_ptr<SubCacheStrategyFactory> &handler);
-    
-    void addBlockStrategyHandler(const std::string &tag,
-            const boost::shared_ptr<SubCacheStrategyFactory> &handler);
-    
-    boost::shared_ptr<CacheStrategy> blockStrategy(const std::string &name) const;
-    boost::shared_ptr<CacheStrategy> pageStrategy(const std::string &name) const;
-    
-private:
-    std::vector<std::pair<DocCacheStrategy*, std::string> > strategies_;
-    
-    typedef std::map<std::string, boost::shared_ptr<SubCacheStrategyFactory> > HandlerMapType;
-    HandlerMapType block_strategy_handlers_;
-    HandlerMapType page_strategy_handlers_;
-    
-    typedef std::map<std::string, boost::shared_ptr<CacheStrategy> > StrategyMapType;
-    StrategyMapType block_cache_strategies_;
-    StrategyMapType page_cache_strategies_;
-};
-
 } // namespace xscript
 
 #endif // _XSCRIPT_DOC_CACHE_STRATEGY_H_

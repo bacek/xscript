@@ -7,6 +7,7 @@
 #include <boost/tokenizer.hpp>
 
 #include "xscript/cache_strategy.h"
+#include "xscript/cache_strategy_collector.h"
 #include "xscript/config.h"
 #include "xscript/context.h"
 #include "xscript/doc_cache_strategy.h"
@@ -42,13 +43,18 @@ SubCacheStrategy::noCache(const Context *ctx) const {
     return false;
 }
 
+std::string
+SubCacheStrategy::key() const {
+    return StringUtils::EMPTY_STRING;
+}
+
 SubCacheStrategyFactory::SubCacheStrategyFactory()
 {}
 
 SubCacheStrategyFactory::~SubCacheStrategyFactory()
 {}
 
-CacheStrategy::CacheStrategy()
+CacheStrategy::CacheStrategy() : valid_(true)
 {
 }
 
@@ -57,7 +63,9 @@ CacheStrategy::~CacheStrategy() {
 
 void
 CacheStrategy::add(std::auto_ptr<SubCacheStrategy> substrategy) {
-    substrategies_.push_back(boost::shared_ptr<SubCacheStrategy>(substrategy.release()));
+    boost::shared_ptr<SubCacheStrategy> sub_str(substrategy.release());
+    substrategies_.push_back(sub_str);
+    key_.append(sub_str->key());
 }
 
 void
@@ -74,17 +82,11 @@ CacheStrategy::initContext(Context *ctx) {
 
 std::string
 CacheStrategy::createKey(const Context *ctx) const {
-    std::string result;
-    bool is_first = true;
+    std::string result(key());
     for(std::vector<boost::shared_ptr<SubCacheStrategy> >::const_iterator it = substrategies_.begin();
         it != substrategies_.end();
         ++it) {
-        if (is_first) {
-            is_first = false;
-        }
-        else {
-            result.push_back('|');
-        }
+        result.push_back('|');
         result.append((*it)->createKey(ctx));
     }
     return result;
@@ -102,10 +104,28 @@ CacheStrategy::noCache(const Context *ctx) const {
     return false;
 }
 
+const std::string&
+CacheStrategy::key() const {
+    return key_;
+}
+
+bool
+CacheStrategy::valid() const {
+    boost::mutex::scoped_lock lock(mutex_);
+    return valid_;
+}
+
+void
+CacheStrategy::valid(bool flag) {
+    boost::mutex::scoped_lock lock(mutex_);
+    valid_ = flag;
+}
+
 class QuerySubCacheStrategy : public SubCacheStrategy {
 public:
     QuerySubCacheStrategy();
     virtual std::string createKey(const Context *ctx);
+    virtual std::string key() const;
     
     friend class QuerySubCacheStrategyFactory;
 private:
@@ -222,9 +242,23 @@ QuerySubCacheStrategy::createKey(const Context *ctx) {
     return key;
 }
 
+std::string
+QuerySubCacheStrategy::key() const {
+    std::string key;
+    for (std::set<std::string>::iterator it = cache_args_.begin();
+         it != cache_args_.end();
+         ++it) {
+        key.append(*it);
+    }
+    key.append(boost::lexical_cast<std::string>(sort_));
+    key.append(boost::lexical_cast<std::string>(except_));
+    return key;
+}
+
 class CookieSubCacheStrategy : public SubCacheStrategy {
 public:
     virtual std::string createKey(const Context *ctx);
+    virtual std::string key() const;
     
     friend class CookieSubCacheStrategyFactory;
 private:
@@ -284,6 +318,17 @@ CookieSubCacheStrategy::createKey(const Context *ctx) {
         key.append(cookie);
     }
     return key; 
+}
+
+std::string
+CookieSubCacheStrategy::key() const {
+    std::string key;
+    for (std::set<std::string>::iterator it = cache_cookies_.begin();
+         it != cache_cookies_.end();
+         ++it) {
+        key.append(*it);
+    }
+    return key;
 }
 
 class CacheStrategyHandlersRegisterer {

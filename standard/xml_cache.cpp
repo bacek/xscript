@@ -363,7 +363,9 @@ StandardScriptCache::clear() {
 
 boost::shared_ptr<Script>
 StandardScriptCache::fetch(const std::string &name) {
-    return boost::dynamic_pointer_cast<Script>(fetchXml(name));
+    boost::shared_ptr<Script> script =
+        boost::dynamic_pointer_cast<Script>(fetchXml(name));
+    return NULL == script.get() || script->valid() ? script : boost::shared_ptr<Script>();
 }
 
 void

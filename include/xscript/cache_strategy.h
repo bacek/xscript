@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include <boost/thread/mutex.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace xscript {
@@ -19,6 +20,8 @@ public:
     virtual void initContext(Context *ctx);
     virtual std::string createKey(const Context *ctx);
     virtual bool noCache(const Context *ctx) const;
+
+    virtual std::string key() const;
 };
 
 class SubCacheStrategyFactory {
@@ -39,8 +42,15 @@ public:
     void initContext(Context *ctx);
     std::string createKey(const Context *ctx) const;
     bool noCache(const Context *ctx) const;
+    const std::string& key() const;
+    bool valid() const;
+    void valid(bool flag);
+
 private:
     std::vector<boost::shared_ptr<SubCacheStrategy> > substrategies_;
+    std::string key_;
+    mutable boost::mutex mutex_;
+    bool valid_;
 };
 
 } // namespace xscript

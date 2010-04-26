@@ -18,6 +18,7 @@
 #include "xscript/param.h"
 #include "xscript/tagged_block.h"
 #include "xscript/logger.h"
+#include "xscript/cache_strategy_collector.h"
 #include "xscript/config.h"
 #include "xscript/context.h"
 #include "xscript/doc_cache_strategy.h"

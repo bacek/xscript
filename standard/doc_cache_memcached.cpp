@@ -6,6 +6,7 @@
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
 
+#include "xscript/cache_strategy_collector.h"
 #include "xscript/doc_cache.h"
 #include "xscript/http_utils.h"
 #include "xscript/string_utils.h"

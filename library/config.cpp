@@ -13,6 +13,7 @@
 
 #include "xscript/algorithm.h"
 #include "xscript/authorizer.h"
+#include "xscript/cache_strategy_collector.h"
 #include "xscript/config.h"
 #include "xscript/control_extension.h"
 #include "xscript/doc_cache_strategy.h"
@@ -56,6 +57,7 @@ typedef details::hash_map<std::string, std::string, details::StringHash> VarMap;
 static std::map<std::string, std::string>* cache_params = NULL;
 static std::set<std::string>* forbidden_keys = NULL;
 static bool stop_collect_cache = false;
+static std::string config_file;
 
 Config::Config() {
     if (NULL == cache_params) {
@@ -128,6 +130,7 @@ Config::startup() {
 
 std::auto_ptr<Config>
 Config::create(const char *file) {
+    config_file.assign(file);
     return std::auto_ptr<Config>(new XmlConfig(file));
 }
 
@@ -137,6 +140,7 @@ Config::create(int &argc, char *argv[], bool dont_check, HelpFunc func) {
         if (strncmp(argv[i], "--config", sizeof("--config") - 1) == 0) {
             const char *pos = strchr(argv[i], '=');
             if (NULL != pos) {
+                config_file.assign(pos + 1);
                 std::auto_ptr<Config> conf(new XmlConfig(pos + 1));
                 std::swap(argv[i], argv[argc - 1]);
                 --argc;
@@ -219,6 +223,11 @@ Config::getCacheParam(const std::string &name, std::string &value) {
 void
 Config::stopCollectCache() {
     stop_collect_cache = true;
+}
+
+const std::string&
+Config::fileName() {
+    return config_file;
 }
 
 class XmlConfig::XmlConfigData {

@@ -59,6 +59,8 @@ public:
     
     void addExpiresHeader(const Context *ctx) const;
 
+    bool valid() const;
+
     class HandlerRegisterer;
 protected:
     static const std::string PARSE_XSCRIPT_NODE_METHOD;

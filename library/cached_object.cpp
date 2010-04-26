@@ -11,6 +11,7 @@
 #include "xscript/algorithm.h"
 #include "xscript/block.h"
 #include "xscript/cached_object.h"
+#include "xscript/cache_strategy_collector.h"
 #include "xscript/doc_cache_strategy.h"
 #include "xscript/logger.h"
 #include "xscript/operation_mode.h"
