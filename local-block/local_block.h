@@ -23,6 +23,14 @@ protected:
     virtual void parseSubNode(xmlNodePtr node);
     virtual void postParse();
 
+    void propertyInternal(const char *name, const char *value);
+    void postParseInternal();
+
+    void proxy(bool flag);
+    bool proxy() const;
+
+    boost::shared_ptr<Script> script() const;
+
 private:
     LocalBlock(const LocalBlock &);
     LocalBlock& operator = (const LocalBlock &);

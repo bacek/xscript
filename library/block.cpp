@@ -733,6 +733,11 @@ Block::checkGuard(Context *ctx) const {
     return true;
 }
 
+bool
+Block::hasGuard() const {
+    return !data_->guards_.empty();
+}
+
 void
 Block::evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const {
 

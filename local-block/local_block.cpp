@@ -29,12 +29,19 @@ LocalBlock::~LocalBlock() {
 }
 
 void
+LocalBlock::propertyInternal(const char *name, const char *value) {
+    if (!TaggedBlock::propertyInternal(name, value)) {
+        ThreadedBlock::property(name, value);
+    }
+}
+
+void
 LocalBlock::property(const char *name, const char *value) {
     if (strncasecmp(name, "proxy", sizeof("proxy")) == 0) {
         proxy_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
-    else if (!TaggedBlock::propertyInternal(name, value)) {
-        ThreadedBlock::property(name, value);
+    else {
+        propertyInternal(name, value);
     }
 }
 
@@ -133,11 +140,17 @@ LocalBlock::parseSubNode(xmlNodePtr node) {
 }
 
 void
-LocalBlock::postParse() {
+LocalBlock::postParseInternal() {
     if (NULL == script_.get()) {
-        throw CriticalInvokeError("script is not specified in local block");
+        throw CriticalInvokeError("child script is not specified");
     }
     
+    TaggedBlock::postParse();
+}
+
+void
+LocalBlock::postParse() {
+    postParseInternal();
     const std::vector<Param*>& params = this->params();
     for(std::vector<Param*>::const_iterator it = params.begin();
         it != params.end();
@@ -146,8 +159,22 @@ LocalBlock::postParse() {
             throw std::runtime_error("local block param without id");
         }
     }
-    
-    TaggedBlock::postParse();
+    createCanonicalMethod("local.");
+}
+
+void
+LocalBlock::proxy(bool flag) {
+    proxy_ = flag;
+}
+
+bool
+LocalBlock::proxy() const {
+    return proxy_;
+}
+
+boost::shared_ptr<Script>
+LocalBlock::script() const {
+    return script_;
 }
 
 std::string
