@@ -1,3 +1,9 @@
+xscript (5.70.66-1) unstable; urgency=low
+
+  * while block added
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 29 Apr 2010 11:18:08 +0400
+
 xscript (5.70.65-1) unstable; urgency=low
 
   * on the fly update page cache strategy

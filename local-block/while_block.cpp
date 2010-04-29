@@ -41,6 +41,7 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
     XmlDocSharedHelper doc;
     TypedMap local_params;
     xmlNodePtr root = NULL;
+    bool no_threaded = threaded() || ctx->forceNoThreaded();
     do {
         if (remainedTime(ctx.get()) <= 0) {
             InvokeError error("block is timed out");
@@ -52,11 +53,8 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
             Context::createChildContext(script(), ctx, local_params, true);
 
         ContextStopper ctx_stopper(local_ctx);
-
-        invoke_ctx->setLocalContext(local_ctx);
-
-        if (threaded() || ctx->forceNoThreaded()) {
-            local_ctx->forceNoThreaded(true);
+        if (no_threaded) {
+            local_ctx->forceNoThreaded(no_threaded);
         }
 
         XmlDocSharedHelper doc_iter = script()->invoke(local_ctx);
