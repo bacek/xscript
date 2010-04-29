@@ -22,6 +22,7 @@ BuildRequires: libxslt-devel
 BuildRequires: openssl-devel
 BuildRequires: lua-devel
 BuildRequires: memcached
+BuildRequires: autoconf-extra-archive
 
 %package       devel
 Summary:       XScript is xml-based application server written in C++
