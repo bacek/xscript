@@ -64,11 +64,13 @@ class Guard {
 public:
     Guard(const char *expr, const char *type, const char *value, bool is_not);
     bool check(const Context *ctx);
+    bool isState() const;
 
 private:
     std::string guard_;
     std::string value_;
     bool not_;
+    bool state_;
     GuardCheckerMethod method_;
     static const std::string STATE_ARG_PARAM_NAME;
 };
@@ -734,8 +736,27 @@ Block::checkGuard(Context *ctx) const {
 }
 
 bool
-Block::hasGuard() const {
-    return !data_->guards_.empty();
+Block::checkStateGuard(Context *ctx) const {
+    for(std::vector<Guard>::iterator it = data_->guards_.begin();
+        it != data_->guards_.end();
+        ++it) {
+        if (it->isState() && !it->check(ctx)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool
+Block::hasStateGuard() const {
+    for(std::vector<Guard>::iterator it = data_->guards_.begin();
+        it != data_->guards_.end();
+        ++it) {
+        if (it->isState()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void
@@ -993,7 +1014,7 @@ Block::concatParams(const Context *ctx, unsigned int first, unsigned int last) c
 Guard::Guard(const char *expr, const char *type, const char *value, bool is_not) :
     guard_(expr ? expr : ""),
     value_(value ? value : ""),
-    not_(is_not),
+    not_(is_not), state_(false),
     method_(GuardChecker::instance()->method(type ? type : STATE_ARG_PARAM_NAME))
 {   
     if (NULL == method_) {
@@ -1015,11 +1036,20 @@ Guard::Guard(const char *expr, const char *type, const char *value, bool is_not)
         stream << ". Guard: " << guard_;
         throw std::runtime_error(stream.str());
     }
+
+    if (NULL == type || 0 == strcasecmp(STATE_ARG_PARAM_NAME.c_str(), type)) {
+        state_ = true;
+    }
 }
 
 bool
 Guard::check(const Context *ctx) {
     return not_ ^ (*method_)(ctx, guard_, value_);
+}
+
+bool
+Guard::isState() const {
+    return state_;
 }
 
 XPathExpr::XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type) :

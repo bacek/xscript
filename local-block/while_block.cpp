@@ -39,7 +39,6 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
     }
 
     XmlDocSharedHelper doc;
-    TypedMap local_params;
     xmlNodePtr root = NULL;
     bool no_threaded = threaded() || ctx->forceNoThreaded();
     do {
@@ -50,7 +49,7 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
         }
 
         boost::shared_ptr<Context> local_ctx =
-            Context::createChildContext(script(), ctx, local_params, true);
+            Context::createChildContext(script(), ctx, ctx->localParams(), true);
 
         ContextStopper ctx_stopper(local_ctx);
         if (no_threaded) {
@@ -81,7 +80,7 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
             invoke_ctx->resultType(InvokeContext::NO_CACHE);
         }
 
-    } while(checkGuard(ctx.get()));
+    } while(checkStateGuard(ctx.get()));
 
     return *doc;
 }
@@ -93,8 +92,8 @@ WhileBlock::postParse() {
         throw std::runtime_error("params is not allowed in while block");
     }
 
-    if (!hasGuard()) {
-        throw std::runtime_error("guard should be specified in while block");
+    if (!hasStateGuard()) {
+        throw std::runtime_error("state guard should be specified in while block");
     }
 
     createCanonicalMethod("while.");

@@ -367,8 +367,9 @@ FileBlock::invokeFile(const std::string &file_name,
         throw InvokeError("Cannot create script", "file", file_name);
     }
 
+    boost::shared_ptr<TypedMap> local_params(new TypedMap());
     boost::shared_ptr<Context> local_ctx =
-        Context::createChildContext(script, ctx, TypedMap(), true);
+        Context::createChildContext(script, ctx, local_params, true);
 
     ContextStopper ctx_stopper(local_ctx);
     

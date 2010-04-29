@@ -71,7 +71,8 @@ protected:
     virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
     
     bool checkGuard(Context *ctx) const;
-    bool hasGuard() const;
+    bool checkStateGuard(Context *ctx) const;
+    bool hasStateGuard() const;
     void evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const;
     XmlXPathObjectHelper evalXPathExpression(const std::string &expr, xmlXPathContextPtr context,
             const std::map<std::string, std::string> &ext_namespaces) const;

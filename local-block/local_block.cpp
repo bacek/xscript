@@ -57,13 +57,13 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
     }
     
     const std::vector<Param*>& params = this->params();
-    TypedMap local_params;
+    boost::shared_ptr<TypedMap> local_params(new TypedMap());
     LocalArgList param_list;
     for(std::vector<Param*>::const_iterator it = params.begin();
         it != params.end();
         ++it) {
         (*it)->add(ctx.get(), param_list);
-        local_params.insert((*it)->id(), param_list.value());
+        local_params->insert((*it)->id(), param_list.value());
     }
 
     boost::shared_ptr<Context> local_ctx =

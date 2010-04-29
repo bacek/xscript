@@ -70,7 +70,7 @@ struct Context::ContextData {
     ContextData(const boost::shared_ptr<RequestData> request_data,
                 const boost::shared_ptr<Script> &script) :
         stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
-        script_(script), expire_delta_(-1), flags_(0)
+        script_(script), expire_delta_(-1), flags_(0), local_params_(new TypedMap())
     {
         if (!script->expireTimeDeltaUndefined()) {
             requestData()->response()->setExpireDelta(script->expireTimeDelta());
@@ -85,7 +85,7 @@ struct Context::ContextData {
     ContextData(const boost::shared_ptr<RequestData> request_data,
                 const boost::shared_ptr<Script> &script,
                 const boost::shared_ptr<Context> &ctx,
-                const TypedMap &local_params) :
+                const boost::shared_ptr<TypedMap> &local_params) :
         stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
         script_(script), parent_context_(ctx), expire_delta_(-1), flags_(0),
         local_params_(local_params)
@@ -98,7 +98,7 @@ struct Context::ContextData {
     ContextData(const boost::shared_ptr<Script> &script,
                 const boost::shared_ptr<Context> &ctx,
                 const boost::shared_ptr<CommonData> &common_data,
-                const TypedMap &local_params) :
+                const boost::shared_ptr<TypedMap> &local_params) :
         stopped_(false), common_data_(common_data), script_(script), parent_context_(ctx),
         expire_delta_(-1), flags_(0), local_params_(local_params)
     {       
@@ -206,7 +206,7 @@ struct Context::ContextData {
     std::map<const Block*, std::string> runtime_errors_;
     TimeoutCounter timer_;
 
-    TypedMap local_params_;
+    boost::shared_ptr<TypedMap> local_params_;
     
     static boost::thread_specific_ptr<std::list<TimeoutCounter> > block_timers_;
     
@@ -239,7 +239,7 @@ Context::Context(const boost::shared_ptr<Script> &script,
 
 Context::Context(const boost::shared_ptr<Script> &script,
                  const boost::shared_ptr<Context> &ctx,
-                 const TypedMap &local_params,
+                 const boost::shared_ptr<TypedMap> &local_params,
                  bool proxy) : ctx_data_(NULL)
 {
     assert(script.get());
@@ -277,7 +277,7 @@ Context::init() {
 boost::shared_ptr<Context>
 Context::createChildContext(const boost::shared_ptr<Script> &script,
                             const boost::shared_ptr<Context> &ctx,
-                            const TypedMap &local_params,
+                            const boost::shared_ptr<TypedMap> &local_params,
                             bool proxy) {
     return boost::shared_ptr<Context>(new Context(script, ctx, local_params, proxy));
 }
@@ -660,32 +660,37 @@ Context::findParam(const std::string &key, boost::any &value) const {
 
 bool
 Context::hasLocalParam(const std::string &name) const {
-    return ctx_data_->local_params_.has(name);
+    return ctx_data_->local_params_->has(name);
 }
 
 bool
 Context::localParamIs(const std::string &name) const {
-    return ctx_data_->local_params_.is(name);
+    return ctx_data_->local_params_->is(name);
 }
 
 const TypedValue&
 Context::getLocalParam(const std::string &name) const {
-    return ctx_data_->local_params_.find(name);
+    return ctx_data_->local_params_->find(name);
 }
 
 bool
 Context::getLocalParam(const std::string &name, TypedValue &result) const {
-    return ctx_data_->local_params_.find(name, result);
+    return ctx_data_->local_params_->find(name, result);
 }
 
 std::string
 Context::getLocalParam(const std::string &name, const std::string &default_value) const {
-    return ctx_data_->local_params_.asString(name, default_value);
+    return ctx_data_->local_params_->asString(name, default_value);
 }
 
 void
 Context::localParams(std::map<std::string, TypedValue> &params) const {
-    ctx_data_->local_params_.values(params);
+    ctx_data_->local_params_->values(params);
+}
+
+const boost::shared_ptr<TypedMap>&
+Context::localParams() const {
+    return ctx_data_->local_params_;
 }
 
 void

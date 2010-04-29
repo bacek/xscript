@@ -49,7 +49,7 @@ public:
     static boost::shared_ptr<Context> createChildContext(
             const boost::shared_ptr<Script> &script,
             const boost::shared_ptr<Context> &ctx,
-            const TypedMap &local_params,
+            const boost::shared_ptr<TypedMap> &local_params,
             bool proxy);
     
     void wait(int millis);
@@ -129,13 +129,14 @@ public:
     bool getLocalParam(const std::string &name, TypedValue &result) const;
     std::string getLocalParam(const std::string &name, const std::string &default_value) const;
     void localParams(std::map<std::string, TypedValue> &params) const;
+    const boost::shared_ptr<TypedMap>& localParams() const;
     
     friend class ContextStopper;
 
 private:
     Context(const boost::shared_ptr<Script> &script,
             const boost::shared_ptr<Context> &ctx,
-            const TypedMap &local_params,
+            const boost::shared_ptr<TypedMap> &local_params,
             bool proxy);
     void init();
     bool insertParam(const std::string &key, const boost::any &value);
