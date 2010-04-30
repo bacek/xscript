@@ -70,7 +70,8 @@ struct Context::ContextData {
     ContextData(const boost::shared_ptr<RequestData> request_data,
                 const boost::shared_ptr<Script> &script) :
         stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
-        script_(script), expire_delta_(-1), flags_(0), local_params_(new TypedMap())
+        script_(script), clear_doc_list_(new std::list<XmlDocSharedHelper>),
+        expire_delta_(-1), flags_(0), local_params_(new TypedMap())
     {
         if (!script->expireTimeDeltaUndefined()) {
             requestData()->response()->setExpireDelta(script->expireTimeDelta());
@@ -87,7 +88,8 @@ struct Context::ContextData {
                 const boost::shared_ptr<Context> &ctx,
                 const boost::shared_ptr<TypedMap> &local_params) :
         stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
-        script_(script), parent_context_(ctx), expire_delta_(-1), flags_(0),
+        script_(script), parent_context_(ctx), clear_doc_list_(ctx->ctx_data_->clear_doc_list_),
+        expire_delta_(-1), flags_(0),
         local_params_(local_params)
     {
         if (!script->expireTimeDeltaUndefined()) {
@@ -100,7 +102,8 @@ struct Context::ContextData {
                 const boost::shared_ptr<CommonData> &common_data,
                 const boost::shared_ptr<TypedMap> &local_params) :
         stopped_(false), common_data_(common_data), script_(script), parent_context_(ctx),
-        expire_delta_(-1), flags_(0), local_params_(local_params)
+        clear_doc_list_(ctx->ctx_data_->clear_doc_list_), expire_delta_(-1),
+        flags_(0), local_params_(local_params)
     {       
         if (!script->expireTimeDeltaUndefined()) {
             requestData()->response()->setExpireDelta(script->expireTimeDelta());
@@ -150,7 +153,7 @@ struct Context::ContextData {
 
     void addDoc(XmlDocSharedHelper doc) {
         boost::mutex::scoped_lock sl(doc_list_mutex_);
-        clear_doc_list_.push_front(doc);
+        clear_doc_list_->push_front(doc);
     }
 
     std::string getRuntimeError(const Block *block) const {
@@ -196,7 +199,7 @@ struct Context::ContextData {
     boost::shared_ptr<Context> parent_context_;
     std::vector<boost::shared_ptr<InvokeContext> > results_;
     std::list<xmlNodePtr> clear_node_list_;
-    std::list<XmlDocSharedHelper> clear_doc_list_;
+    boost::shared_ptr<std::list<XmlDocSharedHelper> > clear_doc_list_;
     boost::int32_t expire_delta_;
 
     boost::condition condition_;
