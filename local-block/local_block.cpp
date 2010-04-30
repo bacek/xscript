@@ -119,7 +119,6 @@ LocalBlock::parseSubNode(xmlNodePtr node) {
                 throw std::runtime_error("Empty root node name is not allowed in local block");
             }
             xmlNodeSetName(node, (const xmlChar*)name.c_str());
-            /*
             xmlNsPtr ns = NULL;
             if (!prefix.empty()) {
                 const std::map<std::string, std::string> names = namespaces();
@@ -133,7 +132,6 @@ LocalBlock::parseSubNode(xmlNodePtr node) {
                 }
             }
             xmlSetNs(node, ns);
-            */
         }
         xmlRemoveProp(name_attr);
     }
