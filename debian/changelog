@@ -1,3 +1,9 @@
+xscript (5.70.67-1) unstable; urgency=low
+
+  * moveableDoc removed from invoke context
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 30 Apr 2010 14:29:16 +0400
+
 xscript (5.70.66-4) unstable; urgency=low
 
   * make common doc cleanup list

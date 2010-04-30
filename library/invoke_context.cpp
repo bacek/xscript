@@ -138,11 +138,4 @@ InvokeContext::getLocalContext() {
     return ctx_data_->local_context_;
 }
 
-bool
-InvokeContext::moveableDoc() const {
-    return NULL == resultDocPtr()->dict &&
-        XmlUtils::xmlVersionNumber() >= 20619 &&
-            ctx_data_->doc_.unique();
-}
-
 } // namespace xscript

@@ -1717,15 +1717,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
         }
 
         xmlDocPtr doc = result->resultDocPtr();
-        xmlNodePtr root = xmlDocGetRootElement(doc);
-        if (result->moveableDoc()) {
-            xmlUnlinkNode(root);
-            xmlAddChild(tctx->insert, root);
-            ctx->rootContext()->addDoc(result->resultDoc());
-        }
-        else {
-            xmlAddChild(tctx->insert, xmlCopyNode(root, 1));
-        }
+        xmlAddChild(tctx->insert, xmlCopyNode(xmlDocGetRootElement(doc), 1));
     }
     catch (const std::exception &e) {
         XmlUtils::reportXsltError("xscript:ExtElementBlock: caught exception: " + std::string(e.what()), tctx);

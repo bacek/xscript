@@ -45,8 +45,6 @@ public:
     void setLocalContext(const boost::shared_ptr<Context> &ctx);
     const boost::shared_ptr<Context>& getLocalContext();
 
-    bool moveableDoc() const;
-
 private:
     struct ContextData;
     ContextData *ctx_data_;
