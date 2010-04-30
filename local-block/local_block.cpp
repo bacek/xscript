@@ -1,5 +1,7 @@
 #include "settings.h"
 
+#include <sstream>
+
 #include <boost/current_function.hpp>
 
 #include <xscript/context.h>
@@ -106,29 +108,35 @@ LocalBlock::parseSubNode(xmlNodePtr node) {
     if (name_attr) {
         const char* value = XmlUtils::value(name_attr);
         if (NULL != value) {
-            std::string name, prefix;
+            std::string node_name, prefix;
             const char* ch = strchr(value, ':');
             if (NULL == ch) {
-                name.assign(value);
+                node_name.assign(value);
             }
             else {
                 prefix.assign(value, ch - value);
-                name.assign(ch + 1);
+                node_name.assign(ch + 1);
             }
-            if (name.empty()) {
-                throw std::runtime_error("Empty root node name is not allowed in local block");
+            if (node_name.empty()) {
+                std::stringstream str;
+                str << "Empty root node name is not allowed in " << name() << " block";
+                throw std::runtime_error(str.str());
             }
-            xmlNodeSetName(node, (const xmlChar*)name.c_str());
+            xmlNodeSetName(node, (const xmlChar*)node_name.c_str());
             xmlNsPtr ns = NULL;
             if (!prefix.empty()) {
                 const std::map<std::string, std::string> names = namespaces();
                 std::map<std::string, std::string>::const_iterator it = names.find(prefix);
                 if (names.end() == it) {
-                    throw std::runtime_error("Unknown local block namespace: " + prefix);
+                    std::stringstream str;
+                    str << "Unknown " << name() << " block namespace: " << prefix;
+                    throw std::runtime_error(str.str());
                 }
                 ns = xmlSearchNsByHref(node->doc, node, (const xmlChar*)it->second.c_str());
                 if (NULL == ns) {
-                    throw std::runtime_error("Cannot find local block namespace: " + prefix);
+                    std::stringstream str;
+                    str << "Cannot find " << name() << " block namespace: " << prefix;
+                    throw std::runtime_error(str.str());
                 }
             }
             xmlSetNs(node, ns);
@@ -142,7 +150,9 @@ LocalBlock::parseSubNode(xmlNodePtr node) {
 void
 LocalBlock::postParseInternal() {
     if (NULL == script_.get()) {
-        throw CriticalInvokeError("child script is not specified");
+        std::stringstream str;
+        str << "Child script is not specified in " << name() << " block";
+        throw std::runtime_error(str.str());
     }
     
     TaggedBlock::postParse();
