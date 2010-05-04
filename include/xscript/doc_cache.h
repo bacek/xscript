@@ -26,15 +26,17 @@ class Tag;
 
 class CacheContext {
 public:
-    CacheContext(const CachedObject *obj);
-    CacheContext(const CachedObject *obj, bool allow_distributed);
+    CacheContext(const CachedObject *obj, Context *ctx);
+    CacheContext(const CachedObject *obj, Context *ctx, bool allow_distributed);
     
     const CachedObject* object() const;
+    Context* context() const;
     bool allowDistributed() const;
     void allowDistributed(bool flag);
     
 private:
     const CachedObject* obj_;
+    Context* ctx_;
     bool allow_distributed_;
 };
 
@@ -45,6 +47,7 @@ public:
     
     virtual bool parse(const char *buf, boost::uint32_t size) = 0;
     virtual void serialize(std::string &buf) = 0;
+    virtual void cleanup(Context *ctx) = 0;
 };
 
 class BlockCacheData : public CacheData {
@@ -55,6 +58,7 @@ public:
     
     virtual bool parse(const char *buf, boost::uint32_t size);
     virtual void serialize(std::string &buf);
+    virtual void cleanup(Context *ctx);
     
     const XmlDocSharedHelper& doc() const;
 private:
@@ -70,6 +74,7 @@ public:
 
     virtual bool parse(const char *buf, boost::uint32_t size);
     virtual void serialize(std::string &buf);
+    virtual void cleanup(Context *ctx);
     
     void append(const char *buf, std::streamsize size);
     void addHeader(const std::string &name, const std::string &value);
@@ -98,10 +103,10 @@ public:
     static bool checkTag(const Context *ctx, const Tag &tag, const char *operation);
     
 protected:
-    bool loadDocImpl(const Context *ctx, InvokeContext *invoke_ctx,
-            const CacheContext *cache_ctx, Tag &tag, boost::shared_ptr<CacheData> &cache_data);
-    bool saveDocImpl(const Context *ctx, const InvokeContext *invoke_ctx,
-            const CacheContext *cache_ctx, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
+    bool loadDocImpl(InvokeContext *invoke_ctx, CacheContext *cache_ctx,
+            Tag &tag, boost::shared_ptr<CacheData> &cache_data);
+    bool saveDocImpl(const InvokeContext *invoke_ctx, CacheContext *cache_ctx,
+            const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
     
     bool allow(const DocCacheStrategy* strategy, const CacheContext *cache_ctx) const;
     
@@ -121,10 +126,10 @@ public:
     virtual ~DocCache();
     static DocCache* instance();
     
-    boost::shared_ptr<BlockCacheData> loadDoc(const Context *ctx, InvokeContext *invoke_ctx,
-            const CacheContext *cache_ctx, Tag &tag);
-    bool saveDoc(const Context *ctx, const InvokeContext *invoke_ctx,
-            const CacheContext *cache_ctx, const Tag &tag, const boost::shared_ptr<BlockCacheData> &cache_data);
+    boost::shared_ptr<BlockCacheData> loadDoc(
+        InvokeContext *invoke_ctx, CacheContext *cache_ctx, Tag &tag);
+    bool saveDoc(const InvokeContext *invoke_ctx, CacheContext *cache_ctx,
+        const Tag &tag, const boost::shared_ptr<BlockCacheData> &cache_data);
 
 protected:
     DocCache();
@@ -138,8 +143,8 @@ public:
     virtual ~PageCache();
     static PageCache* instance();
 
-    boost::shared_ptr<PageCacheData> loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag);
-    virtual bool saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag,
+    boost::shared_ptr<PageCacheData> loadDoc(CacheContext *cache_ctx, Tag &tag);
+    virtual bool saveDoc(CacheContext *cache_ctx, const Tag &tag,
             const boost::shared_ptr<PageCacheData> &cache_data);
     
 protected:

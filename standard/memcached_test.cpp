@@ -60,18 +60,20 @@ private:
         
         boost::shared_ptr<BlockCacheData> saved(new BlockCacheData(doc));
         
-        CacheContext cache_ctx(block);
-        CPPUNIT_ASSERT(tcache->saveDoc(ctx.get(), NULL, &cache_ctx, tag, saved));
+        CacheContext cache_ctx(block, ctx.get());
+        CPPUNIT_ASSERT(tcache->saveDoc(NULL, &cache_ctx, tag, saved));
         CPPUNIT_ASSERT(NULL != doc->get());
 
         // check load
         
-        boost::shared_ptr<BlockCacheData> loaded = tcache->loadDoc(ctx.get(), NULL, &cache_ctx, tag_load);
+        boost::shared_ptr<BlockCacheData> loaded =
+            tcache->loadDoc(NULL, &cache_ctx, tag_load);
+
         CPPUNIT_ASSERT(NULL != loaded.get());
         CPPUNIT_ASSERT(NULL != loaded->doc()->get());
 
         sleep(3);
-        loaded = tcache->loadDoc(ctx.get(), NULL, &cache_ctx, tag_load);
+        loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
         CPPUNIT_ASSERT(NULL == loaded.get());
     }
 };

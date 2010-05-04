@@ -237,7 +237,7 @@ Response::sendHeaders() {
 }
 
 void
-Response::detach(const Context *ctx) {
+Response::detach(Context *ctx) {
     boost::mutex::scoped_lock wl(data_->write_mutex_);
     bool cacheable = data_->cacheable();
     
@@ -265,8 +265,8 @@ Response::detach(const Context *ctx) {
             Tag tag;
             Script* script = ctx->script().get();
             tag.expire_time = time(NULL) + script->cacheTime();
-            CacheContext cache_ctx(script, script->allowDistributed());
-            PageCache::instance()->saveDoc(ctx, &cache_ctx, tag, data_->cache_data_);
+            CacheContext cache_ctx(script, ctx, script->allowDistributed());
+            PageCache::instance()->saveDoc(&cache_ctx, tag, data_->cache_data_);
         }
         catch(const std::exception &e) {
             log()->error("Error in saving page to cache: %s", e.what());

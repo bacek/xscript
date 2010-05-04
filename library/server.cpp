@@ -203,9 +203,9 @@ bool
 Server::processCachedDoc(Context *ctx, const Script *script) {
     try {       
         Tag tag(true, 1, 1); // fake undefined Tag
-        CacheContext cache_ctx(script, script->allowDistributed());
+        CacheContext cache_ctx(script, ctx, script->allowDistributed());
         boost::shared_ptr<PageCacheData> cache_data =
-            PageCache::instance()->loadDoc(ctx, &cache_ctx, tag);
+            PageCache::instance()->loadDoc(&cache_ctx, tag);
         
         if (NULL == cache_data.get()) {
             return false;

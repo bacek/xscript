@@ -116,9 +116,9 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
     XmlDocSharedHelper doc;
     Tag cache_tag(true, 1, 1); // fake undefined Tag
     try {
-        CacheContext cache_ctx(this, this->allowDistributed());
+        CacheContext cache_ctx(this, ctx.get(), this->allowDistributed());
         boost::shared_ptr<BlockCacheData> cache_data = 
-            DocCache::instance()->loadDoc(ctx.get(), invoke_ctx.get(), &cache_ctx, cache_tag);
+            DocCache::instance()->loadDoc(invoke_ctx.get(), &cache_ctx, cache_tag);
         if (NULL != cache_data.get()) {
             doc = cache_data->doc();
             have_cached_doc = (NULL != doc->get()); 
@@ -196,9 +196,9 @@ TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
     }
 
     if (can_store) {
-        CacheContext cache_ctx(this, this->allowDistributed());
+        CacheContext cache_ctx(this, ctx, this->allowDistributed());
         boost::shared_ptr<BlockCacheData> cache_data(new BlockCacheData(invoke_ctx->resultDoc()));
-        cache->saveDoc(ctx, invoke_ctx, &cache_ctx, tag, cache_data);
+        cache->saveDoc(invoke_ctx, &cache_ctx, tag, cache_data);
     }
 }
 
