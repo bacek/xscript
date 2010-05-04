@@ -64,12 +64,9 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
         if (doc.get()) {
             xmlNodePtr next = root_local->children;
             while (next) {
-                xmlNodePtr next_tmp = next->next;
-                xmlUnlinkNode(next);
-                xmlAddChild(root, next);
-                next = next_tmp;
+                xmlAddChild(root, xmlCopyNode(next, 1));
+                next = next->next;
             }
-            ctx->rootContext()->addDoc(doc_iter);
         }
         else {
             doc = doc_iter;
