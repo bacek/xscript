@@ -44,6 +44,32 @@ private:
     MapType params_;
 };
 
+template <typename Type>
+class CleanupList {
+public:
+    CleanupList()
+    {}
+
+    CleanupList(boost::function<void (Type)> destroyFunc) :
+        destroyFunc_(destroyFunc)
+    {}
+
+    ~CleanupList() {
+        if (!destroyFunc_.empty()) {
+            std::for_each(clear_list_.begin(),
+                    clear_list_.end(), boost::bind(destroyFunc_, _1));
+        }
+    }
+
+    void add(const Type &data) {
+        clear_list_.push_front(data);
+    }
+private:
+    boost::mutex mutex_;
+    boost::function<void (Type)> destroyFunc_;
+    std::list<Type> clear_list_;
+};
+
 struct CommonData {
     CommonData(const boost::shared_ptr<RequestData> &request_data,
                const std::string &xslt_name) :
@@ -70,7 +96,9 @@ struct Context::ContextData {
     ContextData(const boost::shared_ptr<RequestData> request_data,
                 const boost::shared_ptr<Script> &script) :
         stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
-        script_(script), clear_doc_list_(new std::list<XmlDocSharedHelper>),
+        script_(script),
+        clear_node_list_(new CleanupList<xmlNodePtr>(&xmlFreeNode)),
+        clear_doc_list_(new CleanupList<XmlDocSharedHelper>()),
         expire_delta_(-1), flags_(0), local_params_(new TypedMap())
     {
         if (!script->expireTimeDeltaUndefined()) {
@@ -88,7 +116,9 @@ struct Context::ContextData {
                 const boost::shared_ptr<Context> &ctx,
                 const boost::shared_ptr<TypedMap> &local_params) :
         stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
-        script_(script), parent_context_(ctx), clear_doc_list_(ctx->ctx_data_->clear_doc_list_),
+        script_(script), parent_context_(ctx),
+        clear_node_list_(ctx->ctx_data_->clear_node_list_),
+        clear_doc_list_(ctx->ctx_data_->clear_doc_list_),
         expire_delta_(-1), flags_(0),
         local_params_(local_params)
     {
@@ -102,8 +132,9 @@ struct Context::ContextData {
                 const boost::shared_ptr<CommonData> &common_data,
                 const boost::shared_ptr<TypedMap> &local_params) :
         stopped_(false), common_data_(common_data), script_(script), parent_context_(ctx),
-        clear_doc_list_(ctx->ctx_data_->clear_doc_list_), expire_delta_(-1),
-        flags_(0), local_params_(local_params)
+        clear_node_list_(ctx->ctx_data_->clear_node_list_),
+        clear_doc_list_(ctx->ctx_data_->clear_doc_list_),
+        expire_delta_(-1), flags_(0), local_params_(local_params)
     {       
         if (!script->expireTimeDeltaUndefined()) {
             requestData()->response()->setExpireDelta(script->expireTimeDelta());
@@ -112,8 +143,6 @@ struct Context::ContextData {
     }
     
     ~ContextData() {
-        std::for_each(clear_node_list_.begin(),
-                clear_node_list_.end(), boost::bind(&xmlFreeNode, _1));
     }
     
     const boost::shared_ptr<RequestData>& requestData() const {
@@ -147,13 +176,11 @@ struct Context::ContextData {
     }
     
     void addNode(xmlNodePtr node) {
-        boost::mutex::scoped_lock sl(node_list_mutex_);
-        clear_node_list_.push_back(node);
+        clear_node_list_->add(node);
     }
 
     void addDoc(XmlDocSharedHelper doc) {
-        boost::mutex::scoped_lock sl(doc_list_mutex_);
-        clear_doc_list_->push_front(doc);
+        clear_doc_list_->add(doc);
     }
 
     std::string getRuntimeError(const Block *block) const {
@@ -198,8 +225,9 @@ struct Context::ContextData {
     boost::shared_ptr<Script> script_;
     boost::shared_ptr<Context> parent_context_;
     std::vector<boost::shared_ptr<InvokeContext> > results_;
-    std::list<xmlNodePtr> clear_node_list_;
-    boost::shared_ptr<std::list<XmlDocSharedHelper> > clear_doc_list_;
+    boost::shared_ptr<CleanupList<xmlNodePtr> > clear_node_list_;
+    boost::shared_ptr<CleanupList<XmlDocSharedHelper> > clear_doc_list_;
+
     boost::int32_t expire_delta_;
 
     boost::condition condition_;
@@ -213,8 +241,7 @@ struct Context::ContextData {
     
     static boost::thread_specific_ptr<std::list<TimeoutCounter> > block_timers_;
     
-    mutable boost::mutex attr_mutex_, results_mutex_, node_list_mutex_,
-        doc_list_mutex_, runtime_errors_mutex_;
+    mutable boost::mutex attr_mutex_, results_mutex_, runtime_errors_mutex_;
     
     static const unsigned int FLAG_FORCE_NO_THREADED = 1;
     static const unsigned int FLAG_NO_XSLT = 1 << 1;
