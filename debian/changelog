@@ -1,3 +1,9 @@
+xscript (5.70.67-5) unstable; urgency=low
+
+  * addDoc used in stylesheet processing
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 05 May 2010 18:43:23 +0400
+
 xscript (5.70.67-4) unstable; urgency=low
 
   * page cache fixed
