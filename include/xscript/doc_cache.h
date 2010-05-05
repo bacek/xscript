@@ -26,16 +26,16 @@ class Tag;
 
 class CacheContext {
 public:
-    CacheContext(const CachedObject *obj, Context *ctx);
-    CacheContext(const CachedObject *obj, Context *ctx, bool allow_distributed);
+    CacheContext(CachedObject *obj, Context *ctx);
+    CacheContext(CachedObject *obj, Context *ctx, bool allow_distributed);
     
-    const CachedObject* object() const;
+    CachedObject* object() const;
     Context* context() const;
     bool allowDistributed() const;
     void allowDistributed(bool flag);
     
 private:
-    const CachedObject* obj_;
+    CachedObject* obj_;
     Context* ctx_;
     bool allow_distributed_;
 };

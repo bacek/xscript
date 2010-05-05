@@ -200,7 +200,7 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
 }
 
 bool
-Server::processCachedDoc(Context *ctx, const Script *script) {
+Server::processCachedDoc(Context *ctx, Script *script) {
     try {       
         Tag tag(true, 1, 1); // fake undefined Tag
         CacheContext cache_ctx(script, ctx, script->allowDistributed());

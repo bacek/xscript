@@ -48,7 +48,8 @@ DocCacheTest::testMissed() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-local.xml");
     ContextStopper ctx_stopper(ctx);
 
-    const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(ctx->script()->block(0));
+    Block* block_tmp = const_cast<Block*>(ctx->script()->block(0));
+    TaggedBlock* block = dynamic_cast<TaggedBlock*>(block_tmp);
     CPPUNIT_ASSERT(NULL != block);
     CPPUNIT_ASSERT(!block->tagged());
 
@@ -70,7 +71,8 @@ DocCacheTest::testStoreLoad() {
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
     CPPUNIT_ASSERT(NULL != doc->get());
 
-    const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(ctx->script()->block(0));
+    Block* block_tmp = const_cast<Block*>(ctx->script()->block(0));
+    TaggedBlock* block = dynamic_cast<TaggedBlock*>(block_tmp);
     CPPUNIT_ASSERT(NULL != block);
     CPPUNIT_ASSERT(!block->tagged());
 
@@ -119,7 +121,8 @@ DocCacheTest::testGetLocalTagged() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("file-local-tagged.xml");
     ContextStopper ctx_stopper(ctx);
 
-    const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(ctx->script()->block(0));
+    Block* block_tmp = const_cast<Block*>(ctx->script()->block(0));
+    TaggedBlock* block = dynamic_cast<TaggedBlock*>(block_tmp);
     CPPUNIT_ASSERT(NULL != block);
     CPPUNIT_ASSERT(block->tagged());
 
@@ -170,7 +173,8 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("file-local-tagged.xml");
     ContextStopper ctx_stopper(ctx);
 
-    const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(ctx->script()->block(0));
+    Block* block_tmp = const_cast<Block*>(ctx->script()->block(0));
+    TaggedBlock* block = dynamic_cast<TaggedBlock*>(block_tmp);
     CPPUNIT_ASSERT(NULL != block);
     CPPUNIT_ASSERT(block->tagged());
 

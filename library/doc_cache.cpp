@@ -203,7 +203,7 @@ DocCacheBase::loadDocImpl(InvokeContext *invoke_ctx, CacheContext *cache_ctx,
     bool loaded = false;
     bool check_tag_key = NULL != invoke_ctx;
     Context *ctx = cache_ctx->context();
-    const CachedObject* object = cache_ctx->object();
+    CachedObject* object = cache_ctx->object();
     DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
     while(!loaded && i != data_->strategies_.end()) {
         DocCacheStrategy* strategy = i->first;
@@ -269,7 +269,7 @@ DocCacheBase::saveDocImpl(const InvokeContext *invoke_ctx, CacheContext *cache_c
     
     bool saved = false;
     bool check_tag_key = NULL != invoke_ctx;
-    const CachedObject* object = cache_ctx->object();
+    CachedObject* object = cache_ctx->object();
     for (DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
          i != data_->strategies_.end();
          ++i) {
@@ -283,8 +283,7 @@ DocCacheBase::saveDocImpl(const InvokeContext *invoke_ctx, CacheContext *cache_c
             check_tag_key = false;
             TagKey* load_key = invoke_ctx->tagKey();            
             if (load_key && key->asString() != load_key->asString()) {
-                CachedObject* mutable_object = const_cast<CachedObject*>(object);
-                TaggedBlock* block = dynamic_cast<TaggedBlock*>(mutable_object);
+                TaggedBlock* block = dynamic_cast<TaggedBlock*>(object);
                 if (NULL == block) {
                     throw std::logic_error("NULL block while saving it to cache");
                 }
@@ -391,15 +390,15 @@ PageCache::saveDoc(CacheContext *cache_ctx, const Tag &tag,
     return saveDocImpl(NULL, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
 }
 
-CacheContext::CacheContext(const CachedObject *obj, Context *ctx) :
+CacheContext::CacheContext(CachedObject *obj, Context *ctx) :
     obj_(obj), ctx_(ctx), allow_distributed_(true)
 {}
 
-CacheContext::CacheContext(const CachedObject *obj, Context *ctx, bool allow_distributed) :
+CacheContext::CacheContext(CachedObject *obj, Context *ctx, bool allow_distributed) :
     obj_(obj), ctx_(ctx), allow_distributed_(allow_distributed)
 {}
 
-const CachedObject*
+CachedObject*
 CacheContext::object() const {
     return obj_;
 }

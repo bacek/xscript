@@ -45,7 +45,8 @@ private:
         ContextStopper ctx_stopper(ctx);        
         XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
         CPPUNIT_ASSERT(NULL != doc->get());
-        const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(ctx->script()->block(0));
+        Block* block_tmp = const_cast<Block*>(ctx->script()->block(0));
+        TaggedBlock* block = dynamic_cast<TaggedBlock*>(block_tmp);
         CPPUNIT_ASSERT(NULL != block);
         CPPUNIT_ASSERT(block->tagged());
 

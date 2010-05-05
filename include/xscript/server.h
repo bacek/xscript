@@ -34,7 +34,7 @@ protected:
     void handleRequest(const boost::shared_ptr<Request> &request,
                        const boost::shared_ptr<Response> &response,
                        boost::shared_ptr<Context> &ctx);    
-    bool processCachedDoc(Context *ctx, const Script *script);
+    bool processCachedDoc(Context *ctx, Script *script);
     void sendResponse(Context *ctx, XmlDocSharedHelper doc);
                                
     virtual boost::shared_ptr<Script> getScript(Request *request);
