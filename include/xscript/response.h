@@ -74,7 +74,7 @@ public:
 
 private:
     Response *resp_;
-    boost::shared_ptr<Context> ctx_;
+    const boost::shared_ptr<Context>& ctx_;
 };
 
 } // namespace xscript
