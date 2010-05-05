@@ -55,9 +55,12 @@ public:
     {}
 
     ~CleanupList() {
-        if (!destroyFunc_.empty()) {
-            std::for_each(clear_list_.begin(),
-                    clear_list_.end(), boost::bind(destroyFunc_, _1));
+        while (!clear_list_.empty()) {
+            Type& front = clear_list_.front();
+            if (!destroyFunc_.empty()) {
+                destroyFunc_(front);
+            }
+            clear_list_.pop_front();
         }
     }
 
@@ -434,6 +437,11 @@ Context::addNode(xmlNodePtr node) {
 void
 Context::addDoc(XmlDocSharedHelper doc) {
     ctx_data_->addDoc(doc);
+}
+
+void
+Context::addDoc(XmlDocHelper doc) {
+    ctx_data_->addDoc(XmlDocSharedHelper(new XmlDocHelper(doc)));
 }
 
 boost::xtime

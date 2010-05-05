@@ -65,6 +65,7 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
             xmlNodePtr next = root_local->children;
             while (next) {
                 xmlAddChild(root, xmlCopyNode(next, 1));
+                ctx->addDoc(doc_iter);
                 next = next->next;
             }
         }
