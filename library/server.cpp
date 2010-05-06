@@ -171,13 +171,16 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
             }
             
             bool result = true;
-            if (script->forceStylesheet() && !ctx->noMainXsltPort()) {
+            if (script->forceStylesheet() && !ctx->noMainXsltPort() && ctx->hasXslt()) {
                 result = script->applyStylesheet(ctx, doc);
                 if (response->isBinary()) {
+                    ctx->addDoc(doc);
                     return;
                 }
             }
             
+            ctx->addDoc(doc);
+
             if (result && cachable && script->cachable(ctx.get(), true)) {
                 ctx->response()->setCacheable();
             }

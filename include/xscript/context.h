@@ -75,6 +75,7 @@ public:
     bool isRoot() const;
     bool isProxy() const;
 
+    bool hasXslt() const;
     std::string xsltName() const;
     void xsltName(const std::string &value);
     

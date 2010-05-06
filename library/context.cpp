@@ -55,9 +55,10 @@ public:
     {}
 
     ~CleanupList() {
+        bool do_destroy = !destroyFunc_.empty();
         while (!clear_list_.empty()) {
             Type& front = clear_list_.front();
-            if (!destroyFunc_.empty()) {
+            if (do_destroy) {
                 destroyFunc_(front);
             }
             clear_list_.pop_front();
@@ -65,6 +66,7 @@ public:
     }
 
     void add(const Type &data) {
+        boost::mutex::scoped_lock lock(mutex_);
         clear_list_.push_front(data);
     }
 private:
@@ -179,11 +181,15 @@ struct Context::ContextData {
     }
     
     void addNode(xmlNodePtr node) {
-        clear_node_list_->add(node);
+        if (node) {
+            clear_node_list_->add(node);
+        }
     }
 
     void addDoc(XmlDocSharedHelper doc) {
-        clear_doc_list_->add(doc);
+        if (doc.get() && doc->get()) {
+            clear_doc_list_->add(doc);
+        }
     }
 
     std::string getRuntimeError(const Block *block) const {
@@ -203,6 +209,11 @@ struct Context::ContextData {
     bool hasRuntimeError() const {
         boost::mutex::scoped_lock lock(runtime_errors_mutex_);
         return !runtime_errors_.empty();
+    }
+
+    bool hasXslt() const {
+        boost::mutex::scoped_lock lock(common_data_->mutex_);
+        return !common_data_->xslt_name_.empty();
     }
 
     std::string xsltName() const {
@@ -395,6 +406,7 @@ Context::expect(unsigned int count) {
 void
 Context::result(unsigned int n, boost::shared_ptr<InvokeContext> result) {
     if (result.get()) {
+        addDoc(result->resultDoc());
         boost::shared_ptr<Context> local_ctx = result->getLocalContext();
         result->setLocalContext(boost::shared_ptr<Context>()); // circle reference removed
         if (local_ctx.get()) {
@@ -469,15 +481,18 @@ Context::result(unsigned int n) const {
     }
 }
 
+bool
+Context::hasXslt() const {
+    return ctx_data_->hasXslt();
+}
+
 std::string
 Context::xsltName() const {
-    boost::mutex::scoped_lock sl(ctx_data_->attr_mutex_);
     return ctx_data_->xsltName();
 }
 
 void
 Context::xsltName(const std::string &value) {
-    boost::mutex::scoped_lock sl(ctx_data_->attr_mutex_);
     if (value.empty()) {
         ctx_data_->xsltName(value);
     }
