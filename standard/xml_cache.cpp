@@ -280,11 +280,6 @@ XmlCache::init(const Config *config, StatBuilder &statBuilder) {
     for (int i = 0; i < buckets; ++i) {
         storages_.push_back(new XmlStorage(bucksize));
     }
-    std::vector<std::string> names;
-    config->subKeys(std::string("/xscript/").append(name).append("/deny"), names);
-    for (std::vector<std::string>::iterator i = names.begin(), end = names.end(); i != end; ++i) {
-        denied_.insert(config->as<std::string>(*i));
-    }
     holder.release();
 
     for (std::vector<XmlStorage*>::iterator it = storages_.begin();
