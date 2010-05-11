@@ -39,20 +39,19 @@ public:
         time_t t = time(0);
         Tag tag(false, t, t+6);
 
-        DocPool::CleanupFunc cleanFunc;
-        pool.saveDoc(key, tag, saved, cleanFunc);
+        pool.saveDoc(key, tag, saved);
 
         boost::shared_ptr<CacheData> loaded(new BlockCacheData());
         
-        bool res = pool.loadDoc(key, tag, loaded, cleanFunc);
+        bool res = pool.loadDoc(key, tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("First load successful", true, res);
 
         sleep(5);
-        res = pool.loadDoc(key, tag, loaded, cleanFunc);
+        res = pool.loadDoc(key, tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Awaiting prefetch successful", false, res);
 
         sleep(2);
-        res = pool.loadDoc(key, tag, loaded, cleanFunc);
+        res = pool.loadDoc(key, tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Expired checked", false, res);
 
     }
@@ -72,38 +71,37 @@ public:
 
         boost::shared_ptr<CacheData> saved(new BlockCacheData(doc1));
         
-        DocPool::CleanupFunc cleanFunc;
-        pool.saveDoc("1", tag, saved, cleanFunc);
+        pool.saveDoc("1", tag, saved);
 
         boost::shared_ptr<CacheData> loaded(new BlockCacheData());
 
-        bool res = pool.loadDoc("1", tag, loaded, cleanFunc);
+        bool res = pool.loadDoc("1", tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("First load successful", true, res);
 
-        pool.saveDoc("2", tag, saved, cleanFunc);
-        pool.saveDoc("3", tag, saved, cleanFunc);
+        pool.saveDoc("2", tag, saved);
+        pool.saveDoc("3", tag, saved);
 
         // First doc should be removed from cache
-        res = pool.loadDoc("1", tag, loaded, cleanFunc);
+        res = pool.loadDoc("1", tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Load of first document failed", false, res);
 
-        res = pool.loadDoc("2", tag, loaded, cleanFunc);
+        res = pool.loadDoc("2", tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Load of second document successful", true, res);
-        res = pool.loadDoc("3", tag, loaded, cleanFunc);
+        res = pool.loadDoc("3", tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Load of third document successful", true, res);
 
         // Load second doc to move it in front of queue.
-        res = pool.loadDoc("2", tag, loaded, cleanFunc);
+        res = pool.loadDoc("2", tag, loaded);
 
         // Save new doc. Third doc should be removed.
-        pool.saveDoc("4", tag, saved, cleanFunc);
+        pool.saveDoc("4", tag, saved);
 
-        res = pool.loadDoc("2", tag, loaded, cleanFunc);
+        res = pool.loadDoc("2", tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Load of second document successful", true, res);
-        res = pool.loadDoc("3", tag, loaded, cleanFunc);
+        res = pool.loadDoc("3", tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Load of third document failed", false, res);
 
-        res = pool.loadDoc("4", tag, loaded, cleanFunc);
+        res = pool.loadDoc("4", tag, loaded);
         CPPUNIT_ASSERT_EQUAL_MESSAGE("Load of forth document successful", true, res);
 
         log()->debug("testManyDocuments FINISHED");

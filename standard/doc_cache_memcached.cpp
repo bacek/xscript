@@ -55,10 +55,8 @@ public:
     
     virtual CachedObject::Strategy strategy() const;
     
-    virtual bool loadDoc(const TagKey *key, CacheContext *cache_ctx,
-        Tag &tag, boost::shared_ptr<CacheData> &cache_data);
-    virtual bool saveDoc(const TagKey *key, CacheContext *cache_ctx,
-        const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
+    virtual bool loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data);
+    virtual bool saveDoc(const TagKey *key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
 
 private:
     boost::uint32_t max_size_;
@@ -323,9 +321,7 @@ memcacheCloseFunc(void *ctx) {
 }
 
 bool 
-DocCacheMemcached::saveDoc(const TagKey *key, CacheContext *cache_ctx,
-    const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
-    (void)cache_ctx;
+DocCacheMemcached::saveDoc(const TagKey *key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
     log()->debug("saving doc in memcached");
     
     std::string mc_key = key->asString();
@@ -363,9 +359,7 @@ DocCacheMemcached::saveDoc(const TagKey *key, CacheContext *cache_ctx,
 }
 
 bool
-DocCacheMemcached::loadDoc(const TagKey *key, CacheContext *cache_ctx,
-    Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
-    (void)cache_ctx;
+DocCacheMemcached::loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
     log()->debug("loading doc in memcached");
     
     std::string mc_key = key->asString();

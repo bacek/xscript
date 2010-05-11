@@ -62,18 +62,13 @@ private:
     CacheCounter& counter_;
     
 public:
-
-    typedef boost::function<void (const Data &data)> CleanupFunc;
-
     explicit LRUCache(unsigned int size, bool check_expire, CacheCounter &counter);
     ~LRUCache();
 
     void clear();
 
     bool load(const Key &key, Data &data, Tag &tag);
-    bool load(const Key &key, Data &data, Tag &tag, const CleanupFunc &cleanFunc);
     void save(const Key &key, const Data &data, const Tag &tag);
-    void save(const Key &key, const Data &data, const Tag &tag, const CleanupFunc &cleanFunc);
     
 private:
     void push_front(const Key &key, const Data &data, const Tag &tag);
@@ -93,15 +88,6 @@ LRUCache<Key, Data, ExpireFunc>::~LRUCache() {
 template<typename Key, typename Data, typename ExpireFunc>
 void
 LRUCache<Key, Data, ExpireFunc>::save(const Key &key, const Data &data, const Tag &tag) {
-    CleanupFunc cleanFunc;
-    save(key, data, tag, cleanFunc);
-}
-
-template<typename Key, typename Data, typename ExpireFunc>
-void
-LRUCache<Key, Data, ExpireFunc>::save(
-    const Key &key, const Data &data, const Tag &tag, const CleanupFunc &cleanFunc) {
-
     boost::mutex::scoped_lock lock(mutex_);
     
     if (key2data_.empty()) {
@@ -119,9 +105,6 @@ LRUCache<Key, Data, ExpireFunc>::save(
         it->second = data_.begin();
         lock.unlock();
         counter_.incUpdated();
-        if (!cleanFunc.empty()) {
-            cleanFunc(data_tmp);
-        }
         return;
     }
 
@@ -140,10 +123,6 @@ LRUCache<Key, Data, ExpireFunc>::save(
     
     lock.unlock();
     counter_.incInserted();
-
-    if (!cleanFunc.empty()) {
-        cleanFunc(data_tmp);
-    }
 }
 
 template<typename Key, typename Data, typename ExpireFunc>
@@ -184,15 +163,6 @@ LRUCache<Key, Data, ExpireFunc>::push_front(const Key &key, const Data &data, co
 template<typename Key, typename Data, typename ExpireFunc>
 bool
 LRUCache<Key, Data, ExpireFunc>::load(const Key &key, Data &data, Tag &tag) {
-    CleanupFunc cleanFunc;
-    return load(key, data, tag, cleanFunc);
-}
-
-template<typename Key, typename Data, typename ExpireFunc>
-bool
-LRUCache<Key, Data, ExpireFunc>::load(
-    const Key &key, Data &data, Tag &tag, const CleanupFunc &cleanFunc) {
-
     boost::mutex::scoped_lock lock(mutex_);
     
     iterator it = key2data_.find(key);
@@ -208,9 +178,6 @@ LRUCache<Key, Data, ExpireFunc>::load(
         key2data_.erase(it);
         lock.unlock();
         counter_.incExpired();
-        if (!cleanFunc.empty()) {
-            cleanFunc(data_tmp);
-        }
         return false;
     }
     

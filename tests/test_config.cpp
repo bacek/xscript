@@ -50,10 +50,10 @@ ConfigTest::testSubkeys() {
     std::vector<std::string> v;
     std::auto_ptr<Config> config = Config::create("test.conf");
 
-    config->subKeys("/xscript/subkey-test/subkey", v);
+    config->subKeys("/xscript/script-cache/deny", v);
     CPPUNIT_ASSERT_EQUAL(static_cast<std::vector<std::string>::size_type>(4), v.size());
-    CPPUNIT_ASSERT_EQUAL(std::string("subkey2"), config->as<std::string>(v[1]));
-    CPPUNIT_ASSERT_EQUAL(std::string("subkey3"), config->as<std::string>(v[2]));
+    CPPUNIT_ASSERT_EQUAL(std::string("/usr/local/www/doc/test-page.xml"), config->as<std::string>(v[1]));
+    CPPUNIT_ASSERT_EQUAL(std::string("/usr/local/www/doc/test-search.xml"), config->as<std::string>(v[2]));
 }
 
 void

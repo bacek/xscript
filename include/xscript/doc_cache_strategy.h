@@ -37,10 +37,8 @@ public:
     virtual std::string name() const = 0;
     virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CachedObject *obj) const = 0;
 
-    virtual bool loadDoc(const TagKey *key, CacheContext *cache_ctx,
-            Tag &tag, boost::shared_ptr<CacheData> &cache_data) = 0;
-    virtual bool saveDoc(const TagKey *key, CacheContext *cache_ctx,
-            const Tag& tag, const boost::shared_ptr<CacheData> &cache_data) = 0;
+    virtual bool loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data) = 0;
+    virtual bool saveDoc(const TagKey *key, const Tag& tag, const boost::shared_ptr<CacheData> &cache_data) = 0;
     
     virtual void fillStatBuilder(StatBuilder *builder);
     

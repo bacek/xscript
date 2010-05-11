@@ -171,16 +171,13 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
             }
             
             bool result = true;
-            if (script->forceStylesheet() && !ctx->noMainXsltPort() && ctx->hasXslt()) {
+            if (script->forceStylesheet() && !ctx->noMainXsltPort()) {
                 result = script->applyStylesheet(ctx, doc);
                 if (response->isBinary()) {
-                    ctx->addDoc(doc);
                     return;
                 }
             }
             
-            ctx->addDoc(doc);
-
             if (result && cachable && script->cachable(ctx.get(), true)) {
                 ctx->response()->setCacheable();
             }
@@ -203,12 +200,12 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
 }
 
 bool
-Server::processCachedDoc(Context *ctx, Script *script) {
+Server::processCachedDoc(Context *ctx, const Script *script) {
     try {       
         Tag tag(true, 1, 1); // fake undefined Tag
-        CacheContext cache_ctx(script, ctx, script->allowDistributed());
+        CacheContext cache_ctx(script, script->allowDistributed());
         boost::shared_ptr<PageCacheData> cache_data =
-            PageCache::instance()->loadDoc(&cache_ctx, tag);
+            PageCache::instance()->loadDoc(ctx, &cache_ctx, tag);
         
         if (NULL == cache_data.get()) {
             return false;

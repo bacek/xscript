@@ -45,8 +45,7 @@ private:
         ContextStopper ctx_stopper(ctx);        
         XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
         CPPUNIT_ASSERT(NULL != doc->get());
-        Block* block_tmp = const_cast<Block*>(ctx->script()->block(0));
-        TaggedBlock* block = dynamic_cast<TaggedBlock*>(block_tmp);
+        const TaggedBlock* block = dynamic_cast<const TaggedBlock*>(ctx->script()->block(0));
         CPPUNIT_ASSERT(NULL != block);
         CPPUNIT_ASSERT(block->tagged());
 
@@ -61,20 +60,18 @@ private:
         
         boost::shared_ptr<BlockCacheData> saved(new BlockCacheData(doc));
         
-        CacheContext cache_ctx(block, ctx.get());
-        CPPUNIT_ASSERT(tcache->saveDoc(NULL, &cache_ctx, tag, saved));
+        CacheContext cache_ctx(block);
+        CPPUNIT_ASSERT(tcache->saveDoc(ctx.get(), NULL, &cache_ctx, tag, saved));
         CPPUNIT_ASSERT(NULL != doc->get());
 
         // check load
         
-        boost::shared_ptr<BlockCacheData> loaded =
-            tcache->loadDoc(NULL, &cache_ctx, tag_load);
-
+        boost::shared_ptr<BlockCacheData> loaded = tcache->loadDoc(ctx.get(), NULL, &cache_ctx, tag_load);
         CPPUNIT_ASSERT(NULL != loaded.get());
         CPPUNIT_ASSERT(NULL != loaded->doc()->get());
 
         sleep(3);
-        loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+        loaded = tcache->loadDoc(ctx.get(), NULL, &cache_ctx, tag_load);
         CPPUNIT_ASSERT(NULL == loaded.get());
     }
 };

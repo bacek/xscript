@@ -55,10 +55,8 @@ public:
     
     virtual CachedObject::Strategy strategy() const;
 
-    virtual bool loadDoc(const TagKey *key, CacheContext *cache_ctx,
-        Tag &tag, boost::shared_ptr<CacheData> &cache_data);
-    virtual bool saveDoc(const TagKey *key, CacheContext *cache_ctx,
-        const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
+    virtual bool loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data);
+    virtual bool saveDoc(const TagKey *key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
 
 private:
     DocPool* pool(const TagKey *key) const;
@@ -76,16 +74,6 @@ private:
 const int DocCacheMemory::DEFAULT_POOL_COUNT = 16;
 const int DocCacheMemory::DEFAULT_POOL_SIZE = 128;
 const time_t DocCacheMemory::DEFAULT_CACHE_TIME = 5; // sec
-
-struct DocCleaner {
-    DocCleaner(Context *ctx) : ctx_(ctx) {}
-    void operator() (const boost::shared_ptr<CacheData> &cache_data) {
-        cache_data->cleanup(ctx_);
-    }
-private:
-    Context *ctx_;
-};
-
 
 DocCacheMemory::DocCacheMemory() :
         min_time_(Tag::UNDEFINED_TIME), max_size_(0) {
@@ -154,15 +142,11 @@ DocCacheMemory::strategy() const {
 }
 
 bool
-DocCacheMemory::loadDoc(const TagKey *key, CacheContext *cache_ctx,
-    Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
-
+DocCacheMemory::loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
     log()->debug("loading doc in memory cache");
     DocPool *mpool = pool(key);
     assert(NULL != mpool);
-
-    DocCleaner cleaner(cache_ctx->context());
-    if (!mpool->loadDoc(key->asString(), tag, cache_data, cleaner)) {
+    if (!mpool->loadDoc(key->asString(), tag, cache_data)) {
         return false;
     }
 
@@ -174,14 +158,11 @@ DocCacheMemory::loadDoc(const TagKey *key, CacheContext *cache_ctx,
 }
 
 bool
-DocCacheMemory::saveDoc(const TagKey *key, CacheContext *cache_ctx,
-    const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
-
+DocCacheMemory::saveDoc(const TagKey *key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
     log()->debug("saving doc in memory cache");
     DocPool *mpool = pool(key);
     assert(NULL != mpool);
-    DocCleaner cleaner(cache_ctx->context());
-    return mpool->saveDoc(key->asString(), tag, cache_data, cleaner);
+    return mpool->saveDoc(key->asString(), tag, cache_data);
 }
 
 unsigned int

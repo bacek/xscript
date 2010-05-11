@@ -23,7 +23,7 @@ class BinaryWriter : private boost::noncopyable {
 public:
     virtual ~BinaryWriter();
 	
-    virtual void write(std::ostream *os) const = 0;
+    virtual void write(std::ostream *os, const Response *response) const = 0;
     virtual std::streamsize size() const = 0;
 };
 

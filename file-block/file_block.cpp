@@ -45,7 +45,8 @@ public:
 		is_(is), size_(size)
 	{}
 
-    void write(std::ostream *os) const {
+    void write(std::ostream *os, const Response *response) const {
+        (void)response;
         *os << is_->rdbuf();
     }
 

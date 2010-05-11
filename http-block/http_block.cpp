@@ -47,7 +47,8 @@ class StringBinaryWriter : public BinaryWriter {
 public:
     StringBinaryWriter(boost::shared_ptr<std::string> data) : data_(data) {}
 
-    void write(std::ostream *os) const {
+    void write(std::ostream *os, const Response *response) const {
+        (void)response;
         os->write(data_->data(), data_->size());
     }
 

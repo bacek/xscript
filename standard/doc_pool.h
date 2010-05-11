@@ -24,21 +24,14 @@ public:
     DocPool(size_t size, const std::string &name);
     virtual ~DocPool();
 
-private:
-    typedef LRUCache<std::string, boost::shared_ptr<CacheData> > CacheType;
-
-public:
-    typedef CacheType::CleanupFunc CleanupFunc;
-
-    bool loadDoc(const std::string &key, Tag &tag, boost::shared_ptr<CacheData> &cache_data,
-            const CleanupFunc &cleanFunc);
-    bool saveDoc(const std::string &key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data,
-            const CleanupFunc &cleanFunc);
+    bool loadDoc(const std::string &key, Tag &tag, boost::shared_ptr<CacheData> &cache_data);
+    bool saveDoc(const std::string &key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
 
     void clear();
     const CacheCounter* getCounter() const;
 
 private:
+    typedef LRUCache<std::string, boost::shared_ptr<CacheData> > CacheType;
     std::auto_ptr<CacheCounter> counter_;
     std::auto_ptr<CacheType> cache_;
 };
