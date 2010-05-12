@@ -237,7 +237,7 @@ Response::sendHeaders() {
 }
 
 void
-Response::detach(const Context *ctx) {
+Response::detach(Context *ctx) {
     boost::mutex::scoped_lock wl(data_->write_mutex_);
     bool cacheable = data_->cacheable();
     
@@ -265,8 +265,8 @@ Response::detach(const Context *ctx) {
             Tag tag;
             Script* script = ctx->script().get();
             tag.expire_time = time(NULL) + script->cacheTime();
-            CacheContext cache_ctx(script, script->allowDistributed());
-            PageCache::instance()->saveDoc(ctx, &cache_ctx, tag, data_->cache_data_);
+            CacheContext cache_ctx(script, ctx, script->allowDistributed());
+            PageCache::instance()->saveDoc(&cache_ctx, tag, data_->cache_data_);
         }
         catch(const std::exception &e) {
             log()->error("Error in saving page to cache: %s", e.what());
@@ -306,7 +306,7 @@ void
 Response::writeHeaders() {
     bool cacheable = data_->cacheable();
     const HeaderMap& headers = outHeaders();
-    for (HeaderMap::const_iterator i = headers.begin(), end = headers.end(); i != end; ++i) {       
+    for (HeaderMap::const_iterator i = headers.begin(), end = headers.end(); i != end; ++i) {
         if (cacheable) {
             if (strcasecmp(i->first.c_str(), "expires") == 0) {
                 continue;
@@ -317,14 +317,11 @@ Response::writeHeaders() {
             (*data_->stream_) << i->first << ": " << i->second << "\r\n";
         }
     }
-    
+
     if (!cacheable) {
         const CookieSet& cookies = outCookies();
         for (CookieSet::const_iterator i = cookies.begin(), end = cookies.end(); i != end; ++i) {
-            std::string cookie_value = i->toString();
-            if (!cacheable) {
-                (*data_->stream_) << "Set-Cookie: " << cookie_value << "\r\n";
-            }
+            (*data_->stream_) << "Set-Cookie: " << i->toString() << "\r\n";
         }
         (*data_->stream_) << "\r\n";
     }

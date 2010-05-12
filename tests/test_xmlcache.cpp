@@ -18,7 +18,6 @@
 
 class XmlCacheTest : public CppUnit::TestFixture {
 public:
-    void testDenied();
     void testExpired();
     void testEvicting();
     void testStoreScript();
@@ -26,7 +25,6 @@ public:
 
 private:
     CPPUNIT_TEST_SUITE(XmlCacheTest);
-    CPPUNIT_TEST(testDenied);
     CPPUNIT_TEST(testExpired);
     CPPUNIT_TEST(testEvicting);
     CPPUNIT_TEST(testStoreScript);
@@ -37,19 +35,6 @@ private:
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(XmlCacheTest, "xml-cache");
 CPPUNIT_REGISTRY_ADD("xml-cache", "xscript");
 
-
-void
-XmlCacheTest::testDenied() {
-
-    using namespace xscript;
-
-    ScriptCache *factory = ScriptCache::instance();
-    factory->clear();
-
-    ScriptFactory::createScript("noblocks.xml");
-    boost::shared_ptr<Script> script = factory->fetch("noblocks.xml");
-    CPPUNIT_ASSERT(NULL == script.get());
-}
 
 void
 XmlCacheTest::testExpired() {

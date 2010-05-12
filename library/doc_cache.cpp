@@ -191,8 +191,8 @@ DocCacheBase::allow(const DocCacheStrategy* strategy, const CacheContext *cache_
 }
 
 bool
-DocCacheBase::loadDocImpl(const Context *ctx, InvokeContext *invoke_ctx,
-        const CacheContext *cache_ctx, Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
+DocCacheBase::loadDocImpl(InvokeContext *invoke_ctx, CacheContext *cache_ctx,
+    Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
     
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
     
@@ -202,6 +202,8 @@ DocCacheBase::loadDocImpl(const Context *ctx, InvokeContext *invoke_ctx,
     
     bool loaded = false;
     bool check_tag_key = NULL != invoke_ctx;
+    Context *ctx = cache_ctx->context();
+    CachedObject* object = cache_ctx->object();
     DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
     while(!loaded && i != data_->strategies_.end()) {
         DocCacheStrategy* strategy = i->first;
@@ -210,19 +212,19 @@ DocCacheBase::loadDocImpl(const Context *ctx, InvokeContext *invoke_ctx,
             continue;
         }
         
-        boost::shared_ptr<TagKey> key(strategy->createKey(ctx, cache_ctx->object()).release());
+        boost::shared_ptr<TagKey> key(strategy->createKey(ctx, object).release());
         
         boost::function<bool()> f = boost::bind(&DocCacheStrategy::loadDoc,
-                strategy, boost::cref(key.get()), boost::ref(tag), boost::ref(cache_data));
+                strategy, boost::cref(key.get()), cache_ctx, boost::ref(tag), boost::ref(cache_data));
         
         std::pair<bool, uint64_t> res = profile(f);
         
         if (res.first) {
-            i->second->usageCounter_->fetchedHit(ctx, cache_ctx->object());
+            i->second->usageCounter_->fetchedHit(ctx, object);
             i->second->hitCounter_->add(res.second);
         }
         else {
-            i->second->usageCounter_->fetchedMiss(ctx, cache_ctx->object());
+            i->second->usageCounter_->fetchedMiss(ctx, object);
             i->second->missCounter_->add(res.second);
             missed_keys.push_back(std::make_pair(i, key));
         }
@@ -246,7 +248,7 @@ DocCacheBase::loadDocImpl(const Context *ctx, InvokeContext *invoke_ctx,
             DocCacheData::StrategyMap::iterator iter = it->first;
             TagKey* key = it->second.get();
             boost::function<bool()> f = boost::bind(&DocCacheStrategy::saveDoc, iter->first,
-                boost::cref(key), boost::cref(tag), boost::cref(cache_data));
+                boost::cref(key), cache_ctx, boost::cref(tag), boost::cref(cache_data));
             std::pair<bool, uint64_t> res = profile(f);
             iter->second->saveCounter_->add(res.second);  
         }
@@ -256,15 +258,18 @@ DocCacheBase::loadDocImpl(const Context *ctx, InvokeContext *invoke_ctx,
 }
 
 bool
-DocCacheBase::saveDocImpl(const Context *ctx, const InvokeContext *invoke_ctx,
-        const CacheContext *cache_ctx, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
+DocCacheBase::saveDocImpl(const InvokeContext *invoke_ctx, CacheContext *cache_ctx,
+    const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
     
+    Context *ctx = cache_ctx->context();
+
     if (!checkTag(ctx, tag, "saving doc from tagged cache")) {
         return false;
     }
     
     bool saved = false;
     bool check_tag_key = NULL != invoke_ctx;
+    CachedObject* object = cache_ctx->object();
     for (DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
          i != data_->strategies_.end();
          ++i) {
@@ -272,13 +277,12 @@ DocCacheBase::saveDocImpl(const Context *ctx, const InvokeContext *invoke_ctx,
         if (!allow(strategy, cache_ctx)) {
             continue;
         }
-        std::auto_ptr<TagKey> key = strategy->createKey(ctx, cache_ctx->object());
+        std::auto_ptr<TagKey> key = strategy->createKey(ctx, object);
 
         if (check_tag_key) {
             check_tag_key = false;
             TagKey* load_key = invoke_ctx->tagKey();            
             if (load_key && key->asString() != load_key->asString()) {
-                CachedObject* object = const_cast<CachedObject*>(cache_ctx->object());
                 TaggedBlock* block = dynamic_cast<TaggedBlock*>(object);
                 if (NULL == block) {
                     throw std::logic_error("NULL block while saving it to cache");
@@ -292,7 +296,7 @@ DocCacheBase::saveDocImpl(const Context *ctx, const InvokeContext *invoke_ctx,
         
         boost::function<bool()> f =
             boost::bind(&DocCacheStrategy::saveDoc, strategy,
-                    boost::cref(key.get()), boost::cref(tag), boost::cref(cache_data));
+                    boost::cref(key.get()), cache_ctx, boost::cref(tag), boost::cref(cache_data));
         
         std::pair<bool, uint64_t> res = profile(f);
         i->second->saveCounter_->add(res.second); 
@@ -325,9 +329,9 @@ DocCache::name() const {
 }
 
 boost::shared_ptr<BlockCacheData>
-DocCache::loadDoc(const Context *ctx, InvokeContext *invoke_ctx, const CacheContext *cache_ctx, Tag &tag) {
+DocCache::loadDoc(InvokeContext *invoke_ctx, CacheContext *cache_ctx, Tag &tag) {
     boost::shared_ptr<CacheData> cache_data(new BlockCacheData());
-    bool res = loadDocImpl(ctx, invoke_ctx, cache_ctx, tag, cache_data);
+    bool res = loadDocImpl(invoke_ctx, cache_ctx, tag, cache_data);
     if (!res) {
         return boost::shared_ptr<BlockCacheData>();
     }
@@ -335,17 +339,17 @@ DocCache::loadDoc(const Context *ctx, InvokeContext *invoke_ctx, const CacheCont
 }
 
 bool
-DocCache::saveDoc(const Context *ctx, const InvokeContext *invoke_ctx,
-    const CacheContext *cache_ctx, const Tag &tag, const boost::shared_ptr<BlockCacheData> &cache_data) {
+DocCache::saveDoc(const InvokeContext *invoke_ctx, CacheContext *cache_ctx,
+    const Tag &tag, const boost::shared_ptr<BlockCacheData> &cache_data) {
     
     xmlDocPtr doc = cache_data->doc()->get();
     if (NULL == doc || NULL == xmlDocGetRootElement(doc)) {
         log()->warn("cannot save empty document or document with no root to tagged cache. Url: %s",
-            ctx->request()->getOriginalUrl().c_str());
+            cache_ctx->context()->request()->getOriginalUrl().c_str());
         return false;
     }
     
-    return saveDocImpl(ctx, invoke_ctx, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
+    return saveDocImpl(invoke_ctx, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
 }
 
 PageCache::PageCache() {
@@ -371,9 +375,9 @@ PageCache::name() const {
 }
 
 boost::shared_ptr<PageCacheData>
-PageCache::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag) {
+PageCache::loadDoc(CacheContext *cache_ctx, Tag &tag) {
     boost::shared_ptr<CacheData> cache_data(new PageCacheData());
-    bool res = loadDocImpl(ctx, NULL, cache_ctx, tag, cache_data);
+    bool res = loadDocImpl(NULL, cache_ctx, tag, cache_data);
     if (!res) {
         return boost::shared_ptr<PageCacheData>();
     }
@@ -381,22 +385,27 @@ PageCache::loadDoc(const Context *ctx, const CacheContext *cache_ctx, Tag &tag) 
 }
 
 bool
-PageCache::saveDoc(const Context *ctx, const CacheContext *cache_ctx, const Tag &tag,
+PageCache::saveDoc(CacheContext *cache_ctx, const Tag &tag,
         const boost::shared_ptr<PageCacheData> &cache_data) {
-    return saveDocImpl(ctx, NULL, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
+    return saveDocImpl(NULL, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
 }
 
-CacheContext::CacheContext(const CachedObject *obj) :
-    obj_(obj), allow_distributed_(true)
+CacheContext::CacheContext(CachedObject *obj, Context *ctx) :
+    obj_(obj), ctx_(ctx), allow_distributed_(true)
 {}
 
-CacheContext::CacheContext(const CachedObject *obj, bool allow_distributed) :
-    obj_(obj), allow_distributed_(allow_distributed)
+CacheContext::CacheContext(CachedObject *obj, Context *ctx, bool allow_distributed) :
+    obj_(obj), ctx_(ctx), allow_distributed_(allow_distributed)
 {}
 
-const CachedObject*
+CachedObject*
 CacheContext::object() const {
     return obj_;
+}
+
+Context*
+CacheContext::context() const {
+    return ctx_;
 }
 
 bool
@@ -501,6 +510,10 @@ PageCacheData::serialize(std::string &buf) {
     buf.append(data_);
 }
 
+void
+PageCacheData::cleanup(Context *ctx) {
+    (void)ctx;
+}
 
 void
 PageCacheData::write(std::ostream *os, const Response *response) const {
@@ -596,6 +609,11 @@ BlockCacheData::serialize(std::string &buf) {
     xmlOutputBufferPtr buffer = NULL;
     buffer = xmlOutputBufferCreateIO(&cacheWriteFunc, &cacheCloseFunc, &buf, NULL);
     xmlSaveFormatFileTo(buffer, doc_->get(), "UTF-8", 0);
+}
+
+void
+BlockCacheData::cleanup(Context *ctx) {
+    ctx->addDoc(doc_);
 }
 
 } // namespace xscript

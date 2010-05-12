@@ -6,6 +6,7 @@
 #include <boost/checked_delete.hpp>
 #include <boost/current_function.hpp>
 
+#include "xscript/context.h"
 #include "xscript/exception.h"
 #include "xscript/logger.h"
 #include "xscript/object.h"
@@ -131,14 +132,16 @@ Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh,
                         boost::shared_ptr<Context> ctx,
                         XmlDocSharedHelper &doc,
                         bool need_copy) {
-
     assert(NULL != doc->get());
+    XmlDocHelper newdoc = sh->apply(this, ctx, doc->get());
+    ctx->addDoc(doc);
+
     if (need_copy) {
-        XmlDocHelper newdoc = sh->apply(this, ctx, doc->get());
         doc.reset(new XmlDocHelper(xmlCopyDoc(newdoc.get(), 1)));
+        ctx->addDoc(newdoc);
     }
     else {
-        doc.reset(new XmlDocHelper(sh->apply(this, ctx, doc->get())));
+        doc.reset(new XmlDocHelper(newdoc));
     }
     XmlUtils::throwUnless(NULL != doc->get());
 }

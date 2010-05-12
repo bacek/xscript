@@ -912,12 +912,9 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
 
 bool
 Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) {    
-    std::string xslt = ctx->xsltName();
-    if (xslt.empty()) {
-        return true;
-    }
-    
-    boost::shared_ptr<Stylesheet> stylesheet(StylesheetFactory::createStylesheet(xslt));
+
+    boost::shared_ptr<Stylesheet> stylesheet(
+        StylesheetFactory::createStylesheet(ctx->xsltName()));
     
     PROFILER(log(), "apply stylesheet " + name());
     log()->info("applying stylesheet to %s", name().c_str());

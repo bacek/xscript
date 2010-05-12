@@ -57,6 +57,7 @@ public:
     void result(unsigned int n, boost::shared_ptr<InvokeContext> result);
     void addNode(xmlNodePtr node);
     void addDoc(XmlDocSharedHelper doc);
+    void addDoc(XmlDocHelper doc);
 
     bool resultsReady() const;
     boost::xtime delay(int millis) const;
@@ -74,6 +75,7 @@ public:
     bool isRoot() const;
     bool isProxy() const;
 
+    bool hasXslt() const;
     std::string xsltName() const;
     void xsltName(const std::string &value);
     

@@ -49,7 +49,7 @@ public:
     const CookieSet& outCookies() const;
     boost::uint32_t expireDelta() const;
     
-    void detach(const Context *ctx);
+    void detach(Context *ctx);
     void setCacheable(
         boost::shared_ptr<PageCacheData> cache_data = boost::shared_ptr<PageCacheData>());
     

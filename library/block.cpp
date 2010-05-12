@@ -573,7 +573,7 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) 
         PROFILER(log(), std::string("per-block-xslt: '") + xsltName() +
                 "' block: '" + name() + "' block-id: '" + id() +
                 "' method: '" + method() + "' owner: '" + owner()->name() + "'");
-        Object::applyStylesheet(sh, ctx, doc, true);
+        Object::applyStylesheet(sh, ctx, doc, XmlUtils::xmlVersionNumber() < 20619);
     }
 
     XmlUtils::throwUnless(NULL != doc->get());

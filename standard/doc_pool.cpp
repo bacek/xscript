@@ -30,15 +30,17 @@ DocPool::getCounter() const {
 }
 
 bool
-DocPool::loadDoc(const std::string &key, Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
+DocPool::loadDoc(const std::string &key, Tag &tag, boost::shared_ptr<CacheData> &cache_data,
+        const CleanupFunc &cleanFunc) {
     log()->debug("%s, key: %s", BOOST_CURRENT_FUNCTION, key.c_str());
-    return cache_->load(key, cache_data, tag);
+    return cache_->load(key, cache_data, tag, cleanFunc);
 }
 
 bool
-DocPool::saveDoc(const std::string &key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
+DocPool::saveDoc(const std::string &key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data,
+        const CleanupFunc &cleanFunc) {
     log()->debug("%s, key: %s", BOOST_CURRENT_FUNCTION, key.c_str());
-    cache_->save(key, cache_data, tag);
+    cache_->save(key, cache_data, tag, cleanFunc);
     return true;
 }
 

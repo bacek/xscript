@@ -280,11 +280,6 @@ XmlCache::init(const Config *config, StatBuilder &statBuilder) {
     for (int i = 0; i < buckets; ++i) {
         storages_.push_back(new XmlStorage(bucksize));
     }
-    std::vector<std::string> names;
-    config->subKeys(std::string("/xscript/").append(name).append("/deny"), names);
-    for (std::vector<std::string>::iterator i = names.begin(), end = names.end(); i != end; ++i) {
-        denied_.insert(config->as<std::string>(*i));
-    }
     holder.release();
 
     for (std::vector<XmlStorage*>::iterator it = storages_.begin();
@@ -301,24 +296,13 @@ XmlCache::delay() {
 
 boost::shared_ptr<Xml>
 XmlCache::fetchXml(const std::string &name) {
-
-    StringSet::const_iterator i = denied_.find(name);
-    if (denied_.end() != i) {
-        return boost::shared_ptr<Xml>();
-    }
-    std::string cache_name = Policy::getKey(NULL, name);
-    return findStorage(name)->fetch(cache_name);
+    return findStorage(name)->fetch(Policy::getKey(NULL, name));
 }
 
 void
 XmlCache::storeXml(const std::string &name, const boost::shared_ptr<Xml> &xml) {
-
     assert(NULL != xml.get());
-    StringSet::const_iterator i = denied_.find(name);
-    if (denied_.end() == i) {
-        std::string cache_name = Policy::getKey(NULL, name);
-        findStorage(name)->store(cache_name, xml);
-    }
+    findStorage(name)->store(Policy::getKey(NULL, name), xml);
 }
 
 XmlStorage*

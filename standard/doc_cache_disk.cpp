@@ -60,8 +60,10 @@ public:
 
     virtual CachedObject::Strategy strategy() const;
     
-    virtual bool loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data);
-    virtual bool saveDoc(const TagKey *key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
+    virtual bool loadDoc(const TagKey *key, CacheContext *cache_ctx,
+        Tag &tag, boost::shared_ptr<CacheData> &cache_data);
+    virtual bool saveDoc(const TagKey *key, CacheContext *cache_ctx,
+        const Tag &tag, const boost::shared_ptr<CacheData> &cache_data);
     
 private:
     static void makeDir(const std::string &name);
@@ -191,7 +193,10 @@ DocCacheDisk::strategy() const {
 }
 
 bool
-DocCacheDisk::loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
+DocCacheDisk::loadDoc(const TagKey *key, CacheContext *cache_ctx,
+    Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
+    (void)cache_ctx;
+
     log()->debug("loading doc in disk cache");
     
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
@@ -216,7 +221,10 @@ DocCacheDisk::loadDoc(const TagKey *key, Tag &tag, boost::shared_ptr<CacheData> 
 }
 
 bool
-DocCacheDisk::saveDoc(const TagKey *key, const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
+DocCacheDisk::saveDoc(const TagKey *key, CacheContext *cache_ctx,
+    const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
+    (void)cache_ctx;
+
     log()->debug("saving doc in disk cache");
     
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);

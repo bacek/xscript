@@ -1,5 +1,7 @@
 #include "settings.h"
 
+#include <sys/time.h>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -391,20 +393,22 @@ MistWorker::setStateByDate(Context *ctx, const std::vector<std::string> &params)
     std::string name_timestamp = name + std::string("_timestamp");
     state->checkName(name_timestamp);
 
-    time_t now_seconds = time(NULL);
+    struct timeval current;
+    gettimeofday(&current, 0);
+
     const char* date_format_iso = "%Y-%m-%d";
 
     char buf[32];
     struct tm ttm;
     memset(buf, 0, sizeof(buf));
 
-    localtime_r(&now_seconds, &ttm);
+    localtime_r(&current.tv_sec, &ttm);
     strftime(buf, sizeof(buf), date_format_iso, &ttm);
 
     std::string now_str(buf);
     state->setString(name, now_str);
-    std::string timestamp_str = boost::lexical_cast<std::string>(now_seconds);
-    state->setLongLong(name_timestamp, now_seconds);
+    std::string timestamp_str = boost::lexical_cast<std::string>(current.tv_sec);
+    state->setLongLong(name_timestamp, current.tv_sec);
 
     StateNode node("date", name.c_str(), now_str.c_str());
 
@@ -416,9 +420,14 @@ MistWorker::setStateByDate(Context *ctx, const std::vector<std::string> &params)
 
     node.setProperty("timestamp", timestamp_str.c_str());
 
-    now_seconds -= 86400; // seconds in one day
+    boost::uint64_t current_ms = (boost::uint64_t)current.tv_sec * 1000 +
+            (boost::uint64_t)current.tv_usec / 1000;
+    timestamp_str = boost::lexical_cast<std::string>(current_ms);
+    node.setProperty("timestamp_ms", timestamp_str.c_str());
 
-    localtime_r(&now_seconds, &ttm);
+    current.tv_sec -= 86400; // seconds in one day
+
+    localtime_r(&current.tv_sec, &ttm);
     strftime(buf, sizeof(buf), date_format_iso, &ttm);
     node.setProperty("before", buf);
 
