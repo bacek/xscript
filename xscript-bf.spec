@@ -96,7 +96,6 @@ mkdir -p %{buildroot}/usr/bin
 install -m 755 extra/xscriptstart.sh %{buildroot}/usr/bin
 install -m 755 extra/xscriptcacheclean.sh %{buildroot}/usr/bin
 mkdir -p %{buildroot}/usr/local/bin
-install -m 755 extra/xscript-fix-shlibdeps.sh %{buildroot}/usr/local/bin
 mkdir -p %{buildroot}/etc/cron.d
 install -m 644 extra/xscript-cache-clean %{buildroot}/etc/cron.d
 rm -f %{buildroot}/%{_libdir}/xscript/xscript-*.la
