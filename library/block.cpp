@@ -43,21 +43,43 @@ const static std::map<std::string, std::string> EMPTY_MAP;
 
 class XPathExpr {
 public:
-    XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type);
+    XPathExpr();
+    XPathExpr(const char *expression, const char *type);
     ~XPathExpr();
 
-    std::string expression(Context *ctx) const;
-    const std::string& result() const;
-    const std::string& delimeter() const;
-    const std::map<std::string, std::string>& namespaces() const;
-    void addNamespace(const char* prefix, const char* uri);
+    bool assign(const char *expression, const char *type);
+
+    const std::string& value() const;
+    bool fromState() const;
+    std::string expression(const Context *ctx) const;
+
+    void compile();
+    XmlXPathObjectHelper eval(xmlXPathContextPtr context, const Context *ctx) const;
 
 private:
     std::string expression_;
+    bool from_state_;
+    XmlXPathCompExprHelper compiled_expr_;
+};
+
+class XPathNodeExpr {
+public:
+    XPathNodeExpr(const char *expression, const char *result, const char *delimeter, const char *type);
+    ~XPathNodeExpr();
+
+    std::string expression(const Context *ctx) const;
+    const std::string& result() const;
+    const std::string& delimeter() const;
+    const std::map<std::string, std::string>& namespaces() const;
+    void addNamespace(const char *prefix, const char *uri);
+
+    XmlXPathObjectHelper eval(xmlXPathContextPtr context, const Context *ctx) const;
+
+private:
+    XPathExpr expr_;
     std::string result_;
     std::string delimeter_;
     std::map<std::string, std::string> namespaces_;
-    bool from_state_;
 };
 
 class Guard {
@@ -88,11 +110,10 @@ struct Block::BlockData {
     xmlNodePtr node_;
     Block *block_;
     std::vector<Param*> params_;
-    std::vector<XPathExpr> xpath_;
+    std::vector<XPathNodeExpr> xpath_;
     std::vector<Guard> guards_;
     std::string id_, method_;
-    std::string xpointer_expr_;
-    bool xpointer_from_state_;
+    XPathExpr xpointer_expr_;
     std::string base_;
     std::map<std::string, std::string> namespaces_;
     bool disable_output_;
@@ -105,8 +126,7 @@ const std::string Block::BlockData::XSCRIPT_INVOKE_FAILED = "xscript_invoke_fail
 const std::string Block::BlockData::XSCRIPT_INVOKE_INFO = "xscript_invoke_info";
 
 Block::BlockData::BlockData(const Extension *ext, Xml *owner, xmlNodePtr node, Block *block) :
-    extension_(ext), owner_(owner), node_(node), block_(block),
-    xpointer_from_state_(false), disable_output_(false)
+    extension_(ext), owner_(owner), node_(node), block_(block), disable_output_(false)
 {}
 
 Block::BlockData::~BlockData() {
@@ -158,7 +178,7 @@ Block::BlockData::property(const char *name, const char *value) {
         block_->xsltName(value);
     }
     else if (strncasecmp(name, "xpointer", sizeof("xpointer")) == 0) {
-        block_->parseXPointerExpr(value);
+        block_->parseXPointerExpr(value, NULL);
     }
     else {
         std::stringstream stream;
@@ -200,7 +220,7 @@ Block::method() const {
 
 const std::string&
 Block::xpointerExpr() const {
-    return data_->xpointer_expr_;
+    return data_->xpointer_expr_.value();
 }
 
 const char*
@@ -256,48 +276,12 @@ Block::tagged() const {
     return false;
 }
 
-XmlXPathObjectHelper
-Block::evalXPathExpression(const std::string &expr, xmlXPathContextPtr context,
-        const std::map<std::string, std::string> &ext_namespaces) const {
-    try {
-        const std::map<std::string, std::string>& block_nslist = data_->namespaces_;
-        for(std::map<std::string, std::string>::const_iterator it_ns = block_nslist.begin();
-            it_ns != block_nslist.end();
-            ++it_ns) {
-            xmlXPathRegisterNs(context,
-                               (const xmlChar *)it_ns->first.c_str(),
-                               (const xmlChar *)it_ns->second.c_str());
-        }
-
-        for(std::map<std::string, std::string>::const_iterator it_ns = ext_namespaces.begin();
-            it_ns != ext_namespaces.end();
-            ++it_ns) {
-            xmlXPathRegisterNs(context,
-                               (const xmlChar *)it_ns->first.c_str(),
-                               (const xmlChar *)it_ns->second.c_str());
-        }
-
-        XmlXPathObjectHelper xpathObj(xmlXPathEvalExpression((const xmlChar *)expr.c_str(), context));
-        XmlUtils::throwUnless(NULL != xpathObj.get());
-        return xpathObj;
-    }
-    catch(const std::exception &e) {
-        std::string message = "XPath error with expression " + expr + " : ";
-        message.append(e.what());
-        throw std::runtime_error(message);
-    }
-}
-
 bool
 Block::processXPointer(const Context *ctx, xmlDocPtr doc, xmlNodePtr insert_node, bool replace) const {
-    if (ctx->noXsltPort() || data_->xpointer_expr_.empty()) {
+    if (ctx->noXsltPort() || data_->xpointer_expr_.value().empty()) {
         return false;
     }
-
-    std::string expr = data_->xpointer_from_state_ ?
-            ctx->state()->asString(data_->xpointer_expr_, StringUtils::EMPTY_STRING) :
-            data_->xpointer_expr_;
-
+    std::string expr = data_->xpointer_expr_.expression(ctx);
     if (expr.empty()) {
         return false;
     }
@@ -312,7 +296,16 @@ Block::processXPointer(const Context *ctx, xmlDocPtr doc, xmlNodePtr insert_node
     XmlXPathContextHelper context(xmlXPathNewContext(doc));
     XmlUtils::throwUnless(NULL != context.get());
 
-    XmlXPathObjectHelper xpathObj = evalXPathExpression(expr, context.get(), EMPTY_MAP);
+    const std::map<std::string, std::string>& block_nslist = data_->namespaces_;
+    for(std::map<std::string, std::string>::const_iterator it_ns = block_nslist.begin();
+        it_ns != block_nslist.end();
+        ++it_ns) {
+        xmlXPathRegisterNs(context.get(),
+                           (const xmlChar *)it_ns->first.c_str(),
+                           (const xmlChar *)it_ns->second.c_str());
+    }
+
+    XmlXPathObjectHelper xpathObj = data_->xpointer_expr_.eval(context.get(), ctx);
     if (XPATH_BOOLEAN == xpathObj->type) {
         const char *str = 0 != xpathObj->boolval ? "1" : "0";
         xmlNodePtr text_node = xmlNewText((const xmlChar *)str);
@@ -358,7 +351,6 @@ Block::processXPointer(const Context *ctx, xmlDocPtr doc, xmlNodePtr insert_node
         xmlAddNextSibling(last_input_node, insert_node);
         last_input_node = insert_node;
     }
-
     return true;
 }
 
@@ -767,7 +759,7 @@ Block::evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const {
     State *state = ctx->state();
     assert(NULL != state);
 
-    for(std::vector<XPathExpr>::const_iterator iter = data_->xpath_.begin(), end = data_->xpath_.end();
+    for(std::vector<XPathNodeExpr>::const_iterator iter = data_->xpath_.begin(), end = data_->xpath_.end();
         iter != end;
         ++iter) {
 
@@ -776,7 +768,25 @@ Block::evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const {
             continue;
         }
         
-        XmlXPathObjectHelper object = evalXPathExpression(expr, xctx.get(), iter->namespaces());
+        const std::map<std::string, std::string>& block_nslist = data_->namespaces_;
+        for(std::map<std::string, std::string>::const_iterator it_ns = block_nslist.begin();
+            it_ns != block_nslist.end();
+            ++it_ns) {
+            xmlXPathRegisterNs(xctx.get(),
+                               (const xmlChar *)it_ns->first.c_str(),
+                               (const xmlChar *)it_ns->second.c_str());
+        }
+
+        const std::map<std::string, std::string>& xpath_nslist = iter->namespaces();
+        for(std::map<std::string, std::string>::const_iterator it_ns = xpath_nslist.begin();
+            it_ns != xpath_nslist.end();
+            ++it_ns) {
+            xmlXPathRegisterNs(xctx.get(),
+                               (const xmlChar *)it_ns->first.c_str(),
+                               (const xmlChar *)it_ns->second.c_str());
+        }
+
+        XmlXPathObjectHelper object = iter->eval(xctx.get(), ctx);
 
         if (XPATH_BOOLEAN == object->type) {
                 state->checkName(iter->result());
@@ -914,7 +924,7 @@ Block::parseXPathNode(const xmlNodePtr node) {
             delim = " ";
         }
         const char *type = XmlUtils::attrValue(node, "type");
-        data_->xpath_.push_back(XPathExpr(expr, result, delim, type));
+        data_->xpath_.push_back(XPathNodeExpr(expr, result, delim, type));
         xmlNs* ns = node->nsDef;
         while (ns) {
             data_->xpath_.back().addNamespace((const char*)ns->prefix, (const char*)ns->href);
@@ -925,35 +935,32 @@ Block::parseXPathNode(const xmlNodePtr node) {
 
 void
 Block::parseXPointerNode(const xmlNodePtr node) {
-
-    if (!data_->xpointer_expr_.empty()) {
+    if (!data_->xpointer_expr_.value().empty()) {
         throw std::runtime_error("In block only one xpointer allowed");
     }
-
-    parseXPointerExpr(XmlUtils::value(node));
-    const char *type = XmlUtils::attrValue(node, "type");
-    if (NULL == type) {
-        return;
-    }
-    if (strncasecmp(type, "statearg", sizeof("statearg")) != 0) {
-        throw std::runtime_error("StateArg type in xpointer node allowed only");
-    }
-    data_->xpointer_from_state_ = true;
+    parseXPointerExpr(XmlUtils::value(node), XmlUtils::attrValue(node, "type"));
 }
 
 void
-Block::parseXPointerExpr(const char *value) {
+Block::parseXPointerExpr(const char *value, const char *type) {
     if (NULL == value) {
         return;
     }
+    std::string xpointer;
     if (strncasecmp(value, "xpointer(", sizeof("xpointer(") - 1) == 0) {
-        data_->xpointer_expr_.assign(value, sizeof("xpointer(") - 1, strlen(value) - sizeof("xpointer("));
+        xpointer.assign(value, sizeof("xpointer(") - 1, strlen(value) - sizeof("xpointer("));
     }
     else {
-        data_->xpointer_expr_.assign(value);
+        xpointer.assign(value);
     }
 
-    if ("/.." == data_->xpointer_expr_ && !data_->xpointer_from_state_) {
+    if (!data_->xpointer_expr_.assign(xpointer.c_str(), type)) {
+        throw std::runtime_error("StateArg type in xpointer node allowed only");
+    }
+
+    data_->xpointer_expr_.compile();
+
+    if ("/.." == data_->xpointer_expr_.value() && !data_->xpointer_expr_.fromState()) {
         data_->disable_output_ = true;
     }
 }
@@ -1052,9 +1059,11 @@ Guard::isState() const {
     return state_;
 }
 
-XPathExpr::XPathExpr(const char* expression, const char* result, const char* delimeter, const char* type) :
-    expression_(expression ? expression : ""), result_(result ? result : ""),
-    delimeter_(delimeter ? delimeter : ""), from_state_(false)
+XPathExpr::XPathExpr() : from_state_(false)
+{}
+
+XPathExpr::XPathExpr(const char *expression, const char *type) :
+    expression_(expression ? expression : ""), from_state_(false)
 {
     if (type && strncasecmp(type, "statearg", sizeof("statearg")) == 0) {
         from_state_ = true;
@@ -1064,34 +1073,115 @@ XPathExpr::XPathExpr(const char* expression, const char* result, const char* del
 XPathExpr::~XPathExpr()
 {}
 
-std::string
-XPathExpr::expression(Context *ctx) const {
-    if (!from_state_) {
-        return expression_;
+bool
+XPathExpr::assign(const char *expression, const char *type) {
+    expression_ = expression ? expression : "";
+    if (type && strncasecmp(type, "statearg", sizeof("statearg")) == 0) {
+        from_state_ = true;
     }
-    return ctx->state()->asString(expression_, StringUtils::EMPTY_STRING);
+    else {
+        from_state_ = false;
+    }
+    return NULL == type || from_state_;
 }
 
 const std::string&
-XPathExpr::result() const {
+XPathExpr::value() const {
+    return expression_;
+}
+
+bool
+XPathExpr::fromState() const {
+    return from_state_;
+}
+
+std::string
+XPathExpr::expression(const Context *ctx) const {
+    if (from_state_) {
+        return ctx->state()->asString(expression_, StringUtils::EMPTY_STRING);
+    }
+    return expression_;
+}
+
+void
+XPathExpr::compile() {
+    try {
+        if (from_state_) {
+            return;
+        }
+        compiled_expr_ = XmlXPathCompExprHelper(xmlXPathCompile(
+                (const xmlChar *)expression_.c_str()));
+        XmlUtils::throwUnless(NULL != compiled_expr_.get());
+    }
+    catch(const std::exception &e) {
+        std::string message = "XPath error with expression " + expression_ + " : ";
+        message.append(e.what());
+        throw std::runtime_error(message);
+    }
+}
+
+XmlXPathObjectHelper
+XPathExpr::eval(xmlXPathContextPtr context, const Context *ctx) const {
+    try {
+        XmlXPathObjectHelper xpathObj;
+        if (compiled_expr_.get()) {
+            xpathObj = XmlXPathObjectHelper(xmlXPathCompiledEval(
+                    compiled_expr_.get(), context));
+        }
+        else {
+            xpathObj = XmlXPathObjectHelper(xmlXPathEvalExpression(
+                    (const xmlChar *)expression(ctx).c_str(), context));
+        }
+        XmlUtils::throwUnless(NULL != xpathObj.get());
+        return xpathObj;
+    }
+    catch(const std::exception &e) {
+        std::string message = "XPath error with expression " + expression(ctx) + " : ";
+        message.append(e.what());
+        throw std::runtime_error(message);
+    }
+}
+
+
+XPathNodeExpr::XPathNodeExpr(const char *expression, const char *result,
+        const char *delimeter, const char *type) :
+    expr_(expression, type), result_(result ? result : ""),
+    delimeter_(delimeter ? delimeter : "")
+{}
+
+XPathNodeExpr::~XPathNodeExpr()
+{}
+
+std::string
+XPathNodeExpr::expression(const Context *ctx) const {
+    return expr_.expression(ctx);
+}
+
+const std::string&
+XPathNodeExpr::result() const {
     return result_;
 }
 
 const std::string&
-XPathExpr::delimeter() const {
+XPathNodeExpr::delimeter() const {
     return delimeter_;
 }
 
 const std::map<std::string, std::string>&
-XPathExpr::namespaces() const {
+XPathNodeExpr::namespaces() const {
     return namespaces_;
 }
 
 void
-XPathExpr::addNamespace(const char* prefix, const char* uri) {
+XPathNodeExpr::addNamespace(const char* prefix, const char* uri) {
     if (prefix && uri) {
         namespaces_.insert(std::make_pair(std::string(prefix), std::string(uri)));
     }
+}
+
+XmlXPathObjectHelper
+XPathNodeExpr::eval(xmlXPathContextPtr context, const Context *ctx) const {
+    return expr_.eval(context, ctx);
 }
 
 } // namespace xscript

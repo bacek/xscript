@@ -74,8 +74,6 @@ protected:
     bool checkStateGuard(Context *ctx) const;
     bool hasStateGuard() const;
     void evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const;
-    XmlXPathObjectHelper evalXPathExpression(const std::string &expr, xmlXPathContextPtr context,
-            const std::map<std::string, std::string> &ext_namespaces) const;
 
     void appendNodeValue(xmlNodePtr node, std::string &val) const;
 
@@ -90,7 +88,7 @@ protected:
     virtual void parseGuardNode(const xmlNodePtr node, bool is_not);
     virtual void parseParamNode(const xmlNodePtr node);
     void parseXPointerNode(const xmlNodePtr node);
-    void parseXPointerExpr(const char *value);
+    void parseXPointerExpr(const char *value, const char *type);
     
     virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const;
     

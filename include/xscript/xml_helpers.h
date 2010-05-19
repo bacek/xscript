@@ -43,6 +43,11 @@ inline void ResourceHolderTraits<xmlXPathContextPtr>::destroy(xmlXPathContextPtr
 };
 
 template<>
+inline void ResourceHolderTraits<xmlXPathCompExprPtr>::destroy(xmlXPathCompExprPtr expr) {
+    xmlXPathFreeCompExpr(expr);
+};
+
+template<>
 inline void ResourceHolderTraits<xsltStylesheetPtr>::destroy(xsltStylesheetPtr sh) {
     xsltFreeStylesheet(sh);
 };
@@ -58,6 +63,7 @@ typedef ResourceHolder<xmlNodePtr> XmlNodeHelper;
 typedef ResourceHolder<xmlNodeSetPtr> XmlNodeSetHelper;
 typedef ResourceHolder<xmlXPathObjectPtr> XmlXPathObjectHelper;
 typedef ResourceHolder<xmlXPathContextPtr> XmlXPathContextHelper;
+typedef ResourceHolder<xmlXPathCompExprPtr> XmlXPathCompExprHelper;
 typedef ResourceHolder<xsltStylesheetPtr> XsltStylesheetHelper;
 typedef ResourceHolder<xsltTransformContextPtr> XsltTransformContextHelper;
 
