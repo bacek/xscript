@@ -73,6 +73,7 @@ public:
     const std::map<std::string, std::string>& namespaces() const;
     void addNamespace(const char *prefix, const char *uri);
 
+    void compile();
     XmlXPathObjectHelper eval(xmlXPathContextPtr context, const Context *ctx) const;
 
 private:
@@ -110,8 +111,8 @@ struct Block::BlockData {
     xmlNodePtr node_;
     Block *block_;
     std::vector<Param*> params_;
-    std::vector<XPathNodeExpr> xpath_;
-    std::vector<Guard> guards_;
+    std::list<XPathNodeExpr> xpath_;
+    std::list<Guard> guards_;
     std::string id_, method_;
     XPathExpr xpointer_expr_;
     std::string base_;
@@ -717,7 +718,7 @@ Block::throwBadArityError() const {
 
 bool
 Block::checkGuard(Context *ctx) const {
-    for(std::vector<Guard>::iterator it = data_->guards_.begin();
+    for(std::list<Guard>::iterator it = data_->guards_.begin();
         it != data_->guards_.end();
         ++it) {
         if (!it->check(ctx)) {
@@ -729,7 +730,7 @@ Block::checkGuard(Context *ctx) const {
 
 bool
 Block::checkStateGuard(Context *ctx) const {
-    for(std::vector<Guard>::iterator it = data_->guards_.begin();
+    for(std::list<Guard>::iterator it = data_->guards_.begin();
         it != data_->guards_.end();
         ++it) {
         if (it->isState() && !it->check(ctx)) {
@@ -741,7 +742,7 @@ Block::checkStateGuard(Context *ctx) const {
 
 bool
 Block::hasStateGuard() const {
-    for(std::vector<Guard>::iterator it = data_->guards_.begin();
+    for(std::list<Guard>::iterator it = data_->guards_.begin();
         it != data_->guards_.end();
         ++it) {
         if (it->isState()) {
@@ -759,7 +760,7 @@ Block::evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const {
     State *state = ctx->state();
     assert(NULL != state);
 
-    for(std::vector<XPathNodeExpr>::const_iterator iter = data_->xpath_.begin(), end = data_->xpath_.end();
+    for(std::list<XPathNodeExpr>::const_iterator iter = data_->xpath_.begin(), end = data_->xpath_.end();
         iter != end;
         ++iter) {
 
@@ -925,6 +926,7 @@ Block::parseXPathNode(const xmlNodePtr node) {
         }
         const char *type = XmlUtils::attrValue(node, "type");
         data_->xpath_.push_back(XPathNodeExpr(expr, result, delim, type));
+        data_->xpath_.back().compile();
         xmlNs* ns = node->nsDef;
         while (ns) {
             data_->xpath_.back().addNamespace((const char*)ns->prefix, (const char*)ns->href);
@@ -1177,6 +1179,11 @@ XPathNodeExpr::addNamespace(const char* prefix, const char* uri) {
     if (prefix && uri) {
         namespaces_.insert(std::make_pair(std::string(prefix), std::string(uri)));
     }
+}
+
+void
+XPathNodeExpr::compile() {
+    expr_.compile();
 }
 
 XmlXPathObjectHelper

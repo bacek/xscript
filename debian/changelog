@@ -1,3 +1,9 @@
+xscript (5.70.74-2) unstable; urgency=low
+
+  * xpath precompilation fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 19 May 2010 16:02:34 +0400
+
 xscript (5.70.74-1) unstable; urgency=low
 
   * xpath precompilation added
