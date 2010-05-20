@@ -656,7 +656,6 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
         catch (const std::exception &e) {
             XmlUtils::reportXsltError(
                 "xscript:sanitize: caught exception: " + std::string(e.what()), tctx, false);
-            ctxt->error = XPATH_EXPR_ERROR;
             xmlXPathReturnEmptyNodeSet(ctxt);
             return;
         }
@@ -720,7 +719,6 @@ xscriptXsltXmlparse(xmlXPathParserContextPtr ctxt, int nargs) {
         catch (const std::exception &e) {
             XmlUtils::reportXsltError(
                 "xscript:xmlparse: caught exception: " + std::string(e.what()), tctx, false);
-            ctxt->error = XPATH_EXPR_ERROR;
             xmlXPathReturnEmptyNodeSet(ctxt);
             return;
         }
