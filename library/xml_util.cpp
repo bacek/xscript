@@ -302,18 +302,27 @@ XmlUtils::xpathValue(xmlDocPtr doc, const std::string &path, const std::string &
 void
 XmlUtils::reportXsltError(const std::string &error, xmlXPathParserContextPtr ctxt) {
     xsltTransformContextPtr tctx = xsltXPathGetTransformContext(ctxt);
-
     reportXsltError(error, tctx);
 }
 
 void
 XmlUtils::reportXsltError(const std::string &error, xsltTransformContextPtr tctx) {
+    reportXsltError(error, tctx, true);
+}
+
+void
+XmlUtils::reportXsltError(const std::string &error, xsltTransformContextPtr tctx, bool strong_check) {
 
     Context *ctx = NULL;
     if (NULL != tctx) {
         try {
             ctx = Stylesheet::getContext(tctx).get();
-            ctx->assignRuntimeError(Stylesheet::getBlock(tctx), error);
+            if (strong_check) {
+                ctx->assignRuntimeError(Stylesheet::getBlock(tctx), error);
+            }
+            else {
+                ctx->setNoCache();
+            }
         }
         catch(const std::exception &e) {
             log()->error("caught exception during handling of error: %s. Exception: %s", error.c_str(), e.what());

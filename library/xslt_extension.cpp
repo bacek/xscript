@@ -650,7 +650,16 @@ xscriptXsltSanitize(xmlXPathParserContextPtr ctxt, int nargs) {
         std::string str = stream.str();
 
         XmlDocHelper doc(xmlParseMemory(str.c_str(), str.length()));
-        XmlUtils::throwUnless(NULL != doc.get());
+        try {
+            XmlUtils::throwUnless(NULL != doc.get());
+        }
+        catch (const std::exception &e) {
+            XmlUtils::reportXsltError(
+                "xscript:sanitize: caught exception: " + std::string(e.what()), tctx, false);
+            ctxt->error = XPATH_EXPR_ERROR;
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
 
         xmlNodePtr node = xmlCopyNode(xmlDocGetRootElement(doc.get()), 1);
 
@@ -705,7 +714,16 @@ xscriptXsltXmlparse(xmlXPathParserContextPtr ctxt, int nargs) {
         std::string text = stream.str();
 
         XmlDocHelper doc(xmlParseMemory(text.c_str(), text.length()));
-        XmlUtils::throwUnless(NULL != doc.get());
+        try {
+            XmlUtils::throwUnless(NULL != doc.get());
+        }
+        catch (const std::exception &e) {
+            XmlUtils::reportXsltError(
+                "xscript:xmlparse: caught exception: " + std::string(e.what()), tctx, false);
+            ctxt->error = XPATH_EXPR_ERROR;
+            xmlXPathReturnEmptyNodeSet(ctxt);
+            return;
+        }
 
         xmlNodePtr node = xmlCopyNode(xmlDocGetRootElement(doc.get()), 1);
 

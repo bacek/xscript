@@ -35,6 +35,7 @@ public:
 
     static void reportXsltError(const std::string &error, xmlXPathParserContextPtr ctxt);
     static void reportXsltError(const std::string &error, xsltTransformContextPtr tctx);
+    static void reportXsltError(const std::string &error, xsltTransformContextPtr tctx, bool strong_check);
 
     static xmlParserInputPtr entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt);
 
