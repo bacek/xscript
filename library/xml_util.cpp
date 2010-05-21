@@ -106,16 +106,7 @@ XmlUtils::XmlUtils() {
     xmlLoadExtDtdDefaultValue |= XML_COMPLETE_ATTRS;
     xmlSubstituteEntitiesDefault(1); // 0
 
-    exsltStrRegister();
-    exsltDynRegister();
-
-    exsltMathRegister();
-    exsltSetsRegister();
-    exsltFuncRegister();
-
-    exsltDateRegister();
-    exsltSaxonRegister();
-    exsltCommonRegister();
+    exsltRegisterAll();
 
     registerReporters();
 
