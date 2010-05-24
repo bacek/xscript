@@ -203,7 +203,7 @@ MemcachedPool::MemcachedPoolImpl::~MemcachedPoolImpl() {
 memcached_st*
 MemcachedPool::MemcachedPoolImpl::get() {
     boost::mutex::scoped_lock lock(mutex_);
-    if (pool_.empty()) {
+    while (pool_.empty()) {
         condition_.wait(lock);
     }
     memcached_st *mc = pool_.front();
