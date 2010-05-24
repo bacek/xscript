@@ -358,6 +358,9 @@ Context::authContext() const {
 
 void
 Context::wait(int millis) {
+    if (millis <= 0) {
+        return;
+    }
 
     log()->debug("%s, setting timeout: %d", BOOST_CURRENT_FUNCTION, millis);
 

@@ -1719,7 +1719,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
             if (!block->checkGuard(ctx.get())) {
                 log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
                     block->owner()->name().c_str(), block->name(), block->method().c_str());
-                result = block->fakeResult(false);
+                return;
             }
             else {
                 result = block->invoke(ctx);
