@@ -69,8 +69,10 @@ protected:
     virtual void postInvoke(Context *ctx, InvokeContext *invoke_ctx);
     virtual void callInternal(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
-    
+
+public:
     bool checkGuard(Context *ctx) const;
+protected:
     bool checkStateGuard(Context *ctx) const;
     bool hasStateGuard() const;
     void evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const;

@@ -892,6 +892,13 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
             continue;
         }
         
+        if (!(*it)->checkGuard(ctx.get())) {
+            log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
+                name().c_str(), (*it)->name(), (*it)->method().c_str());
+            ctx->result(count, (*it)->fakeResult(false));
+            continue;
+        }
+
         (*it)->invokeCheckThreaded(ctx, count);
         
         const ThreadedBlock *tb = dynamic_cast<const ThreadedBlock*>(*it);

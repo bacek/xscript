@@ -1716,13 +1716,20 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
 
         boost::shared_ptr<InvokeContext> result;
         try {
-            result = block->invoke(ctx);
-            if (NULL == result->resultDocPtr()) {
-                XmlUtils::reportXsltError("xscript:ExtElementBlock: empty result", tctx);
-                return;
+            if (!block->checkGuard(ctx.get())) {
+                log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
+                    block->owner()->name().c_str(), block->name(), block->method().c_str());
+                result = block->fakeResult(false);
             }
-            else if (block->processXPointer(ctx.get(), result->resultDocPtr(), tctx->insert, false)) {
-                return;
+            else {
+                result = block->invoke(ctx);
+                if (NULL == result->resultDocPtr()) {
+                    XmlUtils::reportXsltError("xscript:ExtElementBlock: empty result", tctx);
+                    return;
+                }
+                else if (block->processXPointer(ctx.get(), result->resultDocPtr(), tctx->insert, false)) {
+                    return;
+                }
             }
         }
         catch (const InvokeError &e) {
