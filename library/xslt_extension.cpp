@@ -1721,15 +1721,13 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
                     block->owner()->name().c_str(), block->name(), block->method().c_str());
                 return;
             }
-            else {
-                result = block->invoke(ctx);
-                if (NULL == result->resultDocPtr()) {
-                    XmlUtils::reportXsltError("xscript:ExtElementBlock: empty result", tctx);
-                    return;
-                }
-                else if (block->processXPointer(ctx.get(), result->resultDocPtr(), tctx->insert, false)) {
-                    return;
-                }
+            result = block->invoke(ctx);
+            if (NULL == result->resultDocPtr()) {
+                XmlUtils::reportXsltError("xscript:ExtElementBlock: empty result", tctx);
+                return;
+            }
+            if (block->processXPointer(ctx.get(), result->resultDocPtr(), tctx->insert, false)) {
+                return;
             }
         }
         catch (const InvokeError &e) {
