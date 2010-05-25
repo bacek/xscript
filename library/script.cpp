@@ -486,8 +486,11 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
             assert(doc);
             xmlNodePtr result_doc_root_node = xmlDocGetRootElement(doc);
             if (result_doc_root_node) {
-                if (result->error() || !block(count)->processXPointer(ctx, doc, newnode, true)) {
+                if (result->error()) {
                     xmlReplaceNode(newnode, xmlCopyNode(result_doc_root_node, 1));
+                }
+                else {
+                    block(count)->processXPointer(ctx, doc, result->metaDocPtr(), newnode, &xmlReplaceNode);
                 }
             }
             else {

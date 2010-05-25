@@ -23,8 +23,7 @@ namespace xscript {
 
 LocalBlock::LocalBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
     Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node),
-    proxy_(false),
-    node_count_(boost::lexical_cast<std::string>(XmlUtils::getNodeCount(node))) {
+    proxy_(false), node_id_(XmlUtils::getUniqueNodeId(node)) {
 }
 
 LocalBlock::~LocalBlock() {
@@ -69,11 +68,9 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
     }
 
     boost::shared_ptr<Context> local_ctx =
-        Context::createChildContext(script_, ctx, local_params, proxy_);
+        Context::createChildContext(script_, ctx, invoke_ctx, local_params, proxy_);
 
     ContextStopper ctx_stopper(local_ctx);
-    
-    invoke_ctx->setLocalContext(local_ctx);
     
     if (threaded() || ctx->forceNoThreaded()) {
         local_ctx->forceNoThreaded(true);
@@ -199,7 +196,7 @@ LocalBlock::createTagKey(const Context *ctx) const {
     key.push_back('|');
     key.append(blocksModifiedKey(script_->blocks()));
     key.push_back('|');
-    key.append(node_count_);
+    key.append(node_id_);
     return key;
 }
 

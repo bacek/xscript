@@ -79,8 +79,8 @@ public:
     double asDouble(const std::string &name) const;
     void setDouble(const std::string &name, double value);
 
-    std::string asString(const std::string &name) const;
-    std::string asString(const std::string &name, const std::string &default_value) const;
+    const std::string& asString(const std::string &name) const;
+    const std::string& asString(const std::string &name, const std::string &default_value) const;
     void setString(const std::string &name, const std::string &value);
 
     bool asBool(const std::string &name) const;

@@ -42,7 +42,7 @@ private:
         config->startup();
 
         boost::shared_ptr<Context> ctx = TestUtils::createEnv("file-local-tagged.xml");
-        ContextStopper ctx_stopper(ctx);        
+        ContextStopper ctx_stopper(ctx);
         XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
         CPPUNIT_ASSERT(NULL != doc->get());
         Block* block_tmp = const_cast<Block*>(ctx->script()->block(0));
@@ -58,8 +58,12 @@ private:
         Tag tag(true, now, now + 2);
 
         // check save
-        
-        boost::shared_ptr<BlockCacheData> saved(new BlockCacheData(doc));
+
+        Meta meta;
+        meta.set2Core("key1", "value1");
+        meta.set2Core("key2", "value2");
+
+        boost::shared_ptr<BlockCacheData> saved(new BlockCacheData(doc, meta.getCore()));
         
         CacheContext cache_ctx(block, ctx.get());
         CPPUNIT_ASSERT(tcache->saveDoc(NULL, &cache_ctx, tag, saved));
@@ -72,6 +76,18 @@ private:
 
         CPPUNIT_ASSERT(NULL != loaded.get());
         CPPUNIT_ASSERT(NULL != loaded->doc()->get());
+        CPPUNIT_ASSERT(NULL != loaded->meta().get());
+
+        Meta loaded_meta;
+        loaded_meta.setCore(loaded->meta());
+
+        CPPUNIT_ASSERT(loaded_meta.has("key1"));
+        CPPUNIT_ASSERT(loaded_meta.get("key1", "") == "value1");
+
+        CPPUNIT_ASSERT(loaded_meta.has("key2"));
+        CPPUNIT_ASSERT(loaded_meta.get("key2", "") == "value2");
+
+        CPPUNIT_ASSERT(!loaded_meta.has("key3"));
 
         sleep(3);
         loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);

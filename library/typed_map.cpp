@@ -172,7 +172,7 @@ TypedMap::setDouble(const std::string &name, double value) {
     set(name, TypedValue(value));
 }
 
-std::string
+const std::string&
 TypedMap::asString(const std::string &name) const {
     return find(name).value();
 }
@@ -234,7 +234,7 @@ TypedMap::find(const std::string &name) const {
     return i->second;
 }
 
-std::string
+const std::string&
 TypedMap::asString(const std::string &name, const std::string &default_value) const {
     TypedValueMap::const_iterator i = values_.find(name);
     if (values_.end() != i) {

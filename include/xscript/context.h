@@ -49,6 +49,7 @@ public:
     static boost::shared_ptr<Context> createChildContext(
             const boost::shared_ptr<Script> &script,
             const boost::shared_ptr<Context> &ctx,
+            const boost::shared_ptr<InvokeContext> &invoke_ctx,
             const boost::shared_ptr<TypedMap> &local_params,
             bool proxy);
     
@@ -74,6 +75,7 @@ public:
     Context* originalContext() const;
     bool isRoot() const;
     bool isProxy() const;
+    InvokeContext* invokeContext() const;
 
     bool hasXslt() const;
     std::string xsltName() const;
@@ -138,6 +140,7 @@ public:
 private:
     Context(const boost::shared_ptr<Script> &script,
             const boost::shared_ptr<Context> &ctx,
+            InvokeContext *invoke_ctx,
             const boost::shared_ptr<TypedMap> &local_params,
             bool proxy);
     void init();
