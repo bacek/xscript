@@ -1,11 +1,11 @@
 #ifndef _XSCRIPT_META_BLOCK_H_
 #define _XSCRIPT_META_BLOCK_H_
 
-#include <xscript/tagged_block.h>
+#include <xscript/block.h>
 
 namespace xscript {
 
-class MetaBlock : public TaggedBlock {
+class MetaBlock : public Block {
 public:
     MetaBlock(const Block *block, xmlNodePtr node);
     virtual ~MetaBlock();
@@ -13,8 +13,6 @@ public:
     virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception);
     void callLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     bool cacheable() const;
-
-    std::string createTagKey(const Context *ctx) const;
 
 protected:
     virtual void parseSubNode(xmlNodePtr node);

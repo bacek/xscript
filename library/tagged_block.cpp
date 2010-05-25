@@ -388,8 +388,7 @@ TaggedBlock::processMainKey(const Context *ctx) const {
     key.push_back('|');
     key.append(paramsIdKey(xsltParams(), ctx));
     if (metaBlock() && metaBlock()->cacheable()) {
-        key.push_back('|');
-        key.append(metaBlock()->createTagKey(ctx));
+        key.append("|meta");
     }
     return key;
 }

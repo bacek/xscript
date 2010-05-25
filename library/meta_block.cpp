@@ -14,7 +14,6 @@ namespace xscript {
 
 MetaBlock::MetaBlock(const Block *block, xmlNodePtr node) :
         Block(block->extension(), block->owner(), node),
-        TaggedBlock(block->extension(), block->owner(), node),
         parent_(block), cacheable_(true),
         root_name_("meta"), root_ns_(NULL)
 {
@@ -161,24 +160,6 @@ MetaBlock::postParse() {
 bool
 MetaBlock::cacheable() const {
     return cacheable_;
-}
-
-std::string
-MetaBlock::createTagKey(const Context *ctx) const {
-    (void)ctx;
-    std::string key;
-    if (root_ns_) {
-        if (root_ns_->prefix) {
-            key.append((const char*)root_ns_->prefix);
-            key.push_back('|');
-        }
-        if (root_ns_->href) {
-            key.append((const char*)root_ns_->href);
-            key.push_back('|');
-        }
-    }
-    key.append(root_name_);
-    return key;
 }
 
 } // namespace xscript
