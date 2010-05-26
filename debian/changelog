@@ -1,3 +1,9 @@
+xscript (5.70.78-1) unstable; urgency=low
+
+  * crash fixed in fetchRecursive
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 26 May 2010 12:58:03 +0400
+
 xscript (5.70.77-1) unstable; urgency=low
 
   * fixed crash in xscript-memcached
