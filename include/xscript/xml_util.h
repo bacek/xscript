@@ -61,7 +61,7 @@ public:
 
     static bool validate(const std::string &data);
     
-    static std::string getUniqueNodeId(xmlNodePtr node);
+    static boost::int32_t getNodeCount(xmlNodePtr node);
     
     static int xmlVersionNumber();
     static int xsltVersionNumber();
@@ -70,8 +70,6 @@ public:
     static const char* xmlVersion();
     static const char* xsltVersion();
     static const char* exsltVersion();
-
-    static void regiserNsList(xmlXPathContextPtr ctx, const std::map<std::string, std::string> &ns);
 
     static const char * const XSCRIPT_NAMESPACE;
 };

@@ -540,14 +540,13 @@ PageCacheData::size() const {
     return 0;
 }
 
-const boost::uint32_t BlockCacheData::SIGNATURE = 0xffffff1a;
+const boost::uint32_t BlockCacheData::SIGNATURE = 0xffffff0a;
 const boost::uint32_t PageCacheData::SIGNATURE = 0xffffff0b;
 
 BlockCacheData::BlockCacheData()
 {}
 
-BlockCacheData::BlockCacheData(XmlDocSharedHelper doc, boost::shared_ptr<Meta::Core> meta) :
-        doc_(doc), meta_(meta)
+BlockCacheData::BlockCacheData(XmlDocSharedHelper doc) : doc_(doc)
 {}
 
 BlockCacheData::~BlockCacheData()
@@ -558,15 +557,10 @@ BlockCacheData::doc() const {
     return doc_;
 }
 
-const boost::shared_ptr<Meta::Core>&
-BlockCacheData::meta() const {
-    return meta_;
-}
-
 bool
 BlockCacheData::parse(const char *buf, boost::uint32_t size) {
     try {
-        if (size < 2*sizeof(boost::uint32_t)) {
+        if (size < sizeof(boost::uint32_t)) {
             log()->error("error while parsing block cache data: incorrect length");
             return false;
         }
@@ -580,26 +574,7 @@ BlockCacheData::parse(const char *buf, boost::uint32_t size) {
         buf += sizeof(boost::uint32_t);
         size -= sizeof(boost::uint32_t);
         
-        boost::uint32_t meta_size = *((boost::uint32_t*)buf);
-        buf += sizeof(boost::uint32_t);
-        size -= sizeof(boost::uint32_t);
-        if (meta_size > size) {
-            log()->error("error while parsing block cache data: incorrect meta length");
-            return false;
-        }
-
-        Range meta_data(buf, buf + meta_size);
-        if (!meta_data.empty()) {
-            meta_.reset(new Meta::Core());
-            meta_->parse(meta_data.begin(), meta_data.size());
-        }
-
-        if (meta_size == size) {
-            return true;
-        }
-
-        XmlDocHelper newdoc(xmlReadMemory(buf + meta_size, size - meta_size, "",
-            "UTF-8", XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        XmlDocHelper newdoc(xmlReadMemory(buf, size, "", "UTF-8", XML_PARSE_DTDATTR | XML_PARSE_NOENT));
         XmlUtils::throwUnless(NULL != newdoc.get());
         if (NULL == xmlDocGetRootElement(newdoc.get())) {
             log()->warn("get document with no root while parsing block cache data");
@@ -631,16 +606,6 @@ void
 BlockCacheData::serialize(std::string &buf) {
     buf.clear();
     buf.append((char*)&SIGNATURE, sizeof(SIGNATURE));
-    boost::uint32_t meta_size = 0;
-    buf.append((char*)&meta_size, sizeof(meta_size));
-    if (meta_.get()) {
-        meta_->serialize(buf);
-    }
-    meta_size = buf.size() - sizeof(SIGNATURE) - sizeof(meta_size);
-    if (meta_size > 0) {
-        buf.replace(sizeof(SIGNATURE), sizeof(meta_size),
-            (char*)&meta_size, sizeof(meta_size));
-    }
     xmlOutputBufferPtr buffer = NULL;
     buffer = xmlOutputBufferCreateIO(&cacheWriteFunc, &cacheCloseFunc, &buf, NULL);
     xmlSaveFormatFileTo(buffer, doc_->get(), "UTF-8", 0);

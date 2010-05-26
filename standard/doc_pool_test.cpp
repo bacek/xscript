@@ -8,7 +8,6 @@
 #include "xscript/config.h"
 #include "xscript/doc_cache.h"
 #include "xscript/logger_factory.h"
-#include "xscript/meta.h"
 #include "xscript/util.h"
 
 #include "doc_pool.h"
@@ -35,8 +34,7 @@ public:
         std::string key("1");
 
         XmlDocSharedHelper doc1(new XmlDocHelper(xmlNewDoc((const xmlChar*) "1.0")));
-        boost::shared_ptr<CacheData> saved(new BlockCacheData(
-            doc1, boost::shared_ptr<Meta::Core>()));
+        boost::shared_ptr<CacheData> saved(new BlockCacheData(doc1));
         
         time_t t = time(0);
         Tag tag(false, t, t+6);
@@ -72,8 +70,7 @@ public:
         time_t t = time(0);
         Tag tag(false, t, t+6);
 
-        boost::shared_ptr<CacheData> saved(new BlockCacheData(
-            doc1, boost::shared_ptr<Meta::Core>()));
+        boost::shared_ptr<CacheData> saved(new BlockCacheData(doc1));
         
         DocPool::CleanupFunc cleanFunc;
         pool.saveDoc("1", tag, saved, cleanFunc);

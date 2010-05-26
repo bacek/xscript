@@ -8,7 +8,6 @@
 #include "xscript/context.h"
 #include "xscript/doc_cache.h"
 #include "xscript/logger.h"
-#include "xscript/meta_block.h"
 #include "xscript/policy.h"
 #include "details/tag_param.h"
 #include "xscript/tagged_block.h"
@@ -115,7 +114,6 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
 
     bool have_cached_doc = false;
     XmlDocSharedHelper doc;
-    boost::shared_ptr<Meta::Core> meta;
     Tag cache_tag(true, 1, 1); // fake undefined Tag
     try {
         CacheContext cache_ctx(this, ctx.get(), this->allowDistributed());
@@ -123,7 +121,6 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
             DocCache::instance()->loadDoc(invoke_ctx.get(), &cache_ctx, cache_tag);
         if (NULL != cache_data.get()) {
             doc = cache_data->doc();
-            meta = cache_data->meta();
             have_cached_doc = (NULL != doc->get()); 
         }
     }
@@ -155,10 +152,6 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
     
     invoke_ctx->resultType(InvokeContext::SUCCESS);
     invoke_ctx->resultDoc(doc);
-    invoke_ctx->meta()->setCore(meta);
-    if (metaBlock() && !metaBlock()->cacheable()) {
-        invoke_ctx->meta()->setElapsedTime(ctx->timer().elapsed());
-    }
     evalXPath(ctx.get(), doc);
 }
 
@@ -204,12 +197,7 @@ TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
 
     if (can_store) {
         CacheContext cache_ctx(this, ctx, this->allowDistributed());
-        boost::shared_ptr<Meta::Core> meta;
-        if (metaBlock() && metaBlock()->cacheable()) {
-            meta = invoke_ctx->meta()->getCore();
-        }
-        boost::shared_ptr<BlockCacheData> cache_data(
-            new BlockCacheData(invoke_ctx->resultDoc(), meta));
+        boost::shared_ptr<BlockCacheData> cache_data(new BlockCacheData(invoke_ctx->resultDoc()));
         cache->saveDoc(invoke_ctx, &cache_ctx, tag, cache_data);
     }
 }
@@ -387,9 +375,6 @@ TaggedBlock::processMainKey(const Context *ctx) const {
     key.append(canonicalMethod(ctx));
     key.push_back('|');
     key.append(paramsIdKey(xsltParams(), ctx));
-    if (metaBlock() && metaBlock()->cacheable()) {
-        key.append("|meta");
-    }
     return key;
 }
 

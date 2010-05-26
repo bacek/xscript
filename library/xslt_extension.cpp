@@ -1726,9 +1726,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
                 XmlUtils::reportXsltError("xscript:ExtElementBlock: empty result", tctx);
                 return;
             }
-            if (!result->error()) {
-                block->processXPointer(
-                    ctx.get(), result->resultDocPtr(), result->metaDocPtr(), tctx->insert, &xmlAddChild);
+            if (block->processXPointer(ctx.get(), result->resultDocPtr(), tctx->insert, false)) {
                 return;
             }
         }

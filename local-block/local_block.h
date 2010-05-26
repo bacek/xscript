@@ -42,7 +42,7 @@ private:
 private:
     bool proxy_;
     boost::shared_ptr<Script> script_;
-    std::string node_id_;
+    std::string node_count_;
 };
 
 } // namespace xscript

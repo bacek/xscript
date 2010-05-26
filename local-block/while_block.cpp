@@ -49,8 +49,7 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
         }
 
         boost::shared_ptr<Context> local_ctx =
-            Context::createChildContext(script(), ctx, invoke_ctx, ctx->localParams(), true);
-        invoke_ctx->setLocalContext(boost::shared_ptr<Context>());
+            Context::createChildContext(script(), ctx, ctx->localParams(), true);
 
         ContextStopper ctx_stopper(local_ctx);
         if (no_threaded) {

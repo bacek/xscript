@@ -39,19 +39,6 @@ Context* getContext(lua_State *lua) {
     return ctx;
 }
 
-InvokeContext* getInvokeContext(lua_State *lua) {
-    lua_getglobal(lua, "xscript");
-    lua_getfield(lua, -1, "_invoke_ctx");
-
-    pointer<InvokeContext> *p = (pointer<InvokeContext>*)lua_touserdata(lua, -1);
-    assert(p);
-    InvokeContext* ctx = p->ptr;
-
-    lua_pop(lua, 2);
-
-    return ctx;
-}
-
 Block* getBlock(lua_State *lua) {
     lua_getglobal(lua, "xscript");
     lua_getfield(lua, -1, "_block");

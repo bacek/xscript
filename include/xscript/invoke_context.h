@@ -8,14 +8,12 @@
 namespace xscript {
 
 class Context;
-class Meta;
 class Tag;
 class TagKey;
 
 class InvokeContext : private boost::noncopyable {
 public:
     InvokeContext();
-    InvokeContext(InvokeContext *parent);
     virtual ~InvokeContext();
     
     enum ResultType {
@@ -24,12 +22,8 @@ public:
         SUCCESS  = 3,
     };
     
-    InvokeContext* parent(Context *ctx) const;
-
     XmlDocSharedHelper resultDoc() const;
-    XmlDocSharedHelper metaDoc() const;
     xmlDocPtr resultDocPtr() const;
-    xmlDocPtr metaDocPtr() const;
     ResultType resultType() const;
     const Tag& tag() const;
     bool tagged() const;
@@ -39,8 +33,6 @@ public:
     
     void resultDoc(const XmlDocSharedHelper &doc);
     void resultDoc(XmlDocHelper doc);
-    void metaDoc(const XmlDocSharedHelper &doc);
-    void metaDoc(XmlDocHelper doc);
     void resultType(ResultType type);
     void tag(const Tag &tag);
     void resetTag();
@@ -52,10 +44,6 @@ public:
     
     void setLocalContext(const boost::shared_ptr<Context> &ctx);
     const boost::shared_ptr<Context>& getLocalContext();
-
-    Meta* meta() const;
-    void setMeta(const std::string &name, const std::string &value);
-    void setMetaFlag();
 
 private:
     struct ContextData;
