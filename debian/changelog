@@ -1,3 +1,9 @@
+xscript (5.70.79-1) unstable; urgency=low
+
+  * make openssl thread safe
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 26 May 2010 16:52:20 +0400
+
 xscript (5.70.78-1) unstable; urgency=low
 
   * crash fixed in fetchRecursive

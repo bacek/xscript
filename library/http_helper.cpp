@@ -25,12 +25,53 @@
 #include "internal/algorithm.h"
 
 #include <curl/curl.h>
+#include <openssl/crypto.h>
+
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
 
 namespace xscript {
+
+static pthread_mutex_t *lock_cs;
+
+extern "C" void
+pthreads_locking_callback(int mode, int type, const char *file, int line) {
+    (void)file;
+    (void)line;
+    if (mode & CRYPTO_LOCK) {
+        pthread_mutex_lock(&(lock_cs[type]));
+    }
+    else {
+        pthread_mutex_unlock(&(lock_cs[type]));
+    }
+}
+
+extern "C" unsigned long
+pthreads_thread_id(void) {
+    return (unsigned long)pthread_self();
+}
+
+static void
+CRYPTO_thread_setup(void) {
+    lock_cs = reinterpret_cast<pthread_mutex_t*>(
+        OPENSSL_malloc(CRYPTO_num_locks() * sizeof(pthread_mutex_t)));
+    for (int i = 0; i < CRYPTO_num_locks(); i++) {
+        pthread_mutex_init(&(lock_cs[i]),NULL);
+    }
+    CRYPTO_set_id_callback((unsigned long (*)())pthreads_thread_id);
+    CRYPTO_set_locking_callback(pthreads_locking_callback);
+}
+
+static void
+CRYPTO_thread_cleanup(void) {
+    CRYPTO_set_locking_callback(NULL);
+    for (int i = 0; i < CRYPTO_num_locks(); i++) {
+        pthread_mutex_destroy(&(lock_cs[i]));
+    }
+    OPENSSL_free(lock_cs);
+}
 
 class HeadersHelper : private boost::noncopyable {
 public:
@@ -258,6 +299,7 @@ public:
             StringUtils::report("curl init failed: ", errno, stream);
             throw std::runtime_error(stream.str());
         }
+        CRYPTO_thread_setup();
         if (CURLE_OK != curl_global_init(CURL_GLOBAL_ALL)) {
             throw std::runtime_error("libcurl init failed");
         }
@@ -265,6 +307,7 @@ public:
 
     static void destroyEnvironment() {
         curl_global_cleanup();
+        CRYPTO_thread_cleanup();
     }
     
     HeadersHelper headers_helper_;
