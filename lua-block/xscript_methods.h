@@ -7,8 +7,10 @@ namespace xscript {
 
 class Block;
 class Context;
+class InvokeContext;
 
 void setupXScript(lua_State *lua, std::string *buf);
+InvokeContext* getInvokeContext(lua_State *lua);
 Context* getContext(lua_State *lua);
 Block* getBlock(lua_State *lua);
 

@@ -81,7 +81,8 @@ DocCacheTest::testStoreLoad() {
 
     DocCache* tcache = DocCache::instance();
 
-    boost::shared_ptr<BlockCacheData> saved(new BlockCacheData(doc));
+    boost::shared_ptr<BlockCacheData> saved(new BlockCacheData(
+        doc, boost::shared_ptr<Meta::Core>()));
     
     // check first save
     CacheContext cache_ctx(block, ctx.get());

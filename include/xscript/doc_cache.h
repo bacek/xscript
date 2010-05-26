@@ -8,6 +8,8 @@
 #include <boost/shared_ptr.hpp>
 
 #include <xscript/cached_object.h>
+#include <xscript/invoke_context.h>
+#include <xscript/meta.h>
 #include <xscript/writer.h>
 #include <xscript/xml_helpers.h>
 
@@ -53,7 +55,7 @@ public:
 class BlockCacheData : public CacheData {
 public:
     BlockCacheData();
-    BlockCacheData(XmlDocSharedHelper doc);
+    BlockCacheData(XmlDocSharedHelper doc, boost::shared_ptr<Meta::Core> meta);
     ~BlockCacheData();
     
     virtual bool parse(const char *buf, boost::uint32_t size);
@@ -61,8 +63,10 @@ public:
     virtual void cleanup(Context *ctx);
     
     const XmlDocSharedHelper& doc() const;
+    const boost::shared_ptr<Meta::Core>& meta() const;
 private:
     XmlDocSharedHelper doc_;
+    boost::shared_ptr<Meta::Core> meta_;
     static const boost::uint32_t SIGNATURE;
 };
 

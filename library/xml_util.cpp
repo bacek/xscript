@@ -12,6 +12,7 @@
 
 #include <libxml/parser.h>
 #include <libxml/xmlerror.h>
+#include <libxml/xpathInternals.h>
 
 #include <libxslt/extensions.h>
 #include <libxslt/xsltutils.h>
@@ -472,34 +473,22 @@ XmlUtils::fakeXml() {
     return xml_fake_doc_.get();
 }
 
-static bool
-traverseNode(xmlNodePtr target, xmlNodePtr node, boost::int32_t &count) {
-    while(node) {
-        ++count;
-        if (node == target) {
-            return true;
+std::string
+XmlUtils::getUniqueNodeId(xmlNodePtr node) {
+    std::string id;
+    xmlNodePtr parent = node;
+    do {
+        xmlNodePtr prev = parent->prev;
+        int node_pos = 0;
+        while(prev) {
+            ++node_pos;
+            prev = prev->prev;
         }
-        if (node->children) {
-            bool res = traverseNode(target, node->children, count);
-            if (res) {
-                return true;
-            }
-        }
-        node = node->next;
+        id.append(boost::lexical_cast<std::string>(node_pos));
+        parent = parent->parent;
     }
-    return false;
-}
-
-boost::int32_t
-XmlUtils::getNodeCount(xmlNodePtr node) {
-    xmlNodePtr root = node;
-    while(root->parent) {
-        root = root->parent;
-    };
-    
-    boost::int32_t count = 0;
-    bool res = traverseNode(node, root, count);
-    return res ? count : -1;
+    while(parent);
+    return id;
 }
 
 int
@@ -530,6 +519,17 @@ XmlUtils::xsltVersion() {
 const char*
 XmlUtils::exsltVersion() {
     return exsltLibraryVersion;
+}
+
+void
+XmlUtils::regiserNsList(xmlXPathContextPtr ctx, const std::map<std::string, std::string> &ns) {
+    for(std::map<std::string, std::string>::const_iterator it_ns = ns.begin();
+        it_ns != ns.end();
+        ++it_ns) {
+        xmlXPathRegisterNs(ctx,
+                           (const xmlChar *)it_ns->first.c_str(),
+                           (const xmlChar *)it_ns->second.c_str());
+    }
 }
 
 XmlInfoCollector::XmlInfoCollector() {

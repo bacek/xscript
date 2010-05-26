@@ -101,7 +101,7 @@ struct Context::ContextData {
     ContextData(const boost::shared_ptr<RequestData> request_data,
                 const boost::shared_ptr<Script> &script) :
         stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
-        script_(script),
+        script_(script), invoke_ctx_(NULL),
         clear_node_list_(new CleanupList<xmlNodePtr>(&xmlFreeNode)),
         clear_doc_list_(new CleanupList<XmlDocSharedHelper>()),
         expire_delta_(-1), flags_(0), local_params_(new TypedMap())
@@ -119,9 +119,10 @@ struct Context::ContextData {
     ContextData(const boost::shared_ptr<RequestData> request_data,
                 const boost::shared_ptr<Script> &script,
                 const boost::shared_ptr<Context> &ctx,
+                InvokeContext *invoke_ctx,
                 const boost::shared_ptr<TypedMap> &local_params) :
         stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
-        script_(script), parent_context_(ctx),
+        script_(script), parent_context_(ctx), invoke_ctx_(invoke_ctx),
         clear_node_list_(ctx->ctx_data_->clear_node_list_),
         clear_doc_list_(ctx->ctx_data_->clear_doc_list_),
         expire_delta_(-1), flags_(0),
@@ -134,9 +135,11 @@ struct Context::ContextData {
     
     ContextData(const boost::shared_ptr<Script> &script,
                 const boost::shared_ptr<Context> &ctx,
+                InvokeContext *invoke_ctx,
                 const boost::shared_ptr<CommonData> &common_data,
                 const boost::shared_ptr<TypedMap> &local_params) :
-        stopped_(false), common_data_(common_data), script_(script), parent_context_(ctx),
+        stopped_(false), common_data_(common_data), script_(script),
+        parent_context_(ctx), invoke_ctx_(invoke_ctx),
         clear_node_list_(ctx->ctx_data_->clear_node_list_),
         clear_doc_list_(ctx->ctx_data_->clear_doc_list_),
         expire_delta_(-1), flags_(0), local_params_(local_params)
@@ -238,6 +241,7 @@ struct Context::ContextData {
     boost::shared_ptr<CommonData> common_data_;
     boost::shared_ptr<Script> script_;
     boost::shared_ptr<Context> parent_context_;
+    InvokeContext* invoke_ctx_;
     std::vector<boost::shared_ptr<InvokeContext> > results_;
     boost::shared_ptr<CleanupList<xmlNodePtr> > clear_node_list_;
     boost::shared_ptr<CleanupList<XmlDocSharedHelper> > clear_doc_list_;
@@ -283,6 +287,7 @@ Context::Context(const boost::shared_ptr<Script> &script,
 
 Context::Context(const boost::shared_ptr<Script> &script,
                  const boost::shared_ptr<Context> &ctx,
+                 InvokeContext *invoke_ctx,
                  const boost::shared_ptr<TypedMap> &local_params,
                  bool proxy) : ctx_data_(NULL)
 {
@@ -290,11 +295,12 @@ Context::Context(const boost::shared_ptr<Script> &script,
     assert(ctx.get());
     
     if (proxy) {
-        ctx_data_ = new ContextData(script, ctx, ctx->ctx_data_->common_data_, local_params);
+        ctx_data_ = new ContextData(
+            script, ctx, invoke_ctx, ctx->ctx_data_->common_data_, local_params);
     }
     else {
         boost::shared_ptr<RequestData> request_data(new RequestData());
-        ctx_data_ = new ContextData(request_data, script, ctx, local_params);
+        ctx_data_ = new ContextData(request_data, script, ctx, invoke_ctx, local_params);
         ctx_data_->authContext(Authorizer::instance()->checkAuth(this));
         init();
     }
@@ -321,9 +327,13 @@ Context::init() {
 boost::shared_ptr<Context>
 Context::createChildContext(const boost::shared_ptr<Script> &script,
                             const boost::shared_ptr<Context> &ctx,
+                            const boost::shared_ptr<InvokeContext> &invoke_ctx,
                             const boost::shared_ptr<TypedMap> &local_params,
                             bool proxy) {
-    return boost::shared_ptr<Context>(new Context(script, ctx, local_params, proxy));
+    boost::shared_ptr<Context> child_ctx(
+        new Context(script, ctx, invoke_ctx.get(), local_params, proxy));
+    invoke_ctx->setLocalContext(child_ctx);
+    return child_ctx;
 }
 
 const boost::shared_ptr<RequestData>&
@@ -642,6 +652,11 @@ Context::isProxy() const {
         return false;
     }
     return request() == parentContext()->request();
+}
+
+InvokeContext*
+Context::invokeContext() const {
+    return ctx_data_->invoke_ctx_;
 }
 
 bool

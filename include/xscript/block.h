@@ -15,8 +15,9 @@
 namespace xscript {
 
 class Context;
-class Xml;
+class MetaBlock;
 class ParamFactory;
+class Xml;
 
 class Block : public Object {
 public:
@@ -27,7 +28,6 @@ public:
     xmlNodePtr node() const;
     const std::string& id() const;
     const std::string& method() const;
-    const std::string& xpointerExpr() const;
     const char* name() const;
 
     virtual bool threaded() const;
@@ -56,24 +56,36 @@ public:
 
     virtual void startTimer(Context *ctx);
     virtual void stopTimer(Context *ctx);
+
+    typedef xmlNodePtr (*insertFunc)(xmlNodePtr, xmlNodePtr);
+    void processXPointer(const Context *ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
+            xmlNodePtr insert_node, insertFunc func) const;
     
-    bool processXPointer(const Context *ctx, xmlDocPtr doc, xmlNodePtr insert_node, bool replace) const;
+    const Extension* extension() const;
+    MetaBlock* metaBlock() const;
 
 protected:
     virtual void invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void postParse();
+
+public:
     virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) = 0;
+
+protected:
     virtual void processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void property(const char *name, const char *value);
     virtual void postCall(Context *ctx, InvokeContext *invoke_ctx);
     virtual void postInvoke(Context *ctx, InvokeContext *invoke_ctx);
     virtual void callInternal(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
+    void callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+    void callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
 
 public:
     bool checkGuard(Context *ctx) const;
 protected:
     bool checkStateGuard(Context *ctx) const;
+    bool hasGuard() const;
     bool hasStateGuard() const;
     void evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const;
 
@@ -84,19 +96,28 @@ protected:
     virtual bool guardNotNode(const xmlNodePtr node) const;
     virtual bool paramNode(const xmlNodePtr node) const;
     bool xpointerNode(const xmlNodePtr node) const;
+    bool metaNode(const xmlNodePtr node) const;
 
     virtual void parseSubNode(xmlNodePtr node);
     virtual void parseXPathNode(const xmlNodePtr node);
     virtual void parseGuardNode(const xmlNodePtr node, bool is_not);
     virtual void parseParamNode(const xmlNodePtr node);
     void parseXPointerNode(const xmlNodePtr node);
+    void parseMetaNode(const xmlNodePtr node);
     void parseXPointerExpr(const char *value, const char *type);
+    void disableOutput(bool flag);
+    bool disableOutput() const;
+    void processEmptyXPointer(const Context *ctx, xmlDocPtr meta_doc,
+            xmlNodePtr insert_node, insertFunc func) const;
     
     virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const;
     
     void addParam(std::auto_ptr<Param> param);
     void detectBase();
     
+    void addNamespaces(const std::map<std::string, std::string> &ns);
+
+public:
     const std::map<std::string, std::string>& namespaces() const;
 
 private:

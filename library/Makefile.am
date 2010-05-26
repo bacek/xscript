@@ -32,7 +32,8 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp cached_o
 	message_interface.cpp message_errors.cpp exception.cpp \
 	parser.cpp request_impl.cpp http_utils.cpp \
 	dummy_response_time_counter.cpp response_time_counter_impl.cpp response_time_counter_factory.cpp \
-	response_time_counter_block.cpp invoke_context.cpp typed_map.cpp local_arg_param.cpp
+	response_time_counter_block.cpp invoke_context.cpp typed_map.cpp local_arg_param.cpp meta_block.cpp \
+	block_helpers.cpp meta.cpp
 
 libxscript_la_LDFLAGS = @VERSION_INFO@ -lcurl
 

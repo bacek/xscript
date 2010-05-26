@@ -15,15 +15,16 @@
 #include "xscript/profiler.h"
 #include "xscript/xml.h"
 
-#include "stack.h"
-#include "lua_block.h"
+#include "cookie_methods.h"
 #include "local_methods.h"
-#include "xscript_methods.h"
-#include "state_methods.h"
+#include "logger_methods.h"
+#include "lua_block.h"
+#include "meta_methods.h"
 #include "request_methods.h"
 #include "response_methods.h"
-#include "cookie_methods.h"
-#include "logger_methods.h"
+#include "stack.h"
+#include "state_methods.h"
+#include "xscript_methods.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -171,8 +172,13 @@ registerLibs(lua_State *lua, const char *name, Type *type,
 }
 
 static void
-setupLocalData(lua_State * lua, Context *ctx, Block *block) {
+setupLocalData(lua_State * lua, InvokeContext *invoke_ctx, Context *ctx, Block *block) {
     lua_getglobal(lua, "xscript");
+
+    pointer<InvokeContext> *pictx = (pointer<InvokeContext> *)lua_newuserdata(
+            lua, sizeof(pointer<InvokeContext>));
+    pictx->ptr = invoke_ctx;
+    lua_setfield(lua, -2, "_invoke_ctx");
 
     pointer<Context> *pctx = (pointer<Context> *)lua_newuserdata(lua, sizeof(pointer<Context>));
     pctx->ptr = ctx;
@@ -193,6 +199,8 @@ createLua() {
     registerLibs(lua, "state", (void*)1, getStateLib(), getStateLib());
     registerLibs(lua, "response", (void*)1, getResponseLib(), getResponseLib());
     registerLibs(lua, "localargs", (void*)1, getLocalLib(), getLocalLib());
+    registerLibs(lua, "meta", (void*)1, getMetaLib(), getMetaLib());
+    registerLibs(lua, "localmeta", (void*)1, getLocalMetaLib(), getLocalMetaLib());
     registerLibs(lua, "cookie", (void*)NULL, getCookieLib(), getCookieNewLib());
     registerLibs(lua, "logger", (void*)NULL, NULL, getLoggerLib());
     return lua_context;
@@ -205,7 +213,6 @@ createLuaThread(lua_State *parent) {
 
 XmlDocHelper
 LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
-    (void)invoke_ctx;
     log()->entering(BOOST_CURRENT_FUNCTION);    
     
     PROFILER(log(), "Lua block execution, " + owner()->name());
@@ -238,7 +245,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
     
     lua_context->buffer.clear();
     
-    setupLocalData(lua, ctx.get(), this);
+    setupLocalData(lua, invoke_ctx.get(), ctx.get(), this);
     
     if (LUA_ERRMEM == luaL_loadstring(lua, code_)) {
         throw std::bad_alloc();

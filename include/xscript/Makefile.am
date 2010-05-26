@@ -12,4 +12,4 @@ pkginclude_HEADERS = algorithm.h args.h authorizer.h average_counter.h cached_ob
 	xslt_extension.h xslt_profiler.h http_helper.h \
 	validator.h validator_factory.h validator_exception.h refresher.h guard_checker.h \
 	message_interface.h message_errors.h exception.h http_utils.h types.h response_time_counter.h test_utils.h \
-	typed_map.h cache_strategy_collector.h
+	typed_map.h cache_strategy_collector.h meta.h meta_block.h
