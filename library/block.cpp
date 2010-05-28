@@ -424,7 +424,6 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
         BlockTimerStarter starter(ctx.get(), this);
         result = boost::shared_ptr<InvokeContext>(new InvokeContext());
         invokeInternal(ctx, result);
-        callMetaLua(ctx, result);
         if (!result->error()) {
             postInvoke(ctx.get(), result.get());
         }
@@ -518,9 +517,13 @@ Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeC
     invoke_ctx->resultType(type);
     invoke_ctx->resultDoc(doc);
 
-    invoke_ctx->meta()->setElapsedTime(ctx->timer().elapsed());
+    if (metaBlock()) {
+        invoke_ctx->meta()->setElapsedTime(ctx->timer().elapsed());
+    }
     
     postCall(ctx.get(), invoke_ctx.get());
+
+    callMetaLua(ctx, invoke_ctx);
 
     if (need_perblock || xsltName().empty()) {
         evalXPath(ctx.get(), doc);
@@ -866,6 +869,9 @@ Block::callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext>
     if (data_->meta_block_.get() && !data_->meta_block_->disableOutput()) {
         XmlDocHelper meta_doc = data_->meta_block_->call(ctx, invoke_ctx);
         invoke_ctx->metaDoc(meta_doc);
+        if (!ctx->noXsltPort()) {
+            evalXPath(ctx.get(), invoke_ctx->metaDoc());
+        }
     }
 }
 

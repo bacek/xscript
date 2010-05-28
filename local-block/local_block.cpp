@@ -142,6 +142,8 @@ LocalBlock::parseSubNode(xmlNodePtr node) {
     }
 
     script_ = ScriptFactory::createScriptFromXmlNode(owner()->name(), node);
+    Xml::TimeMapType modified_info = owner()->modifiedInfo();
+    script_->swapModifiedInfo(modified_info);
 }
 
 void
@@ -190,9 +192,9 @@ LocalBlock::createTagKey(const Context *ctx) const {
     key.push_back('|');
     key.append(paramsIdKey(params(), ctx));
     key.push_back('|');
-    key.append(owner()->name());
+    key.append(script_->name());
     key.push_back('|');
-    key.append(modifiedKey(owner()->modifiedInfo()));
+    key.append(modifiedKey(script_->modifiedInfo()));
     key.push_back('|');
     key.append(blocksModifiedKey(script_->blocks()));
     key.push_back('|');

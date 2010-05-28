@@ -5,13 +5,30 @@
 #include <string>
 
 #include <boost/cstdint.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "xscript/xml_helpers.h"
 
 namespace xscript {
 
-class Meta {
+class MetaCore : private boost::noncopyable {
+public:
+    MetaCore();
+    ~MetaCore();
+    bool parse(const char *buf, boost::uint32_t size);
+    void serialize(std::string &buf) const;
+    static int undefinedElapsedTime();
+    friend class Meta;
+private:
+    void reset();
+private:
+    typedef std::map<std::string, std::string> MapType;
+    MapType data_;
+    int elapsed_time_;
+};
+
+class Meta : private boost::noncopyable {
 public:
     Meta();
     ~Meta();
@@ -23,37 +40,34 @@ public:
 
     int getElapsedTime() const;
     void setElapsedTime(int time);
-    static int defaultElapsedTime();
 
-    class Core;
-    boost::shared_ptr<Core> getCore() const;
-    void setCore(const boost::shared_ptr<Core> &base);
+    time_t getExpireTime() const;
+    void setExpireTime(time_t time);
+
+    time_t getLastModified() const;
+    void setLastModified(time_t time);
+
+    static time_t undefinedExpireTime();
+    static time_t undefinedLastModified();
+
+    boost::shared_ptr<MetaCore> getCore() const;
+    void setCore(const boost::shared_ptr<MetaCore> &base);
 
     XmlNodeHelper getXml() const;
+    void cacheParamsWritable(bool flag);
+
+    void reset();
 private:
+    void initCore();
     bool allowKey(const std::string &key) const;
 
 private:
-    typedef std::map<std::string, std::string> MapType;
-
-public:
-    class Core {
-    public:
-        Core();
-        ~Core();
-        bool parse(const char *buf, boost::uint32_t size);
-        void serialize(std::string &buf);
-        friend class Meta;
-    private:
-        void reset();
-    private:
-        MapType data_;
-        int elapsed_time_;
-    };
-
-private:
-    boost::shared_ptr<Core> core_;
+    typedef MetaCore::MapType MapType;
+    boost::shared_ptr<MetaCore> core_;
     MapType child_;
+    time_t expire_time_;
+    time_t last_modified_;
+    bool cache_params_writable_;
 };
 
 } // namespace xscript

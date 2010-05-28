@@ -18,21 +18,23 @@
 namespace xscript {
 
 static const std::string ELAPSED_TIME_META_KEY = "elapsed-time";
+static const std::string EXPIRE_TIME_META_KEY = "expire-time";
+static const std::string LAST_MODIFIED_META_KEY = "last-modified";
 
-Meta::Core::Core() : elapsed_time_(defaultElapsedTime())
+MetaCore::MetaCore() : elapsed_time_(undefinedElapsedTime())
 {}
 
-Meta::Core::~Core()
+MetaCore::~MetaCore()
 {}
 
 void
-Meta::Core::reset() {
+MetaCore::reset() {
     data_.clear();
-    elapsed_time_ = defaultElapsedTime();
+    elapsed_time_ = undefinedElapsedTime();
 }
 
 bool
-Meta::Core::parse(const char *buf, boost::uint32_t size) {
+MetaCore::parse(const char *buf, boost::uint32_t size) {
     reset();
     Range data(buf, buf + size);
     while(!data.empty()) {
@@ -45,9 +47,6 @@ Meta::Core::parse(const char *buf, boost::uint32_t size) {
         Range prefix, key;
         split(chunk, ':', prefix, key);
         if (!prefix.empty() && strncmp(prefix.begin(), "Elapsed-time", sizeof("Elapsed-time") - 1) == 0) {
-            if (defaultElapsedTime() != elapsed_time_) {
-                throw std::runtime_error("Elapsed-time specified twice");
-            }
             elapsed_time_ = boost::lexical_cast<int>(std::string(key.begin(), key.size()));
             continue;
         }
@@ -98,11 +97,13 @@ Meta::Core::parse(const char *buf, boost::uint32_t size) {
 }
 
 void
-Meta::Core::serialize(std::string &buf) {
-    buf.append("Elapsed-time:");
-    buf.append(boost::lexical_cast<std::string>(elapsed_time_));
-    buf.append("\r\n");
-    for(MapType::iterator it = data_.begin();
+MetaCore::serialize(std::string &buf) const {
+    if (undefinedElapsedTime() != elapsed_time_) {
+        buf.append("Elapsed-time:");
+        buf.append(boost::lexical_cast<std::string>(elapsed_time_));
+        buf.append("\r\n");
+    }
+    for(MapType::const_iterator it = data_.begin();
         it != data_.end();
         ++it) {
         buf.append("Key:");
@@ -117,18 +118,50 @@ Meta::Core::serialize(std::string &buf) {
     }
 }
 
-Meta::Meta()
+int
+MetaCore::undefinedElapsedTime() {
+    return -1;
+}
+
+Meta::Meta() : expire_time_(undefinedExpireTime()), last_modified_(undefinedLastModified()),
+        cache_params_writable_(false)
 {}
 
 Meta::~Meta()
 {}
 
 void
-Meta::setCore(const boost::shared_ptr<Core> &core) {
+Meta::reset() {
+    core_.reset();
+    child_.clear();
+    cache_params_writable_ = true;
+    expire_time_ = undefinedExpireTime();
+    last_modified_ = undefinedLastModified();
+}
+
+time_t
+Meta::undefinedExpireTime() {
+    return -1;
+}
+
+time_t
+Meta::undefinedLastModified() {
+    return -1;
+}
+
+void
+Meta::initCore() {
+    if (NULL == core_.get()) {
+        core_ = boost::shared_ptr<MetaCore>(new MetaCore);
+    }
+}
+
+void
+Meta::setCore(const boost::shared_ptr<MetaCore> &core) {
     core_ = core;
 }
 
-boost::shared_ptr<Meta::Core>
+boost::shared_ptr<MetaCore>
 Meta::getCore() const {
     return core_;
 }
@@ -155,9 +188,7 @@ Meta::set(const std::string &name, const std::string &value) {
 
 void
 Meta::set2Core(const std::string &name, const std::string &value) {
-    if (NULL == core_.get()) {
-        core_ = boost::shared_ptr<Core>(new Core);
-    }
+    initCore();
     (core_->data_)[name] = value;
 }
 
@@ -177,46 +208,94 @@ Meta::setElapsedTime(int time) {
     if (time < 0) {
         throw std::runtime_error("Incorrect elapsed time value");
     }
-    if (NULL == core_.get()) {
-        core_ = boost::shared_ptr<Core>(new Core);
-    }
+    initCore();
     core_->elapsed_time_ = time;
 }
 
 int
-Meta::defaultElapsedTime() {
-    return -1;
+Meta::getElapsedTime() const {
+    return core_.get() ? core_->elapsed_time_ : MetaCore::undefinedElapsedTime();
 }
 
-int
-Meta::getElapsedTime() const {
-    return core_.get() ? core_->elapsed_time_ : defaultElapsedTime();
+time_t
+Meta::getExpireTime() const {
+    return expire_time_;
+}
+
+void
+Meta::setExpireTime(time_t time) {
+    if (cache_params_writable_) {
+        expire_time_ = time;
+    }
+}
+
+time_t
+Meta::getLastModified() const {
+    return last_modified_;
+}
+
+void
+Meta::setLastModified(time_t time) {
+    if (cache_params_writable_) {
+        last_modified_ = time;
+    }
 }
 
 bool
 Meta::allowKey(const std::string &key) const {
-    if (ELAPSED_TIME_META_KEY == key) {
+    if (ELAPSED_TIME_META_KEY == key ||
+        EXPIRE_TIME_META_KEY == key ||
+        LAST_MODIFIED_META_KEY == key) {
         return false;
     }
     return true;
 }
 
+static void processNewMetaNode(const xmlChar *name, const xmlChar *value,
+    XmlNodeHelper &root, xmlNodePtr &last_insert_node) {
+    if (last_insert_node) {
+        XmlNodeHelper node(xmlNewNode(NULL, name));
+        xmlNodeSetContent(node.get(), value);
+        xmlAddNextSibling(last_insert_node, node.get());
+        last_insert_node = node.release();
+    }
+    else {
+        root = XmlNodeHelper(xmlNewNode(NULL, name));
+        xmlNodeSetContent(root.get(), value);
+        last_insert_node = root.get();
+    }
+}
+
 XmlNodeHelper
 Meta::getXml() const {
-    XmlNodeHelper result(xmlNewNode(NULL, (const xmlChar*)ELAPSED_TIME_META_KEY.c_str()));
-    xmlNodeSetContent(result.get(),
-        (const xmlChar*)boost::lexical_cast<std::string>(getElapsedTime()).c_str());
-    xmlNodePtr last_insert_node = result.get();
+    XmlNodeHelper result;
+    xmlNodePtr last_insert_node = NULL;
+    if (MetaCore::undefinedElapsedTime() != getElapsedTime()) {
+        processNewMetaNode((const xmlChar*)ELAPSED_TIME_META_KEY.c_str(),
+            (const xmlChar*)boost::lexical_cast<std::string>(getElapsedTime()).c_str(),
+            result, last_insert_node);
+    }
+
+    if (undefinedExpireTime() != expire_time_) {
+        processNewMetaNode((const xmlChar*)EXPIRE_TIME_META_KEY.c_str(),
+            (const xmlChar*)boost::lexical_cast<std::string>(expire_time_).c_str(),
+            result, last_insert_node);
+    }
+
+    if (undefinedLastModified() != last_modified_) {
+        processNewMetaNode((const xmlChar*)LAST_MODIFIED_META_KEY.c_str(),
+            (const xmlChar*)boost::lexical_cast<std::string>(last_modified_).c_str(),
+            result, last_insert_node);
+    }
+
     for(MapType::const_iterator it = child_.begin();
         it != child_.end();
         ++it) {
         if (!allowKey(it->first)) {
             continue;
         }
-        XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)it->first.c_str()));
-        xmlNodeSetContent(node.get(), (const xmlChar*)it->second.c_str());
-        xmlAddNextSibling(last_insert_node, node.get());
-        last_insert_node = node.release();
+        processNewMetaNode((const xmlChar*)it->first.c_str(), (const xmlChar*)it->first.c_str(),
+            result, last_insert_node);
     }
 
     if (NULL == core_.get()) {
@@ -229,12 +308,15 @@ Meta::getXml() const {
         if (!allowKey(it->first) || child_.end() != child_.find(it->first)) {
             continue;
         }
-        XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)it->first.c_str()));
-        xmlNodeSetContent(node.get(), (const xmlChar*)it->second.c_str());
-        xmlAddNextSibling(last_insert_node, node.get());
-        last_insert_node = node.release();
+        processNewMetaNode((const xmlChar*)it->first.c_str(), (const xmlChar*)it->first.c_str(),
+            result, last_insert_node);
     }
     return result;
+}
+
+void
+Meta::cacheParamsWritable(bool flag) {
+    cache_params_writable_ = flag;
 }
 
 } // namespace xscript

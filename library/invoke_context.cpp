@@ -21,10 +21,12 @@
 namespace xscript {
 
 struct InvokeContext::ContextData {
-    ContextData() : doc_(new XmlDocHelper()), tagged_(false),
-        result_type_(ERROR), have_cached_copy_(false), parent_(NULL), is_meta_(false) {}
-    ContextData(InvokeContext *parent) : doc_(new XmlDocHelper()), tagged_(false),
-        result_type_(ERROR), have_cached_copy_(false), parent_(parent), is_meta_(false) {}
+    ContextData() : doc_(new XmlDocHelper()),
+        tagged_(false), result_type_(ERROR), have_cached_copy_(false), parent_(NULL),
+        meta_(new Meta), is_meta_(false) {}
+    ContextData(InvokeContext *parent) : doc_(new XmlDocHelper()),
+        tagged_(false), result_type_(ERROR), have_cached_copy_(false), parent_(parent),
+        meta_(new Meta), is_meta_(false) {}
     XmlDocSharedHelper doc_;
     XmlDocSharedHelper meta_doc_;
     bool tagged_;
@@ -35,7 +37,7 @@ struct InvokeContext::ContextData {
     boost::shared_ptr<TagKey> key_;
 
     InvokeContext* parent_;
-    Meta meta_;
+    boost::shared_ptr<Meta> meta_;
     bool is_meta_;
 };
 
@@ -185,18 +187,23 @@ InvokeContext::getLocalContext() {
     return ctx_data_->local_context_;
 }
 
-Meta*
+boost::shared_ptr<Meta>
 InvokeContext::meta() const {
-    return &(ctx_data_->meta_);
+    return ctx_data_->meta_;
 }
 
 void
-InvokeContext::setMeta(const std::string &name, const std::string &value) {
+InvokeContext::setMeta(const boost::shared_ptr<Meta> &meta) {
+    ctx_data_->meta_ = meta;
+}
+
+void
+InvokeContext::setMetaParam(const std::string &name, const std::string &value) {
     if (ctx_data_->is_meta_) {
-        ctx_data_->meta_.set(name, value);
+        ctx_data_->meta_->set(name, value);
     }
     else {
-        ctx_data_->meta_.set2Core(name, value);
+        ctx_data_->meta_->set2Core(name, value);
     }
 }
 

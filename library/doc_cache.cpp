@@ -546,7 +546,7 @@ const boost::uint32_t PageCacheData::SIGNATURE = 0xffffff0b;
 BlockCacheData::BlockCacheData()
 {}
 
-BlockCacheData::BlockCacheData(XmlDocSharedHelper doc, boost::shared_ptr<Meta::Core> meta) :
+BlockCacheData::BlockCacheData(XmlDocSharedHelper doc, boost::shared_ptr<MetaCore> meta) :
         doc_(doc), meta_(meta)
 {}
 
@@ -558,7 +558,7 @@ BlockCacheData::doc() const {
     return doc_;
 }
 
-const boost::shared_ptr<Meta::Core>&
+const boost::shared_ptr<MetaCore>&
 BlockCacheData::meta() const {
     return meta_;
 }
@@ -590,7 +590,7 @@ BlockCacheData::parse(const char *buf, boost::uint32_t size) {
 
         Range meta_data(buf, buf + meta_size);
         if (!meta_data.empty()) {
-            meta_.reset(new Meta::Core());
+            meta_.reset(new MetaCore());
             meta_->parse(meta_data.begin(), meta_data.size());
         }
 

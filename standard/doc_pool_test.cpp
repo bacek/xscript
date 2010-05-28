@@ -36,7 +36,7 @@ public:
 
         XmlDocSharedHelper doc1(new XmlDocHelper(xmlNewDoc((const xmlChar*) "1.0")));
         boost::shared_ptr<CacheData> saved(new BlockCacheData(
-            doc1, boost::shared_ptr<Meta::Core>()));
+            doc1, boost::shared_ptr<MetaCore>()));
         
         time_t t = time(0);
         Tag tag(false, t, t+6);
@@ -73,7 +73,7 @@ public:
         Tag tag(false, t, t+6);
 
         boost::shared_ptr<CacheData> saved(new BlockCacheData(
-            doc1, boost::shared_ptr<Meta::Core>()));
+            doc1, boost::shared_ptr<MetaCore>()));
         
         DocPool::CleanupFunc cleanFunc;
         pool.saveDoc("1", tag, saved, cleanFunc);

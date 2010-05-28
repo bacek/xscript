@@ -19,8 +19,6 @@ public:
 
     typedef std::map<std::string, time_t> TimeMapType;
     const TimeMapType& modifiedInfo() const;
-
-protected:
     void swapModifiedInfo(TimeMapType &info);
 
 private:

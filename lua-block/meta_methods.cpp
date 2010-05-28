@@ -2,6 +2,7 @@
 
 #include <boost/current_function.hpp>
 
+#include "xscript/block.h"
 #include "xscript/context.h"
 #include "xscript/logger.h"
 #include "xscript/meta.h"
@@ -22,6 +23,10 @@ extern "C" {
     int luaMetaGet(lua_State *lua);
     int luaMetaSet(lua_State *lua);
     int luaMetaGetElapsedTime(lua_State *lua);
+    int luaMetaGetExpireTime(lua_State *lua);
+    int luaMetaSetExpireTime(lua_State *lua);
+    int luaMetaGetLastModified(lua_State *lua);
+    int luaMetaSetLastModified(lua_State *lua);
     int luaLocalMetaHas(lua_State *lua);
     int luaLocalMetaGet(lua_State *lua);
     int luaLocalMetaSet(lua_State *lua);
@@ -32,6 +37,10 @@ static const struct luaL_reg metalib [] = {
     {"get",             luaMetaGet},
     {"set",             luaMetaSet},
     {"getElapsedTime",  luaMetaGetElapsedTime},
+    {"getExpireTime",   luaMetaGetExpireTime},
+    {"setExpireTime",   luaMetaSetExpireTime},
+    {"getLastModified", luaMetaGetLastModified},
+    {"setLastModified", luaMetaSetLastModified},
     {NULL, NULL}
 };
 
@@ -125,7 +134,7 @@ luaMetaSetInternal(lua_State *lua, bool local) {
         std::string key = luaReadStack<std::string>(lua, 2);
         std::string value = luaReadStack<std::string>(lua, 3);
         if (invoke_ctx) {
-            invoke_ctx->setMeta(key, value);
+            invoke_ctx->setMetaParam(key, value);
         }
         luaPushStack(lua, value);
         return 1;
@@ -177,7 +186,7 @@ luaMetaGetElapsedTime(lua_State *lua) {
         readMetaFromStack(lua, false);
         InvokeContext* invoke_ctx = metaInvokeContext(lua, false);
         lua_pushnumber(lua, invoke_ctx ?
-            invoke_ctx->meta()->getElapsedTime() : Meta::defaultElapsedTime());
+            invoke_ctx->meta()->getElapsedTime() : MetaCore::undefinedElapsedTime());
         return 1;
     }
     catch (const LuaError &e) {
@@ -185,6 +194,96 @@ luaMetaGetElapsedTime(lua_State *lua) {
     }
     catch (const std::exception &e) {
         luaL_error(lua, "caught exception in meta.getElapsedTime: %s", e.what());
+        return 0;
+    }
+}
+
+int
+luaMetaGetExpireTime(lua_State *lua) {
+    log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+    try {
+        luaCheckStackSize(lua, 1);
+        readMetaFromStack(lua, false);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, false);
+        lua_pushnumber(lua, invoke_ctx ?
+            invoke_ctx->meta()->getExpireTime() : Meta::undefinedExpireTime());
+        return 1;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        luaL_error(lua, "caught exception in meta.getElapsedTime: %s", e.what());
+        return 0;
+    }
+}
+
+int
+luaMetaSetExpireTime(lua_State *lua) {
+    log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+    try {
+        luaCheckStackSize(lua, 2);
+        readMetaFromStack(lua, false);
+        time_t expire_time = luaReadStack<time_t>(lua, 2);
+        if (expire_time < 0) {
+            throw std::runtime_error("negative expire time is not allowed");
+        }
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, false);
+        if (NULL != invoke_ctx) {
+            invoke_ctx->meta()->setExpireTime(expire_time);
+        }
+        return 0;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        luaL_error(lua, "caught exception in meta.setExpireTime: %s", e.what());
+        return 0;
+    }
+}
+
+int
+luaMetaGetLastModified(lua_State *lua) {
+    log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+    try {
+        luaCheckStackSize(lua, 1);
+        readMetaFromStack(lua, false);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, false);
+        lua_pushnumber(lua, invoke_ctx ?
+            invoke_ctx->meta()->getLastModified() : Meta::undefinedLastModified());
+        return 1;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        luaL_error(lua, "caught exception in meta.getElapsedTime: %s", e.what());
+        return 0;
+    }
+}
+
+int
+luaMetaSetLastModified(lua_State *lua) {
+    log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+    try {
+        luaCheckStackSize(lua, 2);
+        readMetaFromStack(lua, false);
+        time_t last_modified = luaReadStack<time_t>(lua, 2);
+        if (last_modified < 0) {
+            throw std::runtime_error("negative last modified is not allowed");
+        }
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, false);
+        if (NULL != invoke_ctx) {
+            invoke_ctx->meta()->setLastModified(last_modified);
+        }
+        return 0;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        luaL_error(lua, "caught exception in meta.setLastModified: %s", e.what());
         return 0;
     }
 }

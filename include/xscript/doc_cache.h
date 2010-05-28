@@ -42,7 +42,7 @@ private:
     bool allow_distributed_;
 };
 
-class CacheData {
+class CacheData : private boost::noncopyable {
 public:
     CacheData();
     virtual ~CacheData();
@@ -55,18 +55,18 @@ public:
 class BlockCacheData : public CacheData {
 public:
     BlockCacheData();
-    BlockCacheData(XmlDocSharedHelper doc, boost::shared_ptr<Meta::Core> meta);
-    ~BlockCacheData();
+    BlockCacheData(XmlDocSharedHelper doc, boost::shared_ptr<MetaCore> meta);
+    virtual ~BlockCacheData();
     
     virtual bool parse(const char *buf, boost::uint32_t size);
     virtual void serialize(std::string &buf);
     virtual void cleanup(Context *ctx);
     
     const XmlDocSharedHelper& doc() const;
-    const boost::shared_ptr<Meta::Core>& meta() const;
+    const boost::shared_ptr<MetaCore>& meta() const;
 private:
     XmlDocSharedHelper doc_;
-    boost::shared_ptr<Meta::Core> meta_;
+    boost::shared_ptr<MetaCore> meta_;
     static const boost::uint32_t SIGNATURE;
 };
 

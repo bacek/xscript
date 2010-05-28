@@ -7,6 +7,7 @@
 
 namespace xscript {
 
+class Block;
 class Context;
 class Meta;
 class Tag;
@@ -53,8 +54,10 @@ public:
     void setLocalContext(const boost::shared_ptr<Context> &ctx);
     const boost::shared_ptr<Context>& getLocalContext();
 
-    Meta* meta() const;
-    void setMeta(const std::string &name, const std::string &value);
+    boost::shared_ptr<Meta> meta() const;
+    void setMeta(const boost::shared_ptr<Meta> &meta);
+
+    void setMetaParam(const std::string &name, const std::string &value);
     void setMetaFlag();
 
 private:

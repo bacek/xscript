@@ -115,16 +115,32 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
 
     bool have_cached_doc = false;
     XmlDocSharedHelper doc;
-    boost::shared_ptr<Meta::Core> meta;
+    boost::shared_ptr<MetaCore> meta_core;
     Tag cache_tag(true, 1, 1); // fake undefined Tag
     try {
         CacheContext cache_ctx(this, ctx.get(), this->allowDistributed());
         boost::shared_ptr<BlockCacheData> cache_data = 
             DocCache::instance()->loadDoc(invoke_ctx.get(), &cache_ctx, cache_tag);
         if (NULL != cache_data.get()) {
-            doc = cache_data->doc();
-            meta = cache_data->meta();
-            have_cached_doc = (NULL != doc->get()); 
+            if (metaBlock()) {
+                invoke_ctx->meta()->cacheParamsWritable(true);
+                invoke_ctx->meta()->setExpireTime(cache_tag.expire_time);
+                invoke_ctx->meta()->setLastModified(cache_tag.last_modified);
+                if (!cacheTimeUndefined()) {
+                    invoke_ctx->meta()->cacheParamsWritable(false);
+                }
+                callMetaLua(ctx, invoke_ctx);
+                if (cacheTimeUndefined()) {
+                    cache_tag.expire_time = invoke_ctx->meta()->getExpireTime();
+                    cache_tag.last_modified = invoke_ctx->meta()->getLastModified();
+                    invoke_ctx->meta()->cacheParamsWritable(false);
+                }
+            }
+            if (!cache_tag.expired()) {
+                doc = cache_data->doc();
+                meta_core = cache_data->meta();
+                have_cached_doc = (NULL != doc->get());
+            }
         }
     }
     catch (const std::exception &e) {
@@ -132,15 +148,17 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
     }
    
     if (!have_cached_doc) {
+        invoke_ctx->meta()->reset();
         Block::invokeInternal(ctx, invoke_ctx);
         return;
     }
     
     if (Tag::UNDEFINED_TIME == cache_tag.expire_time) {
+        boost::shared_ptr<Meta> meta = invoke_ctx->meta();
+        invoke_ctx->setMeta(boost::shared_ptr<Meta>(new Meta));
         invoke_ctx->haveCachedCopy(true);
         invoke_ctx->tag(cache_tag);
         XmlDocHelper newdoc(call(ctx, invoke_ctx));
-        
         if (invoke_ctx->tag().modified) {
             if (NULL == newdoc.get()) {
                 log()->error("Got empty document in tagged block. Cached copy used");
@@ -151,11 +169,12 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
                 return;
             }
         }
+        invoke_ctx->setMeta(meta);
     }
     
     invoke_ctx->resultType(InvokeContext::SUCCESS);
     invoke_ctx->resultDoc(doc);
-    invoke_ctx->meta()->setCore(meta);
+    invoke_ctx->meta()->setCore(meta_core);
     if (metaBlock() && !metaBlock()->cacheable()) {
         invoke_ctx->meta()->setElapsedTime(ctx->timer().elapsed());
     }
@@ -182,10 +201,20 @@ TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
     DocCache *cache = DocCache::instance();
     Tag tag = invoke_ctx->tag();
     
-    boost::shared_ptr<Context> local_ctx = invoke_ctx->getLocalContext();
-    if (local_ctx.get() && !local_ctx->expireDeltaUndefined()) {
-        tag.last_modified = time(NULL);
-        tag.expire_time = tag.last_modified + local_ctx->expireDelta();
+    time_t expire_time = invoke_ctx->meta()->getExpireTime();
+    if (Meta::undefinedExpireTime() != expire_time) {
+        tag.expire_time = expire_time;
+    }
+    else {
+        boost::shared_ptr<Context> local_ctx = invoke_ctx->getLocalContext();
+        if (local_ctx.get() && !local_ctx->expireDeltaUndefined()) {
+            tag.expire_time = tag.last_modified + local_ctx->expireDelta();
+        }
+    }
+
+    time_t last_modified = invoke_ctx->meta()->getLastModified();
+    if (Meta::undefinedLastModified() != last_modified) {
+        tag.last_modified = last_modified;
     }
 
     bool can_store = false;
@@ -204,14 +233,21 @@ TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
 
     if (can_store) {
         CacheContext cache_ctx(this, ctx, this->allowDistributed());
-        boost::shared_ptr<Meta::Core> meta;
+        boost::shared_ptr<MetaCore> meta;
         if (metaBlock() && metaBlock()->cacheable()) {
             meta = invoke_ctx->meta()->getCore();
         }
         boost::shared_ptr<BlockCacheData> cache_data(
             new BlockCacheData(invoke_ctx->resultDoc(), meta));
         cache->saveDoc(invoke_ctx, &cache_ctx, tag, cache_data);
+        invoke_ctx->meta()->setExpireTime(tag.expire_time);
+        invoke_ctx->meta()->setLastModified(tag.last_modified);
     }
+    else {
+        invoke_ctx->meta()->setExpireTime(Meta::undefinedExpireTime());
+        invoke_ctx->meta()->setLastModified(Meta::undefinedLastModified());
+    }
+    invoke_ctx->meta()->cacheParamsWritable(false);
 }
 
 void
