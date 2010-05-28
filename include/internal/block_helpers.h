@@ -46,7 +46,6 @@ public:
 private:
     DynamicParam expression_;
     XmlXPathCompExprHelper compiled_expr_;
-    bool disable_output_;
 };
 
 class XPathNodeExpr {

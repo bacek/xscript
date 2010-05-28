@@ -870,7 +870,7 @@ Block::callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext>
         XmlDocHelper meta_doc = data_->meta_block_->call(ctx, invoke_ctx);
         invoke_ctx->metaDoc(meta_doc);
         if (!ctx->noXsltPort()) {
-            evalXPath(ctx.get(), invoke_ctx->metaDoc());
+            data_->meta_block_->evalXPath(ctx.get(), invoke_ctx->metaDoc());
         }
     }
 }
