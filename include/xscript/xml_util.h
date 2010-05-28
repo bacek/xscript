@@ -1,6 +1,7 @@
 #ifndef _XSCRIPT_XML_UTIL_H_
 #define _XSCRIPT_XML_UTIL_H_
 
+#include <map>
 #include <string>
 
 #include <boost/cstdint.hpp>
@@ -53,11 +54,13 @@ public:
         xmlAttrPtr attr = xmlHasProp(node, (const xmlChar*) name);
         return attr ? value(attr) : NULL;
     }
-    
-    static bool xpathExists(xmlDocPtr doc, const std::string &path,
-        const std::map<std::string, std::string> &ns = std::map<std::string, std::string>());
-    static std::string xpathValue(xmlDocPtr doc, const std::string &path, const std::string &defval = "",
-        const std::map<std::string, std::string> &ns = std::map<std::string, std::string>());
+
+    static bool xpathExists(xmlDocPtr doc, const std::string &path);
+    static std::string xpathValue(xmlDocPtr doc, const std::string &path, const std::string &defval = "");
+    static bool xpathNsExists(xmlDocPtr doc, const std::string &path,
+        const std::map<std::string, std::string> &ns);
+    static std::string xpathNsValue(xmlDocPtr doc, const std::string &path,
+        const std::map<std::string, std::string> &ns, const std::string &defval = "");
     
     static xmlDocPtr fakeXml();
 
