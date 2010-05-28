@@ -262,10 +262,13 @@ XmlUtils::sanitize(const Range &range, const std::string &base_url, int line_lim
 }
 
 bool
-XmlUtils::xpathExists(xmlDocPtr doc, const std::string &path) {
+XmlUtils::xpathExists(xmlDocPtr doc, const std::string &path,
+    const std::map<std::string, std::string> &ns) {
 
     XmlXPathContextHelper ctx(xmlXPathNewContext(doc));
     throwUnless(NULL != ctx.get());
+
+    XmlUtils::regiserNsList(ctx.get(), ns);
 
     XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*) path.c_str(), ctx.get()));
     throwUnless(NULL != object.get());
@@ -273,11 +276,14 @@ XmlUtils::xpathExists(xmlDocPtr doc, const std::string &path) {
 }
 
 std::string
-XmlUtils::xpathValue(xmlDocPtr doc, const std::string &path, const std::string &defval) {
+XmlUtils::xpathValue(xmlDocPtr doc, const std::string &path,
+    const std::string &defval, const std::map<std::string, std::string> &ns) {
 
     std::string res = defval;
     XmlXPathContextHelper ctx(xmlXPathNewContext(doc));
     throwUnless(NULL != ctx.get());
+
+    XmlUtils::regiserNsList(ctx.get(), ns);
 
     XmlXPathObjectHelper object(xmlXPathEvalExpression((const xmlChar*) path.c_str(), ctx.get()));
     throwUnless(NULL != object.get());

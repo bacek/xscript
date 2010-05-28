@@ -38,7 +38,7 @@ ConfigTest::testConfig() {
 
     std::vector<std::string> v;
     config->subKeys("/xscript/modules/module", v);
-    CPPUNIT_ASSERT_EQUAL(static_cast<std::vector<std::string>::size_type>(5), v.size());
+    CPPUNIT_ASSERT_EQUAL(static_cast<std::vector<std::string>::size_type>(6), v.size());
     CPPUNIT_ASSERT_EQUAL(std::string("../standard/.libs/xscript-thrpool.so"), config->as<std::string>(v[0] + "/path"));
 }
 

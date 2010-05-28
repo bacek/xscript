@@ -54,8 +54,10 @@ public:
         return attr ? value(attr) : NULL;
     }
     
-    static bool xpathExists(xmlDocPtr doc, const std::string &path);
-    static std::string xpathValue(xmlDocPtr doc, const std::string &path, const std::string &defval = "");
+    static bool xpathExists(xmlDocPtr doc, const std::string &path,
+        const std::map<std::string, std::string> &ns = std::map<std::string, std::string>());
+    static std::string xpathValue(xmlDocPtr doc, const std::string &path, const std::string &defval = "",
+        const std::map<std::string, std::string> &ns = std::map<std::string, std::string>());
     
     static xmlDocPtr fakeXml();
 

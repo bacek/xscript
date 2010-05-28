@@ -294,7 +294,7 @@ Meta::getXml() const {
         if (!allowKey(it->first)) {
             continue;
         }
-        processNewMetaNode((const xmlChar*)it->first.c_str(), (const xmlChar*)it->first.c_str(),
+        processNewMetaNode((const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str(),
             result, last_insert_node);
     }
 
@@ -308,7 +308,7 @@ Meta::getXml() const {
         if (!allowKey(it->first) || child_.end() != child_.find(it->first)) {
             continue;
         }
-        processNewMetaNode((const xmlChar*)it->first.c_str(), (const xmlChar*)it->first.c_str(),
+        processNewMetaNode((const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str(),
             result, last_insert_node);
     }
     return result;
