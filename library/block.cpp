@@ -866,7 +866,7 @@ Block::callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeConte
 
 void
 Block::callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
-    if (data_->meta_block_.get() && !data_->meta_block_->disableOutput()) {
+    if (data_->meta_block_.get()) {
         XmlDocHelper meta_doc = data_->meta_block_->call(ctx, invoke_ctx);
         invoke_ctx->metaDoc(meta_doc);
         if (!ctx->noXsltPort()) {
