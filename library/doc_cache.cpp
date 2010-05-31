@@ -518,7 +518,7 @@ PageCacheData::cleanup(Context *ctx) {
 void
 PageCacheData::write(std::ostream *os, const Response *response) const {
     typedef std::vector<std::pair<std::string, std::string> > HeaderMap;
-    for(HeaderMap::const_iterator it = headers_.begin(), end = headers_.end();
+    for (HeaderMap::const_iterator it = headers_.begin(), end = headers_.end();
         it != end;
         ++it) {       
         (*os) << it->first << ": " << it->second << "\r\n";

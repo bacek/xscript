@@ -7,6 +7,7 @@
 #include "xscript/logger.h"
 #include "xscript/meta.h"
 #include "xscript/range.h"
+#include "xscript/xml_util.h"
 
 #include "internal/algorithm.h"
 #include "internal/parser.h"
@@ -257,17 +258,17 @@ Meta::allowKey(const std::string &key) const {
     return true;
 }
 
-static void processNewMetaNode(const xmlChar *name, const xmlChar *value,
+static void processNewMetaNode(const std::string &name, const std::string &value,
     XmlNodeHelper &root, xmlNodePtr &last_insert_node) {
     if (last_insert_node) {
-        XmlNodeHelper node(xmlNewNode(NULL, name));
-        xmlNodeSetContent(node.get(), value);
+        XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)name.c_str()));
+        xmlNodeSetContent(node.get(), (const xmlChar*)XmlUtils::escape(value).c_str());
         xmlAddNextSibling(last_insert_node, node.get());
         last_insert_node = node.release();
     }
     else {
-        root = XmlNodeHelper(xmlNewNode(NULL, name));
-        xmlNodeSetContent(root.get(), value);
+        root = XmlNodeHelper(xmlNewNode(NULL, (const xmlChar*)name.c_str()));
+        xmlNodeSetContent(root.get(), (const xmlChar*)XmlUtils::escape(value).c_str());
         last_insert_node = root.get();
     }
 }
@@ -277,20 +278,20 @@ Meta::getXml() const {
     XmlNodeHelper result;
     xmlNodePtr last_insert_node = NULL;
     if (MetaCore::undefinedElapsedTime() != getElapsedTime()) {
-        processNewMetaNode((const xmlChar*)ELAPSED_TIME_META_KEY.c_str(),
-            (const xmlChar*)boost::lexical_cast<std::string>(getElapsedTime()).c_str(),
+        processNewMetaNode(ELAPSED_TIME_META_KEY,
+            boost::lexical_cast<std::string>(getElapsedTime()),
             result, last_insert_node);
     }
 
     if (undefinedExpireTime() != expire_time_) {
-        processNewMetaNode((const xmlChar*)EXPIRE_TIME_META_KEY.c_str(),
-            (const xmlChar*)boost::lexical_cast<std::string>(expire_time_).c_str(),
+        processNewMetaNode(EXPIRE_TIME_META_KEY,
+            boost::lexical_cast<std::string>(expire_time_),
             result, last_insert_node);
     }
 
     if (undefinedLastModified() != last_modified_) {
-        processNewMetaNode((const xmlChar*)LAST_MODIFIED_META_KEY.c_str(),
-            (const xmlChar*)boost::lexical_cast<std::string>(last_modified_).c_str(),
+        processNewMetaNode(LAST_MODIFIED_META_KEY,
+            boost::lexical_cast<std::string>(last_modified_),
             result, last_insert_node);
     }
 
@@ -300,8 +301,7 @@ Meta::getXml() const {
         if (!allowKey(it->first)) {
             continue;
         }
-        processNewMetaNode((const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str(),
-            result, last_insert_node);
+        processNewMetaNode(it->first, it->second, result, last_insert_node);
     }
 
     if (NULL == core_.get()) {
@@ -314,8 +314,7 @@ Meta::getXml() const {
         if (child_.end() != child_.find(it->first)) {
             continue;
         }
-        processNewMetaNode((const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str(),
-            result, last_insert_node);
+        processNewMetaNode(it->first, it->second, result, last_insert_node);
     }
     return result;
 }

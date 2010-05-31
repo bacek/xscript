@@ -4,13 +4,14 @@
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
 
-#include "xscript/context.h"
 #include "xscript/block.h"
+#include "xscript/context.h"
+#include "xscript/encoder.h"
+#include "xscript/http_utils.h"
 #include "xscript/logger.h"
 #include "xscript/request.h"
-#include "xscript/encoder.h"
-#include "xscript/util.h"
 #include "xscript/string_utils.h"
+#include "xscript/util.h"
 #include "xscript/xml_util.h"
 
 #include "internal/vhost_arg_param.h"
@@ -419,6 +420,22 @@ luaSetExpireDelta(lua_State *lua) throw () {
     }
 }
 
+static int
+luaDateParse(lua_State *lua) throw () {
+    try {
+        luaCheckStackSize(lua, 1);
+        std::string date = luaReadStack<std::string>(lua, 1);
+        lua_pushinteger(lua, HttpDateUtils::parse(date.c_str()));
+        return 1;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        return luaL_error(lua, "caught exception in [xscript:dateparse]: %s", e.what());
+    }
+}
+
 void
 setupXScript(lua_State *lua, std::string * buf) {
     log()->debug("%s, >>>stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
@@ -485,6 +502,9 @@ setupXScript(lua_State *lua, std::string * buf) {
     lua_pushcfunction(lua, &luaSetExpireDelta);
     lua_setfield(lua, -2, "setExpireDelta");
     
+    lua_pushcfunction(lua, &luaDateParse);
+    lua_setfield(lua, -2, "dateparse");
+
     lua_pop(lua, 2); // pop _G and xscript
 
     log()->debug("%s, <<<stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));

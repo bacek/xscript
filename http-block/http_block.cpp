@@ -20,6 +20,7 @@
 #include "xscript/context.h"
 #include "xscript/http_helper.h"
 #include "xscript/logger.h"
+#include "xscript/meta.h"
 #include "xscript/operation_mode.h"
 #include "xscript/param.h"
 #include "xscript/policy.h"
@@ -153,6 +154,8 @@ HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) {
         return XmlDocHelper();
     }
 
+    createMeta(helper, invoke_ctx);
+
     return response(helper);
 }
 
@@ -184,6 +187,8 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) {
         error.add("status", boost::lexical_cast<std::string>(status));
         throw error;
     }
+
+    createMeta(helper, invoke_ctx);
 
     ctx->response()->write(
         std::auto_ptr<BinaryWriter>(new StringBinaryWriter(helper.content())));
@@ -235,6 +240,8 @@ HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) {
         return XmlDocHelper();
     }
 
+    createMeta(helper, invoke_ctx);
+
     return response(helper);
 }
 
@@ -276,6 +283,7 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) {
 
     httpCall(helper);
     checkStatus(helper);
+    createMeta(helper, invoke_ctx);
     
     return response(helper);
 }
@@ -315,6 +323,7 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) {
     appendHeaders(helper, ctx->request(), NULL);
     httpCall(helper);
     checkStatus(helper);
+    createMeta(helper, invoke_ctx);
     
     return response(helper);
 }
@@ -364,6 +373,7 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) {
     appendHeaders(helper, ctx->request(), NULL);
     httpCall(helper);
     checkStatus(helper);
+    createMeta(helper, invoke_ctx);
     
     return response(helper);
 }
@@ -522,6 +532,29 @@ HttpBlock::httpCall(HttpHelper &helper) {
         throw RetryInvokeError(e.what(), "url", helper.url());
     }
     log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
+}
+
+void
+HttpBlock::createMeta(HttpHelper &helper, InvokeContext *invoke_ctx) {
+    if (metaBlock()) {
+        typedef std::multimap<std::string, std::string> HttpHeaderMap;
+        typedef HttpHeaderMap::const_iterator HttpHeaderIter;
+        const HttpHeaderMap& headers = helper.headers();
+        for (HttpHeaderIter it = headers.begin();
+             it != headers.end(); ) {
+            std::pair<HttpHeaderIter, HttpHeaderIter> res = headers.equal_range(it->first);
+            HttpHeaderIter itr = res.first;
+            for (int i = 0; itr != res.second; ++itr, ++i) {
+                std::stringstream name;
+                name << "HTTP_" << StringUtils::toupper(it->first);
+                if (i > 0) {
+                    name << "_" << i;
+                }
+                invoke_ctx->meta()->set2Core(name.str(), itr->second);
+            }
+            it = itr;
+        }
+    }
 }
 
 void

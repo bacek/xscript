@@ -64,6 +64,7 @@ private:
     int getTimeout(Context *ctx, const std::string &url);
     void checkStatus(const HttpHelper &helper);
     void httpCall(HttpHelper &helper);
+    void createMeta(HttpHelper &helper, InvokeContext *invoke_ctx);
 
     friend class HttpMethodRegistrator;
 
