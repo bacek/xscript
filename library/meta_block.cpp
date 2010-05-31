@@ -129,6 +129,10 @@ MetaBlock::postParse() {
         }
     }
 
+    if (hasGuard()) {
+        throw std::runtime_error("Guard is not allowed in meta");
+    }
+
     std::string node_name, prefix;
     std::string::size_type pos = root_name_.find(':');
     if (std::string::npos == pos) {

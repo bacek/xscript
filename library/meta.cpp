@@ -183,11 +183,17 @@ Meta::get(const std::string &name, const std::string &default_value) const {
 
 void
 Meta::set(const std::string &name, const std::string &value) {
+    if (!allowKey(name)) {
+        throw std::runtime_error(name + " key is not allowed");
+    }
     child_[name] = value;
 }
 
 void
 Meta::set2Core(const std::string &name, const std::string &value) {
+    if (!allowKey(name)) {
+        throw std::runtime_error(name + " key is not allowed");
+    }
     initCore();
     (core_->data_)[name] = value;
 }
@@ -305,7 +311,7 @@ Meta::getXml() const {
     for(MapType::const_iterator it = core_->data_.begin();
         it != core_->data_.end();
         ++it) {
-        if (!allowKey(it->first) || child_.end() != child_.find(it->first)) {
+        if (child_.end() != child_.find(it->first)) {
             continue;
         }
         processNewMetaNode((const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str(),

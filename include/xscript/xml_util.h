@@ -8,6 +8,7 @@
 #include <boost/utility.hpp>
 
 #include <xscript/range.h>
+#include <xscript/string_utils.h>
 #include <xscript/xml.h>
 
 #include <libxml/tree.h>
@@ -56,11 +57,13 @@ public:
     }
 
     static bool xpathExists(xmlDocPtr doc, const std::string &path);
-    static std::string xpathValue(xmlDocPtr doc, const std::string &path, const std::string &defval = "");
+    static std::string xpathValue(xmlDocPtr doc, const std::string &path,
+            const std::string &defval = StringUtils::EMPTY_STRING);
     static bool xpathNsExists(xmlDocPtr doc, const std::string &path,
         const std::map<std::string, std::string> &ns);
     static std::string xpathNsValue(xmlDocPtr doc, const std::string &path,
-        const std::map<std::string, std::string> &ns, const std::string &defval = "");
+        const std::map<std::string, std::string> &ns,
+            const std::string &defval = StringUtils::EMPTY_STRING);
     
     static xmlDocPtr fakeXml();
 
