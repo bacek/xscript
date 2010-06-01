@@ -446,7 +446,7 @@ FileBlock::createTagKey(const Context *ctx) const {
         return key;
     }
 
-    key.append(". Script: ").append(script->createTagKey(ctx, false));
+    key.append(". Script: ").append(script->createBlockTagKey(ctx));
     return key;
 }
 

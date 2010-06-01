@@ -934,55 +934,57 @@ Script::expireTimeDeltaUndefined() const {
 }
 
 std::string
-Script::createTagKey(const Context *ctx, bool page_cache) const {
-    std::string key;
-    if (page_cache) {
-        CacheStrategy* strategy = cacheStrategy();
-        if (NULL == strategy) {
-            throw std::logic_error("Cannot cache page without strategy");
-        }
+Script::createTagKey(const Context *ctx) const {
 
-        key.assign(ctx->request()->getOriginalUrl());
-        std::string::size_type pos = key.find('?');
-        if (std::string::npos != pos) {
-            key.erase(pos);
-        }
-
-        pos = key.find("://");
-        if (std::string::npos != pos) {
-            pos += 2;
-        }
-
-        while(std::string::npos != pos) {
-            std::string::size_type pos_prev = pos;
-            pos = key.find('/', pos + 1);
-            if (std::string::npos != pos && pos - pos_prev == 1) {
-                key.erase(pos, 1);
-                --pos;
-            }
-        }
-
-        key.push_back('|');
-        key.append(strategy->createKey(ctx));
-        key.push_back('|');
-        key.append(fileModifiedKey(xsltName()));
+    CacheStrategy* strategy = cacheStrategy();
+    if (NULL == strategy) {
+        throw std::logic_error("Cannot cache page without strategy");
     }
-    else {
-        key.assign(name());
+
+    std::string key = ctx->request()->getOriginalUrl();
+    std::string::size_type pos = key.find('?');
+    if (std::string::npos != pos) {
+        key.erase(pos);
     }
-    
-    key.push_back('|');
-    key.append(modifiedKey(modifiedInfo()));
+
+    pos = key.find("://");
+    if (std::string::npos != pos) {
+        pos += 2;
+    }
+
+    while(std::string::npos != pos) {
+        std::string::size_type pos_prev = pos;
+        pos = key.find('/', pos + 1);
+        if (std::string::npos != pos && pos - pos_prev == 1) {
+            key.erase(pos, 1);
+            --pos;
+        }
+    }
 
     key.push_back('|');
-    key.append(blocksModifiedKey(data_->blocks()));
-    
+    key.append(strategy->createKey(ctx));
+    key.push_back('|');
+    key.append(fileModifiedKey(xsltName()));
+    key.push_back('|');
+    key.append(commonTagKey(ctx));
+
     return key;
 }
 
 std::string
-Script::createTagKey(const Context *ctx) const {
-    return createTagKey(ctx, true);
+Script::createBlockTagKey(const Context *ctx) const {
+    std::string key = name();
+    key.push_back('|');
+    key.append(commonTagKey(ctx));
+    return key;
+}
+
+std::string
+Script::commonTagKey(const Context *ctx) const {
+    std::string key = modifiedKey(modifiedInfo());
+    key.push_back('|');
+    key.append(blocksModifiedKey(data_->blocks()));
+    return key;
 }
 
 std::string

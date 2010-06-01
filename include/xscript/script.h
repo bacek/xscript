@@ -54,7 +54,7 @@ public:
     virtual std::string fullName(const std::string &name) const;
     
     virtual std::string createTagKey(const Context *ctx) const;
-    std::string createTagKey(const Context *ctx, bool page_cache) const;
+    virtual std::string createBlockTagKey(const Context *ctx) const;
     
     void addExpiresHeader(const Context *ctx) const;
 
@@ -75,8 +75,10 @@ protected:
     void parseInternal(const boost::function<xmlDocPtr()> &parserFunc);    
     void parseXScript();
     
+    std::string commonTagKey(const Context *ctx) const;
+
     virtual void postParse();
-    
+
 private:
     friend class ScriptFactory;
     
