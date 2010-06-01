@@ -17,13 +17,6 @@ Extension::Extension()
 Extension::~Extension() {
 }
 
-bool
-Extension::checkScriptProperty(const char *prop, const char *value) {
-    (void)prop;
-    (void)value;
-    return false;
-}
-
 void
 Extension::ExtensionResourceTraits::destroy(Extension *ext) {
     // Acquire loader to avoid premature unload of shared library.

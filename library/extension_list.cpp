@@ -119,19 +119,6 @@ ExtensionList::accepts(Extension *ext, const char *name, const char *ref, bool a
     return true;
 }
 
-bool
-ExtensionList::checkScriptProperty(const char *prop, const char *value) {
-    bool result = false;
-    for(std::vector<Extension*>::iterator it = extensions_.begin();
-        it != extensions_.end();
-        ++it) {
-        if ((*it)->checkScriptProperty(prop, value)) {
-            result = true;
-        }
-    }
-    return result;
-}
-
 ExtensionRegisterer::ExtensionRegisterer(ExtensionHolder helper) throw () {
     try {
         ExtensionList::instance()->registerExtension(helper);

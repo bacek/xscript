@@ -642,9 +642,6 @@ Script::PropertyHandler::process(const MessageParams &params,
     }
     else if (script->checkProperty(prop, value)) {
     }
-    else if (ExtensionList::instance()->checkScriptProperty(prop, value)) {
-        script->data_->extensionProperty(prop, value);
-    }
     else {
         throw std::runtime_error(std::string("invalid script property: ").append(prop));
     }
