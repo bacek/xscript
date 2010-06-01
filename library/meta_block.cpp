@@ -116,6 +116,10 @@ MetaBlock::postParse() {
         throw std::runtime_error("Method is not allowed in meta");
     }
 
+    if (!params().empty()) {
+        throw std::runtime_error("Params is not allowed in meta");
+    }
+
     if (!xsltName().empty()) {
         throw std::runtime_error("Xslt is not allowed in meta");
     }
