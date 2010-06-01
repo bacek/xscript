@@ -121,19 +121,14 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
         CacheContext cache_ctx(this, ctx.get(), this->allowDistributed());
         boost::shared_ptr<BlockCacheData> cache_data = 
             DocCache::instance()->loadDoc(invoke_ctx.get(), &cache_ctx, cache_tag);
-        if (NULL != cache_data.get()) {
+        if (cache_data.get()) {
             if (metaBlock()) {
-                invoke_ctx->meta()->cacheParamsWritable(true);
-                invoke_ctx->meta()->setExpireTime(cache_tag.expire_time);
-                invoke_ctx->meta()->setLastModified(cache_tag.last_modified);
-                if (!cacheTimeUndefined()) {
-                    invoke_ctx->meta()->cacheParamsWritable(false);
-                }
-                callMetaLua(ctx, invoke_ctx);
+                invoke_ctx->meta()->setCacheParams(
+                    cache_tag.expire_time, cache_tag.last_modified);
+                callMetaCacheLua(ctx, invoke_ctx);
                 if (cacheTimeUndefined()) {
                     cache_tag.expire_time = invoke_ctx->meta()->getExpireTime();
                     cache_tag.last_modified = invoke_ctx->meta()->getLastModified();
-                    invoke_ctx->meta()->cacheParamsWritable(false);
                 }
             }
             if (!cache_tag.expired()) {
@@ -175,14 +170,12 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
     invoke_ctx->resultType(InvokeContext::SUCCESS);
     invoke_ctx->resultDoc(doc);
     invoke_ctx->meta()->setCore(meta_core);
-    if (metaBlock() && !metaBlock()->cacheable()) {
-        invoke_ctx->meta()->setElapsedTime(ctx->timer().elapsed());
-    }
+    callMetaLua(ctx, invoke_ctx);
     evalXPath(ctx.get(), doc);
 }
 
 void
-TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
+TaggedBlock::postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
 
     log()->debug("%s, tagged: %d", BOOST_CURRENT_FUNCTION, static_cast<int>(tagged()));
     if (!tagged() || !invoke_ctx->success()) {
@@ -193,10 +186,12 @@ TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
         return;
     }
     
-    if (!Policy::allowCaching(ctx, this)) {
+    if (!Policy::allowCaching(ctx.get(), this)) {
         return;
     }
     
+    callMetaCacheLua(ctx, invoke_ctx);
+
     time_t now = time(NULL);
     DocCache *cache = DocCache::instance();
     Tag tag = invoke_ctx->tag();
@@ -231,23 +226,21 @@ TaggedBlock::postCall(Context *ctx, InvokeContext *invoke_ctx) {
         can_store = tag.expire_time >= now + cache->minimalCacheTime();
     }
 
+    bool res = false;
     if (can_store) {
-        CacheContext cache_ctx(this, ctx, this->allowDistributed());
+        CacheContext cache_ctx(this, ctx.get(), this->allowDistributed());
         boost::shared_ptr<MetaCore> meta;
-        if (metaBlock() && metaBlock()->cacheable()) {
+        if (metaBlock()) {
             meta = invoke_ctx->meta()->getCore();
         }
         boost::shared_ptr<BlockCacheData> cache_data(
             new BlockCacheData(invoke_ctx->resultDoc(), meta));
-        cache->saveDoc(invoke_ctx, &cache_ctx, tag, cache_data);
-        invoke_ctx->meta()->setExpireTime(tag.expire_time);
-        invoke_ctx->meta()->setLastModified(tag.last_modified);
+        res = cache->saveDoc(invoke_ctx.get(), &cache_ctx, tag, cache_data);
     }
-    else {
-        invoke_ctx->meta()->setExpireTime(Meta::undefinedExpireTime());
-        invoke_ctx->meta()->setLastModified(Meta::undefinedLastModified());
-    }
-    invoke_ctx->meta()->cacheParamsWritable(false);
+
+    invoke_ctx->meta()->setCacheParams(
+        res ? tag.expire_time : Meta::undefinedExpireTime(),
+        res ? tag.last_modified : Meta::undefinedLastModified());
 }
 
 void
@@ -423,7 +416,7 @@ TaggedBlock::processMainKey(const Context *ctx) const {
     key.append(canonicalMethod(ctx));
     key.push_back('|');
     key.append(paramsIdKey(xsltParams(), ctx));
-    if (metaBlock() && metaBlock()->cacheable()) {
+    if (metaBlock()) {
         key.append("|meta");
     }
     return key;
@@ -432,6 +425,16 @@ TaggedBlock::processMainKey(const Context *ctx) const {
 std::string
 TaggedBlock::processParamsKey(const Context *ctx) const {
     return paramsKey(params(), ctx);
+}
+
+void
+TaggedBlock::callMetaCacheLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+    MetaBlock* meta_block = metaBlock();
+    if (meta_block) {
+        invoke_ctx->meta()->cacheParamsWritable(cacheTimeUndefined());
+        meta_block->callCacheLua(ctx, invoke_ctx);
+        invoke_ctx->meta()->cacheParamsWritable(false);
+    }
 }
 
 } // namespace xscript

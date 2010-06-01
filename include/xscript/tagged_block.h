@@ -37,7 +37,7 @@ public:
 protected:
     bool cacheTimeUndefined() const;
     virtual void invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
-    virtual void postCall(Context *ctx, InvokeContext *invoke_ctx);
+    virtual void postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void postParse();
     virtual void property(const char *name, const char *value);
     bool propertyInternal(const char *name, const char *value);
@@ -48,6 +48,8 @@ protected:
     
     std::string processMainKey(const Context *ctx) const;
     std::string processParamsKey(const Context *ctx) const;
+
+    void callMetaCacheLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
 
 private:
     struct TaggedBlockData;

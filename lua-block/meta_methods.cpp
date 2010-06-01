@@ -27,6 +27,8 @@ extern "C" {
     int luaMetaSetExpireTime(lua_State *lua);
     int luaMetaGetLastModified(lua_State *lua);
     int luaMetaSetLastModified(lua_State *lua);
+    int luaMetaFromCache(lua_State *lua);
+
     int luaLocalMetaHas(lua_State *lua);
     int luaLocalMetaGet(lua_State *lua);
     int luaLocalMetaSet(lua_State *lua);
@@ -41,6 +43,7 @@ static const struct luaL_reg metalib [] = {
     {"setExpireTime",   luaMetaSetExpireTime},
     {"getLastModified", luaMetaGetLastModified},
     {"setLastModified", luaMetaSetLastModified},
+    {"fromCache",       luaMetaFromCache},
     {NULL, NULL}
 };
 
@@ -284,6 +287,29 @@ luaMetaSetLastModified(lua_State *lua) {
     }
     catch (const std::exception &e) {
         luaL_error(lua, "caught exception in meta.setLastModified: %s", e.what());
+        return 0;
+    }
+}
+
+int
+luaMetaFromCache(lua_State *lua) {
+    log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+    try {
+        luaCheckStackSize(lua, 1);
+        readMetaFromStack(lua, false);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, false);
+        bool from_cache = false;
+        if (NULL != invoke_ctx) {
+            from_cache = invoke_ctx->meta()->getExpireTime() != Meta::undefinedExpireTime();
+        }
+        lua_pushboolean(lua, from_cache);
+        return 1;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        luaL_error(lua, "caught exception in meta.fromCache: %s", e.what());
         return 0;
     }
 }

@@ -47,6 +47,8 @@ public:
     time_t getLastModified() const;
     void setLastModified(time_t time);
 
+    void setCacheParams(time_t expire, time_t last_modified);
+
     static time_t undefinedExpireTime();
     static time_t undefinedLastModified();
 

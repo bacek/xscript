@@ -74,7 +74,7 @@ public:
 protected:
     virtual void processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void property(const char *name, const char *value);
-    virtual void postCall(Context *ctx, InvokeContext *invoke_ctx);
+    virtual void postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void postInvoke(Context *ctx, InvokeContext *invoke_ctx);
     virtual void callInternal(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);

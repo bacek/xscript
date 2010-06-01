@@ -248,6 +248,12 @@ Meta::setLastModified(time_t time) {
     }
 }
 
+void
+Meta::setCacheParams(time_t expire, time_t last_modified) {
+    expire_time_ = expire;
+    last_modified_ = last_modified;
+}
+
 bool
 Meta::allowKey(const std::string &key) const {
     if (ELAPSED_TIME_META_KEY == key ||

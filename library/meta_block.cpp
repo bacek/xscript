@@ -14,8 +14,7 @@ namespace xscript {
 
 MetaBlock::MetaBlock(const Block *block, xmlNodePtr node) :
         Block(block->extension(), block->owner(), node),
-        parent_(block), cacheable_(true),
-        root_name_("meta"), root_ns_(NULL)
+        parent_(block), root_name_("meta"), root_ns_(NULL)
 {
     disableOutput(true);
 }
@@ -30,27 +29,45 @@ MetaBlock::luaNode(const xmlNodePtr node) const {
            xmlStrcasecmp(node->ns->href, (const xmlChar*)XmlUtils::XSCRIPT_NAMESPACE) == 0;
 }
 
+bool
+MetaBlock::cacheLuaNode(const xmlNodePtr node) const {
+    return node->ns && node->ns->href &&
+           xmlStrcasecmp(node->name, (const xmlChar*)"cache-lua") == 0 &&
+           xmlStrcasecmp(node->ns->href, (const xmlChar*)XmlUtils::XSCRIPT_NAMESPACE) == 0;
+}
+
 void
 MetaBlock::parseSubNode(xmlNodePtr node) {
     if (metaNode(node)) {
         throw std::runtime_error("Nested meta section is not allowed");
     }
-
-    if (luaNode(node)) {
+    if (cacheLuaNode(node)) {
+        if (cache_lua_block_.get()) {
+            throw std::runtime_error("One cache lua section allowed in meta");
+        }
+        xmlNodeSetName(node, (const xmlChar*)"lua");
+        parseLua(node, cache_lua_block_);
+    }
+    else if (luaNode(node)) {
         if (lua_block_.get()) {
             throw std::runtime_error("One lua section allowed in meta");
         }
-        Extension *ext = ExtensionList::instance()->extension(node, false);
-        if (NULL == ext) {
-            throw std::runtime_error("Lua module is not loaded");
-        }
-        lua_block_ = ext->createBlock(owner(), node);
-        assert(lua_block_.get());
-        lua_block_->parse();
+        parseLua(node, lua_block_);
     }
     else {
         Block::parseSubNode(node);
     }
+}
+
+void
+MetaBlock::parseLua(xmlNodePtr node, std::auto_ptr<Block> &block) {
+    Extension *ext = ExtensionList::instance()->extension(node, false);
+    if (NULL == ext) {
+        throw std::runtime_error("Lua module is not loaded");
+    }
+    block = ext->createBlock(owner(), node);
+    assert(block.get());
+    block->parse();
 }
 
 void
@@ -59,6 +76,15 @@ MetaBlock::callLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeConte
         boost::shared_ptr<InvokeContext> meta_ctx(new InvokeContext(invoke_ctx.get()));
         meta_ctx->setMetaFlag();
         lua_block_->call(ctx, meta_ctx);
+    }
+}
+
+void
+MetaBlock::callCacheLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+    if (cache_lua_block_.get()) {
+        boost::shared_ptr<InvokeContext> meta_ctx(new InvokeContext(invoke_ctx.get()));
+        meta_ctx->setMetaFlag();
+        cache_lua_block_->call(ctx, meta_ctx);
     }
 }
 
@@ -86,17 +112,7 @@ MetaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext>
 
 void
 MetaBlock::property(const char *name, const char *value) {
-    if (strncasecmp(name, "cache", sizeof("cache")) == 0) {
-        if (strncasecmp(value, "yes", sizeof("yes")) == 0) {
-        }
-        else if (strncasecmp(value, "no", sizeof("no")) == 0) {
-            cacheable_ = false;
-        }
-        else {
-            throw std::runtime_error("Incorrect cache value in meta");
-        }
-    }
-    else if (strncasecmp(name, "name", sizeof("name")) == 0) {
+    if (strncasecmp(name, "name", sizeof("name")) == 0) {
         root_name_.assign(value);
         if (root_name_.empty()) {
             throw std::runtime_error("Empty name attribute is not allowed in meta");
@@ -163,11 +179,6 @@ MetaBlock::postParse() {
             throw std::runtime_error(str.str());
         }
     }
-}
-
-bool
-MetaBlock::cacheable() const {
-    return cacheable_;
 }
 
 } // namespace xscript

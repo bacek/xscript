@@ -521,7 +521,7 @@ Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeC
         invoke_ctx->meta()->setElapsedTime(ctx->timer().elapsed());
     }
     
-    postCall(ctx.get(), invoke_ctx.get());
+    postCall(ctx, invoke_ctx);
 
     callMetaLua(ctx, invoke_ctx);
 
@@ -829,7 +829,9 @@ Block::property(const char *name, const char *value) {
 }
 
 void
-Block::postCall(Context *, InvokeContext *) {
+Block::postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+    (void)ctx;
+    (void)invoke_ctx;
 }
 
 void
