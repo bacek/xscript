@@ -1,10 +1,13 @@
 #ifndef _XSCRIPT_CONFIG_H_
 #define _XSCRIPT_CONFIG_H_
 
+#include <iosfwd>
+#include <map>
+#include <memory>
+#include <set>
 #include <string>
 #include <vector>
-#include <memory>
-#include <iosfwd>
+
 #include <boost/noncopyable.hpp>
 #include <boost/lexical_cast.hpp>
 
@@ -27,14 +30,26 @@ public:
     static std::auto_ptr<Config> create(const char *file);
     static std::auto_ptr<Config> create(int &argc, char *argv[], bool dont_check = false, HelpFunc func = NULL);
     
-    //TODO: make these methods non-static
-    static bool getCacheParam(const std::string &name, std::string &value);
-    static void addCacheParam(const std::string &name, const std::string &value);
-    static void addForbiddenKey(const std::string &key);
-    static void stopCollectCache();
-    static const std::string& fileName();
+    virtual const std::string& fileName() const = 0;
+
+    int defaultBlockTimeout() const;
+
 protected:
     virtual std::string value(const std::string &value) const = 0;
+
+public:
+    bool getCacheParam(const std::string &name, std::string &value) const;
+    void stopCollectCache();
+    void addForbiddenKey(const std::string &key) const;
+    void addCacheParam(const std::string &name, const std::string &value) const;
+protected:
+    void initParams();
+
+private:
+    mutable std::map<std::string, std::string> cache_params_;
+    mutable std::set<std::string> forbidden_keys_;
+    bool stop_collect_cache_;
+    int default_block_timeout_;
 };
 
 template<typename T> inline T

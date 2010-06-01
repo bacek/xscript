@@ -54,35 +54,16 @@ typedef std::map<std::string, std::string> VarMap;
 typedef details::hash_map<std::string, std::string, details::StringHash> VarMap;
 #endif
 
-static std::map<std::string, std::string>* cache_params = NULL;
-static std::set<std::string>* forbidden_keys = NULL;
-static bool stop_collect_cache = false;
-static std::string config_file;
-
-Config::Config() {
-    if (NULL == cache_params) {
-        cache_params = new std::map<std::string, std::string>();
-    }
-    if (NULL == forbidden_keys) {
-        forbidden_keys = new std::set<std::string>();
-    }
+Config::Config() : stop_collect_cache_(false), default_block_timeout_(5000) {
 }
 
 Config::~Config() {
-    if (NULL != cache_params) {
-        delete cache_params;
-        cache_params = NULL;
-    }
-    if (NULL != forbidden_keys) {
-        delete forbidden_keys;
-        forbidden_keys = NULL;
-    }
 }
 
 void
 Config::startup() {
 
-    ConfigParams::init(this);
+    initParams();
     
     LoggerFactory::instance()->init(this);
     log()->debug("logger factory started");
@@ -130,7 +111,6 @@ Config::startup() {
 
 std::auto_ptr<Config>
 Config::create(const char *file) {
-    config_file.assign(file);
     return std::auto_ptr<Config>(new XmlConfig(file));
 }
 
@@ -140,7 +120,6 @@ Config::create(int &argc, char *argv[], bool dont_check, HelpFunc func) {
         if (strncmp(argv[i], "--config", sizeof("--config") - 1) == 0) {
             const char *pos = strchr(argv[i], '=');
             if (NULL != pos) {
-                config_file.assign(pos + 1);
                 std::auto_ptr<Config> conf(new XmlConfig(pos + 1));
                 std::swap(argv[i], argv[argc - 1]);
                 --argc;
@@ -164,8 +143,8 @@ Config::create(int &argc, char *argv[], bool dont_check, HelpFunc func) {
 }
 
 void
-Config::addForbiddenKey(const std::string &key) {
-    if (stop_collect_cache) {
+Config::addForbiddenKey(const std::string &key) const {
+    if (stop_collect_cache_) {
         return;
     }
     Range key_r = trim(createRange(key));
@@ -175,16 +154,16 @@ Config::addForbiddenKey(const std::string &key) {
     
     static Range mask = createRange("/*");
     if (endsWith(key_r, mask)) {
-        forbidden_keys->insert(std::string(key_r.begin(), key_r.end() - 1));
+        forbidden_keys_.insert(std::string(key_r.begin(), key_r.end() - 1));
     }
     else {
-        forbidden_keys->insert(std::string(key_r.begin(), key_r.end()));
+        forbidden_keys_.insert(std::string(key_r.begin(), key_r.end()));
     }
 }
 
 void
-Config::addCacheParam(const std::string &name, const std::string &value) {
-    if (stop_collect_cache) {
+Config::addCacheParam(const std::string &name, const std::string &value) const {
+    if (stop_collect_cache_) {
         return;
     }
     Range name_r = trim(createRange(name));
@@ -193,8 +172,8 @@ Config::addCacheParam(const std::string &name, const std::string &value) {
         return;
     }
     
-    for(std::set<std::string>::iterator it = forbidden_keys->begin();
-        it != forbidden_keys->end();
+    for(std::set<std::string>::iterator it = forbidden_keys_.begin();
+        it != forbidden_keys_.end();
         ++it) {
         if ('/' == *it->rbegin()) {
             if (0 == strncmp(name_r.begin(), it->c_str(), it->size())) {
@@ -207,13 +186,13 @@ Config::addCacheParam(const std::string &name, const std::string &value) {
     }
     
     std::string key(name_r.begin() + prefix.size(), name_r.end());
-    (*cache_params)[key] = value;
+    cache_params_[key] = value;
 }
 
 bool
-Config::getCacheParam(const std::string &name, std::string &value) {
-    std::map<std::string, std::string>::iterator it = cache_params->find(name);
-    if (cache_params->end() == it) {
+Config::getCacheParam(const std::string &name, std::string &value) const {
+    std::map<std::string, std::string>::iterator it = cache_params_.find(name);
+    if (cache_params_.end() == it) {
         return false;
     }
     value = it->second;
@@ -222,12 +201,18 @@ Config::getCacheParam(const std::string &name, std::string &value) {
 
 void
 Config::stopCollectCache() {
-    stop_collect_cache = true;
+    stop_collect_cache_ = true;
 }
 
-const std::string&
-Config::fileName() {
-    return config_file;
+void
+Config::initParams() {
+    addForbiddenKey("/xscript/default-block-timeout");
+    default_block_timeout_ = as<int>("/xscript/default-block-timeout", 5000);
+}
+
+int
+Config::defaultBlockTimeout() const {
+    return default_block_timeout_;
 }
 
 class XmlConfig::XmlConfigData {
@@ -242,9 +227,12 @@ public:
     
     VarMap vars_;
     XmlDocHelper doc_;
+    std::string filename_;
 };
 
-XmlConfig::XmlConfigData::XmlConfigData(const char *file) : doc_(NULL) {
+XmlConfig::XmlConfigData::XmlConfigData(const char *file) :
+    doc_(NULL), filename_(file) {
+
     namespace fs = boost::filesystem;
     fs::path path(file, fs::no_check);
     if (!fs::exists(path)) {
@@ -382,7 +370,7 @@ XmlConfig::value(const std::string &key) const {
 void
 XmlConfig::subKeys(const std::string &key, std::vector<std::string> &v) const {
 
-    Config::addForbiddenKey(key + "/*");
+    addForbiddenKey(key + "/*");
     
     XmlXPathContextHelper xctx(xmlXPathNewContext(data_->doc_.get()));
     XmlUtils::throwUnless(NULL != xctx.get());
@@ -404,17 +392,9 @@ XmlConfig::subKeys(const std::string &key, std::vector<std::string> &v) const {
     }
 }
 
-static int default_timeout = 5000;
-
-void 
-ConfigParams::init(const Config *config) {
-    Config::addForbiddenKey("/xscript/default-block-timeout");
-    default_timeout = config->as<int>("/xscript/default-block-timeout", 5000);
-}
-
-int
-ConfigParams::defaultTimeout() {
-    return default_timeout;
+const std::string&
+XmlConfig::fileName() const {
+    return data_->filename_;
 }
 
 } // namespace xscript

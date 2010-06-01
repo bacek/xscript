@@ -8,6 +8,8 @@
 #include <cstring>
 
 #include "xscript/config.h"
+#include "xscript/vhost_data.h"
+
 #include "proc_server.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -69,6 +71,7 @@ main(int argc, char *argv[]) {
             return EXIT_SUCCESS;
         }
 
+        VirtualHostData::instance()->setConfig(config.get());
         ProcServer server(config.get(), url, args);
         server.run();
 

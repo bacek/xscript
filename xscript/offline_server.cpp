@@ -25,7 +25,7 @@ namespace xscript {
 
 OfflineServer::OfflineServer(Config *config) : Server(config) {
     root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");
-    Config::stopCollectCache();
+    config->stopCollectCache();
 }
 
 OfflineServer::~OfflineServer() {

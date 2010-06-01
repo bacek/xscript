@@ -11,6 +11,7 @@
 
 #include "xscript/config.h"
 #include "xscript/logger.h"
+#include "xscript/vhost_data.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -26,6 +27,7 @@ main(int argc, char *argv[]) {
     try {
         std::auto_ptr<Config> config =  Config::create("test.conf");
         config->startup();
+        xscript::VirtualHostData::instance()->setConfig(config.get());
 
         CppUnit::TextUi::TestRunner r;
         r.addTest(CppUnit::TestFactoryRegistry::getRegistry().makeTest());

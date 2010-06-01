@@ -4,6 +4,7 @@
 
 #include "xscript/config.h"
 #include "xscript/string_utils.h"
+#include "xscript/vhost_data.h"
 
 #include "offline_server.h"
 #include "server_wrapper.h"
@@ -22,6 +23,7 @@ initialize(const char *config_path) {
         throw std::runtime_error("server is already initialized");
     }
     config = xscript::Config::create(config_path);
+    VirtualHostData::instance()->setConfig(config.get());
     server.reset(new xscript::OfflineServer(config.get()));
 }
 

@@ -329,16 +329,6 @@ Server::hostname() const {
     return data_->hostname_;
 }
 
-unsigned short
-Server::alternatePort() const {
-    return data_->alternate_ports_[0];
-}
-
-unsigned short
-Server::noXsltPort() const {
-    return data_->noxslt_ports_[0];
-}
-
 extern "C" int
 closeFunc(void *ctx) {
     (void)ctx;

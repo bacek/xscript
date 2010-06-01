@@ -107,7 +107,7 @@ DocCacheMemory::init(const Config *config) {
 
     assert(pools_.empty());
 
-    Config::addForbiddenKey("/xscript/tagged-cache-memory/*");
+    config->addForbiddenKey("/xscript/tagged-cache-memory/*");
     
     unsigned int pools = config->as<unsigned int>("/xscript/tagged-cache-memory/pools", DEFAULT_POOL_COUNT);
     unsigned int pool_size = config->as<unsigned int>("/xscript/tagged-cache-memory/pool-size", DEFAULT_POOL_SIZE);

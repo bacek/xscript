@@ -16,7 +16,7 @@ namespace xscript {
 
 class VirtualHostData::HostData {
 public:
-    HostData() : server_(NULL) {}
+    HostData() : server_(NULL), config_(NULL) {}
     ~HostData() {}
     
     const Request* get() const {
@@ -39,6 +39,7 @@ public:
     };
 
     const Server* server_;
+    const Config* config_;
     boost::thread_specific_ptr<RequestProvider> request_provider_;
 };
 
@@ -67,6 +68,16 @@ VirtualHostData::setServer(const Server *server) {
 const Server*
 VirtualHostData::getServer() const {
     return data_->server_;
+}
+
+void
+VirtualHostData::setConfig(const Config *config) {
+    data_->config_ = config;
+}
+
+const Config*
+VirtualHostData::getConfig() const {
+    return data_->config_;
 }
 
 bool

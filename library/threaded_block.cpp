@@ -15,7 +15,10 @@
 namespace xscript {
 
 struct ThreadedBlock::ThreadedBlockData {
-    ThreadedBlockData() : threaded_(false), timeout_(0), check_elapsed_time_(false)
+    ThreadedBlockData() :
+        threaded_(false),
+        timeout_(VirtualHostData::instance()->getConfig()->defaultBlockTimeout()),
+        check_elapsed_time_(false)
     {}
     
     ~ThreadedBlockData() {
@@ -40,7 +43,7 @@ ThreadedBlock::~ThreadedBlock() {
 
 int
 ThreadedBlock::timeout() const {
-    return trb_data_->timeout_ > 0 ? trb_data_->timeout_ : ConfigParams::defaultTimeout();
+    return trb_data_->timeout_;
 }
 
 int
@@ -66,6 +69,9 @@ ThreadedBlock::property(const char *name, const char *value) {
     else if (strncasecmp(name, "timeout", sizeof("timeout")) == 0) {
         try {
             trb_data_->timeout_ = boost::lexical_cast<int>(value);
+            if (trb_data_->timeout_ <= 0) {
+                throw std::runtime_error("Positive timeout allowed only");
+            }
         }
         catch(const boost::bad_lexical_cast &e) {
             throw std::runtime_error(

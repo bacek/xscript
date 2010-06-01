@@ -23,12 +23,9 @@ public:
 
     virtual bool needApplyMainStylesheet(Request *request) const;
     virtual bool needApplyPerblockStylesheet(Request *request) const;
-    //TODO: remove
-    virtual unsigned short alternatePort() const;
-    //TODO: remove
-    virtual unsigned short noXsltPort() const;
     virtual bool useXsltProfiler() const = 0;
     const std::string& hostname() const;
+    Config* config() const;
 
 protected:
     void handleRequest(const boost::shared_ptr<Request> &request,
@@ -49,8 +46,6 @@ protected:
                                    const boost::shared_ptr<State> &state,
                                    const boost::shared_ptr<Request> &request,
                                    const boost::shared_ptr<Response> &response);
-
-    Config* config() const;
 private:
     class ServerData;
     ServerData *data_;

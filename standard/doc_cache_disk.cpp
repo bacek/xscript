@@ -163,7 +163,7 @@ void
 DocCacheDisk::init(const Config *config) {
     DocCacheStrategy::init(config);
 
-    Config::addForbiddenKey("/xscript/tagged-cache-disk/*");
+    config->addForbiddenKey("/xscript/tagged-cache-disk/*");
     
     root_ = config->as<std::string>("/xscript/tagged-cache-disk/root-dir", "").append("/");
     min_time_ = config->as<time_t>("/xscript/tagged-cache-disk/min-cache-time", DEFAULT_CACHE_TIME);

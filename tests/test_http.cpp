@@ -20,13 +20,11 @@ public:
     void testGet();
     void testGetLocal();
     void testSanitized();
-    void testZeroTimeout();
 
 private:
     CPPUNIT_TEST_SUITE(HttpTest);
     CPPUNIT_TEST(testGet);
     CPPUNIT_TEST(testGetLocal);
-    CPPUNIT_TEST(testZeroTimeout);
     CPPUNIT_TEST_SUITE_END();
 };
 
@@ -69,14 +67,3 @@ HttpTest::testSanitized() {
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
     CPPUNIT_ASSERT(NULL != doc->get());
 }
-
-void
-HttpTest::testZeroTimeout() {
-
-    using namespace xscript;
-    boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-timeout.xml");
-    ContextStopper ctx_stopper(ctx);
-    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
-}
-

@@ -99,7 +99,7 @@ ProcServer::ProcServer(Config *config,
         root_ = std::string(dirname);
     }
     
-    Config::stopCollectCache();
+    config->stopCollectCache();
 }
 
 ProcServer::~ProcServer() {

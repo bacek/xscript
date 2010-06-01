@@ -237,7 +237,7 @@ DocCacheMemcached::init(const Config *config) {
     log()->debug("initing Memcached");
     DocCacheStrategy::init(config);
     
-    Config::addForbiddenKey("/xscript/tagged-cache-memcached/*");
+    config->addForbiddenKey("/xscript/tagged-cache-memcached/*");
     
     std::string cache_strategy = config->as<std::string>(
             "/xscript/tagged-cache-memcached/enable", "");

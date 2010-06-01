@@ -8,6 +8,7 @@
 #include "fcgi_server.h"
 #include "xscript/config.h"
 #include "xscript/logger.h"
+#include "xscript/vhost_data.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -20,6 +21,7 @@ main(int argc, char *argv[]) {
 
     try {
         std::auto_ptr<Config> c = Config::create(argc, argv);
+        VirtualHostData::instance()->setConfig(c.get());
         FCGIServer server(c.get());
         server.run();
 

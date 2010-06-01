@@ -18,12 +18,15 @@ public:
     void set(const Request *request);
     const Request* get() const;
     const Server* getServer() const;
+    const Config* getConfig() const;
 
     bool hasVariable(const Request *request, const std::string &var) const;
     std::string getVariable(const Request *request, const std::string &var) const;
     bool checkVariable(const Request *request, const std::string &var) const;
 
     std::string getDocumentRoot(const Request *request) const;
+
+    void setConfig(const Config *config);
 
 protected:
     friend class Server;

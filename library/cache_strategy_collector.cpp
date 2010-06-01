@@ -9,6 +9,7 @@
 #include "xscript/control_extension.h"
 #include "xscript/doc_cache_strategy.h"
 #include "xscript/logger.h"
+#include "xscript/vhost_data.h"
 #include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -29,7 +30,8 @@ public:
         (void)invoke_ctx;
         ControlExtension::setControlFlag(ctx.get());
 
-        std::auto_ptr<Config> config = Config::create(Config::fileName().c_str());
+        const Config* conf = VirtualHostData::instance()->getConfig();
+        std::auto_ptr<Config> config = Config::create(conf->fileName().c_str());
 
         CacheStrategyCollector::StrategyMapType strategies, invalid_strategies, new_strategies;
         collector_->parsePageCacheStrategies(config.get(), new_strategies);

@@ -50,7 +50,7 @@ std::auto_ptr<Block> FileExtension::createBlock(Xml *owner, xmlNodePtr node) {
 }
 
 void FileExtension::init(const Config *config) {
-    Config::addForbiddenKey("/xscript/file-block/max-invoke-depth");
+    config->addForbiddenKey("/xscript/file-block/max-invoke-depth");
     max_invoke_depth_ = config->as<unsigned int>("/xscript/file-block/max-invoke-depth", 10);
 }
 

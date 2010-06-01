@@ -116,15 +116,15 @@ FCGIServer::run() {
 
     Config* conf = config();
     
-    Config::addForbiddenKey("/xscript/endpoint/*");
+    conf->addForbiddenKey("/xscript/endpoint/*");
     std::string socket = conf->as<std::string>("/xscript/endpoint/socket");
     unsigned short backlog = conf->as<unsigned short>("/xscript/endpoint/backlog");
 
-    Config::addForbiddenKey("/xscript/pidfile");
+    conf->addForbiddenKey("/xscript/pidfile");
     pid(conf->as<std::string>("/xscript/pidfile"));
 
-    Config::addForbiddenKey("/xscript/input-buffer");
-    Config::addForbiddenKey("/xscript/output-buffer");
+    conf->addForbiddenKey("/xscript/input-buffer");
+    conf->addForbiddenKey("/xscript/output-buffer");
     inbuf_size_ = conf->as<unsigned int>("/xscript/input-buffer", 4096);
     outbuf_size_ = conf->as<unsigned int>("/xscript/output-buffer", 4096);
 
@@ -145,7 +145,7 @@ FCGIServer::run() {
     boost::function<void()> f = boost::bind(&FCGIServer::handle, this);
     unsigned short pool_size = conf->as<unsigned short>("/xscript/fastcgi-workers");
     
-    Config::stopCollectCache();
+    conf->stopCollectCache();
     
     workerCounter_->max(pool_size);
     for (unsigned short i = 0; i < pool_size; ++i) {

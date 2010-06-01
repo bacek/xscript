@@ -266,7 +266,7 @@ XmlCache::init(const Config *config, StatBuilder &statBuilder) {
 
     const std::string& name = statBuilder.getName();
     
-    Config::addForbiddenKey(std::string("/xscript/").append(name).append("/*"));
+    config->addForbiddenKey(std::string("/xscript/").append(name).append("/*"));
     
     int buckets = config->as<int>(std::string("/xscript/").append(name).append("/buckets"), 10);
     int bucksize = config->as<int>(std::string("/xscript/").append(name).append("/bucket-size"), 200);

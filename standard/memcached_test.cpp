@@ -7,9 +7,11 @@
 #include "xscript/logger_factory.h"
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
+#include "xscript/server.h"
 #include "xscript/state.h"
 #include "xscript/tagged_block.h"
 #include "xscript/test_utils.h"
+#include "xscript/vhost_data.h"
 
 #include "internal/extension_list.h"
 #include "internal/loader.h"
@@ -40,6 +42,7 @@ private:
     void testSaveLoad() {
         std::auto_ptr<Config> config = Config::create("test.conf");
         config->startup();
+        VirtualHostData::instance()->setConfig(config.get());
 
         boost::shared_ptr<Context> ctx = TestUtils::createEnv("file-local-tagged.xml");
         ContextStopper ctx_stopper(ctx);

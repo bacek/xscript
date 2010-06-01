@@ -16,6 +16,7 @@ public:
     virtual std::string value(const std::string &value) const;
     virtual void subKeys(const std::string &value, std::vector<std::string> &v) const;
 
+    virtual const std::string& fileName() const;
 private:
     class XmlConfigData;
     XmlConfigData *data_;

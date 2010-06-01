@@ -30,7 +30,8 @@ VHostArgParam::variable(const Context *ctx, const std::string &name) {
         return VirtualHostData::instance()->getVariable(ctx->rootContext()->request(), name);
     }
     std::string value;
-    if (Config::getCacheParam(name, value)) {
+    const Config *config = VirtualHostData::instance()->getConfig();
+    if (config->getCacheParam(name, value)) {
         return value;
     }
     return StringUtils::EMPTY_STRING;
