@@ -44,7 +44,6 @@ public:
     unsigned int blocksNumber() const;
     const std::vector<Block*>& blocks() const;
     const std::map<std::string, std::string>& headers() const;
-    const std::string& extensionProperty(const std::string &name) const;
     
     std::string info(const Context *ctx) const;
     bool cachable(const Context *ctx, bool for_save) const;

@@ -71,7 +71,6 @@ public:
     bool allowMethod(const std::string &value) const;
     
     const std::map<std::string, std::string>& headers() const;
-    const std::string& extensionProperty(const std::string &name) const;
     std::set<xmlNodePtr>& xscriptNodes() const;
     
     unsigned int blocksNumber() const;
@@ -83,7 +82,6 @@ public:
     void addXscriptNode(xmlNodePtr node);
     void addHeader(const std::string &name, const std::string &value);
     void setHeaders(Response *response);
-    void extensionProperty(const std::string &name, const std::string &value);
 
     void threaded(bool value);
     void forceStylesheet(bool value);
@@ -115,7 +113,6 @@ public:
     std::set<xmlNodePtr> xscript_node_set_;
     std::map<std::string, std::string> headers_;
     std::vector<std::string> allow_methods_;
-    std::map<std::string, std::string, StringCILess> extension_properties_;
     
     static const unsigned int FLAG_THREADED = 1;
     static const unsigned int FLAG_FORCE_STYLESHEET = 1 << 1;
@@ -250,11 +247,6 @@ Script::ScriptData::addXscriptNode(xmlNodePtr node) {
 }
 
 void
-Script::ScriptData::extensionProperty(const std::string &name, const std::string &value) {
-    extension_properties_.insert(std::make_pair(name, value));
-}
-
-void
 Script::ScriptData::addHeader(const std::string &name, const std::string &value) {
     headers_.insert(std::make_pair<std::string, std::string>(name, value));
 }
@@ -264,18 +256,6 @@ Script::ScriptData::setHeaders(Response *response) {
     for (std::map<std::string, std::string>::const_iterator i = headers_.begin(), end = headers_.end(); i != end; ++i) {
         response->setHeader(i->first, i->second);
     }
-}
-
-const std::string&
-Script::ScriptData::extensionProperty(const std::string &name) const {
-    std::map<std::string, std::string, StringCILess>::const_iterator it =
-        extension_properties_.find(name);
-    
-    if (it == extension_properties_.end()) {
-        return StringUtils::EMPTY_STRING;
-    }
-    
-    return it->second;
 }
 
 bool
@@ -946,11 +926,6 @@ Script::addExpiresHeader(const Context *ctx) const {
 
 void
 Script::postParse() {
-}
-
-const std::string&
-Script::extensionProperty(const std::string &name) const {
-    return data_->extensionProperty(name);
 }
 
 bool
