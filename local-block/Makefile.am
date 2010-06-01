@@ -1,7 +1,6 @@
 pkglib_LTLIBRARIES = xscript-local.la
 
-xscript_local_la_SOURCES = local_block.cpp local_extension.cpp local_arg_list.cpp while_block.cpp while_extension.cpp \
-	namespace_handler.cpp
+xscript_local_la_SOURCES = local_block.cpp local_extension.cpp local_arg_list.cpp while_block.cpp while_extension.cpp
 
 
 xscript_local_la_LIBADD = ../library/libxscript.la

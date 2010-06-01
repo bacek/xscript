@@ -44,7 +44,7 @@ public:
         static void destroy(Extension * ptr);
     };
 
-    bool allowEmptyNamespace() const;
+    virtual bool allowEmptyNamespace() const;
     
     static const std::string ALLOW_EMPTY_NAMESPACE_METHOD;
 

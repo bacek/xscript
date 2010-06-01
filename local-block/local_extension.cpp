@@ -54,6 +54,11 @@ LocalExtension::init(const Config *config) {
     (void)config;
 }
 
+bool
+LocalExtension::allowEmptyNamespace() const {
+    return false;
+}
+
 static ExtensionRegisterer ext_(ExtensionHolder(new LocalExtension()));
 
 }

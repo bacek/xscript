@@ -54,6 +54,11 @@ WhileExtension::init(const Config *config) {
     (void)config;
 }
 
+bool
+WhileExtension::allowEmptyNamespace() const {
+    return false;
+}
+
 static ExtensionRegisterer ext_(ExtensionHolder(new WhileExtension()));
 
 }

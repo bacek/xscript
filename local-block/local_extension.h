@@ -20,6 +20,7 @@ public:
     virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);
     virtual void init(const Config *config);
 
+    virtual bool allowEmptyNamespace() const;
 private:
     LocalExtension(const LocalExtension &);
     LocalExtension& operator = (const LocalExtension &);
