@@ -35,9 +35,9 @@ RegexXsltExtensionTest::testRegexp() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("regexp.xml");
     ContextStopper ctx_stopper(ctx);
 	XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-	CPPUNIT_ASSERT(NULL != doc->get());
+	CPPUNIT_ASSERT(NULL != doc.get());
 	ctx->script()->applyStylesheet(ctx, doc);
-	CPPUNIT_ASSERT_EQUAL(std::string("true"), XmlUtils::xpathValue(doc->get(), "/result/status", "failed"));
+	CPPUNIT_ASSERT_EQUAL(std::string("true"), XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
 }
 
 void
@@ -47,7 +47,7 @@ RegexXsltExtensionTest::testBadRegexp() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("badregexp.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 	try {
 	    ctx->script()->applyStylesheet(ctx, doc);
 	}

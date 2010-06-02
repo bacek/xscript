@@ -131,18 +131,18 @@ Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh,
                         boost::shared_ptr<Context> ctx,
                         XmlDocSharedHelper &doc,
                         bool need_copy) {
-    assert(NULL != doc->get());
-    XmlDocHelper newdoc = sh->apply(this, ctx, doc->get());
+    assert(NULL != doc.get());
+    XmlDocHelper newdoc = sh->apply(this, ctx, doc.get());
     ctx->addDoc(doc);
 
     if (need_copy) {
-        doc.reset(new XmlDocHelper(xmlCopyDoc(newdoc.get(), 1)));
+        doc.reset(xmlCopyDoc(newdoc.get(), 1));
         ctx->addDoc(newdoc);
     }
     else {
-        doc.reset(new XmlDocHelper(newdoc));
+        doc.reset(newdoc.release());
     }
-    XmlUtils::throwUnless(NULL != doc->get());
+    XmlUtils::throwUnless(NULL != doc.get());
 }
 
 std::auto_ptr<Param>

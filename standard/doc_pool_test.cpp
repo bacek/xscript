@@ -34,7 +34,7 @@ public:
 
         std::string key("1");
 
-        XmlDocSharedHelper doc1(new XmlDocHelper(xmlNewDoc((const xmlChar*) "1.0")));
+        XmlDocSharedHelper doc1(xmlNewDoc((const xmlChar*) "1.0"));
         boost::shared_ptr<CacheData> saved(new BlockCacheData(
             doc1, boost::shared_ptr<MetaCore>()));
         
@@ -67,7 +67,7 @@ public:
         
         DocPool pool(2, "pool");
 
-        XmlDocSharedHelper doc1(new XmlDocHelper(xmlNewDoc((const xmlChar*) "1.0")));
+        XmlDocSharedHelper doc1(xmlNewDoc((const xmlChar*) "1.0"));
 
         time_t t = time(0);
         Tag tag(false, t, t+6);

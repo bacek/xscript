@@ -106,8 +106,8 @@ class ValidatorTest : public CppUnit::TestFixture {
         boost::shared_ptr<Context> ctx = TestUtils::createEnv("./validator.xml");
         ContextStopper ctx_stopper(ctx);
         XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-        CPPUNIT_ASSERT(NULL != doc->get());
-        CPPUNIT_ASSERT(xscript::XmlUtils::xpathExists(doc->get(), "//xscript_invoke_failed"));
+        CPPUNIT_ASSERT(NULL != doc.get());
+        CPPUNIT_ASSERT(xscript::XmlUtils::xpathExists(doc.get(), "//xscript_invoke_failed"));
 
         // Guard was set
         CPPUNIT_ASSERT(ctx->state()->is("epic-failure"));
@@ -118,8 +118,8 @@ class ValidatorTest : public CppUnit::TestFixture {
         boost::shared_ptr<Context> ctx = TestUtils::createEnv("./validator2.xml");
         ContextStopper ctx_stopper(ctx);
         XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-        CPPUNIT_ASSERT(NULL != doc->get());
-        CPPUNIT_ASSERT(xscript::XmlUtils::xpathExists(doc->get(), "//include-data"));
+        CPPUNIT_ASSERT(NULL != doc.get());
+        CPPUNIT_ASSERT(xscript::XmlUtils::xpathExists(doc.get(), "//include-data"));
         
         // Guard wasn't set
         CPPUNIT_ASSERT(!ctx->state()->is("epic-failure"));

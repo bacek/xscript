@@ -21,12 +21,10 @@
 namespace xscript {
 
 struct InvokeContext::ContextData {
-    ContextData() : doc_(new XmlDocHelper()),
-        tagged_(false), result_type_(ERROR), have_cached_copy_(false), parent_(NULL),
-        meta_(new Meta), is_meta_(false) {}
-    ContextData(InvokeContext *parent) : doc_(new XmlDocHelper()),
-        tagged_(false), result_type_(ERROR), have_cached_copy_(false), parent_(parent),
-        meta_(new Meta), is_meta_(false) {}
+    ContextData() : tagged_(false), result_type_(ERROR),
+        have_cached_copy_(false), parent_(NULL), meta_(new Meta), is_meta_(false) {}
+    ContextData(InvokeContext *parent) :  tagged_(false), result_type_(ERROR),
+        have_cached_copy_(false), parent_(parent), meta_(new Meta), is_meta_(false) {}
     XmlDocSharedHelper doc_;
     XmlDocSharedHelper meta_doc_;
     bool tagged_;
@@ -66,16 +64,6 @@ InvokeContext::metaDoc() const {
     return ctx_data_->meta_doc_;
 }
 
-xmlDocPtr
-InvokeContext::resultDocPtr() const {
-    return ctx_data_->doc_->get();
-}
-
-xmlDocPtr
-InvokeContext::metaDocPtr() const {
-    return ctx_data_->meta_doc_.get() ? ctx_data_->meta_doc_->get() : NULL;
-}
-
 InvokeContext::ResultType
 InvokeContext::resultType() const {
     return ctx_data_->result_type_;
@@ -103,29 +91,24 @@ InvokeContext::haveCachedCopy(bool flag) {
 
 void
 InvokeContext::resultDoc(const XmlDocSharedHelper &doc) {
-    if (NULL == doc.get()) {
-        throw std::logic_error("Cannot add NULL doc to invoke context");
-    }
     ctx_data_->doc_.reset();
     ctx_data_->doc_ = doc;
 }
 
 void
 InvokeContext::resultDoc(XmlDocHelper doc) {
-    ctx_data_->doc_ = XmlDocSharedHelper(new XmlDocHelper(doc));
+    ctx_data_->doc_ = XmlDocSharedHelper(doc.release());
 }
 
 void
 InvokeContext::metaDoc(const XmlDocSharedHelper &doc) {
-    if (NULL == doc.get()) {
-        throw std::logic_error("Cannot add NULL meta doc to invoke context");
-    }
+    ctx_data_->meta_doc_.reset();
     ctx_data_->meta_doc_ = doc;
 }
 
 void
 InvokeContext::metaDoc(XmlDocHelper doc) {
-    ctx_data_->meta_doc_ = XmlDocSharedHelper(new XmlDocHelper(doc));
+    ctx_data_->meta_doc_ = XmlDocSharedHelper(doc.release());
 }
 
 void

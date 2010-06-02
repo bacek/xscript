@@ -78,7 +78,7 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
     }
     
     XmlDocSharedHelper doc = script_->invoke(local_ctx);
-    XmlUtils::throwUnless(NULL != doc->get());
+    XmlUtils::throwUnless(NULL != doc.get());
     
     if (local_ctx->noCache()) {
         invoke_ctx->resultType(InvokeContext::NO_CACHE);

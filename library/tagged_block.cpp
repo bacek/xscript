@@ -133,7 +133,7 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
             if (!cache_tag.expired()) {
                 doc = cache_data->doc();
                 meta_core = cache_data->meta();
-                have_cached_doc = (NULL != doc->get());
+                have_cached_doc = (NULL != doc.get());
             }
         }
     }
@@ -154,7 +154,7 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
         invoke_ctx->tag(cache_tag);
         call(ctx, invoke_ctx);
         if (invoke_ctx->tag().modified) {
-            if (NULL == invoke_ctx->resultDoc().get() || NULL == invoke_ctx->resultDoc()->get()) {
+            if (NULL == invoke_ctx->resultDoc().get()) {
                 log()->error("Got empty document in tagged block. Cached copy used");
             }
             else {

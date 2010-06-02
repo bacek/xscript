@@ -46,7 +46,7 @@ HttpTest::testGet() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-get.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 }
 
 void
@@ -55,8 +55,8 @@ HttpTest::testGetLocal() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-local.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
-    CPPUNIT_ASSERT(!XmlUtils::xpathExists(doc->get(), "/page/error"));
+    CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(!XmlUtils::xpathExists(doc.get(), "/page/error"));
 }
 
 void
@@ -65,5 +65,5 @@ HttpTest::testSanitized() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-sanitized.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 }

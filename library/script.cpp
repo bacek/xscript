@@ -435,15 +435,15 @@ Script::ScriptData::addHeaders(Context *ctx) {
 XmlDocSharedHelper
 Script::ScriptData::fetchResults(Context *ctx) {
 
-    XmlDocSharedHelper newdoc(new XmlDocHelper(xmlCopyDoc(doc_.get(), 1)));
-    XmlUtils::throwUnless(NULL != newdoc->get());
+    XmlDocSharedHelper newdoc(xmlCopyDoc(doc_.get(), 1));
+    XmlUtils::throwUnless(NULL != newdoc.get());
      
     unsigned int count = 0, xscript_count = 0;
      
     xmlNodePtr node = xmlDocGetRootElement(doc_.get());
     assert(node);
         
-    xmlNodePtr newnode = xmlDocGetRootElement(newdoc->get());
+    xmlNodePtr newnode = xmlDocGetRootElement(newdoc.get());
     assert(newnode);
         
     fetchRecursive(ctx, node, newnode, count, xscript_count);
@@ -462,7 +462,7 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
         xmlNodePtr next = newnode->next;
         if (count < blocks_num && block(count)->node() == node) {
             boost::shared_ptr<InvokeContext> result = ctx->result(count);
-            xmlDocPtr doc = result->resultDocPtr();
+            xmlDocPtr doc = result->resultDoc().get();
             assert(doc);
             xmlNodePtr result_doc_root_node = xmlDocGetRootElement(doc);
             if (result_doc_root_node) {
@@ -470,7 +470,7 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
                     xmlReplaceNode(newnode, xmlCopyNode(result_doc_root_node, 1));
                 }
                 else {
-                    block(count)->processXPointer(ctx, doc, result->metaDocPtr(), newnode, &xmlReplaceNode);
+                    block(count)->processXPointer(ctx, doc, result->metaDoc().get(), newnode, &xmlReplaceNode);
                 }
             }
             else {

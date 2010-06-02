@@ -47,7 +47,7 @@ private:
         boost::shared_ptr<Context> ctx = TestUtils::createEnv("file-local-tagged.xml");
         ContextStopper ctx_stopper(ctx);
         XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-        CPPUNIT_ASSERT(NULL != doc->get());
+        CPPUNIT_ASSERT(NULL != doc.get());
         Block* block_tmp = const_cast<Block*>(ctx->script()->block(0));
         TaggedBlock* block = dynamic_cast<TaggedBlock*>(block_tmp);
         CPPUNIT_ASSERT(NULL != block);
@@ -70,7 +70,7 @@ private:
         
         CacheContext cache_ctx(block, ctx.get());
         CPPUNIT_ASSERT(tcache->saveDoc(NULL, &cache_ctx, tag, saved));
-        CPPUNIT_ASSERT(NULL != doc->get());
+        CPPUNIT_ASSERT(NULL != doc.get());
 
         // check load
         
@@ -78,7 +78,7 @@ private:
             tcache->loadDoc(NULL, &cache_ctx, tag_load);
 
         CPPUNIT_ASSERT(NULL != loaded.get());
-        CPPUNIT_ASSERT(NULL != loaded->doc()->get());
+        CPPUNIT_ASSERT(NULL != loaded->doc().get());
         CPPUNIT_ASSERT(NULL != loaded->meta().get());
 
         Meta loaded_meta;

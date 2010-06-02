@@ -163,7 +163,7 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
         
         if (!loaded) {
             XmlDocSharedHelper doc = script->invoke(ctx);
-            XmlUtils::throwUnless(NULL != doc->get());
+            XmlUtils::throwUnless(NULL != doc.get());
             
             if (script->binaryPage() || response->isBinary()) {
                 return;
@@ -240,7 +240,7 @@ Server::sendResponse(Context *ctx, XmlDocSharedHelper doc) {
     XmlUtils::throwUnless(NULL != buf);
 
     try {
-        ctx->documentWriter()->write(ctx->response(), doc->get(), buf);
+        ctx->documentWriter()->write(ctx->response(), doc.get(), buf);
     }
     catch(const std::exception &e) {
         xmlOutputBufferClose(buf);

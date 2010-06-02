@@ -56,7 +56,7 @@ MistTest::testDrop() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("mist-drop.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     std::vector<std::string> v;
     ctx->state()->keys(v);
@@ -69,7 +69,7 @@ MistTest::testTypes() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("mist-types.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(static_cast<boost::int32_t>(1), ctx->state()->asLong("val-1"));
     CPPUNIT_ASSERT_EQUAL(std::string("string-2"), ctx->state()->asString("val-2"));
@@ -86,7 +86,7 @@ MistTest::testDate() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("mist-date.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     time_t now = time(NULL);
 
@@ -105,7 +105,7 @@ MistTest::testSplit() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("mist-split.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("test"), ctx->state()->asString("pref0"));
     CPPUNIT_ASSERT_EQUAL(std::string("test string property"), ctx->state()->asString("testconcat"));
@@ -122,7 +122,7 @@ MistTest::testEscape() {
     ctx->state()->setString("data", "<stress>&data;</stress>");
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 }
 
 void
@@ -138,7 +138,7 @@ MistTest::testStylesheet() {
     CPPUNIT_ASSERT_EQUAL(std::string("object.xsl"), ctx->xsltName());
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("stylesheet.xsl"), ctx->xsltName());
 }
@@ -150,7 +150,7 @@ MistTest::testDefined() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("mist-defined.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT_EQUAL(std::string("15"), ctx->state()->asString("replace_var"));
 }
 
@@ -160,7 +160,7 @@ MistTest::testDomain() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("mist-domain.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT_EQUAL(std::string("net"), ctx->state()->asString("tld"));
     CPPUNIT_ASSERT_EQUAL(std::string("localhost"), ctx->state()->asString("no_level"));
     CPPUNIT_ASSERT_EQUAL(std::string("www.yandex.ru"), ctx->state()->asString("no_level_no_scheme"));
@@ -178,7 +178,7 @@ MistTest::testKeys() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("mist-keys.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT_EQUAL(std::string("value3"), ctx->state()->asString("var"));
 }
 

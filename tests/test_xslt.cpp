@@ -94,13 +94,13 @@ XsltTest::testFile(const std::string &name) {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv(name);
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(true, ctx->script()->forceStylesheet());
     ctx->script()->applyStylesheet(ctx, doc);
 
     CPPUNIT_ASSERT_EQUAL(std::string("success"),
-                         XmlUtils::xpathValue(doc->get(), "/result/status"));
+                         XmlUtils::xpathValue(doc.get(), "/result/status"));
 }
 
 void
@@ -112,7 +112,7 @@ XsltTest::testMist() {
     CPPUNIT_ASSERT_EQUAL(std::string("mist-extension.xsl"), ctx->xsltName());
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("2"), ctx->state()->asString("c"));
 

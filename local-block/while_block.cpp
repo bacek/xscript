@@ -59,8 +59,8 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
         }
 
         XmlDocSharedHelper doc_iter = script()->invoke(local_ctx);
-        XmlUtils::throwUnless(NULL != doc_iter->get());
-        xmlNodePtr root_local = xmlDocGetRootElement(doc_iter->get());
+        XmlUtils::throwUnless(NULL != doc_iter.get());
+        xmlNodePtr root_local = xmlDocGetRootElement(doc_iter.get());
         XmlUtils::throwUnless(NULL != root_local);
 
         if (doc.get()) {

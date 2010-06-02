@@ -84,12 +84,12 @@ LuaTest::testPrint() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
     
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "/page/lua"));
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
     CPPUNIT_ASSERT_EQUAL(
         std::string("Hello\n&nbsp;\nWorld!"),
-        XmlUtils::xpathValue(doc->get(), "/page/lua", "Bye")
+        XmlUtils::xpathValue(doc.get(), "/page/lua", "Bye")
     );
 }
 
@@ -100,7 +100,7 @@ LuaTest::testState() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     for (int i = 1; i <= 10; ++i) {
 
@@ -128,7 +128,7 @@ LuaTest::testStateHas() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     // Unknown param returns empty string
     CPPUNIT_ASSERT_EQUAL(std::string(""), ctx->state()->asString("unknown_param"));
@@ -146,7 +146,7 @@ LuaTest::testStateIs() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
     
     CPPUNIT_ASSERT(ctx->state()->asBool("guard0_passed"));
     CPPUNIT_ASSERT(ctx->state()->asBool("guard1_passed"));
@@ -237,11 +237,11 @@ LuaTest::testEncode() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "/page/lua"));
+    CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
     CPPUNIT_ASSERT_EQUAL(
         std::string("%CF%F0%E5%E2%E5%E4\nПревед\n%D0%9F%D1%80%D0%B5%D0%B2%D0%B5%D0%B4\nПревед"),
-        XmlUtils::xpathValue(doc->get(), "/page/lua", "Bye")
+        XmlUtils::xpathValue(doc.get(), "/page/lua", "Bye")
     );
 }
 
@@ -251,7 +251,7 @@ LuaTest::testCookie() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
     
     const CookieSet& cookies = ctx->response()->outCookies();
     Cookie cookie("foo", "");
@@ -262,7 +262,7 @@ LuaTest::testCookie() {
     CPPUNIT_ASSERT_EQUAL(std::string(".example.com"), cookie_it->domain());
     CPPUNIT_ASSERT_EQUAL(time_t(123456789), cookie_it->expires());
 
-    std::string out = XmlUtils::xpathValue(doc->get(), "/page/lua", "Bye");
+    std::string out = XmlUtils::xpathValue(doc.get(), "/page/lua", "Bye");
     CPPUNIT_ASSERT(out.find(".example.com") != std::string::npos);
     CPPUNIT_ASSERT(out.find( "/some/path") != std::string::npos);
     CPPUNIT_ASSERT(out.find( "123456789") != std::string::npos);
@@ -280,8 +280,8 @@ LuaTest::testBadType() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "/page/xscript_invoke_failed"));
+    CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/xscript_invoke_failed"));
 }
 
 void
@@ -290,8 +290,8 @@ LuaTest::testBadArgCount() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "/page/xscript_invoke_failed"));
+    CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/xscript_invoke_failed"));
 }
 
 void
@@ -306,7 +306,7 @@ LuaTest::testMultiBlock() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
     CPPUNIT_ASSERT_EQUAL(ctx->state()->asString("bar"), std::string("baz"));
 }
 
@@ -316,12 +316,12 @@ LuaTest::testMD5() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
     
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "/page/lua"));
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
     CPPUNIT_ASSERT_EQUAL(
         std::string("5946210c9e93ae37891dfe96c3e39614"),
-        XmlUtils::xpathValue(doc->get(), "/page/lua", "foo")
+        XmlUtils::xpathValue(doc.get(), "/page/lua", "foo")
     );
 }
 
@@ -334,7 +334,7 @@ LuaTest::testDomain() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
     
     CPPUNIT_ASSERT_EQUAL(std::string("hghltd.yandex.net"), ctx->state()->asString("no_level"));
     CPPUNIT_ASSERT_EQUAL(std::string("net"), ctx->state()->asString("tld"));
@@ -353,12 +353,12 @@ LuaTest::testXmlEncode() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
     
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "/page/lua"));
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
     CPPUNIT_ASSERT_EQUAL(
         std::string("&lt;some &amp; value&gt;"),
-        XmlUtils::xpathValue(doc->get(), "/page/lua", "foo")
+        XmlUtils::xpathValue(doc.get(), "/page/lua", "foo")
     );
 }
 
@@ -369,7 +369,7 @@ LuaTest::testLogger() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 }
 
 void
@@ -378,7 +378,7 @@ LuaTest::testGetVHostArg() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     // Unknown param returns empty string
     CPPUNIT_ASSERT_EQUAL(std::string("1111"), ctx->state()->asString("maxdepth"));
@@ -390,7 +390,7 @@ LuaTest::testStrSplit() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("value1"), ctx->state()->asString("var1"));
     CPPUNIT_ASSERT_EQUAL(std::string("value2"), ctx->state()->asString("var2"));

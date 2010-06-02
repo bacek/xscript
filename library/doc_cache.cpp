@@ -340,7 +340,7 @@ bool
 DocCache::saveDoc(const InvokeContext *invoke_ctx, CacheContext *cache_ctx,
     const Tag &tag, const boost::shared_ptr<BlockCacheData> &cache_data) {
     
-    xmlDocPtr doc = cache_data->doc()->get();
+    xmlDocPtr doc = cache_data->doc().get();
     if (NULL == doc || NULL == xmlDocGetRootElement(doc)) {
         log()->warn("cannot save empty document or document with no root to tagged cache. Url: %s",
             cache_ctx->context()->request()->getOriginalUrl().c_str());
@@ -603,7 +603,7 @@ BlockCacheData::parse(const char *buf, boost::uint32_t size) {
             log()->warn("get document with no root while parsing block cache data");
             return false;
         }
-        doc_.reset(new XmlDocHelper(newdoc));
+        doc_.reset(newdoc.release());
         return true;
     }
     catch (const std::exception &e) {
@@ -641,7 +641,7 @@ BlockCacheData::serialize(std::string &buf) {
     }
     xmlOutputBufferPtr buffer = NULL;
     buffer = xmlOutputBufferCreateIO(&cacheWriteFunc, &cacheCloseFunc, &buf, NULL);
-    xmlSaveFormatFileTo(buffer, doc_->get(), "UTF-8", 0);
+    xmlSaveFormatFileTo(buffer, doc_.get(), "UTF-8", 0);
 }
 
 void

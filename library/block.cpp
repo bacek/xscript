@@ -463,7 +463,7 @@ Block::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
     }
     
     call(ctx, invoke_ctx);
-    if (NULL == invoke_ctx->resultDoc().get() || NULL == invoke_ctx->resultDoc()->get()) {
+    if (NULL == invoke_ctx->resultDoc().get()) {
         errorResult("got empty document", false, invoke_ctx);
         return;
     }
@@ -484,11 +484,11 @@ Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
 void
 Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) { 
     XmlDocSharedHelper doc = invoke_ctx->resultDoc();
-    if (NULL == doc->get()) {
+    if (NULL == doc.get()) {
         throw InvokeError("null response document");
     }
 
-    if (NULL == xmlDocGetRootElement(doc->get())) {
+    if (NULL == xmlDocGetRootElement(doc.get())) {
         throw InvokeError("got document with no root");
     }
 
@@ -496,9 +496,9 @@ Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeC
         throw InvokeError("context is already stopped, cannot process response");
     }
 
-    bool is_error_doc = Policy::isErrorDoc(doc->get());
+    bool is_error_doc = Policy::isErrorDoc(doc.get());
     
-    log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc->get());
+    log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
     
     bool need_perblock = !ctx->noXsltPort() && !xsltName().empty();
     bool success = true;
@@ -544,8 +544,8 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) 
         Object::applyStylesheet(sh, ctx, doc, XmlUtils::xmlVersionNumber() < 20619);
     }
 
-    XmlUtils::throwUnless(NULL != doc->get());
-    log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc->get());
+    XmlUtils::throwUnless(NULL != doc.get());
+    log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
         
     bool result = true;
     if (XmlUtils::hasXMLError()) {
@@ -736,7 +736,7 @@ Block::hasStateGuard() const {
 void
 Block::evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const {
 
-    XmlXPathContextHelper xctx(xmlXPathNewContext(doc->get()));
+    XmlXPathContextHelper xctx(xmlXPathNewContext(doc.get()));
     XmlUtils::throwUnless(NULL != xctx.get());
     State *state = ctx->state();
     assert(NULL != state);
@@ -869,7 +869,7 @@ void
 Block::callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
     if (data_->meta_block_.get()) {
         data_->meta_block_->call(ctx, invoke_ctx);
-        if (NULL == invoke_ctx->metaDoc().get() || NULL == invoke_ctx->metaDoc()->get()) {
+        if (NULL == invoke_ctx->metaDoc().get()) {
             errorResult("got empty meta document", false, invoke_ctx);
             return;
         }

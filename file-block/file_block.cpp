@@ -180,7 +180,7 @@ FileBlock::call(boost::shared_ptr<Context> ctx,
 
     const Tag& tag = invoke_ctx->tag();
 
-    XmlDocHelper doc;
+    XmlDocSharedHelper doc;
     bool modified = true;
     if (invoke_ctx->haveCachedCopy() && tag.last_modified != Tag::UNDEFINED_TIME && st.st_mtime == tag.last_modified) {
         // We got tag and file modification time equal than last_modified in tag
@@ -196,7 +196,7 @@ FileBlock::call(boost::shared_ptr<Context> ctx,
     invoke_ctx->resultDoc(doc);
 }
 
-XmlDocHelper
+XmlDocSharedHelper
 FileBlock::invokeMethod(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     try {
@@ -211,7 +211,7 @@ FileBlock::invokeMethod(const std::string &file_name,
     }
 }
 
-XmlDocHelper
+XmlDocSharedHelper
 FileBlock::loadFile(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     (void)ctx;
@@ -221,7 +221,7 @@ FileBlock::loadFile(const std::string &file_name,
     PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
 
     XmlInfoCollector::Starter starter;
-    XmlDocHelper doc(xmlReadFile(
+    XmlDocSharedHelper doc(xmlReadFile(
         file_name.c_str(), NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
 
     XmlUtils::throwUnless(NULL != doc.get());
@@ -240,7 +240,7 @@ FileBlock::loadFile(const std::string &file_name,
     return doc;
 }
 
-XmlDocHelper
+XmlDocSharedHelper
 FileBlock::loadText(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     (void)ctx;
@@ -268,7 +268,7 @@ FileBlock::loadText(const std::string &file_name,
     is.read(&doc_data[0], size);
 
     if (doc_data.empty()) {
-        XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+        XmlDocSharedHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
         XmlUtils::throwUnless(NULL != doc.get());
         
         XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"text", NULL));
@@ -281,7 +281,7 @@ FileBlock::loadText(const std::string &file_name,
     std::string res("<text>");
     res.append(XmlUtils::escape(doc_data)).append("</text>");
 
-    XmlDocHelper result(xmlReadMemory(
+    XmlDocSharedHelper result(xmlReadMemory(
         res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
     XmlUtils::throwUnless(NULL != result.get());
     
@@ -291,7 +291,7 @@ FileBlock::loadText(const std::string &file_name,
     
 }
 
-XmlDocHelper
+XmlDocSharedHelper
 FileBlock::loadBinary(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     (void)invoke_ctx;
@@ -319,7 +319,7 @@ FileBlock::loadBinary(const std::string &file_name,
     ctx->response()->write(
         std::auto_ptr<BinaryWriter>(new FStreamBinaryWriter(is, size)));
     
-    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlDocSharedHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
     
     XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"success", (const xmlChar*)"1"));
@@ -331,7 +331,7 @@ FileBlock::loadBinary(const std::string &file_name,
     return doc;
 }
 
-XmlDocHelper
+XmlDocSharedHelper
 FileBlock::invokeFile(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     log()->debug("%s: invoking file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
@@ -381,21 +381,20 @@ FileBlock::invokeFile(const std::string &file_name,
     }
     
     XmlDocSharedHelper doc = script->invoke(local_ctx);    
-    XmlUtils::throwUnless(NULL != doc->get());
+    XmlUtils::throwUnless(NULL != doc.get());
     
     if (local_ctx->noCache()) {
         invoke_ctx->resultType(InvokeContext::NO_CACHE);
     }
     
     ctx_stopper.reset();
-    
-    return *doc;
+    return doc;
 }
 
 
-XmlDocHelper
+XmlDocSharedHelper
 FileBlock::testFileDoc(bool result, const std::string &file) const {
-    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlDocSharedHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
     
     std::string res = boost::lexical_cast<std::string>(result);

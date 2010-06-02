@@ -29,8 +29,6 @@ public:
 
     XmlDocSharedHelper resultDoc() const;
     XmlDocSharedHelper metaDoc() const;
-    xmlDocPtr resultDocPtr() const;
-    xmlDocPtr metaDocPtr() const;
     ResultType resultType() const;
     const Tag& tag() const;
     bool tagged() const;

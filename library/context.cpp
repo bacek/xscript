@@ -190,7 +190,7 @@ struct Context::ContextData {
     }
 
     void addDoc(XmlDocSharedHelper doc) {
-        if (doc.get() && doc->get()) {
+        if (doc.get()) {
             clear_doc_list_->add(doc);
         }
     }
@@ -376,7 +376,7 @@ Context::wait(int millis) {
     if (save_result) {
         for (unsigned int i = 0; i < ctx_data_->results_.size(); ++i) {
             InvokeContext* result = ctx_data_->results_[i].get();
-            if (NULL == result || NULL == result->resultDocPtr()) {
+            if (NULL == result || NULL == result->resultDoc().get()) {
                 if (timedout) {
                     ctx_data_->results_[i] = ctx_data_->script_->block(i)->errorResult("timed out", false);
                     no_cache = true;
@@ -459,7 +459,7 @@ Context::addDoc(XmlDocSharedHelper doc) {
 
 void
 Context::addDoc(XmlDocHelper doc) {
-    ctx_data_->addDoc(XmlDocSharedHelper(new XmlDocHelper(doc)));
+    ctx_data_->addDoc(XmlDocSharedHelper(doc.release()));
 }
 
 boost::xtime

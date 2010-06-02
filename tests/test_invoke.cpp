@@ -59,7 +59,7 @@ InvokeTest::testInvoke() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("invoke.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 }
 
 void
@@ -68,18 +68,18 @@ InvokeTest::testMeta() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("meta.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     std::map<std::string, std::string> ns;
     ns.insert(std::make_pair(std::string("g"), std::string("http://www.ya.ru")));
 
     CPPUNIT_ASSERT_EQUAL(std::string("value0"),
-                         XmlUtils::xpathNsValue(doc->get(), "/page/g:rootmeta/key0", ns, "failed"));
+                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/key0", ns, "failed"));
     CPPUNIT_ASSERT_EQUAL(std::string("value1"),
-                         XmlUtils::xpathNsValue(doc->get(), "/page/g:rootmeta/key1", ns, "failed"));
+                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/key1", ns, "failed"));
     CPPUNIT_ASSERT_EQUAL(std::string("value2"),
-                         XmlUtils::xpathNsValue(doc->get(), "/page/g:rootmeta/key2", ns, "failed"));
-    CPPUNIT_ASSERT(XmlUtils::xpathNsExists(doc->get(), "/page/g:rootmeta/elapsed-time", ns));
+                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/key2", ns, "failed"));
+    CPPUNIT_ASSERT(XmlUtils::xpathNsExists(doc.get(), "/page/g:rootmeta/elapsed-time", ns));
     CPPUNIT_ASSERT_EQUAL(std::string("value0"), ctx->state()->asString("key"));
 }
 
@@ -89,13 +89,13 @@ InvokeTest::testParams() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("params.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("params.xsl"), ctx->script()->xsltName());
     ctx->script()->applyStylesheet(ctx, doc);
 
     CPPUNIT_ASSERT_EQUAL(std::string("success"),
-                         XmlUtils::xpathValue(doc->get(), "/result/status", "failed"));
+                         XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
 }
 
 void
@@ -104,10 +104,10 @@ InvokeTest::testFileBlockParams() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("file-block-params.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("success"),
-                         XmlUtils::xpathValue(doc->get(), "/result/status", "failed"));
+                         XmlUtils::xpathValue(doc.get(), "/result/status", "failed"));
 }
 
 void
@@ -116,8 +116,8 @@ InvokeTest::testHttpBlockScheme() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("http-block-scheme.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "/result/xscript_invoke_failed/@error"));
+    CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/result/xscript_invoke_failed/@error"));
 }
 
 void
@@ -126,7 +126,7 @@ InvokeTest::testNoBlocks() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("noblocks.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 }
 
 void
@@ -135,7 +135,7 @@ InvokeTest::testEmptyCDATA() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("empty-cdata.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 }
 
 void
@@ -144,7 +144,7 @@ InvokeTest::testEvalXPath() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("invoke.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT(ctx->state()->has("delim_expr"));
     CPPUNIT_ASSERT(ctx->state()->has("result_expr"));
@@ -167,10 +167,10 @@ InvokeTest::testEvalXPointer() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("file-load-xpointer.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "/page/simple/item/id"));
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "/page/dynamic/item/id"));
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/simple/item/id"));
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/dynamic/item/id"));
 }
 
 void
@@ -182,7 +182,7 @@ InvokeTest::testCheckGuard() {
     ctx->state()->setString("guardkey", "some value");
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT(!ctx->state()->has("val-2"));
     CPPUNIT_ASSERT_EQUAL(static_cast<boost::int32_t>(3), ctx->state()->asLong("val-3"));
@@ -196,8 +196,8 @@ InvokeTest::testStylesheet() {
     ContextStopper ctx_stopper(ctx);
 
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
+    CPPUNIT_ASSERT(NULL != doc.get());
 
     CPPUNIT_ASSERT_EQUAL(std::string("long"),
-                         XmlUtils::xpathValue(doc->get(), "/page/state-results/type", "failed"));
+                         XmlUtils::xpathValue(doc.get(), "/page/state-results/type", "failed"));
 }

@@ -1722,13 +1722,13 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
                 return;
             }
             result = block->invoke(ctx);
-            if (NULL == result->resultDocPtr()) {
+            if (NULL == result->resultDoc().get()) {
                 XmlUtils::reportXsltError("xscript:ExtElementBlock: empty result", tctx);
                 return;
             }
             if (!result->error()) {
                 block->processXPointer(
-                    ctx.get(), result->resultDocPtr(), result->metaDocPtr(), tctx->insert, &xmlAddChild);
+                    ctx.get(), result->resultDoc().get(), result->metaDoc().get(), tctx->insert, &xmlAddChild);
                 return;
             }
         }
@@ -1739,7 +1739,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
             result = block->errorResult(e.what(), false);
         }
 
-        xmlDocPtr doc = result->resultDocPtr();
+        xmlDocPtr doc = result->resultDoc().get();
         xmlAddChild(tctx->insert, xmlCopyNode(xmlDocGetRootElement(doc), 1));
     }
     catch (const std::exception &e) {

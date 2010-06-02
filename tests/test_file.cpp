@@ -51,8 +51,8 @@ FileTest::testLoad() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("./file-load.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "//include-data"));
+    CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "//include-data"));
 }
 
 void
@@ -60,6 +60,6 @@ FileTest::testInclude() {
     boost::shared_ptr<Context> ctx = TestUtils::createEnv("./file-include.xml");
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc->get());
-    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc->get(), "//include-data"));
+    CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "//include-data"));
 }

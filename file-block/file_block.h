@@ -9,7 +9,7 @@
 namespace xscript {
 class FileBlock;
 
-typedef XmlDocHelper (FileBlock::*Method)(const std::string&,
+typedef XmlDocSharedHelper (FileBlock::*Method)(const std::string&,
         boost::shared_ptr<Context>, boost::shared_ptr<InvokeContext>) const;
 
 /**
@@ -33,22 +33,22 @@ private:
     virtual void postParse();
     virtual void call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception);
 
-    XmlDocHelper loadFile(const std::string &file_name,
+    XmlDocSharedHelper loadFile(const std::string &file_name,
             boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const;
 
-    XmlDocHelper loadText(const std::string &file_name,
+    XmlDocSharedHelper loadText(const std::string &file_name,
             boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const;
 
-    XmlDocHelper loadBinary(const std::string &file_name,
+    XmlDocSharedHelper loadBinary(const std::string &file_name,
             boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const;
     
-    XmlDocHelper invokeFile(const std::string &file_name,
+    XmlDocSharedHelper invokeFile(const std::string &file_name,
             boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const;
     
-    XmlDocHelper invokeMethod(const std::string &file_name,
+    XmlDocSharedHelper invokeMethod(const std::string &file_name,
             boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const;
     
-    XmlDocHelper testFileDoc(bool result, const std::string &file) const;
+    XmlDocSharedHelper testFileDoc(bool result, const std::string &file) const;
     
     std::string fileName(const Context *ctx) const;
     

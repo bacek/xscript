@@ -95,7 +95,7 @@ ThreadedBlock::postInvoke(Context *ctx, InvokeContext *invoke_ctx) {
         return;
     }
     
-    xmlNodePtr node = xmlDocGetRootElement(invoke_ctx->resultDocPtr());
+    xmlNodePtr node = xmlDocGetRootElement(invoke_ctx->resultDoc().get());
     if (NULL == node) {
         return;
     }
