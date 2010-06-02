@@ -329,7 +329,6 @@ HttpHelper::HttpHelper(const std::string &url, long timeout) :
 {}
 
 HttpHelper::~HttpHelper() {
-    delete data_;
 }
 
 void

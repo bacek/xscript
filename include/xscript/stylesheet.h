@@ -44,7 +44,7 @@ private:
     friend class StylesheetFactory;
 
     class StylesheetData;
-    StylesheetData *data_;
+    std::auto_ptr<StylesheetData> data_;
 };
 
 } // namespace xscript

@@ -47,7 +47,7 @@ public:
 
 private:
     class StatBuilderData;
-    StatBuilderData *data_;
+    std::auto_ptr<StatBuilderData> data_;
 };
 
 } // namespace xscript

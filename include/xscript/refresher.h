@@ -14,7 +14,7 @@ public:
     
 private:
     class RefresherData;
-    RefresherData *data_;
+    std::auto_ptr<RefresherData> data_;
 };
 
 } // namespace xscript

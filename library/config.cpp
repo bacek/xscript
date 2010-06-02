@@ -335,7 +335,6 @@ XmlConfig::XmlConfig(const char *file) : data_(new XmlConfigData(file))
 {}
 
 XmlConfig::~XmlConfig() {
-    delete data_;
 }
 
 std::string

@@ -19,7 +19,7 @@ public:
     virtual const std::string& fileName() const;
 private:
     class XmlConfigData;
-    XmlConfigData *data_;
+    std::auto_ptr<XmlConfigData> data_;
 };
 
 } // namespace xscript

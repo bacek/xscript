@@ -49,7 +49,6 @@ CachedObject::CachedObject() : data_(new ObjectData())
 {}
 
 CachedObject::~CachedObject() {
-    delete data_;
 }
 
 time_t

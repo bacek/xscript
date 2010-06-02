@@ -120,9 +120,7 @@ protected:
     
 private:
     class DocCacheData;
-    // workaround for woody
-    friend class DocCacheData;
-    DocCacheData *data_;
+    std::auto_ptr<DocCacheData> data_;
 };
 
 class DocCache : public DocCacheBase {

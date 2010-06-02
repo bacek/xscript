@@ -54,7 +54,6 @@ Refresher::Refresher(boost::function<void()> f, boost::uint32_t timeout) :
 }
 
 Refresher::~Refresher() {
-    delete data_;
 }
 
 } // namespace xscript

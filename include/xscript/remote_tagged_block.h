@@ -33,7 +33,7 @@ protected:
 
 private:
     struct RemoteTaggedBlockData;
-    RemoteTaggedBlockData *rtb_data_;
+    std::auto_ptr<RemoteTaggedBlockData> rtb_data_;
 };
 
 class RetryInvokeError : public InvokeError {

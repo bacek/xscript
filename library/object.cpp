@@ -77,7 +77,6 @@ Object::Object() : data_(new ObjectData()) {
 }
 
 Object::~Object() {
-    delete data_;
 }
 
 const std::string&

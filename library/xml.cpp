@@ -65,7 +65,6 @@ Xml::Xml(const std::string &name) : data_(new XmlData(name, this)) {
 }
 
 Xml::~Xml() {
-    delete data_;
 }
 
 const std::string&

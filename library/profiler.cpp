@@ -77,7 +77,6 @@ Profiler::setInfo(const std::string &info) {
 
 Profiler::~Profiler() {
     release();
-    delete data_;
 }
 
 } // namespace xscript

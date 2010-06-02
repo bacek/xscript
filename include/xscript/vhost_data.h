@@ -34,7 +34,7 @@ protected:
 
 private:
     class HostData;
-    HostData *data_;
+    std::auto_ptr<HostData> data_;
 };
 
 } // namespace xscript

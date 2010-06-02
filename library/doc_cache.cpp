@@ -108,12 +108,11 @@ DocCacheBase::DocCacheBase() : data_(new DocCacheData(this)) {
 }
 
 DocCacheBase::~DocCacheBase() {
-    delete data_;
 }
 
 void
 DocCacheBase::init(const Config *config) {
-    ControlExtension::Constructor f = boost::bind(boost::mem_fn(&DocCacheData::createBlock), data_, _1, _2, _3);
+    ControlExtension::Constructor f = boost::bind(boost::mem_fn(&DocCacheData::createBlock), data_.get(), _1, _2, _3);
     ControlExtension::registerConstructor(name().append("-stat"), f);
     
     TaggedCacheUsageCounterFactory::instance()->init(config);

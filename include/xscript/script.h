@@ -84,18 +84,12 @@ private:
     
     // workaround for woody
     class ParseXScriptNodeHandler;
-    friend class ParseXScriptNodeHandler;
     class ReplaceXScriptNodeHandler;
-    friend class ReplaceXScriptNodeHandler;
     class PropertyHandler;
-    friend class PropertyHandler;
     class CachableHandler;
-    friend class CachableHandler;
     
     class ScriptData;
-    // workaround for woody
-    friend class ScriptData;
-    ScriptData *data_;
+    std::auto_ptr<ScriptData> data_;
 };
 
 } // namespace xscript

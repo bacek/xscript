@@ -49,7 +49,6 @@ InvokeContext::InvokeContext(InvokeContext *parent) :
 {}
 
 InvokeContext::~InvokeContext() {
-    delete ctx_data_;
 }
 
 InvokeContext*

@@ -42,7 +42,6 @@ StatBuilder::StatBuilder(const std::string& name) :
 {}
 
 StatBuilder::~StatBuilder() {
-    delete data_;
 }
 
 XmlDocHelper

@@ -39,7 +39,6 @@ TaggedBlock::TaggedBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
 }
 
 TaggedBlock::~TaggedBlock() {
-    delete tb_data_;
 }
 
 bool

@@ -150,7 +150,7 @@ private:
 
 private:
     struct ContextData;
-    ContextData *ctx_data_;
+    std::auto_ptr<ContextData> ctx_data_;
 };
 
 class ContextStopper {

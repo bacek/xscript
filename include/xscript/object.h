@@ -41,7 +41,7 @@ protected:
 
 private:
     class ObjectData;
-    ObjectData *data_;
+    std::auto_ptr<ObjectData> data_;
 };
 
 } // namespace xscript

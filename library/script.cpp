@@ -516,8 +516,8 @@ Script::ParseXScriptNodeHandler::process(const MessageParams &params,
     
     log()->debug("parsing xscript node");
 
-    XmlUtils::visitAttributes(node->properties,
-                              boost::bind(&Script::ScriptData::property, script->data_, _1, _2));
+    XmlUtils::visitAttributes(node->properties, boost::bind(
+        &Script::ScriptData::property, script->data_.get(), _1, _2));
 
     xmlNodePtr child = node->children;
     for( ; child; child = child->next) {
@@ -716,7 +716,6 @@ Script::Script(const std::string &name) :
 {}
 
 Script::~Script() {
-    delete data_;
 }
 
 bool
@@ -981,6 +980,7 @@ Script::createBlockTagKey(const Context *ctx) const {
 
 std::string
 Script::commonTagKey(const Context *ctx) const {
+    (void)ctx;
     std::string key = modifiedKey(modifiedInfo());
     key.push_back('|');
     key.append(blocksModifiedKey(data_->blocks()));

@@ -97,7 +97,6 @@ Response::Response(std::ostream *stream) :
 }
 
 Response::~Response() {
-    delete data_;
 }
 
 void

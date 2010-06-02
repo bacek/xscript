@@ -51,7 +51,7 @@ private:
 
 private:
     class HelperData;
-    HelperData *data_; 
+    std::auto_ptr<HelperData> data_;
 };
 
 } // namespace xscript

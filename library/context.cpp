@@ -275,13 +275,11 @@ boost::thread_specific_ptr<std::list<TimeoutCounter> > Context::ContextData::blo
 Context::Context(const boost::shared_ptr<Script> &script,
                  const boost::shared_ptr<State> &state,
                  const boost::shared_ptr<Request> &request,
-                 const boost::shared_ptr<Response> &response) :
-    ctx_data_(NULL)
-{
+                 const boost::shared_ptr<Response> &response) {
     assert(script.get());
     boost::shared_ptr<RequestData> request_data(
             new RequestData(request, response, state));
-    ctx_data_ = new ContextData(request_data, script);
+    ctx_data_ = std::auto_ptr<ContextData>(new ContextData(request_data, script));
     init();
 }
 
@@ -289,18 +287,18 @@ Context::Context(const boost::shared_ptr<Script> &script,
                  const boost::shared_ptr<Context> &ctx,
                  InvokeContext *invoke_ctx,
                  const boost::shared_ptr<TypedMap> &local_params,
-                 bool proxy) : ctx_data_(NULL)
-{
+                 bool proxy) {
     assert(script.get());
     assert(ctx.get());
     
     if (proxy) {
-        ctx_data_ = new ContextData(
-            script, ctx, invoke_ctx, ctx->ctx_data_->common_data_, local_params);
+        ctx_data_ = std::auto_ptr<ContextData>(new ContextData(
+            script, ctx, invoke_ctx, ctx->ctx_data_->common_data_, local_params));
     }
     else {
         boost::shared_ptr<RequestData> request_data(new RequestData());
-        ctx_data_ = new ContextData(request_data, script, ctx, invoke_ctx, local_params);
+        ctx_data_ = std::auto_ptr<ContextData>(new ContextData(
+            request_data, script, ctx, invoke_ctx, local_params));
         ctx_data_->authContext(Authorizer::instance()->checkAuth(this));
         init();
     }
@@ -312,7 +310,6 @@ Context::~Context() {
         XmlUtils::printXMLError(postfix);
     }
     ExtensionList::instance()->destroyContext(this);
-    delete ctx_data_;
 }
 
 void

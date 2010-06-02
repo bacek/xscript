@@ -26,7 +26,7 @@ protected:
 
 private:
     struct ThreadedBlockData;
-    ThreadedBlockData *trb_data_;
+    std::auto_ptr<ThreadedBlockData> trb_data_;
 };
 
 } // namespace xscript

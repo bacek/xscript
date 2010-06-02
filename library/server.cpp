@@ -110,7 +110,6 @@ Server::Server(Config *config) : data_(new ServerData(config)) {
 }
 
 Server::~Server() {
-    delete data_;
 }
 
 Config*

@@ -140,7 +140,6 @@ Block::Block(const Extension *ext, Xml *owner, xmlNodePtr node) :
 }
 
 Block::~Block() {
-    delete data_;
 }
 
 Xml*

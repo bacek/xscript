@@ -48,7 +48,7 @@ protected:
                                    const boost::shared_ptr<Response> &response);
 private:
     class ServerData;
-    ServerData *data_;
+    std::auto_ptr<ServerData> data_;
 };
 
 } // namespace xscript

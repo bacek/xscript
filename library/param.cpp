@@ -52,7 +52,6 @@ Param::Param(Object * /* owner */, xmlNodePtr node) :
 }
 
 Param::~Param() {
-    delete data_;
 }
 
 const std::string&
@@ -225,7 +224,6 @@ ConvertedParam::ConvertedParam(Object *owner, xmlNodePtr node) :
 }
 
 ConvertedParam::~ConvertedParam() {
-    delete converted_data_;
 }
 
 const std::string&
@@ -259,7 +257,6 @@ TypedParam::TypedParam(Object *owner, xmlNodePtr node) :
 }
 
 TypedParam::~TypedParam() {
-    delete typed_data_;
 }
 
 const std::string&

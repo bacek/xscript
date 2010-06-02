@@ -47,7 +47,6 @@ VirtualHostData::VirtualHostData() : data_(new HostData()) {
 }
 
 VirtualHostData::~VirtualHostData() {
-    delete data_;
 }
 
 void

@@ -53,7 +53,7 @@ protected:
 
 private:
     struct TaggedBlockData;
-    TaggedBlockData *tb_data_;
+    std::auto_ptr<TaggedBlockData> tb_data_;
 };
 
 } // namespace xscript

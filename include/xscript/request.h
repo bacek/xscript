@@ -94,18 +94,14 @@ protected:
     
 private:
     friend class Parser;
+    friend class RequestImpl;
     
     class AttachHandler;
-    friend class AttachHandler;
     class RealIPHandler;
-    friend class RealIPHandler;
     class OriginalURIHandler;
-    friend class OriginalURIHandler;
     class OriginalHostHandler;
-    friend class OriginalHostHandler;
     
-    friend class RequestImpl;
-    RequestImpl *data_;
+    std::auto_ptr<RequestImpl> data_;
 };
 
 } // namespace xscript

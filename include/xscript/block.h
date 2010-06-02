@@ -42,6 +42,7 @@ public:
     virtual void parse();
     virtual std::string fullName(const std::string &name) const;
 
+    virtual void call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) = 0;
     virtual boost::shared_ptr<InvokeContext> invoke(boost::shared_ptr<Context> ctx);
     virtual void invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual bool applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc);
@@ -49,7 +50,7 @@ public:
     boost::shared_ptr<InvokeContext> errorResult(const char *error, bool info) const;
     boost::shared_ptr<InvokeContext> errorResult(const InvokeError &error, bool info) const;
     boost::shared_ptr<InvokeContext> fakeResult(bool error) const;
-       
+
     void throwBadArityError() const;
 
     Logger * log() const;
@@ -63,15 +64,12 @@ public:
     
     const Extension* extension() const;
     MetaBlock* metaBlock() const;
+    bool checkGuard(Context *ctx) const;
+    const std::map<std::string, std::string>& namespaces() const;
 
 protected:
     virtual void invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void postParse();
-
-public:
-    virtual void call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) = 0;
-
-protected:
     virtual void processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void property(const char *name, const char *value);
     virtual void postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
@@ -80,10 +78,6 @@ protected:
     virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
     void callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     void callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
-
-public:
-    bool checkGuard(Context *ctx) const;
-protected:
     bool checkStateGuard(Context *ctx) const;
     bool hasGuard() const;
     bool hasStateGuard() const;
@@ -117,9 +111,6 @@ protected:
     
     void addNamespaces(const std::map<std::string, std::string> &ns);
 
-public:
-    const std::map<std::string, std::string>& namespaces() const;
-
 private:
     std::string errorMessage(const InvokeError &error) const;
     boost::shared_ptr<InvokeContext> errorResult(XmlDocHelper doc) const;
@@ -130,8 +121,7 @@ private:
     
 private:
     struct BlockData;
-    friend struct BlockData;
-    BlockData *data_;
+    std::auto_ptr<BlockData> data_;
 };
 
 struct BlockTimerStarter {

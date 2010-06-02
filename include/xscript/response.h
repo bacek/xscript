@@ -63,8 +63,7 @@ protected:
     
 private:
     class ResponseData;
-    friend class ResponseData;
-    ResponseData *data_;
+    std::auto_ptr<ResponseData> data_;
 };
 
 class ResponseDetacher {

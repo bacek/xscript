@@ -33,7 +33,6 @@ RemoteTaggedBlock::RemoteTaggedBlock(const Extension *ext, Xml *owner, xmlNodePt
 {}
 
 RemoteTaggedBlock::~RemoteTaggedBlock() {
-    delete rtb_data_;
 }
 
 void

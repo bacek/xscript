@@ -41,7 +41,7 @@ protected:
 
 private:
     class ParamData;
-    ParamData *data_;
+    std::auto_ptr<ParamData> data_;
 };
 
 class ConvertedParam : public Param {
@@ -58,7 +58,7 @@ protected:
 
 private:
     class ConvertedParamData;
-    ConvertedParamData *converted_data_;
+    std::auto_ptr<ConvertedParamData> converted_data_;
 };
 
 class TypedParam : public ConvertedParam {
@@ -76,7 +76,7 @@ protected:
 
 private:
     class TypedParamData;
-    TypedParamData *typed_data_;
+    std::auto_ptr<TypedParamData> typed_data_;
 };
 
 typedef std::auto_ptr<Param> (*ParamCreator)(Object *owner, xmlNodePtr node);

@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <map>
+#include <memory>
 #include <string>
 
 #include <boost/noncopyable.hpp>
@@ -23,7 +24,7 @@ public:
 
 private:
     class XmlData;
-    XmlData *data_;
+    std::auto_ptr<XmlData> data_;
 };
 
 } // namespace xscript

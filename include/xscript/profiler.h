@@ -58,7 +58,7 @@ public:
     boost::uint64_t checkPoint(const std::string &info);
 private:
     struct ProfilerData;
-    ProfilerData *data_;
+    std::auto_ptr<ProfilerData> data_;
 };
 
 } // namespace xscript

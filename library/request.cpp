@@ -30,7 +30,6 @@ Request::Request() : data_(new RequestImpl()) {
 }
 
 Request::~Request() {
-    delete data_;
 }
 
 unsigned short
@@ -378,7 +377,7 @@ Request::addInputHeader(const std::string &name, const std::string &value) {
     Range value_range = createRange(value);
     std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
     boost::mutex::scoped_lock lock(data_->mutex_);
-    Parser::addHeader(data_, key_range, value_range, enc.get());
+    Parser::addHeader(data_.get(), key_range, value_range, enc.get());
 }
 
 void
@@ -417,7 +416,7 @@ class Request::AttachHandler : public MessageHandler {
         char** env = params.getPtr<char*>(2);
         
         std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
-        Parser::parse(request->data_, env, enc.get());
+        Parser::parse(request->data_.get(), env, enc.get());
 
         if (is && "POST" == request->getRequestMethod()) {
             request->data_->body_.resize(request->getContentLength());
@@ -432,7 +431,7 @@ class Request::AttachHandler : public MessageHandler {
             if (strncasecmp("multipart/form-data", type.c_str(), sizeof("multipart/form-data") - 1) == 0) {
                 Range body = createRange(request->data_->body_);
                 std::string boundary = Parser::getBoundary(createRange(type));
-                Parser::parseMultipart(request->data_, body, boundary, enc.get());
+                Parser::parseMultipart(request->data_.get(), body, boundary, enc.get());
             }
             else if (!request->data_->body_.empty()) {
                 StringUtils::parse(createRange(request->data_->body_), request->data_->args_, enc.get());

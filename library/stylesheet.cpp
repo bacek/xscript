@@ -320,7 +320,6 @@ Stylesheet::Stylesheet(const std::string &name) :
 }
 
 Stylesheet::~Stylesheet() {
-    delete data_;
 }
 
 xsltStylesheetPtr
