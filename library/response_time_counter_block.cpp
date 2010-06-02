@@ -18,15 +18,14 @@ ResponseTimeCounterBlock::ResponseTimeCounterBlock(
     Block(ext, owner, node), responseCounter_(counter) {
 }
 
-XmlDocHelper
-ResponseTimeCounterBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
-    (void)invoke_ctx;
+void
+ResponseTimeCounterBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     ControlExtension::setControlFlag(ctx.get());
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
     XmlNodeHelper root = responseCounter_->createReport();
     xmlDocSetRootElement(doc.get(), root.release());
-    return doc;
+    invoke_ctx->resultDoc(doc);
 }
 
 ResetResponseTimeCounterBlock::ResetResponseTimeCounterBlock(
@@ -35,9 +34,8 @@ ResetResponseTimeCounterBlock::ResetResponseTimeCounterBlock(
     Block(ext, owner, node), responseCounter_(counter) {
 }
 
-XmlDocHelper
-ResetResponseTimeCounterBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
-    (void)invoke_ctx;
+void
+ResetResponseTimeCounterBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     ControlExtension::setControlFlag(ctx.get());
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
@@ -45,7 +43,7 @@ ResetResponseTimeCounterBlock::call(boost::shared_ptr<Context> ctx, boost::share
     XmlUtils::throwUnless(NULL != root.get());
     responseCounter_->reset();
     xmlDocSetRootElement(doc.get(), root.release());
-    return doc;
+    invoke_ctx->resultDoc(doc);
 }
 
 }

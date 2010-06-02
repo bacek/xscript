@@ -95,9 +95,9 @@ HttpBlock::postParse() {
     }
 }
 
-XmlDocHelper
-HttpBlock::retryCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
-    return (this->*method_)(ctx.get(), invoke_ctx.get());
+void
+HttpBlock::retryCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
+    invoke_ctx->resultDoc((this->*method_)(ctx.get(), invoke_ctx.get()));
 }
 
 void
@@ -128,7 +128,7 @@ HttpBlock::concatParams(const Context *ctx, unsigned int first, unsigned int las
 }
 
 XmlDocHelper
-HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) {
+HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) const {
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
@@ -161,7 +161,7 @@ HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) {
 
 
 XmlDocHelper
-HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) {
+HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
     (void)invoke_ctx;
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
@@ -212,7 +212,7 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) {
 
 
 XmlDocHelper
-HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) {
+HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
@@ -246,7 +246,7 @@ HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) {
 }
 
 XmlDocHelper
-HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) {
+HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     (void)invoke_ctx;
     
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
@@ -289,7 +289,7 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) {
 }
 
 XmlDocHelper
-HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) {
+HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
     (void)invoke_ctx;
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
@@ -329,7 +329,7 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) {
 }
 
 XmlDocHelper
-HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) {
+HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     (void)invoke_ctx;
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
@@ -484,7 +484,7 @@ HttpBlock::createTagInfo(const HttpHelper &helper, InvokeContext *invoke_ctx) co
 }
 
 int
-HttpBlock::getTimeout(Context *ctx, const std::string &url) {
+HttpBlock::getTimeout(Context *ctx, const std::string &url) const {
     int timeout = remainedTime(ctx);
     if (timeout > 0) {
         return timeout;
@@ -496,7 +496,7 @@ HttpBlock::getTimeout(Context *ctx, const std::string &url) {
 }
 
 void
-HttpBlock::checkStatus(const HttpHelper &helper) {
+HttpBlock::checkStatus(const HttpHelper &helper) const {
     try {
         helper.checkStatus();
     }
@@ -524,7 +524,7 @@ HttpBlock::checkStatus(const HttpHelper &helper) {
 }
 
 void
-HttpBlock::httpCall(HttpHelper &helper) {
+HttpBlock::httpCall(HttpHelper &helper) const {
     try {
         helper.perform();
     }
@@ -535,7 +535,7 @@ HttpBlock::httpCall(HttpHelper &helper) {
 }
 
 void
-HttpBlock::createMeta(HttpHelper &helper, InvokeContext *invoke_ctx) {
+HttpBlock::createMeta(HttpHelper &helper, InvokeContext *invoke_ctx) const {
     if (metaBlock()) {
         typedef std::multimap<std::string, std::string> HttpHeaderMap;
         typedef HttpHeaderMap::const_iterator HttpHeaderIter;

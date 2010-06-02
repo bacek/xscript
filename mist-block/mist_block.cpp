@@ -29,9 +29,8 @@ MistBlock::postParse() {
     worker_ = MistWorker::create(method());
 }
 
-XmlDocHelper
-MistBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
-    (void)invoke_ctx;
+void
+MistBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     assert(worker_.get());
     
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
@@ -52,7 +51,7 @@ MistBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext>
         throwBadArityError();
     }
     
-    return doc;
+    invoke_ctx->resultDoc(doc);
 }
 
 MistExtension::MistExtension() {

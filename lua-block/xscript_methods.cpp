@@ -53,13 +53,13 @@ InvokeContext* getInvokeContext(lua_State *lua) {
     return ctx;
 }
 
-Block* getBlock(lua_State *lua) {
+const Block* getBlock(lua_State *lua) {
     lua_getglobal(lua, "xscript");
     lua_getfield(lua, -1, "_block");
 
-    pointer<Block> *p = (pointer<Block>*)lua_touserdata(lua, -1);
+    pointer<const Block> *p = (pointer<const Block>*)lua_touserdata(lua, -1);
     assert(p);
-    Block* block = p->ptr;
+    const Block* block = p->ptr;
 
     lua_pop(lua, 2);
     

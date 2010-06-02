@@ -25,9 +25,8 @@ public:
             : Block(ext, owner, node), collector_(collector) {
     }
 
-    XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx)
+    void call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const
         throw (std::exception) {
-        (void)invoke_ctx;
         ControlExtension::setControlFlag(ctx.get());
 
         const Config* conf = VirtualHostData::instance()->getConfig();
@@ -83,8 +82,7 @@ public:
         XmlUtils::throwUnless(NULL != node);
 
         xmlDocSetRootElement(doc.get(), node);
-
-        return doc;
+        invoke_ctx->resultDoc(doc);
     }
 
     static std::auto_ptr<Block> createBlock(const ControlExtension *ext, Xml *owner,

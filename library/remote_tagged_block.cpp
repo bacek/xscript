@@ -104,16 +104,17 @@ RemoteTaggedBlock::retryCount() const {
     return rtb_data_->retry_count_;
 }
 
-XmlDocHelper
+void
 RemoteTaggedBlock::call(boost::shared_ptr<Context> ctx,
-    boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
+    boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     
     for(int rcount = retryCount(); rcount >= 0; --rcount) {
         try {
             if (ctx->stopBlocks()) {
                 throw SkipResultInvokeError("block is stopped");
             }
-            return retryCall(ctx, invoke_ctx);
+            retryCall(ctx, invoke_ctx);
+            return;
         }
         catch(const RetryInvokeError &e) {
             if (rcount > 0) {

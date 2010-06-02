@@ -120,9 +120,9 @@ FileBlock::isInvoke() const {
     return &FileBlock::invokeFile == method_;
 }
 
-XmlDocHelper
+void
 FileBlock::call(boost::shared_ptr<Context> ctx,
-    boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
+    boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
@@ -145,7 +145,8 @@ FileBlock::call(boost::shared_ptr<Context> ctx,
 
     if (file.empty()) {
         if (isTest()) {
-            return testFileDoc(false, file);
+            invoke_ctx->resultDoc(testFileDoc(false, file));
+            return;
         }
         ignore_not_existed_ ? throw SkipResultInvokeError("empty path") :
             throw InvokeError("empty path");
@@ -161,7 +162,8 @@ FileBlock::call(boost::shared_ptr<Context> ctx,
     int res = stat(file.c_str(), &st);
     
     if (isTest()) {
-        return testFileDoc(!res, file);
+        invoke_ctx->resultDoc(testFileDoc(!res, file));
+        return;
     }
     
     if (res != 0) {
@@ -172,7 +174,8 @@ FileBlock::call(boost::shared_ptr<Context> ctx,
     }
     
     if (!tagged()) {
-        return invokeMethod(file, ctx, invoke_ctx);
+        invoke_ctx->resultDoc(invokeMethod(file, ctx, invoke_ctx));
+        return;
     }
 
     const Tag& tag = invoke_ctx->tag();
@@ -190,13 +193,12 @@ FileBlock::call(boost::shared_ptr<Context> ctx,
 
     Tag local_tag(modified, st.st_mtime, Tag::UNDEFINED_TIME);
     invoke_ctx->tag(local_tag);
-
-    return doc;
+    invoke_ctx->resultDoc(doc);
 }
 
 XmlDocHelper
 FileBlock::invokeMethod(const std::string &file_name,
-        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     try {
         return (this->*method_)(file_name, ctx, invoke_ctx);
     }
@@ -211,7 +213,7 @@ FileBlock::invokeMethod(const std::string &file_name,
 
 XmlDocHelper
 FileBlock::loadFile(const std::string &file_name,
-        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     (void)ctx;
     (void)invoke_ctx;
     log()->debug("%s: loading file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
@@ -240,7 +242,7 @@ FileBlock::loadFile(const std::string &file_name,
 
 XmlDocHelper
 FileBlock::loadText(const std::string &file_name,
-        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     (void)ctx;
     (void)invoke_ctx;
     log()->debug("%s: loading text file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
@@ -291,7 +293,7 @@ FileBlock::loadText(const std::string &file_name,
 
 XmlDocHelper
 FileBlock::loadBinary(const std::string &file_name,
-        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     (void)invoke_ctx;
     log()->debug("%s: loading binary file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
@@ -331,7 +333,7 @@ FileBlock::loadBinary(const std::string &file_name,
 
 XmlDocHelper
 FileBlock::invokeFile(const std::string &file_name,
-        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     log()->debug("%s: invoking file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
     PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
@@ -392,7 +394,7 @@ FileBlock::invokeFile(const std::string &file_name,
 
 
 XmlDocHelper
-FileBlock::testFileDoc(bool result, const std::string &file) {
+FileBlock::testFileDoc(bool result, const std::string &file) const {
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
     

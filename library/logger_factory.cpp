@@ -30,19 +30,15 @@ public:
             : Block(ext, owner, node) {
     }
 
-    XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
-        (void)invoke_ctx;
+    void call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
         ControlExtension::setControlFlag(ctx.get());
         LoggerFactory::instance()->logRotate();
         XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
         XmlUtils::throwUnless(NULL != doc.get());
-
         xmlNodePtr node = xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "logrotate", (const xmlChar*) "rotated");
         XmlUtils::throwUnless(NULL != node);
-
         xmlDocSetRootElement(doc.get(), node);
-        
-        return doc;
+        invoke_ctx->resultDoc(doc);
     }
 };
 

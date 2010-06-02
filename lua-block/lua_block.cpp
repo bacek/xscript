@@ -172,7 +172,7 @@ registerLibs(lua_State *lua, const char *name, Type *type,
 }
 
 static void
-setupLocalData(lua_State * lua, InvokeContext *invoke_ctx, Context *ctx, Block *block) {
+setupLocalData(lua_State * lua, InvokeContext *invoke_ctx, Context *ctx, const Block *block) {
     lua_getglobal(lua, "xscript");
 
     pointer<InvokeContext> *pictx = (pointer<InvokeContext> *)lua_newuserdata(
@@ -184,7 +184,7 @@ setupLocalData(lua_State * lua, InvokeContext *invoke_ctx, Context *ctx, Block *
     pctx->ptr = ctx;
     lua_setfield(lua, -2, "_ctx");
     
-    pointer<Block> *pblock = (pointer<Block> *)lua_newuserdata(lua, sizeof(pointer<Block>));
+    pointer<const Block> *pblock = (pointer<const Block> *)lua_newuserdata(lua, sizeof(pointer<const Block>));
     pblock->ptr = block;
     lua_setfield(lua, -2, "_block");
 }
@@ -211,8 +211,8 @@ createLuaThread(lua_State *parent) {
     return LuaSharedThread(new LuaThread(parent));
 }
 
-XmlDocHelper
-LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
+void
+LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     log()->entering(BOOST_CURRENT_FUNCTION);    
     
     PROFILER(log(), "Lua block execution, " + owner()->name());
@@ -222,7 +222,8 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
         XmlUtils::throwUnless(NULL != doc.get());
         XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "lua", (const xmlChar*) ""));
         xmlDocSetRootElement(doc.get(), node.release());
-        return doc;
+        invoke_ctx->resultDoc(doc);
+        return;
     }   
     
     Context *root_ctx = ctx->rootContext();
@@ -274,8 +275,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
     }
     xmlDocSetRootElement(doc.get(), node.get());
     node.release();
-    
-    return doc;
+    invoke_ctx->resultDoc(doc);
 }
 
 LuaExtension::LuaExtension() {

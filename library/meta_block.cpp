@@ -88,8 +88,8 @@ MetaBlock::callCacheLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<Invoke
     }
 }
 
-XmlDocHelper
-MetaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
+void
+MetaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     (void)ctx;
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
@@ -107,7 +107,7 @@ MetaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext>
     }
 
     xmlDocSetRootElement(doc.get(), node.release());
-    return doc;
+    invoke_ctx->metaDoc(doc);
 }
 
 void

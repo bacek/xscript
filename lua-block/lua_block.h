@@ -21,7 +21,7 @@ protected:
     virtual void postParse();
 
     void reportError(const char *message, lua_State *lua);
-    virtual XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception);
+    virtual void call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception);
 
 private:
     const char* code_;

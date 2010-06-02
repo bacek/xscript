@@ -24,7 +24,7 @@ class HttpHelper;
 
 class HttpMethodRegistrator;
 
-typedef XmlDocHelper (HttpBlock::*HttpMethod)(Context *ctx, InvokeContext *invoke_ctx);
+typedef XmlDocHelper (HttpBlock::*HttpMethod)(Context *ctx, InvokeContext *invoke_ctx) const;
 
 #ifndef HAVE_HASHMAP
 typedef std::map<std::string, HttpMethod> MethodMap;
@@ -41,15 +41,15 @@ public:
 protected:
     virtual void postParse();
     virtual void property(const char *name, const char *value);
-    virtual XmlDocHelper retryCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception);
+    virtual void retryCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception);
     virtual std::string concatParams(const Context *ctx, unsigned int first, unsigned int last) const;
     
-    XmlDocHelper getHttp(Context *ctx, InvokeContext *invoke_ctx);
-    XmlDocHelper postHttp(Context *ctx, InvokeContext *invoke_ctx);
-    XmlDocHelper getByState(Context *ctx, InvokeContext *invoke_ctx);
-    XmlDocHelper getByRequest(Context *ctx, InvokeContext *invoke_ctx);
-    XmlDocHelper postByRequest(Context *ctx, InvokeContext *invoke_ctx);
-    XmlDocHelper getBinaryPage(Context *ctx, InvokeContext *invoke_ctx);
+    XmlDocHelper getHttp(Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper postHttp(Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper getByState(Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper getByRequest(Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper postByRequest(Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const;
 
     XmlDocHelper response(const HttpHelper &h, bool error_mode = false) const;
     void appendHeaders(HttpHelper &helper, const Request *request, InvokeContext *invoke_ctx) const;
@@ -61,10 +61,10 @@ private:
     HttpBlock(const HttpBlock &);
     HttpBlock& operator = (const HttpBlock &);
     
-    int getTimeout(Context *ctx, const std::string &url);
-    void checkStatus(const HttpHelper &helper);
-    void httpCall(HttpHelper &helper);
-    void createMeta(HttpHelper &helper, InvokeContext *invoke_ctx);
+    int getTimeout(Context *ctx, const std::string &url) const;
+    void checkStatus(const HttpHelper &helper) const;
+    void httpCall(HttpHelper &helper) const;
+    void createMeta(HttpHelper &helper, InvokeContext *invoke_ctx) const;
 
     friend class HttpMethodRegistrator;
 

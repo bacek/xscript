@@ -153,13 +153,12 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
         invoke_ctx->setMeta(boost::shared_ptr<Meta>(new Meta));
         invoke_ctx->haveCachedCopy(true);
         invoke_ctx->tag(cache_tag);
-        XmlDocHelper newdoc(call(ctx, invoke_ctx));
+        call(ctx, invoke_ctx);
         if (invoke_ctx->tag().modified) {
-            if (NULL == newdoc.get()) {
+            if (NULL == invoke_ctx->resultDoc().get() || NULL == invoke_ctx->resultDoc()->get()) {
                 log()->error("Got empty document in tagged block. Cached copy used");
             }
             else {
-                invoke_ctx->resultDoc(newdoc);
                 processResponse(ctx, invoke_ctx);
                 return;
             }

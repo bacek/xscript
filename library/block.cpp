@@ -463,12 +463,11 @@ Block::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
         (*i)->checkValidator(ctx.get());
     }
     
-    XmlDocHelper doc(call(ctx, invoke_ctx));
-    if (NULL == doc.get()) {
+    call(ctx, invoke_ctx);
+    if (NULL == invoke_ctx->resultDoc().get() || NULL == invoke_ctx->resultDoc()->get()) {
         errorResult("got empty document", false, invoke_ctx);
         return;
     }
-    invoke_ctx->resultDoc(doc);
     processResponse(ctx, invoke_ctx);
 }
 
@@ -560,14 +559,15 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) 
 }
 
 void
-Block::errorResult(const char *error, bool info, boost::shared_ptr<InvokeContext> &ctx) const {
+Block::errorResult(const char *error, bool info, boost::shared_ptr<InvokeContext> &invoke_ctx) const {
     std::string full_error;
     InvokeError invoke_error(error);
     XmlDocHelper doc = errorDoc(invoke_error, info ? BlockData::XSCRIPT_INVOKE_INFO.c_str() :
         BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error);
     
-    ctx->resultDoc(doc);
-    ctx->resultType(InvokeContext::ERROR);
+    invoke_ctx->resultDoc(doc);
+    invoke_ctx->metaDoc(XmlDocHelper());
+    invoke_ctx->resultType(InvokeContext::ERROR);
 }
 
 boost::shared_ptr<InvokeContext>
@@ -869,8 +869,11 @@ Block::callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeConte
 void
 Block::callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
     if (data_->meta_block_.get()) {
-        XmlDocHelper meta_doc = data_->meta_block_->call(ctx, invoke_ctx);
-        invoke_ctx->metaDoc(meta_doc);
+        data_->meta_block_->call(ctx, invoke_ctx);
+        if (NULL == invoke_ctx->metaDoc().get() || NULL == invoke_ctx->metaDoc()->get()) {
+            errorResult("got empty meta document", false, invoke_ctx);
+            return;
+        }
         if (!ctx->noXsltPort()) {
             data_->meta_block_->evalXPath(ctx.get(), invoke_ctx->metaDoc());
         }

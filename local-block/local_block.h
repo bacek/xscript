@@ -36,8 +36,8 @@ private:
     LocalBlock& operator = (const LocalBlock &);
 
     virtual void property(const char *name, const char *value);
-    virtual XmlDocHelper call(boost::shared_ptr<Context> ctx,
-        boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception);
+    virtual void call(boost::shared_ptr<Context> ctx,
+        boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception);
 
 private:
     bool proxy_;

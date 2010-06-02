@@ -27,15 +27,16 @@ WhileBlock::property(const char *name, const char *value) {
     LocalBlock::propertyInternal(name, value);
 }
 
-XmlDocHelper
+void
 WhileBlock::call(boost::shared_ptr<Context> ctx,
-    boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
+    boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     
     if (invoke_ctx->haveCachedCopy()) {
         Tag local_tag = invoke_ctx->tag();
         local_tag.modified = false;
         invoke_ctx->tag(local_tag);
-        return XmlDocHelper();
+        invoke_ctx->resultDoc(XmlDocHelper());
+        return;
     }
 
     XmlDocSharedHelper doc;
@@ -81,7 +82,7 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
 
     } while(checkStateGuard(ctx.get()));
 
-    return *doc;
+    invoke_ctx->resultDoc(doc);
 }
 
 void

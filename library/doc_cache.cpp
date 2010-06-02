@@ -49,10 +49,9 @@ public:
                 : Block(ext, owner, node), cache_data_(cache_data) {
         }
 
-        XmlDocHelper call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) throw (std::exception) {
-            (void)invoke_ctx;
+        void call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
             ControlExtension::setControlFlag(ctx.get());
-            return cache_data_.createReport();
+            invoke_ctx->resultDoc(cache_data_.createReport());
         }
     private:
         const DocCacheData &cache_data_;
