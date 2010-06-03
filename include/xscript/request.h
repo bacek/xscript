@@ -34,14 +34,14 @@ public:
 
     const std::string& getRemoteUser() const;
     const std::string& getRemoteAddr() const;
-    virtual const std::string& getRealIP() const;
+    const std::string& getRealIP() const;
     const std::string& getQueryString() const;
     const std::string& getRequestMethod() const;
     std::string getURI() const;
     const std::string& getRequestURI() const;
-    virtual std::string getOriginalURI() const;
+    std::string getOriginalURI() const;
     const std::string& getHost() const;
-    virtual const std::string& getOriginalHost() const;
+    const std::string& getOriginalHost() const;
     std::string getOriginalUrl() const;
 
     boost::uint32_t getContentLength() const;
@@ -83,11 +83,23 @@ public:
     std::pair<const char*, std::streamsize> requestBody() const;
     bool suppressBody() const;
     
-    virtual void attach(std::istream *is, char *env[]);
+    void attach(std::istream *is, char *env[]);
 
+    class HandlerRegisterer;
+protected:
+    static const std::string ATTACH_METHOD;
+    static const std::string REAL_IP_METHOD;
+    static const std::string ORIGINAL_URI_METHOD;
+    static const std::string ORIGINAL_HOST_METHOD;
+    
 private:
     friend class Parser;
     friend class RequestImpl;
+    
+    class AttachHandler;
+    class RealIPHandler;
+    class OriginalURIHandler;
+    class OriginalHostHandler;
     
     std::auto_ptr<RequestImpl> data_;
 };
