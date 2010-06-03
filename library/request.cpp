@@ -10,8 +10,8 @@
 
 #include "xscript/authorizer.h"
 #include "xscript/encoder.h"
+#include "xscript/exception.h"
 #include "xscript/functors.h"
-#include "xscript/message_interface.h"
 #include "xscript/range.h"
 #include "xscript/request.h"
 
@@ -20,11 +20,6 @@
 #endif
 
 namespace xscript {
-
-const std::string Request::ATTACH_METHOD = "REQUEST_ATTACH";
-const std::string Request::REAL_IP_METHOD = "REQUEST_REAL_IP";
-const std::string Request::ORIGINAL_URI_METHOD = "REQUEST_ORIGINAL_URI";
-const std::string Request::ORIGINAL_HOST_METHOD = "REQUEST_ORIGINAL_HOST";
 
 Request::Request() : data_(new RequestImpl()) {
 }
@@ -80,14 +75,7 @@ Request::getRemoteAddr() const {
 
 const std::string&
 Request::getRealIP() const {
-    MessageParam<const Request> request_param(this);
-    MessageParamBase* param_list[1];
-    param_list[0] = &request_param;
-    MessageParams params(1, param_list);
-    MessageResult<const std::string*> result;
-  
-    MessageProcessor::instance()->process(REAL_IP_METHOD, params, result);
-    return *result.get();
+    return getRemoteAddr();
 }
 
 const std::string&
@@ -119,14 +107,8 @@ Request::getRequestURI() const {
 
 std::string
 Request::getOriginalURI() const {
-    MessageParam<const Request> request_param(this);
-    MessageParamBase* param_list[1];
-    param_list[0] = &request_param;
-    MessageParams params(1, param_list);
-    MessageResult<std::string> result;
-  
-    MessageProcessor::instance()->process(ORIGINAL_URI_METHOD, params, result);
-    return result.get();
+    const std::string& uri = getRequestURI();
+    return uri.empty() ? getURI() : uri;
 }
 
 std::string
@@ -145,14 +127,7 @@ Request::getHost() const {
 
 const std::string&
 Request::getOriginalHost() const {
-    MessageParam<const Request> request_param(this);
-    MessageParamBase* param_list[1];
-    param_list[0] = &request_param;
-    MessageParams params(1, param_list);
-    MessageResult<const std::string*> result;
-  
-    MessageProcessor::instance()->process(ORIGINAL_HOST_METHOD, params, result);
-    return *result.get();
+    return getHost();
 }
 
 boost::uint32_t
@@ -383,19 +358,35 @@ Request::addInputHeader(const std::string &name, const std::string &value) {
 void
 Request::attach(std::istream *is, char *env[]) {
     try {
-        MessageParam<Request> request_param(this);
-        MessageParam<std::istream> stream_param(is);
-        MessageParam<char*> env_param(env);
-        
-        MessageParamBase* param_list[3];
-        param_list[0] = &request_param;
-        param_list[1] = &stream_param;
-        param_list[2] = &env_param;
-        
-        MessageParams params(3, param_list);
-        MessageResultBase result;
-      
-        MessageProcessor::instance()->process(ATTACH_METHOD, params, result);
+        std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
+        Parser::parse(data_.get(), env, enc.get());
+
+        if (is && "POST" == getRequestMethod()) {
+            data_->body_.resize(getContentLength());
+            is->exceptions(std::ios::badbit);
+            is->read(&data_->body_[0], data_->body_.size());
+
+            if (is->gcount() != static_cast<std::streamsize>(data_->body_.size())) {
+                throw std::runtime_error("failed to read request entity");
+            }
+
+            const std::string &type = getContentType();
+            if (strncasecmp("multipart/form-data", type.c_str(), sizeof("multipart/form-data") - 1) == 0) {
+                Range body = createRange(data_->body_);
+                std::string boundary = Parser::getBoundary(createRange(type));
+                Parser::parseMultipart(data_.get(), body, boundary, enc.get());
+            }
+            else if (!data_->body_.empty()) {
+                StringUtils::parse(createRange(data_->body_), data_->args_, enc.get());
+            }
+        }
+        else {
+            const std::string &query = getQueryString();
+            if (!query.empty()) {
+                StringUtils::parse(createRange(query), data_->args_, enc.get());
+            }
+        }
+        data_->is_bot_ = Authorizer::instance()->isBot(getHeader("User-Agent"));
     }
     catch(const BadRequestError &e) {
         throw;
@@ -407,99 +398,5 @@ Request::attach(std::istream *is, char *env[]) {
         throw BadRequestError("Unknown error");
     }
 }
-
-class Request::AttachHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)result;
-        Request* request = params.getPtr<Request>(0);
-        std::istream* is = params.getPtr<std::istream>(1);
-        char** env = params.getPtr<char*>(2);
-        
-        std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
-        Parser::parse(request->data_.get(), env, enc.get());
-
-        if (is && "POST" == request->getRequestMethod()) {
-            request->data_->body_.resize(request->getContentLength());
-            is->exceptions(std::ios::badbit);
-            is->read(&request->data_->body_[0], request->data_->body_.size());
-            
-            if (is->gcount() != static_cast<std::streamsize>(request->data_->body_.size())) {
-                throw std::runtime_error("failed to read request entity");
-            }
-            
-            const std::string &type = request->getContentType();
-            if (strncasecmp("multipart/form-data", type.c_str(), sizeof("multipart/form-data") - 1) == 0) {
-                Range body = createRange(request->data_->body_);
-                std::string boundary = Parser::getBoundary(createRange(type));
-                Parser::parseMultipart(request->data_.get(), body, boundary, enc.get());
-            }
-            else if (!request->data_->body_.empty()) {
-                StringUtils::parse(createRange(request->data_->body_), request->data_->args_, enc.get());
-            }
-        }
-        else {
-            const std::string &query = request->getQueryString();
-            if (!query.empty()) {
-                StringUtils::parse(createRange(query), request->data_->args_, enc.get());
-            }
-        }
-        request->data_->is_bot_ = Authorizer::instance()->isBot(request->getHeader("User-Agent"));
-        return CONTINUE;
-    }
-};
-
-class Request::RealIPHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        const Request* request = params.getPtr<const Request>(0);
-        result.set(&request->getRemoteAddr());
-        return CONTINUE;
-    }
-};
-
-class Request::OriginalURIHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        const Request* request = params.getPtr<const Request>(0);
-        const std::string& uri = request->getRequestURI();
-        if (uri.empty()) {
-            result.set(request->getURI());
-        }
-        else {
-            result.set(uri);
-        }
-        return CONTINUE;
-    }
-};
-
-class Request::OriginalHostHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        const Request* request = params.getPtr<const Request>(0);
-        result.set(&request->getHost());
-        return CONTINUE;
-    }
-};
-
-class NormalizeHeaderHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)params;
-        result.set(false);
-        return CONTINUE;
-    }
-};
-
-class Request::HandlerRegisterer {
-public:
-    HandlerRegisterer() {
-        MessageProcessor::instance()->registerBack(ATTACH_METHOD,
-            boost::shared_ptr<MessageHandler>(new AttachHandler()));
-        MessageProcessor::instance()->registerBack(REAL_IP_METHOD,
-            boost::shared_ptr<MessageHandler>(new RealIPHandler()));
-        MessageProcessor::instance()->registerBack(ORIGINAL_URI_METHOD,
-            boost::shared_ptr<MessageHandler>(new OriginalURIHandler()));
-        MessageProcessor::instance()->registerBack(ORIGINAL_HOST_METHOD,
-            boost::shared_ptr<MessageHandler>(new OriginalHostHandler()));        
-    }
-};
-
-static Request::HandlerRegisterer reg_request_handlers;
 
 } // namespace xscript
