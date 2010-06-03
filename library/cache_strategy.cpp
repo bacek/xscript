@@ -283,7 +283,7 @@ class CookieSubCacheStrategyFactory : public SubCacheStrategyFactory {
         typedef boost::tokenizer<Separator> Tokenizer;
         Tokenizer tok(value, Separator(", "));
         for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
-            if (!Policy::allowCachingInputCookie(it->c_str())) {
+            if (!Policy::instance()->allowCachingInputCookie(it->c_str())) {
                 std::stringstream ss;
                 ss << "Cookie " << *it << " is not allowed in cookie strategy";
                 throw std::runtime_error(ss.str());

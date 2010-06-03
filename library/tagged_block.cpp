@@ -107,7 +107,7 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
         return;
     }
     
-    if (!Policy::allowCaching(ctx.get(), this)) {
+    if (!Policy::instance()->allowCaching(ctx.get(), this)) {
         Block::invokeInternal(ctx, invoke_ctx);
         return;
     }
@@ -184,7 +184,7 @@ TaggedBlock::postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
         return;
     }
     
-    if (!Policy::allowCaching(ctx.get(), this)) {
+    if (!Policy::instance()->allowCaching(ctx.get(), this)) {
         return;
     }
     
@@ -282,7 +282,7 @@ TaggedBlock::property(const char *name, const char *value) {
 bool
 TaggedBlock::propertyInternal(const char *name, const char *value) {
     if (strncasecmp(name, "no-cache", sizeof("no-cache")) == 0) {
-        Policy::processCacheLevel(this, value);
+        Policy::instance()->processCacheLevel(this, value);
     }
     else if (CachedObject::checkProperty(name, value)) {        
     }

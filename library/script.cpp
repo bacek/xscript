@@ -698,7 +698,7 @@ Script::CachableHandler::process(const MessageParams &params,
         
         const CookieSet &cookies = ctx->response()->outCookies();       
         for(CookieSet::const_iterator it = cookies.begin(); it != cookies.end(); ++it) {
-            if (!Policy::allowCachingOutputCookie(it->name().c_str())) {
+            if (!Policy::instance()->allowCachingOutputCookie(it->name().c_str())) {
                 log()->debug("Cannot cache script. Output cookie %s is not allowed", it->name().c_str());
                 result.set(false);
                 return CONTINUE;

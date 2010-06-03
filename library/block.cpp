@@ -496,7 +496,7 @@ Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeC
         throw InvokeError("context is already stopped, cannot process response");
     }
 
-    bool is_error_doc = Policy::isErrorDoc(doc.get());
+    bool is_error_doc = Policy::instance()->isErrorDoc(doc.get());
     
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
     

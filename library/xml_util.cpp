@@ -391,7 +391,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
                 return NULL;
             }
 
-            fileName = Policy::getPathByScheme(NULL, url);
+            fileName = Policy::instance()->getPathByScheme(NULL, url);
             if (fileName != url) {
                 log()->info("entityResolver: url changed %s", fileName.c_str());
             }

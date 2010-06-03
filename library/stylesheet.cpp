@@ -176,7 +176,7 @@ Stylesheet::StylesheetData::detectOutputMethod() {
 void
 Stylesheet::StylesheetData::detectOutputEncoding() {
     if (NULL == stylesheet_->encoding) {
-        output_encoding_.assign(Policy::getOutputEncoding(NULL));
+        output_encoding_.assign(Policy::instance()->getOutputEncoding(NULL));
         stylesheet_->encoding =
             xmlStrdup((const xmlChar*)(output_encoding_.c_str()));
     }

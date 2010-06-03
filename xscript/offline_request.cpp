@@ -58,7 +58,7 @@ OfflineRequest::attach(const std::string &uri,
             processed_url = docroot_ + (uri.substr(pos));
         }
         else {
-            processed_url = Policy::getPathByScheme(this, uri);
+            processed_url = Policy::instance()->getPathByScheme(this, uri);
         }
         
         size_t query_pos = processed_url.rfind('?');

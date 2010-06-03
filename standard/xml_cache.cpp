@@ -296,13 +296,13 @@ XmlCache::delay() {
 
 boost::shared_ptr<Xml>
 XmlCache::fetchXml(const std::string &name) {
-    return findStorage(name)->fetch(Policy::getKey(NULL, name));
+    return findStorage(name)->fetch(Policy::instance()->getKey(NULL, name));
 }
 
 void
 XmlCache::storeXml(const std::string &name, const boost::shared_ptr<Xml> &xml) {
     assert(NULL != xml.get());
-    findStorage(name)->store(Policy::getKey(NULL, name), xml);
+    findStorage(name)->store(Policy::instance()->getKey(NULL, name), xml);
 }
 
 XmlStorage*
