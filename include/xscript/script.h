@@ -82,7 +82,6 @@ protected:
 private:
     friend class ScriptFactory;
     
-    // workaround for woody
     class ParseXScriptNodeHandler;
     class ReplaceXScriptNodeHandler;
     class PropertyHandler;

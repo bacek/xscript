@@ -4,7 +4,6 @@
 
 #include "xscript/authorizer.h"
 #include "xscript/context.h"
-#include "xscript/message_interface.h"
 #include "xscript/request.h"
 #include "xscript/response.h"
 #include "xscript/string_utils.h"
@@ -17,7 +16,6 @@ namespace xscript {
 
 std::vector<std::string> Authorizer::bots_;
 
-const std::string AuthContext::STATUS_METHOD = "AUTHCONTEXT_STATUS";
 const std::string AuthContext::NOAUTH_STATUS = "noauth";
 
 AuthContext::AuthContext() {
@@ -33,15 +31,7 @@ AuthContext::authorized() const {
 
 const std::string&
 AuthContext::status() const {
-    MessageParam<const AuthContext> auth_context_param(this);    
-    MessageParamBase* param_list[1];
-    param_list[0] = &auth_context_param;
-    
-    MessageParams params(1, param_list);
-    MessageResult<const std::string*> result;
-    
-    MessageProcessor::instance()->process(STATUS_METHOD, params, result);
-    return *result.get();
+    return AuthContext::NOAUTH_STATUS;
 }
 
 Authorizer::Authorizer() {
@@ -87,28 +77,6 @@ Authorizer::isBot(const std::string &user_agent) {
     }
     return false;
 }
-
-namespace AuthContextHandlers {
-
-class StatusHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)params;
-        result.set(&AuthContext::NOAUTH_STATUS);
-        return BREAK;
-    }
-};
-
-
-struct HandlerRegisterer {
-    HandlerRegisterer() {
-        MessageProcessor::instance()->registerBack(AuthContext::STATUS_METHOD,
-                boost::shared_ptr<MessageHandler>(new StatusHandler()));
-    }
-};
-
-static HandlerRegisterer reg_handlers;
-
-} // namespace AuthContextHandlers
 
 static ComponentRegisterer<Authorizer> reg; 
 
