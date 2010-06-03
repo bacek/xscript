@@ -78,10 +78,10 @@ OfflineServer::renderBuffer(const std::string &url,
         handleRequest(request, response, ctx);
     }
     catch (const BadRequestError &e) {
-        OperationMode::sendError(response.get(), 400, e.what());
+        OperationMode::instance()->sendError(response.get(), 400, e.what());
     }
     catch (const std::exception &e) {
-        OperationMode::sendError(response.get(), 500, e.what());
+        OperationMode::instance()->sendError(response.get(), 500, e.what());
     }
     
     return buffer.str();

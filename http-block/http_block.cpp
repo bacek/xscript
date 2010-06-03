@@ -422,7 +422,7 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
         XmlDocHelper result(xmlReadMemory(str->c_str(), str->size(), "",
             charset_.empty() ? NULL : charset_.c_str(), XML_PARSE_DTDATTR | XML_PARSE_NOENT));
         XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());
-        OperationMode::processXmlError(helper.url());
+        OperationMode::instance()->processXmlError(helper.url());
         return result;
     }
     
@@ -440,10 +440,10 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
             std::string error = "Invalid sanitized text/html document. Url: " + helper.url() + ". Error: ";
             std::string xml_error = XmlUtils::getXMLError();
             xml_error.empty() ? error.append("Unknown XML error") : error.append(xml_error);
-            OperationMode::processCriticalInvokeError(error);
+            OperationMode::instance()->processCriticalInvokeError(error);
         }
         
-        OperationMode::processXmlError(helper.url());
+        OperationMode::instance()->processXmlError(helper.url());
         
         return result;
     }
@@ -463,7 +463,7 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
         XmlDocHelper result(xmlReadMemory(res.c_str(), res.size(), "",
                 helper.charset().c_str(), XML_PARSE_DTDATTR | XML_PARSE_NOENT));
         XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());
-        OperationMode::processXmlError(helper.url());
+        OperationMode::instance()->processXmlError(helper.url());
         return result;
     }
 

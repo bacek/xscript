@@ -89,7 +89,7 @@ void
 ThreadedBlock::postInvoke(Context *ctx, InvokeContext *invoke_ctx) {
     
     bool show_elapsed_time = trb_data_->check_elapsed_time_ ? trb_data_->check_elapsed_time_ :
-        OperationMode::checkDevelopmentVariable(ctx->request(), ThreadedBlockData::SHOW_ELAPSED_TIME);
+    OperationMode::instance()->checkDevelopmentVariable(ctx->request(), ThreadedBlockData::SHOW_ELAPSED_TIME);
        
     if (!show_elapsed_time || tagged()) {
         return;

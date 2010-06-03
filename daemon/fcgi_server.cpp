@@ -197,7 +197,7 @@ FCGIServer::handle() {
                         handleRequest(request, response, ctx);
                     }
                     catch (const BadRequestError &e) {
-                        OperationMode::sendError(response.get(), 400, e.what());
+                        OperationMode::instance()->sendError(response.get(), 400, e.what());
                     }
                 }
                 ctx.get() ? responseCounter_->add(ctx.get(), PROFILER_RELEASE()) :

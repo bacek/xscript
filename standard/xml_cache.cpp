@@ -271,7 +271,7 @@ XmlCache::init(const Config *config, StatBuilder &statBuilder) {
     int buckets = config->as<int>(std::string("/xscript/").append(name).append("/buckets"), 10);
     int bucksize = config->as<int>(std::string("/xscript/").append(name).append("/bucket-size"), 200);
 
-    if (OperationMode::isProduction()) {
+    if (OperationMode::instance()->isProduction()) {
         delay_ = config->as<time_t>(std::string("/xscript/").append(name).append("/refresh-delay"), 5);
     }
 

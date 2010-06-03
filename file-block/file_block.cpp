@@ -235,7 +235,7 @@ FileBlock::loadFile(const std::string &file_name,
         throw InvokeError(error);
     }
     
-    OperationMode::processXmlError(file_name);
+    OperationMode::instance()->processXmlError(file_name);
     
     return doc;
 }
@@ -285,7 +285,7 @@ FileBlock::loadText(const std::string &file_name,
         res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
     XmlUtils::throwUnless(NULL != result.get());
     
-    OperationMode::processXmlError(file_name);
+    OperationMode::instance()->processXmlError(file_name);
     
     return result;
     

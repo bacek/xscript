@@ -285,7 +285,7 @@ Stylesheet::StylesheetData::appendXsltParams(const std::vector<Param*>& params,
         if (result.second == false) {
             std::stringstream stream;
             stream << "duplicated xslt-param: " << id << ". Url: " << ctx->request()->getOriginalUrl();
-            OperationMode::processError(stream.str());
+            OperationMode::instance()->processError(stream.str());
         }
         else {
             std::string value = param->asString(ctx);
@@ -443,7 +443,7 @@ Stylesheet::parse() {
             throw UnboundRuntimeError(error);
         }
         
-        OperationMode::processXmlError(name());
+        OperationMode::instance()->processXmlError(name());
     }
 
     data_->parseStylesheet(data_->stylesheet_.get());

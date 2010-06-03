@@ -20,213 +20,139 @@
 #endif
 
 namespace xscript {
-namespace DevelopmentModeHandlers {
 
-class ProcessErrorHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)result;
-        const std::string& message = params.get<const std::string>(0);
-        log()->error("%s", message.c_str());
-        throw UnboundRuntimeError(message);
-    }
+class DevelopmentMode : public OperationMode {
+public:
+    DevelopmentMode();
+    virtual ~DevelopmentMode();
+    virtual void processError(const std::string& message);
+    virtual void processCriticalInvokeError(const std::string& message);
+    virtual void sendError(Response* response, unsigned short status, const std::string& message);
+    virtual bool isProduction();
+    virtual void assignBlockError(Context *ctx, const Block *block, const std::string &error);
+    virtual void processPerblockXsltError(const Context *ctx, const Block *block);
+    virtual void processScriptError(const Context *ctx, const Script *script);
+    virtual void processMainXsltError(const Context *ctx, const Script *script, const Stylesheet *style);
+    virtual void processXmlError(const std::string &filename);
+    virtual void collectError(const InvokeError &error, InvokeError &full_error);
+    virtual bool checkDevelopmentVariable(const Request* request, const std::string &var);
+    virtual void checkRemoteTimeout(RemoteTaggedBlock *block);
 };
 
-class ProcessCriticalInvokeErrorHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)result;
-        const std::string& message = params.get<const std::string>(0);
-        throw CriticalInvokeError(message);
-    }
-};
+DevelopmentMode::DevelopmentMode()
+{}
 
-class SendErrorHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)result;
-        Response* response = params.getPtr<Response>(0);
-        unsigned short status = params.get<unsigned short>(1);
-        const std::string& message = params.get<const std::string>(2);
-        response->sendError(status, message);
-        return BREAK;
-    }
-};
+DevelopmentMode::~DevelopmentMode()
+{}
 
-class IsProductionHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)params;
-        result.set(false);
-        return BREAK;
-    }
-};
+void
+DevelopmentMode::processError(const std::string &message) {
+    log()->error("%s", message.c_str());
+    throw UnboundRuntimeError(message);
+}
 
-class AssignBlockErrorHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)result;
-        Context* ctx = params.getPtr<Context>(0);
-        const Block* block = params.getPtr<const Block>(1);
-        const std::string& error = params.get<const std::string>(2);
-        ctx->assignRuntimeError(block, error);
-        return BREAK;
-    }
-};
+void
+DevelopmentMode::processCriticalInvokeError(const std::string &message) {
+    throw CriticalInvokeError(message);
+}
 
-class ProcessPerblockXsltErrorHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)result;
-        const Context* ctx = params.getPtr<const Context>(0);
-        const Block* block = params.getPtr<const Block>(1);
-        std::string res = ctx->getRuntimeError(block);
-        if (!res.empty()) {
-            throw CriticalInvokeError(res, "xslt", block->xsltName());
+void
+DevelopmentMode::sendError(Response* response, unsigned short status, const std::string &message) {
+    response->sendError(status, message);
+}
+
+bool
+DevelopmentMode::isProduction() {
+    return false;
+}
+
+void
+DevelopmentMode::assignBlockError(Context *ctx, const Block *block, const std::string &error) {
+    ctx->assignRuntimeError(block, error);
+}
+
+void
+DevelopmentMode::processPerblockXsltError(const Context *ctx, const Block *block) {
+    std::string res = ctx->getRuntimeError(block);
+    if (!res.empty()) {
+        throw CriticalInvokeError(res, "xslt", block->xsltName());
+    }
+    if (XmlUtils::hasXMLError()) {
+        std::string error = XmlUtils::getXMLError();
+        if (!error.empty()) {
+            throw InvokeError(error, "xslt", block->xsltName());
         }
-        if (XmlUtils::hasXMLError()) {
-            std::string error = XmlUtils::getXMLError();
-            if (!error.empty()) {
-                throw InvokeError(error, "xslt", block->xsltName());
-            }
-        }
-        return BREAK;
     }
-};
+}
 
-class ProcessScriptErrorHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)result;
-        
-        const Context* ctx = params.getPtr<const Context>(0);
-        const Script* script = params.getPtr<const Script>(1);
-        
-        std::string res;
-        unsigned int size = script->blocksNumber();
-        for (unsigned int i = 0; i < size; ++i) {
-            std::string error = ctx->getRuntimeError(script->block(i));
-            if (!error.empty()) {
-                res.append(error);
-                res.push_back(' ');
-            }
+void
+DevelopmentMode::processScriptError(const Context *ctx, const Script *script) {
+    std::string res;
+    unsigned int size = script->blocksNumber();
+    for (unsigned int i = 0; i < size; ++i) {
+        std::string error = ctx->getRuntimeError(script->block(i));
+        if (!error.empty()) {
+            res.append(error);
+            res.push_back(' ');
         }
-        
-        if (!res.empty()) {
-            throw InvokeError(res.c_str());
-        }
-        
-        return BREAK;
     }
-};
+    if (!res.empty()) {
+        throw InvokeError(res.c_str());
+    }
+}
 
-class ProcessMainXsltErrorHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)result;
-        
-        const Context* ctx = params.getPtr<const Context>(0);
-        const Script* script = params.getPtr<const Script>(1);
-        const Stylesheet* style = params.getPtr<const Stylesheet>(2);
-        
-        std::string res = ctx->getRuntimeError(NULL);
-        if (!res.empty()) {            
+void
+DevelopmentMode::processMainXsltError(const Context *ctx, const Script *script, const Stylesheet *style) {
+    std::string res = ctx->getRuntimeError(NULL);
+    if (!res.empty()) {
+        std::stringstream stream;
+        stream << res << ". Script: " << script->name() << ". Main stylesheet: " << style->name();
+        throw InvokeError(stream.str());
+    }
+    if (XmlUtils::hasXMLError()) {
+        std::string error = XmlUtils::getXMLError();
+        if (!error.empty()) {
             std::stringstream stream;
-            stream << res << ". Script: " << script->name() << ". Main stylesheet: " << style->name();
+            stream << error << ". Script: " << script->name() << ". Main stylesheet: " << style->name();
             throw InvokeError(stream.str());
         }
-        if (XmlUtils::hasXMLError()) {
-            std::string error = XmlUtils::getXMLError();
-            if (!error.empty()) {
-                std::stringstream stream;
-                stream << error << ". Script: " << script->name() << ". Main stylesheet: " << style->name();
-                throw InvokeError(stream.str());
-            }
+    }
+}
+
+void
+DevelopmentMode::processXmlError(const std::string &filename) {
+    if (XmlUtils::hasXMLError()) {
+        std::string error = XmlUtils::getXMLError();
+        if (!error.empty()) {
+            std::stringstream stream;
+            stream << error << ". File: " << filename;
+            throw UnboundRuntimeError(stream.str());
         }
-        
-        return BREAK;
     }
-};
+}
 
-class ProcessXmlErrorHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)result;
-        if (XmlUtils::hasXMLError()) {
-            std::string error = XmlUtils::getXMLError();
-            if (!error.empty()) {
-                const std::string& filename = params.get<const std::string>(0);
-                std::stringstream stream;
-                stream << error << ". File: " << filename;
-                throw UnboundRuntimeError(error);
-            }
-        }
-        
-        return BREAK;
+void
+DevelopmentMode::collectError(const InvokeError &error, InvokeError &full_error) {
+    const InvokeError::InfoMapType& info = error.info();
+    for(InvokeError::InfoMapType::const_iterator it = info.begin();
+        it != info.end();
+        ++it) {
+        full_error.add(it->first, it->second);
     }
-};
+}
 
-class CollectErrorHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)result;
-        const InvokeError& error = params.get<const InvokeError>(0);
-        InvokeError& full_error = params.get<InvokeError>(1);
-        
-        const InvokeError::InfoMapType& info = error.info();
-        for(InvokeError::InfoMapType::const_iterator it = info.begin();
-            it != info.end();
-            ++it) {
-            full_error.add(it->first, it->second);        
-        } 
- 
-        return BREAK;
+bool
+DevelopmentMode::checkDevelopmentVariable(const Request* request, const std::string &var) {
+    return VirtualHostData::instance()->checkVariable(request, var);
+}
+
+void
+DevelopmentMode::checkRemoteTimeout(RemoteTaggedBlock *block) {
+    if (block->retryCount() == 0 && !block->tagged() && !block->isDefaultRemoteTimeout()) {
+        throw std::runtime_error("remote timeout setup is prohibited for non-tagged blocks or when tag cache time is nil");
     }
-};
+}
 
-class CheckDevelopmentVariableHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        const Request* request = params.getPtr<const Request>(0);
-        const std::string& var = params.get<const std::string>(1);
-        result.set(VirtualHostData::instance()->checkVariable(request, var));
-        return BREAK;
-    }
-};
+static ComponentImplRegisterer<OperationMode> reg_(new DevelopmentMode());
 
-class CheckRemoteTimeoutHandler : public MessageHandler {
-    Result process(const MessageParams &params, MessageResultBase &result) {
-        (void)result;
-        RemoteTaggedBlock* block = params.getPtr<RemoteTaggedBlock>(0);
-        if (block->retryCount() == 0 &&
-            !block->tagged() &&
-            !block->isDefaultRemoteTimeout()) {
-            
-            throw std::runtime_error("remote timeout setup is prohibited for non-tagged blocks or when tag cache time is nil");
-        }
-        return BREAK;
-    }
-};
-
-struct HandlerRegisterer {
-    HandlerRegisterer() {
-        MessageProcessor::instance()->registerFront(OperationMode::PROCESS_ERROR_METHOD,
-                boost::shared_ptr<MessageHandler>(new ProcessErrorHandler()));
-        MessageProcessor::instance()->registerFront(OperationMode::PROCESS_CRITICAL_INVOKE_ERROR_METHOD,
-                boost::shared_ptr<MessageHandler>(new ProcessCriticalInvokeErrorHandler()));
-        MessageProcessor::instance()->registerFront(OperationMode::SEND_ERROR_METHOD,
-                boost::shared_ptr<MessageHandler>(new SendErrorHandler()));
-        MessageProcessor::instance()->registerFront(OperationMode::IS_PRODUCTION_METHOD,
-                boost::shared_ptr<MessageHandler>(new IsProductionHandler()));
-        MessageProcessor::instance()->registerFront(OperationMode::ASSIGN_BLOCK_ERROR_METHOD,
-                boost::shared_ptr<MessageHandler>(new AssignBlockErrorHandler()));
-        MessageProcessor::instance()->registerFront(OperationMode::PROCESS_PERBLOCK_XSLT_ERROR_METHOD,
-                boost::shared_ptr<MessageHandler>(new ProcessPerblockXsltErrorHandler()));
-        MessageProcessor::instance()->registerFront(OperationMode::PROCESS_SCRIPT_ERROR_METHOD,
-                boost::shared_ptr<MessageHandler>(new ProcessScriptErrorHandler()));
-        MessageProcessor::instance()->registerFront(OperationMode::PROCESS_MAIN_XSLT_ERROR_METHOD,
-                boost::shared_ptr<MessageHandler>(new ProcessMainXsltErrorHandler()));
-        MessageProcessor::instance()->registerFront(OperationMode::PROCESS_XML_ERROR_METHOD,
-                boost::shared_ptr<MessageHandler>(new ProcessXmlErrorHandler()));
-        MessageProcessor::instance()->registerFront(OperationMode::COLLECT_ERROR_METHOD,
-                boost::shared_ptr<MessageHandler>(new CollectErrorHandler()));
-        MessageProcessor::instance()->registerFront(OperationMode::CHECK_DEVELOPMENT_VARIABLE_METHOD,
-                boost::shared_ptr<MessageHandler>(new CheckDevelopmentVariableHandler()));
-        MessageProcessor::instance()->registerFront(OperationMode::CHECK_REMOTE_TIMEOUT_METHOD,
-                boost::shared_ptr<MessageHandler>(new CheckRemoteTimeoutHandler()));
-    }
-};
-
-static HandlerRegisterer reg_handlers;
-
-} // namespace DevelopmentModeHandlers
 } // namespace xscript

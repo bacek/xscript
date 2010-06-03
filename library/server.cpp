@@ -131,12 +131,12 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
         
         boost::shared_ptr<Script> script = getScript(request.get());
         if (NULL == script.get()) {
-            OperationMode::sendError(response.get(), 404, request->getScriptFilename() + " not found");
+            OperationMode::instance()->sendError(response.get(), 404, request->getScriptFilename() + " not found");
             return;  
         }
 
         if (!script->allowMethod(request->getRequestMethod())) {
-            OperationMode::sendError(response.get(), 405, request->getRequestMethod() + " not allowed");
+            OperationMode::instance()->sendError(response.get(), 405, request->getRequestMethod() + " not allowed");
             return;
         }
 
@@ -192,12 +192,12 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
     catch (const std::exception &e) {
         log()->error("%s: exception caught: %s. Owner: %s",
             BOOST_CURRENT_FUNCTION, e.what(), request->getScriptFilename().c_str());
-        OperationMode::sendError(response.get(), 500, e.what());
+        OperationMode::instance()->sendError(response.get(), 500, e.what());
     }
     catch (...) {
         log()->error("%s: unknown exception caught. Owner: %s",
             BOOST_CURRENT_FUNCTION, request->getScriptFilename().c_str());
-        OperationMode::sendError(response.get(), 500, "unknown error");
+        OperationMode::instance()->sendError(response.get(), 500, "unknown error");
     }
 }
 

@@ -431,7 +431,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     catch (const CriticalInvokeError &e) {
         std::string full_error;
         result = errorResult(e, full_error);        
-        OperationMode::assignBlockError(ctx.get(), this, full_error);
+        OperationMode::instance()->assignBlockError(ctx.get(), this, full_error);
     }
     catch (const SkipResultInvokeError &e) {
         log()->info("%s", errorMessage(e).c_str());
@@ -552,7 +552,7 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) 
         result = false;
     }
                 
-    OperationMode::processPerblockXsltError(ctx.get(), this);
+    OperationMode::instance()->processPerblockXsltError(ctx.get(), this);
                     
     return result;
 }

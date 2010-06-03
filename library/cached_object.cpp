@@ -118,7 +118,7 @@ CachedObject::checkProperty(const char *name, const char *value) {
                 CacheStrategyCollector::instance()->pageStrategy(str_name);
             
             if (NULL == cache_strategy.get()) {
-                OperationMode::processError("unknown cache strategy: " + str_name);
+                OperationMode::instance()->processError("unknown cache strategy: " + str_name);
             }
             else {
                 data_->cache_strategy_ = cache_strategy;

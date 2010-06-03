@@ -150,7 +150,7 @@ ProcServer::run() {
         handleRequest(request, response, ctx);
     }
     catch (const BadRequestError &e) {
-        OperationMode::sendError(response.get(), 400, e.what());
+        OperationMode::instance()->sendError(response.get(), 400, e.what());
     }
     catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;

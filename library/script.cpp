@@ -790,7 +790,7 @@ Script::parseInternal(const boost::function<xmlDocPtr()> &parserFunc) {
             throw UnboundRuntimeError(error);
         }
         
-        OperationMode::processXmlError(name());
+        OperationMode::instance()->processXmlError(name());
     }
 
     data_->doc_ = doc;
@@ -889,7 +889,7 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
     ctx->wait(timeout);
     log()->debug("%s, finished to wait", BOOST_CURRENT_FUNCTION);
     
-    OperationMode::processScriptError(ctx.get(), this);
+    OperationMode::instance()->processScriptError(ctx.get(), this);
     
     data_->addHeaders(ctx.get());
 
@@ -913,7 +913,7 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc)
         result = false;
     }
 		    
-    OperationMode::processMainXsltError(ctx.get(), this, stylesheet.get());
+    OperationMode::instance()->processMainXsltError(ctx.get(), this, stylesheet.get());
     return result;
 }
 
