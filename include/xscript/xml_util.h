@@ -48,6 +48,7 @@ public:
     template<typename Cont> static std::string sanitize(const Cont &value, const std::string &base_url, int line_limit);
 
     template<typename NodePtr> static const char* value(NodePtr node);
+    template<typename NodePtr> static const char* cdataValue(NodePtr node);
 
     template<typename Visitor> static void visitAttributes(xmlAttrPtr attr, Visitor visitor);
 
@@ -119,6 +120,18 @@ XmlUtils::value(NodePtr node) {
         return (const char*) child->content;
     }
     return NULL;
+}
+
+template <typename NodePtr> inline const char*
+XmlUtils::cdataValue(NodePtr node) {
+    const char* value = NULL;
+    for (xmlNodePtr ptr = node->children; NULL != ptr; ptr = ptr->next) {
+        if (XML_CDATA_SECTION_NODE == ptr->type) {
+            value = (const char*)ptr->content;
+            break;
+        }
+    }
+    return value;
 }
 
 template<typename Visitor> inline void

@@ -88,14 +88,7 @@ LuaBlock::~LuaBlock() {
 
 void
 LuaBlock::postParse() {
-
-    xmlNodePtr ptr = NULL;
-    for (ptr = node()->children; NULL != ptr; ptr = ptr->next) {
-        if (XML_CDATA_SECTION_NODE == ptr->type) {
-            code_ = (const char*) ptr->content;
-            break;
-        }
-    }
+    code_ = XmlUtils::cdataValue(node());
     if (NULL == code_) {
         code_ = XmlUtils::value(node());
         if (NULL == code_) {

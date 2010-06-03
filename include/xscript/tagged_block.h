@@ -49,7 +49,7 @@ protected:
     std::string processMainKey(const Context *ctx) const;
     std::string processParamsKey(const Context *ctx) const;
 
-    void callMetaCacheLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+    void callMetaCacheMissLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
 
 private:
     struct TaggedBlockData;

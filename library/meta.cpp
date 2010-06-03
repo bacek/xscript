@@ -125,7 +125,7 @@ MetaCore::undefinedElapsedTime() {
 }
 
 Meta::Meta() : expire_time_(undefinedExpireTime()), last_modified_(undefinedLastModified()),
-        cache_params_writable_(false)
+        cache_params_writable_(false), core_writable_(true)
 {}
 
 Meta::~Meta()
@@ -135,7 +135,8 @@ void
 Meta::reset() {
     core_.reset();
     child_.clear();
-    cache_params_writable_ = true;
+    cache_params_writable_ = false;
+    core_writable_ = true;
     expire_time_ = undefinedExpireTime();
     last_modified_ = undefinedLastModified();
 }
@@ -183,7 +184,19 @@ Meta::get(const std::string &name, const std::string &default_value) const {
 }
 
 void
-Meta::set(const std::string &name, const std::string &value) {
+Meta::set2Core(const std::string &name, const std::string &value) {
+    if (!core_writable_) {
+        return;
+    }
+    if (!allowKey(name)) {
+        throw std::runtime_error(name + " key is not allowed");
+    }
+    initCore();
+    (core_->data_)[name] = value;
+}
+
+void
+Meta::set2Child(const std::string &name, const std::string &value) {
     if (!allowKey(name)) {
         throw std::runtime_error(name + " key is not allowed");
     }
@@ -191,12 +204,8 @@ Meta::set(const std::string &name, const std::string &value) {
 }
 
 void
-Meta::set2Core(const std::string &name, const std::string &value) {
-    if (!allowKey(name)) {
-        throw std::runtime_error(name + " key is not allowed");
-    }
-    initCore();
-    (core_->data_)[name] = value;
+Meta::set(const std::string &name, const std::string &value) {
+    core_writable_ ? set2Core(name, value) : set2Child(name, value);
 }
 
 bool
@@ -328,6 +337,11 @@ Meta::getXml() const {
 void
 Meta::cacheParamsWritable(bool flag) {
     cache_params_writable_ = flag;
+}
+
+void
+Meta::coreWritable(bool flag) {
+    core_writable_ = flag;
 }
 
 } // namespace xscript

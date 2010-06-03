@@ -113,27 +113,25 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
     }
 
     bool have_cached_doc = false;
-    XmlDocSharedHelper doc;
-    boost::shared_ptr<MetaCore> meta_core;
     Tag cache_tag(true, 1, 1); // fake undefined Tag
     try {
         CacheContext cache_ctx(this, ctx.get(), this->allowDistributed());
         boost::shared_ptr<BlockCacheData> cache_data = 
             DocCache::instance()->loadDoc(invoke_ctx.get(), &cache_ctx, cache_tag);
-        if (cache_data.get()) {
+        if (cache_data.get() && cache_data->doc().get()) {
+            invoke_ctx->resultDoc(cache_data->doc());
             if (metaBlock()) {
+                invoke_ctx->meta()->setCore(cache_data->meta());
                 invoke_ctx->meta()->setCacheParams(
                     cache_tag.expire_time, cache_tag.last_modified);
-                callMetaCacheLua(ctx, invoke_ctx);
+                callMetaLua(ctx, invoke_ctx);
                 if (cacheTimeUndefined()) {
                     cache_tag.expire_time = invoke_ctx->meta()->getExpireTime();
                     cache_tag.last_modified = invoke_ctx->meta()->getLastModified();
                 }
             }
             if (!cache_tag.expired()) {
-                doc = cache_data->doc();
-                meta_core = cache_data->meta();
-                have_cached_doc = (NULL != doc.get());
+                have_cached_doc = true;
             }
         }
     }
@@ -152,6 +150,7 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
         invoke_ctx->setMeta(boost::shared_ptr<Meta>(new Meta));
         invoke_ctx->haveCachedCopy(true);
         invoke_ctx->tag(cache_tag);
+        XmlDocSharedHelper doc = invoke_ctx->resultDoc();
         call(ctx, invoke_ctx);
         if (invoke_ctx->tag().modified) {
             if (NULL == invoke_ctx->resultDoc().get()) {
@@ -162,14 +161,12 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
                 return;
             }
         }
+        invoke_ctx->resultDoc(doc);
         invoke_ctx->setMeta(meta);
     }
     
     invoke_ctx->resultType(InvokeContext::SUCCESS);
-    invoke_ctx->resultDoc(doc);
-    invoke_ctx->meta()->setCore(meta_core);
-    callMetaLua(ctx, invoke_ctx);
-    evalXPath(ctx.get(), doc);
+    evalXPath(ctx.get(), invoke_ctx->resultDoc());
 }
 
 void
@@ -188,7 +185,7 @@ TaggedBlock::postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
         return;
     }
     
-    callMetaCacheLua(ctx, invoke_ctx);
+    callMetaCacheMissLua(ctx, invoke_ctx);
 
     time_t now = time(NULL);
     DocCache *cache = DocCache::instance();
@@ -415,7 +412,8 @@ TaggedBlock::processMainKey(const Context *ctx) const {
     key.push_back('|');
     key.append(paramsIdKey(xsltParams(), ctx));
     if (metaBlock()) {
-        key.append("|meta");
+        key.push_back('|');
+        key.append(metaBlock()->getTagKey());
     }
     return key;
 }
@@ -426,11 +424,11 @@ TaggedBlock::processParamsKey(const Context *ctx) const {
 }
 
 void
-TaggedBlock::callMetaCacheLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+TaggedBlock::callMetaCacheMissLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
     MetaBlock* meta_block = metaBlock();
     if (meta_block) {
         invoke_ctx->meta()->cacheParamsWritable(cacheTimeUndefined());
-        meta_block->callCacheLua(ctx, invoke_ctx);
+        meta_block->callCacheMissLua(ctx, invoke_ctx);
         invoke_ctx->meta()->cacheParamsWritable(false);
     }
 }

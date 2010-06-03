@@ -55,9 +55,6 @@ public:
     boost::shared_ptr<Meta> meta() const;
     void setMeta(const boost::shared_ptr<Meta> &meta);
 
-    void setMetaParam(const std::string &name, const std::string &value);
-    void setMetaFlag();
-
 private:
     struct ContextData;
     std::auto_ptr<ContextData> ctx_data_;

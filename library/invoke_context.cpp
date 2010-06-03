@@ -22,9 +22,9 @@ namespace xscript {
 
 struct InvokeContext::ContextData {
     ContextData() : tagged_(false), result_type_(ERROR),
-        have_cached_copy_(false), parent_(NULL), meta_(new Meta), is_meta_(false) {}
+        have_cached_copy_(false), parent_(NULL), meta_(new Meta) {}
     ContextData(InvokeContext *parent) :  tagged_(false), result_type_(ERROR),
-        have_cached_copy_(false), parent_(parent), meta_(new Meta), is_meta_(false) {}
+        have_cached_copy_(false), parent_(parent), meta_(new Meta) {}
     XmlDocSharedHelper doc_;
     XmlDocSharedHelper meta_doc_;
     bool tagged_;
@@ -36,7 +36,6 @@ struct InvokeContext::ContextData {
 
     InvokeContext* parent_;
     boost::shared_ptr<Meta> meta_;
-    bool is_meta_;
 };
 
 InvokeContext::InvokeContext() : ctx_data_(new ContextData())
@@ -171,21 +170,6 @@ InvokeContext::meta() const {
 void
 InvokeContext::setMeta(const boost::shared_ptr<Meta> &meta) {
     ctx_data_->meta_ = meta;
-}
-
-void
-InvokeContext::setMetaParam(const std::string &name, const std::string &value) {
-    if (ctx_data_->is_meta_) {
-        ctx_data_->meta_->set(name, value);
-    }
-    else {
-        ctx_data_->meta_->set2Core(name, value);
-    }
-}
-
-void
-InvokeContext::setMetaFlag() {
-    ctx_data_->is_meta_ = true;
 }
 
 } // namespace xscript

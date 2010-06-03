@@ -2,6 +2,7 @@
 
 #include "internal/extension_list.h"
 
+#include "xscript/algorithm.h"
 #include "xscript/meta.h"
 #include "xscript/meta_block.h"
 #include "xscript/xml_util.h"
@@ -14,7 +15,7 @@ namespace xscript {
 
 MetaBlock::MetaBlock(const Block *block, xmlNodePtr node) :
         Block(block->extension(), block->owner(), node),
-        parent_(block), root_name_("meta"), root_ns_(NULL)
+        parent_(block), root_name_("meta"), root_ns_(NULL), key_("meta")
 {
     disableOutput(true);
 }
@@ -30,9 +31,9 @@ MetaBlock::luaNode(const xmlNodePtr node) const {
 }
 
 bool
-MetaBlock::cacheLuaNode(const xmlNodePtr node) const {
+MetaBlock::cacheMissLuaNode(const xmlNodePtr node) const {
     return node->ns && node->ns->href &&
-           xmlStrcasecmp(node->name, (const xmlChar*)"cache-lua") == 0 &&
+           xmlStrcasecmp(node->name, (const xmlChar*)"cache-miss-lua") == 0 &&
            xmlStrcasecmp(node->ns->href, (const xmlChar*)XmlUtils::XSCRIPT_NAMESPACE) == 0;
 }
 
@@ -41,12 +42,12 @@ MetaBlock::parseSubNode(xmlNodePtr node) {
     if (metaNode(node)) {
         throw std::runtime_error("Nested meta section is not allowed");
     }
-    if (cacheLuaNode(node)) {
-        if (cache_lua_block_.get()) {
-            throw std::runtime_error("One cache lua section allowed in meta");
+    if (cacheMissLuaNode(node)) {
+        if (cache_miss_lua_block_.get()) {
+            throw std::runtime_error("One cache miss lua section allowed in meta");
         }
         xmlNodeSetName(node, (const xmlChar*)"lua");
-        parseLua(node, cache_lua_block_);
+        parseLua(node, cache_miss_lua_block_);
     }
     else if (luaNode(node)) {
         if (lua_block_.get()) {
@@ -74,17 +75,16 @@ void
 MetaBlock::callLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
     if (lua_block_.get()) {
         boost::shared_ptr<InvokeContext> meta_ctx(new InvokeContext(invoke_ctx.get()));
-        meta_ctx->setMetaFlag();
+        meta_ctx->meta()->coreWritable(false);
         lua_block_->call(ctx, meta_ctx);
     }
 }
 
 void
-MetaBlock::callCacheLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
-    if (cache_lua_block_.get()) {
+MetaBlock::callCacheMissLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+    if (cache_miss_lua_block_.get()) {
         boost::shared_ptr<InvokeContext> meta_ctx(new InvokeContext(invoke_ctx.get()));
-        meta_ctx->setMetaFlag();
-        cache_lua_block_->call(ctx, meta_ctx);
+        cache_miss_lua_block_->call(ctx, meta_ctx);
     }
 }
 
@@ -179,6 +179,31 @@ MetaBlock::postParse() {
             throw std::runtime_error(str.str());
         }
     }
+
+    if (cache_miss_lua_block_.get()) {
+        Range code = getLuaCode(cache_miss_lua_block_.get());
+        if (!code.empty()) {
+            key_.push_back('|');
+            key_.append(HashUtils::hexMD5(code.begin(), code.size()));
+        }
+    }
+}
+
+Range
+MetaBlock::getLuaCode(Block *lua) const {
+    const char* code = XmlUtils::cdataValue(lua->node());
+    if (NULL == code) {
+        code = XmlUtils::value(lua->node());
+        if (NULL != code) {
+            return trim(createRange(code));
+        }
+    }
+    return Range();
+}
+
+const std::string&
+MetaBlock::getTagKey() const {
+    return key_;
 }
 
 } // namespace xscript

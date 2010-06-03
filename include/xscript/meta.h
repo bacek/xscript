@@ -37,6 +37,7 @@ public:
     bool has(const std::string &name) const;
     void set(const std::string &name, const std::string &value);
     void set2Core(const std::string &name, const std::string &value);
+    void set2Child(const std::string &name, const std::string &value);
 
     int getElapsedTime() const;
     void setElapsedTime(int time);
@@ -57,6 +58,7 @@ public:
 
     XmlNodeHelper getXml() const;
     void cacheParamsWritable(bool flag);
+    void coreWritable(bool flag);
 
     void reset();
 private:
@@ -70,6 +72,7 @@ private:
     time_t expire_time_;
     time_t last_modified_;
     bool cache_params_writable_;
+    bool core_writable_;
 };
 
 } // namespace xscript
