@@ -155,28 +155,27 @@ MetaBlock::postParse() {
 
     std::string node_name, prefix;
     std::string::size_type pos = root_name_.find(':');
-    if (std::string::npos == pos) {
-        return;
-    }
-    prefix = root_name_.substr(0, pos);
-    root_name_.erase(0, pos + 1);
+    if (std::string::npos != pos) {
+        prefix = root_name_.substr(0, pos);
+        root_name_.erase(0, pos + 1);
 
-    if (root_name_.empty()) {
-        throw std::runtime_error("Empty name in name attribute is not allowed in meta");
-    }
-    if (!prefix.empty()) {
-        const std::map<std::string, std::string> names = namespaces();
-        std::map<std::string, std::string>::const_iterator it = names.find(prefix);
-        if (names.end() == it) {
-            std::stringstream str;
-            str << "Unknown " << parent_->name() << " block namespace: " << prefix;
-            throw std::runtime_error(str.str());
+        if (root_name_.empty()) {
+            throw std::runtime_error("Empty name in name attribute is not allowed in meta");
         }
-        root_ns_ = xmlSearchNsByHref(node()->doc, node(), (const xmlChar*)it->second.c_str());
-        if (NULL == root_ns_) {
-            std::stringstream str;
-            str << "Cannot find " << parent_->name() << " block namespace: " << prefix;
-            throw std::runtime_error(str.str());
+        if (!prefix.empty()) {
+            const std::map<std::string, std::string> names = namespaces();
+            std::map<std::string, std::string>::const_iterator it = names.find(prefix);
+            if (names.end() == it) {
+                std::stringstream str;
+                str << "Unknown " << parent_->name() << " block namespace: " << prefix;
+                throw std::runtime_error(str.str());
+            }
+            root_ns_ = xmlSearchNsByHref(node()->doc, node(), (const xmlChar*)it->second.c_str());
+            if (NULL == root_ns_) {
+                std::stringstream str;
+                str << "Cannot find " << parent_->name() << " block namespace: " << prefix;
+                throw std::runtime_error(str.str());
+            }
         }
     }
 

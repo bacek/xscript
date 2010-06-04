@@ -141,6 +141,7 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
    
     if (!have_cached_doc) {
         invoke_ctx->meta()->reset();
+        invoke_ctx->resultDoc(XmlDocSharedHelper());
         Block::invokeInternal(ctx, invoke_ctx);
         return;
     }
