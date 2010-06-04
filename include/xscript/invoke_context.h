@@ -21,8 +21,9 @@ public:
     
     enum ResultType {
         ERROR  = 1,
-        NO_CACHE = 2,
-        SUCCESS  = 3,
+        META_ERROR  = 2,
+        NO_CACHE = 3,
+        SUCCESS  = 4,
     };
     
     InvokeContext* parent(Context *ctx) const;
@@ -45,6 +46,7 @@ public:
     void resetTag();
      
     bool error() const;
+    bool meta_error() const;
     bool success() const;
     bool noCache() const;
     TagKey* tagKey() const;

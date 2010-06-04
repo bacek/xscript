@@ -136,7 +136,12 @@ bool
 InvokeContext::error() const {
     return ERROR == ctx_data_->result_type_;
 }
-    
+
+bool
+InvokeContext::meta_error() const {
+    return META_ERROR == ctx_data_->result_type_;
+}
+
 bool
 InvokeContext::success() const {
     return SUCCESS == ctx_data_->result_type_;

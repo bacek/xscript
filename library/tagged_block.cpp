@@ -136,7 +136,7 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
         }
     }
     catch (const std::exception &e) {
-        log()->error("caught exception while fetching cached doc: %s", e.what());
+        log()->error("caught exception while fetching and processing cached doc: %s", e.what());
     }
    
     if (!have_cached_doc) {
@@ -167,7 +167,6 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
     }
     
     invoke_ctx->resultType(InvokeContext::SUCCESS);
-    evalXPath(ctx.get(), invoke_ctx->resultDoc());
 }
 
 void
@@ -186,7 +185,15 @@ TaggedBlock::postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
         return;
     }
     
-    callMetaCacheMissLua(ctx, invoke_ctx);
+    try {
+        callMetaCacheMissLua(ctx, invoke_ctx);
+    }
+    catch (const InvokeError &e) {
+        throw MetaInvokeError(e.what());
+    }
+    catch (const std::exception &e) {
+        throw MetaInvokeError(e.what());
+    }
 
     time_t now = time(NULL);
     DocCache *cache = DocCache::instance();

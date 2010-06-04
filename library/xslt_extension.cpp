@@ -1727,8 +1727,19 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
                 return;
             }
             if (!result->error()) {
-                block->processXPointer(
-                    ctx.get(), result->resultDoc().get(), result->metaDoc().get(), tctx->insert, &xmlAddChild);
+                xmlDocPtr meta_doc = result->meta_error() ? NULL : result->metaDoc().get();
+                xmlNodePtr last_node = block->processXPointer(
+                    ctx.get(), result->resultDoc().get(), meta_doc, tctx->insert, &xmlAddChild);
+                meta_doc = result->metaDoc().get();
+                xmlNodePtr root = meta_doc ? xmlDocGetRootElement(meta_doc) : NULL;
+                if (result->meta_error() && root) {  //add error meta
+                    if (last_node) {
+                        xmlAddNextSibling(last_node, xmlCopyNode(root, 1));
+                    }
+                    else {
+                        xmlAddChild(tctx->insert, xmlCopyNode(root, 1));
+                    }
+                }
                 return;
             }
         }

@@ -37,6 +37,7 @@ public:
     InvokeError(const std::string &error);
     InvokeError(const std::string &error, XmlNodeHelper node);
     InvokeError(const std::string &error, const std::string &name, const std::string &value);
+    InvokeError(const std::string &error, const InfoMapType &info);
 
     void add(const std::string &name, const std::string &value);
     void addEscaped(const std::string &name, const std::string &value);
@@ -68,6 +69,12 @@ public:
     SkipResultInvokeError(const std::string &error) : InvokeError(error) {}
     SkipResultInvokeError(const std::string &error, const std::string &name, const std::string &value) :
         InvokeError(error, name, value) {}
+};
+
+class MetaInvokeError : public InvokeError {
+public:
+    MetaInvokeError(const std::string &error) : InvokeError(error) {}
+    MetaInvokeError(const InvokeError &error) : InvokeError(error.what(), error.info()) {}
 };
 
 } // namespace xscript

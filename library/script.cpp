@@ -470,7 +470,22 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
                     xmlReplaceNode(newnode, xmlCopyNode(result_doc_root_node, 1));
                 }
                 else {
-                    block(count)->processXPointer(ctx, doc, result->metaDoc().get(), newnode, &xmlReplaceNode);
+                    xmlDocPtr meta_doc = result->meta_error() ? NULL : result->metaDoc().get();
+                    xmlNodePtr last_node = block(count)->processXPointer(
+                        ctx, doc, meta_doc, newnode, &xmlReplaceNode);
+                    meta_doc = result->metaDoc().get();
+                    xmlNodePtr root = meta_doc ? xmlDocGetRootElement(meta_doc) : NULL;
+                    if (result->meta_error() && root) {  //add error meta
+                        if (last_node) {
+                            xmlAddNextSibling(last_node, xmlCopyNode(root, 1));
+                        }
+                        else {
+                            xmlReplaceNode(newnode, xmlCopyNode(root, 1));
+                        }
+                    }
+                    else if (NULL == last_node) { // unlink if block and meta responses are empty
+                        xmlUnlinkNode(newnode);
+                    }
                 }
             }
             else {

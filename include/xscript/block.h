@@ -59,7 +59,7 @@ public:
     virtual void stopTimer(Context *ctx);
 
     typedef xmlNodePtr (*insertFunc)(xmlNodePtr, xmlNodePtr);
-    void processXPointer(const Context *ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
+    xmlNodePtr processXPointer(const Context *ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
             xmlNodePtr insert_node, insertFunc func) const;
     
     const Extension* extension() const;
@@ -101,7 +101,7 @@ protected:
     void parseXPointerExpr(const char *value, const char *type);
     void disableOutput(bool flag);
     bool disableOutput() const;
-    void processEmptyXPointer(const Context *ctx, xmlDocPtr meta_doc,
+    xmlNodePtr processEmptyXPointer(const Context *ctx, xmlDocPtr meta_doc,
             xmlNodePtr insert_node, insertFunc func) const;
     
     virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const;
@@ -116,6 +116,7 @@ private:
     boost::shared_ptr<InvokeContext> errorResult(XmlDocHelper doc) const;
     boost::shared_ptr<InvokeContext> errorResult(const InvokeError &error, std::string &full_error) const;
     void errorResult(const char *error, bool info, boost::shared_ptr<InvokeContext> &ctx) const;
+    void metaErrorResult(const MetaInvokeError &error, boost::shared_ptr<InvokeContext> &invoke_ctx) const;
     XmlDocHelper errorDoc(const InvokeError &error, const char *tag_name, std::string &full_error) const;
     XmlDocHelper fakeDoc() const;
     

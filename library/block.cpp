@@ -64,10 +64,12 @@ struct Block::BlockData {
     std::auto_ptr<MetaBlock> meta_block_;
 
     static const std::string XSCRIPT_INVOKE_FAILED;
+    static const std::string META_INVOKE_FAILED;
     static const std::string XSCRIPT_INVOKE_INFO;
 };
 
 const std::string Block::BlockData::XSCRIPT_INVOKE_FAILED = "xscript_invoke_failed";
+const std::string Block::BlockData::META_INVOKE_FAILED = "meta_invoke_failed";
 const std::string Block::BlockData::XSCRIPT_INVOKE_INFO = "xscript_invoke_info";
 
 Block::BlockData::BlockData(const Extension *ext, Xml *owner, xmlNodePtr node, Block *block) :
@@ -215,23 +217,22 @@ Block::tagged() const {
     return false;
 }
 
-void
+// return last insert node
+xmlNodePtr
 Block::processEmptyXPointer(const Context *ctx, xmlDocPtr meta_doc,
         xmlNodePtr insert_node, insertFunc func) const {
     if (meta_doc && data_->meta_block_.get()) {
-        data_->meta_block_->processXPointer(ctx, meta_doc, NULL, insert_node, func);
+        return data_->meta_block_->processXPointer(ctx, meta_doc, NULL, insert_node, func);
     }
-    else if (&xmlReplaceNode == func) {
-        xmlUnlinkNode(insert_node);
-    }
+    return NULL;
 }
 
-void
+// return last insert node
+xmlNodePtr
 Block::processXPointer(const Context *ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
         xmlNodePtr insert_node, insertFunc func) const {
-    if (data_->disable_output_) {
-        processEmptyXPointer(ctx, meta_doc, insert_node, func);
-        return;
+    if (NULL == doc || data_->disable_output_) {
+        return processEmptyXPointer(ctx, meta_doc, insert_node, func);
     }
     xmlNodePtr root_node = xmlDocGetRootElement(doc);
     bool need_xp = true;
@@ -249,14 +250,13 @@ Block::processXPointer(const Context *ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
         xmlNodePtr node = xmlCopyNode(root_node, 1);
         func(insert_node, node);
         if (meta_doc && data_->meta_block_.get()) {
-            data_->meta_block_->processXPointer(ctx, meta_doc, NULL, node, &xmlAddNextSibling);
+            return data_->meta_block_->processXPointer(ctx, meta_doc, NULL, node, &xmlAddNextSibling);
         }
-        return;
+        return node;
     }
 
     if ("/.." == expr) {
-        processEmptyXPointer(ctx, meta_doc, insert_node, func);
-        return;
+        return processEmptyXPointer(ctx, meta_doc, insert_node, func);
     }
 
     XmlXPathContextHelper context(xmlXPathNewContext(doc));
@@ -283,15 +283,14 @@ Block::processXPointer(const Context *ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
     if (node) {
         func(insert_node, node);
         if (meta_doc && data_->meta_block_.get()) {
-            data_->meta_block_->processXPointer(ctx, meta_doc, NULL, node, &xmlAddNextSibling);
+            return data_->meta_block_->processXPointer(ctx, meta_doc, NULL, node, &xmlAddNextSibling);
         }
-        return;
+        return node;
     }
 
     xmlNodeSetPtr nodeset = xpathObj->nodesetval;
     if (NULL == nodeset || 0 == nodeset->nodeNr) {
-        processEmptyXPointer(ctx, meta_doc, insert_node, func);
-        return;
+        return processEmptyXPointer(ctx, meta_doc, insert_node, func);
     }
 
     xmlNodePtr current_node = nodeset->nodeTab[0];
@@ -312,8 +311,10 @@ Block::processXPointer(const Context *ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
     }
 
     if (meta_doc && data_->meta_block_.get()) {
-        data_->meta_block_->processXPointer(ctx, meta_doc, NULL, last_input_node, &xmlAddNextSibling);
+        return data_->meta_block_->processXPointer(ctx, meta_doc, NULL, last_input_node, &xmlAddNextSibling);
     }
+
+    return last_input_node;
 }
 
 void
@@ -418,37 +419,47 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
         return fakeResult(true);
     }
 
-    boost::shared_ptr<InvokeContext> result;
+    boost::shared_ptr<InvokeContext> invoke_ctx;
     try {
         BlockTimerStarter starter(ctx.get(), this);
-        result = boost::shared_ptr<InvokeContext>(new InvokeContext());
-        invokeInternal(ctx, result);
-        if (!result->error()) {
-            postInvoke(ctx.get(), result.get());
+        invoke_ctx = boost::shared_ptr<InvokeContext>(new InvokeContext());
+        try {
+            invokeInternal(ctx, invoke_ctx);
         }
-        callMeta(ctx, result);
+        catch (const MetaInvokeError &e) {
+            evalXPath(ctx.get(), invoke_ctx->resultDoc());
+            throw e;
+        }
+        evalXPath(ctx.get(), invoke_ctx->resultDoc());
+        if (!invoke_ctx->error()) {
+            postInvoke(ctx.get(), invoke_ctx.get());
+        }
+        callMeta(ctx, invoke_ctx);
     }
     catch (const CriticalInvokeError &e) {
         std::string full_error;
-        result = errorResult(e, full_error);        
+        invoke_ctx = errorResult(e, full_error);
         OperationMode::instance()->assignBlockError(ctx.get(), this, full_error);
     }
     catch (const SkipResultInvokeError &e) {
         log()->info("%s", errorMessage(e).c_str());
-        result = errorResult(fakeDoc());
+        invoke_ctx = errorResult(fakeDoc());
+    }
+    catch (const MetaInvokeError &e) {
+        metaErrorResult(e, invoke_ctx);
     }
     catch (const InvokeError &e) {
-        result = errorResult(e, false);
+        invoke_ctx = errorResult(e, false);
     }
     catch (const std::exception &e) {
-        result = errorResult(e.what(), false);
+        invoke_ctx = errorResult(e.what(), false);
     }
     
-    if (!result->success()) {
+    if (!invoke_ctx->success()) {
         ctx->setNoCache();
     }
     
-    return result;
+    return invoke_ctx;
 }
 
 void
@@ -522,10 +533,6 @@ Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeC
     postCall(ctx, invoke_ctx);
 
     callMetaLua(ctx, invoke_ctx);
-
-    if (need_perblock || xsltName().empty()) {
-        evalXPath(ctx.get(), doc);
-    }
 }
 
 bool
@@ -565,7 +572,7 @@ Block::errorResult(const char *error, bool info, boost::shared_ptr<InvokeContext
         BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error);
     
     invoke_ctx->resultDoc(doc);
-    invoke_ctx->metaDoc(XmlDocHelper());
+    invoke_ctx->metaDoc(XmlDocSharedHelper());
     invoke_ctx->resultType(InvokeContext::ERROR);
 }
 
@@ -585,6 +592,15 @@ Block::errorResult(const InvokeError &error, bool info) const {
     return errorResult(errorDoc(error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error));
 }
 
+void
+Block::metaErrorResult(const MetaInvokeError &error,
+    boost::shared_ptr<InvokeContext> &invoke_ctx) const {
+    std::string full_error;
+    XmlDocHelper doc(errorDoc(error, BlockData::META_INVOKE_FAILED.c_str(), full_error));
+    invoke_ctx->metaDoc(doc);
+    invoke_ctx->resultType(InvokeContext::META_ERROR);
+}
+
 boost::shared_ptr<InvokeContext>
 Block::errorResult(const InvokeError &error, std::string &full_error) const {
     return errorResult(errorDoc(error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error));
@@ -592,18 +608,18 @@ Block::errorResult(const InvokeError &error, std::string &full_error) const {
 
 boost::shared_ptr<InvokeContext>
 Block::errorResult(XmlDocHelper doc) const {
-    boost::shared_ptr<InvokeContext> ctx(new InvokeContext());
-    ctx->resultDoc(doc);
-    ctx->resultType(InvokeContext::ERROR);
-    return ctx;
+    boost::shared_ptr<InvokeContext> invoke_ctx(new InvokeContext());
+    invoke_ctx->resultDoc(doc);
+    invoke_ctx->resultType(InvokeContext::ERROR);
+    return invoke_ctx;
 }
 
 boost::shared_ptr<InvokeContext>
 Block::fakeResult(bool error) const {   
-    boost::shared_ptr<InvokeContext> ctx(new InvokeContext());
-    ctx->resultDoc(fakeDoc());
-    ctx->resultType(error ? InvokeContext::ERROR : InvokeContext::SUCCESS);
-    return ctx;
+    boost::shared_ptr<InvokeContext> invoke_ctx(new InvokeContext());
+    invoke_ctx->resultDoc(fakeDoc());
+    invoke_ctx->resultType(error ? InvokeContext::ERROR : InvokeContext::SUCCESS);
+    return invoke_ctx;
 }
 
 XmlDocHelper
@@ -735,6 +751,9 @@ Block::hasStateGuard() const {
 
 void
 Block::evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const {
+    if (ctx->noXsltPort()) {
+        return;
+    }
 
     XmlXPathContextHelper xctx(xmlXPathNewContext(doc.get()));
     XmlUtils::throwUnless(NULL != xctx.get());
@@ -860,22 +879,34 @@ Block::callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
 
 void
 Block::callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
-    if (data_->meta_block_.get()) {
+    if (NULL == data_->meta_block_.get()) {
+        return;
+    }
+    try {
         data_->meta_block_->callLua(ctx, invoke_ctx);
+    }
+    catch (const InvokeError &e) {
+        throw MetaInvokeError(e);
+    }
+    catch (const std::exception &e) {
+        throw MetaInvokeError(e.what());
     }
 }
 
 void
 Block::callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
-    if (data_->meta_block_.get()) {
+    if (NULL == data_->meta_block_.get()) {
+        return;
+    }
+    try {
         data_->meta_block_->call(ctx, invoke_ctx);
-        if (NULL == invoke_ctx->metaDoc().get()) {
-            errorResult("got empty meta document", false, invoke_ctx);
-            return;
-        }
-        if (!ctx->noXsltPort()) {
-            data_->meta_block_->evalXPath(ctx.get(), invoke_ctx->metaDoc());
-        }
+        data_->meta_block_->evalXPath(ctx.get(), invoke_ctx->metaDoc());
+    }
+    catch (const InvokeError &e) {
+        throw MetaInvokeError(e);
+    }
+    catch (const std::exception &e) {
+        throw MetaInvokeError(e.what());
     }
 }
 

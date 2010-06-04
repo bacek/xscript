@@ -23,6 +23,10 @@ InvokeError::InvokeError(const std::string &error, const std::string &name, cons
     addEscaped(name, value);
 }
 
+InvokeError::InvokeError(const std::string &error, const InfoMapType &info) :
+        UnboundRuntimeError(error), info_(info)
+{}
+
 void
 InvokeError::add(const std::string &name, const std::string &value) {
     if (name.empty()) {
