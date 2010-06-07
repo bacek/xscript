@@ -1,3 +1,9 @@
+xscript (5.71.0-1) unstable; urgency=low
+
+  * ABI changed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 07 Jun 2010 12:32:55 +0400
+
 xscript (5.70.82-2) unstable; urgency=low
 
   * build fixed

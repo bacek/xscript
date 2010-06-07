@@ -20,6 +20,18 @@
 
 namespace xscript {
 
+struct CacheWritableHolder {
+    CacheWritableHolder(InvokeContext *invoke_ctx, bool writable) : invoke_ctx_(invoke_ctx) {
+        invoke_ctx_->meta()->cacheParamsWritable(writable);
+    }
+
+    ~CacheWritableHolder() {
+        invoke_ctx_->meta()->cacheParamsWritable(false);
+    }
+private:
+    InvokeContext* invoke_ctx_;
+};
+
 struct TaggedBlock::TaggedBlockData {
     TaggedBlockData() : cache_level_(0), tag_position_(-1)
     {}
@@ -112,7 +124,6 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
         return;
     }
 
-    bool have_cached_doc = false;
     Tag cache_tag(true, 1, 1); // fake undefined Tag
     try {
         CacheContext cache_ctx(this, ctx.get(), this->allowDistributed());
@@ -130,27 +141,39 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
                     cache_tag.last_modified = invoke_ctx->meta()->getLastModified();
                 }
             }
-            if (!cache_tag.expired()) {
-                have_cached_doc = true;
-            }
         }
+    }
+    catch (const MetaInvokeError &e) {
+        log()->error("caught meta exception while fetching and processing cached doc: %s", e.what());
+        if (processCachedDoc(ctx, invoke_ctx, cache_tag)) {
+            throw e;
+        }
+        return;
     }
     catch (const std::exception &e) {
         log()->error("caught exception while fetching and processing cached doc: %s", e.what());
     }
-   
-    if (!have_cached_doc) {
+
+    processCachedDoc(ctx, invoke_ctx, cache_tag);
+}
+
+// return true if cache copy processed
+bool
+TaggedBlock::processCachedDoc(boost::shared_ptr<Context> ctx,
+    boost::shared_ptr<InvokeContext> invoke_ctx, const Tag &tag) {
+
+    if (tag.expired()) {
         invoke_ctx->meta()->reset();
         invoke_ctx->resultDoc(XmlDocSharedHelper());
         Block::invokeInternal(ctx, invoke_ctx);
-        return;
+        return false;
     }
-    
-    if (Tag::UNDEFINED_TIME == cache_tag.expire_time) {
+
+    if (Tag::UNDEFINED_TIME == tag.expire_time) {
         boost::shared_ptr<Meta> meta = invoke_ctx->meta();
         invoke_ctx->setMeta(boost::shared_ptr<Meta>(new Meta));
         invoke_ctx->haveCachedCopy(true);
-        invoke_ctx->tag(cache_tag);
+        invoke_ctx->tag(tag);
         XmlDocSharedHelper doc = invoke_ctx->resultDoc();
         call(ctx, invoke_ctx);
         if (invoke_ctx->tag().modified) {
@@ -159,14 +182,15 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
             }
             else {
                 processResponse(ctx, invoke_ctx);
-                return;
+                return false;
             }
         }
         invoke_ctx->resultDoc(doc);
         invoke_ctx->setMeta(meta);
     }
-    
+
     invoke_ctx->resultType(InvokeContext::SUCCESS);
+    return true;
 }
 
 void
@@ -432,12 +456,17 @@ TaggedBlock::processParamsKey(const Context *ctx) const {
 }
 
 void
+TaggedBlock::callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+    CacheWritableHolder holder(invoke_ctx.get(), cacheTimeUndefined());
+    Block::callMetaLua(ctx, invoke_ctx);
+}
+
+void
 TaggedBlock::callMetaCacheMissLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
     MetaBlock* meta_block = metaBlock();
     if (meta_block) {
-        invoke_ctx->meta()->cacheParamsWritable(cacheTimeUndefined());
+        CacheWritableHolder holder(invoke_ctx.get(), cacheTimeUndefined());
         meta_block->callCacheMissLua(ctx, invoke_ctx);
-        invoke_ctx->meta()->cacheParamsWritable(false);
     }
 }
 
