@@ -20,18 +20,6 @@
 
 namespace xscript {
 
-struct CacheWritableHolder {
-    CacheWritableHolder(InvokeContext *invoke_ctx, bool writable) : invoke_ctx_(invoke_ctx) {
-        invoke_ctx_->meta()->cacheParamsWritable(writable);
-    }
-
-    ~CacheWritableHolder() {
-        invoke_ctx_->meta()->cacheParamsWritable(false);
-    }
-private:
-    InvokeContext* invoke_ctx_;
-};
-
 struct TaggedBlock::TaggedBlockData {
     TaggedBlockData() : cache_level_(0), tag_position_(-1)
     {}
@@ -124,6 +112,8 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
         return;
     }
 
+    invoke_ctx->meta()->cacheParamsWritable(cacheTimeUndefined());
+
     Tag cache_tag(true, 1, 1); // fake undefined Tag
     try {
         CacheContext cache_ctx(this, ctx.get(), this->allowDistributed());
@@ -135,7 +125,7 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
                 invoke_ctx->meta()->setCore(cache_data->meta());
                 invoke_ctx->meta()->setCacheParams(
                     cache_tag.expire_time, cache_tag.last_modified);
-                callMetaLua(ctx, invoke_ctx);
+                callMetaCacheHitLua(ctx, invoke_ctx);
                 if (cacheTimeUndefined()) {
                     cache_tag.expire_time = invoke_ctx->meta()->getExpireTime();
                     cache_tag.last_modified = invoke_ctx->meta()->getLastModified();
@@ -164,6 +154,7 @@ TaggedBlock::processCachedDoc(boost::shared_ptr<Context> ctx,
 
     if (tag.expired()) {
         invoke_ctx->meta()->reset();
+        invoke_ctx->meta()->cacheParamsWritable(cacheTimeUndefined());
         invoke_ctx->resultDoc(XmlDocSharedHelper());
         Block::invokeInternal(ctx, invoke_ctx);
         return false;
@@ -208,7 +199,7 @@ TaggedBlock::postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
     if (!Policy::instance()->allowCaching(ctx.get(), this)) {
         return;
     }
-    
+
     try {
         callMetaCacheMissLua(ctx, invoke_ctx);
     }
@@ -299,6 +290,11 @@ TaggedBlock::parseParamNode(const xmlNodePtr node) {
 
 void
 TaggedBlock::postParse() {
+    Block::postParse();
+    MetaBlock *meta_block = metaBlock();
+    if (meta_block && meta_block->haveCachedLua() && !cacheTimeUndefined()) {
+        throw std::runtime_error("Meta cache lua sections allowed for tag=yes only");
+    }
 }
 
 void
@@ -457,7 +453,6 @@ TaggedBlock::processParamsKey(const Context *ctx) const {
 
 void
 TaggedBlock::callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
-    CacheWritableHolder holder(invoke_ctx.get(), cacheTimeUndefined());
     Block::callMetaLua(ctx, invoke_ctx);
 }
 
@@ -465,8 +460,15 @@ void
 TaggedBlock::callMetaCacheMissLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
     MetaBlock* meta_block = metaBlock();
     if (meta_block) {
-        CacheWritableHolder holder(invoke_ctx.get(), cacheTimeUndefined());
         meta_block->callCacheMissLua(ctx, invoke_ctx);
+    }
+}
+
+void
+TaggedBlock::callMetaCacheHitLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+    MetaBlock* meta_block = metaBlock();
+    if (meta_block) {
+        meta_block->callCacheHitLua(ctx, invoke_ctx);
     }
 }
 

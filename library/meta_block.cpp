@@ -13,6 +13,18 @@
 
 namespace xscript {
 
+struct MetaCoreNotWritable {
+    MetaCoreNotWritable(InvokeContext *invoke_ctx) : invoke_ctx_(invoke_ctx) {
+        invoke_ctx_->meta()->coreWritable(false);
+    }
+
+    ~MetaCoreNotWritable() {
+        invoke_ctx_->meta()->coreWritable(true);
+    }
+private:
+    InvokeContext* invoke_ctx_;
+};
+
 MetaBlock::MetaBlock(const Block *block, xmlNodePtr node) :
         Block(block->extension(), block->owner(), node),
         parent_(block), root_name_("meta"), root_ns_(NULL), key_("meta")
@@ -30,30 +42,13 @@ MetaBlock::luaNode(const xmlNodePtr node) const {
            xmlStrcasecmp(node->ns->href, (const xmlChar*)XmlUtils::XSCRIPT_NAMESPACE) == 0;
 }
 
-bool
-MetaBlock::cacheMissLuaNode(const xmlNodePtr node) const {
-    return node->ns && node->ns->href &&
-           xmlStrcasecmp(node->name, (const xmlChar*)"cache-miss-lua") == 0 &&
-           xmlStrcasecmp(node->ns->href, (const xmlChar*)XmlUtils::XSCRIPT_NAMESPACE) == 0;
-}
-
 void
 MetaBlock::parseSubNode(xmlNodePtr node) {
     if (metaNode(node)) {
         throw std::runtime_error("Nested meta section is not allowed");
     }
-    if (cacheMissLuaNode(node)) {
-        if (cache_miss_lua_block_.get()) {
-            throw std::runtime_error("One cache miss lua section allowed in meta");
-        }
-        xmlNodeSetName(node, (const xmlChar*)"lua");
-        parseLua(node, cache_miss_lua_block_);
-    }
-    else if (luaNode(node)) {
-        if (lua_block_.get()) {
-            throw std::runtime_error("One lua section allowed in meta");
-        }
-        parseLua(node, lua_block_);
+    if (luaNode(node)) {
+        parseLua(node);
     }
     else {
         Block::parseSubNode(node);
@@ -61,7 +56,39 @@ MetaBlock::parseSubNode(xmlNodePtr node) {
 }
 
 void
-MetaBlock::parseLua(xmlNodePtr node, std::auto_ptr<Block> &block) {
+MetaBlock::parseLua(xmlNodePtr node) {
+    std::string value;
+    xmlAttrPtr scope_attr = xmlHasProp(node, (const xmlChar*)"scope");
+    if (NULL != scope_attr) {
+        value.assign(XmlUtils::value(scope_attr));
+        xmlRemoveProp(scope_attr);
+    }
+
+    if (value.empty()) {
+        if (lua_block_.get()) {
+            throw std::runtime_error("One common lua section allowed in meta");
+        }
+        parseLuaSection(node, lua_block_);
+    }
+    else if (0 == strcasecmp(value.c_str(), "cache-hit")) {
+        if (cache_hit_lua_block_.get()) {
+            throw std::runtime_error("One cache hit lua section allowed in meta");
+        }
+        parseLuaSection(node, cache_hit_lua_block_);
+    }
+    else if (0 == strcasecmp(value.c_str(), "cache-miss")) {
+        if (cache_miss_lua_block_.get()) {
+            throw std::runtime_error("One cache miss lua section allowed in meta");
+        }
+        parseLuaSection(node, cache_miss_lua_block_);
+    }
+    else {
+        throw std::runtime_error(std::string("Incorrect scope value in meta lua: ") + value);
+    }
+}
+
+void
+MetaBlock::parseLuaSection(xmlNodePtr node, std::auto_ptr<Block> &block) {
     Extension *ext = ExtensionList::instance()->extension(node, false);
     if (NULL == ext) {
         throw std::runtime_error("Lua module is not loaded");
@@ -75,7 +102,7 @@ void
 MetaBlock::callLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
     if (lua_block_.get()) {
         boost::shared_ptr<InvokeContext> meta_ctx(new InvokeContext(invoke_ctx.get()));
-        meta_ctx->meta()->coreWritable(false);
+        MetaCoreNotWritable holder(invoke_ctx.get());
         lua_block_->call(ctx, meta_ctx);
     }
 }
@@ -85,6 +112,15 @@ MetaBlock::callCacheMissLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
     if (cache_miss_lua_block_.get()) {
         boost::shared_ptr<InvokeContext> meta_ctx(new InvokeContext(invoke_ctx.get()));
         cache_miss_lua_block_->call(ctx, meta_ctx);
+    }
+}
+
+void
+MetaBlock::callCacheHitLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+    if (cache_hit_lua_block_.get()) {
+        boost::shared_ptr<InvokeContext> meta_ctx(new InvokeContext(invoke_ctx.get()));
+        MetaCoreNotWritable holder(invoke_ctx.get());
+        cache_hit_lua_block_->call(ctx, meta_ctx);
     }
 }
 
@@ -203,6 +239,11 @@ MetaBlock::getLuaCode(Block *lua) const {
 const std::string&
 MetaBlock::getTagKey() const {
     return key_;
+}
+
+bool
+MetaBlock::haveCachedLua() const {
+    return cache_miss_lua_block_.get() || cache_hit_lua_block_.get();
 }
 
 } // namespace xscript

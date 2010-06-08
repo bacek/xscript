@@ -425,6 +425,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
         invoke_ctx = boost::shared_ptr<InvokeContext>(new InvokeContext());
         try {
             invokeInternal(ctx, invoke_ctx);
+            callMetaLua(ctx, invoke_ctx);
         }
         catch (const MetaInvokeError &e) {
             evalXPath(ctx.get(), invoke_ctx->resultDoc());
@@ -531,8 +532,6 @@ Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeC
     }
     
     postCall(ctx, invoke_ctx);
-
-    callMetaLua(ctx, invoke_ctx);
 }
 
 bool
@@ -839,6 +838,10 @@ Block::fakeDoc() const {
 
 void
 Block::postParse() {
+    if (data_->meta_block_.get() && !tagged() && data_->meta_block_->haveCachedLua()) {
+        throw std::runtime_error(
+            "Meta cache lua sections are not allowed in non-tagged blocks");
+    }
 }
 
 void

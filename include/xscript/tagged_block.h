@@ -51,6 +51,7 @@ protected:
 
     virtual void callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     void callMetaCacheMissLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+    void callMetaCacheHitLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
 
     bool processCachedDoc(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, const Tag &tag);
 

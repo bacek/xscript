@@ -13,26 +13,29 @@ public:
     virtual void call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception);
     void callLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     void callCacheMissLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+    void callCacheHitLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
 
     const std::string& getTagKey() const;
+    bool haveCachedLua() const;
 
 protected:
     virtual void parseSubNode(xmlNodePtr node);
     virtual void property(const char *name, const char *value);
     virtual void postParse();
     bool luaNode(const xmlNodePtr node) const;
-    bool cacheMissLuaNode(const xmlNodePtr node) const;
 
 private:
     MetaBlock(const MetaBlock &);
     MetaBlock& operator = (const MetaBlock &);
-    void parseLua(xmlNodePtr node, std::auto_ptr<Block> &block);
+    void parseLua(xmlNodePtr node);
+    void parseLuaSection(xmlNodePtr node, std::auto_ptr<Block> &block);
     Range getLuaCode(Block *lua) const;
 
 private:
     const Block* parent_;
-    std::auto_ptr<Block> cache_miss_lua_block_;
     std::auto_ptr<Block> lua_block_;
+    std::auto_ptr<Block> cache_miss_lua_block_;
+    std::auto_ptr<Block> cache_hit_lua_block_;
     std::string root_name_;
     xmlNs *root_ns_;
     std::string key_;

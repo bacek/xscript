@@ -382,7 +382,8 @@ bool
 DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &tag,
         const boost::shared_ptr<CacheData> &cache_data) {
 
-    log()->debug("saving %s, key: %s", path.c_str(), key.c_str());
+    log()->debug("saving %s, key: %s, expire: %ld, last-modified: %ld",
+        path.c_str(), key.c_str(), tag.expire_time, tag.last_modified);
 
     try {
         FILE *f = fopen(path.c_str(), "w");
