@@ -132,6 +132,10 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
                 }
             }
         }
+        else {
+            cache_tag.expire_time = 1;
+            cache_tag.last_modified = 1;
+        }
     }
     catch (const MetaInvokeError &e) {
         log()->error("caught meta exception while fetching and processing cached doc: %s", e.what());
