@@ -1,3 +1,9 @@
+xscript (5.71.0-2) unstable; urgency=low
+
+  * xpath fixed for noxslt port
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 10 Jun 2010 14:27:54 +0400
+
 xscript (5.71.0-1) unstable; urgency=low
 
   * ABI changed

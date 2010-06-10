@@ -750,7 +750,7 @@ Block::hasStateGuard() const {
 
 void
 Block::evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const {
-    if (ctx->noXsltPort()) {
+    if (ctx->noXsltPort() && !xsltName().empty()) {
         return;
     }
 
