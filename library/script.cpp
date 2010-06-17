@@ -853,7 +853,8 @@ void
 Script::parseFromXml(xmlNodePtr node) {
     data_->doc_ = XmlDocHelper(xmlNewDoc((const xmlChar*) "1.0"));
     XmlNodeHelper root_node(xmlCopyNode(node, 1));
-    xmlDocSetRootElement(data_->doc_.get(), root_node.release());
+    xmlDocSetRootElement(data_->doc_.get(), root_node.get());
+    xmlNodeSetBase(root_node.release(), xmlNodeGetBase(node->doc, node));
     parseXScript();
 }
 
