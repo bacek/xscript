@@ -381,10 +381,15 @@ ArrayTypedValue::ArrayTypedValue(const std::vector<std::string> &value) : value_
 {}
 
 ArrayTypedValue::ArrayTypedValue(const Range &value) {
-    Range tail = value;
-    Range head;
-    while (split(tail, Parser::RN_RANGE, head, tail)) {
-        value_.push_back(std::string(head.begin(), head.size()));
+    if (!value.empty()) {
+        Range tail = value;
+        Range head;
+        bool flag = true;
+        do {
+            flag = split(tail, Parser::RN_RANGE, head, tail);
+            value_.push_back(std::string(head.begin(), head.size()));
+        }
+        while(flag);
     }
 }
 
@@ -432,20 +437,25 @@ MapTypedValue::MapTypedValue(const std::map<std::string, std::string> &value) :
 {}
 
 MapTypedValue::MapTypedValue(const Range &value) {
-    int i = 0;
-    Range tail = value;
-    Range head, key;
-    while (split(tail, Parser::RN_RANGE, head, tail)) {
-        if (i == 0) {
-            key = head;
-            ++i;
+    if (!value.empty()) {
+        int i = 0;
+        Range tail = value;
+        Range head, key;
+        bool flag = true;
+        do {
+            flag = split(tail, Parser::RN_RANGE, head, tail);
+            if (i == 0) {
+                key = head;
+                ++i;
+            }
+            else {
+                value_.insert(std::make_pair(
+                    std::string(key.begin(), key.size()),
+                    std::string(head.begin(), head.size())));
+                --i;
+            }
         }
-        else {
-            value_.insert(std::make_pair(
-                std::string(key.begin(), key.size()),
-                std::string(head.begin(), head.size())));
-            --i;
-        }
+        while(flag);
     }
 }
 
