@@ -21,27 +21,57 @@ namespace xscript {
 extern "C" {
     int luaMetaHas(lua_State *lua);
     int luaMetaGet(lua_State *lua);
-    int luaMetaSet(lua_State *lua);
+    int luaMetaGetTypedValue(lua_State *lua);
     int luaMetaGetElapsedTime(lua_State *lua);
     int luaMetaGetExpireTime(lua_State *lua);
     int luaMetaSetExpireTime(lua_State *lua);
     int luaMetaGetLastModified(lua_State *lua);
     int luaMetaSetLastModified(lua_State *lua);
+    int luaMetaSetBool(lua_State *lua);
+    int luaMetaSetLong(lua_State *lua);
+    int luaMetaSetLongLong(lua_State *lua);
+    int luaMetaSetULong(lua_State *lua);
+    int luaMetaSetULongLong(lua_State *lua);
+    int luaMetaSetDouble(lua_State *lua);
+    int luaMetaSetString(lua_State *lua);
+    int luaMetaSetTable(lua_State *lua);
 
-    int luaLocalMetaHas(lua_State *lua);
-    int luaLocalMetaGet(lua_State *lua);
-    int luaLocalMetaSet(lua_State *lua);
+    int luaSelfMetaHas(lua_State *lua);
+    int luaSelfMetaGet(lua_State *lua);
+    int luaSelfMetaGetTypedValue(lua_State *lua);
+    int luaSelfMetaGetElapsedTime(lua_State *lua);
+    int luaSelfMetaGetExpireTime(lua_State *lua);
+    int luaSelfMetaSetExpireTime(lua_State *lua);
+    int luaSelfMetaGetLastModified(lua_State *lua);
+    int luaSelfMetaSetLastModified(lua_State *lua);
+    int luaSelfMetaSetBool(lua_State *lua);
+    int luaSelfMetaSetLong(lua_State *lua);
+    int luaSelfMetaSetLongLong(lua_State *lua);
+    int luaSelfMetaSetULong(lua_State *lua);
+    int luaSelfMetaSetULongLong(lua_State *lua);
+    int luaSelfMetaSetDouble(lua_State *lua);
+    int luaSelfMetaSetString(lua_State *lua);
+    int luaSelfMetaSetTable(lua_State *lua);
 }
 
 static const struct luaL_reg metalib [] = {
     {"has",             luaMetaHas},
     {"get",             luaMetaGet},
-    {"set",             luaMetaSet},
+    {"getTypedValue",   luaMetaGetTypedValue},
     {"getElapsedTime",  luaMetaGetElapsedTime},
     {"getExpireTime",   luaMetaGetExpireTime},
     {"setExpireTime",   luaMetaSetExpireTime},
     {"getLastModified", luaMetaGetLastModified},
     {"setLastModified", luaMetaSetLastModified},
+    {"setBool",         luaMetaSetBool},
+    {"setBoolean",      luaMetaSetBool},
+    {"setLong",         luaMetaSetLong},
+    {"setLongLong",     luaMetaSetLongLong},
+    {"setULong",        luaMetaSetULong},
+    {"setULongLong",    luaMetaSetULongLong},
+    {"setString",       luaMetaSetString},
+    {"setDouble",       luaMetaSetDouble},
+    {"setTable",        luaMetaSetTable},
     {NULL, NULL}
 };
 
@@ -49,41 +79,53 @@ const struct luaL_reg * getMetaLib() {
     return metalib;
 }
 
-static const struct luaL_reg localmetalib [] = {
-    {"has",             luaLocalMetaHas},
-    {"get",             luaLocalMetaGet},
-    {"set",             luaLocalMetaSet},
+static const struct luaL_reg selfmetalib [] = {
+    {"has",             luaSelfMetaHas},
+    {"get",             luaSelfMetaGet},
+    {"getTypedValue",   luaSelfMetaGetTypedValue},
+    {"getElapsedTime",  luaSelfMetaGetElapsedTime},
+    {"getExpireTime",   luaSelfMetaGetExpireTime},
+    {"setExpireTime",   luaSelfMetaSetExpireTime},
+    {"getLastModified", luaSelfMetaGetLastModified},
+    {"setLastModified", luaSelfMetaSetLastModified},
+    {"setBool",         luaSelfMetaSetBool},
+    {"setBoolean",      luaSelfMetaSetBool},
+    {"setLong",         luaSelfMetaSetLong},
+    {"setLongLong",     luaSelfMetaSetLongLong},
+    {"setULong",        luaSelfMetaSetULong},
+    {"setULongLong",    luaSelfMetaSetULongLong},
+    {"setString",       luaSelfMetaSetString},
+    {"setDouble",       luaSelfMetaSetDouble},
+    {"setTable",        luaSelfMetaSetTable},
     {NULL, NULL}
 };
 
-const struct luaL_reg * getLocalMetaLib() {
-    return localmetalib;
+const struct luaL_reg * getSelfMetaLib() {
+    return selfmetalib;
 }
 
-extern "C" {
-
 static void
-readMetaFromStack(lua_State *lua, bool local) {
-    const char *name = local ? "xscript.localmeta" : "xscript.meta";
+readMetaFromStack(lua_State *lua, bool self) {
+    const char *name = self ? "xscript.selfmeta" : "xscript.meta";
     luaReadStack<void>(lua, name, 1);
 }
 
 static InvokeContext*
-metaInvokeContext(lua_State *lua, bool local) {
+metaInvokeContext(lua_State *lua, bool self) {
     InvokeContext* invoke_ctx = getInvokeContext(lua);
-    if (local) {
+    if (self && !invoke_ctx->isMeta()) {
         return invoke_ctx;
     }
     return invoke_ctx->parent(getContext(lua));
 }
 
 static int
-luaMetaHasInternal(lua_State *lua, bool local) {
+luaMetaHasInternal(lua_State *lua, bool self) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
-        readMetaFromStack(lua, local);
-        InvokeContext* invoke_ctx = metaInvokeContext(lua, local);
+        readMetaFromStack(lua, self);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
         std::string key = luaReadStack<std::string>(lua, 2);
         lua_pushboolean(lua, invoke_ctx ? invoke_ctx->meta()->has(key) : false);
         return 1;
@@ -98,15 +140,15 @@ luaMetaHasInternal(lua_State *lua, bool local) {
 }
 
 static int
-luaMetaGetInternal(lua_State *lua, bool local) {
+luaMetaGetInternal(lua_State *lua, bool self) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         int count = lua_gettop(lua);
         if (count < 2 || count > 3) {
             throw BadArgCount(count);
         }
-        readMetaFromStack(lua, local);
-        InvokeContext* invoke_ctx = metaInvokeContext(lua, local);
+        readMetaFromStack(lua, self);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
         std::string key = luaReadStack<std::string>(lua, 2);
         std::string def_value;
         if (3 == count) {
@@ -126,14 +168,42 @@ luaMetaGetInternal(lua_State *lua, bool local) {
 }
 
 static int
-luaMetaSetInternal(lua_State *lua, bool local) {
+luaMetaGetTypedValueInternal(lua_State *lua, bool self) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
-        luaCheckStackSize(lua, 3);
-        readMetaFromStack(lua, local);
-        InvokeContext* invoke_ctx = metaInvokeContext(lua, local);
+        luaCheckStackSize(lua, 2);
+        readMetaFromStack(lua, self);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
         std::string key = luaReadStack<std::string>(lua, 2);
-        std::string value = luaReadStack<std::string>(lua, 3);
+        if (NULL == invoke_ctx) {
+            lua_pushnil(lua);
+            return 1;
+        }
+        TypedValue value;
+        if (!invoke_ctx->meta()->getTypedValue(key, value)) {
+            lua_pushnil(lua);
+            return 1;
+        }
+        luaPushStack<const TypedValue&>(lua, value);
+        return 1;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        luaL_error(lua, "caught exception in meta.getTypedValue: %s", e.what());
+        return 0;
+    }
+}
+
+template<typename Type> int
+luaMetaSet(lua_State *lua, bool self) {
+    try {
+        luaCheckStackSize(lua, 3);
+        readMetaFromStack(lua, self);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
+        std::string key = luaReadStack<std::string>(lua, 2);
+        Type value = luaReadStack<Type>(lua, 3);
         if (invoke_ctx) {
             invoke_ctx->meta()->set(key, value);
         }
@@ -144,48 +214,88 @@ luaMetaSetInternal(lua_State *lua, bool local) {
         return e.translate(lua);
     }
     catch (const std::exception &e) {
-        luaL_error(lua, "caught exception in meta.set: %s", e.what());
-        return 0;
+        log()->debug("caught exception in meta.set: %s", e.what());
+        return luaL_error(lua, "caught exception in meta.set: %s", e.what());
     }
 }
 
-int
-luaMetaHas(lua_State *lua) {
-    return luaMetaHasInternal(lua, false);
+static int
+luaMetaSetBoolInternal(lua_State *lua, bool self) {
+    return luaMetaSet<bool>(lua, self);
 }
 
-int
-luaLocalMetaHas(lua_State *lua) {
-    return luaMetaHasInternal(lua, true);
+static int
+luaMetaSetLongInternal(lua_State *lua, bool self) {
+    return luaMetaSet<boost::int32_t>(lua, self);
 }
 
-int
-luaMetaGet(lua_State *lua) {
-    return luaMetaGetInternal(lua, false);
+static int
+luaMetaSetLongLongInternal(lua_State *lua, bool self) {
+    return luaMetaSet<boost::int64_t>(lua, self);
 }
 
-int
-luaLocalMetaGet(lua_State *lua) {
-    return luaMetaGetInternal(lua, true);
+static int
+luaMetaSetULongInternal(lua_State *lua, bool self) {
+    return luaMetaSet<boost::uint32_t>(lua, self);
 }
 
-int
-luaMetaSet(lua_State *lua) {
-    return luaMetaSetInternal(lua, false);
+static int
+luaMetaSetULongLongInternal(lua_State *lua, bool self) {
+    return luaMetaSet<boost::uint64_t>(lua, self);
 }
 
-int
-luaLocalMetaSet(lua_State *lua) {
-    return luaMetaSetInternal(lua, true);
+static int
+luaMetaSetStringInternal(lua_State *lua, bool self) {
+    return luaMetaSet<std::string>(lua, self);
 }
 
-int
-luaMetaGetElapsedTime(lua_State *lua) {
+static int
+luaMetaSetDoubleInternal(lua_State *lua, bool self) {
+    return luaMetaSet<double>(lua, self);
+}
+
+static int
+luaMetaSetTableInternal(lua_State *lua, bool self) {
+    try {
+        luaCheckStackSize(lua, 3);
+        readMetaFromStack(lua, self);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
+        std::string key = luaReadStack<std::string>(lua, 2);
+        if (luaIsNil(lua, 3)) {
+            return 0;
+        }
+        if (luaIsArrayTable(lua, 3)) {
+            std::auto_ptr<std::vector<std::string> > value =
+                luaReadStack<std::auto_ptr<std::vector<std::string> > >(lua, 3);
+            if (invoke_ctx) {
+                invoke_ctx->meta()->setArray(key, *value);
+            }
+        }
+        else {
+            std::auto_ptr<std::map<std::string, std::string> > value =
+                luaReadStack<std::auto_ptr<std::map<std::string, std::string> > >(lua, 3);
+            if (invoke_ctx) {
+                invoke_ctx->meta()->setMap(key, *value);
+            }
+        }
+        return 0;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        log()->debug("caught exception in meta.setTable: %s", e.what());
+        return luaL_error(lua, "caught exception in meta.setTable: %s", e.what());
+    }
+}
+
+static int
+luaMetaGetElapsedTimeInternal(lua_State *lua, bool self) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 1);
-        readMetaFromStack(lua, false);
-        InvokeContext* invoke_ctx = metaInvokeContext(lua, false);
+        readMetaFromStack(lua, self);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
         lua_pushnumber(lua, invoke_ctx ?
             invoke_ctx->meta()->getElapsedTime() : MetaCore::undefinedElapsedTime());
         return 1;
@@ -199,13 +309,13 @@ luaMetaGetElapsedTime(lua_State *lua) {
     }
 }
 
-int
-luaMetaGetExpireTime(lua_State *lua) {
+static int
+luaMetaGetExpireTimeInternal(lua_State *lua, bool self) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 1);
-        readMetaFromStack(lua, false);
-        InvokeContext* invoke_ctx = metaInvokeContext(lua, false);
+        readMetaFromStack(lua, self);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
         lua_pushnumber(lua, invoke_ctx ?
             invoke_ctx->meta()->getExpireTime() : Meta::undefinedExpireTime());
         return 1;
@@ -219,21 +329,23 @@ luaMetaGetExpireTime(lua_State *lua) {
     }
 }
 
-int
-luaMetaSetExpireTime(lua_State *lua) {
+static int
+luaMetaSetExpireTimeInternal(lua_State *lua, bool self) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
-        readMetaFromStack(lua, false);
+        readMetaFromStack(lua, self);
         time_t expire_time = luaReadStack<time_t>(lua, 2);
         if (expire_time < 0) {
             throw std::runtime_error("negative expire time is not allowed");
         }
-        InvokeContext* invoke_ctx = metaInvokeContext(lua, false);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
         if (NULL != invoke_ctx) {
             invoke_ctx->meta()->setExpireTime(expire_time);
         }
-        return 0;
+        lua_pushnumber(lua, invoke_ctx ?
+            invoke_ctx->meta()->getExpireTime() : Meta::undefinedExpireTime());
+        return 1;
     }
     catch (const LuaError &e) {
         return e.translate(lua);
@@ -244,13 +356,13 @@ luaMetaSetExpireTime(lua_State *lua) {
     }
 }
 
-int
-luaMetaGetLastModified(lua_State *lua) {
+static int
+luaMetaGetLastModifiedInternal(lua_State *lua, bool self) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 1);
-        readMetaFromStack(lua, false);
-        InvokeContext* invoke_ctx = metaInvokeContext(lua, false);
+        readMetaFromStack(lua, self);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
         lua_pushnumber(lua, invoke_ctx ?
             invoke_ctx->meta()->getLastModified() : Meta::undefinedLastModified());
         return 1;
@@ -264,21 +376,23 @@ luaMetaGetLastModified(lua_State *lua) {
     }
 }
 
-int
-luaMetaSetLastModified(lua_State *lua) {
+static int
+luaMetaSetLastModifiedInternal(lua_State *lua, bool self) {
     log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
     try {
         luaCheckStackSize(lua, 2);
-        readMetaFromStack(lua, false);
+        readMetaFromStack(lua, self);
         time_t last_modified = luaReadStack<time_t>(lua, 2);
         if (last_modified < 0) {
             throw std::runtime_error("negative last modified is not allowed");
         }
-        InvokeContext* invoke_ctx = metaInvokeContext(lua, false);
+        InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
         if (NULL != invoke_ctx) {
             invoke_ctx->meta()->setLastModified(last_modified);
         }
-        return 0;
+        lua_pushnumber(lua, invoke_ctx ?
+            invoke_ctx->meta()->getLastModified() : Meta::undefinedLastModified());
+        return 1;
     }
     catch (const LuaError &e) {
         return e.translate(lua);
@@ -287,6 +401,168 @@ luaMetaSetLastModified(lua_State *lua) {
         luaL_error(lua, "caught exception in meta.setLastModified: %s", e.what());
         return 0;
     }
+}
+
+extern "C" {
+
+int
+luaMetaHas(lua_State *lua) {
+    return luaMetaHasInternal(lua, false);
+}
+
+int
+luaSelfMetaHas(lua_State *lua) {
+    return luaMetaHasInternal(lua, true);
+}
+
+int
+luaMetaGet(lua_State *lua) {
+    return luaMetaGetInternal(lua, false);
+}
+
+int
+luaSelfMetaGet(lua_State *lua) {
+    return luaMetaGetInternal(lua, true);
+}
+
+int
+luaMetaGetTypedValue(lua_State *lua) {
+    return luaMetaGetTypedValueInternal(lua, false);
+}
+
+int
+luaSelfMetaGetTypedValue(lua_State *lua) {
+    return luaMetaGetTypedValueInternal(lua, true);
+}
+
+int
+luaMetaGetElapsedTime(lua_State *lua) {
+    return luaMetaGetElapsedTimeInternal(lua, false);
+}
+
+int
+luaSelfMetaGetElapsedTime(lua_State *lua) {
+    return luaMetaGetElapsedTimeInternal(lua, true);
+}
+
+int
+luaMetaGetExpireTime(lua_State *lua) {
+    return luaMetaGetExpireTimeInternal(lua, false);
+}
+
+int
+luaSelfMetaGetExpireTime(lua_State *lua) {
+    return luaMetaGetExpireTimeInternal(lua, true);
+}
+
+int
+luaMetaSetExpireTime(lua_State *lua) {
+    return luaMetaSetExpireTimeInternal(lua, false);
+}
+
+int
+luaSelfMetaSetExpireTime(lua_State *lua) {
+    return luaMetaSetExpireTimeInternal(lua, true);
+}
+
+int
+luaMetaGetLastModified(lua_State *lua) {
+    return luaMetaGetLastModifiedInternal(lua, false);
+}
+
+int
+luaSelfMetaGetLastModified(lua_State *lua) {
+    return luaMetaGetLastModifiedInternal(lua, true);
+}
+
+int
+luaMetaSetLastModified(lua_State *lua) {
+    return luaMetaSetLastModifiedInternal(lua, false);
+}
+
+int
+luaSelfMetaSetLastModified(lua_State *lua) {
+    return luaMetaSetLastModifiedInternal(lua, true);
+}
+
+int
+luaMetaSetBool(lua_State *lua) {
+    return luaMetaSetBoolInternal(lua, false);
+}
+
+int
+luaMetaSetLong(lua_State *lua) {
+    return luaMetaSetLongInternal(lua, false);
+}
+
+int
+luaMetaSetLongLong(lua_State *lua) {
+    return luaMetaSetLongLongInternal(lua, false);
+}
+
+int
+luaMetaSetULong(lua_State *lua) {
+    return luaMetaSetULongInternal(lua, false);
+}
+
+int
+luaMetaSetULongLong(lua_State *lua) {
+    return luaMetaSetULongLongInternal(lua, false);
+}
+
+int
+luaMetaSetDouble(lua_State *lua) {
+    return luaMetaSetDoubleInternal(lua, false);
+}
+
+int
+luaMetaSetString(lua_State *lua) {
+    return luaMetaSetStringInternal(lua, false);
+}
+
+int
+luaMetaSetTable(lua_State *lua) {
+    return luaMetaSetTableInternal(lua, false);
+}
+
+int
+luaSelfMetaSetBool(lua_State *lua) {
+    return luaMetaSetBoolInternal(lua, true);
+}
+
+int
+luaSelfMetaSetLong(lua_State *lua) {
+    return luaMetaSetLongInternal(lua, true);
+}
+
+int
+luaSelfMetaSetLongLong(lua_State *lua) {
+    return luaMetaSetLongLongInternal(lua, true);
+}
+
+int
+luaSelfMetaSetULong(lua_State *lua) {
+    return luaMetaSetULongInternal(lua, true);
+}
+
+int
+luaSelfMetaSetULongLong(lua_State *lua) {
+    return luaMetaSetULongLongInternal(lua, true);
+}
+
+int
+luaSelfMetaSetDouble(lua_State *lua) {
+    return luaMetaSetDoubleInternal(lua, true);
+}
+
+int
+luaSelfMetaSetString(lua_State *lua) {
+    return luaMetaSetStringInternal(lua, true);
+}
+
+int
+luaSelfMetaSetTable(lua_State *lua) {
+    return luaMetaSetTableInternal(lua, true);
 }
 
 } // extern "C"

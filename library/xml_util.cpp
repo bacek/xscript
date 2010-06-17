@@ -550,6 +550,61 @@ XmlUtils::regiserNsList(xmlXPathContextPtr ctx, const std::map<std::string, std:
     }
 }
 
+XmlTypedVisitor::XmlTypedVisitor(const std::string &name) : name_(name)
+{}
+
+XmlTypedVisitor::~XmlTypedVisitor()
+{}
+
+void
+XmlTypedVisitor::visitString(const std::string &value) {
+    result_ = XmlNodeSetHelper(xmlXPathNodeSetCreate(NULL));
+    XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)name_.c_str()));
+    xmlNodeSetContent(node.get(), (const xmlChar*)XmlUtils::escape(value).c_str());
+    xmlXPathNodeSetAdd(result_.get(), node.release());
+}
+
+void
+XmlTypedVisitor::visitArray(const std::vector<std::string> &value) {
+    result_ = XmlNodeSetHelper(xmlXPathNodeSetCreate(NULL));
+    for (std::vector<std::string>::const_iterator it = value.begin();
+        it != value.end();
+        ++it) {
+        XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)name_.c_str()));
+        xmlNodeSetContent(node.get(), (const xmlChar*)XmlUtils::escape(*it).c_str());
+        xmlXPathNodeSetAdd(result_.get(), node.release());
+    }
+}
+
+void
+XmlTypedVisitor::visitMap(const std::map<std::string, std::string> &value) {
+    result_ = XmlNodeSetHelper(xmlXPathNodeSetCreate(NULL));
+    XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)name_.c_str()));
+    for (std::map<std::string, std::string>::const_iterator it = value.begin();
+        it != value.end();
+        ++it) {
+        XmlNodeHelper child(xmlNewNode(NULL, (const xmlChar*)it->first.c_str()));
+        xmlNodeSetContent(child.get(), (const xmlChar*)XmlUtils::escape(it->second).c_str());
+        xmlAddChild(node.get(), child.release());
+    }
+    xmlXPathNodeSetAdd(result_.get(), node.release());
+}
+
+void
+XmlTypedVisitor::reset() {
+    result_.reset(NULL);
+}
+
+XmlNodeSetHelper
+XmlTypedVisitor::result() const {
+    return result_;
+}
+
+void
+XmlTypedVisitor::setResult(XmlNodeSetHelper result) {
+    result_ = result;
+}
+
 XmlInfoCollector::XmlInfoCollector() {
 }
 

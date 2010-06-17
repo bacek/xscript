@@ -5,6 +5,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
+#include <libxml/xpathInternals.h>
+
 #include "mist_worker.h"
 #include "state_node.h"
 #include "state_prefix_node.h"
@@ -687,6 +689,23 @@ MistWorker::dropState(Context *ctx, const std::vector<std::string> &params) {
     return XmlNodeHelper(node.releaseNode());
 }
 
+class DumpStateTypedVisitor : public XmlTypedVisitor {
+public:
+    DumpStateTypedVisitor(const std::string &name) : XmlTypedVisitor(name) {}
+    virtual ~DumpStateTypedVisitor() {}
+    virtual void visitMap(const std::map<std::string, std::string> &value) {
+        XmlNodeSetHelper result(xmlXPathNodeSetCreate(NULL));
+        for (std::map<std::string, std::string>::const_iterator it = value.begin();
+            it != value.end();
+            ++it) {
+            XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)it->first.c_str()));
+            xmlNodeSetContent(node.get(), (const xmlChar*)XmlUtils::escape(it->second).c_str());
+            xmlXPathNodeSetAdd(result.get(), node.release());
+        }
+        setResult(result);
+    }
+};
+
 XmlNodeHelper
 MistWorker::dumpState(Context *ctx, const std::vector<std::string> &params) {
     if (!params.empty()) {
@@ -698,12 +717,22 @@ MistWorker::dumpState(Context *ctx, const std::vector<std::string> &params) {
     std::map<std::string, TypedValue> state_info;
     ctx->state()->values(state_info);
     
-    for(std::map<std::string, TypedValue>::const_iterator it = state_info.begin();
+    for (std::map<std::string, TypedValue>::const_iterator it = state_info.begin();
         it != state_info.end();
         ++it) {
-        XmlChildNode child(node.getNode(), "param", it->second.value().c_str());
+        XmlChildNode child(node.getNode(), "param", it->second.simpleValue().c_str());
         child.setProperty("name", it->first.c_str());
         child.setProperty("type", it->second.stringType().c_str());
+        if (it->second.complexType()) {
+            DumpStateTypedVisitor visitor(it->first);
+            it->second.visit(&visitor, false);
+            XmlNodeSetHelper result = visitor.result();
+            while (result->nodeNr > 0) {
+                xmlAddChild(child.getNode(), result->nodeTab[0]);
+                xmlXPathNodeSetRemove(result.get(), 0);
+            }
+        }
+
     }
     
     return XmlNodeHelper(node.releaseNode());

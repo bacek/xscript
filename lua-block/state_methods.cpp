@@ -24,6 +24,7 @@ namespace xscript {
 extern "C" {
     int luaStateHas(lua_State *lua);
     int luaStateGet(lua_State *lua);
+    int luaStateGetTypedValue(lua_State *lua);
 
     int luaStateSetBool(lua_State *lua);
     int luaStateSetLong(lua_State *lua);
@@ -32,6 +33,7 @@ extern "C" {
     int luaStateSetULongLong(lua_State *lua);
     int luaStateSetDouble(lua_State *lua);
     int luaStateSetString(lua_State *lua);
+    int luaStateSetTable(lua_State *lua);
 
     int luaStateIs(lua_State *lua);
     int luaStateDrop(lua_State *lua);
@@ -40,6 +42,7 @@ extern "C" {
 static const struct luaL_reg statelib [] = {
     {"has",             luaStateHas },
     {"get",             luaStateGet},
+    {"getTypedValue",   luaStateGetTypedValue},
     {"setBool",         luaStateSetBool},
     {"setBoolean",      luaStateSetBool},
     {"setLong",         luaStateSetLong},
@@ -48,6 +51,7 @@ static const struct luaL_reg statelib [] = {
     {"setULongLong",    luaStateSetULongLong},
     {"setString",       luaStateSetString},
     {"setDouble",       luaStateSetDouble},
+    {"setTable",        luaStateSetTable},
     {"is",              luaStateIs},
     {"drop",            luaStateDrop},
     {NULL, NULL}
@@ -104,6 +108,32 @@ luaStateGet(lua_State *lua) {
     }
     catch (const std::exception &e) {
         luaL_error(lua, "caught exception in state.get: %s", e.what());
+        return 0;
+    }
+}
+
+int
+luaStateGetTypedValue(lua_State *lua) {
+    log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+    try {
+        luaCheckStackSize(lua, 2);
+        luaReadStack<void>(lua, "xscript.state", 1);
+        State *state = getContext(lua)->state();
+        std::string key = luaReadStack<std::string>(lua, 2);
+        log()->debug("luaStateGet: %s", key.c_str());
+        TypedValue value;
+        if (!state->typedValue(key, value)) {
+            lua_pushnil(lua);
+            return 1;
+        }
+        luaPushStack<const TypedValue&>(lua, value);
+        return 1;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        luaL_error(lua, "caught exception in state.getTypedValue: %s", e.what());
         return 0;
     }
 }
@@ -168,6 +198,36 @@ luaStateSetString(lua_State *lua) {
 int
 luaStateSetDouble(lua_State *lua) {
     return luaStateSet<double>(lua);
+}
+
+int luaStateSetTable(lua_State *lua) {
+    try {
+        luaCheckStackSize(lua, 3);
+        luaReadStack<void>(lua, "xscript.state", 1);
+        State *state = getContext(lua)->state();
+        std::string key = luaReadStack<std::string>(lua, 2);
+        if (luaIsNil(lua, 3)) {
+            return 0;
+        }
+        if (luaIsArrayTable(lua, 3)) {
+            std::auto_ptr<std::vector<std::string> > value =
+                luaReadStack<std::auto_ptr<std::vector<std::string> > >(lua, 3);
+            state->set<const std::vector<std::string>&>(key, *value);
+        }
+        else {
+            std::auto_ptr<std::map<std::string, std::string> > value =
+                luaReadStack<std::auto_ptr<std::map<std::string, std::string> > >(lua, 3);
+            state->set<const std::map<std::string, std::string>&>(key, *value);
+        }
+        return 0;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        log()->debug("caught exception in state.setTable: %s", e.what());
+        return luaL_error(lua, "caught exception in state.setTable: %s", e.what());
+    }
 }
 
 int

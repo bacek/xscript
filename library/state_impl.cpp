@@ -51,13 +51,13 @@ StateImpl::keys(std::vector<std::string> &v) const {
 void
 StateImpl::values(std::map<std::string, TypedValue> &v) const {
     boost::mutex::scoped_lock sl(mutex_);
-    data_.values(v);
+    v = data_.values();
 }
 
 void
 StateImpl::copy(const std::string &src, const std::string &dest) {
     boost::mutex::scoped_lock sl(mutex_);
-    const TypedValue &val = data_.find(src);
+    TypedValue val = data_.find(src);
     data_.insert(dest, val);
 }
 

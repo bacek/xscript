@@ -2,8 +2,10 @@
 
 #include <stdexcept>
 
+#include <boost/tokenizer.hpp>
+
 #include "xscript/algorithm.h"
-#include "xscript/range.h"
+#include "xscript/string_utils.h"
 #include "xscript/typed_map.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -51,13 +53,42 @@ TypedValue::TypedValue(const std::string &value) :
     type_(TYPE_STRING), value_(value)
 {}
 
-TypedValue::TypedValue(int type, const std::string &value) :
-    type_(type), value_(value)
+TypedValue::TypedValue(const std::vector<std::string> &value) :
+    type_(TYPE_ARRAY), complex_(new ArrayTypedValue(value))
 {}
+
+TypedValue::TypedValue(const std::map<std::string, std::string> &value) :
+    type_(TYPE_MAP), complex_(new MapTypedValue(value))
+{}
+
+TypedValue::TypedValue(unsigned int type, const Range &value) :
+    type_(type)
+{
+    if (type >= TYPE_BOOL && type <= TYPE_STRING) {
+        value_.assign(value.begin(), value.size());
+    }
+    else if (type == TYPE_ARRAY) {
+        complex_.reset(new ArrayTypedValue(value));
+    }
+    else if (type == TYPE_MAP) {
+        complex_.reset(new MapTypedValue(value));
+    }
+    else {
+        throw std::runtime_error("Unknown value type");
+    }
+}
+
+unsigned int
+TypedValue::type() const {
+    return type_;
+}
 
 const std::string&
 TypedValue::stringType() const {
-    if (type_ == TYPE_BOOL) {
+    if (complex_.get()) {
+        return complex_->stringType();
+    }
+    else if (type_ == TYPE_BOOL) {
         return TYPE_BOOL_STRING;
     }
     else if (type_ == TYPE_LONG) {
@@ -75,14 +106,20 @@ TypedValue::stringType() const {
     else if (type_ == TYPE_DOUBLE) {
         return TYPE_DOUBLE_STRING;
     }
-
     return TYPE_STRING_STRING;
+}
+
+ComplexTypedValue*
+TypedValue::complexType() const {
+    return complex_.get();
 }
 
 bool
 TypedValue::asBool() const {
-
-    if (trim(createRange(value_)).empty()) {
+    if (NULL != complex_.get()) {
+        return true;
+    }
+    else if (trim(createRange(value_)).empty()) {
         return false;
     }
     else if (type_ == TypedValue::TYPE_STRING) {
@@ -98,6 +135,62 @@ TypedValue::asBool() const {
     }
     else {
         return value_ != "0";
+    }
+}
+
+std::string
+TypedValue::asString() const {
+    return complex_.get() ? complex_->asString() : value_;
+}
+
+const std::string&
+TypedValue::simpleValue() const {
+    return value_;
+}
+
+void
+TypedValue::serialize(std::string &result) const {
+    if (complex_.get()) {
+        complex_->serialize(result);
+    }
+    else {
+        result.assign(value_);
+    }
+}
+
+void
+TypedValue::visit(TypedValueVisitor *visitor, bool string_prefer) const {
+    if (NULL != complex_.get()) {
+        complex_->visit(visitor);
+        return;
+    }
+
+    if (string_prefer) {
+        visitor->visitString(value_);
+        return;
+    }
+
+    switch (type_) {
+    case TYPE_BOOL:
+        visitor->visitBool(boost::lexical_cast<bool>(value_));
+        break;
+    case TYPE_LONG:
+        visitor->visitInt32(boost::lexical_cast<boost::int32_t>(value_));
+        break;
+    case TYPE_ULONG:
+        visitor->visitUInt32(boost::lexical_cast<boost::uint32_t>(value_));
+        break;
+    case TYPE_LONGLONG:
+        visitor->visitInt64(boost::lexical_cast<boost::int64_t>(value_));
+        break;
+    case TYPE_ULONGLONG:
+        visitor->visitUInt64(boost::lexical_cast<boost::uint64_t>(value_));
+        break;
+    case TYPE_DOUBLE:
+        visitor->visitDouble(boost::lexical_cast<double>(value_));
+        break;
+    case TYPE_STRING:
+        visitor->visitString(value_);
     }
 }
 
@@ -172,9 +265,9 @@ TypedMap::setDouble(const std::string &name, double value) {
     set(name, TypedValue(value));
 }
 
-const std::string&
+std::string
 TypedMap::asString(const std::string &name) const {
-    return find(name).value();
+    return getTypedValue(name).asString();
 }
 
 void
@@ -196,7 +289,7 @@ TypedMap::erasePrefix(const std::string &prefix) {
 
 bool
 TypedMap::asBool(const std::string &name) const {
-    return find(name).asBool();
+    return getTypedValue(name).asBool();
 }
 
 void
@@ -218,46 +311,58 @@ TypedMap::keys(std::vector<std::string> &v) const {
     }
 }
 
-void
-TypedMap::values(std::map<std::string, TypedValue> &v) const {
-    std::map<std::string, TypedValue> local;
-    std::copy(values_.begin(), values_.end(), std::inserter(local, local.begin()));
-    local.swap(v);
+const std::map<std::string, TypedValue>&
+TypedMap::values() const {
+    return values_;
+}
+
+TypedValue
+TypedMap::find(const std::string &name) const {
+    const TypedValue& value = getTypedValue(name);
+    if (NULL == value.complex_.get()) {
+        return value;
+    }
+    TypedValue result = value;
+    result.complex_.reset(value.complex_->clone());
+    return result;
 }
 
 const TypedValue&
-TypedMap::find(const std::string &name) const {
-    TypedValueMap::const_iterator i = values_.find(name);
-    if (values_.end() == i) {
+TypedMap::getTypedValue(const std::string &name) const {
+    TypedValueMap::const_iterator it = values_.find(name);
+    if (values_.end() == it) {
         throw std::invalid_argument("nonexistent typed value: " + name);
     }
-    return i->second;
+    return it->second;
 }
 
-const std::string&
+std::string
 TypedMap::asString(const std::string &name, const std::string &default_value) const {
-    TypedValueMap::const_iterator i = values_.find(name);
-    if (values_.end() != i) {
-        return i->second.value();
+    TypedValueMap::const_iterator it = values_.find(name);
+    if (values_.end() != it) {
+        return it->second.asString();
     }
     return default_value;
 }
 
 bool
 TypedMap::find(const std::string &name, TypedValue &result) const {
-    TypedValueMap::const_iterator i = values_.find(name);
-    if (values_.end() == i) {
+    TypedValueMap::const_iterator it = values_.find(name);
+    if (values_.end() == it) {
         return false;
     }
-    result = i->second;
+    result = it->second;
+    if (it->second.complex_.get()) {
+        result.complex_.reset(it->second.complex_->clone());
+    }
     return true;
 }
 
 bool
 TypedMap::is(const std::string &name) const {
-    TypedValueMap::const_iterator i = values_.find(name);
-    if (values_.end() != i) {
-        return i->second.asBool();
+    TypedValueMap::const_iterator it = values_.find(name);
+    if (values_.end() != it) {
+        return it->second.asBool();
     }
     return false;
 }
@@ -266,5 +371,123 @@ void
 TypedMap::set(const std::string &name, const TypedValue &value) {
     values_[name] = value;
 }
+
+ComplexTypedValue::~ComplexTypedValue()
+{}
+
+const std::string ArrayTypedValue::TYPE = "Array";
+
+ArrayTypedValue::ArrayTypedValue(const std::vector<std::string> &value) : value_(value)
+{}
+
+ArrayTypedValue::ArrayTypedValue(const Range &value) {
+    typedef boost::char_separator<char> Separator;
+    typedef boost::tokenizer<Separator> Tokenizer;
+    Tokenizer tok(value, Separator("\r\n"));
+    for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
+        value_.push_back(*it);
+    }
+}
+
+ArrayTypedValue::~ArrayTypedValue()
+{}
+
+void
+ArrayTypedValue::visit(TypedValueVisitor *visitor) const {
+    visitor->visitArray(value_);
+}
+
+const std::string&
+ArrayTypedValue::stringType() const {
+    return TYPE;
+}
+
+std::string
+ArrayTypedValue::asString() const {
+    return value_.empty() ? StringUtils::EMPTY_STRING : value_[0];
+}
+
+void
+ArrayTypedValue::serialize(std::string &result) const {
+    result.clear();
+    for (std::vector<std::string>::const_iterator it = value_.begin(), it_beg = it;
+         it != value_.end();
+         ++it) {
+        if (it != it_beg) {
+            result.append("\r\n");
+        }
+        result.append(*it);
+    }
+}
+
+ComplexTypedValue*
+ArrayTypedValue::clone() const {
+    return new ArrayTypedValue(*this);
+}
+
+
+const std::string MapTypedValue::TYPE = "Map";
+
+MapTypedValue::MapTypedValue(const std::map<std::string, std::string> &value) :
+    value_(value)
+{}
+
+MapTypedValue::MapTypedValue(const Range &value) {
+    typedef boost::char_separator<char> Separator;
+    typedef boost::tokenizer<Separator> Tokenizer;
+    Tokenizer tok(value, Separator("\r\n"));
+    int i = 0;
+    Tokenizer::iterator key;
+    for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
+        if (i == 0) {
+            key = it;
+            ++i;
+        }
+        else {
+            value_.insert(std::make_pair(*key, *it));
+            --i;
+        }
+    }
+}
+
+MapTypedValue::~MapTypedValue()
+{}
+
+void
+MapTypedValue::visit(TypedValueVisitor *visitor) const {
+    visitor->visitMap(value_);
+}
+
+const std::string&
+MapTypedValue::stringType() const {
+    return TYPE;
+}
+
+std::string
+MapTypedValue::asString() const {
+    return value_.empty() ? StringUtils::EMPTY_STRING : value_.begin()->second;
+}
+
+void
+MapTypedValue::serialize(std::string &result) const {
+    result.clear();
+    for (std::map<std::string, std::string>::const_iterator it = value_.begin(), it_beg = it;
+         it != value_.end();
+         ++it) {
+        if (it != it_beg) {
+            result.append("\r\n");
+        }
+        result.append(it->first);
+        result.append("\r\n");
+        result.append(it->second);
+    }
+}
+
+ComplexTypedValue*
+MapTypedValue::clone() const {
+    return new MapTypedValue(*this);
+}
+
+
 
 } // namespace xscript

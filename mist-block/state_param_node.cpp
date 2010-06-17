@@ -32,12 +32,11 @@ StateParamNode::createSubNode(const char *val) const {
 
 void
 StateParamNode::createSubNode(const TypedValue &value) const {
-    XmlChildNode child_param(parent_, "param", value.value().c_str());
+    XmlChildNode child_param(parent_, "param", value.simpleValue().c_str());
     child_param.setProperty("name", name_);
     child_param.setProperty("type", value.stringType().c_str());
-
     if (is_valid_name_) {
-        XmlChildNode(parent_, name_, value.value().c_str());
+        XmlChildNode(parent_, name_, value);
     }
 }
 

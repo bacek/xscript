@@ -125,7 +125,7 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
                 invoke_ctx->meta()->setCore(cache_data->meta());
                 invoke_ctx->meta()->setCacheParams(
                     cache_tag.expire_time, cache_tag.last_modified);
-                callMetaCacheHitLua(ctx, invoke_ctx);
+                callMetaAfterCacheLoadLua(ctx, invoke_ctx);
                 if (cacheTimeUndefined()) {
                     cache_tag.expire_time = invoke_ctx->meta()->getExpireTime();
                     cache_tag.last_modified = invoke_ctx->meta()->getLastModified();
@@ -205,7 +205,7 @@ TaggedBlock::postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
     }
 
     try {
-        callMetaCacheMissLua(ctx, invoke_ctx);
+        callMetaBeforeCacheSaveLua(ctx, invoke_ctx);
     }
     catch (const InvokeError &e) {
         throw MetaInvokeError(e.what());
@@ -461,18 +461,18 @@ TaggedBlock::callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<Invok
 }
 
 void
-TaggedBlock::callMetaCacheMissLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+TaggedBlock::callMetaBeforeCacheSaveLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
     MetaBlock* meta_block = metaBlock();
     if (meta_block) {
-        meta_block->callCacheMissLua(ctx, invoke_ctx);
+        meta_block->callBeforeCacheSaveLua(ctx, invoke_ctx);
     }
 }
 
 void
-TaggedBlock::callMetaCacheHitLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+TaggedBlock::callMetaAfterCacheLoadLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
     MetaBlock* meta_block = metaBlock();
     if (meta_block) {
-        meta_block->callCacheHitLua(ctx, invoke_ctx);
+        meta_block->callAfterCacheLoadLua(ctx, invoke_ctx);
     }
 }
 

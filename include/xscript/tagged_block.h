@@ -50,8 +50,8 @@ protected:
     std::string processParamsKey(const Context *ctx) const;
 
     virtual void callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
-    void callMetaCacheMissLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
-    void callMetaCacheHitLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+    void callMetaBeforeCacheSaveLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+    void callMetaAfterCacheLoadLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
 
     bool processCachedDoc(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, const Tag &tag);
 

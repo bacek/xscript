@@ -6,7 +6,7 @@
 namespace xscript {
 
 const struct luaL_reg * getMetaLib();
-const struct luaL_reg * getLocalMetaLib();
+const struct luaL_reg * getSelfMetaLib();
 
 } // namespace xscript
 

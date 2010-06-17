@@ -51,7 +51,7 @@ StateParam::asString(const Context *ctx) const {
     for(std::map<std::string, TypedValue>::iterator i = vals.begin(), end = vals.end();
         i != end;
         ++i) {
-        stream << i->first << ":" << i->second.value() << std::endl;
+        stream << i->first << ":" << i->second.asString() << std::endl;
     }
     return stream.str();
 }

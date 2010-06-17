@@ -2,13 +2,13 @@
 <page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
     <x:local proxy="yes">
         <root>
-            <lua>xscript.meta:set("key0", "value0")</lua>
+            <lua>xscript.meta:setString("key0", "value0")</lua>
         </root>
         <x:meta xpointer="/*" name="g:rootmeta" xmlns:g="http://www.ya.ru">
             <xpath expr="/g:rootmeta/key0" result="key"/>
             <x:lua>
-                xscript.meta:set("key1", "value1");
-                xscript.meta:set("key2", "value2");
+                xscript.meta:setString("key1", "value1");
+                xscript.meta:setString("key2", "value2");
             </x:lua>
         </x:meta>
     </x:local>

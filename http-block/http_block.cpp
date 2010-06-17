@@ -540,18 +540,17 @@ HttpBlock::createMeta(HttpHelper &helper, InvokeContext *invoke_ctx) const {
         typedef std::multimap<std::string, std::string> HttpHeaderMap;
         typedef HttpHeaderMap::const_iterator HttpHeaderIter;
         const HttpHeaderMap& headers = helper.headers();
-        for (HttpHeaderIter it = headers.begin();
-             it != headers.end(); ) {
+        for (HttpHeaderIter it = headers.begin(); it != headers.end(); ) {
             std::pair<HttpHeaderIter, HttpHeaderIter> res = headers.equal_range(it->first);
             HttpHeaderIter itr = res.first;
-            for (int i = 0; itr != res.second; ++itr, ++i) {
-                std::stringstream name;
-                name << "HTTP_" << StringUtils::toupper(it->first);
-                if (i > 0) {
-                    name << "_" << i;
-                }
-                invoke_ctx->meta()->set2Core(name.str(), itr->second);
+            std::vector<std::string> result;
+            std::string name = "HTTP_" + StringUtils::toupper(it->first);
+            for (; itr != res.second; ++itr) {
+                result.push_back(itr->second);
             }
+            result.size() == 1 ?
+                invoke_ctx->meta()->setString(name, result[0]) :
+                invoke_ctx->meta()->setArray(name, result);
             it = itr;
         }
     }

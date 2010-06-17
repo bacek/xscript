@@ -30,6 +30,33 @@ luaCheckBoolean(lua_State *lua, int index) {
     }
 }
 
+void
+luaCheckTable(lua_State *lua, int index) {
+    if (!lua_istable(lua, index)) {
+        throw BadType("table", index);
+    }
+}
+
+bool
+luaIsArrayTable(lua_State *lua, int index) {
+    luaCheckTable(lua, index);
+    bool res = true;
+    lua_pushnil(lua);
+    if (lua_next(lua, index)) {
+        if (!lua_isnumber(lua, -2)) {
+            res = false;
+        }
+        lua_pop(lua, 1);
+    }
+    lua_pop(lua, 1);
+    return res;
+}
+
+bool
+luaIsNil(lua_State *lua, int index) {
+    return lua_isnil(lua, index);
+}
+
 int
 luaCheckStackSize(lua_State *lua, int count_min, int count_max) {
     int count = lua_gettop(lua);

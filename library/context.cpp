@@ -732,7 +732,7 @@ Context::localParamIs(const std::string &name) const {
     return ctx_data_->local_params_->is(name);
 }
 
-const TypedValue&
+TypedValue
 Context::getLocalParam(const std::string &name) const {
     return ctx_data_->local_params_->find(name);
 }
@@ -749,7 +749,7 @@ Context::getLocalParam(const std::string &name, const std::string &default_value
 
 void
 Context::localParams(std::map<std::string, TypedValue> &params) const {
-    ctx_data_->local_params_->values(params);
+    params = ctx_data_->local_params_->values();
 }
 
 const boost::shared_ptr<TypedMap>&

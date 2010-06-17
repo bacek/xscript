@@ -42,48 +42,47 @@ MetaBlock::luaNode(const xmlNodePtr node) const {
            xmlStrcasecmp(node->ns->href, (const xmlChar*)XmlUtils::XSCRIPT_NAMESPACE) == 0;
 }
 
+bool
+MetaBlock::luaAfterCacheLoadNode(const xmlNodePtr node) const {
+    return node->ns && node->ns->href &&
+           xmlStrcasecmp(node->name, (const xmlChar*)"lua-after-cache-load") == 0 &&
+           xmlStrcasecmp(node->ns->href, (const xmlChar*)XmlUtils::XSCRIPT_NAMESPACE) == 0;
+}
+
+bool
+MetaBlock::luaBeforeCacheSaveNode(const xmlNodePtr node) const {
+    return node->ns && node->ns->href &&
+           xmlStrcasecmp(node->name, (const xmlChar*)"lua-before-cache-save") == 0 &&
+           xmlStrcasecmp(node->ns->href, (const xmlChar*)XmlUtils::XSCRIPT_NAMESPACE) == 0;
+}
+
 void
 MetaBlock::parseSubNode(xmlNodePtr node) {
     if (metaNode(node)) {
         throw std::runtime_error("Nested meta section is not allowed");
     }
     if (luaNode(node)) {
-        parseLua(node);
-    }
-    else {
-        Block::parseSubNode(node);
-    }
-}
-
-void
-MetaBlock::parseLua(xmlNodePtr node) {
-    std::string value;
-    xmlAttrPtr scope_attr = xmlHasProp(node, (const xmlChar*)"scope");
-    if (NULL != scope_attr) {
-        value.assign(XmlUtils::value(scope_attr));
-        xmlRemoveProp(scope_attr);
-    }
-
-    if (value.empty()) {
         if (lua_block_.get()) {
             throw std::runtime_error("One common lua section allowed in meta");
         }
         parseLuaSection(node, lua_block_);
     }
-    else if (0 == strcasecmp(value.c_str(), "cache-hit")) {
-        if (cache_hit_lua_block_.get()) {
-            throw std::runtime_error("One cache hit lua section allowed in meta");
+    else if (luaAfterCacheLoadNode(node)) {
+        if (after_cache_load_lua_.get()) {
+            throw std::runtime_error("One after-cache-load lua section allowed in meta");
         }
-        parseLuaSection(node, cache_hit_lua_block_);
+        xmlNodeSetName(node, (const xmlChar*)"lua");
+        parseLuaSection(node, after_cache_load_lua_);
     }
-    else if (0 == strcasecmp(value.c_str(), "cache-miss")) {
-        if (cache_miss_lua_block_.get()) {
-            throw std::runtime_error("One cache miss lua section allowed in meta");
+    else if (luaBeforeCacheSaveNode(node)) {
+        if (before_cache_save_lua_.get()) {
+            throw std::runtime_error("One before-cache-save lua section allowed in meta");
         }
-        parseLuaSection(node, cache_miss_lua_block_);
+        xmlNodeSetName(node, (const xmlChar*)"lua");
+        parseLuaSection(node, before_cache_save_lua_);
     }
     else {
-        throw std::runtime_error(std::string("Incorrect scope value in meta lua: ") + value);
+        Block::parseSubNode(node);
     }
 }
 
@@ -108,19 +107,19 @@ MetaBlock::callLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeConte
 }
 
 void
-MetaBlock::callCacheMissLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
-    if (cache_miss_lua_block_.get()) {
+MetaBlock::callBeforeCacheSaveLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+    if (before_cache_save_lua_.get()) {
         boost::shared_ptr<InvokeContext> meta_ctx(new InvokeContext(invoke_ctx.get()));
-        cache_miss_lua_block_->call(ctx, meta_ctx);
+        before_cache_save_lua_->call(ctx, meta_ctx);
     }
 }
 
 void
-MetaBlock::callCacheHitLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
-    if (cache_hit_lua_block_.get()) {
+MetaBlock::callAfterCacheLoadLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+    if (after_cache_load_lua_.get()) {
         boost::shared_ptr<InvokeContext> meta_ctx(new InvokeContext(invoke_ctx.get()));
         MetaCoreNotWritable holder(invoke_ctx.get());
-        cache_hit_lua_block_->call(ctx, meta_ctx);
+        after_cache_load_lua_->call(ctx, meta_ctx);
     }
 }
 
@@ -215,8 +214,8 @@ MetaBlock::postParse() {
         }
     }
 
-    if (cache_miss_lua_block_.get()) {
-        Range code = getLuaCode(cache_miss_lua_block_.get());
+    if (before_cache_save_lua_.get()) {
+        Range code = getLuaCode(before_cache_save_lua_.get());
         if (!code.empty()) {
             key_.push_back('|');
             key_.append(HashUtils::hexMD5(code.begin(), code.size()));
@@ -243,7 +242,7 @@ MetaBlock::getTagKey() const {
 
 bool
 MetaBlock::haveCachedLua() const {
-    return cache_miss_lua_block_.get() || cache_hit_lua_block_.get();
+    return before_cache_save_lua_.get() || after_cache_load_lua_.get();
 }
 
 } // namespace xscript

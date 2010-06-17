@@ -1,6 +1,7 @@
 #include "settings.h"
 
 #include <libxml/xmlstring.h>
+#include <libxml/xpathInternals.h>
 
 #include "xml_node.h"
 
@@ -59,11 +60,21 @@ XmlNode::releaseNode() {
     return ret_node;
 }
 
-
 XmlChildNode::XmlChildNode(xmlNodePtr parent, const char* name, const char* val)
         : XmlNodeCommon() {
     node_ = xmlNewTextChild(parent, NULL, (const xmlChar*) name, (const xmlChar*) val);
     XmlUtils::throwUnless(NULL != node_);
+}
+
+XmlChildNode::XmlChildNode(xmlNodePtr parent, const char* name, const TypedValue &val)
+        : XmlNodeCommon() {
+    XmlTypedVisitor visitor(name);
+    val.visit(&visitor, true);
+    XmlNodeSetHelper result = visitor.result();
+    while (result->nodeNr > 0) {
+        xmlAddChild(parent, result->nodeTab[0]);
+        xmlXPathNodeSetRemove(result.get(), 0);
+    }
 }
 
 

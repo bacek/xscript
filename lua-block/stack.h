@@ -14,6 +14,7 @@
 #include <lua.hpp>
 
 #include "xscript/string_utils.h"
+#include "xscript/typed_map.h"
 
 namespace xscript {
 
@@ -26,18 +27,18 @@ struct pointer {
     T* ptr;
 };
 
-
 typedef pointer<State> statePtr;
 typedef pointer<Request> requestPtr;
 typedef pointer<Response> responsePtr;
 
-
+bool luaIsNil(lua_State *lua, int index);
 void luaCheckNumber(lua_State *lua, int index);
 void luaCheckString(lua_State *lua, int index);
 void luaCheckBoolean(lua_State *lua, int index);
+void luaCheckTable(lua_State *lua, int index);
+bool luaIsArrayTable(lua_State *lua, int index);
 void luaCheckStackSize(lua_State *lua, int index);
 int luaCheckStackSize(lua_State *lua, int index_min, int index_max);
-
 void* luaCheckUserData(lua_State *lua, const char *name, int index);
 
 template<typename Type> inline Type
@@ -94,6 +95,40 @@ luaReadStack<std::string>(lua_State *lua, int index) {
     return std::string(lua_tostring(lua, index));
 }
 
+template<> inline std::auto_ptr<std::vector<std::string> >
+luaReadStack<std::auto_ptr<std::vector<std::string> > >(lua_State *lua, int index) {
+    luaCheckTable(lua, index);
+    std::auto_ptr<std::vector<std::string> > result(new std::vector<std::string>);
+    lua_pushnil(lua);
+    while (lua_next(lua, index)) {
+        luaCheckNumber(lua, -2);
+        luaCheckString(lua, -1);
+        lua_tonumber(lua, -2);
+        result->push_back(std::string(lua_tostring(lua, -1)));
+        lua_pop(lua, 1);
+    }
+    lua_pop(lua, 1);
+    return result;
+}
+
+template<> inline std::auto_ptr<std::map<std::string, std::string> >
+luaReadStack<std::auto_ptr<std::map<std::string, std::string> > >(lua_State *lua, int index) {
+    luaCheckTable(lua, index);
+    std::auto_ptr<std::map<std::string, std::string> > result(
+        new std::map<std::string, std::string>);
+    lua_pushnil(lua);
+    while (lua_next(lua, index)) {
+        luaCheckString(lua, -2);
+        luaCheckString(lua, -1);
+        result->insert(std::make_pair(
+            std::string(lua_tostring(lua, -2)),
+            std::string(lua_tostring(lua, -1))));
+        lua_pop(lua, 1);
+    }
+    lua_pop(lua, 1);
+    return result;
+}
+
 template<typename Type>
 void luaPushStack(lua_State* lua, Type t) {
     // We should specify how to push value
@@ -142,27 +177,37 @@ inline void luaPushStack(lua_State* lua, double n) {
 }
 
 template<>
-inline void luaPushStack(lua_State* lua, std::auto_ptr<std::vector<std::string> > args) {
-    int size = args->size();
+inline void luaPushStack(lua_State* lua, const std::vector<std::string> &args) {
+    int size = args.size();
     lua_createtable(lua, size, 0);
     int table = lua_gettop(lua);
     for(int i = 0; i < size; ++i) {
-        lua_pushstring(lua, (*args)[i].c_str());
+        lua_pushstring(lua, args[i].c_str());
         lua_rawseti(lua, table, i + 1);
     }
 }
 
 template<>
-inline void luaPushStack(lua_State* lua, std::auto_ptr<std::map<std::string, std::string> > args) {
+inline void luaPushStack(lua_State* lua, std::auto_ptr<std::vector<std::string> > args) {
+    luaPushStack<const std::vector<std::string>&>(lua, *args);
+}
+
+template<>
+inline void luaPushStack(lua_State* lua, const std::map<std::string, std::string> &args) {
     lua_newtable(lua);
     int table = lua_gettop(lua);
-    for(std::map<std::string, std::string>::const_iterator it = args->begin();
-        it != args->end();
+    for(std::map<std::string, std::string>::const_iterator it = args.begin();
+        it != args.end();
         ++it) {
         lua_pushstring(lua, it->first.c_str());
         lua_pushstring(lua, it->second.c_str());
         lua_settable(lua, table);
     }
+}
+
+template<>
+inline void luaPushStack(lua_State* lua, std::auto_ptr<std::map<std::string, std::string> > args) {
+    luaPushStack<const std::map<std::string, std::string>&>(lua, *args);
 }
 
 template<>
@@ -186,6 +231,49 @@ inline void luaPushStack(lua_State* lua, const std::vector<StringUtils::NamedVal
         lua_settable(lua, table);
         lua_rawseti(lua, main_table, i + 1);
     }
+}
+
+class LuaTypedVisitor : public TypedValueVisitor {
+public:
+    LuaTypedVisitor(lua_State* lua) : lua_(lua) {}
+    virtual ~LuaTypedVisitor() {}
+
+    virtual void visitBool(bool value) {
+        luaPushStack(lua_, value);
+    }
+    virtual void visitInt32(boost::int32_t value) {
+        luaPushStack(lua_, value);
+    }
+    virtual void visitUInt32(boost::uint32_t value) {
+        luaPushStack(lua_, value);
+    }
+    virtual void visitInt64(boost::int64_t value) {
+        luaPushStack(lua_, value);
+    }
+    virtual void visitUInt64(boost::uint64_t value) {
+        luaPushStack(lua_, value);
+    }
+    virtual void visitDouble(double value) {
+        luaPushStack(lua_, value);
+    }
+    virtual void visitString(const std::string &value) {
+        luaPushStack(lua_, value);
+    }
+    virtual void visitArray(const std::vector<std::string> &value) {
+        luaPushStack<const std::vector<std::string>&>(lua_, value);
+    }
+    virtual void visitMap(const std::map<std::string, std::string> &value) {
+        luaPushStack<const std::map<std::string, std::string>&>(lua_, value);
+    }
+
+private:
+    lua_State* lua_;
+};
+
+template<>
+inline void luaPushStack(lua_State* lua, const TypedValue &value) {
+    LuaTypedVisitor visitor(lua);
+    value.visit(&visitor, false);
 }
 
 } // namespace xscript

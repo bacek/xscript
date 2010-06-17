@@ -63,8 +63,8 @@ private:
         // check save
 
         Meta meta;
-        meta.set2Core("key1", "value1");
-        meta.set2Core("key2", "value2");
+        meta.setString("key1", "value1");
+        meta.setString("key2", "value2");
 
         boost::shared_ptr<BlockCacheData> saved(new BlockCacheData(doc, meta.getCore()));
         

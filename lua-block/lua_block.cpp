@@ -193,7 +193,7 @@ createLua() {
     registerLibs(lua, "response", (void*)1, getResponseLib(), getResponseLib());
     registerLibs(lua, "localargs", (void*)1, getLocalLib(), getLocalLib());
     registerLibs(lua, "meta", (void*)1, getMetaLib(), getMetaLib());
-    registerLibs(lua, "localmeta", (void*)1, getLocalMetaLib(), getLocalMetaLib());
+    registerLibs(lua, "selfmeta", (void*)1, getSelfMetaLib(), getSelfMetaLib());
     registerLibs(lua, "cookie", (void*)NULL, getCookieLib(), getCookieNewLib());
     registerLibs(lua, "logger", (void*)NULL, NULL, getLoggerLib());
     return lua_context;

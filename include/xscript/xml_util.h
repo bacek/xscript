@@ -9,7 +9,9 @@
 
 #include <xscript/range.h>
 #include <xscript/string_utils.h>
+#include <xscript/typed_map.h>
 #include <xscript/xml.h>
+#include <xscript/xml_helpers.h>
 
 #include <libxml/tree.h>
 #include <libxslt/transform.h>
@@ -83,6 +85,22 @@ public:
     static void regiserNsList(xmlXPathContextPtr ctx, const std::map<std::string, std::string> &ns);
 
     static const char * const XSCRIPT_NAMESPACE;
+};
+
+class XmlTypedVisitor : public TypedValueVisitor {
+public:
+    XmlTypedVisitor(const std::string &name);
+    virtual ~XmlTypedVisitor();
+    virtual void visitString(const std::string &value);
+    virtual void visitArray(const std::vector<std::string> &value);
+    virtual void visitMap(const std::map<std::string, std::string> &value);
+    void reset();
+    XmlNodeSetHelper result() const;
+protected:
+    void setResult(XmlNodeSetHelper result);
+private:
+    std::string name_;
+    XmlNodeSetHelper result_;
 };
 
 class XmlInfoCollector {

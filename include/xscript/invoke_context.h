@@ -57,6 +57,8 @@ public:
     boost::shared_ptr<Meta> meta() const;
     void setMeta(const boost::shared_ptr<Meta> &meta);
 
+    bool isMeta() const;
+
 private:
     struct ContextData;
     std::auto_ptr<ContextData> ctx_data_;

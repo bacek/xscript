@@ -10,10 +10,11 @@
 #include <boost/utility.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <xscript/typed_map.h>
+
 namespace xscript {
 
 class StateImpl;
-class TypedValue;
 
 class State : private boost::noncopyable {
 public:
@@ -148,6 +149,18 @@ State::as<std::string>(const std::string &name) const {
 template<> inline void
 State::set<const std::string&>(const std::string &name, const std::string &val) {
     setString(name, val);
+}
+
+template<> inline void
+State::set<const std::vector<std::string>&>(
+    const std::string &name, const std::vector<std::string> &val) {
+    setTypedValue(name, TypedValue(val));
+}
+
+template<> inline void
+State::set<const std::map<std::string, std::string>&>(
+    const std::string &name, const std::map<std::string, std::string> &val) {
+    setTypedValue(name, TypedValue(val));
 }
 
 } // namespace xscript

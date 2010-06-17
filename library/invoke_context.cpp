@@ -22,9 +22,9 @@ namespace xscript {
 
 struct InvokeContext::ContextData {
     ContextData() : tagged_(false), result_type_(ERROR),
-        have_cached_copy_(false), parent_(NULL), meta_(new Meta) {}
-    ContextData(InvokeContext *parent) :  tagged_(false), result_type_(ERROR),
-        have_cached_copy_(false), parent_(parent), meta_(new Meta) {}
+        have_cached_copy_(false), base_(NULL), meta_(new Meta) {}
+    ContextData(InvokeContext *base) :  tagged_(false), result_type_(ERROR),
+        have_cached_copy_(false), base_(base), meta_(new Meta) {}
     XmlDocSharedHelper doc_;
     XmlDocSharedHelper meta_doc_;
     bool tagged_;
@@ -34,7 +34,7 @@ struct InvokeContext::ContextData {
     boost::shared_ptr<Context> local_context_;
     boost::shared_ptr<TagKey> key_;
 
-    InvokeContext* parent_;
+    InvokeContext* base_;
     boost::shared_ptr<Meta> meta_;
 };
 
@@ -50,7 +50,7 @@ InvokeContext::~InvokeContext() {
 
 InvokeContext*
 InvokeContext::parent(Context *ctx) const {
-    return ctx_data_->parent_ ? ctx_data_->parent_ : ctx->invokeContext();
+    return ctx_data_->base_ ? ctx_data_->base_ : ctx->invokeContext();
 }
 
 XmlDocSharedHelper
@@ -175,6 +175,11 @@ InvokeContext::meta() const {
 void
 InvokeContext::setMeta(const boost::shared_ptr<Meta> &meta) {
     ctx_data_->meta_ = meta;
+}
+
+bool
+InvokeContext::isMeta() const {
+    return NULL != ctx_data_->base_;
 }
 
 } // namespace xscript

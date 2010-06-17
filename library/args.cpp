@@ -85,7 +85,7 @@ ArgList::addAs(const std::string &type, const std::string &value) {
 
 void
 ArgList::addAs(const std::string &type, const TypedValue &value) {
-    addAs(type.empty() ? value.stringType() : type, value.value());
+    addAs(type.empty() ? value.stringType() : type, value.asString());
 }
 
 } // namespace xscript

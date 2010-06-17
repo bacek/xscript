@@ -4,6 +4,8 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include <libxml/xpathInternals.h>
+
 #include "xscript/logger.h"
 #include "xscript/meta.h"
 #include "xscript/range.h"
@@ -34,65 +36,51 @@ MetaCore::reset() {
     elapsed_time_ = undefinedElapsedTime();
 }
 
+static const Range ELAPSED_TIME_RANGE = createRange("Elapsed-time:");
+
 bool
 MetaCore::parse(const char *buf, boost::uint32_t size) {
-    reset();
-    Range data(buf, buf + size);
-    while(!data.empty()) {
-        Range chunk;
-        split(data, Parser::RN_RANGE, chunk, data);
-        if (chunk.empty()) {
-            break;
+    try {
+        reset();
+        Range data(buf, buf + size);
+
+        if (startsWith(data, ELAPSED_TIME_RANGE)) {
+            Range chunk;
+            split(data, Parser::RN_RANGE, chunk, data);
+            Range prefix, key;
+            split(chunk, ':', prefix, key);
+            if (key.empty()) {
+                log()->error("incorrect elapsed time format in block cache data");
+                return false;
+            }
+            elapsed_time_ = static_cast<int>(*((boost::int32_t*)key.begin()));
         }
 
-        Range prefix, key;
-        split(chunk, ':', prefix, key);
-        if (!prefix.empty() && strncmp(prefix.begin(), "Elapsed-time", sizeof("Elapsed-time") - 1) == 0) {
-            elapsed_time_ = boost::lexical_cast<int>(std::string(key.begin(), key.size()));
-            continue;
-        }
+        const char* buf_tmp = data.begin();
+        const char* buf_end = data.end();
+        while (buf_tmp < buf_end) {
+            boost::uint32_t var = *((boost::uint32_t*)buf_tmp);
+            buf_tmp += sizeof(boost::uint32_t);
+            std::string key(buf_tmp, var);
+            buf_tmp += var;
 
-        if (prefix.empty() || strncmp(prefix.begin(), "Key", sizeof("Key") - 1) != 0) {
-            log()->error("incorrect key prefix while parsing block cache data");
-            return false;
-        }
+            var = *((boost::uint32_t*)buf_tmp);
+            buf_tmp += sizeof(boost::uint32_t);
+            unsigned int type = static_cast<unsigned int>(var);
 
-        split(data, Parser::RN_RANGE, chunk, data);
-        if (chunk.empty()) {
-            log()->error("incorrect format while parsing block cache data");
-            return false;
-        }
+            var = *((boost::uint32_t*)buf_tmp);
+            buf_tmp += sizeof(boost::uint32_t);
+            Range value(buf_tmp, buf_tmp + var);
+            buf_tmp += var;
 
-        Range type;
-        split(chunk, ':', prefix, type);
-        if (prefix.empty() || strncmp(prefix.begin(), "Type", sizeof("Type") - 1) != 0) {
-            log()->error("incorrect type prefix while parsing block cache data");
-            return false;
+            if (!key.empty()) {
+                data_.insert(key, TypedValue(type, value));
+            }
         }
-
-        if (type.empty() || strncmp(type.begin(), "string", sizeof("string") - 1) != 0) {
-            log()->error("unknown meta type while parsing block cache data");
-            return false;
-        }
-
-        split(data, Parser::RN_RANGE, chunk, data);
-        if (chunk.empty()) {
-            log()->error("incorrect format while parsing block cache data");
-            return false;
-        }
-
-        Range value;
-        split(chunk, ':', prefix, value);
-        if (prefix.empty() || strncmp(prefix.begin(), "Value", sizeof("Value") - 1) != 0) {
-            log()->error("incorrect value prefix while parsing block cache data");
-            return false;
-        }
-
-        if (!key.empty()) {
-            data_.insert(std::make_pair(
-                std::string(key.begin(), key.size()),
-                std::string(value.begin(), value.size())));
-        }
+    }
+    catch(const std::exception &e) {
+        log()->error("exception caught while parsing block cache data: %s", e.what());
+        return false;
     }
     return true;
 }
@@ -101,21 +89,24 @@ void
 MetaCore::serialize(std::string &buf) const {
     if (undefinedElapsedTime() != elapsed_time_) {
         buf.append("Elapsed-time:");
-        buf.append(boost::lexical_cast<std::string>(elapsed_time_));
+        boost::int32_t var = elapsed_time_;
+        buf.append((char*)&var, sizeof(var));
         buf.append("\r\n");
     }
-    for(MapType::const_iterator it = data_.begin();
-        it != data_.end();
+    const std::map<std::string, TypedValue>& values = data_.values();
+    for (std::map<std::string, TypedValue>::const_iterator it = values.begin();
+        it != values.end();
         ++it) {
-        buf.append("Key:");
+        boost::uint32_t var = it->first.size();
+        buf.append((char*)&var, sizeof(var));
         buf.append(it->first);
-        buf.append("\r\n");
-        buf.append("Type:");
-        buf.append("string");
-        buf.append("\r\n");
-        buf.append("Value:");
-        buf.append(it->second);
-        buf.append("\r\n");
+        var = it->second.type();
+        buf.append((char*)&var, sizeof(var));
+        std::string res;
+        it->second.serialize(res);
+        var = res.size();
+        buf.append((char*)&var, sizeof(var));
+        buf.append(res);
     }
 }
 
@@ -168,52 +159,94 @@ Meta::getCore() const {
     return core_;
 }
 
-const std::string&
+std::string
 Meta::get(const std::string &name, const std::string &default_value) const {
-    MapType::const_iterator it = child_.find(name);
-    if (child_.end() != it) {
-        return it->second;
+    TypedValue value;
+    if (child_.find(name, value)) {
+        return value.asString();
     }
-    if (core_.get()) {
-        it = core_->data_.find(name);
-        if (core_->data_.end() != it) {
-            return it->second;
-        }
+    if (core_.get() && core_->data_.find(name, value)) {
+        return value.asString();
     }
     return default_value;
 }
 
-void
-Meta::set2Core(const std::string &name, const std::string &value) {
-    if (!core_writable_) {
-        return;
+bool
+Meta::getTypedValue(const std::string &name, TypedValue &value) const {
+    if (child_.find(name, value)) {
+        return true;
     }
-    if (!allowKey(name)) {
-        throw std::runtime_error(name + " key is not allowed");
+    if (core_.get() && core_->data_.find(name, value)) {
+        return true;
     }
-    initCore();
-    (core_->data_)[name] = value;
+    return false;
 }
 
 void
-Meta::set2Child(const std::string &name, const std::string &value) {
+Meta::setTypedValue(const std::string &name, const TypedValue &value) {
     if (!allowKey(name)) {
         throw std::runtime_error(name + " key is not allowed");
     }
-    child_[name] = value;
+    if (core_writable_) {
+        initCore();
+        core_->data_.insert(name, value);
+    }
+    else {
+        child_.insert(name, value);
+    }
 }
 
 void
-Meta::set(const std::string &name, const std::string &value) {
-    core_writable_ ? set2Core(name, value) : set2Child(name, value);
+Meta::setBool(const std::string &name, bool value) {
+    setTypedValue(name, TypedValue(value));
+}
+
+void
+Meta::setLong(const std::string &name, boost::int32_t value) {
+    setTypedValue(name, TypedValue(value));
+}
+
+void
+Meta::setULong(const std::string &name, boost::uint32_t value) {
+    setTypedValue(name, TypedValue(value));
+}
+
+void
+Meta::setLongLong(const std::string &name, boost::int64_t value) {
+    setTypedValue(name, TypedValue(value));
+}
+
+void
+Meta::setULongLong(const std::string &name, boost::uint64_t value) {
+    setTypedValue(name, TypedValue(value));
+}
+
+void
+Meta::setDouble(const std::string &name, double value) {
+    setTypedValue(name, TypedValue(value));
+}
+
+void
+Meta::setString(const std::string &name, const std::string &value) {
+    setTypedValue(name, TypedValue(value));
+}
+
+void
+Meta::setArray(const std::string &name, const std::vector<std::string> &value) {
+    setTypedValue(name, TypedValue(value));
+}
+
+void
+Meta::setMap(const std::string &name, const std::map<std::string, std::string> &value) {
+    setTypedValue(name, TypedValue(value));
 }
 
 bool
 Meta::has(const std::string &name) const {
-    if (child_.end() != child_.find(name)) {
+    if (child_.has(name)) {
         return true;
     }
-    if (core_.get() && core_->data_.end() != core_->data_.find(name)) {
+    if (core_.get() && core_->data_.has(name)) {
         return true;
     }
     return false;
@@ -273,18 +306,22 @@ Meta::allowKey(const std::string &key) const {
     return true;
 }
 
-static void processNewMetaNode(const std::string &name, const std::string &value,
+static void processNewMetaNode(const std::string &name, const TypedValue &value,
     XmlNodeHelper &root, xmlNodePtr &last_insert_node) {
-    if (last_insert_node) {
-        XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)name.c_str()));
-        xmlNodeSetContent(node.get(), (const xmlChar*)XmlUtils::escape(value).c_str());
-        xmlAddNextSibling(last_insert_node, node.get());
-        last_insert_node = node.release();
-    }
-    else {
-        root = XmlNodeHelper(xmlNewNode(NULL, (const xmlChar*)name.c_str()));
-        xmlNodeSetContent(root.get(), (const xmlChar*)XmlUtils::escape(value).c_str());
-        last_insert_node = root.get();
+
+    XmlTypedVisitor visitor(name);
+    value.visit(&visitor, true);
+    XmlNodeSetHelper res = visitor.result();
+    while (res->nodeNr > 0) {
+        if (last_insert_node) {
+            xmlAddNextSibling(last_insert_node, res->nodeTab[0]);
+            last_insert_node = res->nodeTab[0];
+        }
+        else {
+            root = XmlNodeHelper(res->nodeTab[0]);
+            last_insert_node = root.get();
+        }
+        xmlXPathNodeSetRemove(res.get(), 0);
     }
 }
 
@@ -293,25 +330,23 @@ Meta::getXml() const {
     XmlNodeHelper result;
     xmlNodePtr last_insert_node = NULL;
     if (MetaCore::undefinedElapsedTime() != getElapsedTime()) {
-        processNewMetaNode(ELAPSED_TIME_META_KEY,
-            boost::lexical_cast<std::string>(getElapsedTime()),
-            result, last_insert_node);
+        TypedValue value(boost::lexical_cast<std::string>(getElapsedTime()));
+        processNewMetaNode(ELAPSED_TIME_META_KEY, value, result, last_insert_node);
     }
 
     if (undefinedExpireTime() != expire_time_) {
-        processNewMetaNode(EXPIRE_TIME_META_KEY,
-            boost::lexical_cast<std::string>(expire_time_),
-            result, last_insert_node);
+        TypedValue value(boost::lexical_cast<std::string>(expire_time_));
+        processNewMetaNode(EXPIRE_TIME_META_KEY, value, result, last_insert_node);
     }
 
-    if (undefinedLastModified() != last_modified_) {
-        processNewMetaNode(LAST_MODIFIED_META_KEY,
-            boost::lexical_cast<std::string>(last_modified_),
-            result, last_insert_node);
+    if (undefinedExpireTime() != last_modified_) {
+        TypedValue value(boost::lexical_cast<std::string>(last_modified_));
+        processNewMetaNode(LAST_MODIFIED_META_KEY, value, result, last_insert_node);
     }
 
-    for(MapType::const_iterator it = child_.begin();
-        it != child_.end();
+    const std::map<std::string, TypedValue> &values = child_.values();
+    for(std::map<std::string, TypedValue>::const_iterator it = values.begin();
+        it != values.end();
         ++it) {
         if (!allowKey(it->first)) {
             continue;
@@ -323,10 +358,11 @@ Meta::getXml() const {
         return result;
     }
 
-    for(MapType::const_iterator it = core_->data_.begin();
-        it != core_->data_.end();
+    const std::map<std::string, TypedValue> &core_values = core_->data_.values();
+    for(std::map<std::string, TypedValue>::const_iterator it = core_values.begin();
+        it != core_values.end();
         ++it) {
-        if (child_.end() != child_.find(it->first)) {
+        if (child_.has(it->first)) {
             continue;
         }
         processNewMetaNode(it->first, it->second, result, last_insert_node);

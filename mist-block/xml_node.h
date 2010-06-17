@@ -5,6 +5,8 @@
 
 namespace xscript {
 
+class TypedValue;
+
 class XmlNodeCommon {
 protected:
     XmlNodeCommon();
@@ -39,6 +41,7 @@ public:
 class XmlChildNode : public XmlNodeCommon {
 public:
     XmlChildNode(xmlNodePtr parent, const char* name, const char* val);
+    XmlChildNode(xmlNodePtr parent, const char* name, const TypedValue &val);
 };
 
 } // namespace xscript

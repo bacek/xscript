@@ -538,7 +538,7 @@ PageCacheData::size() const {
     return 0;
 }
 
-const boost::uint32_t BlockCacheData::SIGNATURE = 0xffffff1a;
+const boost::uint32_t BlockCacheData::SIGNATURE = 0xffffff2a;
 const boost::uint32_t PageCacheData::SIGNATURE = 0xffffff0b;
 
 BlockCacheData::BlockCacheData()
