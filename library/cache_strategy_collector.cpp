@@ -40,11 +40,15 @@ public:
             bool need_swap = false;
             boost::mutex::scoped_lock lock(mutex);
             typedef CacheStrategyCollector::StrategyMapType::iterator StrategyIterator;
-            for(StrategyIterator it = collector_->page_strategies_.begin();
+            for (StrategyIterator it = collector_->page_strategies_.begin();
                 it != collector_->page_strategies_.end();
                 ++it) {
                 StrategyIterator it_new = new_strategies.find(it->first);
-                if (new_strategies.end() == it_new || it->second->key() != it_new->second->key()) {
+                if (new_strategies.end() == it_new) {
+                    invalid_strategies.insert(*it);
+                    need_swap = true;
+                }
+                else if (it->second->key() != it_new->second->key()) {
                     invalid_strategies.insert(*it);
                     strategies.insert(*it_new);
                     need_swap = true;
@@ -54,7 +58,7 @@ public:
                 }
             }
 
-            for(StrategyIterator it = new_strategies.begin();
+            for (StrategyIterator it = new_strategies.begin();
                 it != new_strategies.end();
                 ++it) {
                 StrategyIterator it_new = strategies.find(it->first);
