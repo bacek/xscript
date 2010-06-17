@@ -2,11 +2,11 @@
 
 #include <stdexcept>
 
-#include <boost/tokenizer.hpp>
-
 #include "xscript/algorithm.h"
 #include "xscript/string_utils.h"
 #include "xscript/typed_map.h"
+
+#include "internal/parser.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -381,11 +381,10 @@ ArrayTypedValue::ArrayTypedValue(const std::vector<std::string> &value) : value_
 {}
 
 ArrayTypedValue::ArrayTypedValue(const Range &value) {
-    typedef boost::char_separator<char> Separator;
-    typedef boost::tokenizer<Separator> Tokenizer;
-    Tokenizer tok(value, Separator("\r\n"));
-    for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
-        value_.push_back(*it);
+    Range tail = value;
+    Range head;
+    while (split(tail, Parser::RN_RANGE, head, tail)) {
+        value_.push_back(std::string(head.begin(), head.size()));
     }
 }
 
@@ -433,18 +432,18 @@ MapTypedValue::MapTypedValue(const std::map<std::string, std::string> &value) :
 {}
 
 MapTypedValue::MapTypedValue(const Range &value) {
-    typedef boost::char_separator<char> Separator;
-    typedef boost::tokenizer<Separator> Tokenizer;
-    Tokenizer tok(value, Separator("\r\n"));
     int i = 0;
-    Tokenizer::iterator key;
-    for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
+    Range tail = value;
+    Range head, key;
+    while (split(tail, Parser::RN_RANGE, head, tail)) {
         if (i == 0) {
-            key = it;
+            key = head;
             ++i;
         }
         else {
-            value_.insert(std::make_pair(*key, *it));
+            value_.insert(std::make_pair(
+                std::string(key.begin(), key.size()),
+                std::string(head.begin(), head.size())));
             --i;
         }
     }
