@@ -24,7 +24,22 @@ static const std::string ELAPSED_TIME_META_KEY = "elapsed-time";
 static const std::string EXPIRE_TIME_META_KEY = "expire-time";
 static const std::string LAST_MODIFIED_META_KEY = "last-modified";
 
-MetaCore::MetaCore() : elapsed_time_(undefinedElapsedTime())
+struct MetaCore::MetaCoreData {
+    MetaCoreData() : elapsed_time_(MetaCore::undefinedElapsedTime())
+    {}
+    ~MetaCoreData()
+    {}
+
+    void reset() {
+        data_.clear();
+        elapsed_time_ = MetaCore::undefinedElapsedTime();
+    }
+
+    TypedMap data_;
+    int elapsed_time_;
+};
+
+MetaCore::MetaCore() : core_data_(new MetaCoreData())
 {}
 
 MetaCore::~MetaCore()
@@ -32,8 +47,7 @@ MetaCore::~MetaCore()
 
 void
 MetaCore::reset() {
-    data_.clear();
-    elapsed_time_ = undefinedElapsedTime();
+    core_data_->reset();
 }
 
 static const Range ELAPSED_TIME_RANGE = createRange("Elapsed-time:");
@@ -53,7 +67,7 @@ MetaCore::parse(const char *buf, boost::uint32_t size) {
                 log()->error("incorrect elapsed time format in block cache data");
                 return false;
             }
-            elapsed_time_ = static_cast<int>(*((boost::int32_t*)key.begin()));
+            core_data_->elapsed_time_ = static_cast<int>(*((boost::int32_t*)key.begin()));
         }
 
         const char* buf_tmp = data.begin();
@@ -74,7 +88,7 @@ MetaCore::parse(const char *buf, boost::uint32_t size) {
             buf_tmp += var;
 
             if (!key.empty()) {
-                data_.insert(key, TypedValue(type, value));
+                core_data_->data_.insert(key, TypedValue(type, value));
             }
         }
     }
@@ -87,13 +101,13 @@ MetaCore::parse(const char *buf, boost::uint32_t size) {
 
 void
 MetaCore::serialize(std::string &buf) const {
-    if (undefinedElapsedTime() != elapsed_time_) {
+    if (undefinedElapsedTime() != core_data_->elapsed_time_) {
         buf.append("Elapsed-time:");
-        boost::int32_t var = elapsed_time_;
+        boost::int32_t var = core_data_->elapsed_time_;
         buf.append((char*)&var, sizeof(var));
         buf.append("\r\n");
     }
-    const std::map<std::string, TypedValue>& values = data_.values();
+    const std::map<std::string, TypedValue>& values = core_data_->data_.values();
     for (std::map<std::string, TypedValue>::const_iterator it = values.begin();
         it != values.end();
         ++it) {
@@ -115,8 +129,68 @@ MetaCore::undefinedElapsedTime() {
     return -1;
 }
 
-Meta::Meta() : expire_time_(undefinedExpireTime()), last_modified_(undefinedLastModified()),
-        cache_params_writable_(false), core_writable_(true)
+bool
+MetaCore::find(const std::string &name, TypedValue &result) const {
+    return core_data_->data_.find(name, result);
+}
+
+void
+MetaCore::insert(const std::string &name, const TypedValue &value) {
+    core_data_->data_.insert(name, value);
+}
+
+bool
+MetaCore::has(const std::string &name) const {
+    return core_data_->data_.has(name);
+}
+
+time_t
+MetaCore::getElapsedTime() const {
+    return core_data_->elapsed_time_;
+}
+
+void
+MetaCore::setElapsedTime(time_t time) {
+    core_data_->elapsed_time_ = time;
+}
+
+const std::map<std::string, TypedValue>&
+MetaCore::values() const {
+    return core_data_->data_.values();
+}
+
+struct Meta::MetaData {
+    MetaData() : expire_time_(Meta::undefinedExpireTime()),
+            last_modified_(Meta::undefinedLastModified()),
+            cache_params_writable_(false), core_writable_(true)
+    {}
+    ~MetaData()
+    {}
+
+    void reset() {
+        core_.reset();
+        child_.clear();
+        cache_params_writable_ = false;
+        core_writable_ = true;
+        expire_time_ = Meta::undefinedExpireTime();
+        last_modified_ = Meta::undefinedLastModified();
+    }
+
+    void initCore() {
+        if (NULL == core_.get()) {
+            core_ = boost::shared_ptr<MetaCore>(new MetaCore);
+        }
+    }
+
+    boost::shared_ptr<MetaCore> core_;
+    TypedMap child_;
+    time_t expire_time_;
+    time_t last_modified_;
+    bool cache_params_writable_;
+    bool core_writable_;
+};
+
+Meta::Meta() : meta_data_(new MetaData())
 {}
 
 Meta::~Meta()
@@ -124,12 +198,7 @@ Meta::~Meta()
 
 void
 Meta::reset() {
-    core_.reset();
-    child_.clear();
-    cache_params_writable_ = false;
-    core_writable_ = true;
-    expire_time_ = undefinedExpireTime();
-    last_modified_ = undefinedLastModified();
+    meta_data_->reset();
 }
 
 time_t
@@ -144,28 +213,26 @@ Meta::undefinedLastModified() {
 
 void
 Meta::initCore() {
-    if (NULL == core_.get()) {
-        core_ = boost::shared_ptr<MetaCore>(new MetaCore);
-    }
+    meta_data_->initCore();
 }
 
 void
 Meta::setCore(const boost::shared_ptr<MetaCore> &core) {
-    core_ = core;
+    meta_data_->core_ = core;
 }
 
 boost::shared_ptr<MetaCore>
 Meta::getCore() const {
-    return core_;
+    return meta_data_->core_;
 }
 
 std::string
 Meta::get(const std::string &name, const std::string &default_value) const {
     TypedValue value;
-    if (child_.find(name, value)) {
+    if (meta_data_->child_.find(name, value)) {
         return value.asString();
     }
-    if (core_.get() && core_->data_.find(name, value)) {
+    if (meta_data_->core_.get() && meta_data_->core_->find(name, value)) {
         return value.asString();
     }
     return default_value;
@@ -173,10 +240,10 @@ Meta::get(const std::string &name, const std::string &default_value) const {
 
 bool
 Meta::getTypedValue(const std::string &name, TypedValue &value) const {
-    if (child_.find(name, value)) {
+    if (meta_data_->child_.find(name, value)) {
         return true;
     }
-    if (core_.get() && core_->data_.find(name, value)) {
+    if (meta_data_->core_.get() && meta_data_->core_->find(name, value)) {
         return true;
     }
     return false;
@@ -187,12 +254,12 @@ Meta::setTypedValue(const std::string &name, const TypedValue &value) {
     if (!allowKey(name)) {
         throw std::runtime_error(name + " key is not allowed");
     }
-    if (core_writable_) {
+    if (meta_data_->core_writable_) {
         initCore();
-        core_->data_.insert(name, value);
+        meta_data_->core_->insert(name, value);
     }
     else {
-        child_.insert(name, value);
+        meta_data_->child_.insert(name, value);
     }
 }
 
@@ -243,10 +310,10 @@ Meta::setMap(const std::string &name, const std::map<std::string, std::string> &
 
 bool
 Meta::has(const std::string &name) const {
-    if (child_.has(name)) {
+    if (meta_data_->child_.has(name)) {
         return true;
     }
-    if (core_.get() && core_->data_.has(name)) {
+    if (meta_data_->core_.get() && meta_data_->core_->has(name)) {
         return true;
     }
     return false;
@@ -258,42 +325,44 @@ Meta::setElapsedTime(int time) {
         throw std::runtime_error("Incorrect elapsed time value");
     }
     initCore();
-    core_->elapsed_time_ = time;
+    meta_data_->core_->setElapsedTime(time);
 }
 
 int
 Meta::getElapsedTime() const {
-    return core_.get() ? core_->elapsed_time_ : MetaCore::undefinedElapsedTime();
+    return meta_data_->core_.get() ?
+        meta_data_->core_->getElapsedTime() :
+            MetaCore::undefinedElapsedTime();
 }
 
 time_t
 Meta::getExpireTime() const {
-    return expire_time_;
+    return meta_data_->expire_time_;
 }
 
 void
 Meta::setExpireTime(time_t time) {
-    if (cache_params_writable_) {
-        expire_time_ = time;
+    if (meta_data_->cache_params_writable_) {
+        meta_data_->expire_time_ = time;
     }
 }
 
 time_t
 Meta::getLastModified() const {
-    return last_modified_;
+    return meta_data_->last_modified_;
 }
 
 void
 Meta::setLastModified(time_t time) {
-    if (cache_params_writable_) {
-        last_modified_ = time;
+    if (meta_data_->cache_params_writable_) {
+        meta_data_->last_modified_ = time;
     }
 }
 
 void
 Meta::setCacheParams(time_t expire, time_t last_modified) {
-    expire_time_ = expire;
-    last_modified_ = last_modified;
+    meta_data_->expire_time_ = expire;
+    meta_data_->last_modified_ = last_modified;
 }
 
 bool
@@ -334,17 +403,17 @@ Meta::getXml() const {
         processNewMetaNode(ELAPSED_TIME_META_KEY, value, result, last_insert_node);
     }
 
-    if (undefinedExpireTime() != expire_time_) {
-        TypedValue value(boost::lexical_cast<std::string>(expire_time_));
+    if (undefinedExpireTime() != meta_data_->expire_time_) {
+        TypedValue value(boost::lexical_cast<std::string>(meta_data_->expire_time_));
         processNewMetaNode(EXPIRE_TIME_META_KEY, value, result, last_insert_node);
     }
 
-    if (undefinedExpireTime() != last_modified_) {
-        TypedValue value(boost::lexical_cast<std::string>(last_modified_));
+    if (undefinedExpireTime() != meta_data_->last_modified_) {
+        TypedValue value(boost::lexical_cast<std::string>(meta_data_->last_modified_));
         processNewMetaNode(LAST_MODIFIED_META_KEY, value, result, last_insert_node);
     }
 
-    const std::map<std::string, TypedValue> &values = child_.values();
+    const std::map<std::string, TypedValue> &values = meta_data_->child_.values();
     for(std::map<std::string, TypedValue>::const_iterator it = values.begin();
         it != values.end();
         ++it) {
@@ -354,15 +423,15 @@ Meta::getXml() const {
         processNewMetaNode(it->first, it->second, result, last_insert_node);
     }
 
-    if (NULL == core_.get()) {
+    if (NULL == meta_data_->core_.get()) {
         return result;
     }
 
-    const std::map<std::string, TypedValue> &core_values = core_->data_.values();
+    const std::map<std::string, TypedValue> &core_values = meta_data_->core_->values();
     for(std::map<std::string, TypedValue>::const_iterator it = core_values.begin();
         it != core_values.end();
         ++it) {
-        if (child_.has(it->first)) {
+        if (meta_data_->child_.has(it->first)) {
             continue;
         }
         processNewMetaNode(it->first, it->second, result, last_insert_node);
@@ -372,12 +441,12 @@ Meta::getXml() const {
 
 void
 Meta::cacheParamsWritable(bool flag) {
-    cache_params_writable_ = flag;
+    meta_data_->cache_params_writable_ = flag;
 }
 
 void
 Meta::coreWritable(bool flag) {
-    core_writable_ = flag;
+    meta_data_->core_writable_ = flag;
 }
 
 } // namespace xscript

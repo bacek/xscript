@@ -20,12 +20,18 @@ public:
     bool parse(const char *buf, boost::uint32_t size);
     void serialize(std::string &buf) const;
     static int undefinedElapsedTime();
+    bool find(const std::string &name, TypedValue &result) const;
+    void insert(const std::string &name, const TypedValue &value);
+    bool has(const std::string &name) const;
+    time_t getElapsedTime() const;
+    void setElapsedTime(time_t time);
+    const std::map<std::string, TypedValue>& values() const;
     friend class Meta;
 private:
     void reset();
 private:
-    TypedMap data_;
-    int elapsed_time_;
+    struct MetaCoreData;
+    std::auto_ptr<MetaCoreData> core_data_;
 };
 
 class Meta : private boost::noncopyable {
@@ -77,12 +83,8 @@ private:
     bool allowKey(const std::string &key) const;
 
 private:
-    boost::shared_ptr<MetaCore> core_;
-    TypedMap child_;
-    time_t expire_time_;
-    time_t last_modified_;
-    bool cache_params_writable_;
-    bool core_writable_;
+    struct MetaData;
+    std::auto_ptr<MetaData> meta_data_;
 };
 
 template<typename Type> inline void
