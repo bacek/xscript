@@ -1051,12 +1051,12 @@ Block::log() const {
 
 void
 Block::startTimer(Context *ctx) {
-    (void)ctx;
+    ctx->startTimer(TimeoutCounter::UNLIMITED_TIME);
 }
 
 void
 Block::stopTimer(Context *ctx) {
-    (void)ctx;
+    ctx->stopTimer();
 }
 
 std::string

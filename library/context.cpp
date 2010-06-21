@@ -270,6 +270,7 @@ struct Context::ContextData {
     
 };
 
+//TODO: move block_timers_ to invoke context
 boost::thread_specific_ptr<std::list<TimeoutCounter> > Context::ContextData::block_timers_;
 
 Context::Context(const boost::shared_ptr<Script> &script,
