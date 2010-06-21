@@ -65,6 +65,10 @@ HtmlWriter::addHeaders(Response *response) {
     }
     std::string type = stylesheet_->contentType();
     if (type.find("text/") == 0) {
+        std::string::size_type pos = type.find(';');
+        if (std::string::npos != pos) {
+            type.erase(pos);
+        }
         std::stringstream stream;
         stream << type << "; charset=" << stylesheet_->outputEncoding();
         response->setHeader("Content-type", stream.str());
