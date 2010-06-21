@@ -36,6 +36,8 @@ public:
     static const char* statusToString(short status);
     
     static const std::string NORMALIZE_HEADER_METHOD;
+    static const std::string USER_AGENT_HEADER_NAME;
+    static const std::string ACCEPT_HEADER_NAME;
 private:
     HttpUtils();
     virtual ~HttpUtils();

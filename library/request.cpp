@@ -11,6 +11,8 @@
 #include "xscript/authorizer.h"
 #include "xscript/encoder.h"
 #include "xscript/functors.h"
+#include "xscript/http_utils.h"
+#include "xscript/logger.h"
 #include "xscript/message_interface.h"
 #include "xscript/range.h"
 #include "xscript/request.h"
@@ -443,7 +445,16 @@ class Request::AttachHandler : public MessageHandler {
                 StringUtils::parse(createRange(query), request->data_->args_, enc.get());
             }
         }
-        request->data_->is_bot_ = Authorizer::instance()->isBot(request->getHeader("User-Agent"));
+
+        if (request->getHeader(HttpUtils::ACCEPT_HEADER_NAME).empty()) {
+            log()->info("Bot detected with empty accept header");
+            request->data_->is_bot_ = true;
+        }
+        else {
+            request->data_->is_bot_ = Authorizer::instance()->isBot(
+                request->getHeader(HttpUtils::USER_AGENT_HEADER_NAME));
+        }
+
         return CONTINUE;
     }
 };

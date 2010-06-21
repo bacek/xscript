@@ -93,6 +93,8 @@ HttpDateUtils::expires(boost::uint32_t delta) {
 }
 
 const std::string HttpUtils::NORMALIZE_HEADER_METHOD = "HTTP_UTILS_NORMALIZE_HEADER_METHOD";
+const std::string HttpUtils::USER_AGENT_HEADER_NAME = "User-Agent";
+const std::string HttpUtils::ACCEPT_HEADER_NAME = "Accept";
 
 HttpUtils::HttpUtils() {
 }

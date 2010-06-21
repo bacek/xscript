@@ -27,6 +27,7 @@ public:
     virtual void init(const Config *config);
     virtual boost::shared_ptr<AuthContext> checkAuth(Context *ctx);
     virtual void redirectToAuth(const Context *ctx, const AuthContext *auth) const;
+    //TODO: change interface to bool isBot(const Request *request)
     virtual bool isBot(const std::string &user_agent);
     
 private:
