@@ -32,9 +32,8 @@ public:
     virtual ~ComplexTypedValue();
     virtual void visit(TypedValueVisitor *visitor) const = 0;
     virtual const std::string& stringType() const = 0;
-    virtual std::string asString() const = 0;
+    virtual const std::string& asString() const = 0;
     virtual void serialize(std::string &result) const = 0;
-    virtual ComplexTypedValue* clone() const = 0;
 };
 
 class ArrayTypedValue : public ComplexTypedValue {
@@ -44,9 +43,8 @@ public:
     virtual ~ArrayTypedValue();
     virtual void visit(TypedValueVisitor *visitor) const;
     virtual const std::string& stringType() const;
-    virtual std::string asString() const;
+    virtual const std::string& asString() const;
     virtual void serialize(std::string &result) const;
-    virtual ComplexTypedValue* clone() const;
 private:
     static const std::string TYPE;
     std::vector<std::string> value_;
@@ -59,9 +57,8 @@ public:
     virtual ~MapTypedValue();
     virtual void visit(TypedValueVisitor *visitor) const;
     virtual const std::string& stringType() const;
-    virtual std::string asString() const;
+    virtual const std::string& asString() const;
     virtual void serialize(std::string &result) const;
-    virtual ComplexTypedValue* clone() const;
 private:
     static const std::string TYPE;
     std::map<std::string, std::string> value_;
@@ -84,14 +81,17 @@ public:
     TypedValue(unsigned int type, const Range &value);
 
     unsigned int type() const;
+    bool undefined() const;
     const std::string& stringType() const;
     ComplexTypedValue* complexType() const;
     bool asBool() const;
-    std::string asString() const;
+    const std::string& asString() const;
     const std::string& simpleValue() const;
     void serialize(std::string &result) const;
-    void visit(TypedValueVisitor *visitor, bool string_prefer) const;
+    void visit(TypedValueVisitor *visitor) const;
+    void visitAsString(TypedValueVisitor *visitor) const;
 
+    static const unsigned int TYPE_UNDEFINED = 0;
     static const unsigned int TYPE_BOOL = 1;
     static const unsigned int TYPE_LONG = 1 << 1;
     static const unsigned int TYPE_ULONG = 1 << 2;
@@ -111,7 +111,6 @@ public:
     static const std::string TYPE_STRING_STRING;
 
     friend class TypedMap;
-
 private:
     unsigned int type_;
     std::string value_;
@@ -143,8 +142,8 @@ public:
     double asDouble(const std::string &name) const;
     void setDouble(const std::string &name, double value);
 
-    std::string asString(const std::string &name) const;
-    std::string asString(const std::string &name, const std::string &default_value) const;
+    const std::string& asString(const std::string &name) const;
+    const std::string& asString(const std::string &name, const std::string &default_value) const;
     void setString(const std::string &name, const std::string &value);
 
     bool asBool(const std::string &name) const;
@@ -157,23 +156,23 @@ public:
 
     bool is(const std::string &name) const;
 
-    TypedValue find(const std::string &name) const;
-    bool find(const std::string &name, TypedValue &result) const;
+    const TypedValue& find(const std::string &name) const;
+    const TypedValue& findNoThrow(const std::string &name) const;
 
     void set(const std::string &name, const TypedValue &value);
 
 protected:
     typedef std::map<std::string, TypedValue> TypedValueMap;
-    const TypedValue& getTypedValue(const std::string &name) const;
     template<typename T> T as(const std::string &name) const;
 
 private:
+    static const TypedValue undefined_;
     TypedValueMap values_;
 };
 
 template<typename T> inline T
 TypedMap::as(const std::string &name) const {
-    std::string value = getTypedValue(name).asString();
+    const std::string& value = find(name).asString();
     if (value.empty()) {
         return static_cast<T>(0);
     }

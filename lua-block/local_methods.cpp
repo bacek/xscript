@@ -97,8 +97,8 @@ luaLocalGetTypedValue(lua_State *lua) {
         std::string key = luaReadStack<std::string>(lua, 2);
         log()->debug("luaLocalGet: %s", key.c_str());
 
-        TypedValue value;
-        if (!ctx->getLocalParam(key, value)) {
+        const TypedValue& value = ctx->getLocalParam(key);
+        if (value.undefined()) {
             lua_pushnil(lua);
             return 1;
         }

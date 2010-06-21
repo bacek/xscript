@@ -145,11 +145,6 @@ State::typedValue(const std::string &name) const {
     return impl_->typedValue(name);
 }
 
-bool
-State::typedValue(const std::string &name, TypedValue &result) const {
-    return impl_->typedValue(name, result);
-}
-
 void
 State::checkName(const std::string &name) const {
     if (name.empty()) {

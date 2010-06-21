@@ -115,7 +115,6 @@ public:
     void copy(const std::string &src, const std::string &dest);
 
     TypedValue typedValue(const std::string &name) const;
-    bool typedValue(const std::string &name, TypedValue &result) const;
 
     bool is(const std::string &name) const;
 

@@ -121,8 +121,8 @@ luaStateGetTypedValue(lua_State *lua) {
         State *state = getContext(lua)->state();
         std::string key = luaReadStack<std::string>(lua, 2);
         log()->debug("luaStateGet: %s", key.c_str());
-        TypedValue value;
-        if (!state->typedValue(key, value)) {
+        TypedValue value = state->typedValue(key);
+        if (!value.undefined()) {
             lua_pushnil(lua);
             return 1;
         }

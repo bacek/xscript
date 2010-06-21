@@ -129,11 +129,10 @@ public:
     
     bool hasLocalParam(const std::string &name) const;
     bool localParamIs(const std::string &name) const;
-    TypedValue getLocalParam(const std::string &name) const;
-    bool getLocalParam(const std::string &name, TypedValue &result) const;
-    std::string getLocalParam(const std::string &name, const std::string &default_value) const;
-    void localParams(std::map<std::string, TypedValue> &params) const;
-    const boost::shared_ptr<TypedMap>& localParams() const;
+    const TypedValue& getLocalParam(const std::string &name) const;
+    const std::string& getLocalParam(const std::string &name, const std::string &default_value) const;
+    const std::map<std::string, TypedValue>& localParams() const;
+    const boost::shared_ptr<TypedMap>& localParamsMap() const;
     
     friend class ContextStopper;
 

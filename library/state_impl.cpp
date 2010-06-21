@@ -57,7 +57,7 @@ StateImpl::values(std::map<std::string, TypedValue> &v) const {
 void
 StateImpl::copy(const std::string &src, const std::string &dest) {
     boost::mutex::scoped_lock sl(mutex_);
-    TypedValue val = data_.find(src);
+    const TypedValue& val = data_.find(src);
     data_.insert(dest, val);
 }
 
@@ -76,13 +76,7 @@ StateImpl::is(const std::string &name) const {
 TypedValue
 StateImpl::typedValue(const std::string &name) const {
     boost::mutex::scoped_lock sl(mutex_);
-    return data_.find(name);
-}
-
-bool
-StateImpl::typedValue(const std::string &name, TypedValue &result) const {
-    boost::mutex::scoped_lock sl(mutex_);
-    return data_.find(name, result);
+    return data_.findNoThrow(name);
 }
 
 } // namespace xscript

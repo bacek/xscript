@@ -725,7 +725,7 @@ MistWorker::dumpState(Context *ctx, const std::vector<std::string> &params) {
         child.setProperty("type", it->second.stringType().c_str());
         if (it->second.complexType()) {
             DumpStateTypedVisitor visitor(it->first);
-            it->second.visit(&visitor, false);
+            it->second.visitAsString(&visitor);
             XmlNodeSetHelper result = visitor.result();
             while (result->nodeNr > 0) {
                 xmlAddChild(child.getNode(), result->nodeTab[0]);

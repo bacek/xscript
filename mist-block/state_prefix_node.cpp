@@ -258,8 +258,7 @@ StateLocalNode::build(const Context* ctx) {
         return;
     }
     
-    std::map<std::string, TypedValue> params;
-    ctx->localParams(params);
+    const std::map<std::string, TypedValue>& params = ctx->localParams();
     for(std::map<std::string, TypedValue>::const_iterator it = params.begin();
         it != params.end();
         ++it) {

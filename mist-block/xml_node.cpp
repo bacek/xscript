@@ -69,7 +69,7 @@ XmlChildNode::XmlChildNode(xmlNodePtr parent, const char* name, const char* val)
 XmlChildNode::XmlChildNode(xmlNodePtr parent, const char* name, const TypedValue &val)
         : XmlNodeCommon() {
     XmlTypedVisitor visitor(name);
-    val.visit(&visitor, true);
+    val.visitAsString(&visitor);
     XmlNodeSetHelper result = visitor.result();
     while (result->nodeNr > 0) {
         xmlAddChild(parent, result->nodeTab[0]);

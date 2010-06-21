@@ -20,7 +20,7 @@ public:
     bool parse(const char *buf, boost::uint32_t size);
     void serialize(std::string &buf) const;
     static int undefinedElapsedTime();
-    bool find(const std::string &name, TypedValue &result) const;
+    const TypedValue& find(const std::string &name) const;
     void insert(const std::string &name, const TypedValue &value);
     bool has(const std::string &name) const;
     time_t getElapsedTime() const;
@@ -39,9 +39,9 @@ public:
     Meta();
     ~Meta();
 
-    std::string get(const std::string &name, const std::string &default_value) const;
+    const std::string& get(const std::string &name, const std::string &default_value) const;
     bool has(const std::string &name) const;
-    bool getTypedValue(const std::string &name, TypedValue &value) const;
+    const TypedValue& getTypedValue(const std::string &name) const;
     void setTypedValue(const std::string &name, const TypedValue &value);
 
     void setBool(const std::string &name, bool value);

@@ -129,9 +129,9 @@ MetaCore::undefinedElapsedTime() {
     return -1;
 }
 
-bool
-MetaCore::find(const std::string &name, TypedValue &result) const {
-    return core_data_->data_.find(name, result);
+const TypedValue&
+MetaCore::find(const std::string &name) const {
+    return core_data_->data_.findNoThrow(name);
 }
 
 void
@@ -226,27 +226,28 @@ Meta::getCore() const {
     return meta_data_->core_;
 }
 
-std::string
+const std::string&
 Meta::get(const std::string &name, const std::string &default_value) const {
-    TypedValue value;
-    if (meta_data_->child_.find(name, value)) {
+    const TypedValue& value = meta_data_->child_.findNoThrow(name);
+    if (!value.undefined()) {
         return value.asString();
     }
-    if (meta_data_->core_.get() && meta_data_->core_->find(name, value)) {
-        return value.asString();
+    if (meta_data_->core_.get()) {
+        const TypedValue& value = meta_data_->core_->find(name);
+        if (!value.undefined()) {
+            return value.asString();
+        }
     }
     return default_value;
 }
 
-bool
-Meta::getTypedValue(const std::string &name, TypedValue &value) const {
-    if (meta_data_->child_.find(name, value)) {
-        return true;
+const TypedValue&
+Meta::getTypedValue(const std::string &name) const {
+    const TypedValue& value = meta_data_->child_.findNoThrow(name);
+    if (!value.undefined()) {
+        return value;
     }
-    if (meta_data_->core_.get() && meta_data_->core_->find(name, value)) {
-        return true;
-    }
-    return false;
+    return meta_data_->core_.get() ? meta_data_->core_->find(name) : value;
 }
 
 void
@@ -379,7 +380,7 @@ static void processNewMetaNode(const std::string &name, const TypedValue &value,
     XmlNodeHelper &root, xmlNodePtr &last_insert_node) {
 
     XmlTypedVisitor visitor(name);
-    value.visit(&visitor, true);
+    value.visitAsString(&visitor);
     XmlNodeSetHelper res = visitor.result();
     while (res->nodeNr > 0) {
         if (last_insert_node) {

@@ -1,3 +1,11 @@
+xscript (5.71.2-1) unstable; urgency=low
+
+  * elapsed time fixed
+  * meta impl added
+  * access header check added to bot processing
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 21 Jun 2010 13:51:28 +0400
+
 xscript (5.71.1-1) unstable; urgency=low
 
   * meta refactored

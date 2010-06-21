@@ -733,28 +733,23 @@ Context::localParamIs(const std::string &name) const {
     return ctx_data_->local_params_->is(name);
 }
 
-TypedValue
+const TypedValue&
 Context::getLocalParam(const std::string &name) const {
-    return ctx_data_->local_params_->find(name);
+    return ctx_data_->local_params_->findNoThrow(name);
 }
 
-bool
-Context::getLocalParam(const std::string &name, TypedValue &result) const {
-    return ctx_data_->local_params_->find(name, result);
-}
-
-std::string
+const std::string&
 Context::getLocalParam(const std::string &name, const std::string &default_value) const {
     return ctx_data_->local_params_->asString(name, default_value);
 }
 
-void
-Context::localParams(std::map<std::string, TypedValue> &params) const {
-    params = ctx_data_->local_params_->values();
+const std::map<std::string, TypedValue>&
+Context::localParams() const {
+    return ctx_data_->local_params_->values();
 }
 
 const boost::shared_ptr<TypedMap>&
-Context::localParams() const {
+Context::localParamsMap() const {
     return ctx_data_->local_params_;
 }
 

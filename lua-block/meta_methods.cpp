@@ -179,8 +179,8 @@ luaMetaGetTypedValueInternal(lua_State *lua, bool self) {
             lua_pushnil(lua);
             return 1;
         }
-        TypedValue value;
-        if (!invoke_ctx->meta()->getTypedValue(key, value)) {
+        const TypedValue& value = invoke_ctx->meta()->getTypedValue(key);
+        if (value.undefined()) {
             lua_pushnil(lua);
             return 1;
         }

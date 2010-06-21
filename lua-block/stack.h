@@ -273,7 +273,7 @@ private:
 template<>
 inline void luaPushStack(lua_State* lua, const TypedValue &value) {
     LuaTypedVisitor visitor(lua);
-    value.visit(&visitor, false);
+    value.visit(&visitor);
 }
 
 } // namespace xscript
