@@ -65,7 +65,17 @@ TypedValue::TypedValue(unsigned int type, const Range &value) :
     type_(type)
 {
     if (type >= TYPE_BOOL && type <= TYPE_STRING) {
-        value_.assign(value.begin(), value.size());
+        const char* buf = value.begin();
+        const char* end = value.end();
+        if (end - buf < (boost::int32_t)sizeof(boost::uint32_t)) {
+            throw std::runtime_error("Incorrect format of typed value");
+        }
+        boost::uint32_t var = *((boost::uint32_t*)buf);
+        buf += sizeof(boost::uint32_t);
+        if (end - buf < (boost::int64_t)var) {
+            throw std::runtime_error("Incorrect format of typed value");
+        }
+        value_.assign(buf, var);
     }
     else if (type == TYPE_ARRAY) {
         complex_.reset(new ArrayTypedValue(value));
@@ -159,7 +169,11 @@ TypedValue::serialize(std::string &result) const {
         complex_->serialize(result);
     }
     else {
-        result.assign(value_);
+        result.clear();
+        boost::uint32_t var = value_.size();
+        result.reserve(var + sizeof(var));
+        result.append((char*)&var, sizeof(var));
+        result.append(value_);
     }
 }
 
@@ -376,15 +390,19 @@ ArrayTypedValue::ArrayTypedValue(const std::vector<std::string> &value) : value_
 {}
 
 ArrayTypedValue::ArrayTypedValue(const Range &value) {
-    if (!value.empty()) {
-        Range tail = value;
-        Range head;
-        bool flag = true;
-        do {
-            flag = split(tail, Parser::RN_RANGE, head, tail);
-            value_.push_back(std::string(head.begin(), head.size()));
+    const char* buf = value.begin();
+    const char* end = value.end();
+    while (buf < end) {
+        if (end - buf < (boost::int32_t)sizeof(boost::uint32_t)) {
+            throw std::runtime_error("Incorrect format of array typed value");
         }
-        while(flag);
+        boost::uint32_t var = *((boost::uint32_t*)buf);
+        buf += sizeof(boost::uint32_t);
+        if (end - buf < (boost::int64_t)var) {
+            throw std::runtime_error("Incorrect format of array typed value");
+        }
+        value_.push_back(std::string(buf, var));
+        buf += var;
     }
 }
 
@@ -408,13 +426,20 @@ ArrayTypedValue::asString() const {
 
 void
 ArrayTypedValue::serialize(std::string &result) const {
-    result.clear();
-    for (std::vector<std::string>::const_iterator it = value_.begin(), it_beg = it;
+    boost::uint32_t size = 0;
+    for (std::vector<std::string>::const_iterator it = value_.begin();
          it != value_.end();
          ++it) {
-        if (it != it_beg) {
-            result.append("\r\n");
-        }
+        size += it->size();
+        size += sizeof(size);
+    }
+    result.clear();
+    result.reserve(size);
+    for (std::vector<std::string>::const_iterator it = value_.begin();
+         it != value_.end();
+         ++it) {
+        boost::uint32_t var = it->size();
+        result.append((char*)&var, sizeof(var));
         result.append(*it);
     }
 }
@@ -426,25 +451,32 @@ MapTypedValue::MapTypedValue(const std::map<std::string, std::string> &value) :
 {}
 
 MapTypedValue::MapTypedValue(const Range &value) {
-    if (!value.empty()) {
-        int i = 0;
-        Range tail = value;
-        Range head, key;
-        bool flag = true;
-        do {
-            flag = split(tail, Parser::RN_RANGE, head, tail);
-            if (i == 0) {
-                key = head;
-                ++i;
-            }
-            else {
-                value_.insert(std::make_pair(
-                    std::string(key.begin(), key.size()),
-                    std::string(head.begin(), head.size())));
-                --i;
-            }
+    const char* buf = value.begin();
+    const char* end = value.end();
+    while (buf < end) {
+        if (end - buf < (boost::int32_t)sizeof(boost::uint32_t)) {
+            throw std::runtime_error("Incorrect format of map typed value");
         }
-        while(flag);
+        boost::uint32_t var = *((boost::uint32_t*)buf);
+        buf += sizeof(boost::uint32_t);
+        if (end - buf < (boost::int64_t)var) {
+            throw std::runtime_error("Incorrect format of map typed value");
+        }
+        Range key(buf, buf + var);
+        buf += var;
+        if (end - buf < (boost::int32_t)sizeof(boost::uint32_t)) {
+            throw std::runtime_error("Incorrect format of map typed value");
+        }
+        var = *((boost::uint32_t*)buf);
+        buf += sizeof(boost::uint32_t);
+        if (end - buf < (boost::int64_t)var) {
+            throw std::runtime_error("Incorrect format of map typed value");
+        }
+        Range value(buf, buf + var);
+        buf += var;
+        value_.insert(std::make_pair(
+            std::string(key.begin(), key.size()),
+            std::string(value.begin(), value.size())));
     }
 }
 
@@ -468,15 +500,25 @@ MapTypedValue::asString() const {
 
 void
 MapTypedValue::serialize(std::string &result) const {
-    result.clear();
-    for (std::map<std::string, std::string>::const_iterator it = value_.begin(), it_beg = it;
+    boost::uint32_t size = 0;
+    for (std::map<std::string, std::string>::const_iterator it = value_.begin();
          it != value_.end();
          ++it) {
-        if (it != it_beg) {
-            result.append("\r\n");
-        }
+        size += it->first.size();
+        size += sizeof(size);
+        size += it->second.size();
+        size += sizeof(size);
+    }
+    result.clear();
+    result.reserve(size);
+    for (std::map<std::string, std::string>::const_iterator it = value_.begin();
+         it != value_.end();
+         ++it) {
+        boost::uint32_t var = it->first.size();
+        result.append((char*)&var, sizeof(var));
         result.append(it->first);
-        result.append("\r\n");
+        var = it->second.size();
+        result.append((char*)&var, sizeof(var));
         result.append(it->second);
     }
 }
