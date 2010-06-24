@@ -2,11 +2,15 @@
 #define _XSCRIPT_HTTP_HELPER_H_
 
 #include <string>
+#include <map>
+#include <vector>
+
 #include <time.h>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/utility.hpp>
 
+#include "xscript/exception.h"
 #include "xscript/tag.h"
 
 
@@ -52,6 +56,11 @@ private:
 private:
     class HelperData;
     std::auto_ptr<HelperData> data_;
+};
+
+class HttpTimeoutError : public UnboundRuntimeError {
+public:
+    HttpTimeoutError(const std::string &error) : UnboundRuntimeError(error) {}
 };
 
 } // namespace xscript

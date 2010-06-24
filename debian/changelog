@@ -1,3 +1,11 @@
+xscript (5.71.4-1) unstable; urgency=low
+
+  * xscript.state:getTypedValue fixed
+  * while block fixed
+  * HttpTimeoutException added to HttpHelper
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 24 Jun 2010 10:58:07 +0400
+
 xscript (5.71.3-1) unstable; urgency=low
 
   * meta cache format changed

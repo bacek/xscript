@@ -42,23 +42,33 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
     XmlDocSharedHelper doc;
     xmlNodePtr root = NULL;
     bool no_threaded = threaded() || ctx->forceNoThreaded();
-    do {
+    boost::shared_ptr<Context> final_ctx;
+    while (1) {
         if (remainedTime(ctx.get()) <= 0) {
             InvokeError error("block is timed out");
             error.add("timeout", boost::lexical_cast<std::string>(ctx->timer().timeout()));
             throw error;
         }
 
-        boost::shared_ptr<Context> local_ctx =
-            Context::createChildContext(script(), ctx, invoke_ctx, ctx->localParamsMap(), true);
-        invoke_ctx->setLocalContext(boost::shared_ptr<Context>());
+        boost::shared_ptr<Context> local_ctx = Context::createChildContext(
+            script(), ctx, invoke_ctx, ctx->localParamsMap(), true);
 
-        ContextStopper ctx_stopper(local_ctx);
+        if (final_ctx.get()) {
+            if (final_ctx->noCache()) {
+                local_ctx->setNoCache();
+            }
+            if (!final_ctx->expireDeltaUndefined()) {
+                local_ctx->setExpireDelta(final_ctx->expireDelta());
+            }
+        }
+        final_ctx = local_ctx;
+
+        ContextStopper ctx_stopper(final_ctx);
         if (no_threaded) {
-            local_ctx->forceNoThreaded(no_threaded);
+            final_ctx->forceNoThreaded(no_threaded);
         }
 
-        XmlDocSharedHelper doc_iter = script()->invoke(local_ctx);
+        XmlDocSharedHelper doc_iter = script()->invoke(final_ctx);
         XmlUtils::throwUnless(NULL != doc_iter.get());
         xmlNodePtr root_local = xmlDocGetRootElement(doc_iter.get());
         XmlUtils::throwUnless(NULL != root_local);
@@ -76,12 +86,15 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
             root = root_local;
         }
 
-        if (local_ctx->noCache()) {
-            invoke_ctx->resultType(InvokeContext::NO_CACHE);
+        if (!checkStateGuard(ctx.get())) {
+            ctx_stopper.reset();
+            break;
         }
+    }
 
-    } while(checkStateGuard(ctx.get()));
-
+    if (final_ctx->noCache()) {
+        invoke_ctx->resultType(InvokeContext::NO_CACHE);
+    }
     invoke_ctx->resultDoc(doc);
 }
 

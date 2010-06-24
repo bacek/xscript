@@ -150,6 +150,9 @@ public:
 
    void check(CURLcode code) const {
         if (CURLE_OK != code) {
+            if (CURLE_OPERATION_TIMEDOUT == code) {
+                throw HttpTimeoutError(curl_easy_strerror(code));
+            }
             throw std::runtime_error(curl_easy_strerror(code));
         }
     }
@@ -212,7 +215,7 @@ public:
         detectContentType();
         return status_;
     }
-    
+
     void detectContentType() {
         std::multimap<std::string, std::string>::const_iterator i = headers_.find("content-type");
         if (headers_.end() != i) {
