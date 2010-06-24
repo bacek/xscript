@@ -115,11 +115,6 @@ get_unique_args(Request *request) {
     return args; 
 }
 
-static const std::vector<StringUtils::NamedValue>*
-get_query_args(Request *request) {
-    return &(request->args());
-}
-
 extern "C" int
 luaRequestGetArgs(lua_State *lua) throw () {
     if (lua_gettop(lua) == 2) {
@@ -130,7 +125,39 @@ luaRequestGetArgs(lua_State *lua) throw () {
 
 extern "C" int
 luaRequestGetQueryArgs(lua_State *lua) throw () {
-    return lua_request_method<1>::invoke(lua, get_query_args);
+    try {
+        luaCheckStackSize(lua, 1);
+        luaReadStack<void>(lua, "xscript.request", 1);
+        Request *req = getContext(lua)->request();
+        const std::vector<StringUtils::NamedValue>& args = req->args();
+
+        int size = args.size();
+        lua_createtable(lua, size, 0);
+        if (size <= 0) {
+            return 1;
+        }
+
+        int main_table = lua_gettop(lua);
+        for(int i = 0; i < size; ++i) {
+            lua_newtable(lua);
+            int table = lua_gettop(lua);
+            const StringUtils::NamedValue& arg = args.at(i);
+            lua_pushstring(lua, "name");
+            lua_pushstring(lua, arg.first.c_str());
+            lua_settable(lua, table);
+            lua_pushstring(lua, "value");
+            lua_pushstring(lua, arg.second.c_str());
+            lua_settable(lua, table);
+            lua_rawseti(lua, main_table, i + 1);
+        }
+        return 1;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        return luaL_error(lua, "caught exception in args: %s", e.what());
+    }
 }
 
 extern "C" int

@@ -93,7 +93,7 @@ public:
     virtual ~XmlTypedVisitor();
     virtual void visitString(const std::string &value);
     virtual void visitArray(const std::vector<std::string> &value);
-    virtual void visitMap(const std::map<std::string, std::string> &value);
+    virtual void visitMap(const std::vector<StringUtils::NamedValue> &value);
     void reset();
     XmlNodeSetHelper result() const;
 protected:

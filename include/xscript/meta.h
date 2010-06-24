@@ -52,7 +52,7 @@ public:
     void setDouble(const std::string &name, double value);
     void setString(const std::string &name, const std::string &value);
     void setArray(const std::string &name, const std::vector<std::string> &value);
-    void setMap(const std::string &name, const std::map<std::string, std::string> &value);
+    void setMap(const std::string &name, const std::vector<StringUtils::NamedValue> &value);
 
     template<typename Type> void set(const std::string &name, Type val);
 
@@ -130,7 +130,13 @@ Meta::set<const std::string&>(const std::string &name, const std::string &val) {
 template<> inline void
 Meta::set<const std::vector<std::string>&>(
     const std::string &name, const std::vector<std::string> &val) {
-    setTypedValue(name, TypedValue(val));
+    setArray(name, val);
+}
+
+template<> inline void
+Meta::set<const std::vector<StringUtils::NamedValue>&>(
+    const std::string &name, const std::vector<StringUtils::NamedValue> &val) {
+    setMap(name, val);
 }
 
 } // namespace xscript

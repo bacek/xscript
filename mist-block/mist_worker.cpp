@@ -693,9 +693,9 @@ class DumpStateTypedVisitor : public XmlTypedVisitor {
 public:
     DumpStateTypedVisitor(const std::string &name) : XmlTypedVisitor(name) {}
     virtual ~DumpStateTypedVisitor() {}
-    virtual void visitMap(const std::map<std::string, std::string> &value) {
+    virtual void visitMap(const std::vector<StringUtils::NamedValue> &value) {
         XmlNodeSetHelper result(xmlXPathNodeSetCreate(NULL));
-        for (std::map<std::string, std::string>::const_iterator it = value.begin();
+        for (std::vector<StringUtils::NamedValue>::const_iterator it = value.begin();
             it != value.end();
             ++it) {
             XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)it->first.c_str()));

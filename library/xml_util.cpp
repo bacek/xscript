@@ -577,10 +577,10 @@ XmlTypedVisitor::visitArray(const std::vector<std::string> &value) {
 }
 
 void
-XmlTypedVisitor::visitMap(const std::map<std::string, std::string> &value) {
+XmlTypedVisitor::visitMap(const std::vector<StringUtils::NamedValue> &value) {
     result_ = XmlNodeSetHelper(xmlXPathNodeSetCreate(NULL));
     XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)name_.c_str()));
-    for (std::map<std::string, std::string>::const_iterator it = value.begin();
+    for (std::vector<StringUtils::NamedValue>::const_iterator it = value.begin();
         it != value.end();
         ++it) {
         XmlNodeHelper child(xmlNewNode(NULL, (const xmlChar*)it->first.c_str()));

@@ -57,7 +57,7 @@ TypedValue::TypedValue(const std::vector<std::string> &value) :
     type_(TYPE_ARRAY), complex_(new ArrayTypedValue(value))
 {}
 
-TypedValue::TypedValue(const std::map<std::string, std::string> &value) :
+TypedValue::TypedValue(const std::vector<StringUtils::NamedValue> &value) :
     type_(TYPE_MAP), complex_(new MapTypedValue(value))
 {}
 
@@ -446,7 +446,7 @@ ArrayTypedValue::serialize(std::string &result) const {
 
 const std::string MapTypedValue::TYPE = "Map";
 
-MapTypedValue::MapTypedValue(const std::map<std::string, std::string> &value) :
+MapTypedValue::MapTypedValue(const std::vector<StringUtils::NamedValue> &value) :
     value_(value)
 {}
 
@@ -474,7 +474,7 @@ MapTypedValue::MapTypedValue(const Range &value) {
         }
         Range value(buf, buf + var);
         buf += var;
-        value_.insert(std::make_pair(
+        value_.push_back(StringUtils::NamedValue(
             std::string(key.begin(), key.size()),
             std::string(value.begin(), value.size())));
     }
@@ -501,7 +501,7 @@ MapTypedValue::asString() const {
 void
 MapTypedValue::serialize(std::string &result) const {
     boost::uint32_t size = 0;
-    for (std::map<std::string, std::string>::const_iterator it = value_.begin();
+    for (std::vector<StringUtils::NamedValue>::const_iterator it = value_.begin();
          it != value_.end();
          ++it) {
         size += it->first.size();
@@ -511,7 +511,7 @@ MapTypedValue::serialize(std::string &result) const {
     }
     result.clear();
     result.reserve(size);
-    for (std::map<std::string, std::string>::const_iterator it = value_.begin();
+    for (std::vector<StringUtils::NamedValue>::const_iterator it = value_.begin();
          it != value_.end();
          ++it) {
         boost::uint32_t var = it->first.size();

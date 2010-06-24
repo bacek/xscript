@@ -305,7 +305,7 @@ Meta::setArray(const std::string &name, const std::vector<std::string> &value) {
 }
 
 void
-Meta::setMap(const std::string &name, const std::map<std::string, std::string> &value) {
+Meta::setMap(const std::string &name, const std::vector<StringUtils::NamedValue> &value) {
     setTypedValue(name, TypedValue(value));
 }
 

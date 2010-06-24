@@ -111,6 +111,24 @@ luaReadStack<std::auto_ptr<std::vector<std::string> > >(lua_State *lua, int inde
     return result;
 }
 
+template<> inline std::auto_ptr<std::vector<StringUtils::NamedValue> >
+luaReadStack<std::auto_ptr<std::vector<StringUtils::NamedValue> > >(lua_State *lua, int index) {
+    luaCheckTable(lua, index);
+    std::auto_ptr<std::vector<StringUtils::NamedValue> > result(
+        new std::vector<StringUtils::NamedValue>);
+    lua_pushnil(lua);
+    while (lua_next(lua, index)) {
+        luaCheckString(lua, -2);
+        luaCheckString(lua, -1);
+        result->push_back(StringUtils::NamedValue(
+            std::string(lua_tostring(lua, -2)),
+            std::string(lua_tostring(lua, -1))));
+        lua_pop(lua, 1);
+    }
+    lua_pop(lua, 1);
+    return result;
+}
+
 template<> inline std::auto_ptr<std::map<std::string, std::string> >
 luaReadStack<std::auto_ptr<std::map<std::string, std::string> > >(lua_State *lua, int index) {
     luaCheckTable(lua, index);
@@ -211,25 +229,15 @@ inline void luaPushStack(lua_State* lua, std::auto_ptr<std::map<std::string, std
 }
 
 template<>
-inline void luaPushStack(lua_State* lua, const std::vector<StringUtils::NamedValue> *args) {
-    int size = args->size();
-    lua_createtable(lua, size, 0);
-    if (size <= 0) {
-        return;
-    }
-
-    int main_table = lua_gettop(lua);
-    for(int i = 0; i < size; ++i) {
-        lua_newtable(lua);
-        int table = lua_gettop(lua);
-        const StringUtils::NamedValue& arg = args->at(i);
-        lua_pushstring(lua, "name");
-        lua_pushstring(lua, arg.first.c_str());
+inline void luaPushStack(lua_State* lua, const std::vector<StringUtils::NamedValue> &args) {
+    lua_newtable(lua);
+    int table = lua_gettop(lua);
+    for (std::vector<StringUtils::NamedValue>::const_iterator it = args.begin();
+        it != args.end();
+        ++it) {
+        lua_pushstring(lua, it->first.c_str());
+        lua_pushstring(lua, it->second.c_str());
         lua_settable(lua, table);
-        lua_pushstring(lua, "value");
-        lua_pushstring(lua, arg.second.c_str());
-        lua_settable(lua, table);
-        lua_rawseti(lua, main_table, i + 1);
     }
 }
 
@@ -262,8 +270,8 @@ public:
     virtual void visitArray(const std::vector<std::string> &value) {
         luaPushStack<const std::vector<std::string>&>(lua_, value);
     }
-    virtual void visitMap(const std::map<std::string, std::string> &value) {
-        luaPushStack<const std::map<std::string, std::string>&>(lua_, value);
+    virtual void visitMap(const std::vector<StringUtils::NamedValue> &value) {
+        luaPushStack<const std::vector<StringUtils::NamedValue>&>(lua_, value);
     }
 
 private:

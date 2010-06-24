@@ -43,6 +43,7 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
     xmlNodePtr root = NULL;
     bool no_threaded = threaded() || ctx->forceNoThreaded();
     boost::shared_ptr<Context> final_ctx;
+    std::vector<boost::shared_ptr<Context> > old_ctxs;
     while (1) {
         if (remainedTime(ctx.get()) <= 0) {
             InvokeError error("block is timed out");
@@ -52,6 +53,8 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
 
         boost::shared_ptr<Context> local_ctx = Context::createChildContext(
             script(), ctx, invoke_ctx, ctx->localParamsMap(), true);
+
+        old_ctxs.push_back(local_ctx);
 
         if (final_ctx.get()) {
             if (final_ctx->noCache()) {

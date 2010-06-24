@@ -157,8 +157,8 @@ State::set<const std::vector<std::string>&>(
 }
 
 template<> inline void
-State::set<const std::map<std::string, std::string>&>(
-    const std::string &name, const std::map<std::string, std::string> &val) {
+State::set<const std::vector<StringUtils::NamedValue>&>(
+    const std::string &name, const std::vector<StringUtils::NamedValue> &val) {
     setTypedValue(name, TypedValue(val));
 }
 

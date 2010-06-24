@@ -215,9 +215,9 @@ int luaStateSetTable(lua_State *lua) {
             state->set<const std::vector<std::string>&>(key, *value);
         }
         else {
-            std::auto_ptr<std::map<std::string, std::string> > value =
-                luaReadStack<std::auto_ptr<std::map<std::string, std::string> > >(lua, 3);
-            state->set<const std::map<std::string, std::string>&>(key, *value);
+            std::auto_ptr<std::vector<StringUtils::NamedValue> > value =
+                luaReadStack<std::auto_ptr<std::vector<StringUtils::NamedValue> > >(lua, 3);
+            state->set<const std::vector<StringUtils::NamedValue>&>(key, *value);
         }
         return 0;
     }

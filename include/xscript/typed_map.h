@@ -10,6 +10,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "xscript/range.h"
+#include "xscript/string_utils.h"
 
 namespace xscript {
 
@@ -24,7 +25,7 @@ public:
     virtual void visitDouble(double) {};
     virtual void visitString(const std::string&) = 0;
     virtual void visitArray(const std::vector<std::string>&) = 0;
-    virtual void visitMap(const std::map<std::string, std::string>&) = 0;
+    virtual void visitMap(const std::vector<StringUtils::NamedValue>&) = 0;
 };
 
 class ComplexTypedValue {
@@ -52,7 +53,7 @@ private:
 
 class MapTypedValue : public ComplexTypedValue {
 public:
-    MapTypedValue(const std::map<std::string, std::string> &value);
+    MapTypedValue(const std::vector<StringUtils::NamedValue> &value);
     MapTypedValue(const Range &value);
     virtual ~MapTypedValue();
     virtual void visit(TypedValueVisitor *visitor) const;
@@ -61,7 +62,7 @@ public:
     virtual void serialize(std::string &result) const;
 private:
     static const std::string TYPE;
-    std::map<std::string, std::string> value_;
+    std::vector<StringUtils::NamedValue> value_;
 };
 
 class TypedMap;
@@ -77,7 +78,7 @@ public:
     TypedValue(double value);
     TypedValue(const std::string &value);
     TypedValue(const std::vector<std::string> &value);
-    TypedValue(const std::map<std::string, std::string> &value);
+    TypedValue(const std::vector<StringUtils::NamedValue> &value);
     TypedValue(unsigned int type, const Range &value);
 
     unsigned int type() const;

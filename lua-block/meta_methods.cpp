@@ -272,8 +272,8 @@ luaMetaSetTableInternal(lua_State *lua, bool self) {
             }
         }
         else {
-            std::auto_ptr<std::map<std::string, std::string> > value =
-                luaReadStack<std::auto_ptr<std::map<std::string, std::string> > >(lua, 3);
+            std::auto_ptr<std::vector<StringUtils::NamedValue> > value =
+                luaReadStack<std::auto_ptr<std::vector<StringUtils::NamedValue> > >(lua, 3);
             if (invoke_ctx) {
                 invoke_ctx->meta()->setMap(key, *value);
             }
