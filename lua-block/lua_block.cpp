@@ -55,9 +55,9 @@ typedef boost::shared_ptr<LuaState> LuaSharedContext;
 
 class LuaThread {
 public:
-    LuaThread(lua_State *parent) {
-        state_ = lua_newthread(parent);
+    LuaThread(lua_State *parent) : parent_(parent), state_(lua_newthread(parent)) {
         lua_pushvalue(parent, -1);
+        thread_id_ = luaL_ref(parent, LUA_REGISTRYINDEX);
         lua_newtable(parent);
         lua_pushvalue(parent, -1);
         lua_setmetatable(parent, -2);
@@ -66,15 +66,19 @@ public:
         lua_setfenv(parent, -2);
         lua_pop(parent, 1);
     }
-    
-    ~LuaThread() {}
-    
+
+    ~LuaThread() {
+        luaL_unref(parent_, LUA_REGISTRYINDEX, thread_id_);
+    }
+
     lua_State* get() const {
         return state_;
     }
-    
+
 private:
+    lua_State* parent_;
     lua_State* state_;
+    int thread_id_;
 };
 
 typedef boost::shared_ptr<LuaThread> LuaSharedThread;

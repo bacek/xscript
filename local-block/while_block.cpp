@@ -42,8 +42,14 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
     XmlDocSharedHelper doc;
     xmlNodePtr root = NULL;
     bool no_threaded = threaded() || ctx->forceNoThreaded();
-    boost::shared_ptr<Context> final_ctx;
-    std::vector<boost::shared_ptr<Context> > old_ctxs;
+
+    boost::shared_ptr<Context> child_ctx = Context::createChildContext(
+        script(), ctx, invoke_ctx, ctx->localParamsMap(), true);
+
+    ContextStopper ctx_stopper(child_ctx);
+
+    boost::shared_ptr<Context> local_ctx = child_ctx;
+
     while (1) {
         if (remainedTime(ctx.get()) <= 0) {
             InvokeError error("block is timed out");
@@ -51,27 +57,16 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
             throw error;
         }
 
-        boost::shared_ptr<Context> local_ctx = Context::createChildContext(
-            script(), ctx, invoke_ctx, ctx->localParamsMap(), true);
-
-        old_ctxs.push_back(local_ctx);
-
-        if (final_ctx.get()) {
-            if (final_ctx->noCache()) {
-                local_ctx->setNoCache();
-            }
-            if (!final_ctx->expireDeltaUndefined()) {
-                local_ctx->setExpireDelta(final_ctx->expireDelta());
-            }
+        ContextStopper local_ctx_stopper(local_ctx);
+        if (local_ctx.get() == child_ctx.get()) {
+            local_ctx_stopper.reset();
         }
-        final_ctx = local_ctx;
 
-        ContextStopper ctx_stopper(final_ctx);
         if (no_threaded) {
-            final_ctx->forceNoThreaded(no_threaded);
+            local_ctx->forceNoThreaded(no_threaded);
         }
 
-        XmlDocSharedHelper doc_iter = script()->invoke(final_ctx);
+        XmlDocSharedHelper doc_iter = script()->invoke(local_ctx);
         XmlUtils::throwUnless(NULL != doc_iter.get());
         xmlNodePtr root_local = xmlDocGetRootElement(doc_iter.get());
         XmlUtils::throwUnless(NULL != root_local);
@@ -89,16 +84,33 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
             root = root_local;
         }
 
+        if (child_ctx.get()) {
+            if (local_ctx->noCache()) {
+                child_ctx->setNoCache();
+            }
+            if (!local_ctx->expireDeltaUndefined()) {
+                child_ctx->setExpireDelta(local_ctx->expireDelta());
+            }
+        }
+        else {
+            child_ctx = local_ctx;
+        }
+
         if (!checkStateGuard(ctx.get())) {
-            ctx_stopper.reset();
             break;
         }
+
+        local_ctx = Context::createChildContext(
+            script(), ctx, invoke_ctx, ctx->localParamsMap(), true);
+        invoke_ctx->setLocalContext(child_ctx);
     }
 
-    if (final_ctx->noCache()) {
+    if (local_ctx->noCache()) {
         invoke_ctx->resultType(InvokeContext::NO_CACHE);
     }
+
     invoke_ctx->resultDoc(doc);
+    ctx_stopper.reset();
 }
 
 void
