@@ -55,7 +55,8 @@ typedef boost::shared_ptr<LuaState> LuaSharedContext;
 
 class LuaThread {
 public:
-    LuaThread(lua_State *parent) : parent_(parent), state_(lua_newthread(parent)) {
+    LuaThread(lua_State *parent, Context::MutexPtr mutex) :
+        parent_(parent), state_(lua_newthread(parent)), mutex_(mutex) {
         lua_pushvalue(parent, -1);
         thread_id_ = luaL_ref(parent, LUA_REGISTRYINDEX);
         lua_newtable(parent);
@@ -68,6 +69,7 @@ public:
     }
 
     ~LuaThread() {
+        boost::mutex::scoped_lock lock(*mutex_);
         luaL_unref(parent_, LUA_REGISTRYINDEX, thread_id_);
     }
 
@@ -79,6 +81,7 @@ private:
     lua_State* parent_;
     lua_State* state_;
     int thread_id_;
+    Context::MutexPtr mutex_;
 };
 
 typedef boost::shared_ptr<LuaThread> LuaSharedThread;
@@ -204,8 +207,8 @@ createLua() {
 }
 
 static LuaSharedThread
-createLuaThread(lua_State *parent) {
-    return LuaSharedThread(new LuaThread(parent));
+createLuaThread(lua_State *parent, Context::MutexPtr mutex) {
+    return LuaSharedThread(new LuaThread(parent, mutex));
 }
 
 void
@@ -236,7 +239,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
     LuaSharedThread lua_thread;
     
     if (orig_ctx != root_ctx) {
-        boost::function<LuaSharedThread ()> creator = boost::bind(&createLuaThread, lua);    
+        boost::function<LuaSharedThread ()> creator = boost::bind(&createLuaThread, lua, mutex);
         lua_thread = orig_ctx->param(XSCRIPT_THREAD, creator);
         lua = lua_thread->get();
     }
