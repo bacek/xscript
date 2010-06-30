@@ -26,7 +26,6 @@ extern "C" {
     int luaMetaGetExpireTime(lua_State *lua);
     int luaMetaSetExpireTime(lua_State *lua);
     int luaMetaGetLastModified(lua_State *lua);
-    int luaMetaSetLastModified(lua_State *lua);
     int luaMetaSetBool(lua_State *lua);
     int luaMetaSetLong(lua_State *lua);
     int luaMetaSetLongLong(lua_State *lua);
@@ -43,7 +42,6 @@ extern "C" {
     int luaSelfMetaGetExpireTime(lua_State *lua);
     int luaSelfMetaSetExpireTime(lua_State *lua);
     int luaSelfMetaGetLastModified(lua_State *lua);
-    int luaSelfMetaSetLastModified(lua_State *lua);
     int luaSelfMetaSetBool(lua_State *lua);
     int luaSelfMetaSetLong(lua_State *lua);
     int luaSelfMetaSetLongLong(lua_State *lua);
@@ -62,7 +60,6 @@ static const struct luaL_reg metalib [] = {
     {"getExpireTime",   luaMetaGetExpireTime},
     {"setExpireTime",   luaMetaSetExpireTime},
     {"getLastModified", luaMetaGetLastModified},
-    {"setLastModified", luaMetaSetLastModified},
     {"setBool",         luaMetaSetBool},
     {"setBoolean",      luaMetaSetBool},
     {"setLong",         luaMetaSetLong},
@@ -87,7 +84,6 @@ static const struct luaL_reg selfmetalib [] = {
     {"getExpireTime",   luaSelfMetaGetExpireTime},
     {"setExpireTime",   luaSelfMetaSetExpireTime},
     {"getLastModified", luaSelfMetaGetLastModified},
-    {"setLastModified", luaSelfMetaSetLastModified},
     {"setBool",         luaSelfMetaSetBool},
     {"setBoolean",      luaSelfMetaSetBool},
     {"setLong",         luaSelfMetaSetLong},
@@ -376,33 +372,6 @@ luaMetaGetLastModifiedInternal(lua_State *lua, bool self) {
     }
 }
 
-static int
-luaMetaSetLastModifiedInternal(lua_State *lua, bool self) {
-    log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
-    try {
-        luaCheckStackSize(lua, 2);
-        readMetaFromStack(lua, self);
-        time_t last_modified = luaReadStack<time_t>(lua, 2);
-        if (last_modified < 0) {
-            throw std::runtime_error("negative last modified is not allowed");
-        }
-        InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
-        if (NULL != invoke_ctx) {
-            invoke_ctx->meta()->setLastModified(last_modified);
-        }
-        lua_pushnumber(lua, invoke_ctx ?
-            invoke_ctx->meta()->getLastModified() : Meta::undefinedLastModified());
-        return 1;
-    }
-    catch (const LuaError &e) {
-        return e.translate(lua);
-    }
-    catch (const std::exception &e) {
-        luaL_error(lua, "caught exception in meta.setLastModified: %s", e.what());
-        return 0;
-    }
-}
-
 extern "C" {
 
 int
@@ -473,16 +442,6 @@ luaMetaGetLastModified(lua_State *lua) {
 int
 luaSelfMetaGetLastModified(lua_State *lua) {
     return luaMetaGetLastModifiedInternal(lua, true);
-}
-
-int
-luaMetaSetLastModified(lua_State *lua) {
-    return luaMetaSetLastModifiedInternal(lua, false);
-}
-
-int
-luaSelfMetaSetLastModified(lua_State *lua) {
-    return luaMetaSetLastModifiedInternal(lua, true);
 }
 
 int
