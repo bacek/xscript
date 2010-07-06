@@ -97,10 +97,19 @@ luaStateGet(lua_State *lua) {
         std::string key = luaReadStack<std::string>(lua, 2);
         log()->debug("luaStateGet: %s", key.c_str());
         std::string def_value;
+        bool is_nil = false;
         if (3 == count) {
-            def_value = luaReadStack<std::string>(lua, 3);
+            is_nil = luaIsNil(lua, 3);
+            if (!is_nil) {
+                def_value = luaReadStack<std::string>(lua, 3);
+            }
         }
-        lua_pushstring(lua, state->asString(key, def_value).c_str());
+        if (is_nil && !state->has(key)) {
+            lua_pushnil(lua);
+        }
+        else {
+            lua_pushstring(lua, state->asString(key, def_value).c_str());
+        }
         return 1;
     }
     catch (const LuaError &e) {

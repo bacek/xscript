@@ -147,11 +147,20 @@ luaMetaGetInternal(lua_State *lua, bool self) {
         InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
         std::string key = luaReadStack<std::string>(lua, 2);
         std::string def_value;
+        bool is_nil = false;
         if (3 == count) {
-            def_value = luaReadStack<std::string>(lua, 3);
+            is_nil = luaIsNil(lua, 3);
+            if (!is_nil) {
+                def_value = luaReadStack<std::string>(lua, 3);
+            }
         }
-        lua_pushstring(lua, invoke_ctx ?
-            invoke_ctx->meta()->get(key, def_value).c_str() : def_value.c_str());
+        if (is_nil && (NULL == invoke_ctx || !invoke_ctx->meta()->has(key))) {
+            lua_pushnil(lua);
+        }
+        else {
+            lua_pushstring(lua, invoke_ctx ?
+                invoke_ctx->meta()->get(key, def_value).c_str() : def_value.c_str());
+        }
         return 1;
     }
     catch (const LuaError &e) {
