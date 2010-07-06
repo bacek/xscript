@@ -18,7 +18,7 @@ public:
     LocalBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~LocalBlock();
 
-    virtual std::string createTagKey(const Context *ctx) const;
+    virtual std::string createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const;
 protected:
     virtual void parseSubNode(xmlNodePtr node);
     virtual void postParse();

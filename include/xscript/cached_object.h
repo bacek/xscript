@@ -13,6 +13,7 @@ namespace xscript {
 class Block;
 class CacheStrategy;
 class Context;
+class InvokeContext;
 class Param;
 
 class CachedObject : private boost::noncopyable {
@@ -23,7 +24,7 @@ public:
     time_t cacheTime() const;
     void cacheTime(time_t cache_time);
     
-    virtual std::string createTagKey(const Context *ctx) const = 0;
+    virtual std::string createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const = 0;
     virtual bool allowDistributed() const;
    
     enum Strategy {

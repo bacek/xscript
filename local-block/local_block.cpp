@@ -187,8 +187,8 @@ LocalBlock::script() const {
 }
 
 std::string
-LocalBlock::createTagKey(const Context *ctx) const {
-    std::string key(processMainKey(ctx));
+LocalBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
+    std::string key(processMainKey(ctx, invoke_ctx));
     key.push_back('|');
     key.append(paramsIdKey(params(), ctx));
     key.push_back('|');

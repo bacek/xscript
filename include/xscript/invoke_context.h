@@ -59,6 +59,9 @@ public:
 
     bool isMeta() const;
 
+    const std::string& xsltName() const;
+    void xsltName(const std::string &name);
+
 private:
     struct ContextData;
     std::auto_ptr<ContextData> ctx_data_;

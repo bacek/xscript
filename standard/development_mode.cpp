@@ -30,7 +30,7 @@ public:
     virtual void sendError(Response* response, unsigned short status, const std::string& message);
     virtual bool isProduction();
     virtual void assignBlockError(Context *ctx, const Block *block, const std::string &error);
-    virtual void processPerblockXsltError(const Context *ctx, const Block *block);
+    virtual void processPerblockXsltError(const Context *ctx, const InvokeContext *invoke_ctx, const Block *block);
     virtual void processScriptError(const Context *ctx, const Script *script);
     virtual void processMainXsltError(const Context *ctx, const Script *script, const Stylesheet *style);
     virtual void processXmlError(const std::string &filename);
@@ -72,15 +72,16 @@ DevelopmentMode::assignBlockError(Context *ctx, const Block *block, const std::s
 }
 
 void
-DevelopmentMode::processPerblockXsltError(const Context *ctx, const Block *block) {
+DevelopmentMode::processPerblockXsltError(const Context *ctx,
+    const InvokeContext *invoke_ctx, const Block *block) {
     std::string res = ctx->getRuntimeError(block);
     if (!res.empty()) {
-        throw CriticalInvokeError(res, "xslt", block->xsltName());
+        throw CriticalInvokeError(res, "xslt", invoke_ctx->xsltName());
     }
     if (XmlUtils::hasXMLError()) {
         std::string error = XmlUtils::getXMLError();
         if (!error.empty()) {
-            throw InvokeError(error, "xslt", block->xsltName());
+            throw InvokeError(error, "xslt", invoke_ctx->xsltName());
         }
     }
 }

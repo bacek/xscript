@@ -55,12 +55,13 @@ OperationMode::assignBlockError(Context *ctx, const Block *block, const std::str
 }
 
 void
-OperationMode::processPerblockXsltError(const Context *ctx, const Block *block) {
+OperationMode::processPerblockXsltError(const Context *ctx,
+    const InvokeContext *invoke_ctx, const Block *block) {
     (void)ctx;
     if (XmlUtils::hasXMLError()) {
         std::string postfix = "Script: " + block->owner()->name() +
             ". Block: name: " + block->name() + ", id: " + block->id() +
-            ", method: " + block->method() + ". Perblock stylesheet: " + block->xsltName();
+            ", method: " + block->method() + ". Perblock stylesheet: " + invoke_ctx->xsltName();
         XmlUtils::printXMLError(postfix);
     }
 }

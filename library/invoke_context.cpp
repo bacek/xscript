@@ -33,6 +33,7 @@ struct InvokeContext::ContextData {
     bool have_cached_copy_;
     boost::shared_ptr<Context> local_context_;
     boost::shared_ptr<TagKey> key_;
+    std::string xslt_;
 
     InvokeContext* base_;
     boost::shared_ptr<Meta> meta_;
@@ -180,6 +181,16 @@ InvokeContext::setMeta(const boost::shared_ptr<Meta> &meta) {
 bool
 InvokeContext::isMeta() const {
     return NULL != ctx_data_->base_;
+}
+
+const std::string&
+InvokeContext::xsltName() const {
+    return ctx_data_->xslt_;
+}
+
+void
+InvokeContext::xsltName(const std::string &name) {
+    ctx_data_->xslt_ = name;
 }
 
 } // namespace xscript

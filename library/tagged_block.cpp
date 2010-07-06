@@ -102,7 +102,7 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
         return;
     }
 
-    if (!xsltName().empty() && ctx->noXsltPort()) {
+    if (xsltDefined() && ctx->noXsltPort()) {
         Block::invokeInternal(ctx, invoke_ctx);
         return;
     }
@@ -196,7 +196,7 @@ TaggedBlock::postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
         return;
     }
 
-    if (!xsltName().empty() && ctx->noXsltPort()) {
+    if (xsltDefined() && ctx->noXsltPort()) {
         return;
     }
     
@@ -367,7 +367,7 @@ TaggedBlock::info(const Context *ctx) const {
     
     std::string info = canonicalMethod(ctx);
     
-    const std::string& xslt = xsltName();
+    const std::string &xslt = xsltNameRaw();
     if (!xslt.empty()) {        
         info.append(" | Xslt: ");
         info.append(xslt);
@@ -421,17 +421,17 @@ TaggedBlock::info(const Context *ctx) const {
 }
 
 std::string
-TaggedBlock::createTagKey(const Context *ctx) const {
-    std::string key(processMainKey(ctx));
+TaggedBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
+    std::string key(processMainKey(ctx, invoke_ctx));
     key.push_back('|');
     key.append(processParamsKey(ctx));
     return key;
 }
 
 std::string
-TaggedBlock::processMainKey(const Context *ctx) const {
+TaggedBlock::processMainKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
     std::string key;
-    const std::string& xslt = xsltName();
+    const std::string &xslt = invoke_ctx->xsltName();
     if (!xslt.empty()) {
         key.assign(xslt);
         key.push_back('|');

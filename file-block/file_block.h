@@ -27,7 +27,7 @@ public:
     FileBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~FileBlock();
 
-    std::string createTagKey(const Context *ctx) const;
+    std::string createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const;
     virtual bool allowDistributed() const;
 private:
     virtual void postParse();

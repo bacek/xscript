@@ -22,7 +22,8 @@ public:
     Object();
     virtual ~Object();
 
-    const std::string& xsltName() const;
+    std::string xsltName(const Context *ctx) const;
+    bool xsltDefined() const;
     const std::vector<Param*>& xsltParams() const;
 
     virtual std::string fullName(const std::string &name) const = 0;
@@ -31,8 +32,10 @@ public:
 protected:
     virtual void postParse();
     
-    void xsltName(const std::string &value);
+    void xsltName(const char *value, const char *type);
     bool xsltParamNode(const xmlNodePtr node) const;
+
+    const std::string& xsltNameRaw() const;
 
     void parseXsltParamNode(const xmlNodePtr node);
     void applyStylesheet(boost::shared_ptr<Stylesheet> sh, boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc, bool need_copy);

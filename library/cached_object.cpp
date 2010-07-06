@@ -206,7 +206,8 @@ CachedObject::blocksModifiedKey(const std::vector<Block*> &blocks) {
         if (!key.empty()) {
             key.push_back('|');
         }
-        key.append(fileModifiedKey((*it)->xsltName()));
+        // check modified for static (not from state) xslt only
+        key.append(fileModifiedKey((*it)->xsltName(NULL)));
     }
     return key;
 }

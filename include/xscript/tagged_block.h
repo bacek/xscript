@@ -29,7 +29,7 @@ public:
     
     virtual std::string info(const Context *ctx) const;
 
-    virtual std::string createTagKey(const Context *ctx) const;
+    virtual std::string createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const;
 
     void cacheLevel(unsigned char type, bool value);
     bool cacheLevel(unsigned char type) const;
@@ -46,7 +46,7 @@ protected:
     
     void parseParamNode(const xmlNodePtr node);
     
-    std::string processMainKey(const Context *ctx) const;
+    std::string processMainKey(const Context *ctx, const InvokeContext *invoke_ctx) const;
     std::string processParamsKey(const Context *ctx) const;
 
     virtual void callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);

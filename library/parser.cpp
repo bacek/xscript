@@ -95,7 +95,7 @@ Parser::addHeader(RequestImpl *req, const Range &key, const Range &value, Encode
 void
 Parser::parse(RequestImpl *req, char *env[], Encoder *encoder) {
     for (int i = 0; NULL != env[i]; ++i) {
-        log()->debug("env[%d] = %s", i, env[i]);
+        log()->info("env[%d] = %s", i, env[i]);
         Range key, value;
         split(createRange(env[i]), '=', key, value);
         if (COOKIE_RANGE == key) {

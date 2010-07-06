@@ -122,7 +122,7 @@ Block::BlockData::property(const char *name, const char *value) {
         method_.assign(value);
     }
     else if (strncasecmp(name, "xslt", sizeof("xslt")) == 0) {
-        block_->xsltName(value);
+        block_->xsltName(value, NULL);
     }
     else if (strncasecmp(name, "xpointer", sizeof("xpointer")) == 0) {
         block_->parseXPointerExpr(value, NULL);
@@ -385,6 +385,9 @@ Block::parseSubNode(xmlNodePtr node) {
         else if (metaNode(node)) {
             parseMetaNode(node);
         }
+        else if (xsltNode(node)) {
+            parseXsltNode(node);
+        }
         else if (guardNode(node)) {
             parseGuardNode(node, false);
         }
@@ -428,10 +431,10 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
             callMetaLua(ctx, invoke_ctx);
         }
         catch (const MetaInvokeError &e) {
-            evalXPath(ctx.get(), invoke_ctx->resultDoc());
+            evalXPath(ctx.get(), invoke_ctx.get(), invoke_ctx->resultDoc());
             throw e;
         }
-        evalXPath(ctx.get(), invoke_ctx->resultDoc());
+        evalXPath(ctx.get(), invoke_ctx.get(), invoke_ctx->resultDoc());
         if (!invoke_ctx->error()) {
             postInvoke(ctx.get(), invoke_ctx.get());
         }
@@ -512,12 +515,10 @@ Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeC
     
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
     
-    bool need_perblock = !ctx->noXsltPort() && !xsltName().empty();
-    bool success = true;
-    if (need_perblock) {
-        boost::shared_ptr<Context> local_ctx = invoke_ctx->getLocalContext();
-        success = applyStylesheet(local_ctx.get() ? local_ctx : ctx, doc);
-    }
+    invoke_ctx->xsltName(xsltName(ctx.get()));
+
+    boost::shared_ptr<Context> local_ctx = invoke_ctx->getLocalContext();
+    bool success = applyStylesheet(local_ctx.get() ? local_ctx : ctx, invoke_ctx, doc);
 
     InvokeContext::ResultType type = InvokeContext::SUCCESS;    
     if (is_error_doc || !success || invoke_ctx->noCache()) {
@@ -535,16 +536,23 @@ Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeC
 }
 
 bool
-Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) {
-
+Block::applyStylesheet(boost::shared_ptr<Context> ctx,
+    boost::shared_ptr<InvokeContext> invoke_ctx, XmlDocSharedHelper &doc) {
+    if (ctx->noXsltPort()) {
+        return true;
+    }
+    const std::string& xslt = invoke_ctx->xsltName();
+    if (xslt.empty()) {
+        return true;
+    }
     const TimeoutCounter &timer = ctx->timer();
     if (timer.expired()) {
         throw InvokeError("block is timed out", "timeout",
             boost::lexical_cast<std::string>(timer.timeout()));
     }
-    boost::shared_ptr<Stylesheet> sh = StylesheetFactory::createStylesheet(xsltName());
+    boost::shared_ptr<Stylesheet> sh = StylesheetFactory::createStylesheet(xslt);
     {
-        PROFILER(log(), std::string("per-block-xslt: '") + xsltName() +
+        PROFILER(log(), std::string("per-block-xslt: '") + xslt +
                 "' block: '" + name() + "' block-id: '" + id() +
                 "' method: '" + method() + "' owner: '" + owner()->name() + "'");
         Object::applyStylesheet(sh, ctx, doc, XmlUtils::xmlVersionNumber() < 20619);
@@ -552,15 +560,23 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) 
 
     XmlUtils::throwUnless(NULL != doc.get());
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
-        
+
     bool result = true;
     if (XmlUtils::hasXMLError()) {
         result = false;
     }
-                
-    OperationMode::instance()->processPerblockXsltError(ctx.get(), this);
-                    
+
+    OperationMode::instance()->processPerblockXsltError(ctx.get(), invoke_ctx.get(), this);
+
     return result;
+}
+
+// TODO: remove this
+bool
+Block::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) {
+    (void)ctx;
+    (void)doc;
+    return false;
 }
 
 void
@@ -749,8 +765,8 @@ Block::hasStateGuard() const {
 }
 
 void
-Block::evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const {
-    if (ctx->noXsltPort() && !xsltName().empty()) {
+Block::evalXPath(Context *ctx, InvokeContext *invoke_ctx, const XmlDocSharedHelper &doc) const {
+    if (ctx->noXsltPort() && !invoke_ctx->xsltName().empty()) {
         return;
     }
 
@@ -903,7 +919,7 @@ Block::callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext>
     }
     try {
         data_->meta_block_->call(ctx, invoke_ctx);
-        data_->meta_block_->evalXPath(ctx.get(), invoke_ctx->metaDoc());
+        data_->meta_block_->evalXPath(ctx.get(), invoke_ctx.get(), invoke_ctx->metaDoc());
     }
     catch (const InvokeError &e) {
         throw MetaInvokeError(e);
@@ -948,6 +964,11 @@ Block::guardNode(const xmlNodePtr node) const {
 bool
 Block::guardNotNode(const xmlNodePtr node) const {
     return xmlStrncasecmp(node->name, (const xmlChar*) "guard-not", sizeof("guard-not")) == 0;
+}
+
+bool
+Block::xsltNode(const xmlNodePtr node) const {
+    return xmlStrncasecmp(node->name, (const xmlChar*) "xslt", sizeof("xslt")) == 0;
 }
 
 void
@@ -1031,6 +1052,14 @@ Block::parseGuardNode(const xmlNodePtr node, bool is_not) {
     const char *value = XmlUtils::attrValue(node, "value");
     data_->guards_.push_back(Guard(guard, type, value, is_not));
 }
+
+void
+Block::parseXsltNode(const xmlNodePtr node) {
+    const char *xslt = XmlUtils::value(node);
+    const char *type = XmlUtils::attrValue(node, "type");
+    xsltName(xslt, type);
+}
+
 
 void
 Block::parseParamNode(const xmlNodePtr node) {

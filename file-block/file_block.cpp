@@ -415,9 +415,9 @@ FileBlock::fileName(const Context *ctx) const {
 }
 
 std::string
-FileBlock::createTagKey(const Context *ctx) const {
+FileBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
     
-    std::string key = processMainKey(ctx);
+    std::string key = processMainKey(ctx, invoke_ctx);
     boost::function<std::string()> filename_creator =
         boost::bind(&FileBlock::fileName, this, ctx);
     Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);

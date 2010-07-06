@@ -7,7 +7,7 @@ namespace xscript {
 
 class TagKeyMemory : public TagKey {
 public:
-    TagKeyMemory(const Context *ctx, const CachedObject *obj);
+    TagKeyMemory(const Context *ctx, const InvokeContext *invoke_ctx, const CachedObject *obj);
     virtual const std::string& asString() const;
 
 protected:

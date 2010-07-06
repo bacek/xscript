@@ -30,7 +30,11 @@ DynamicParam::assign(const char *value, const char *type) {
 
 std::string
 DynamicParam::value(const Context *ctx) const {
-    return state_ ? ctx->state()->asString(value_, StringUtils::EMPTY_STRING) : value_;
+    if (!state_) {
+        return value_;
+    }
+    return ctx ? ctx->state()->asString(value_, StringUtils::EMPTY_STRING) :
+        StringUtils::EMPTY_STRING;
 }
 
 const std::string&

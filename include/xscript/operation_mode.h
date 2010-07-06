@@ -9,6 +9,7 @@ namespace xscript {
 
 class Block;
 class Context;
+class InvokeContext;
 class InvokeError;
 class RemoteTaggedBlock;
 class Request;
@@ -25,7 +26,7 @@ public:
     virtual void sendError(Response* response, unsigned short status, const std::string& message);
     virtual bool isProduction();
     virtual void assignBlockError(Context *ctx, const Block *block, const std::string &error);
-    virtual void processPerblockXsltError(const Context *ctx, const Block *block);
+    virtual void processPerblockXsltError(const Context *ctx, const InvokeContext *invoke_ctx, const Block *block);
     virtual void processScriptError(const Context *ctx, const Script *script);
     virtual void processMainXsltError(const Context *ctx, const Script *script, const Stylesheet *style);
     virtual void processXmlError(const std::string &filename);

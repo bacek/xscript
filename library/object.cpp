@@ -16,6 +16,7 @@
 #include "xscript/vhost_data.h"
 #include "xscript/xml_util.h"
 
+#include "internal/block_helpers.h"
 #include "internal/param_factory.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -31,7 +32,7 @@ public:
     
     void checkParam(Param *param);
     
-    std::string xslt_name_;
+    DynamicParam xslt_name_;
     std::vector<Param*> params_;
 };
 
@@ -79,9 +80,13 @@ Object::Object() : data_(new ObjectData()) {
 Object::~Object() {
 }
 
-const std::string&
-Object::xsltName() const {
-    return data_->xslt_name_;
+std::string
+Object::xsltName(const Context *ctx) const {
+    std::string xslt = data_->xslt_name_.value(ctx);
+    if (!data_->xslt_name_.fromState()) {
+        return xslt;
+    }
+    return xslt.empty() ? xslt : fullName(xslt);
 }
 
 const std::vector<Param*>&
@@ -94,22 +99,27 @@ Object::postParse() {
 }
 
 void
-Object::xsltName(const std::string &value) {
-    if (value.empty()) {
-        data_->xslt_name_.erase();
+Object::xsltName(const char *value, const char *type) {
+    if (NULL != type) {
+        data_->xslt_name_.assign(value, type);
         return;
     }
 
+    if (NULL == value || '\0' == value[0]) {
+        data_->xslt_name_.assign(value, NULL);
+        return;
+    }
+
+    std::string xslt(value);
     if (value[0] == '/') {
         std::string full_name = VirtualHostData::instance()->getDocumentRoot(NULL) + value;
         if (FileUtils::fileExists(full_name)) {
-            data_->xslt_name_ = fullName(full_name);
-            return;
+            xslt = full_name;
         }
-        log()->warn("absolute path in stylesheet href: %s", value.c_str());
+        log()->warn("absolute path in stylesheet href: %s", value);
     }
 
-    data_->xslt_name_ = fullName(value);
+    data_->xslt_name_.assign(fullName(xslt).c_str(), NULL);
 }
 
 bool
@@ -149,6 +159,16 @@ std::auto_ptr<Param>
 Object::createParam(const xmlNodePtr node) {
     ParamFactory *pf = ParamFactory::instance();
     return pf->param(this, node);
+}
+
+const std::string&
+Object::xsltNameRaw() const {
+    return data_->xslt_name_.value();
+}
+
+bool
+Object::xsltDefined() const {
+    return !xsltNameRaw().empty();
 }
 
 } // namespace xscript

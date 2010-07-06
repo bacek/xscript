@@ -58,7 +58,8 @@ DocCacheTest::testMissed() {
     XmlDocSharedHelper doc_load;
 
     CacheContext cache_ctx(block, ctx.get());
-    boost::shared_ptr<BlockCacheData> loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    InvokeContext invoke_ctx;
+    boost::shared_ptr<BlockCacheData> loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL == loaded.get());
 }
 
@@ -85,15 +86,16 @@ DocCacheTest::testStoreLoad() {
     
     // check first save
     CacheContext cache_ctx(block, ctx.get());
-    CPPUNIT_ASSERT(tcache->saveDoc(NULL, &cache_ctx, tag, saved));
+    InvokeContext invoke_ctx;
+    CPPUNIT_ASSERT(tcache->saveDoc(&invoke_ctx, &cache_ctx, tag, saved));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     // check save again
-    CPPUNIT_ASSERT(tcache->saveDoc(NULL, &cache_ctx, tag, saved));
+    CPPUNIT_ASSERT(tcache->saveDoc(&invoke_ctx, &cache_ctx, tag, saved));
     CPPUNIT_ASSERT(NULL != doc.get());
 
     // check first load
-    boost::shared_ptr<BlockCacheData> loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    boost::shared_ptr<BlockCacheData> loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL != loaded.get());
     CPPUNIT_ASSERT(NULL != loaded->doc().get());
 
@@ -103,7 +105,7 @@ DocCacheTest::testStoreLoad() {
 
     // check load again
     loaded.reset();
-    loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL != loaded.get());
     CPPUNIT_ASSERT(NULL != loaded->doc().get());
 
@@ -111,7 +113,7 @@ DocCacheTest::testStoreLoad() {
 
     // check skip expired
     loaded.reset();
-    loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL == loaded.get());
 }
 
@@ -130,7 +132,8 @@ DocCacheTest::testGetLocalTagged() {
 
     Tag tag_load;
     CacheContext cache_ctx(block, ctx.get());
-    boost::shared_ptr<BlockCacheData> loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    InvokeContext invoke_ctx;
+    boost::shared_ptr<BlockCacheData> loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL == loaded.get());
 
     /*
@@ -148,14 +151,14 @@ DocCacheTest::testGetLocalTagged() {
     CPPUNIT_ASSERT(NULL != doc.get());
     
     loaded.reset();
-    loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL != loaded.get());
     CPPUNIT_ASSERT(NULL != loaded->doc().get());
 
     sleep(3);
 
     loaded.reset();
-    loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL != loaded.get());
     CPPUNIT_ASSERT(NULL != loaded->doc().get());
 
@@ -163,7 +166,7 @@ DocCacheTest::testGetLocalTagged() {
 
     // check skip expired
     loaded.reset();
-    loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL == loaded.get());
 }
 
@@ -182,8 +185,8 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
 
     Tag tag_load;
     CacheContext cache_ctx(block, ctx.get());
-    
-    boost::shared_ptr<BlockCacheData> loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    InvokeContext invoke_ctx;
+    boost::shared_ptr<BlockCacheData> loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL == loaded.get());
 
     /*
@@ -201,14 +204,14 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
     CPPUNIT_ASSERT(NULL != doc.get());
 
     loaded.reset();
-    loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL != loaded.get());
     CPPUNIT_ASSERT(NULL != loaded->doc().get());
 
     sleep(3);
 
     loaded.reset();
-    loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL != loaded.get());
     CPPUNIT_ASSERT(NULL != loaded->doc().get());
 
@@ -216,27 +219,27 @@ DocCacheTest::testGetLocalTaggedPrefetch() {
 
     // check mark cache file for prefetch
     loaded.reset();
-    loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL != loaded.get());
     CPPUNIT_ASSERT(NULL != loaded->doc().get());
 
     loaded.reset();
-    loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL == loaded.get());
     
     loaded.reset();
-    loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL == loaded.get());
     
     loaded.reset();
-    loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL == loaded.get());
     
     sleep(1);
 
     // check skip expired
     loaded.reset();
-    loaded = tcache->loadDoc(NULL, &cache_ctx, tag_load);
+    loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
     CPPUNIT_ASSERT(NULL != loaded.get());
     CPPUNIT_ASSERT(NULL != loaded->doc().get());
 }

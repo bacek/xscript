@@ -210,7 +210,7 @@ DocCacheBase::loadDocImpl(InvokeContext *invoke_ctx, CacheContext *cache_ctx,
             continue;
         }
         
-        boost::shared_ptr<TagKey> key(strategy->createKey(ctx, object).release());
+        boost::shared_ptr<TagKey> key(strategy->createKey(ctx, invoke_ctx, object).release());
         
         boost::function<bool()> f = boost::bind(&DocCacheStrategy::loadDoc,
                 strategy, boost::cref(key.get()), cache_ctx, boost::ref(tag), boost::ref(cache_data));
@@ -275,7 +275,7 @@ DocCacheBase::saveDocImpl(const InvokeContext *invoke_ctx, CacheContext *cache_c
         if (!allow(strategy, cache_ctx)) {
             continue;
         }
-        std::auto_ptr<TagKey> key = strategy->createKey(ctx, object);
+        std::auto_ptr<TagKey> key = strategy->createKey(ctx, invoke_ctx, object);
 
         if (check_tag_key) {
             check_tag_key = false;

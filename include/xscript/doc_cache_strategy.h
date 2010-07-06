@@ -35,7 +35,8 @@ public:
 
     virtual time_t minimalCacheTime() const = 0;
     virtual std::string name() const = 0;
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CachedObject *obj) const = 0;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx,
+        const InvokeContext *invoke_ctx, const CachedObject *obj) const = 0;
 
     virtual bool loadDoc(const TagKey *key, CacheContext *cache_ctx,
             Tag &tag, boost::shared_ptr<CacheData> &cache_data) = 0;

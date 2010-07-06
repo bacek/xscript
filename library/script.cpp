@@ -356,7 +356,8 @@ Script::ScriptData::parseStylesheetNode(const xmlNodePtr node) {
                     if (begin == end) {
                         throw std::runtime_error("empty href in stylesheet node");
                     }
-                    owner_->xsltName(std::string((const char*) begin, (const char*) end));
+                    std::string xslt((const char*)begin, (const char*)end);
+                    owner_->xsltName(xslt.c_str());
                     return;
                 }
             }
@@ -863,6 +864,12 @@ Script::fullName(const std::string &name) const {
     return Xml::fullName(name);
 }
 
+const std::string&
+Script::xsltName() const {
+    return Object::xsltNameRaw();
+}
+
+
 XmlDocSharedHelper
 Script::invoke(boost::shared_ptr<Context> ctx) {
 
@@ -949,8 +956,8 @@ Script::expireTimeDeltaUndefined() const {
 }
 
 std::string
-Script::createTagKey(const Context *ctx) const {
-
+Script::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
+    (void)invoke_ctx;
     CacheStrategy* strategy = cacheStrategy();
     if (NULL == strategy) {
         throw std::logic_error("Cannot cache page without strategy");
@@ -1001,6 +1008,11 @@ Script::commonTagKey(const Context *ctx) const {
     key.push_back('|');
     key.append(blocksModifiedKey(data_->blocks()));
     return key;
+}
+
+void
+Script::xsltName(const char *name) {
+    Object::xsltName(name, NULL);
 }
 
 std::string

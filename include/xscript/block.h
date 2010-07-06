@@ -81,7 +81,9 @@ protected:
     bool checkStateGuard(Context *ctx) const;
     bool hasGuard() const;
     bool hasStateGuard() const;
-    void evalXPath(Context *ctx, const XmlDocSharedHelper &doc) const;
+    void evalXPath(Context *ctx, InvokeContext *invoke_ctx, const XmlDocSharedHelper &doc) const;
+    bool applyStylesheet(boost::shared_ptr<Context> ctx,
+        boost::shared_ptr<InvokeContext> invoke_ctx, XmlDocSharedHelper &doc);
 
     void appendNodeValue(xmlNodePtr node, std::string &val) const;
 
@@ -91,11 +93,13 @@ protected:
     virtual bool paramNode(const xmlNodePtr node) const;
     bool xpointerNode(const xmlNodePtr node) const;
     bool metaNode(const xmlNodePtr node) const;
+    bool xsltNode(const xmlNodePtr node) const;
 
     virtual void parseSubNode(xmlNodePtr node);
     virtual void parseXPathNode(const xmlNodePtr node);
     virtual void parseGuardNode(const xmlNodePtr node, bool is_not);
     virtual void parseParamNode(const xmlNodePtr node);
+    void parseXsltNode(const xmlNodePtr node);
     void parseXPointerNode(const xmlNodePtr node);
     void parseMetaNode(const xmlNodePtr node);
     void parseXPointerExpr(const char *value, const char *type);

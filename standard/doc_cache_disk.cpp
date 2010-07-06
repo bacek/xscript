@@ -32,7 +32,7 @@ namespace xscript {
 
 class TaggedKeyDisk : public TagKey {
 public:
-    TaggedKeyDisk(const Context *ctx, const CachedObject *obj);
+    TaggedKeyDisk(const Context *ctx, const InvokeContext *invoke_ctx, const CachedObject *obj);
 
     boost::uint32_t number() const;
     virtual const std::string& asString() const;
@@ -56,7 +56,8 @@ public:
     virtual time_t minimalCacheTime() const;
     virtual std::string name() const;
 
-    virtual std::auto_ptr<TagKey> createKey(const Context *ctx, const CachedObject *obj) const;
+    virtual std::auto_ptr<TagKey> createKey(const Context *ctx,
+        const InvokeContext *invoke_ctx, const CachedObject *obj) const;
 
     virtual CachedObject::Strategy strategy() const;
     
@@ -103,11 +104,12 @@ const boost::uint32_t DocCacheDisk::VERSION_SIGNATURE_MARKED = 0xdfc00204;
 const boost::uint32_t DocCacheDisk::DOC_SIGNATURE_START = 0x0a0b0d0a;
 const boost::uint32_t DocCacheDisk::DOC_SIGNATURE_END = 0x0a0e0d0a;
 
-TaggedKeyDisk::TaggedKeyDisk(const Context *ctx, const CachedObject *obj) {
+TaggedKeyDisk::TaggedKeyDisk(const Context *ctx,
+    const InvokeContext *invoke_ctx, const CachedObject *obj) {
     assert(NULL != ctx);
     assert(NULL != obj);
 
-    value_ = obj->createTagKey(ctx);
+    value_ = obj->createTagKey(ctx, invoke_ctx);
 
     std::string hash = HashUtils::hexMD5(value_.c_str(), value_.length());
     number_ = HashUtils::crc32(hash) & 0xFF;
@@ -270,8 +272,8 @@ DocCacheDisk::saveDoc(const TagKey *key, CacheContext *cache_ctx,
 }
 
 std::auto_ptr<TagKey>
-DocCacheDisk::createKey(const Context *ctx, const CachedObject *obj) const {
-    return std::auto_ptr<TagKey>(new TaggedKeyDisk(ctx, obj));
+DocCacheDisk::createKey(const Context *ctx, const InvokeContext *invoke_ctx, const CachedObject *obj) const {
+    return std::auto_ptr<TagKey>(new TaggedKeyDisk(ctx, invoke_ctx, obj));
 }
 
 void

@@ -1,3 +1,10 @@
+xscript (5.71.8-1) unstable; urgency=low
+
+  * dynamic perblock xslt implemented
+  * nil can be passed in lua getter
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 06 Jul 2010 18:00:00 +0400
+
 xscript (5.71.7-2) unstable; urgency=low
 
   * setLastModified removed from xscript.meta

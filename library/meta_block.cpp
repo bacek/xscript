@@ -171,12 +171,12 @@ MetaBlock::postParse() {
         throw std::runtime_error("Params is not allowed in meta");
     }
 
-    if (!xsltName().empty()) {
+    if (xsltDefined()) {
         throw std::runtime_error("Xslt is not allowed in meta");
     }
 
     if (lua_block_.get()) {
-        if (!lua_block_->xsltName().empty()) {
+        if (lua_block_->xsltDefined()) {
             throw std::runtime_error("Xslt is not allowed in meta lua");
         }
         if (lua_block_->metaBlock()) {

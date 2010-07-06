@@ -52,8 +52,9 @@ public:
     virtual bool applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc);
     
     virtual std::string fullName(const std::string &name) const;
+    const std::string& xsltName() const;
     
-    virtual std::string createTagKey(const Context *ctx) const;
+    virtual std::string createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const;
     virtual std::string createBlockTagKey(const Context *ctx) const;
     
     void addExpiresHeader(const Context *ctx) const;
@@ -76,6 +77,7 @@ protected:
     void parseXScript();
     
     std::string commonTagKey(const Context *ctx) const;
+    void xsltName(const char *name);
 
     virtual void postParse();
 
