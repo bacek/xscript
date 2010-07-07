@@ -426,6 +426,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
     try {
         BlockTimerStarter starter(ctx.get(), this);
         invoke_ctx = boost::shared_ptr<InvokeContext>(new InvokeContext());
+        invoke_ctx->xsltName(xsltName(ctx.get()));
         try {
             invokeInternal(ctx, invoke_ctx);
             callMetaLua(ctx, invoke_ctx);
@@ -514,8 +515,6 @@ Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeC
     bool is_error_doc = Policy::instance()->isErrorDoc(doc.get());
     
     log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
-    
-    invoke_ctx->xsltName(xsltName(ctx.get()));
 
     boost::shared_ptr<Context> local_ctx = invoke_ctx->getLocalContext();
     bool success = applyStylesheet(local_ctx.get() ? local_ctx : ctx, invoke_ctx, doc);
