@@ -225,7 +225,7 @@ TaggedBlock::postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
     else {
         boost::shared_ptr<Context> local_ctx = invoke_ctx->getLocalContext();
         if (local_ctx.get() && !local_ctx->expireDeltaUndefined()) {
-            tag.expire_time = tag.last_modified + local_ctx->expireDelta();
+            tag.expire_time = now + local_ctx->expireDelta();
         }
     }
 
