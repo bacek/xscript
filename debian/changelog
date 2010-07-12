@@ -1,3 +1,9 @@
+xscript (5.71.9-1) unstable; urgency=low
+
+  * local block caching fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 12 Jul 2010 17:03:55 +0400
+
 xscript (5.71.8-2) unstable; urgency=low
 
   * calculate perblock xslt before block processing

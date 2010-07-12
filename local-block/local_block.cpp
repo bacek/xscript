@@ -86,6 +86,17 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
     
     ctx_stopper.reset();
     invoke_ctx->resultDoc(doc);
+    if (tagged()) {
+        const Xml::TimeMapType& modified_info = script_->modifiedInfo();
+        time_t max_time = 0;
+        for (Xml::TimeMapType::const_iterator it = modified_info.begin();
+             it != modified_info.end();
+             ++it) {
+            max_time = std::max(max_time, it->second);
+        }
+        Tag local_tag(true, max_time, Tag::UNDEFINED_TIME);
+        invoke_ctx->tag(local_tag);
+    }
 }
 
 void
