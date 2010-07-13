@@ -70,7 +70,7 @@ public:
     State* state() const;
     const boost::shared_ptr<Script>& script() const;
 
-    Context* parentContext() const;
+    const boost::shared_ptr<Context>& parentContext() const;
     Context* rootContext() const;
     Context* originalContext() const;
     bool isRoot() const;

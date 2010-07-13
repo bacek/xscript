@@ -350,7 +350,7 @@ FileBlock::invokeFile(const std::string &file_name,
             throw InvokeError("too much recursive invocation depth");
         }
 
-        tmp_ctx = tmp_ctx->parentContext();
+        tmp_ctx = tmp_ctx->parentContext().get();
     }
 
     boost::function<boost::shared_ptr<Script>()> script_creator =

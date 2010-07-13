@@ -42,6 +42,26 @@
 
 namespace xscript {
 
+InvokeHelper::InvokeHelper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {
+    boost::shared_ptr<Context> ctx_tmp = ctx->parentContext();
+    while (ctx_tmp.get()) {
+        parents_.push_back(ctx_tmp);
+        ctx_tmp = ctx_tmp->parentContext();
+    }
+}
+
+InvokeHelper::~InvokeHelper() {
+    ctx_.reset();
+    while (!parents_.empty()) {
+        parents_.pop_front();
+    }
+}
+
+const boost::shared_ptr<Context>&
+InvokeHelper::context() const {
+    return ctx_;
+}
+
 struct Block::BlockData {
     BlockData(const Extension *ext, Xml *owner, xmlNodePtr node, Block *block);
     ~BlockData();
@@ -487,9 +507,15 @@ Block::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
 }
 
 void
+Block::callInternalThreaded_Ex(InvokeHelper helper, unsigned int slot) {
+    callInternalThreaded(helper.context(), slot);
+}
+
+void
 Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
     if (threaded() && !ctx->forceNoThreaded()) {
-        boost::function<void()> f = boost::bind(&Block::callInternalThreaded, this, ctx, slot);
+        InvokeHelper helper(ctx);
+        boost::function<void()> f = boost::bind(&Block::callInternalThreaded_Ex, this, helper, slot);
         ThreadPool::instance()->invoke(f);
     }
     else {

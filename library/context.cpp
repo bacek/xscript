@@ -564,7 +564,7 @@ Context::setNoCache() {
     Context *local_ctx = this;
     while(local_ctx) {
         local_ctx->ctx_data_->flag(ContextData::FLAG_NO_CACHE, true);
-        local_ctx = local_ctx->parentContext();
+        local_ctx = local_ctx->parentContext().get();
     }
 }
 
@@ -613,16 +613,16 @@ Context::assignRuntimeError(const Block *block, const std::string &error_message
     ctx_data_->assignRuntimeError(block, error_message);
 }
 
-Context*
+const boost::shared_ptr<Context>&
 Context::parentContext() const {
-    return ctx_data_->parent_context_.get();
+    return ctx_data_->parent_context_;
 }
 
 Context*
 Context::rootContext() const {
     const Context* ctx = this;
-    while (NULL != ctx->parentContext()) {
-        ctx = ctx->parentContext();
+    while (NULL != ctx->parentContext().get()) {
+        ctx = ctx->parentContext().get();
     }
     return const_cast<Context*>(ctx);
 }
@@ -631,7 +631,7 @@ Context*
 Context::originalContext() const {
     const Context* ctx = this;
     while(ctx->isProxy()) {
-        ctx = ctx->parentContext();
+        ctx = ctx->parentContext().get();
         if (NULL == ctx) {
             throw std::logic_error("NULL original context");
         }
@@ -641,7 +641,7 @@ Context::originalContext() const {
 
 bool
 Context::isRoot() const {
-    return parentContext() == NULL;
+    return parentContext().get() == NULL;
 }
 
 bool
@@ -659,8 +659,9 @@ Context::invokeContext() const {
 
 bool
 Context::stopped() const {
-    if (parentContext()) {
-        return ctx_data_->stopped_ || parentContext()->stopped();
+    Context* parent = parentContext().get();
+    if (parent) {
+        return ctx_data_->stopped_ || parent->stopped();
     }
 
     return ctx_data_->stopped_;

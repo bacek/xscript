@@ -19,6 +19,17 @@ class MetaBlock;
 class ParamFactory;
 class Xml;
 
+class InvokeHelper {
+public:
+    InvokeHelper(boost::shared_ptr<Context> ctx);
+    ~InvokeHelper();
+
+    const boost::shared_ptr<Context>& context() const;
+private:
+    std::list<boost::shared_ptr<Context> > parents_;
+    boost::shared_ptr<Context> ctx_;
+};
+
 class Block : public Object {
 public:
     Block(const Extension *ext, Xml *owner, xmlNodePtr node);
@@ -76,6 +87,7 @@ protected:
     virtual void postInvoke(Context *ctx, InvokeContext *invoke_ctx);
     virtual void callInternal(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
+    void callInternalThreaded_Ex(InvokeHelper helper, unsigned int slot);
     virtual void callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     void callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     bool checkStateGuard(Context *ctx) const;
