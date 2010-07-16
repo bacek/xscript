@@ -30,6 +30,7 @@
 #include "xscript/context.h"
 #include "xscript/control_extension.h"
 #include "xscript/doc_cache.h"
+#include "xscript/http_utils.h"
 #include "xscript/logger.h"
 #include "xscript/operation_mode.h"
 #include "xscript/policy.h"
@@ -210,6 +211,13 @@ Server::processCachedDoc(Context *ctx, Script *script) {
             PageCache::instance()->loadDoc(&cache_ctx, tag);
         
         if (NULL == cache_data.get()) {
+            return false;
+        }
+
+        const std::string& if_none_match =
+            ctx->request()->getHeader(HttpUtils::IF_NONE_MATCH_HEADER_NAME);
+
+        if (if_none_match != cache_data->etag()) {
             return false;
         }
 

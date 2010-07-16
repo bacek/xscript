@@ -942,8 +942,7 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc)
 
 void
 Script::addExpiresHeader(const Context *ctx) const {
-    boost::int32_t expires = HttpDateUtils::expires(ctx->response()->expireDelta());
-    ctx->response()->setHeader("Expires", HttpDateUtils::format(expires));
+    ctx->response()->setExpiresHeader();
 }
 
 void

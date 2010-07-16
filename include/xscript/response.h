@@ -28,6 +28,7 @@ public:
     void setStatus(unsigned short status);
     void sendError(unsigned short status, const std::string &message);
     void setHeader(const std::string &name, const std::string &value);
+    void setExpiresHeader();
     void setExpireDelta(boost::uint32_t delta);
     void setSuppressBody(bool value);
 

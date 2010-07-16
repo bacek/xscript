@@ -84,13 +84,19 @@ public:
     void addHeader(const std::string &name, const std::string &value);
     void expireTimeDelta(boost::uint32_t delta);
     
-    virtual void write(std::ostream *os, const Response *response) const;
+    virtual void write(std::ostream *os, const Response *response) const; // TODO: remove const
     virtual std::streamsize size() const;
     
+    const std::string& etag() const;
+
+private:
+    void checkETag(const Response *response) const; // TODO: remove const
+
 private:
     std::string data_;
     std::vector<std::pair<std::string, std::string> > headers_;
     boost::uint32_t expire_time_delta_;
+    mutable std::string etag_; // TODO: remove mutable
     static const boost::uint32_t SIGNATURE;
 };
 

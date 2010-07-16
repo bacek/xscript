@@ -177,6 +177,12 @@ Response::setHeader(const std::string &name, const std::string &value) {
 }
 
 void
+Response::setExpiresHeader() {
+    boost::int32_t expires = HttpDateUtils::expires(expireDelta());
+    setHeader("Expires", HttpDateUtils::format(expires));
+}
+
+void
 Response::setExpireDelta(boost::uint32_t delta) {
     boost::mutex::scoped_lock sl(data_->resp_mutex_);
     data_->expire_delta_ = delta;
@@ -244,7 +250,15 @@ Response::detach(Context *ctx) {
         data_->sendHeaders();
     }
     else if (cacheable) {
-        writeByWriter(data_->cache_data_.get());
+        if (data_->have_cached_copy_) {
+            setStatus(304);
+            setExpiresHeader();
+            data_->cache_data_ = boost::shared_ptr<PageCacheData>(); //need for sending headers in non-cache mode
+            data_->sendHeaders();
+        }
+        else {
+            writeByWriter(data_->cache_data_.get());
+        }
     }
     else if (data_->isBinary()) {
         setHeader("Content-length", boost::lexical_cast<std::string>(data_->writer_->size()));
@@ -307,7 +321,8 @@ Response::writeHeaders() {
     const HeaderMap& headers = outHeaders();
     for (HeaderMap::const_iterator i = headers.begin(), end = headers.end(); i != end; ++i) {
         if (cacheable) {
-            if (strcasecmp(i->first.c_str(), "expires") == 0) {
+            if (0 == strcasecmp(i->first.c_str(), "expires") ||
+                0 == strcasecmp(i->first.c_str(), "etag")) {
                 continue;
             }
             data_->cache_data_->addHeader(i->first, i->second);

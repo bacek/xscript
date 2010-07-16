@@ -449,7 +449,7 @@ PageCacheData::expireTimeDelta(boost::uint32_t delta) {
 
 bool
 PageCacheData::parse(const char *buf, boost::uint32_t size) {
-    if (size < 2*sizeof(boost::uint32_t)) {
+    if (size < 3*sizeof(boost::uint32_t)) {
         log()->error("error while parsing page cache data: incorrect length");
         return false;
     }
@@ -463,11 +463,24 @@ PageCacheData::parse(const char *buf, boost::uint32_t size) {
     data_.clear();
     headers_.clear();
     
+    const char *buf_orig = buf;
+
     buf += sizeof(boost::uint32_t);
     expire_time_delta_ = *((boost::uint32_t*)buf);
     buf += sizeof(boost::uint32_t);
     
-    Range data(buf, buf + size - 2*sizeof(boost::uint32_t));
+    boost::uint32_t etag_size = *((boost::uint32_t*)buf);
+    buf += sizeof(boost::uint32_t);
+
+    if (buf - buf_orig + etag_size >= size) {
+        log()->error("error while parsing page cache data: incorrect etag length");
+        return false;
+    }
+
+    etag_.assign(buf, etag_size);
+    buf += etag_size;
+
+    Range data(buf, buf_orig + size);
     while(!data.empty()) {
         Range header;
         split(data, Parser::RN_RANGE, header, data);
@@ -496,6 +509,11 @@ PageCacheData::serialize(std::string &buf) {
     buf.clear();
     buf.append((char*)&SIGNATURE, sizeof(SIGNATURE));
     buf.append((char*)&expire_time_delta_, sizeof(expire_time_delta_));
+
+    boost::uint32_t size = etag_.size();
+    buf.append((char*)&size, sizeof(size));
+    buf.append(etag_);
+
     for(std::vector<std::pair<std::string, std::string> >::iterator it = headers_.begin();
         it != headers_.end();
         ++it) {
@@ -513,8 +531,39 @@ PageCacheData::cleanup(Context *ctx) {
     (void)ctx;
 }
 
+const std::string&
+PageCacheData::etag() const {
+    return etag_;
+}
+
+void
+PageCacheData::checkETag(const Response *response) const {
+    if (!etag_.empty()) {
+        return;
+    }
+    std::string key;
+    typedef std::vector<std::pair<std::string, std::string> > HeaderMap;
+    for (HeaderMap::const_iterator it = headers_.begin(), end = headers_.end();
+        it != end;
+        ++it) {
+        key.append(it->first);
+        key.append(it->second);
+    }
+    const CookieSet& cookies = response->outCookies();
+    for (CookieSet::const_iterator it = cookies.begin(), end = cookies.end(); it != end; ++it) {
+        key.append(it->toString());
+    }
+
+    key.append(HashUtils::hexMD5(data_.c_str(), data_.size()));
+    etag_.reserve(2 + 32);
+    etag_.push_back('"');
+    etag_.append(HashUtils::hexMD5(key.c_str(), key.size()));
+    etag_.push_back('"');
+}
+
 void
 PageCacheData::write(std::ostream *os, const Response *response) const {
+    checkETag(response);
     typedef std::vector<std::pair<std::string, std::string> > HeaderMap;
     for (HeaderMap::const_iterator it = headers_.begin(), end = headers_.end();
         it != end;
@@ -526,6 +575,8 @@ PageCacheData::write(std::ostream *os, const Response *response) const {
     for (CookieSet::const_iterator it = cookies.begin(), end = cookies.end(); it != end; ++it) {
         (*os) << "Set-Cookie: " << it->toString() << "\r\n";
     }
+
+    (*os) << "ETag: " << etag_ << "\r\n";
 
     boost::int32_t expires = HttpDateUtils::expires(expire_time_delta_);
     (*os) << "Expires: " << HttpDateUtils::format(expires) << "\r\n\r\n";
@@ -539,7 +590,7 @@ PageCacheData::size() const {
 }
 
 const boost::uint32_t BlockCacheData::SIGNATURE = 0xffffff3a;
-const boost::uint32_t PageCacheData::SIGNATURE = 0xffffff0b;
+const boost::uint32_t PageCacheData::SIGNATURE = 0xffffff1b;
 
 BlockCacheData::BlockCacheData()
 {}
