@@ -39,6 +39,9 @@ public:
     static const std::string USER_AGENT_HEADER_NAME;
     static const std::string ACCEPT_HEADER_NAME;
     static const std::string IF_NONE_MATCH_HEADER_NAME;
+    static const std::string EXPIRES_HEADER_NAME;
+    static const std::string ETAG_HEADER_NAME;
+
 private:
     HttpUtils();
     virtual ~HttpUtils();

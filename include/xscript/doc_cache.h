@@ -155,11 +155,18 @@ public:
     virtual bool saveDoc(CacheContext *cache_ctx, const Tag &tag,
             const boost::shared_ptr<PageCacheData> &cache_data);
     
+    virtual void init(const Config *config);
+
+    bool useETag() const;
+
 protected:
     PageCache();
     
     virtual void createUsageCounter(boost::shared_ptr<StatInfo> info);
     virtual std::string name() const;
+
+private:
+    bool use_etag_;
 };
 
 } // namespace xscript

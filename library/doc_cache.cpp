@@ -350,7 +350,7 @@ DocCache::saveDoc(const InvokeContext *invoke_ctx, CacheContext *cache_ctx,
     return saveDocImpl(invoke_ctx, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
 }
 
-PageCache::PageCache() {
+PageCache::PageCache() : use_etag_(false) {
 }
 
 PageCache::~PageCache() {
@@ -360,6 +360,17 @@ PageCache*
 PageCache::instance() {
     static PageCache cache;
     return &cache;
+}
+
+void
+PageCache::init(const Config *config) {
+    use_etag_ = config->as<bool>("/xscript/page-cache-strategies/use-etag", false);
+    DocCacheBase::init(config);
+}
+
+bool
+PageCache::useETag() const {
+    return use_etag_;
 }
 
 void
@@ -576,7 +587,9 @@ PageCacheData::write(std::ostream *os, const Response *response) const {
         (*os) << "Set-Cookie: " << it->toString() << "\r\n";
     }
 
-    (*os) << "ETag: " << etag_ << "\r\n";
+    if (PageCache::instance()->useETag()) {
+        (*os) << "ETag: " << etag_ << "\r\n";
+    }
 
     boost::int32_t expires = HttpDateUtils::expires(expire_time_delta_);
     (*os) << "Expires: " << HttpDateUtils::format(expires) << "\r\n\r\n";

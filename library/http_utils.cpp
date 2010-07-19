@@ -96,6 +96,8 @@ const std::string HttpUtils::NORMALIZE_HEADER_METHOD = "HTTP_UTILS_NORMALIZE_HEA
 const std::string HttpUtils::USER_AGENT_HEADER_NAME = "User-Agent";
 const std::string HttpUtils::ACCEPT_HEADER_NAME = "Accept";
 const std::string HttpUtils::IF_NONE_MATCH_HEADER_NAME = "If-None-Match";
+const std::string HttpUtils::EXPIRES_HEADER_NAME = "Expires";
+const std::string HttpUtils::ETAG_HEADER_NAME = "ETag";
 
 HttpUtils::HttpUtils() {
 }

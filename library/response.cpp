@@ -179,7 +179,7 @@ Response::setHeader(const std::string &name, const std::string &value) {
 void
 Response::setExpiresHeader() {
     boost::int32_t expires = HttpDateUtils::expires(expireDelta());
-    setHeader("Expires", HttpDateUtils::format(expires));
+    setHeader(HttpUtils::EXPIRES_HEADER_NAME, HttpDateUtils::format(expires));
 }
 
 void
@@ -250,9 +250,10 @@ Response::detach(Context *ctx) {
         data_->sendHeaders();
     }
     else if (cacheable) {
-        if (data_->have_cached_copy_) {
+        if (data_->have_cached_copy_ && PageCache::instance()->useETag()) {
             setStatus(304);
             setExpiresHeader();
+            setHeader(HttpUtils::ETAG_HEADER_NAME, data_->cache_data_->etag());
             data_->cache_data_ = boost::shared_ptr<PageCacheData>(); //need for sending headers in non-cache mode
             data_->sendHeaders();
         }

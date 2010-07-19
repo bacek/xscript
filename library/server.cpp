@@ -217,7 +217,18 @@ Server::processCachedDoc(Context *ctx, Script *script) {
         const std::string& if_none_match =
             ctx->request()->getHeader(HttpUtils::IF_NONE_MATCH_HEADER_NAME);
 
-        if (if_none_match != cache_data->etag()) {
+        bool matched = false;
+        typedef boost::char_separator<char> Separator;
+        typedef boost::tokenizer<Separator> Tokenizer;
+        Tokenizer tok(if_none_match, Separator(", "));
+        for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
+            if (*it == cache_data->etag()) {
+                matched = true;
+                break;
+            }
+        }
+
+        if (!matched) {
             return false;
         }
 
