@@ -548,7 +548,7 @@ PageCacheData::etag() const {
 }
 
 void
-PageCacheData::checkETag(const Response *response) const {
+PageCacheData::checkETag() const {
     if (!etag_.empty()) {
         return;
     }
@@ -560,11 +560,6 @@ PageCacheData::checkETag(const Response *response) const {
         key.append(it->first);
         key.append(it->second);
     }
-    const CookieSet& cookies = response->outCookies();
-    for (CookieSet::const_iterator it = cookies.begin(), end = cookies.end(); it != end; ++it) {
-        key.append(it->toString());
-    }
-
     key.append(HashUtils::hexMD5(data_.c_str(), data_.size()));
     etag_.reserve(2 + 32);
     etag_.push_back('"');
@@ -574,7 +569,7 @@ PageCacheData::checkETag(const Response *response) const {
 
 void
 PageCacheData::write(std::ostream *os, const Response *response) const {
-    checkETag(response);
+    checkETag();
     typedef std::vector<std::pair<std::string, std::string> > HeaderMap;
     for (HeaderMap::const_iterator it = headers_.begin(), end = headers_.end();
         it != end;

@@ -90,7 +90,7 @@ public:
     const std::string& etag() const;
 
 private:
-    void checkETag(const Response *response) const; // TODO: remove const
+    void checkETag() const; // TODO: remove const
 
 private:
     std::string data_;

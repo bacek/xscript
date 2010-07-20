@@ -217,21 +217,21 @@ Server::processCachedDoc(Context *ctx, Script *script) {
         const std::string& if_none_match =
             ctx->request()->getHeader(HttpUtils::IF_NONE_MATCH_HEADER_NAME);
 
-        bool matched = false;
-        typedef boost::char_separator<char> Separator;
-        typedef boost::tokenizer<Separator> Tokenizer;
-        Tokenizer tok(if_none_match, Separator(", "));
-        for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
-            if (*it == cache_data->etag()) {
-                matched = true;
-                break;
+        if (!if_none_match.empty()) {
+            bool matched = false;
+            typedef boost::char_separator<char> Separator;
+            typedef boost::tokenizer<Separator> Tokenizer;
+            Tokenizer tok(if_none_match, Separator(", "));
+            for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
+                if (*it == cache_data->etag()) {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                return false;
             }
         }
-
-        if (!matched) {
-            return false;
-        }
-
         ctx->response()->setCacheable(cache_data);
     }
     catch(const std::exception &e) {
