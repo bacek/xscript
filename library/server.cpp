@@ -209,28 +209,8 @@ Server::processCachedDoc(Context *ctx, Script *script) {
         CacheContext cache_ctx(script, ctx, script->allowDistributed());
         boost::shared_ptr<PageCacheData> cache_data =
             PageCache::instance()->loadDoc(&cache_ctx, tag);
-        
         if (NULL == cache_data.get()) {
             return false;
-        }
-
-        const std::string& if_none_match =
-            ctx->request()->getHeader(HttpUtils::IF_NONE_MATCH_HEADER_NAME);
-
-        if (!if_none_match.empty()) {
-            bool matched = false;
-            typedef boost::char_separator<char> Separator;
-            typedef boost::tokenizer<Separator> Tokenizer;
-            Tokenizer tok(if_none_match, Separator(", "));
-            for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
-                if (*it == cache_data->etag()) {
-                    matched = true;
-                    break;
-                }
-            }
-            if (!matched) {
-                return false;
-            }
         }
         ctx->response()->setCacheable(cache_data);
     }
@@ -238,7 +218,6 @@ Server::processCachedDoc(Context *ctx, Script *script) {
         log()->error("Error in loading cached page: %s", e.what());
         return false;
     }
-
     return true;
 }
 

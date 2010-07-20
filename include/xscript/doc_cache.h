@@ -88,6 +88,7 @@ public:
     virtual std::streamsize size() const;
     
     const std::string& etag() const;
+    bool notModified(Context *ctx) const;
 
 private:
     void checkETag() const; // TODO: remove const

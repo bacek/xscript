@@ -250,7 +250,7 @@ Response::detach(Context *ctx) {
         data_->sendHeaders();
     }
     else if (cacheable) {
-        if (data_->have_cached_copy_ && PageCache::instance()->useETag()) {
+        if (data_->have_cached_copy_ && data_->cache_data_->notModified(ctx)) {
             setStatus(304);
             setExpiresHeader();
             setHeader(HttpUtils::ETAG_HEADER_NAME, data_->cache_data_->etag());

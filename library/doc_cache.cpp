@@ -3,6 +3,7 @@
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "xscript/algorithm.h"
 #include "xscript/average_counter.h"
@@ -521,6 +522,7 @@ PageCacheData::serialize(std::string &buf) {
     buf.append((char*)&SIGNATURE, sizeof(SIGNATURE));
     buf.append((char*)&expire_time_delta_, sizeof(expire_time_delta_));
 
+    checkETag();
     boost::uint32_t size = etag_.size();
     buf.append((char*)&size, sizeof(size));
     buf.append(etag_);
@@ -590,6 +592,29 @@ PageCacheData::write(std::ostream *os, const Response *response) const {
     (*os) << "Expires: " << HttpDateUtils::format(expires) << "\r\n\r\n";
     
     os->write(data_.c_str(), data_.size());
+}
+
+bool
+PageCacheData::notModified(Context *ctx) const {
+    if (!PageCache::instance()->useETag()) {
+        return false;
+    }
+    const std::string& if_none_match =
+        ctx->request()->getHeader(HttpUtils::IF_NONE_MATCH_HEADER_NAME);
+    if (if_none_match.empty()) {
+        return false;
+    }
+    bool matched = false;
+    typedef boost::char_separator<char> Separator;
+    typedef boost::tokenizer<Separator> Tokenizer;
+    Tokenizer tok(if_none_match, Separator(", "));
+    for (Tokenizer::iterator it = tok.begin(), it_end = tok.end(); it != it_end; ++it) {
+        if (*it == etag_) {
+            matched = true;
+            break;
+        }
+    }
+    return matched;
 }
 
 std::streamsize
