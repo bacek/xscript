@@ -55,6 +55,9 @@ ProtocolArgParam::create(Object *owner, xmlNodePtr node) {
 bool
 ProtocolArgParam::is(const Context *ctx, const std::string &name, const std::string &value) {
     try {
+        if (value.empty()) {
+            return !Protocol::get(ctx, name.c_str()).empty();
+        }
         return Protocol::get(ctx, name.c_str()) == value;
     }
     catch(const std::runtime_error &e) {

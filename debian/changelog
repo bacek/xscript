@@ -1,3 +1,9 @@
+xscript (5.71.16-1) unstable; urgency=low
+
+  * ProtocolArg fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 22 Jul 2010 12:11:41 +0400
+
 xscript (5.71.15-1) unstable; urgency=low
 
   * empty value in ProtocolArg allowed
