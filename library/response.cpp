@@ -272,7 +272,9 @@ Response::detach(Context *ctx) {
 
     data_->detached_ = true;
     
-    (*data_->stream_) << std::flush;
+    if (data_->stream_->good()) {
+        (*data_->stream_) << std::flush;
+    }
     
     if (cacheable && !data_->have_cached_copy_ && ctx) {
         try {

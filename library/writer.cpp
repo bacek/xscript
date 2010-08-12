@@ -39,10 +39,10 @@ XmlWriter::addHeaders(Response *response) {
     response->setHeader("Content-type", std::string("text/xml; charset=").append(encoding_));
 }
 
-void
+int
 XmlWriter::write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf) {
     addHeaders(response);
-    xmlSaveFormatFileTo(buf, doc, encoding_.c_str(), 1);
+    return xmlSaveFormatFileTo(buf, doc, encoding_.c_str(), 1);
 }
 
 HtmlWriter::HtmlWriter(const boost::shared_ptr<Stylesheet> &sh) :
@@ -78,11 +78,12 @@ HtmlWriter::addHeaders(Response *response) {
     }
 }
 
-void
+int
 HtmlWriter::write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf) {
     addHeaders(response);
-    xsltSaveResultTo(buf, doc, stylesheet_->stylesheet());
+    int len = xsltSaveResultTo(buf, doc, stylesheet_->stylesheet());
     xmlOutputBufferClose(buf);
+    return len;
 }
 
 BinaryWriter::~BinaryWriter() {

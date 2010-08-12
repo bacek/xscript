@@ -698,9 +698,15 @@ BlockCacheData::parse(const char *buf, boost::uint32_t size) {
 
 extern "C" int
 cacheWriteFunc(void *ctx, const char *data, int len) {
-    std::string * str = static_cast<std::string*>(ctx);
-    str->append(data, len);
-    return len;
+    std::string* str = static_cast<std::string*>(ctx);
+    try {
+        str->append(data, len);
+        return len;
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception while writing cache data: %s", e.what());
+    }
+    return -1;
 }
 
 extern "C" int

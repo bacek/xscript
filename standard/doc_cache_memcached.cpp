@@ -311,19 +311,6 @@ DocCacheMemcached::createKey(const Context *ctx,
     return std::auto_ptr<TagKey>(new TagKeyMemcached(ctx, invoke_ctx, obj));
 }
 
-extern "C" int
-memcacheWriteFunc(void *ctx, const char *data, int len) {
-    std::string * str = static_cast<std::string*>(ctx);
-    str->append(data, len);
-    return len;
-}
-
-extern "C" int
-memcacheCloseFunc(void *ctx) {
-    (void) ctx;
-    return 0;
-}
-
 bool 
 DocCacheMemcached::saveDoc(const TagKey *key, CacheContext *cache_ctx,
     const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {

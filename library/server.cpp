@@ -238,7 +238,9 @@ Server::sendResponse(Context *ctx, XmlDocSharedHelper doc) {
     XmlUtils::throwUnless(NULL != buf);
 
     try {
-        ctx->documentWriter()->write(ctx->response(), doc.get(), buf);
+        if (-1 == ctx->documentWriter()->write(ctx->response(), doc.get(), buf)) {
+            XmlUtils::resetReporter();
+        }
     }
     catch(const std::exception &e) {
         xmlOutputBufferClose(buf);
@@ -342,7 +344,7 @@ writeFunc(void *ctx, const char *data, int len) {
         return context->response()->write(data, len, context->request());
     }
     catch (const std::exception &e) {
-        log()->error("caught exception while writing result: %s %s",
+        log()->warn("caught exception while writing result: %s %s",
                      context->request()->getScriptFilename().c_str(), e.what());
     }
     return -1;
