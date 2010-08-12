@@ -344,8 +344,8 @@ writeFunc(void *ctx, const char *data, int len) {
         return context->response()->write(data, len, context->request());
     }
     catch (const std::exception &e) {
-        log()->warn("caught exception while writing result: %s %s",
-                     context->request()->getScriptFilename().c_str(), e.what());
+        log()->warn("caught exception while writing result: %s. Url: %s",
+            e.what(), context->request()->getOriginalUrl().c_str());
     }
     return -1;
 }
