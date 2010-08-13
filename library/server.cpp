@@ -190,14 +190,27 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
         
         XsltProfiler::instance()->dumpProfileInfo(ctx);
     }
+    catch (const ParseError &e) {
+        std::stringstream str_log;
+        std::stringstream str_browse;
+        str_log << e.what();
+        str_browse << e.what();
+        const ParseError::InfoType& info = e.info();
+        for (ParseError::InfoType::const_iterator it = info.begin(), end = info.end();
+             it != end;
+             ++it) {
+            str_log << " " << *it;
+            str_browse << "\n" << *it;
+        }
+        log()->error("parse exception caught: %s. Owner: %s", str_log.str().c_str(), request->getScriptFilename().c_str());
+        OperationMode::instance()->sendError(response.get(), 500, str_browse.str().c_str());
+    }
     catch (const std::exception &e) {
-        log()->error("%s: exception caught: %s. Owner: %s",
-            BOOST_CURRENT_FUNCTION, e.what(), request->getScriptFilename().c_str());
+        log()->error("runtime exception caught: %s. Owner: %s", e.what(), request->getScriptFilename().c_str());
         OperationMode::instance()->sendError(response.get(), 500, e.what());
     }
     catch (...) {
-        log()->error("%s: unknown exception caught. Owner: %s",
-            BOOST_CURRENT_FUNCTION, request->getScriptFilename().c_str());
+        log()->error("unknown exception caught. Owner: %s", request->getScriptFilename().c_str());
         OperationMode::instance()->sendError(response.get(), 500, "unknown error");
     }
 }

@@ -343,7 +343,7 @@ Block::detectBase() {
     if (NULL == base.get()) {
         return;
     }
-    
+
     data_->base_ = (const char*)base.get();
     std::string::size_type pos = data_->base_.find_last_of('/');
     if (pos != std::string::npos) {
@@ -381,9 +381,14 @@ Block::parse() {
         }
         postParse();
     }
-    catch(const std::exception &e) {
-        log()->error("%s, parse failed for '%s': %s", name(), owner()->name().c_str(), e.what());
-        throw;
+    catch (ParseError &e) {
+        e.add(errorLocation());
+        throw e;
+    }
+    catch (const std::exception &e) {
+        ParseError error(e.what());
+        error.add(errorLocation());
+        throw error;
     }
 }
 
@@ -716,30 +721,32 @@ Block::errorDoc(const InvokeError &error,
 }
 
 std::string
-Block::errorMessage(const InvokeError &error) const {
-
+Block::errorLocation() const {
     std::stringstream stream;
-    stream << error.what() << ". " << "block: " << name() << ". ";
-
+    stream << "[Block: " << name();
     if (!method().empty()) {
-        stream << "method: " << method() << ". ";
+        stream << ", method: " << method();
     }
-
     if (!id().empty()) {
-        stream << "id: " << id() << ". ";
+        stream << ", id: " << id();
     }
+    stream << "]";
+    return stream.str();
+}
 
+std::string
+Block::errorMessage(const InvokeError &error) const {
+    std::stringstream stream;
+    stream << error.what() << errorLocation();
     const InvokeError::InfoMapType& info = error.info();
-    for(InvokeError::InfoMapType::const_iterator it = info.begin();
-        it != info.end();
-        ++it) {
+    for (InvokeError::InfoMapType::const_iterator it = info.begin();
+         it != info.end();
+         ++it) {
         if (!it->second.empty()) {
-            stream << it->first << ": " << it->second << ". ";
+            stream << ". " << it->first << ": " << it->second;
         }
     }
-
-    stream << "owner: " << owner()->name() << ".";
-
+    stream << ". owner: " << owner()->name() << ".";
     return stream.str();
 }
 

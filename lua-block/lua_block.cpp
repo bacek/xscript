@@ -116,7 +116,8 @@ LuaBlock::postParse() {
     LuaHolder lua(luaL_newstate());
     int res = luaL_loadstring(lua.get(), code_);
     if (LUA_ERRSYNTAX == res) {
-        throw std::runtime_error("bad lua code");
+        std::string msg(lua_tostring(lua.get(), -1));
+        throw std::runtime_error(std::string("bad lua code: ") + msg.c_str());
     }
     else if (LUA_ERRMEM == res) {
         throw std::bad_alloc();

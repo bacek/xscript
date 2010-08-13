@@ -89,10 +89,14 @@ private:
 
     static boost::thread_specific_ptr<XmlErrorReporter> reporter_;
     static const std::string UNKNOWN_XML_ERROR;
+    static const int CHUNK_MESSAGE_SIZE;
+    static const int MESSAGE_SIZE_LIMIT;
 };
 
 boost::thread_specific_ptr<XmlErrorReporter> XmlErrorReporter::reporter_;
 const std::string XmlErrorReporter::UNKNOWN_XML_ERROR = "unknown XML error";
+const int XmlErrorReporter::CHUNK_MESSAGE_SIZE = 5120;
+const int XmlErrorReporter::MESSAGE_SIZE_LIMIT = 10 * 1024;
 
 extern "C" void xmlNullError(void *, const char *, ...);
 extern "C" void xmlReportPlainError(void *, const char *, ...);
@@ -687,9 +691,12 @@ XmlErrorReporter::report(const char *format, ...) {
 
 void
 XmlErrorReporter::report(const char *format, va_list args) {
-    char part_message[5120];
+    if (message_.size() >= MESSAGE_SIZE_LIMIT) {
+        return;
+    }
+    char part_message[CHUNK_MESSAGE_SIZE];
     vsnprintf(part_message, sizeof(part_message), format, args);
-    part_message[5119] = 0;
+    part_message[CHUNK_MESSAGE_SIZE - 1] = 0;
     message_ += part_message;
     error_ = true;
 }

@@ -128,6 +128,7 @@ protected:
     void addNamespaces(const std::map<std::string, std::string> &ns);
 
 private:
+    std::string errorLocation() const;
     std::string errorMessage(const InvokeError &error) const;
     boost::shared_ptr<InvokeContext> errorResult(XmlDocHelper doc) const;
     boost::shared_ptr<InvokeContext> errorResult(const InvokeError &error, std::string &full_error) const;

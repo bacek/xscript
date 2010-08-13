@@ -5,6 +5,7 @@
 #include <boost/current_function.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "xscript/context.h"
 #include "xscript/doc_cache.h"
@@ -314,8 +315,14 @@ Response::writeByWriter(const BinaryWriter *writer) {
 
 void
 Response::writeError(unsigned short status, const std::string &message) {
-    (*data_->stream_) << "<html><body><h1>" << status << " " << HttpUtils::statusToString(status) << "<br><br>"
-    << XmlUtils::escape(createRange(message)) << "</h1></body></html>";
+    (*data_->stream_) << "<html><body><h1>" << status << " " << HttpUtils::statusToString(status) << "<br>";
+    typedef boost::char_separator<char> Separator;
+    typedef boost::tokenizer<Separator> Tokenizer;
+    Tokenizer tok(message, Separator("\r\n"));
+    for (Tokenizer::iterator it = tok.begin(), end = tok.end(); it != end; ++it) {
+        (*data_->stream_) << "<br>" << XmlUtils::escape(createRange(*it));
+    }
+    (*data_->stream_) << "</h1></body></html>";
 }
 
 void

@@ -29,6 +29,19 @@ public:
     BadRequestError(const std::string &error) : UnboundRuntimeError(error) {}
 };
 
+class ParseError : public UnboundRuntimeError {
+public:
+    typedef std::vector<std::string> InfoType;
+
+    ParseError(const std::string &error);
+    virtual ~ParseError() throw () {}
+
+    void add(const std::string &info);
+    const InfoType& info() const;
+
+private:
+    InfoType info_;
+};
 
 class InvokeError : public UnboundRuntimeError {
 public:

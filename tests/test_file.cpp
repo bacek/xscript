@@ -4,6 +4,7 @@
 #include <cppunit/extensions/HelperMacros.h>
 
 #include "xscript/context.h"
+#include "xscript/exception.h"
 #include "xscript/script.h"
 #include "xscript/script_factory.h"
 #include "xscript/state.h"
@@ -22,7 +23,7 @@ using namespace xscript;
 class FileTest : public CppUnit::TestFixture {
 public:
     CPPUNIT_TEST_SUITE(FileTest);
-    CPPUNIT_TEST_EXCEPTION(testUnknowMethod, std::invalid_argument);
+    CPPUNIT_TEST_EXCEPTION(testUnknowMethod, ParseError);
     CPPUNIT_TEST(testLoad);
     CPPUNIT_TEST(testInclude);
     CPPUNIT_TEST_SUITE_END();

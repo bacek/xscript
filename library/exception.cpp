@@ -11,6 +11,19 @@
 
 namespace xscript {
 
+ParseError::ParseError(const std::string &error) : UnboundRuntimeError(error)
+{}
+
+void
+ParseError::add(const std::string &info) {
+    info_.push_back(info);
+}
+
+const ParseError::InfoType&
+ParseError::info() const {
+    return info_;
+}
+
 InvokeError::InvokeError(const std::string &error) : UnboundRuntimeError(error)
 {}
 

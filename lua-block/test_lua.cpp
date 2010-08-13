@@ -6,6 +6,7 @@
 #include <cppunit/TestFixture.h>
 #include <cppunit/extensions/HelperMacros.h>
 
+#include "xscript/exception.h"
 #include "xscript/http_utils.h"
 #include "xscript/xml_util.h"
 #include "xscript/test_utils.h"
@@ -58,7 +59,7 @@ private:
 
     CPPUNIT_TEST(testBadType);
     CPPUNIT_TEST(testBadArgCount);
-    CPPUNIT_TEST_EXCEPTION(testBadCode, std::runtime_error);
+    CPPUNIT_TEST_EXCEPTION(testBadCode, ParseError);
 
     CPPUNIT_TEST(testMultiBlock);
     CPPUNIT_TEST(testMD5);
