@@ -12,6 +12,7 @@
 #include "xscript/resource_holder.h"
 #include "xscript/logger.h"
 #include "xscript/context.h"
+#include "xscript/operation_mode.h"
 #include "xscript/profiler.h"
 #include "xscript/xml.h"
 
@@ -41,10 +42,20 @@ inline void ResourceHolderTraits<lua_State*>::destroy(lua_State *state) {
     lua_close(state);
 }
 
+struct LuaDebugInfo {
+    int line;
+    std::string func_name;
+
+    LuaDebugInfo(int l, const std::string &name) : line(l), func_name(name)
+    {}
+};
+
 typedef ResourceHolder<lua_State*> LuaHolder;
+typedef std::list<LuaDebugInfo> LuaStackTrace;
 
 struct LuaState {
     std::string buffer;
+    LuaStackTrace trace;
     LuaHolder state;
 
     LuaState(lua_State *l) : state(l) {
@@ -111,12 +122,6 @@ LuaBlock::postParse() {
         throw std::bad_alloc();
     }
 }
-
-extern "C" void luaHook(lua_State * lua, lua_Debug *ar) {
-    (void)lua;
-    (void)ar;
-}
-
 
 /**
  * Setup userdata for lua.
@@ -189,12 +194,55 @@ setupLocalData(lua_State * lua, InvokeContext *invoke_ctx, Context *ctx, const B
     lua_setfield(lua, -2, "_block");
 }
 
+static LuaStackTrace*
+getTrace(lua_State *lua) {
+    lua_getglobal(lua, "xscript");
+    lua_getfield(lua, -1, "_trace");
+    pointer<LuaStackTrace> *p = (pointer<LuaStackTrace>*)lua_touserdata(lua, -1);
+    assert(p);
+    LuaStackTrace* trace = p->ptr;
+    assert(trace);
+    lua_pop(lua, 2);
+    return trace;
+}
+
+extern "C" void
+luaHook(lua_State *lua, lua_Debug *ar) {
+    LuaStackTrace* trace = getTrace(lua);
+    lua_getinfo(lua, "Sln", ar);
+    if (LUA_HOOKCALL == ar->event) {
+        std::string name;
+        if (ar->name) {
+            name = std::string("function ") + ar->name;
+        }
+        else {
+            name = "[MAIN]";
+        }
+        LuaDebugInfo debug(ar->currentline, name);
+        trace->push_front(debug);
+    }
+    else if (LUA_HOOKRET == ar->event) {
+        if (trace->size() > 0) {
+            trace->pop_front();
+        }
+    }
+}
+
+static void
+setupDebug(lua_State *lua, LuaStackTrace *trace) {
+    lua_getglobal(lua, "xscript");
+    pointer<LuaStackTrace> *pl = (pointer<LuaStackTrace> *)
+        lua_newuserdata(lua, sizeof(pointer<LuaStackTrace>));
+    pl->ptr = trace;
+    lua_setfield(lua, -2, "_trace");
+}
+
 static LuaSharedContext
 createLua() {
     LuaSharedContext lua_context(new LuaState(luaL_newstate()));
     lua_State *lua = lua_context->state.get();
     luaL_openlibs(lua);
-    setupXScript(lua, &(lua_context->buffer));    
+    setupXScript(lua, &(lua_context->buffer));
     registerLibs(lua, "request", (void*)1, getRequestLib(), getRequestLib());   
     registerLibs(lua, "state", (void*)1, getStateLib(), getStateLib());
     registerLibs(lua, "response", (void*)1, getResponseLib(), getResponseLib());
@@ -203,6 +251,10 @@ createLua() {
     registerLibs(lua, "selfmeta", (void*)1, getSelfMetaLib(), getSelfMetaLib());
     registerLibs(lua, "cookie", (void*)NULL, getCookieLib(), getCookieNewLib());
     registerLibs(lua, "logger", (void*)NULL, NULL, getLoggerLib());
+    if (!OperationMode::instance()->isProduction()) {
+        setupDebug(lua, &(lua_context->trace));
+        lua_sethook(lua, &luaHook, LUA_MASKCALL | LUA_MASKRET, 0);
+    }
     return lua_context;
 }
 
@@ -245,19 +297,36 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
     }
     
     lua_context->buffer.clear();
+    lua_context->trace.clear();
     
     setupLocalData(lua, invoke_ctx.get(), ctx.get(), this);
     
     if (LUA_ERRMEM == luaL_loadstring(lua, code_)) {
         throw std::bad_alloc();
     }
-    
+
     int res = lua_pcall(lua, 0, LUA_MULTRET, 0);    
     if (res != 0) {
         std::string msg(lua_tostring(lua, -1));
         lua_pop(lua, 1);
         // Just throw exception. It will be logger by Block.
-        throw InvokeError(msg);
+
+        if (OperationMode::instance()->isProduction()) {
+            throw InvokeError(msg);
+        }
+
+        XmlNodeHelper trace_node(xmlNewNode(NULL, (const xmlChar*)"stacktrace"));
+        LuaStackTrace* trace = getTrace(lua);
+        for (LuaStackTrace::iterator it = trace->begin(), end = trace->end();
+             it != end;
+             ++it) {
+            XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)"level"));
+            xmlNodeSetContent(node.get(), (const xmlChar*)it->func_name.c_str());
+            xmlSetProp(node.get(), (const xmlChar*)"line",
+                (const xmlChar*)boost::lexical_cast<std::string>(it->line).c_str());
+            xmlAddChild(trace_node.get(), node.release());
+        }
+        throw InvokeError(msg, trace_node);
     }
 
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
