@@ -68,8 +68,10 @@ OperationMode::processPerblockXsltError(const Context *ctx,
 
 void
 OperationMode::processScriptError(const Context *ctx, const Script *script) {
-    (void)ctx;
-    (void)script;
+    if (XmlUtils::hasXMLError()) {
+        std::string postfix = "Script: " + script->name();
+        XmlUtils::printXMLError(postfix);
+    }
 }
 
 void

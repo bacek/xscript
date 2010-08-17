@@ -306,10 +306,6 @@ Context::Context(const boost::shared_ptr<Script> &script,
 }
 
 Context::~Context() {    
-    if (XmlUtils::hasXMLError()) {
-        std::string postfix = "Script: " + script()->name();
-        XmlUtils::printXMLError(postfix);
-    }
     ExtensionList::instance()->destroyContext(this);
 }
 
