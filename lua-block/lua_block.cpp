@@ -42,16 +42,8 @@ inline void ResourceHolderTraits<lua_State*>::destroy(lua_State *state) {
     lua_close(state);
 }
 
-struct LuaDebugInfo {
-    int line;
-    std::string func_name;
-
-    LuaDebugInfo(int l, const std::string &name) : line(l), func_name(name)
-    {}
-};
-
 typedef ResourceHolder<lua_State*> LuaHolder;
-typedef std::list<LuaDebugInfo> LuaStackTrace;
+typedef std::list<std::string> LuaStackTrace;
 
 struct LuaState {
     std::string buffer;
@@ -219,8 +211,7 @@ luaHook(lua_State *lua, lua_Debug *ar) {
         else {
             name = "[MAIN]";
         }
-        LuaDebugInfo debug(ar->currentline, name);
-        trace->push_front(debug);
+        trace->push_front(name);
     }
     else if (LUA_HOOKRET == ar->event) {
         if (trace->size() > 0) {
@@ -322,9 +313,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
              it != end;
              ++it) {
             XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)"level"));
-            xmlNodeSetContent(node.get(), (const xmlChar*)it->func_name.c_str());
-            xmlSetProp(node.get(), (const xmlChar*)"line",
-                (const xmlChar*)boost::lexical_cast<std::string>(it->line).c_str());
+            xmlNodeSetContent(node.get(), (const xmlChar*)it->c_str());
             xmlAddChild(trace_node.get(), node.release());
         }
         throw InvokeError(msg, trace_node);

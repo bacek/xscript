@@ -746,7 +746,7 @@ Block::errorMessage(const InvokeError &error) const {
             stream << ". " << it->first << ": " << it->second;
         }
     }
-    stream << ". owner: " << owner()->name() << ".";
+    stream << ". owner: " << owner()->name();
     return stream.str();
 }
 
