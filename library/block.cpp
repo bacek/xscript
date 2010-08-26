@@ -582,9 +582,17 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx,
     }
     boost::shared_ptr<Stylesheet> sh = StylesheetFactory::createStylesheet(xslt);
     {
-        PROFILER(log(), std::string("per-block-xslt: '") + xslt +
-                "' block: '" + name() + "' block-id: '" + id() +
-                "' method: '" + method() + "' owner: '" + owner()->name() + "'");
+        std::stringstream str;
+        str << "per-block-xslt: " << xslt;
+        str << ", block: " << name();
+        if (!id().empty()) {
+            str << ", block-id: " << id();
+        }
+        if (!method().empty()) {
+            str << ", method: " << method();
+        }
+        str << ", owner: " << owner()->name();
+        PROFILER(log(), str.str())
         Object::applyStylesheet(sh, ctx, doc, XmlUtils::xmlVersionNumber() < 20619);
     }
 
