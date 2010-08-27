@@ -6,6 +6,30 @@
 
 namespace xoffline = xscript::offline;
 
+namespace xscript { namespace python {
+
+class interpreter_unlock
+{
+public:
+    interpreter_unlock() :
+         save_(PyEval_SaveThread())
+    {
+    }
+
+    ~interpreter_unlock() {
+        PyEval_RestoreThread(save_);
+    }
+
+private:
+    interpreter_unlock(interpreter_unlock const &);
+    interpreter_unlock& operator = (interpreter_unlock const &);
+
+    PyThreadState *save_;
+};
+
+} }
+
+
 static void
 initialize(const char *config_path) {
     std::string error;
@@ -31,6 +55,8 @@ renderBuffer(const std::string &url,
              const std::string &body,
              const std::string &headers,
              const std::string &vars) {
+
+    xscript::python::interpreter_unlock unlock;
     std::string error;
     try {
         return xoffline::renderBuffer(url, xml, body, headers, vars);
@@ -52,6 +78,8 @@ renderFile(const std::string &file,
            const std::string &body,
            const std::string &headers,
            const std::string &vars) {
+
+    xscript::python::interpreter_unlock unlock;
     std::string error;
     try {
         return xoffline::renderFile(file, body, headers, vars);
