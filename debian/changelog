@@ -1,3 +1,10 @@
+xscript (5.71.22-1) unstable; urgency=low
+
+  * unlock python gil while rendering xscript page 
+  * fixed checking http status, allow 200,204,304 and 0(local-file) 
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 27 Aug 2010 19:03:56 +0400
+
 xscript (5.71.21-2) unstable; urgency=low
 
   * boolean values accepted in xscript.state:setTable
