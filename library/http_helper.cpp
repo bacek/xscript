@@ -217,7 +217,7 @@ public:
     }
 
     void detectContentType() {
-        std::multimap<std::string, std::string>::const_iterator i = headers_.find("content-type");
+        std::multimap<std::string, std::string>::const_iterator i = headers_.find(HEADER_NAME_CONTENT_TYPE);
         if (headers_.end() != i) {
             const std::string &type = i->second;
             typedef boost::char_separator<char> Separator;
@@ -295,6 +295,36 @@ public:
         }
         return 0;
     }
+
+    void checkStatus() const {
+        log()->debug("%s, status: %ld", BOOST_CURRENT_FUNCTION, status_);
+        if (0 == status_) {
+            if (content_->empty()) {
+                throw std::runtime_error("empty local content: possibly not performed");
+            }
+        }
+        else if (204 == status_) {
+            if (!content_->empty()) {
+                throw std::runtime_error("content must be empty");
+            }
+        }
+        else if (304 == status_) {
+            if (!sent_modified_since_) {
+                throw std::runtime_error("server responded not-modified but if-modified-since was not sent");
+            }
+        }
+        else if (200 != status_) {
+            std::stringstream stream;
+            stream << "server responded " << status_;
+            if (301 == status_ || 302 == status_) {
+                std::multimap<std::string, std::string>::const_iterator i = headers_.find(HEADER_NAME_LOCATION);
+                if (i != headers_.end() && !i->second.empty()) {
+                    stream << " " << HEADER_NAME_LOCATION << ": " << i->second;
+                }
+            }
+            throw std::runtime_error(stream.str());
+        }
+    }
     
     static void initEnvironment() {
         if (atexit(&destroyEnvironment) != 0) {
@@ -322,10 +352,17 @@ public:
     bool sent_modified_since_;
 
     static boost::once_flag init_flag_;
+    static const std::string HEADER_NAME_LAST_MODIFIED;
+    static const std::string HEADER_NAME_EXPIRES;
+    static const std::string HEADER_NAME_LOCATION;
+    static const std::string HEADER_NAME_CONTENT_TYPE;
 };
 
 boost::once_flag HttpHelper::HelperData::init_flag_ = BOOST_ONCE_INIT;
-
+const std::string HttpHelper::HelperData::HEADER_NAME_LAST_MODIFIED = "last-modified";
+const std::string HttpHelper::HelperData::HEADER_NAME_EXPIRES = "expires";
+const std::string HttpHelper::HelperData::HEADER_NAME_LOCATION = "location";
+const std::string HttpHelper::HelperData::HEADER_NAME_CONTENT_TYPE = "content-type";
 
 HttpHelper::HttpHelper(const std::string &url, long timeout) :
     data_(new HelperData(url, timeout))
@@ -396,21 +433,7 @@ HttpHelper::base() const {
 
 void
 HttpHelper::checkStatus() const {
-    log()->debug("%s, status: %ld", BOOST_CURRENT_FUNCTION, data_->status_);
-    if (data_->status_ >= 400) {
-        std::stringstream stream;
-        stream << "server responded " << data_->status_;
-        throw std::runtime_error(stream.str());
-    }
-    if (0 == data_->status_ && data_->content_->empty()) {
-        throw std::runtime_error("empty local content: possibly not performed");
-    }
-    if (204 == data_->status_ && !data_->content_->empty()) {
-        throw std::runtime_error("content must be empty");
-    }
-    if (304 == data_->status_ && !data_->sent_modified_since_) {
-        throw std::runtime_error("server responded not-modified but if-modified-since was not sent");
-    }
+    data_->checkStatus();
 }
 
 Tag
@@ -420,14 +443,14 @@ HttpHelper::createTag() const {
         tag.modified = false;
     }
     else if (200 == data_->status_ || 0 == data_->status_) {
-        std::multimap<std::string, std::string>::const_iterator im = data_->headers_.find("last-modified");
+        std::multimap<std::string, std::string>::const_iterator im = data_->headers_.find(HttpHelper::HelperData::HEADER_NAME_LAST_MODIFIED);
 
         if (im != data_->headers_.end()) {
             tag.last_modified = HttpDateUtils::parse(im->second.c_str());
             log()->debug("%s, last_modified: %llu", BOOST_CURRENT_FUNCTION,
                 static_cast<unsigned long long>(tag.last_modified));
         }
-        std::multimap<std::string, std::string>::const_iterator ie = data_->headers_.find("expires");
+        std::multimap<std::string, std::string>::const_iterator ie = data_->headers_.find(HttpHelper::HelperData::HEADER_NAME_EXPIRES);
         if (ie != data_->headers_.end()) {
             tag.expire_time = HttpDateUtils::parse(ie->second.c_str());
             log()->debug("%s, expire_time: %llu", BOOST_CURRENT_FUNCTION,
