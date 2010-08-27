@@ -35,6 +35,7 @@ bool luaIsNil(lua_State *lua, int index);
 void luaCheckNumber(lua_State *lua, int index);
 void luaCheckString(lua_State *lua, int index);
 void luaCheckBoolean(lua_State *lua, int index);
+void luaCheckSimpleType(lua_State *lua, int index);
 void luaCheckTable(lua_State *lua, int index);
 bool luaIsArrayTable(lua_State *lua, int index);
 void luaCheckStackSize(lua_State *lua, int index);
@@ -102,9 +103,19 @@ luaReadStack<std::auto_ptr<std::vector<std::string> > >(lua_State *lua, int inde
     lua_pushnil(lua);
     while (lua_next(lua, index)) {
         luaCheckNumber(lua, -2);
-        luaCheckString(lua, -1);
+        luaCheckSimpleType(lua, -1);
         lua_tonumber(lua, -2);
-        result->push_back(std::string(lua_tostring(lua, -1)));
+
+        std::string res;
+        if (lua_isboolean(lua, -1)) {
+            int var = lua_toboolean(lua, -1);
+            res.assign(var > 0 ? "true" : "false");
+        }
+        else {
+            res.assign(lua_tostring(lua, -1));
+        }
+//        result->push_back(std::string(lua_tostring(lua, -1)));
+        result->push_back(res);
         lua_pop(lua, 1);
     }
     lua_pop(lua, 1);

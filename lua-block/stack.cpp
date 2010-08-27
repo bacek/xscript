@@ -31,6 +31,16 @@ luaCheckBoolean(lua_State *lua, int index) {
 }
 
 void
+luaCheckSimpleType(lua_State *lua, int index) {
+    if (lua_isstring(lua, index) ||
+        lua_isnumber(lua, index) ||
+        lua_isboolean(lua, index)) {
+        return;
+    }
+    throw BadType("simple", index);
+}
+
+void
 luaCheckTable(lua_State *lua, int index) {
     if (!lua_istable(lua, index)) {
         throw BadType("table", index);

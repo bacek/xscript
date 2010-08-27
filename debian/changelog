@@ -1,3 +1,9 @@
+xscript (5.71.21-2) unstable; urgency=low
+
+  * boolean values accepted in xscript.state:setTable
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 27 Aug 2010 10:30:00 +0400
+
 xscript (5.71.21-1) unstable; urgency=low
 
   * printXmlError removed from Context destructor
