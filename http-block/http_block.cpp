@@ -490,9 +490,22 @@ HttpBlock::getTimeout(Context *ctx, const std::string &url) const {
         return timeout;
     }
     
-    InvokeError error("block is timed out", "url", url);
+    InvokeError error("block is timed out");
+    error.addEscaped("url", url);
     error.add("timeout", boost::lexical_cast<std::string>(ctx->timer().timeout()));
     throw error;
+}
+
+void
+HttpBlock::wrapError(InvokeError &error, const HttpHelper &helper, const XmlNodeHelper &error_body_node) const {
+    error.addEscaped("url", helper.url());
+    error.add("status", boost::lexical_cast<std::string>(helper.status()));
+    if (!helper.contentType().empty()) {
+        error.addEscaped("content-type", helper.contentType());
+    }
+    if (NULL != error_body_node.get()) {
+        error.attachNode(error_body_node);
+    }
 }
 
 void
@@ -500,26 +513,32 @@ HttpBlock::checkStatus(const HttpHelper &helper) const {
     try {
         helper.checkStatus();
     }
+    catch(InvokeError &e) {
+        wrapError(e, helper, XmlNodeHelper());
+        throw;
+    }
     catch(const std::runtime_error &e) {
-        if (print_error_ && 404 != helper.status() && helper.content()->size() > 0) {
+        int status = helper.status();
+        XmlNodeHelper error_body_node;
+        if (print_error_ && 404 != status && helper.content()->size() > 0) {
             XmlDocHelper doc = response(helper, true);
             if (NULL != doc.get()) {
                 xmlNodePtr root_node = xmlDocGetRootElement(doc.get());
                 if (root_node) {
-                    XmlNodeHelper result_node(xmlCopyNode(root_node, 1));
-                    RetryInvokeError error(e.what(), result_node);
-                    error.addEscaped("url", helper.url());
-                    error.add("status", boost::lexical_cast<std::string>(helper.status()));
-                    error.addEscaped("content-type", helper.contentType());
-                    throw error;
+                    error_body_node = XmlNodeHelper(xmlCopyNode(root_node, 1));
                 }
             }
         }
-        
-        RetryInvokeError error(e.what(), "url", helper.url());
-        error.add("status", boost::lexical_cast<std::string>(helper.status()));
-        error.addEscaped("content-type", helper.contentType());
-        throw error;
+        if (status >= 500) {
+            RetryInvokeError error(e.what());
+            wrapError(error, helper, error_body_node);
+            throw error;
+        }
+        else {
+            InvokeError error(e.what());
+            wrapError(error, helper, error_body_node);
+            throw error;
+        }
     }
 }
 

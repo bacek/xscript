@@ -54,6 +54,7 @@ public:
 
     void add(const std::string &name, const std::string &value);
     void addEscaped(const std::string &name, const std::string &value);
+    void attachNode(const XmlNodeHelper &node);
 
     virtual ~InvokeError() throw () {}
     virtual std::string what_info() const throw();

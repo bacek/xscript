@@ -63,6 +63,11 @@ public:
     HttpTimeoutError(const std::string &error) : UnboundRuntimeError(error) {}
 };
 
+class HttpRedirectError : public InvokeError {
+public:
+    HttpRedirectError(const std::string &error) : InvokeError(error) {}
+};
+
 } // namespace xscript
 
 #endif // _XSCRIPT_HTTP_HELPER_H_

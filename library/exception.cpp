@@ -63,6 +63,11 @@ InvokeError::addEscaped(const std::string &name, const std::string &value) {
     add(name, XmlUtils::escape(value));
 }
 
+void
+InvokeError::attachNode(const XmlNodeHelper &node) {
+    node_ = node;
+}
+
 std::string
 InvokeError::what_info() const throw() {
 

@@ -240,12 +240,15 @@ public:
             }
             log()->debug("found %s, %s", content_type_.c_str(), charset_.c_str());
         }
-        else if (content_->empty() && (200 == status_ || 204 == status_)) {
-            charset_.assign("utf-8");
-            content_type_.assign("text/plain");
+        else if (content_->empty()) {
+            if (200 == status_ || 204 == status_) {
+                charset_.assign("utf-8");
+                content_type_.assign("text/plain");
+            }
         }
-        else {
-            charset_.assign("windows-1251");
+        else if (200 == status_ || 0 == status_) {
+            //charset_.assign("windows-1251");
+            charset_.assign("utf-8");
             content_type_.assign("text/xml");
         }
     }
@@ -302,6 +305,7 @@ public:
             if (content_->empty()) {
                 throw std::runtime_error("empty local content: possibly not performed");
             }
+            // allow for reading local file
         }
         else if (204 == status_) {
             if (!content_->empty()) {
@@ -319,7 +323,9 @@ public:
             if (301 == status_ || 302 == status_) {
                 std::multimap<std::string, std::string>::const_iterator i = headers_.find(HEADER_NAME_LOCATION);
                 if (i != headers_.end() && !i->second.empty()) {
-                    stream << " " << HEADER_NAME_LOCATION << ": " << i->second;
+                    HttpRedirectError error(stream.str());
+                    error.addEscaped(HEADER_NAME_LOCATION, i->second);
+                    throw error;
                 }
             }
             throw std::runtime_error(stream.str());

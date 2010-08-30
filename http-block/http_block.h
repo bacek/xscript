@@ -62,6 +62,7 @@ private:
     HttpBlock& operator = (const HttpBlock &);
     
     int getTimeout(Context *ctx, const std::string &url) const;
+    void wrapError(InvokeError &error, const HttpHelper &helper, const XmlNodeHelper &error_body_node) const;
     void checkStatus(const HttpHelper &helper) const;
     void httpCall(HttpHelper &helper) const;
     void createMeta(HttpHelper &helper, InvokeContext *invoke_ctx) const;

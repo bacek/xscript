@@ -1,3 +1,10 @@
+xscript (5.71.23-1) unstable; urgency=low
+
+  * Using HttpRedirectError
+  * change default charset in http-helper to utf-8
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 30 Aug 2010 16:02:05 +0400
+
 xscript (5.71.22-1) unstable; urgency=low
 
   * unlock python gil while rendering xscript page 
