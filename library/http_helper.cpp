@@ -324,7 +324,7 @@ public:
                 std::multimap<std::string, std::string>::const_iterator i = headers_.find(HEADER_NAME_LOCATION);
                 if (i != headers_.end() && !i->second.empty()) {
                     HttpRedirectError error(stream.str());
-                    error.addEscaped(HEADER_NAME_LOCATION, i->second);
+                    error.add(HEADER_NAME_LOCATION, i->second);
                     throw error;
                 }
             }

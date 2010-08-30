@@ -491,17 +491,17 @@ HttpBlock::getTimeout(Context *ctx, const std::string &url) const {
     }
     
     InvokeError error("block is timed out");
-    error.addEscaped("url", url);
+    error.add("url", url);
     error.add("timeout", boost::lexical_cast<std::string>(ctx->timer().timeout()));
     throw error;
 }
 
 void
 HttpBlock::wrapError(InvokeError &error, const HttpHelper &helper, const XmlNodeHelper &error_body_node) const {
-    error.addEscaped("url", helper.url());
+    error.add("url", helper.url());
     error.add("status", boost::lexical_cast<std::string>(helper.status()));
     if (!helper.contentType().empty()) {
-        error.addEscaped("content-type", helper.contentType());
+        error.add("content-type", helper.contentType());
     }
     if (NULL != error_body_node.get()) {
         error.attachNode(error_body_node);
@@ -518,9 +518,8 @@ HttpBlock::checkStatus(const HttpHelper &helper) const {
         throw;
     }
     catch(const std::runtime_error &e) {
-        int status = helper.status();
         XmlNodeHelper error_body_node;
-        if (print_error_ && 404 != status && helper.content()->size() > 0) {
+        if (print_error_ && 404 != helper.status() && helper.content()->size() > 0) {
             XmlDocHelper doc = response(helper, true);
             if (NULL != doc.get()) {
                 xmlNodePtr root_node = xmlDocGetRootElement(doc.get());
@@ -529,7 +528,7 @@ HttpBlock::checkStatus(const HttpHelper &helper) const {
                 }
             }
         }
-        if (status >= 500) {
+        if (helper.status() >= 500) {
             RetryInvokeError error(e.what());
             wrapError(error, helper, error_body_node);
             throw error;
