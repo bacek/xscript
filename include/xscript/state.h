@@ -150,19 +150,6 @@ State::set<const std::string&>(const std::string &name, const std::string &val) 
     setString(name, val);
 }
 
-/*
-template<> inline void
-State::set<const std::vector<std::string>&>(
-    const std::string &name, const std::vector<std::string> &val) {
-    setTypedValue(name, TypedValue(val));
-}
-
-template<> inline void
-State::set<const std::vector<StringUtils::NamedValue>&>(
-    const std::string &name, const std::vector<StringUtils::NamedValue> &val) {
-    setTypedValue(name, TypedValue(val));
-}
-*/
 } // namespace xscript
 
 #endif // _XSCRIPT_STATE_H_
