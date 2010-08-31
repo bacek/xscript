@@ -2,6 +2,7 @@
 #define _XSCRIPT_COOKIE_H_
 
 #include <ctime>
+#include <memory>
 #include <string>
 
 namespace xscript {
@@ -10,59 +11,29 @@ class Cookie {
 public:
     Cookie();
     Cookie(const std::string &name, const std::string &value);
+    Cookie(const Cookie &cookie);
     virtual ~Cookie();
+    Cookie& operator=(const Cookie &cookie);
 
-    inline const std::string& name() const {
-        return name_;
-    }
-
-    inline const std::string& value() const {
-        return value_;
-    }
-
-    inline bool secure() const {
-        return secure_;
-    }
-
-    inline void secure(bool value) {
-        secure_ = value;
-    }
-
-    inline time_t expires() const {
-        return expires_;
-    }
-
-    inline void expires(time_t value) {
-        expires_ = value;
-    }
-
-    inline const std::string& path() const {
-        return path_;
-    }
-
-    inline void path(const std::string &value) {
-        path_ = value;
-    }
-
-    inline const std::string& domain() const {
-        return domain_;
-    }
-
-    inline void domain(const std::string &value) {
-        domain_ = value;
-    }
-
+    const std::string& name() const;
+    const std::string& value() const;
+    bool secure() const;
+    void secure(bool value);
+    bool httpOnly() const;
+    void httpOnly(bool value);
+    time_t expires() const;
+    void expires(time_t value);
+    const std::string& path() const;
+    void path(const std::string &value);
+    const std::string& domain() const;
+    void domain(const std::string &value);
     time_t permanent() const;
-
     void permanent(bool value);
-
     std::string toString() const;
     bool check() const;
-
 private:
-    bool secure_;
-    time_t expires_;
-    std::string name_, value_, path_, domain_;
+    class CookieData;
+    std::auto_ptr<CookieData> data_;
 };
 
 } // namespace xscript

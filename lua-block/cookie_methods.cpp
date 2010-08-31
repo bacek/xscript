@@ -19,6 +19,7 @@ extern "C" {
     int luaCookieName(lua_State *);
     int luaCookieValue(lua_State *);
     int luaCookieSecure(lua_State *);
+    int luaCookieHttpOnly(lua_State *);
     int luaCookieExpires(lua_State *);
     int luaCookiePath(lua_State *);
     int luaCookieDomain(lua_State *);
@@ -38,6 +39,7 @@ static const struct luaL_reg cookielib_m [] = {
     {"name",        luaCookieName},
     {"value",       luaCookieValue},
     {"secure",      luaCookieSecure},
+    {"httpOnly",    luaCookieHttpOnly},
     {"expires",     luaCookieExpires},
     {"path",        luaCookiePath},
     {"domain",      luaCookieDomain},
@@ -138,6 +140,31 @@ int luaCookieSecure(lua_State * lua) {
         else if (size == 2) {
             bool value = luaReadStack<bool>(lua, 2);
             c->secure(value);
+            return 0;
+        }
+        luaL_error(lua, "Invalid arity");
+        return 0;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        return luaL_error(lua, "caught exception in args: %s", e.what());
+    }
+}
+
+int luaCookieHttpOnly(lua_State *lua) {
+    try {
+        log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+        int size = lua_gettop(lua);
+        Cookie* c = luaReadStack<Cookie>(lua, "xscript.cookie", 1);
+        if (size == 1) {
+            lua_pushboolean(lua, c->httpOnly());
+            return 1;
+        }
+        else if (size == 2) {
+            bool value = luaReadStack<bool>(lua, 2);
+            c->httpOnly(value);
             return 0;
         }
         luaL_error(lua, "Invalid arity");
