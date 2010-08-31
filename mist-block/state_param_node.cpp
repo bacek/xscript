@@ -1,9 +1,10 @@
 #include "settings.h"
 
 #include "xscript/typed_map.h"
+#include "xscript/xml_util.h"
 
-#include "xml_node.h"
 #include "state_param_node.h"
+#include "xml_node.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -32,12 +33,11 @@ StateParamNode::createSubNode(const char *val) const {
 
 void
 StateParamNode::createSubNode(const TypedValue &value) const {
-    XmlChildNode child_param(parent_, "param", value.simpleValue().c_str());
-    child_param.setProperty("name", name_);
-    child_param.setProperty("type", value.stringType().c_str());
-    if (is_valid_name_) {
-        XmlChildNode(parent_, name_, value);
-    }
+    XmlTypedVisitor visitor;
+    value.visit(&visitor);
+    XmlNodeHelper result = visitor.result();
+    xmlNewProp(result.get(), (const xmlChar*) "name", (const xmlChar*) name_);
+    xmlAddChild(parent_, result.release());
 }
 
 void

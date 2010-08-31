@@ -89,18 +89,24 @@ public:
 
 class XmlTypedVisitor : public TypedValueVisitor {
 public:
-    XmlTypedVisitor(const std::string &name);
+    XmlTypedVisitor();
     virtual ~XmlTypedVisitor();
+    virtual void visitNil();
+    virtual void visitBool(bool value);
+    virtual void visitInt32(boost::int32_t value);
+    virtual void visitUInt32(boost::uint32_t value);
+    virtual void visitInt64(boost::int64_t value);
+    virtual void visitUInt64(boost::uint64_t value);
+    virtual void visitDouble(double value);
     virtual void visitString(const std::string &value);
-    virtual void visitArray(const std::vector<std::string> &value);
-    virtual void visitMap(const std::vector<StringUtils::NamedValue> &value);
-    void reset();
-    XmlNodeSetHelper result() const;
+    virtual void visitArray(const TypedValue::ArrayType &value);
+    virtual void visitMap(const TypedValue::MapType &value);
+    XmlNodeHelper result() const;
 protected:
-    void setResult(XmlNodeSetHelper result);
+    XmlNodeHelper createNode(const char *type, const char *value);
+    void appendResult(XmlNodeHelper result);
 private:
-    std::string name_;
-    XmlNodeSetHelper result_;
+    XmlNodeHelper result_;
 };
 
 class XmlInfoCollector {

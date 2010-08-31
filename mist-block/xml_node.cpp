@@ -66,16 +66,5 @@ XmlChildNode::XmlChildNode(xmlNodePtr parent, const char* name, const char* val)
     XmlUtils::throwUnless(NULL != node_);
 }
 
-XmlChildNode::XmlChildNode(xmlNodePtr parent, const char* name, const TypedValue &val)
-        : XmlNodeCommon() {
-    XmlTypedVisitor visitor(name);
-    val.visitAsString(&visitor);
-    XmlNodeSetHelper result = visitor.result();
-    while (result->nodeNr > 0) {
-        xmlAddChild(parent, result->nodeTab[0]);
-        xmlXPathNodeSetRemove(result.get(), 0);
-    }
-}
-
 
 } // namespace xscript

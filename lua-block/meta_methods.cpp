@@ -185,7 +185,7 @@ luaMetaGetTypedValueInternal(lua_State *lua, bool self) {
             return 1;
         }
         const TypedValue& value = invoke_ctx->meta()->getTypedValue(key);
-        if (value.undefined()) {
+        if (value.nil()) {
             lua_pushnil(lua);
             return 1;
         }
@@ -265,23 +265,9 @@ luaMetaSetTableInternal(lua_State *lua, bool self) {
         luaCheckStackSize(lua, 3);
         readMetaFromStack(lua, self);
         InvokeContext* invoke_ctx = metaInvokeContext(lua, self);
-        std::string key = luaReadStack<std::string>(lua, 2);
-        if (luaIsNil(lua, 3)) {
-            return 0;
-        }
-        if (luaIsArrayTable(lua, 3)) {
-            std::auto_ptr<std::vector<std::string> > value =
-                luaReadStack<std::auto_ptr<std::vector<std::string> > >(lua, 3);
-            if (invoke_ctx) {
-                invoke_ctx->meta()->setArray(key, *value);
-            }
-        }
-        else {
-            std::auto_ptr<std::vector<StringUtils::NamedValue> > value =
-                luaReadStack<std::auto_ptr<std::vector<StringUtils::NamedValue> > >(lua, 3);
-            if (invoke_ctx) {
-                invoke_ctx->meta()->setMap(key, *value);
-            }
+        if (!luaIsNil(lua, 3) && invoke_ctx) {
+            std::string key = luaReadStack<std::string>(lua, 2);
+            invoke_ctx->meta()->setTypedValue(key, luaReadTable(lua, 3));
         }
         return 0;
     }

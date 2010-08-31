@@ -1,3 +1,9 @@
+xscript (5.71.26-1) unstable; urgency=low
+
+  * allow nested types in TypedValue
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Tue, 31 Aug 2010 17:01:36 +0400
+
 xscript (5.71.25-1) unstable; urgency=low
 
   * added unlockingInterpreterMode(bool) into libxscript-python (default: false)

@@ -5,7 +5,7 @@
             <lua>xscript.meta:setString("key0", "value0")</lua>
         </root>
         <x:meta xpointer="/*" name="g:rootmeta" xmlns:g="http://www.ya.ru">
-            <xpath expr="/g:rootmeta/key0" result="key"/>
+            <xpath expr="/g:rootmeta/param[@name='key0']" result="key"/>
             <x:lua>
                 xscript.meta:setString("key1", "value1");
                 xscript.meta:setString("key2", "value2");

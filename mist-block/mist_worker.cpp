@@ -689,23 +689,6 @@ MistWorker::dropState(Context *ctx, const std::vector<std::string> &params) {
     return XmlNodeHelper(node.releaseNode());
 }
 
-class DumpStateTypedVisitor : public XmlTypedVisitor {
-public:
-    DumpStateTypedVisitor(const std::string &name) : XmlTypedVisitor(name) {}
-    virtual ~DumpStateTypedVisitor() {}
-    virtual void visitMap(const std::vector<StringUtils::NamedValue> &value) {
-        XmlNodeSetHelper result(xmlXPathNodeSetCreate(NULL));
-        for (std::vector<StringUtils::NamedValue>::const_iterator it = value.begin();
-            it != value.end();
-            ++it) {
-            XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)it->first.c_str()));
-            xmlNodeSetContent(node.get(), (const xmlChar*)XmlUtils::escape(it->second).c_str());
-            xmlXPathNodeSetAdd(result.get(), node.release());
-        }
-        setResult(result);
-    }
-};
-
 XmlNodeHelper
 MistWorker::dumpState(Context *ctx, const std::vector<std::string> &params) {
     if (!params.empty()) {
@@ -720,19 +703,11 @@ MistWorker::dumpState(Context *ctx, const std::vector<std::string> &params) {
     for (std::map<std::string, TypedValue>::const_iterator it = state_info.begin();
         it != state_info.end();
         ++it) {
-        XmlChildNode child(node.getNode(), "param", it->second.simpleValue().c_str());
-        child.setProperty("name", it->first.c_str());
-        child.setProperty("type", it->second.stringType().c_str());
-        if (it->second.complexType()) {
-            DumpStateTypedVisitor visitor(it->first);
-            it->second.visitAsString(&visitor);
-            XmlNodeSetHelper result = visitor.result();
-            while (result->nodeNr > 0) {
-                xmlAddChild(child.getNode(), result->nodeTab[0]);
-                xmlXPathNodeSetRemove(result.get(), 0);
-            }
-        }
-
+        XmlTypedVisitor visitor;
+        it->second.visit(&visitor);
+        XmlNodeHelper result = visitor.result();
+        xmlNewProp(result.get(), (const xmlChar*)"name", (const xmlChar*)it->first.c_str());
+        xmlAddChild(node.getNode(), result.release());
     }
     
     return XmlNodeHelper(node.releaseNode());

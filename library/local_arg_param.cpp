@@ -49,7 +49,7 @@ LocalArgParam::add(const Context *ctx, ArgList &al) const {
     const std::string& as = ConvertedParam::as();
     const std::string& name = value();
     const TypedValue& value = ctx->getLocalParam(name);
-    value.undefined() ? al.addAs(as, defaultValue()) : al.addAs(as, value);
+    value.nil() ? al.addAs(as, defaultValue()) : al.addAs(as, value);
 }
 
 std::auto_ptr<Param>

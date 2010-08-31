@@ -14,61 +14,14 @@
 
 namespace xscript {
 
-class TypedValueVisitor {
-public:
-    virtual ~TypedValueVisitor() {}
-    virtual void visitBool(bool) {}
-    virtual void visitInt32(boost::int32_t) {};
-    virtual void visitUInt32(boost::uint32_t) {};
-    virtual void visitInt64(boost::int64_t) {};
-    virtual void visitUInt64(boost::uint64_t) {};
-    virtual void visitDouble(double) {};
-    virtual void visitString(const std::string&) = 0;
-    virtual void visitArray(const std::vector<std::string>&) = 0;
-    virtual void visitMap(const std::vector<StringUtils::NamedValue>&) = 0;
-};
-
-class ComplexTypedValue {
-public:
-    virtual ~ComplexTypedValue();
-    virtual void visit(TypedValueVisitor *visitor) const = 0;
-    virtual const std::string& stringType() const = 0;
-    virtual const std::string& asString() const = 0;
-    virtual void serialize(std::string &result) const = 0;
-};
-
-class ArrayTypedValue : public ComplexTypedValue {
-public:
-    ArrayTypedValue(const std::vector<std::string> &value);
-    ArrayTypedValue(const Range &value);
-    virtual ~ArrayTypedValue();
-    virtual void visit(TypedValueVisitor *visitor) const;
-    virtual const std::string& stringType() const;
-    virtual const std::string& asString() const;
-    virtual void serialize(std::string &result) const;
-private:
-    static const std::string TYPE;
-    std::vector<std::string> value_;
-};
-
-class MapTypedValue : public ComplexTypedValue {
-public:
-    MapTypedValue(const std::vector<StringUtils::NamedValue> &value);
-    MapTypedValue(const Range &value);
-    virtual ~MapTypedValue();
-    virtual void visit(TypedValueVisitor *visitor) const;
-    virtual const std::string& stringType() const;
-    virtual const std::string& asString() const;
-    virtual void serialize(std::string &result) const;
-private:
-    static const std::string TYPE;
-    std::vector<StringUtils::NamedValue> value_;
-};
-
 class TypedMap;
+class TypedValueVisitor;
 
 class TypedValue {
 public:
+    typedef std::vector<TypedValue> ArrayType;
+    typedef std::vector<std::pair<std::string, TypedValue> > MapType;
+
     TypedValue();
     TypedValue(bool value);
     TypedValue(boost::int32_t value);
@@ -77,22 +30,24 @@ public:
     TypedValue(boost::uint64_t value);
     TypedValue(double value);
     TypedValue(const std::string &value);
-    TypedValue(const std::vector<std::string> &value);
-    TypedValue(const std::vector<StringUtils::NamedValue> &value);
-    TypedValue(unsigned int type, const Range &value);
+    TypedValue(const ArrayType &value);
+    TypedValue(const MapType &value);
+    TypedValue(const Range &value);
 
-    unsigned int type() const;
-    bool undefined() const;
+    static TypedValue createArrayValue();
+    static TypedValue createMapValue();
+
+    bool add(const std::string &key, const TypedValue &value);
+
+    boost::uint16_t type() const;
+    bool nil() const;
     const std::string& stringType() const;
-    ComplexTypedValue* complexType() const;
     bool asBool() const;
     const std::string& asString() const;
-    const std::string& simpleValue() const;
     void serialize(std::string &result) const;
     void visit(TypedValueVisitor *visitor) const;
-    void visitAsString(TypedValueVisitor *visitor) const;
 
-    static const unsigned int TYPE_UNDEFINED = 0;
+    static const unsigned int TYPE_NIL = 0;
     static const unsigned int TYPE_BOOL = 1;
     static const unsigned int TYPE_LONG = 1 << 1;
     static const unsigned int TYPE_ULONG = 1 << 2;
@@ -103,6 +58,7 @@ public:
     static const unsigned int TYPE_ARRAY = 1 << 7;
     static const unsigned int TYPE_MAP = 1 << 8;
 
+    static const std::string TYPE_NIL_STRING;
     static const std::string TYPE_BOOL_STRING;
     static const std::string TYPE_LONG_STRING;
     static const std::string TYPE_ULONG_STRING;
@@ -111,10 +67,17 @@ public:
     static const std::string TYPE_DOUBLE_STRING;
     static const std::string TYPE_STRING_STRING;
 
-    friend class TypedMap;
+    class ComplexTypedValue;
+    friend class ComplexTypedValue;
+
 private:
-    unsigned int type_;
+    boost::uint32_t serializedSize() const;
+    friend class TypedMap;
+
+private:
+    boost::uint16_t type_;
     std::string value_;
+
     boost::shared_ptr<ComplexTypedValue> complex_;
 };
 
@@ -179,6 +142,21 @@ TypedMap::as(const std::string &name) const {
     }
     return boost::lexical_cast<T>(value);
 }
+
+class TypedValueVisitor {
+public:
+    virtual ~TypedValueVisitor() {}
+    virtual void visitNil() {}
+    virtual void visitBool(bool) {}
+    virtual void visitInt32(boost::int32_t) {};
+    virtual void visitUInt32(boost::uint32_t) {};
+    virtual void visitInt64(boost::int64_t) {};
+    virtual void visitUInt64(boost::uint64_t) {};
+    virtual void visitDouble(double) {};
+    virtual void visitString(const std::string&) = 0;
+    virtual void visitArray(const TypedValue::ArrayType&) = 0;
+    virtual void visitMap(const TypedValue::MapType&) = 0;
+};
 
 } // namespace xscript
 

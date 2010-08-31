@@ -89,14 +89,14 @@ private:
 
     static boost::thread_specific_ptr<XmlErrorReporter> reporter_;
     static const std::string UNKNOWN_XML_ERROR;
-    static const int CHUNK_MESSAGE_SIZE;
-    static const int MESSAGE_SIZE_LIMIT;
+    static const unsigned int CHUNK_MESSAGE_SIZE;
+    static const unsigned int MESSAGE_SIZE_LIMIT;
 };
 
 boost::thread_specific_ptr<XmlErrorReporter> XmlErrorReporter::reporter_;
 const std::string XmlErrorReporter::UNKNOWN_XML_ERROR = "unknown XML error";
-const int XmlErrorReporter::CHUNK_MESSAGE_SIZE = 5120;
-const int XmlErrorReporter::MESSAGE_SIZE_LIMIT = 10 * 1024;
+const unsigned int XmlErrorReporter::CHUNK_MESSAGE_SIZE = 5120;
+const unsigned int XmlErrorReporter::MESSAGE_SIZE_LIMIT = 10 * 1024;
 
 extern "C" void xmlNullError(void *, const char *, ...);
 extern "C" void xmlReportPlainError(void *, const char *, ...);
@@ -548,65 +548,114 @@ XmlUtils::regiserNsList(xmlXPathContextPtr ctx, const std::map<std::string, std:
     for(std::map<std::string, std::string>::const_iterator it_ns = ns.begin();
         it_ns != ns.end();
         ++it_ns) {
-        xmlXPathRegisterNs(ctx,
-                           (const xmlChar *)it_ns->first.c_str(),
-                           (const xmlChar *)it_ns->second.c_str());
+        xmlXPathRegisterNs(ctx, (const xmlChar *)it_ns->first.c_str(),
+            (const xmlChar *)it_ns->second.c_str());
     }
 }
 
-XmlTypedVisitor::XmlTypedVisitor(const std::string &name) : name_(name)
+XmlTypedVisitor::XmlTypedVisitor()
 {}
 
 XmlTypedVisitor::~XmlTypedVisitor()
 {}
 
 void
+XmlTypedVisitor::visitNil() {
+    appendResult(createNode(TypedValue::TYPE_NIL_STRING.c_str(), NULL));
+}
+
+void
+XmlTypedVisitor::visitBool(bool value) {
+    appendResult(createNode(TypedValue::TYPE_BOOL_STRING.c_str(),
+        boost::lexical_cast<std::string>(value).c_str()));
+}
+void
+XmlTypedVisitor::visitInt32(boost::int32_t value) {
+    appendResult(createNode(TypedValue::TYPE_LONG_STRING.c_str(),
+        boost::lexical_cast<std::string>(value).c_str()));
+}
+
+void
+XmlTypedVisitor::visitUInt32(boost::uint32_t value) {
+    appendResult(createNode(TypedValue::TYPE_ULONG_STRING.c_str(),
+        boost::lexical_cast<std::string>(value).c_str()));
+}
+
+void
+XmlTypedVisitor::visitInt64(boost::int64_t value) {
+    appendResult(createNode(TypedValue::TYPE_LONGLONG_STRING.c_str(),
+        boost::lexical_cast<std::string>(value).c_str()));
+}
+
+void
+XmlTypedVisitor::visitUInt64(boost::uint64_t value) {
+    appendResult(createNode(TypedValue::TYPE_ULONGLONG_STRING.c_str(),
+        boost::lexical_cast<std::string>(value).c_str()));
+}
+
+void
+XmlTypedVisitor::visitDouble(double value) {
+    appendResult(createNode(TypedValue::TYPE_DOUBLE_STRING.c_str(),
+        boost::lexical_cast<std::string>(value).c_str()));
+}
+
+void
 XmlTypedVisitor::visitString(const std::string &value) {
-    result_ = XmlNodeSetHelper(xmlXPathNodeSetCreate(NULL));
-    XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)name_.c_str()));
-    xmlNodeSetContent(node.get(), (const xmlChar*)XmlUtils::escape(value).c_str());
-    xmlXPathNodeSetAdd(result_.get(), node.release());
+    appendResult(createNode(TypedValue::TYPE_STRING_STRING.c_str(), value.c_str()));
+}
+
+XmlNodeHelper
+XmlTypedVisitor::createNode(const char *type, const char *value) {
+    XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)"param"));
+    xmlNewProp(node.get(), (const xmlChar*)"type", (const xmlChar*)type);
+    if (value) {
+        xmlNodeSetContent(node.get(), (const xmlChar*)XmlUtils::escape(value).c_str());
+    }
+    return node;
 }
 
 void
-XmlTypedVisitor::visitArray(const std::vector<std::string> &value) {
-    result_ = XmlNodeSetHelper(xmlXPathNodeSetCreate(NULL));
-    for (std::vector<std::string>::const_iterator it = value.begin();
-        it != value.end();
-        ++it) {
-        XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)name_.c_str()));
-        xmlNodeSetContent(node.get(), (const xmlChar*)XmlUtils::escape(*it).c_str());
-        xmlXPathNodeSetAdd(result_.get(), node.release());
+XmlTypedVisitor::appendResult(XmlNodeHelper result) {
+    if (result_.get()) {
+        xmlAddChild(result_.get(), result.release());
+    }
+    else {
+        result_ = result;
     }
 }
 
 void
-XmlTypedVisitor::visitMap(const std::vector<StringUtils::NamedValue> &value) {
-    result_ = XmlNodeSetHelper(xmlXPathNodeSetCreate(NULL));
-    XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)name_.c_str()));
-    for (std::vector<StringUtils::NamedValue>::const_iterator it = value.begin();
-        it != value.end();
-        ++it) {
-        XmlNodeHelper child(xmlNewNode(NULL, (const xmlChar*)it->first.c_str()));
-        xmlNodeSetContent(child.get(), (const xmlChar*)XmlUtils::escape(it->second).c_str());
-        xmlAddChild(node.get(), child.release());
+XmlTypedVisitor::visitArray(const TypedValue::ArrayType &value) {
+    XmlNodeHelper result_old = result_;
+    XmlNodeHelper root = createNode("Array", NULL);
+    for (TypedValue::ArrayType::const_iterator it = value.begin();
+         it != value.end();
+         ++it) {
+        it->visit(this);
+        xmlAddChild(root.get(), result_.release());
     }
-    xmlXPathNodeSetAdd(result_.get(), node.release());
+    result_ = result_old;
+    appendResult(root);
 }
 
 void
-XmlTypedVisitor::reset() {
-    result_.reset(NULL);
+XmlTypedVisitor::visitMap(const TypedValue::MapType &value) {
+    XmlNodeHelper result_old = result_;
+    XmlNodeHelper root = createNode("Map", NULL);
+    for (TypedValue::MapType::const_iterator it = value.begin();
+         it != value.end();
+         ++it) {
+        it->second.visit(this);
+        xmlNewProp(result_.get(), (const xmlChar*)"name", (const xmlChar*)it->first.c_str());
+        xmlAddChild(root.get(), result_.release());
+    }
+    result_ = result_old;
+    appendResult(root);
 }
 
-XmlNodeSetHelper
+XmlNodeHelper
 XmlTypedVisitor::result() const {
     return result_;
-}
-
-void
-XmlTypedVisitor::setResult(XmlNodeSetHelper result) {
-    result_ = result;
 }
 
 XmlInfoCollector::XmlInfoCollector() {

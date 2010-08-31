@@ -74,12 +74,12 @@ InvokeTest::testMeta() {
     ns.insert(std::make_pair(std::string("g"), std::string("http://www.ya.ru")));
 
     CPPUNIT_ASSERT_EQUAL(std::string("value0"),
-                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/key0", ns, "failed"));
+                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/param[@name='key0']", ns, "failed"));
     CPPUNIT_ASSERT_EQUAL(std::string("value1"),
-                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/key1", ns, "failed"));
+                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/param[@name='key1']", ns, "failed"));
     CPPUNIT_ASSERT_EQUAL(std::string("value2"),
-                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/key2", ns, "failed"));
-    CPPUNIT_ASSERT(XmlUtils::xpathNsExists(doc.get(), "/page/g:rootmeta/elapsed-time", ns));
+                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/param[@name='key2']", ns, "failed"));
+    CPPUNIT_ASSERT(XmlUtils::xpathNsExists(doc.get(), "/page/g:rootmeta/param[@name='elapsed-time']", ns));
     CPPUNIT_ASSERT_EQUAL(std::string("value0"), ctx->state()->asString("key"));
 }
 

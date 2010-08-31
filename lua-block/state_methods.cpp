@@ -131,7 +131,7 @@ luaStateGetTypedValue(lua_State *lua) {
         std::string key = luaReadStack<std::string>(lua, 2);
         log()->debug("luaStateGet: %s", key.c_str());
         TypedValue value = state->typedValue(key);
-        if (value.undefined()) {
+        if (value.nil()) {
             lua_pushnil(lua);
             return 1;
         }
@@ -209,24 +209,15 @@ luaStateSetDouble(lua_State *lua) {
     return luaStateSet<double>(lua);
 }
 
-int luaStateSetTable(lua_State *lua) {
+int
+luaStateSetTable(lua_State *lua) {
     try {
         luaCheckStackSize(lua, 3);
         luaReadStack<void>(lua, "xscript.state", 1);
         State *state = getContext(lua)->state();
-        std::string key = luaReadStack<std::string>(lua, 2);
-        if (luaIsNil(lua, 3)) {
-            return 0;
-        }
-        if (luaIsArrayTable(lua, 3)) {
-            std::auto_ptr<std::vector<std::string> > value =
-                luaReadStack<std::auto_ptr<std::vector<std::string> > >(lua, 3);
-            state->set<const std::vector<std::string>&>(key, *value);
-        }
-        else {
-            std::auto_ptr<std::vector<StringUtils::NamedValue> > value =
-                luaReadStack<std::auto_ptr<std::vector<StringUtils::NamedValue> > >(lua, 3);
-            state->set<const std::vector<StringUtils::NamedValue>&>(key, *value);
+        if (!luaIsNil(lua, 3)) {
+            std::string key = luaReadStack<std::string>(lua, 2);
+            state->setTypedValue(key, luaReadTable(lua, 3));
         }
         return 0;
     }

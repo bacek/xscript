@@ -107,7 +107,7 @@ luaLocalGetTypedValue(lua_State *lua) {
         log()->debug("luaLocalGet: %s", key.c_str());
 
         const TypedValue& value = ctx->getLocalParam(key);
-        if (value.undefined()) {
+        if (value.nil()) {
             lua_pushnil(lua);
             return 1;
         }
