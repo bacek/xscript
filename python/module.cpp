@@ -11,14 +11,20 @@ namespace xscript { namespace python {
 class interpreter_unlock
 {
 public:
-    interpreter_unlock() :
-         save_(PyEval_SaveThread())
+    interpreter_unlock() : save_(NULL)
     {
+        if (enable) {
+            save_ = PyEval_SaveThread();
+        }
     }
 
     ~interpreter_unlock() {
-        PyEval_RestoreThread(save_);
+        if (enable) {
+            PyEval_RestoreThread(save_);
+        }
     }
+
+    static bool enable;
 
 private:
     interpreter_unlock(interpreter_unlock const &);
@@ -26,6 +32,8 @@ private:
 
     PyThreadState *save_;
 };
+
+bool interpreter_unlock::enable = false;
 
 } }
 
@@ -47,6 +55,11 @@ initialize(const char *config_path) {
     PyErr_SetString(PyExc_RuntimeError, error.c_str());
     boost::python::throw_error_already_set();
     throw std::runtime_error(error);
+}
+
+static void
+unlockingInterpreterMode(bool value) {
+    xscript::python::interpreter_unlock::enable = value;
 }
 
 static std::string
@@ -99,6 +112,7 @@ renderFile(const std::string &file,
 BOOST_PYTHON_MODULE(xscript) {
     using namespace boost::python;
     def("initialize", initialize);
+    def("unlockingInterpreterMode", unlockingInterpreterMode);
     def("renderBuffer", renderBuffer);
     def("renderFile", renderFile);
 }
