@@ -11,6 +11,7 @@
 
 #include "xscript/functors.h"
 #include "xscript/string_utils.h"
+#include "xscript/types.h"
 
 namespace xscript {
 
@@ -60,6 +61,7 @@ public:
     const std::string& getHeader(const std::string &name) const;
     void headerNames(std::vector<std::string> &v) const;
     void addInputHeader(const std::string &name, const std::string &value);
+    HeaderMap headers() const;
 
     unsigned int countCookies() const;
     bool hasCookie(const std::string &name) const;

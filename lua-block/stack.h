@@ -15,6 +15,7 @@
 
 #include "xscript/string_utils.h"
 #include "xscript/typed_map.h"
+#include "xscript/types.h"
 
 namespace xscript {
 
@@ -162,19 +163,28 @@ inline void luaPushStack(lua_State* lua, std::auto_ptr<std::vector<std::string> 
     luaPushStack<const std::vector<std::string>&>(lua, *args);
 }
 
-template<>
-inline void luaPushStack(lua_State* lua, const std::map<std::string, std::string> &args) {
+template<typename MapType> void
+luaPushMap(lua_State* lua, const MapType &map) {
     lua_newtable(lua);
     int table = lua_gettop(lua);
-    for (std::map<std::string, std::string>::const_iterator it = args.begin();
-         it != args.end();
+    for (typename MapType::const_iterator it = map.begin();
+         it != map.end();
          ++it) {
         lua_pushstring(lua, it->first.c_str());
         lua_pushstring(lua, it->second.c_str());
         lua_settable(lua, table);
     }
+};
+
+template<>
+inline void luaPushStack(lua_State* lua, const std::map<std::string, std::string> &args) {
+    luaPushMap<std::map<std::string, std::string> >(lua, args);
 }
 
+template<>
+inline void luaPushStack(lua_State* lua, const HeaderMap &args) {
+    luaPushMap<HeaderMap>(lua, args);
+}
 
 template<>
 inline void luaPushStack(lua_State* lua, std::auto_ptr<std::map<std::string, std::string> > args) {
@@ -242,6 +252,20 @@ template<>
 inline void luaPushStack(lua_State* lua, const TypedValue &value) {
     LuaTypedVisitor visitor(lua);
     value.visit(&visitor);
+}
+
+template<>
+inline void luaPushStack(lua_State* lua, const std::map<std::string, TypedValue> &value) {
+    lua_newtable(lua);
+    int table = lua_gettop(lua);
+    LuaTypedVisitor visitor(lua);
+    for (std::map<std::string, TypedValue>::const_iterator it = value.begin();
+         it != value.end();
+         ++it) {
+        lua_pushstring(lua, it->first.c_str());
+        it->second.visit(&visitor);
+        lua_settable(lua, table);
+    }
 }
 
 } // namespace xscript

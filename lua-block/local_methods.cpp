@@ -20,6 +20,7 @@ extern "C" {
     int luaLocalHas(lua_State *lua);
     int luaLocalGet(lua_State *lua);
     int luaLocalGetTypedValue(lua_State *lua);
+    int luaLocalGetAll(lua_State *lua);
     int luaLocalIs(lua_State *lua);
 }
 
@@ -27,6 +28,7 @@ static const struct luaL_reg locallib [] = {
     {"has",             luaLocalHas},
     {"get",             luaLocalGet},
     {"getTypedValue",   luaLocalGetTypedValue},
+    {"getAll",          luaLocalGetAll},
     {"is",              luaLocalIs},
     {NULL, NULL}
 };
@@ -119,6 +121,25 @@ luaLocalGetTypedValue(lua_State *lua) {
     }
     catch (const std::exception &e) {
         luaL_error(lua, "caught exception in localargs.getTypedValue: %s", e.what());
+        return 0;
+    }
+}
+
+int
+luaLocalGetAll(lua_State *lua) {
+    log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+    try {
+        luaCheckStackSize(lua, 1);
+        luaReadStack<void>(lua, "xscript.localargs", 1);
+        luaPushStack<const std::map<std::string, TypedValue>&>(
+            lua, getContext(lua)->localParams());
+        return 1;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        luaL_error(lua, "caught exception in localargs.getAll: %s", e.what());
         return 0;
     }
 }

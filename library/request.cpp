@@ -270,6 +270,12 @@ Request::headerNames(std::vector<std::string> &v) const {
     Parser::keys(data_->headers_, v);
 }
 
+HeaderMap
+Request::headers() const {
+    boost::mutex::scoped_lock lock(data_->mutex_);
+    return data_->headers_;
+}
+
 unsigned int
 Request::countCookies() const {
     return data_->cookies_.size();

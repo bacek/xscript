@@ -116,6 +116,24 @@ get_unique_args(Request *request) {
 }
 
 extern "C" int
+luaRequestGetHeaders(lua_State *lua) throw () {
+    try {
+        luaCheckStackSize(lua, 1);
+        luaReadStack<void>(lua, "xscript.request", 1);
+        HeaderMap headers = getContext(lua)->request()->headers();
+        luaPushStack<const HeaderMap&>(lua, headers);
+        return 1;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        luaL_error(lua, "caught exception in request.getHeaders: %s", e.what());
+        return 0;
+    }
+}
+
+extern "C" int
 luaRequestGetArgs(lua_State *lua) throw () {
     if (lua_gettop(lua) == 2) {
         return lua_request_method<2>::invoke(lua, get_args);
@@ -289,6 +307,7 @@ static const struct luaL_reg requestlib [] = {
     {"getArgs",       luaRequestGetArgs},
     {"getQueryArgs",  luaRequestGetQueryArgs},
     {"getHeader",     luaRequestGetHeader},
+    {"getHeaders",    luaRequestGetHeaders},
     {"getCookie",     luaRequestGetCookie},
     {"hasArg",        luaRequestHasArg},
     {"hasHeader",     luaRequestHasHeader},
