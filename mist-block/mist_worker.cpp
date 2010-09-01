@@ -691,14 +691,21 @@ MistWorker::dropState(Context *ctx, const std::vector<std::string> &params) {
 
 XmlNodeHelper
 MistWorker::dumpState(Context *ctx, const std::vector<std::string> &params) {
-    if (!params.empty()) {
+    if (1 < params.size()) {
         throw std::invalid_argument("bad arity");
     }
     
+    const std::string &prefix = params.empty() ? StringUtils::EMPTY_STRING : params[0];
+
     XmlNode node("state_dump");
 
     std::map<std::string, TypedValue> state_info;
-    ctx->state()->values(state_info);
+    if (prefix.empty()) {
+        ctx->state()->values(state_info);
+    }
+    else {
+        ctx->state()->values(prefix, state_info);
+    }
     
     for (std::map<std::string, TypedValue>::const_iterator it = state_info.begin();
         it != state_info.end();

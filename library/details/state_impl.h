@@ -112,6 +112,7 @@ public:
     void keys(std::vector<std::string> &v) const;
 
     void values(std::map<std::string, TypedValue> &v) const;
+    void values(const std::string &prefix, std::map<std::string, TypedValue> &v) const;
     void copy(const std::string &src, const std::string &dest);
 
     TypedValue typedValue(const std::string &name) const;

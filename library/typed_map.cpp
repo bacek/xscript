@@ -405,6 +405,21 @@ TypedMap::values() const {
     return values_;
 }
 
+void
+TypedMap::values(const std::string &prefix, std::map<std::string, TypedValue> &values) const {
+    values.clear();
+    if (prefix.empty()) {
+        return;
+    }
+    for (TypedValueMap::const_iterator it = values_.begin(), end = values_.end();
+         it != end;
+         ++it) {
+        if (0 == strncmp(it->first.c_str(), prefix.c_str(), prefix.size())) {
+            values.insert(*it);
+        }
+    }
+}
+
 const TypedValue&
 TypedMap::find(const std::string &name) const {
     const TypedValue& value = findNoThrow(name);

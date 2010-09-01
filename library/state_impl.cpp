@@ -55,6 +55,12 @@ StateImpl::values(std::map<std::string, TypedValue> &v) const {
 }
 
 void
+StateImpl::values(const std::string &prefix, std::map<std::string, TypedValue> &v) const {
+    boost::mutex::scoped_lock sl(mutex_);
+    data_.values(prefix, v);
+}
+
+void
 StateImpl::copy(const std::string &src, const std::string &dest) {
     boost::mutex::scoped_lock sl(mutex_);
     const TypedValue& val = data_.find(src);

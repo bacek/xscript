@@ -117,6 +117,7 @@ public:
     void keys(std::vector<std::string> &v) const;
 
     const std::map<std::string, TypedValue>& values() const;
+    void values(const std::string &prefix, std::map<std::string, TypedValue> &values) const;
 
     bool is(const std::string &name) const;
 

@@ -136,6 +136,11 @@ State::values(std::map<std::string, TypedValue> &v) const {
 }
 
 void
+State::values(const std::string &prefix, std::map<std::string, TypedValue> &v) const {
+    impl_->values(prefix, v);
+}
+
+void
 State::copy(const std::string &src, const std::string &dest) {
     impl_->copy(src, dest);
 }
