@@ -490,10 +490,11 @@ MistWorker::setStateByRequestUrlencoded(Context *ctx, const std::vector<std::str
 
 XmlNodeHelper
 MistWorker::echoRequest(Context *ctx, const std::vector<std::string> &params) {
-    if (1 != params.size()) {
+    if (1 < params.size()) {
         throw std::invalid_argument("bad arity");
     }
-    StateRequestNode node(params[0], NULL);
+    const std::string &prefix = params.empty() ? StringUtils::EMPTY_STRING : params[0];
+    StateRequestNode node(prefix, NULL);
     node.build(ctx->request(), false, NULL);
     return XmlNodeHelper(node.releaseNode());
 }
@@ -511,10 +512,11 @@ MistWorker::setStateByHeaders(Context *ctx, const std::vector<std::string> &para
 
 XmlNodeHelper
 MistWorker::echoHeaders(Context *ctx, const std::vector<std::string> &params) {
-    if (1 != params.size()) {
+    if (1 < params.size()) {
         throw std::invalid_argument("bad arity");
     }
-    StateHeadersNode node(params[0], NULL);
+    const std::string &prefix = params.empty() ? StringUtils::EMPTY_STRING : params[0];
+    StateHeadersNode node(prefix, NULL);
     node.build(ctx->request());
     return XmlNodeHelper(node.releaseNode());
 }
@@ -532,10 +534,11 @@ MistWorker::setStateByCookies(Context *ctx, const std::vector<std::string> &para
 
 XmlNodeHelper
 MistWorker::echoCookies(Context *ctx, const std::vector<std::string> &params) {
-    if (1 != params.size()) {
+    if (1 < params.size()) {
         throw std::invalid_argument("bad arity");
     }
-    StateCookiesNode node(params[0], NULL);
+    const std::string &prefix = params.empty() ? StringUtils::EMPTY_STRING : params[0];
+    StateCookiesNode node(prefix, NULL);
     node.build(ctx->request());
     return XmlNodeHelper(node.releaseNode());
 }
@@ -553,10 +556,11 @@ MistWorker::setStateByProtocol(Context *ctx, const std::vector<std::string> &par
 
 XmlNodeHelper
 MistWorker::echoProtocol(Context *ctx, const std::vector<std::string> &params) {
-    if (1 != params.size()) {
+    if (1 < params.size()) {
         throw std::invalid_argument("bad arity");
     }
-    StateProtocolNode node(params[0], NULL);
+    const std::string &prefix = params.empty() ? StringUtils::EMPTY_STRING : params[0];
+    StateProtocolNode node(prefix, NULL);
     node.build(ctx);
     return XmlNodeHelper(node.releaseNode());
 }
@@ -573,10 +577,11 @@ MistWorker::setStateByLocalArgs(Context *ctx, const std::vector<std::string> &pa
 
 XmlNodeHelper
 MistWorker::echoLocalArgs(Context *ctx, const std::vector<std::string> &params) {
-    if (1 != params.size()) {
+    if (1 < params.size()) {
         throw std::invalid_argument("bad arity");
     }
-    StateLocalNode node(params[0], NULL);
+    const std::string &prefix = params.empty() ? StringUtils::EMPTY_STRING : params[0];
+    StateLocalNode node(prefix, NULL);
     node.build(ctx);
     return XmlNodeHelper(node.releaseNode());
 }
