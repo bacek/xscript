@@ -82,6 +82,19 @@ luaCheckUserData(lua_State *lua, const char *name, int index) {
 
 }
 
+static bool
+isLongInteger(double d) {
+    if (d > (double)std::numeric_limits<boost::int64_t>::max() ||
+        d < (double)std::numeric_limits<boost::int64_t>::min()) {
+        return false;
+    }
+    if (d - (boost::int64_t)d > std::numeric_limits<double>::epsilon() ||
+        d - (boost::int64_t)d < -std::numeric_limits<double>::epsilon()) {
+        return false;
+    }
+    return true;
+}
+
 static TypedValue
 luaReadTableInternal(lua_State *lua, int index) {
     lua_pushnil(lua);
@@ -103,9 +116,12 @@ luaReadTableInternal(lua_State *lua, int index) {
             case LUA_TBOOLEAN:
                 value.add(key, TypedValue(0 != lua_toboolean(lua, -1)));
                 break;
-            case LUA_TNUMBER:
-                value.add(key, TypedValue(lua_tonumber(lua, -1)));
+            case LUA_TNUMBER: {
+                double d = lua_tonumber(lua, -1);
+                isLongInteger(d) ? value.add(key, TypedValue((boost::int64_t)d)) :
+                    value.add(key, TypedValue(d));
                 break;
+            }
             case LUA_TSTRING:
                 value.add(key, TypedValue(std::string(lua_tostring(lua, -1))));
                 break;
