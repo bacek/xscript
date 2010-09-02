@@ -334,21 +334,24 @@ DocCache::loadDoc(InvokeContext *invoke_ctx, CacheContext *cache_ctx, Tag &tag) 
     if (!res) {
         return boost::shared_ptr<BlockCacheData>();
     }
+    log()->info("Doc loaded from cache");
     return boost::dynamic_pointer_cast<BlockCacheData>(cache_data);
 }
 
 bool
 DocCache::saveDoc(const InvokeContext *invoke_ctx, CacheContext *cache_ctx,
     const Tag &tag, const boost::shared_ptr<BlockCacheData> &cache_data) {
-    
     xmlDocPtr doc = cache_data->doc().get();
     if (NULL == doc || NULL == xmlDocGetRootElement(doc)) {
         log()->warn("cannot save empty document or document with no root to tagged cache. Url: %s",
             cache_ctx->context()->request()->getOriginalUrl().c_str());
         return false;
     }
-    
-    return saveDocImpl(invoke_ctx, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data));
+    if (saveDocImpl(invoke_ctx, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data))) {
+        log()->info("Doc saved to cache");
+        return true;
+    }
+    return false;
 }
 
 PageCache::PageCache() : use_etag_(false) {

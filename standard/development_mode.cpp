@@ -47,7 +47,6 @@ DevelopmentMode::~DevelopmentMode()
 
 void
 DevelopmentMode::processError(const std::string &message) {
-    log()->error("%s", message.c_str());
     throw UnboundRuntimeError(message);
 }
 

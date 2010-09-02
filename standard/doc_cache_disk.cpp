@@ -199,8 +199,6 @@ DocCacheDisk::loadDoc(const TagKey *key, CacheContext *cache_ctx,
     Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
     (void)cache_ctx;
 
-    log()->debug("loading doc in disk cache");
-    
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
     assert(NULL != dkey);
 
@@ -226,8 +224,6 @@ bool
 DocCacheDisk::saveDoc(const TagKey *key, CacheContext *cache_ctx,
     const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
     (void)cache_ctx;
-
-    log()->debug("saving doc in disk cache");
     
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
     assert(NULL != dkey);

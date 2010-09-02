@@ -319,22 +319,48 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
         throw InvokeError(msg, trace_node);
     }
 
-    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
-    XmlUtils::throwUnless(NULL != doc.get());
+    const char* ret_buf = lua_tostring(lua, -1);
+    std::string ret;
+    if (ret_buf) {
+        ret.assign("<lua>");
+        ret.append(ret_buf);
+        ret.append("</lua>");
+    }
 
-    XmlNodeHelper node;
-    if (lua_context->buffer.empty()) {
-        node = XmlNodeHelper(xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "lua", 
-          (const xmlChar*) ""));
+    XmlNodeHelper lua_content_node;
+    if (!lua_context->buffer.empty()) {
+        lua_content_node = XmlNodeHelper(xmlNewText((const xmlChar*)lua_context->buffer.c_str()));
+    }
+
+    lock.unlock();
+
+    XmlDocHelper ret_doc;
+    if (!ret.empty()) {
+        ret_doc = XmlDocHelper(xmlReadMemory(ret.c_str(), ret.size(),
+            "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+        if (NULL == ret_doc.get()) {
+            OperationMode::instance()->processError(
+                "Invalid lua output: " + XmlUtils::getXMLError());
+        }
+    }
+    if (NULL == ret_doc.get() || NULL == xmlDocGetRootElement(ret_doc.get())) {
+        if (NULL == ret_doc.get()) {
+            ret_doc = XmlDocHelper(xmlNewDoc((const xmlChar*) "1.0"));
+            XmlUtils::throwUnless(NULL != ret_doc.get());
+        }
+        XmlNodeHelper root(xmlNewNode(NULL, (const xmlChar*)"lua"));
+        XmlUtils::throwUnless(NULL != root.get());
+        if (lua_content_node.get()) {
+            xmlAddChild(root.get(), lua_content_node.release());
+        }
+        xmlDocSetRootElement(ret_doc.get(), root.release());
     }
     else {
-        log()->debug("Lua output: %s", lua_context->buffer.c_str());
-        node = XmlNodeHelper(xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "lua",
-            (const xmlChar*) XmlUtils::escape(lua_context->buffer).c_str()));
+        xmlNodePtr root = xmlDocGetRootElement(ret_doc.get());
+        root->children ? xmlAddPrevSibling(root->children, lua_content_node.release()) :
+            xmlAddChild(root, lua_content_node.release());
     }
-    xmlDocSetRootElement(doc.get(), node.get());
-    node.release();
-    invoke_ctx->resultDoc(doc);
+    invoke_ctx->resultDoc(ret_doc);
 }
 
 LuaExtension::LuaExtension() {
