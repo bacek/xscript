@@ -1,3 +1,13 @@
+xscript (5.71.27-1) unstable; urgency=low
+
+  * xml output added to lua
+  * httpOnly added to Cookie
+  * Request:getHeaders, State:getAll, LocalArgs:getAll added to lua
+  * optional prefix param added to mist::dumpState
+  * prefix param make optional in echoRequest, echoProtocol, echoCookies, echoHeaders
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 02 Sep 2010 16:14:17 +0400
+
 xscript (5.71.26-1) unstable; urgency=low
 
   * allow nested types in TypedValue
