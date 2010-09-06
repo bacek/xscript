@@ -80,7 +80,8 @@ ResponseTimeCounterImpl::add(const Context *ctx, boost::uint64_t value) {
     boost::mutex::scoped_lock lock(mtx_);
     boost::shared_ptr<StatusInfo> status_info =
         findStatusInfo(ctx->response()->status());
-    status_info->add(ctx->authContext()->status().c_str(), value);
+    status_info->add(ctx->authContext().get() ?
+        ctx->authContext()->status().c_str() : NULL, value);
 }
 
 boost::shared_ptr<ResponseTimeCounterImpl::StatusInfo>
