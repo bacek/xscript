@@ -1,3 +1,9 @@
+xscript (5.71.27-2) unstable; urgency=low
+
+  * add auth context check
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 06 Sep 2010 18:14:07 +0400
+
 xscript (5.71.27-1) unstable; urgency=low
 
   * xml output added to lua
