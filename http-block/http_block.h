@@ -42,7 +42,8 @@ protected:
     virtual void postParse();
     virtual void property(const char *name, const char *value);
     virtual void retryCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception);
-    virtual std::string concatParams(const Context *ctx, unsigned int first, unsigned int last) const;
+
+    std::string getUrl(const ArgList *args, unsigned int first, unsigned int last) const;
     
     XmlDocHelper getHttp(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper postHttp(Context *ctx, InvokeContext *invoke_ctx) const;

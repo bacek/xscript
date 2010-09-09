@@ -10,10 +10,10 @@
 
 #include <libxml/xinclude.h>
 
+#include <xscript/args.h>
 #include <xscript/context.h>
 #include <xscript/logger.h>
 #include <xscript/operation_mode.h>
-#include <xscript/param.h>
 #include <xscript/profiler.h>
 #include <xscript/request_data.h>
 #include <xscript/script.h>
@@ -126,14 +126,14 @@ FileBlock::call(boost::shared_ptr<Context> ctx,
     
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
-    const std::vector<Param*> &p = params();
-    unsigned int size = p.size();
+    const ArgList* args = invoke_ctx->getArgList();
+    unsigned int size = args->size();
     if (size == 0) {
         throwBadArityError();
     }
     
     std::string file;
-    boost::function<std::string()> filename_creator = boost::bind(&FileBlock::fileName, this, ctx.get());
+    boost::function<std::string()> filename_creator = boost::bind(&FileBlock::fileName, this, args);
     if (isInvoke() && tagged()) {
         std::string param_name = FILENAME_PARAMNAME + boost::lexical_cast<std::string>(this);
         Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);
@@ -409,8 +409,8 @@ FileBlock::testFileDoc(bool result, const std::string &file) const {
 }
 
 std::string
-FileBlock::fileName(const Context *ctx) const {
-    std::string filename = concatParams(ctx, 0, params().size() - 1);
+FileBlock::fileName(const ArgList *args) const {
+    std::string filename = Block::concatArguments(args, 0, args->size() - 1);
     return filename.empty() ? filename : fullName(filename);
 }
 
@@ -419,7 +419,7 @@ FileBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) con
     
     std::string key = processMainKey(ctx, invoke_ctx);
     boost::function<std::string()> filename_creator =
-        boost::bind(&FileBlock::fileName, this, ctx);
+        boost::bind(&FileBlock::fileName, this, invoke_ctx->getArgList());
     Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);
     std::string param_name = FILENAME_PARAMNAME + boost::lexical_cast<std::string>(this);
     std::string filename =

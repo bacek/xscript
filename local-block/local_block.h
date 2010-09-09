@@ -22,6 +22,9 @@ public:
 protected:
     virtual void parseSubNode(xmlNodePtr node);
     virtual void postParse();
+    virtual ArgList* createArgList(Context *ctx, InvokeContext *invoke_ctx) const;
+    virtual void call(boost::shared_ptr<Context> ctx,
+        boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception);
 
     void propertyInternal(const char *name, const char *value);
     void postParseInternal();
@@ -36,8 +39,6 @@ private:
     LocalBlock& operator = (const LocalBlock &);
 
     virtual void property(const char *name, const char *value);
-    virtual void call(boost::shared_ptr<Context> ctx,
-        boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception);
 
 private:
     bool proxy_;

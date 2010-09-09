@@ -47,7 +47,7 @@ protected:
     void parseParamNode(const xmlNodePtr node);
     
     std::string processMainKey(const Context *ctx, const InvokeContext *invoke_ctx) const;
-    std::string processParamsKey(const Context *ctx) const;
+    std::string processParamsKey(const InvokeContext *invoke_ctx) const;
 
     virtual void callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     void callMetaBeforeCacheSaveLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);

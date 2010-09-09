@@ -17,6 +17,7 @@
 #include "internal/block_helpers.h"
 #include "internal/param_factory.h"
 
+#include "xscript/args.h"
 #include "xscript/block.h"
 #include "xscript/context.h"
 #include "xscript/logger.h"
@@ -452,6 +453,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
         BlockTimerStarter starter(ctx.get(), this);
         invoke_ctx = boost::shared_ptr<InvokeContext>(new InvokeContext());
         invoke_ctx->xsltName(xsltName(ctx.get()));
+        processArguments(ctx.get(), invoke_ctx.get());
         try {
             invokeInternal(ctx, invoke_ctx);
             callMetaLua(ctx, invoke_ctx);
@@ -911,6 +913,25 @@ Block::postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext>
     (void)invoke_ctx;
 }
 
+ArgList*
+Block::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
+    (void)ctx;
+    (void)invoke_ctx;
+    return new CommonArgList();
+}
+
+void
+Block::processArguments(Context *ctx, InvokeContext *invoke_ctx) {
+    boost::shared_ptr<ArgList> args(createArgList(ctx, invoke_ctx));
+    const std::vector<Param*>& prms = params();
+    for (std::vector<Param*>::const_iterator it = prms.begin();
+         it != prms.end();
+         ++it) {
+        (*it)->add(ctx, *args);
+    }
+    invoke_ctx->setArgList(args);
+}
+
 void
 Block::postInvoke(Context *, InvokeContext *) {
 }
@@ -1129,20 +1150,16 @@ Block::stopTimer(Context *ctx) {
 }
 
 std::string
-Block::concatParams(const Context *ctx, unsigned int first, unsigned int last) const {
-    const std::vector<Param*> &p = params();
-    unsigned int size = p.size();
+Block::concatArguments(const ArgList *args, unsigned int first, unsigned int last) {
+    unsigned int size = args->size();
     if (first >= size) {
         return StringUtils::EMPTY_STRING;
     }
-    
     last = std::min(last, size - 1);
-    
     std::string result;
-    for(unsigned int i = first; i <= last; ++i) {
-        result.append(p[i]->asString(ctx));
+    for (unsigned int i = first; i <= last; ++i) {
+        result.append(args->at(i).asString());
     }
-    
     return result;
 }
 

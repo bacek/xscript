@@ -15,8 +15,8 @@
 
 namespace xscript {
 
+class ArgList;
 class Context;
-class Param;
 class MistWorkerMethodRegistrator;
 class XsltParamFetcher;
 
@@ -26,12 +26,10 @@ public:
 
     static std::auto_ptr<MistWorker> create(const std::string &method);
    
-    XmlNodeHelper run(Context *ctx,
-                      const std::vector<Param*> &params,
-                      const std::map<unsigned int, std::string> &overrides = EMPTY_OVERRIDES_);
-    XmlNodeHelper run(Context *ctx,
-                      const XsltParamFetcher &params,
-                      const std::map<unsigned int, std::string> &overrides = EMPTY_OVERRIDES_);
+    XmlNodeHelper run(Context *ctx, const ArgList *params,
+            const std::map<unsigned int, std::string> &overrides = EMPTY_OVERRIDES_);
+    XmlNodeHelper run(Context *ctx, const XsltParamFetcher &params,
+            const std::map<unsigned int, std::string> &overrides = EMPTY_OVERRIDES_);
     
     const std::string& methodName() const;
     bool isAttachStylesheet() const;

@@ -11,9 +11,9 @@
 #include "state_node.h"
 #include "state_prefix_node.h"
 
+#include <xscript/args.h>
 #include <xscript/context.h>
 #include <xscript/encoder.h>
-#include <xscript/param.h>
 #include <xscript/state.h>
 #include <xscript/string_utils.h>
 #include <xscript/typed_map.h>
@@ -60,34 +60,32 @@ MistWorker::isAttachStylesheet() const {
 }
 
 XmlNodeHelper
-MistWorker::run(Context *ctx,
-                const std::vector<Param*> &params,
-                const std::map<unsigned int, std::string> &overrides) {
+MistWorker::run(Context *ctx, const ArgList *params,
+        const std::map<unsigned int, std::string> &overrides) {
     std::vector<std::string> str_params;
-    int size = params.size();
+    int size = params->size();
     str_params.reserve(size);
     
     unsigned int last = 0;
-    for(std::map<unsigned int, std::string>::const_iterator it = overrides.begin();
+    for (std::map<unsigned int, std::string>::const_iterator it = overrides.begin();
         it != overrides.end();
         ++it) {
-        for(unsigned int i = last; i < it->first; ++i) {
-            str_params.push_back(params[i]->asString(ctx));
+        for (unsigned int i = last; i < it->first; ++i) {
+            str_params.push_back(params->at(i).asString());
         }
         str_params.push_back(it->second);
         last = it->first + 1;
     }
     for(int i = last; i < size; ++i) {
-        str_params.push_back(params[i]->asString(ctx));
+        str_params.push_back(params->at(i).asString());
     }
     
     return method_(ctx, str_params);
 }
 
 XmlNodeHelper
-MistWorker::run(Context *ctx,
-                const XsltParamFetcher &params,
-                const std::map<unsigned int, std::string> &overrides) {
+MistWorker::run(Context *ctx, const XsltParamFetcher &params,
+        const std::map<unsigned int, std::string> &overrides) {
     std::vector<std::string> str_params;
     int size = params.size();
     str_params.reserve(size - 1);

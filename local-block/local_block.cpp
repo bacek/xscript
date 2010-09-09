@@ -58,14 +58,16 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
         return;
     }
     
-    const std::vector<Param*>& params = this->params();
+    const ArgList* args = invoke_ctx->getArgList();
     boost::shared_ptr<TypedMap> local_params(new TypedMap());
-    LocalArgList param_list;
-    for(std::vector<Param*>::const_iterator it = params.begin();
-        it != params.end();
-        ++it) {
-        (*it)->add(ctx.get(), param_list);
-        local_params->insert((*it)->id(), param_list.value());
+    std::vector<Param*>::const_iterator it = params().begin();
+    std::vector<Param*>::const_iterator end = params().end();
+    for (unsigned int i = 0, size = args->size(); i < size; ++i) {
+        if (end == it) {
+            throw CriticalInvokeError("Incorrect param list");
+        }
+        local_params->insert((*it)->id(), args->at(i));
+        ++it;
     }
 
     boost::shared_ptr<Context> local_ctx =
@@ -97,6 +99,13 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
         Tag local_tag(true, max_time, Tag::UNDEFINED_TIME);
         invoke_ctx->tag(local_tag);
     }
+}
+
+ArgList*
+LocalBlock::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
+    (void)ctx;
+    (void)invoke_ctx;
+    return new LocalArgList();
 }
 
 void

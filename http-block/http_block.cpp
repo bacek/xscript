@@ -17,12 +17,12 @@
 
 #include "http_block.h"
 
+#include "xscript/args.h"
 #include "xscript/context.h"
 #include "xscript/http_helper.h"
 #include "xscript/logger.h"
 #include "xscript/meta.h"
 #include "xscript/operation_mode.h"
-#include "xscript/param.h"
 #include "xscript/policy.h"
 #include "xscript/profiler.h"
 #include "xscript/request.h"
@@ -118,8 +118,8 @@ HttpBlock::property(const char *name, const char *value) {
 }
 
 std::string
-HttpBlock::concatParams(const Context *ctx, unsigned int first, unsigned int last) const {  
-    std::string url = Block::concatParams(ctx, first, last);
+HttpBlock::getUrl(const ArgList *args, unsigned int first, unsigned int last) const {
+    std::string url = Block::concatArguments(args, first, last);
     if (strncasecmp(url.c_str(), "file://", sizeof("file://") - 1) == 0) {
         throw InvokeError("File scheme is not allowed", "url", url);
     }
@@ -129,16 +129,15 @@ HttpBlock::concatParams(const Context *ctx, unsigned int first, unsigned int las
 
 XmlDocHelper
 HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) const {
-
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
-    const std::vector<Param*> &p = params();
-    unsigned int size = p.size();
+    const ArgList* args = invoke_ctx->getArgList();
+    unsigned int size = args->size();
     if (size == 0) {
         throwBadArityError();
     }
     
-    std::string url = concatParams(ctx, 0, size - 1);
+    std::string url = getUrl(args, 0, size - 1);
     
     PROFILER(log(), "getHttp: " + url);
 
@@ -162,18 +161,15 @@ HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) const {
 
 XmlDocHelper
 HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
-    (void)invoke_ctx;
-
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
-    const std::vector<Param*> &p = params();
-    unsigned int size = p.size();
-    
+    const ArgList* args = invoke_ctx->getArgList();
+    unsigned int size = args->size();
     if (size == 0 || tagged()) {
         throw InvokeError("bad arity");
     }
     
-    std::string url = concatParams(ctx, 0, size - 1);
+    std::string url = getUrl(args, 0, size - 1);
     PROFILER(log(), "getBinaryPage: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
@@ -216,19 +212,19 @@ HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
-    const std::vector<Param*> &p = params();
-    unsigned int size = p.size();
+    const ArgList* args = invoke_ctx->getArgList();
+    unsigned int size = args->size();
     if (size < 2) {
         throwBadArityError();
     }
     
-    std::string url = concatParams(ctx, 0, size - 2);
+    std::string url = getUrl(args, 0, size - 2);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
     appendHeaders(helper, ctx->request(), invoke_ctx);
 
-    std::string body = p[size-1]->asString(ctx);
+    const std::string& body = args->at(size-1).asString();
     helper.postData(body.data(), body.size());
 
     httpCall(helper);
@@ -251,13 +247,13 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
-    const std::vector<Param*> &p = params();
-    unsigned int size = p.size();
+    const ArgList* args = invoke_ctx->getArgList();
+    unsigned int size = args->size();
     if (size == 0 || tagged()) {
         throw InvokeError("bad arity");
     }
     
-    std::string url = concatParams(ctx, 0, size - 1);
+    std::string url = getUrl(args, 0, size - 1);
     
     bool is_get = (strcmp(ctx->request()->getRequestMethod().c_str(), "GET") == 0);
     
@@ -294,14 +290,14 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
     
-    const std::vector<Param*> &p = params();
-    unsigned int size = p.size();
+    const ArgList* args = invoke_ctx->getArgList();
+    unsigned int size = args->size();
     
     if (size == 0 || tagged()) {
         throw InvokeError("bad arity");
     }
     
-    std::string url = concatParams(ctx, 0, size - 1);
+    std::string url = getUrl(args, 0, size - 1);
     
     bool has_query = url.find('?') != std::string::npos;
 
@@ -334,14 +330,14 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
 
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
-    const std::vector<Param*> &p = params();
-    unsigned int size = p.size();
+    const ArgList* args = invoke_ctx->getArgList();
+    unsigned int size = args->size();
     
     if (size == 0 || tagged()) {
         throw InvokeError("bad arity");
     }
     
-    std::string url = concatParams(ctx, 0, size - 1);
+    std::string url = getUrl(args, 0, size - 1);
     
     bool is_post = (strcmp(ctx->request()->getRequestMethod().c_str(), "POST") == 0);
     

@@ -14,6 +14,7 @@
 
 namespace xscript {
 
+class ArgList;
 class Context;
 class MetaBlock;
 class ParamFactory;
@@ -89,6 +90,8 @@ protected:
     virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
     void callInternalThreaded_Ex(InvokeHelper helper, unsigned int slot);
     virtual void callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+    virtual ArgList* createArgList(Context *ctx, InvokeContext *invoke_ctx) const;
+    void processArguments(Context *ctx, InvokeContext *invoke_ctx);
     void callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     bool checkStateGuard(Context *ctx) const;
     bool hasGuard() const;
@@ -120,8 +123,8 @@ protected:
     xmlNodePtr processEmptyXPointer(const Context *ctx, xmlDocPtr meta_doc,
             xmlNodePtr insert_node, insertFunc func) const;
     
-    virtual std::string concatParams(const Context *ctx, unsigned int begin, unsigned int end) const;
-    
+    static std::string concatArguments(const ArgList *args, unsigned int first, unsigned int last);
+
     void addParam(std::auto_ptr<Param> param);
     void detectBase();
     

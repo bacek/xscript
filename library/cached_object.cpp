@@ -9,6 +9,7 @@
 #include <boost/filesystem/operations.hpp>
 
 #include "xscript/algorithm.h"
+#include "xscript/args.h"
 #include "xscript/block.h"
 #include "xscript/cached_object.h"
 #include "xscript/cache_strategy_collector.h"
@@ -213,15 +214,16 @@ CachedObject::blocksModifiedKey(const std::vector<Block*> &blocks) {
 }
 
 std::string
-CachedObject::paramsKey(const std::vector<Param*> &params, const Context *ctx) {
+CachedObject::paramsKey(const ArgList *args) {
+    if (NULL == args) {
+        return StringUtils::EMPTY_STRING;
+    }
     std::string key;
-    for(std::vector<Param*>::const_iterator it = params.begin();
-        it != params.end();
-        ++it) {
+    for (unsigned int i = 0, size = args->size(); i < size; ++i) {
         if (!key.empty()) {
             key.push_back(':');
         }
-        key.append((*it)->asString(ctx));
+        key.append(args->at(i).asString());
     }
     return key;
 }

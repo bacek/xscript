@@ -37,6 +37,7 @@ struct InvokeContext::ContextData {
 
     InvokeContext* base_;
     boost::shared_ptr<Meta> meta_;
+    boost::shared_ptr<ArgList> args_;
 };
 
 InvokeContext::InvokeContext() : ctx_data_(new ContextData())
@@ -164,7 +165,7 @@ InvokeContext::setLocalContext(const boost::shared_ptr<Context> &ctx) {
 }
 
 const boost::shared_ptr<Context>&
-InvokeContext::getLocalContext() {
+InvokeContext::getLocalContext() const {
     return ctx_data_->local_context_;
 }
 
@@ -191,6 +192,16 @@ InvokeContext::xsltName() const {
 void
 InvokeContext::xsltName(const std::string &name) {
     ctx_data_->xslt_ = name;
+}
+
+void
+InvokeContext::setArgList(const boost::shared_ptr<ArgList> &args) {
+    ctx_data_->args_ = args;
+}
+
+ArgList*
+InvokeContext::getArgList() const {
+    return ctx_data_->args_.get();
 }
 
 } // namespace xscript

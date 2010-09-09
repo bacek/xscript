@@ -10,6 +10,7 @@
 
 namespace xscript {
 
+class ArgList;
 class Block;
 class CacheStrategy;
 class Context;
@@ -44,7 +45,7 @@ public:
     static std::string fileModifiedKey(const std::string &filename);
     static std::string blocksModifiedKey(const std::vector<Block*> &blocks);
     static std::string modifiedKey(const Xml::TimeMapType &modified_info);
-    static std::string paramsKey(const std::vector<Param*> &params, const Context *ctx);
+    static std::string paramsKey(const ArgList *args);
     static std::string paramsIdKey(const std::vector<Param*> &params, const Context *ctx);
     
     static const time_t CACHE_TIME_UNDEFINED;

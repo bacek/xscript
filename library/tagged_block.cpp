@@ -5,6 +5,7 @@
 
 #include <limits>
 
+#include "xscript/args.h"
 #include "xscript/context.h"
 #include "xscript/doc_cache.h"
 #include "xscript/logger.h"
@@ -424,7 +425,7 @@ std::string
 TaggedBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
     std::string key(processMainKey(ctx, invoke_ctx));
     key.push_back('|');
-    key.append(processParamsKey(ctx));
+    key.append(processParamsKey(invoke_ctx));
     return key;
 }
 
@@ -451,8 +452,8 @@ TaggedBlock::processMainKey(const Context *ctx, const InvokeContext *invoke_ctx)
 }
 
 std::string
-TaggedBlock::processParamsKey(const Context *ctx) const {
-    return paramsKey(params(), ctx);
+TaggedBlock::processParamsKey(const InvokeContext *invoke_ctx) const {
+    return paramsKey(invoke_ctx->getArgList());
 }
 
 void

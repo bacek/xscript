@@ -5,6 +5,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "xscript/args.h"
+#include "xscript/exception.h"
 #include "xscript/typed_map.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -86,6 +87,92 @@ ArgList::addAs(const std::string &type, const std::string &value) {
 void
 ArgList::addAs(const std::string &type, const TypedValue &value) {
     addAs(type.empty() ? value.stringType() : type, value.asString());
+}
+
+void
+ArgList::addState(const Context *ctx) {
+    (void)ctx;
+    throw CriticalInvokeError("State param is not allowed in this context");
+}
+
+void
+ArgList::addRequest(const Context *ctx) {
+    (void)ctx;
+    throw CriticalInvokeError("Request param is not allowed in this context");
+}
+
+void
+ArgList::addRequestData(const Context *ctx) {
+    (void)ctx;
+    throw CriticalInvokeError("RequestData param is not allowed in this context");
+}
+
+void
+ArgList::addTag(const TaggedBlock *tb, const Context *ctx) {
+    (void)tb;
+    (void)ctx;
+    throw CriticalInvokeError("Tag param is not allowed in this context");
+}
+
+CommonArgList::CommonArgList() {
+}
+
+CommonArgList::~CommonArgList() {
+}
+
+void
+CommonArgList::add(bool value) {
+    args_.push_back(TypedValue(value));
+}
+
+void
+CommonArgList::add(double value) {
+    args_.push_back(TypedValue(value));
+}
+
+void
+CommonArgList::add(boost::int32_t value) {
+    args_.push_back(TypedValue(value));
+}
+
+void
+CommonArgList::add(boost::int64_t value) {
+    args_.push_back(TypedValue(value));
+}
+
+void
+CommonArgList::add(boost::uint32_t value) {
+    args_.push_back(TypedValue(value));
+}
+
+void
+CommonArgList::add(boost::uint64_t value) {
+    args_.push_back(TypedValue(value));
+}
+
+void
+CommonArgList::add(const std::string &value) {
+    args_.push_back(TypedValue(value));
+}
+
+void
+CommonArgList::add(const TypedValue &value) {
+    args_.push_back(value);
+}
+
+bool
+CommonArgList::empty() const {
+    return args_.empty();
+}
+
+unsigned int
+CommonArgList::size() const {
+    return args_.size();
+}
+
+const TypedValue&
+CommonArgList::at(unsigned int i) const {
+    return args_.at(i);
 }
 
 } // namespace xscript

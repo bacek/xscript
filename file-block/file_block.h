@@ -50,7 +50,7 @@ private:
     
     XmlDocSharedHelper testFileDoc(bool result, const std::string &file) const;
     
-    std::string fileName(const Context *ctx) const;
+    std::string fileName(const ArgList *args) const;
     
     virtual void property(const char *name, const char *value);
     

@@ -2,7 +2,7 @@
 
 #include "mist_block.h"
 
-#include "xscript/param.h"
+#include "xscript/args.h"
 #include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -36,16 +36,16 @@ MistBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext>
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
     
+    const ArgList* args = invoke_ctx->getArgList();
     std::map<unsigned int, std::string> overrides;
     if (worker_->isAttachStylesheet()) {
-        const std::vector<Param*> &p = params();
-        if (!p.empty()) {
-            overrides.insert(std::make_pair(0, fullName(p[0]->asString(ctx.get()))));
+        if (!args->empty()) {
+            overrides.insert(std::make_pair(0, fullName(args->at(0).asString())));
         }
     }
     
     try {
-        xmlDocSetRootElement(doc.get(), worker_->run(ctx.get(), params(), overrides).release());
+        xmlDocSetRootElement(doc.get(), worker_->run(ctx.get(), args, overrides).release());
     }
     catch(const std::invalid_argument &e) {
         throwBadArityError();

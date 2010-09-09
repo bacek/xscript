@@ -7,6 +7,7 @@
 
 namespace xscript {
 
+class ArgList;
 class Block;
 class Context;
 class Meta;
@@ -52,15 +53,17 @@ public:
     TagKey* tagKey() const;
     
     void setLocalContext(const boost::shared_ptr<Context> &ctx);
-    const boost::shared_ptr<Context>& getLocalContext();
+    const boost::shared_ptr<Context>& getLocalContext() const;
 
     boost::shared_ptr<Meta> meta() const;
     void setMeta(const boost::shared_ptr<Meta> &meta);
-
     bool isMeta() const;
 
     const std::string& xsltName() const;
     void xsltName(const std::string &name);
+
+    void setArgList(const boost::shared_ptr<ArgList> &args);
+    ArgList* getArgList() const;
 
 private:
     struct ContextData;
