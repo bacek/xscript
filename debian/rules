@@ -73,7 +73,7 @@ binary-arch: build install
 	# dh_strip
 	dh_compress
 	dh_fixperms
-	dh_makeshlibs -V 'libxscript (>= 5.72), libxscript (<< 5.73)'
+	dh_makeshlibs -V 'libxscript (>= 5.73), libxscript (<< 5.74)'
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol
