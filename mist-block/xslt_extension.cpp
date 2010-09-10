@@ -50,7 +50,6 @@ xscriptXsltMist(xmlXPathParserContextPtr ctxt, int nargs) {
 
     try {
         std::auto_ptr<MistWorker> worker = MistWorker::create(method);
-        std::map<unsigned int, std::string> overrides;
         if (worker->isAttachStylesheet()) {
             if (params.size() > 1) {
                 const char* xslt_name = params.str(1);
@@ -58,13 +57,13 @@ xscriptXsltMist(xmlXPathParserContextPtr ctxt, int nargs) {
                     Stylesheet* style = Stylesheet::getStylesheet(tctx);
                     const Block* block = Stylesheet::getBlock(tctx);
                     std::string name = block ? block->fullName(xslt_name) : style->fullName(xslt_name);
-                    overrides.insert(std::make_pair(0, name));
+                    worker->attachData(name);
                 }
             }
         }
 
         boost::shared_ptr<Context> ctx = Stylesheet::getContext(tctx);
-        XmlNodeHelper node = worker->run(ctx.get(), params, overrides);
+        XmlNodeHelper node = worker->run(ctx.get(), params);
 
         XmlNodeSetHelper ret(xmlXPathNodeSetCreate(NULL));
         xmlXPathNodeSetAdd(ret.get(), node.get());

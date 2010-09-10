@@ -1,3 +1,9 @@
+xscript (5.73.0-1) unstable; urgency=low
+
+  * arg list changed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 10 Sep 2010 13:31:27 +0400
+
 xscript (5.72.0-2) unstable; urgency=low
 
   * dependency fixed

@@ -58,7 +58,10 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
         return;
     }
     
-    const ArgList* args = invoke_ctx->getArgList();
+    const LocalArgList* args = dynamic_cast<const LocalArgList*>(invoke_ctx->getArgList());
+    if (NULL == args) {
+        throw CriticalInvokeError("Non local arg list");
+    }
     boost::shared_ptr<TypedMap> local_params(new TypedMap());
     std::vector<Param*>::const_iterator it = params().begin();
     std::vector<Param*>::const_iterator end = params().end();
@@ -66,7 +69,7 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
         if (end == it) {
             throw CriticalInvokeError("Incorrect param list");
         }
-        local_params->insert((*it)->id(), args->at(i));
+        local_params->insert((*it)->id(), args->typedValue(i));
         ++it;
     }
 

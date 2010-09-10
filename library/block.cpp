@@ -1158,7 +1158,7 @@ Block::concatArguments(const ArgList *args, unsigned int first, unsigned int las
     last = std::min(last, size - 1);
     std::string result;
     for (unsigned int i = first; i <= last; ++i) {
-        result.append(args->at(i).asString());
+        result.append(args->at(i));
     }
     return result;
 }

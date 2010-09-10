@@ -206,6 +206,11 @@ SimpleParam<T>::add(const Context * /* ctx */, ArgList &al) const {
     al.add(typedValue());
 }
 
+template<> void
+SimpleParam<std::string>::add(const Context * /* ctx */, ArgList &al) const {
+    al.add(typedValue());
+}
+
 template<typename T> std::auto_ptr<Param>
 SimpleParam<T>::create(Object *owner, xmlNodePtr node) {
     return std::auto_ptr<Param>(new SimpleParam<T>(owner, node));

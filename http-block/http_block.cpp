@@ -224,7 +224,7 @@ HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
     
     appendHeaders(helper, ctx->request(), invoke_ctx);
 
-    const std::string& body = args->at(size-1).asString();
+    const std::string& body = args->at(size-1);
     helper.postData(body.data(), body.size());
 
     httpCall(helper);

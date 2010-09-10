@@ -15,7 +15,7 @@
 
 namespace xscript {
 
-class ArgList;
+class CommonArgList;
 class Context;
 class MistWorkerMethodRegistrator;
 class XsltParamFetcher;
@@ -26,64 +26,63 @@ public:
 
     static std::auto_ptr<MistWorker> create(const std::string &method);
    
-    XmlNodeHelper run(Context *ctx, const ArgList *params,
-            const std::map<unsigned int, std::string> &overrides = EMPTY_OVERRIDES_);
-    XmlNodeHelper run(Context *ctx, const XsltParamFetcher &params,
-            const std::map<unsigned int, std::string> &overrides = EMPTY_OVERRIDES_);
+    XmlNodeHelper run(Context *ctx, const CommonArgList *params);
+    XmlNodeHelper run(Context *ctx, const XsltParamFetcher &params);
     
     const std::string& methodName() const;
     bool isAttachStylesheet() const;
+    void attachData(const std::string &data);
 
 private:
     friend class MistWorkerMethodRegistrator;
     
-    typedef boost::function<XmlNodeHelper (Context*, const std::vector<std::string>&)> Method;
+    typedef XmlNodeHelper (MistWorker::*Method)(Context*, const std::vector<std::string>&) const;
     typedef std::map<std::string, Method, StringCILess> MethodMap;
     
     MistWorker(const std::string &method);
 
     static void registerMethod(const std::string &name, Method method);
     
-    static XmlNodeHelper setStateLong(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateString(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateDouble(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateLongLong(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateRandom(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateDefined(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateUrlencode(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateUrldecode(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateXmlescape(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateDomain(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateByKeys(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateByDate(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateByQuery(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateByRequest(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateByRequestUrlencoded(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateByHeaders(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateByCookies(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateByProtocol(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateByLocalArgs(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper echoQuery(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper echoRequest(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper echoHeaders(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper echoCookies(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper echoProtocol(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper echoLocalArgs(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateJoinString(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateSplitString(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStateConcatString(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper dropState(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper dumpState(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper attachStylesheet(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper location(Context *ctx, const std::vector<std::string> &params);
-    static XmlNodeHelper setStatus(Context *ctx, const std::vector<std::string> &params);
+    XmlNodeHelper setStateLong(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateString(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateDouble(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateLongLong(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateRandom(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateDefined(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateUrlencode(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateUrldecode(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateXmlescape(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateDomain(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateByKeys(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateByDate(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateByQuery(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateByRequest(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateByRequestUrlencoded(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateByHeaders(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateByCookies(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateByProtocol(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateByLocalArgs(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper echoQuery(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper echoRequest(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper echoHeaders(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper echoCookies(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper echoProtocol(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper echoLocalArgs(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateJoinString(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateSplitString(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStateConcatString(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper dropState(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper dumpState(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper attachStylesheet(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper location(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper setStatus(Context *ctx, const std::vector<std::string> &params) const;
 
 private:    
     std::string method_name_;
+    std::string data_;
     Method method_;
     
     static MethodMap methods_;
-    static std::map<unsigned int, std::string> EMPTY_OVERRIDES_;
 };
 
 } // namespace xscript

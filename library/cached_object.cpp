@@ -223,7 +223,7 @@ CachedObject::paramsKey(const ArgList *args) {
         if (!key.empty()) {
             key.push_back(':');
         }
-        key.append(args->at(i).asString());
+        key.append(args->at(i));
     }
     return key;
 }

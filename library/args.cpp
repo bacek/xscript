@@ -122,42 +122,37 @@ CommonArgList::~CommonArgList() {
 
 void
 CommonArgList::add(bool value) {
-    args_.push_back(TypedValue(value));
+    args_.push_back(value ? "1" : "0");
 }
 
 void
 CommonArgList::add(double value) {
-    args_.push_back(TypedValue(value));
+    args_.push_back(boost::lexical_cast<std::string>(value));
 }
 
 void
 CommonArgList::add(boost::int32_t value) {
-    args_.push_back(TypedValue(value));
+    args_.push_back(boost::lexical_cast<std::string>(value));
 }
 
 void
 CommonArgList::add(boost::int64_t value) {
-    args_.push_back(TypedValue(value));
+    args_.push_back(boost::lexical_cast<std::string>(value));
 }
 
 void
 CommonArgList::add(boost::uint32_t value) {
-    args_.push_back(TypedValue(value));
+    args_.push_back(boost::lexical_cast<std::string>(value));
 }
 
 void
 CommonArgList::add(boost::uint64_t value) {
-    args_.push_back(TypedValue(value));
+    args_.push_back(boost::lexical_cast<std::string>(value));
 }
 
 void
 CommonArgList::add(const std::string &value) {
-    args_.push_back(TypedValue(value));
-}
-
-void
-CommonArgList::add(const TypedValue &value) {
-    args_.push_back(value);
+    args_.push_back(boost::lexical_cast<std::string>(value));
 }
 
 bool
@@ -170,9 +165,14 @@ CommonArgList::size() const {
     return args_.size();
 }
 
-const TypedValue&
+const std::string&
 CommonArgList::at(unsigned int i) const {
     return args_.at(i);
+}
+
+const std::vector<std::string>&
+CommonArgList::args() const {
+    return args_;
 }
 
 } // namespace xscript

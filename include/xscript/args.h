@@ -33,7 +33,7 @@ public:
 
     virtual bool empty() const = 0;
     virtual unsigned int size() const = 0;
-    virtual const TypedValue& at(unsigned int i) const = 0;
+    virtual const std::string& at(unsigned int i) const = 0;
 };
 
 class CommonArgList : public ArgList {
@@ -49,12 +49,12 @@ public:
     virtual void add(const std::string &value);
     virtual bool empty() const;
     virtual unsigned int size() const;
-    virtual const TypedValue& at(unsigned int i) const;
+    virtual const std::string& at(unsigned int i) const;
 
-protected:
-    void add(const TypedValue &value);
+    const std::vector<std::string>& args() const;
+
 private:
-    std::vector<TypedValue> args_;
+    std::vector<std::string> args_;
 };
 
 } // namespace xscript
