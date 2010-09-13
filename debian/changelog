@@ -1,3 +1,9 @@
+xscript (5.73.2-2) unstable; urgency=low
+
+  * xi:include fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 13 Sep 2010 17:45:57 +0400
+
 xscript (5.73.2-1) unstable; urgency=low
 
   * add virtual inheritance for CommonArgList

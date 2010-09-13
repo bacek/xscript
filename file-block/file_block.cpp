@@ -227,7 +227,7 @@ FileBlock::loadFile(const std::string &file_name,
     XmlUtils::throwUnless(NULL != doc.get());
 
     if (processXInclude_) {
-        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT) >= 0);
+        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT | XML_PARSE_NOXINCNODE) >= 0);
     }
     
     std::string error = XmlInfoCollector::getError();

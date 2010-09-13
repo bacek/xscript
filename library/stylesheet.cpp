@@ -419,7 +419,7 @@ Stylesheet::parse() {
             throw std::runtime_error("got empty xml doc");
         }
 
-        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT) >= 0);
+        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT | XML_PARSE_NOXINCNODE) >= 0);
 
         if (NULL == xmlDocGetRootElement(doc.get())) {
             throw std::runtime_error("got xml doc with no root");
