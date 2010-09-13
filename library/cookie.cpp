@@ -174,6 +174,7 @@ Cookie::operator=(const Cookie &cookie) {
     if (this != &cookie) {
         data_.reset(new CookieData(*cookie.data_));
     }
+    return *this;
 }
 
 const std::string&
