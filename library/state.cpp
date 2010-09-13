@@ -162,4 +162,17 @@ State::is(const std::string &name) const {
     return impl_->is(name);
 }
 
+std::string
+State::asString() const {
+    std::stringstream stream;
+    std::map<std::string, TypedValue> vals;
+    values(vals);
+    for(std::map<std::string, TypedValue>::iterator i = vals.begin(), end = vals.end();
+        i != end;
+        ++i) {
+        stream << i->first << ":" << i->second.asString() << std::endl;
+    }
+    return stream.str();
+}
+
 } // namespace xscript

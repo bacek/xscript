@@ -211,9 +211,7 @@ LocalBlock::script() const {
 
 std::string
 LocalBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
-    std::string key(processMainKey(ctx, invoke_ctx));
-    key.push_back('|');
-    key.append(paramsIdKey(params(), ctx));
+    std::string key(TaggedBlock::createTagKey(ctx, invoke_ctx));
     key.push_back('|');
     key.append(script_->name());
     key.push_back('|');
@@ -223,6 +221,7 @@ LocalBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) co
     key.push_back('|');
     key.append(node_id_);
     return key;
+
 }
 
 } // namespace xscript

@@ -67,6 +67,7 @@ public:
      * Check that state with name set to true
      */
     bool is(const std::string &name) const;
+    std::string asString() const;
 private:
     std::auto_ptr<StateImpl> impl_;
 };

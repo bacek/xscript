@@ -41,19 +41,7 @@ StateParam::type() const {
 
 std::string
 StateParam::asString(const Context *ctx) const {
-
-    std::stringstream stream;
-    std::map<std::string, TypedValue> vals;
-
-    State* state = ctx->state();
-    state->values(vals);
-
-    for(std::map<std::string, TypedValue>::iterator i = vals.begin(), end = vals.end();
-        i != end;
-        ++i) {
-        stream << i->first << ":" << i->second.asString() << std::endl;
-    }
-    return stream.str();
+    return ctx->state()->asString();
 }
 
 void

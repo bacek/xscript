@@ -5,7 +5,9 @@
 #include <boost/lexical_cast.hpp>
 
 #include "xscript/args.h"
+#include "xscript/context.h"
 #include "xscript/exception.h"
+#include "xscript/state.h"
 #include "xscript/typed_map.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -91,20 +93,17 @@ ArgList::addAs(const std::string &type, const TypedValue &value) {
 
 void
 ArgList::addState(const Context *ctx) {
-    (void)ctx;
-    throw CriticalInvokeError("State param is not allowed in this context");
+    add(ctx->state()->asString());
 }
 
 void
 ArgList::addRequest(const Context *ctx) {
-    (void)ctx;
-    throw CriticalInvokeError("Request param is not allowed in this context");
+    add(ctx->request()->getQueryString());
 }
 
 void
 ArgList::addRequestData(const Context *ctx) {
-    (void)ctx;
-    throw CriticalInvokeError("RequestData param is not allowed in this context");
+    add(ctx->request()->getQueryString());
 }
 
 void
