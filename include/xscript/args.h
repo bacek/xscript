@@ -36,7 +36,7 @@ public:
     virtual const std::string& at(unsigned int i) const = 0;
 };
 
-class CommonArgList : public ArgList {
+class CommonArgList : public virtual ArgList {
 public:
     CommonArgList();
     virtual ~CommonArgList();

@@ -1,3 +1,9 @@
+xscript (5.73.2-1) unstable; urgency=low
+
+  * add virtual inheritance for CommonArgList
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 13 Sep 2010 16:51:35 +0400
+
 xscript (5.73.1-1) lucid; urgency=low
 
   * arglist fixed for tagged blocks
