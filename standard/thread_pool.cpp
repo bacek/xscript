@@ -86,6 +86,7 @@ StandardThreadPool::invoke(boost::function<void()> f) {
     boost::mutex::scoped_lock sl(mutex_);
     if (running_) {
         if (0 == free_threads_) {
+            sl.unlock();
             f();
             return;
         }
