@@ -103,8 +103,6 @@ public:
 
     bool stopped() const;
 
-    bool forceNoThreaded() const;
-    void forceNoThreaded(bool value);
     bool noXsltPort() const;
     bool noMainXsltPort() const;
     bool noCache() const;

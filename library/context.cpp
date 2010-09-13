@@ -261,7 +261,6 @@ struct Context::ContextData {
     
     mutable boost::mutex attr_mutex_, results_mutex_, runtime_errors_mutex_;
     
-    static const unsigned int FLAG_FORCE_NO_THREADED = 1;
     static const unsigned int FLAG_NO_XSLT = 1 << 1;
     static const unsigned int FLAG_NO_MAIN_XSLT = 1 << 2;
     static const unsigned int FLAG_NO_CACHE = 1 << 3;
@@ -528,16 +527,6 @@ Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
         ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new HtmlWriter(sh)));
         log()->debug("html writer created");
     }
-}
-
-bool
-Context::forceNoThreaded() const {
-    return ctx_data_->flag(ContextData::FLAG_FORCE_NO_THREADED);
-}
-
-void
-Context::forceNoThreaded(bool value) {
-    ctx_data_->flag(ContextData::FLAG_FORCE_NO_THREADED, value);
 }
 
 bool

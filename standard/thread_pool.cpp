@@ -46,6 +46,7 @@ private:
 private:
     bool running_;
     std::queue<Task> tasks_;
+    unsigned short free_threads_;
 
     boost::mutex mutex_;
     boost::condition condition_;
@@ -53,7 +54,7 @@ private:
     std::auto_ptr<SimpleCounter> counter_;
 };
 
-StandardThreadPool::StandardThreadPool() : running_(true) {
+StandardThreadPool::StandardThreadPool() : running_(true), free_threads_(0) {
 }
 
 StandardThreadPool::~StandardThreadPool() {
@@ -65,7 +66,7 @@ StandardThreadPool::init(const Config *config) {
 
     try {
         counter_ = SimpleCounterFactory::instance()->createCounter("working-threads", true);
-        int nthreads = config->as<unsigned short>("/xscript/pool-workers");
+        unsigned short nthreads = config->as<unsigned short>("/xscript/pool-workers");
         counter_->max(nthreads);
         boost::function<void()> f = boost::bind(&StandardThreadPool::handle, this);
         for (int i = 0; i < nthreads; ++i) {
@@ -84,6 +85,10 @@ void
 StandardThreadPool::invoke(boost::function<void()> f) {
     boost::mutex::scoped_lock sl(mutex_);
     if (running_) {
+        if (0 == free_threads_) {
+            f();
+            return;
+        }
         tasks_.push(f);
         condition_.notify_all();
     }
@@ -124,10 +129,12 @@ boost::function<void()>
 StandardThreadPool::wait() {
     boost::function<void()> f;
     boost::mutex::scoped_lock sl(mutex_);
+    ++free_threads_;
     condition_.wait(sl, boost::bind(&StandardThreadPool::canRun, this));
     if (running_) {
         f = tasks_.front();
         tasks_.pop();
+        --free_threads_;
     }
     return f;
 }

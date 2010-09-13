@@ -78,10 +78,6 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
 
     ContextStopper ctx_stopper(local_ctx);
     
-    if (threaded() || ctx->forceNoThreaded()) {
-        local_ctx->forceNoThreaded(true);
-    }
-    
     XmlDocSharedHelper doc = script_->invoke(local_ctx);
     XmlUtils::throwUnless(NULL != doc.get());
     

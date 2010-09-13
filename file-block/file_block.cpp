@@ -227,7 +227,7 @@ FileBlock::loadFile(const std::string &file_name,
     XmlUtils::throwUnless(NULL != doc.get());
 
     if (processXInclude_) {
-        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT | XML_PARSE_NOXINCNODE) >= 0);
+        XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT) >= 0);
     }
     
     std::string error = XmlInfoCollector::getError();
@@ -375,10 +375,6 @@ FileBlock::invokeFile(const std::string &file_name,
         Context::createChildContext(script, ctx, invoke_ctx, local_params, true);
 
     ContextStopper ctx_stopper(local_ctx);
-
-    if (threaded() || ctx->forceNoThreaded()) {
-        local_ctx->forceNoThreaded(true);
-    }
     
     XmlDocSharedHelper doc = script->invoke(local_ctx);    
     XmlUtils::throwUnless(NULL != doc.get());

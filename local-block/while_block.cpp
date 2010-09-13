@@ -41,7 +41,6 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
 
     XmlDocSharedHelper doc;
     xmlNodePtr root = NULL;
-    bool no_threaded = threaded() || ctx->forceNoThreaded();
 
     boost::shared_ptr<Context> child_ctx = Context::createChildContext(
         script(), ctx, invoke_ctx, ctx->localParamsMap(), true);
@@ -60,10 +59,6 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
         ContextStopper local_ctx_stopper(local_ctx);
         if (local_ctx.get() == child_ctx.get()) {
             local_ctx_stopper.reset();
-        }
-
-        if (no_threaded) {
-            local_ctx->forceNoThreaded(no_threaded);
         }
 
         XmlDocSharedHelper doc_iter = script()->invoke(local_ctx);
