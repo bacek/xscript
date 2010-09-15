@@ -27,7 +27,7 @@ private:
 
 MetaBlock::MetaBlock(const Block *block, xmlNodePtr node) :
         Block(block->extension(), block->owner(), node),
-        parent_(block), root_name_("meta"), root_ns_(NULL), key_("meta")
+        parent_(block), root_name_("meta"), root_ns_(node->ns), key_("meta")
 {
     disableOutput(true);
 }
