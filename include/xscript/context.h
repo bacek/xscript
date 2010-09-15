@@ -53,7 +53,7 @@ public:
             const boost::shared_ptr<TypedMap> &local_params,
             bool proxy);
     
-    void wait(int millis);
+    void wait(const boost::xtime &until);
     void expect(unsigned int count);
     void result(unsigned int n, boost::shared_ptr<InvokeContext> result);
     void addNode(xmlNodePtr node);
@@ -61,7 +61,7 @@ public:
     void addDoc(XmlDocHelper doc);
 
     bool resultsReady() const;
-    boost::xtime delay(int millis) const;
+    static boost::xtime delay(int millis);
     boost::shared_ptr<InvokeContext> result(unsigned int n) const;
 
     const boost::shared_ptr<RequestData>& requestData() const;

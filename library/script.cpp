@@ -869,23 +869,24 @@ Script::xsltName() const {
     return Object::xsltNameRaw();
 }
 
-
 XmlDocSharedHelper
 Script::invoke(boost::shared_ptr<Context> ctx) {
-
     log()->info("%s, invoking %s", BOOST_CURRENT_FUNCTION, name().c_str());
     PROFILER(log(), "invoke script " + name());
+    ctx->wait(invokeBlocks(ctx));
+    return processResults(ctx);
+}
 
+boost::xtime
+Script::invokeBlocks(boost::shared_ptr<Context> ctx) {
     unsigned int count = 0;
-    int timeout = 0;
-    
+    boost::xtime end_time = Context::delay(0);
     std::vector<Block*> &blocks = data_->blocks();
     ctx->expect(blocks.size());
-    
     bool stop = false;
-    for(std::vector<Block*>::iterator it = blocks.begin();
-        it != blocks.end();
-        ++it, ++count) {
+    for (std::vector<Block*>::iterator it = blocks.begin();
+         it != blocks.end();
+         ++it, ++count) {
         if (!stop && (ctx->skipNextBlocks() || ctx->stopBlocks())) {
             stop = true;
         }
@@ -893,29 +894,28 @@ Script::invoke(boost::shared_ptr<Context> ctx) {
             ctx->result(count, (*it)->fakeResult(true));
             continue;
         }
-        
         if (!(*it)->checkGuard(ctx.get())) {
             log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
                 name().c_str(), (*it)->name(), (*it)->method().c_str());
             ctx->result(count, (*it)->fakeResult(false));
             continue;
         }
-
         (*it)->invokeCheckThreaded(ctx, count);
-        
         const ThreadedBlock *tb = dynamic_cast<const ThreadedBlock*>(*it);
         if (tb && tb->threaded()) {
-            timeout = std::max(timeout, tb->timeout());
+            boost::xtime tmp = Context::delay(tb->timeout());
+            if (boost::xtime_cmp(tmp, end_time) > 0) {
+                end_time = tmp;
+            }
         }
     }
+    return end_time;
+}
 
-    ctx->wait(timeout);
-    log()->debug("%s, finished to wait", BOOST_CURRENT_FUNCTION);
-    
+XmlDocSharedHelper
+Script::processResults(boost::shared_ptr<Context> ctx) {
     OperationMode::instance()->processScriptError(ctx.get(), this);
-    
     data_->addHeaders(ctx.get());
-
     return data_->fetchResults(ctx.get());
 }
 

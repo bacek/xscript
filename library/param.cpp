@@ -167,27 +167,20 @@ SimpleParam<T>::typedValue() const {
         return boost::lexical_cast<T>(value());
     }
     catch (const std::exception &e) {
-        log()->error("caught exception while getting value: %s", e.what());
-        throw;
+        throw std::invalid_argument(std::string("bad value: ").append(value()));
     }
 }
 
 template<> bool
 SimpleParam<bool>::typedValue() const {
-    try {
-        if ("0" == value() || strncasecmp(value().c_str(), "false", sizeof("false")) == 0) {
-            return false;
-        }
-        else if ("1" == value() || strncasecmp(value().c_str(), "true", sizeof("true")) == 0) {
-            return true;
-        }
-        else {
-            throw std::invalid_argument(std::string("bad boolean value: ").append(value()));
-        }
+    if ("0" == value() || strncasecmp(value().c_str(), "false", sizeof("false")) == 0) {
+        return false;
     }
-    catch (const std::exception &e) {
-        log()->error("caught exception while getting value: %s", e.what());
-        throw;
+    else if ("1" == value() || strncasecmp(value().c_str(), "true", sizeof("true")) == 0) {
+        return true;
+    }
+    else {
+        throw std::invalid_argument(std::string("bad boolean value: ").append(value()));
     }
 }
 

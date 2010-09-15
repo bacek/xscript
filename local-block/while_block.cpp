@@ -13,6 +13,40 @@
 
 namespace xscript {
 
+class ContextListStopper {
+public:
+    ContextListStopper()
+    {}
+    void add(boost::shared_ptr<Context> ctx) {
+        stoppers_.push_back(new ContextStopper(ctx));
+    }
+    ~ContextListStopper() {
+        for (std::list<ContextStopper*>::iterator it = stoppers_.begin();
+             it != stoppers_.end();
+             ++it) {
+            if (NULL != *it) {
+                delete *it;
+            }
+        }
+    }
+private:
+    std::list<ContextStopper*> stoppers_;
+};
+
+ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {
+}
+
+ContextStopper::~ContextStopper() {
+    if (ctx_.get()) {
+        ctx_->stop();
+    }
+}
+
+void
+ContextStopper::reset() {
+    return ctx_.reset();
+}
+
 WhileBlock::WhileBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
     Block(ext, owner, node), LocalBlock(ext, owner, node)
 {
@@ -30,7 +64,7 @@ WhileBlock::property(const char *name, const char *value) {
 void
 WhileBlock::call(boost::shared_ptr<Context> ctx,
     boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
-    
+
     if (invoke_ctx->haveCachedCopy()) {
         Tag local_tag = invoke_ctx->tag();
         local_tag.modified = false;
@@ -39,16 +73,11 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
         return;
     }
 
-    XmlDocSharedHelper doc;
-    xmlNodePtr root = NULL;
-
-    boost::shared_ptr<Context> child_ctx = Context::createChildContext(
-        script(), ctx, invoke_ctx, ctx->localParamsMap(), true);
-
-    ContextStopper ctx_stopper(child_ctx);
-
-    boost::shared_ptr<Context> local_ctx = child_ctx;
-
+    bool no_cache = false;
+    boost::shared_ptr<Context> main_child_ctx;
+    std::list<boost::shared_ptr<Context> > ctxs;
+    ContextListStopper ctx_list_stopper;
+    boost::xtime end_time = Context::delay(0);
     while (1) {
         if (remainedTime(ctx.get()) <= 0) {
             InvokeError error("block is timed out");
@@ -56,51 +85,62 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
             throw error;
         }
 
-        ContextStopper local_ctx_stopper(local_ctx);
-        if (local_ctx.get() == child_ctx.get()) {
-            local_ctx_stopper.reset();
+        main_child_ctx = Context::createChildContext(
+            script(), ctx, invoke_ctx, ctx->localParamsMap(), true);
+        ctxs.push_back(main_child_ctx);
+
+        ContextStopper ctx_stopper(main_child_ctx);
+        boost::xtime tmp = script()->invokeBlocks(main_child_ctx);
+        if (boost::xtime_cmp(tmp, end_time) > 0) {
+            end_time = tmp;
         }
 
-        XmlDocSharedHelper doc_iter = script()->invoke(local_ctx);
-        XmlUtils::throwUnless(NULL != doc_iter.get());
-        xmlNodePtr root_local = xmlDocGetRootElement(doc_iter.get());
-        XmlUtils::throwUnless(NULL != root_local);
+        if (!checkStateGuard(ctx.get())) {
+            ctx_stopper.reset();
+            break;
+        }
 
+        ctx_stopper.reset();
+        ctx_list_stopper.add(main_child_ctx);
+    }
+
+    ContextStopper ctx_stopper(main_child_ctx);
+
+    XmlDocSharedHelper doc;
+    xmlNodePtr root = NULL;
+
+    for (std::list<boost::shared_ptr<Context> >::iterator it = ctxs.begin();
+         it != ctxs.end();
+         ++it) {
+        boost::shared_ptr<Context> local_ctx = *it;
+        local_ctx->wait(end_time);
+        XmlDocSharedHelper doc_tmp = script()->processResults(local_ctx);
+        XmlUtils::throwUnless(NULL != doc_tmp.get());
+        xmlNodePtr root_tmp = xmlDocGetRootElement(doc_tmp.get());
+        XmlUtils::throwUnless(NULL != root_tmp);
         if (doc.get()) {
-            xmlNodePtr next = root_local->children;
+            xmlNodePtr next = root_tmp->children;
             while (next) {
                 xmlAddChild(root, xmlCopyNode(next, 1));
-                ctx->addDoc(doc_iter);
+                ctx->addDoc(doc_tmp);
                 next = next->next;
             }
         }
         else {
-            doc = doc_iter;
-            root = root_local;
+            doc = doc_tmp;
+            root = root_tmp;
         }
 
-        if (child_ctx.get()) {
-            if (local_ctx->noCache()) {
-                child_ctx->setNoCache();
-            }
-            if (!local_ctx->expireDeltaUndefined()) {
-                child_ctx->setExpireDelta(local_ctx->expireDelta());
-            }
-        }
-        else {
-            child_ctx = local_ctx;
+        if (local_ctx->noCache()) {
+            no_cache = true;
         }
 
-        if (!checkStateGuard(ctx.get())) {
-            break;
+        if (main_child_ctx.get() != local_ctx.get() && !local_ctx->expireDeltaUndefined()) {
+            main_child_ctx->setExpireDelta(local_ctx->expireDelta());
         }
-
-        local_ctx = Context::createChildContext(
-            script(), ctx, invoke_ctx, ctx->localParamsMap(), true);
-        invoke_ctx->setLocalContext(child_ctx);
     }
 
-    if (local_ctx->noCache()) {
+    if (no_cache) {
         invoke_ctx->resultType(InvokeContext::NO_CACHE);
     }
 

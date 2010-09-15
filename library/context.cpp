@@ -360,12 +360,10 @@ Context::authContext() const {
 }
 
 void
-Context::wait(int millis) {
-    log()->debug("%s, setting timeout: %d", BOOST_CURRENT_FUNCTION, millis);
-
-    boost::xtime xt = delay(millis);
+Context::wait(const boost::xtime &until) {
     boost::mutex::scoped_lock sl(ctx_data_->results_mutex_);
-    bool timedout = !ctx_data_->condition_.timed_wait(sl, xt, boost::bind(&Context::resultsReady, this));
+    bool timedout = !ctx_data_->condition_.timed_wait(
+            sl, until, boost::bind(&Context::resultsReady, this));
     
     bool no_cache = false;
     bool save_result = timedout || stopBlocks();
@@ -459,7 +457,7 @@ Context::addDoc(XmlDocHelper doc) {
 }
 
 boost::xtime
-Context::delay(int millis) const {
+Context::delay(int millis) {
 
     boost::xtime xt;
     boost::xtime_get(&xt, boost::TIME_UTC);

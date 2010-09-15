@@ -49,7 +49,7 @@ LocalBlock::property(const char *name, const char *value) {
 void
 LocalBlock::call(boost::shared_ptr<Context> ctx,
     boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
-    
+
     if (invoke_ctx->haveCachedCopy()) {
         Tag local_tag = invoke_ctx->tag();
         local_tag.modified = false;

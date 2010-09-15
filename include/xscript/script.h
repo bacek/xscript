@@ -9,6 +9,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/xtime.hpp>
 
 #include <xscript/cached_object.h>
 #include <xscript/functors.h>
@@ -50,6 +51,8 @@ public:
     
     virtual XmlDocSharedHelper invoke(boost::shared_ptr<Context> ctx);
     virtual bool applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc);
+    boost::xtime invokeBlocks(boost::shared_ptr<Context> ctx);
+    XmlDocSharedHelper processResults(boost::shared_ptr<Context> ctx);
     
     virtual std::string fullName(const std::string &name) const;
     const std::string& xsltName() const;
@@ -75,7 +78,7 @@ protected:
     void parseFromXml(xmlNodePtr node); 
     void parseInternal(const boost::function<xmlDocPtr()> &parserFunc);    
     void parseXScript();
-    
+
     std::string commonTagKey(const Context *ctx) const;
     void xsltName(const char *name);
 
