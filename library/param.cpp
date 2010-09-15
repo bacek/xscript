@@ -1,39 +1,20 @@
 #include "settings.h"
 
 #include <cassert>
-#include <sstream>
-#include <stdexcept>
+
 #include <boost/bind.hpp>
-#include <boost/cstdint.hpp>
-#include <boost/lexical_cast.hpp>
-#include <boost/current_function.hpp>
 
 #include "xscript/args.h"
-#include "xscript/xml_util.h"
 #include "xscript/param.h"
-#include "xscript/logger.h"
+#include "xscript/validator.h"
 #include "xscript/validator_factory.h"
+#include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
 
 namespace xscript {
-
-template<typename T>
-class SimpleParam : public Param {
-public:
-    SimpleParam(Object *owner, xmlNodePtr node);
-    virtual ~SimpleParam();
-
-    virtual const char* type() const;
-    virtual bool constant() const;
-    T typedValue() const;
-    virtual std::string asString(const Context *ctx) const;
-    virtual void add(const Context *ctx, ArgList &al) const;
-
-    static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
-};
 
 class Param::ParamData {
 public:
@@ -102,112 +83,6 @@ Param::checkValidator(const Context *ctx) const {
     }
 };
 
-template<typename T>
-SimpleParam<T>::SimpleParam(Object *owner, xmlNodePtr node) :
-        Param(owner, node) {
-}
-
-template<typename T>
-SimpleParam<T>::~SimpleParam() {
-}
-
-template<typename T> bool
-SimpleParam<T>::constant() const {
-    return true;
-}
-
-template<typename T> const char*
-SimpleParam<T>::type() const {
-    throw std::logic_error("Undefined simple param type");
-}
-
-template<> const char*
-SimpleParam<bool>::type() const {
-    return "boolean";
-}
-
-template<> const char*
-SimpleParam<float>::type() const {
-    return "float";
-}
-
-template<> const char*
-SimpleParam<double>::type() const {
-    return "double";
-}
-
-template<> const char*
-SimpleParam<std::string>::type() const {
-    return "string";
-}
-
-template<> const char*
-SimpleParam<boost::int32_t>::type() const {
-    return "long";
-}
-
-template<> const char*
-SimpleParam<boost::uint32_t>::type() const {
-    return "unsigned long";
-}
-
-template<> const char*
-SimpleParam<boost::int64_t>::type() const {
-    return "long long";
-}
-
-template<> const char*
-SimpleParam<boost::uint64_t>::type() const {
-    return "unsigned long long";
-}
-
-template<typename T> T
-SimpleParam<T>::typedValue() const {
-    try {
-        return boost::lexical_cast<T>(value());
-    }
-    catch (const std::exception &e) {
-        throw std::invalid_argument(std::string("bad value: ").append(value()));
-    }
-}
-
-template<> bool
-SimpleParam<bool>::typedValue() const {
-    if ("0" == value() || strncasecmp(value().c_str(), "false", sizeof("false")) == 0) {
-        return false;
-    }
-    else if ("1" == value() || strncasecmp(value().c_str(), "true", sizeof("true")) == 0) {
-        return true;
-    }
-    else {
-        throw std::invalid_argument(std::string("bad boolean value: ").append(value()));
-    }
-}
-
-template<> std::string
-SimpleParam<std::string>::typedValue() const {
-    return value();
-}
-
-template<typename T> std::string
-SimpleParam<T>::asString(const Context * /* ctx */) const {
-    return value();
-}
-
-template<typename T> void
-SimpleParam<T>::add(const Context * /* ctx */, ArgList &al) const {
-    al.add(typedValue());
-}
-
-template<> void
-SimpleParam<std::string>::add(const Context * /* ctx */, ArgList &al) const {
-    al.add(typedValue());
-}
-
-template<typename T> std::auto_ptr<Param>
-SimpleParam<T>::create(Object *owner, xmlNodePtr node) {
-    return std::auto_ptr<Param>(new SimpleParam<T>(owner, node));
-}
 
 class ConvertedParam::ConvertedParamData {
 public:
@@ -289,31 +164,5 @@ TypedParam::add(const Context *ctx, ArgList &al) const {
         ConvertedParam::add(ctx, al);
     }
 }
-
-class SimpleParamRegisterer {
-public:
-    SimpleParamRegisterer() {
-
-        CreatorRegisterer("bool", &SimpleParam<bool>::create);
-        CreatorRegisterer("boolean", &SimpleParam<bool>::create);
-
-        CreatorRegisterer("float", &SimpleParam<float>::create);
-        CreatorRegisterer("double", &SimpleParam<double>::create);
-        CreatorRegisterer("string", &SimpleParam<std::string>::create);
-
-        CreatorRegisterer("long", &SimpleParam<boost::int32_t>::create);
-
-        CreatorRegisterer("ulong", &SimpleParam<boost::uint32_t>::create);
-        CreatorRegisterer("unsigned long", &SimpleParam<boost::uint32_t>::create);
-
-        CreatorRegisterer("longlong", &SimpleParam<boost::int64_t>::create);
-        CreatorRegisterer("long long", &SimpleParam<boost::int64_t>::create);
-
-        CreatorRegisterer("ulonglong", &SimpleParam<boost::uint64_t>::create);
-        CreatorRegisterer("unsigned long long", &SimpleParam<boost::uint64_t>::create);
-    }
-};
-
-static SimpleParamRegisterer reg_;
 
 } // namespace xscript

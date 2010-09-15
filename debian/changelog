@@ -1,3 +1,9 @@
+xscript (5.73.5-1) unstable; urgency=low
+
+  * check param types at parse
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 15 Sep 2010 16:43:07 +0400
+
 xscript (5.73.4-1) unstable; urgency=low
 
   * make while block threaded
