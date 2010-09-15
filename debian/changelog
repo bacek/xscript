@@ -1,3 +1,9 @@
+xscript (5.73.4-1) unstable; urgency=low
+
+  * make while block threaded
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 15 Sep 2010 14:51:25 +0400
+
 xscript (5.73.3-1) unstable; urgency=low
 
   * standard thread pool use external threads if full
