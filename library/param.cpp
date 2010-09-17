@@ -168,11 +168,11 @@ TypedParam::add(const Context *ctx, ArgList &al) const {
         return;
     }
     ValueResult result = getValue(ctx);
-    if (result.second || NULL == dynamic_cast<CommonArgList*>(&al)) {
+    if (NULL == dynamic_cast<CommonArgList*>(&al)) {
         ConvertedParam::add(ctx, al);
     }
     else {
-        al.add(defaultValue());
+        al.add(result.second ? result.first : defaultValue());
     }
 }
 
