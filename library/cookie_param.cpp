@@ -16,10 +16,12 @@ public:
     virtual ~CookieParam();
 
     virtual const char* type() const;
-    virtual std::string asString(const Context *ctx) const;
 
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
     static bool is(const Context *ctx, const std::string &name, const std::string &value);
+
+protected:
+    virtual ValueResult getValue(const Context *ctx) const;
 };
 
 CookieParam::CookieParam(Object *owner, xmlNodePtr node) :
@@ -34,13 +36,13 @@ CookieParam::type() const {
     return "Cookie";
 }
 
-std::string
-CookieParam::asString(const Context *ctx) const {
+TypedParam::ValueResult
+CookieParam::getValue(const Context *ctx) const {
     Request *req = ctx->request();
     if (req->hasCookie(value())) {
-        return req->getCookie(value());
+        return ValueResult(req->getCookie(value()), true);
     }
-    return defaultValue();
+    return ValueResult(StringUtils::EMPTY_STRING, false);
 }
 
 std::auto_ptr<Param>

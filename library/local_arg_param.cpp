@@ -24,6 +24,9 @@ public:
     
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
     static bool is(const Context *ctx, const std::string &name, const std::string &value);
+
+protected:
+    virtual ValueResult getValue(const Context *ctx) const;
 };
 
 LocalArgParam::LocalArgParam(Object *owner, xmlNodePtr node) :
@@ -38,6 +41,11 @@ LocalArgParam::type() const {
     return "LocalArg";
 }
 
+TypedParam::ValueResult
+LocalArgParam::getValue(const Context *ctx) const {
+    return ValueResult(StringUtils::EMPTY_STRING, false);
+}
+
 std::string
 LocalArgParam::asString(const Context *ctx) const {
     return ctx ? ctx->getLocalParam(value(), defaultValue()) :
@@ -49,7 +57,15 @@ LocalArgParam::add(const Context *ctx, ArgList &al) const {
     const std::string& as = ConvertedParam::as();
     const std::string& name = value();
     const TypedValue& value = ctx->getLocalParam(name);
-    value.nil() ? al.addAs(as, defaultValue()) : al.addAs(as, value);
+    if (!value.nil()) {
+        al.addAs(as, value);
+    }
+    else if (NULL == dynamic_cast<CommonArgList*>(&al)) {
+        al.addAs(as, defaultValue());
+    }
+    else {
+        al.add(defaultValue());
+    }
 }
 
 std::auto_ptr<Param>

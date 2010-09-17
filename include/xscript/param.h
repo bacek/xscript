@@ -70,9 +70,12 @@ public:
 
     virtual void add(const Context *ctx, ArgList &al) const;
     virtual const std::string& value() const;
+    virtual std::string asString(const Context *ctx) const;
 
 protected:
     virtual void property(const char *name, const char *value);
+    typedef std::pair<std::string, bool> ValueResult;
+    virtual ValueResult getValue(const Context *ctx) const;
 
 private:
     class TypedParamData;

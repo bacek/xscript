@@ -27,7 +27,7 @@ private:
 
 MetaBlock::MetaBlock(const Block *block, xmlNodePtr node) :
         Block(block->extension(), block->owner(), node),
-        parent_(block), root_name_("meta"), root_ns_(node->ns), key_("meta")
+        parent_(block), root_ns_(node->ns), key_("meta")
 {
     disableOutput(true);
 }
@@ -188,29 +188,36 @@ MetaBlock::postParse() {
         throw std::runtime_error("Guard is not allowed in meta");
     }
 
-    std::string node_name, prefix;
-    std::string::size_type pos = root_name_.find(':');
-    if (std::string::npos != pos) {
-        prefix = root_name_.substr(0, pos);
-        root_name_.erase(0, pos + 1);
+    if (root_name_.empty()) {
+        root_name_.assign("meta");
+    }
+    else {
+        std::string::size_type pos = root_name_.find(':');
+        if (std::string::npos != pos) {
+            std::string prefix = root_name_.substr(0, pos);
+            root_name_.erase(0, pos + 1);
 
-        if (root_name_.empty()) {
-            throw std::runtime_error("Empty name in name attribute is not allowed in meta");
+            if (root_name_.empty()) {
+                throw std::runtime_error("Empty name in name attribute is not allowed in meta");
+            }
+            if (!prefix.empty()) {
+                const std::map<std::string, std::string> names = namespaces();
+                std::map<std::string, std::string>::const_iterator it = names.find(prefix);
+                if (names.end() == it) {
+                    std::stringstream str;
+                    str << "Unknown " << parent_->name() << " block namespace: " << prefix;
+                    throw std::runtime_error(str.str());
+                }
+                root_ns_ = xmlSearchNsByHref(node()->doc, node(), (const xmlChar*)it->second.c_str());
+                if (NULL == root_ns_) {
+                    std::stringstream str;
+                    str << "Cannot find " << parent_->name() << " block namespace: " << prefix;
+                    throw std::runtime_error(str.str());
+                }
+            }
         }
-        if (!prefix.empty()) {
-            const std::map<std::string, std::string> names = namespaces();
-            std::map<std::string, std::string>::const_iterator it = names.find(prefix);
-            if (names.end() == it) {
-                std::stringstream str;
-                str << "Unknown " << parent_->name() << " block namespace: " << prefix;
-                throw std::runtime_error(str.str());
-            }
-            root_ns_ = xmlSearchNsByHref(node()->doc, node(), (const xmlChar*)it->second.c_str());
-            if (NULL == root_ns_) {
-                std::stringstream str;
-                str << "Cannot find " << parent_->name() << " block namespace: " << prefix;
-                throw std::runtime_error(str.str());
-            }
+        else {
+            root_ns_ = NULL;
         }
     }
 

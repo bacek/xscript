@@ -17,10 +17,12 @@ public:
     virtual ~HeaderParam();
 
     virtual const char* type() const;
-    virtual std::string asString(const Context *ctx) const;
 
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
     static bool is(const Context *ctx, const std::string &name, const std::string &value);
+
+protected:
+    virtual ValueResult getValue(const Context *ctx) const;
 };
 
 HeaderParam::HeaderParam(Object *owner, xmlNodePtr node) :
@@ -35,15 +37,15 @@ HeaderParam::type() const {
     return "HttpHeader";
 }
 
-std::string
-HeaderParam::asString(const Context *ctx) const {
+TypedParam::ValueResult
+HeaderParam::getValue(const Context *ctx) const {
     if (NULL != ctx) {
         Request *req = ctx->request();
         if (req->hasHeader(value())) {
-            return req->getHeader(value());
+            return ValueResult(req->getHeader(value()), true);
         }
     }
-    return defaultValue();
+    return ValueResult(StringUtils::EMPTY_STRING, false);
 }
 
 std::auto_ptr<Param>

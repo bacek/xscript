@@ -37,10 +37,10 @@ VHostArgParam::variable(const Context *ctx, const std::string &name) {
     return StringUtils::EMPTY_STRING;
 }
 
-std::string
-VHostArgParam::asString(const Context *ctx) const {
+TypedParam::ValueResult
+VHostArgParam::getValue(const Context *ctx) const {
     std::string result = variable(ctx, value());
-    return result.empty() ? defaultValue() : result;
+    return ValueResult(result, !result.empty());
 }
 
 std::auto_ptr<Param>

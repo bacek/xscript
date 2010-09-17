@@ -17,10 +17,12 @@ public:
     virtual ~QueryArgParam();
 
     virtual const char* type() const;
-    virtual std::string asString(const Context *ctx) const;
 
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
     static bool is(const Context *ctx, const std::string &name, const std::string &value);
+
+protected:
+    virtual ValueResult getValue(const Context *ctx) const;
 };
 
 QueryArgParam::QueryArgParam(Object *owner, xmlNodePtr node) :
@@ -35,15 +37,15 @@ QueryArgParam::type() const {
     return "QueryArg";
 }
 
-std::string
-QueryArgParam::asString(const Context *ctx) const {
+TypedParam::ValueResult
+QueryArgParam::getValue(const Context *ctx) const {
     if (NULL != ctx) {
         Request *req = ctx->request();
         if (req->hasArg(value())) {
-            return req->getArg(value());
+            return ValueResult(req->getArg(value()), true);
         }
     }
-    return defaultValue();
+    return ValueResult(StringUtils::EMPTY_STRING, false);
 }
 
 std::auto_ptr<Param>

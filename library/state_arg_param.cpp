@@ -26,6 +26,9 @@ public:
     
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
     static bool is(const Context *ctx, const std::string &name, const std::string &value);
+
+protected:
+    virtual ValueResult getValue(const Context *ctx) const;
 };
 
 StateArgParam::StateArgParam(Object *owner, xmlNodePtr node) :
@@ -40,6 +43,11 @@ StateArgParam::type() const {
     return "StateArg";
 }
 
+TypedParam::ValueResult
+StateArgParam::getValue(const Context *ctx) const {
+    return ValueResult(StringUtils::EMPTY_STRING, false);
+}
+
 std::string
 StateArgParam::asString(const Context *ctx) const {
     return ctx ? ctx->state()->asString(value(), defaultValue()) :
@@ -51,7 +59,15 @@ StateArgParam::add(const Context *ctx, ArgList &al) const {
     const std::string& as = ConvertedParam::as();
     const std::string& name = value();   
     TypedValue value = ctx->state()->typedValue(name);
-    value.nil() ? al.addAs(as, defaultValue()) : al.addAs(as, value);
+    if (!value.nil()) {
+        al.addAs(as, value);
+    }
+    else if (NULL == dynamic_cast<CommonArgList*>(&al)) {
+        al.addAs(as, defaultValue());
+    }
+    else {
+        al.add(defaultValue());
+    }
 }
 
 std::auto_ptr<Param>

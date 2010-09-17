@@ -154,15 +154,32 @@ TypedParam::value() const {
     return id();
 }
 
+TypedParam::ValueResult
+TypedParam::getValue(const Context *ctx) const {
+    (void)ctx;
+    return ValueResult(StringUtils::EMPTY_STRING, false);
+}
+
 void
 TypedParam::add(const Context *ctx, ArgList &al) const {
     const std::string& as = ConvertedParam::as();
     if (as.empty()) {
         al.add(asString(ctx));
+        return;
     }
-    else {
+    ValueResult result = getValue(ctx);
+    if (result.second || NULL == dynamic_cast<CommonArgList*>(&al)) {
         ConvertedParam::add(ctx, al);
     }
+    else {
+        al.add(defaultValue());
+    }
+}
+
+std::string
+TypedParam::asString(const Context *ctx) const {
+    ValueResult result = getValue(ctx);
+    return result.second ? result.first : defaultValue();
 }
 
 } // namespace xscript

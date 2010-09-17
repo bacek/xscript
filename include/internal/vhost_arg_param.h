@@ -11,12 +11,14 @@ public:
     virtual ~VHostArgParam();
 
     virtual const char* type() const;
-    virtual std::string asString(const Context *ctx) const;
 
     static std::string variable(const Context *ctx, const std::string &name);
     
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
     static bool is(const Context *ctx, const std::string &name, const std::string &value);
+
+protected:
+    virtual ValueResult getValue(const Context *ctx) const;
 };
 
 } // namespace xscript

@@ -18,10 +18,12 @@ public:
     virtual ~ProtocolArgParam();
 
     virtual const char* type() const;
-    virtual std::string asString(const Context *ctx) const;
 
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
     static bool is(const Context *ctx, const std::string &name, const std::string &value);
+
+protected:
+    virtual ValueResult getValue(const Context *ctx) const;
 };
 
 ProtocolArgParam::ProtocolArgParam(Object *owner, xmlNodePtr node) :
@@ -36,11 +38,11 @@ ProtocolArgParam::type() const {
     return "ProtocolArg";
 }
 
-std::string
-ProtocolArgParam::asString(const Context *ctx) const {
+TypedParam::ValueResult
+ProtocolArgParam::getValue(const Context *ctx) const {
     try {
         std::string result = Protocol::get(ctx, value().c_str());
-        return result.empty() ? defaultValue() : result;
+        return ValueResult(result, !result.empty());
     }
     catch(const std::runtime_error &e) {
         throw CriticalInvokeError(e.what());
