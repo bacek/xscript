@@ -97,7 +97,6 @@ ParamFactory::param(Object *owner, xmlNodePtr node) {
         else {
             error_msg = e.what();
         }
-        log()->crit("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, error_msg.c_str());
         throw std::runtime_error(error_msg.c_str());
     }
 }
