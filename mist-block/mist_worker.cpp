@@ -29,33 +29,30 @@ namespace xscript {
 
 MistWorker::MethodMap MistWorker::methods_;
 
-MistWorker::MistWorker(const std::string &method) :
-    method_name_(method)
-{
-    MethodMap::iterator it = methods_.find(method);
-    if (methods_.end() == it) {
-        throw std::runtime_error("Unknown mist worker method: " + method);
-    }
-    method_ = it->second;
-}
+MistWorker::MistWorker(Method method) :
+    method_(method)
+{}
 
 MistWorker::~MistWorker()
 {}
 
 std::auto_ptr<MistWorker>
 MistWorker::create(const std::string &method) {
-    return std::auto_ptr<MistWorker>(new MistWorker(method));
+    MethodMap::iterator it = methods_.find(method);
+    if (methods_.end() == it) {
+        throw std::runtime_error("Unknown mist worker method: " + method);
+    }
+    return std::auto_ptr<MistWorker>(new MistWorker(it->second));
 }
 
-const std::string&
-MistWorker::methodName() const {
-    return method_name_;
+std::auto_ptr<MistWorker>
+MistWorker::clone() const {
+    return std::auto_ptr<MistWorker>(new MistWorker(method_));
 }
 
 bool
 MistWorker::isAttachStylesheet() const {
-    return strncasecmp(method_name_.c_str(), "attach_stylesheet", sizeof("attach_stylesheet") - 1) == 0 ||
-           strncasecmp(method_name_.c_str(), "attachStylesheet", sizeof("attachStylesheet") - 1) == 0;
+    return method_ == &MistWorker::attachStylesheet;
 }
 
 void
@@ -64,12 +61,12 @@ MistWorker::attachData(const std::string &data) {
 }
 
 XmlNodeHelper
-MistWorker::run(Context *ctx, const CommonArgList *params) {
+MistWorker::run(Context *ctx, const CommonArgList *params) const {
     return (this->*method_)(ctx, params->args());
 }
 
 XmlNodeHelper
-MistWorker::run(Context *ctx, const XsltParamFetcher &params) {
+MistWorker::run(Context *ctx, const XsltParamFetcher &params) const {
     std::vector<std::string> str_params;
     int size = params.size();
     str_params.reserve(size - 1);

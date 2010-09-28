@@ -25,11 +25,11 @@ public:
     virtual ~MistWorker();
 
     static std::auto_ptr<MistWorker> create(const std::string &method);
+    std::auto_ptr<MistWorker> clone() const;
    
-    XmlNodeHelper run(Context *ctx, const CommonArgList *params);
-    XmlNodeHelper run(Context *ctx, const XsltParamFetcher &params);
+    XmlNodeHelper run(Context *ctx, const CommonArgList *params) const;
+    XmlNodeHelper run(Context *ctx, const XsltParamFetcher &params) const;
     
-    const std::string& methodName() const;
     bool isAttachStylesheet() const;
     void attachData(const std::string &data);
 
@@ -39,7 +39,7 @@ private:
     typedef XmlNodeHelper (MistWorker::*Method)(Context*, const std::vector<std::string>&) const;
     typedef std::map<std::string, Method, StringCILess> MethodMap;
     
-    MistWorker(const std::string &method);
+    MistWorker(Method method);
 
     static void registerMethod(const std::string &name, Method method);
     
@@ -78,7 +78,6 @@ private:
     XmlNodeHelper setStatus(Context *ctx, const std::vector<std::string> &params) const;
 
 private:    
-    std::string method_name_;
     std::string data_;
     Method method_;
     

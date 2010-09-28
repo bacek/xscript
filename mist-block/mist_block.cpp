@@ -33,24 +33,27 @@ void
 MistBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     assert(worker_.get());
     
-    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
-    XmlUtils::throwUnless(NULL != doc.get());
-    
     const CommonArgList* args = dynamic_cast<const CommonArgList*>(invoke_ctx->getArgList());
     assert(args);
-    if (worker_->isAttachStylesheet()) {
-        if (!args->empty()) {
-            worker_->attachData(fullName(args->at(0)));
-        }
-    }
-    
+    XmlNodeHelper result;
     try {
-        xmlDocSetRootElement(doc.get(), worker_->run(ctx.get(), args).release());
+        if (worker_->isAttachStylesheet() && !args->empty()) {
+            std::auto_ptr<MistWorker> worker = worker_->clone();
+            worker->attachData(fullName(args->at(0)));
+            result = worker->run(ctx.get(), args);
+        }
+        else {
+            result = worker_->run(ctx.get(), args);
+        }
     }
     catch(const std::invalid_argument &e) {
         throwBadArityError();
     }
     
+    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlUtils::throwUnless(NULL != doc.get());
+
+    xmlDocSetRootElement(doc.get(), result.release());
     invoke_ctx->resultDoc(doc);
 }
 
