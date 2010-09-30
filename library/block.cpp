@@ -520,14 +520,19 @@ Block::callInternalThreaded_Ex(InvokeHelper helper, unsigned int slot) {
 
 void
 Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
+    invokeCheckThreadedEx(ctx, slot);
+}
+
+bool
+Block::invokeCheckThreadedEx(boost::shared_ptr<Context> ctx, unsigned int slot) {
     if (threaded()) {
         InvokeHelper helper(ctx);
-        boost::function<void()> f = boost::bind(&Block::callInternalThreaded_Ex, this, helper, slot);
-        ThreadPool::instance()->invoke(f);
+        boost::function<void()> f_threaded = boost::bind(&Block::callInternalThreaded_Ex, this, helper, slot);
+        boost::function<void()> f_unthreaded = boost::bind(&Block::callInternal, this, ctx, slot);
+        return ThreadPool::instance()->invokeEx(f_threaded, f_unthreaded);
     }
-    else {
-        callInternal(ctx, slot);
-    }
+    callInternal(ctx, slot);
+    return false;
 }
 
 void

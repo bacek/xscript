@@ -8,9 +8,10 @@
 
 namespace xscript {
 
-void
-ThreadPool::invoke(boost::function<void()> f) {
-    f();
+bool
+ThreadPool::invokeEx(boost::function<void()> /* f_threaded */, boost::function<void()> f_unthreaded) {
+    f_unthreaded();
+    return false;
 }
 
 void

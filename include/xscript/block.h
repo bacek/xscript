@@ -56,7 +56,8 @@ public:
 
     virtual void call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) = 0;
     virtual boost::shared_ptr<InvokeContext> invoke(boost::shared_ptr<Context> ctx);
-    virtual void invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
+    virtual void invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot); //TODO: remove this
+    bool invokeCheckThreadedEx(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual bool applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc);
 
     boost::shared_ptr<InvokeContext> errorResult(const char *error, bool info) const;

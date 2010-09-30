@@ -900,9 +900,9 @@ Script::invokeBlocks(boost::shared_ptr<Context> ctx) {
             ctx->result(count, (*it)->fakeResult(false));
             continue;
         }
-        (*it)->invokeCheckThreaded(ctx, count);
-        const ThreadedBlock *tb = dynamic_cast<const ThreadedBlock*>(*it);
-        if (tb && tb->threaded()) {
+        if ((*it)->invokeCheckThreadedEx(ctx, count)) {
+            const ThreadedBlock *tb = dynamic_cast<const ThreadedBlock*>(*it);
+            assert(tb);
             boost::xtime tmp = Context::delay(tb->timeout());
             if (boost::xtime_cmp(tmp, end_time) > 0) {
                 end_time = tmp;

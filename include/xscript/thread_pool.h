@@ -10,7 +10,7 @@ namespace xscript {
 
 class ThreadPool : public Component<ThreadPool> {
 public:
-    virtual void invoke(boost::function<void()> f);
+    virtual bool invokeEx(boost::function<void()> f_threaded, boost::function<void()> f_unthreaded);
     virtual void stop();
 };
 

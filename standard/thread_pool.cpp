@@ -31,7 +31,7 @@ public:
     virtual ~StandardThreadPool();
 
     virtual void init(const Config *config);
-    virtual void invoke(boost::function<void()> f);
+    virtual bool invokeEx(boost::function<void()> f_threaded, boost::function<void()> f_unthreaded);
     virtual void stop();
 
 protected:
@@ -81,18 +81,20 @@ StandardThreadPool::init(const Config *config) {
     StatusInfo::instance()->getStatBuilder().addCounter(counter_.get());
 }
 
-void
-StandardThreadPool::invoke(boost::function<void()> f) {
+bool
+StandardThreadPool::invokeEx(boost::function<void()> f_threaded, boost::function<void()> f_unthreaded) {
     boost::mutex::scoped_lock sl(mutex_);
     if (running_) {
         if (0 == free_threads_) {
             sl.unlock();
-            f();
-            return;
+            f_unthreaded();
+            return false;
         }
-        tasks_.push(f);
+        tasks_.push(f_threaded);
         condition_.notify_all();
+	return true;
     }
+    return false;
 }
 
 void
