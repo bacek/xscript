@@ -13,6 +13,7 @@ class Context;
 class Meta;
 class Tag;
 class TagKey;
+class XPathExpr;
 
 class InvokeContext : private boost::noncopyable {
 public:
@@ -65,6 +66,11 @@ public:
     void setArgList(const boost::shared_ptr<ArgList> &args);
     ArgList* getArgList() const;
 
+    void setXPointer(const boost::shared_ptr<XPathExpr> &xpointer);
+    void setMetaXPointer(const boost::shared_ptr<XPathExpr> &xpointer);
+
+    const boost::shared_ptr<XPathExpr>& xpointer() const;
+    const boost::shared_ptr<XPathExpr>& metaXPointer() const;
 private:
     struct ContextData;
     std::auto_ptr<ContextData> ctx_data_;

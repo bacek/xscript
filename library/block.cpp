@@ -77,7 +77,7 @@ struct Block::BlockData {
     std::list<XPathNodeExpr> xpath_;
     std::list<Guard> guards_;
     std::string id_, method_;
-    XPathExpr xpointer_expr_;
+    boost::shared_ptr<XPathExpr> xpointer_expr_;
     std::string base_;
     std::map<std::string, std::string> namespaces_;
     bool disable_output_;
@@ -94,7 +94,8 @@ const std::string Block::BlockData::META_INVOKE_FAILED = "meta_invoke_failed";
 const std::string Block::BlockData::XSCRIPT_INVOKE_INFO = "xscript_invoke_info";
 
 Block::BlockData::BlockData(const Extension *ext, Xml *owner, xmlNodePtr node, Block *block) :
-    extension_(ext), owner_(owner), node_(node), block_(block), disable_output_(false)
+    extension_(ext), owner_(owner), node_(node), block_(block), xpointer_expr_(new XPathExpr()),
+    disable_output_(false)
 {}
 
 Block::BlockData::~BlockData() {
@@ -240,51 +241,46 @@ Block::tagged() const {
 
 // return last insert node
 xmlNodePtr
-Block::processEmptyXPointer(const Context *ctx, xmlDocPtr meta_doc,
+Block::processEmptyXPointer(const InvokeContext *invoke_ctx, xmlDocPtr meta_doc,
         xmlNodePtr insert_node, insertFunc func) const {
     if (meta_doc && data_->meta_block_.get()) {
-        return data_->meta_block_->processXPointer(ctx, meta_doc, NULL, insert_node, func);
+        return data_->meta_block_->processXPointer(
+            invoke_ctx, meta_doc, NULL, insert_node, func);
     }
     return NULL;
 }
 
 // return last insert node
 xmlNodePtr
-Block::processXPointer(const Context *ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
+Block::processXPointer(const InvokeContext *invoke_ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
         xmlNodePtr insert_node, insertFunc func) const {
     if (NULL == doc || data_->disable_output_) {
-        return processEmptyXPointer(ctx, meta_doc, insert_node, func);
+        return processEmptyXPointer(invoke_ctx, meta_doc, insert_node, func);
     }
     xmlNodePtr root_node = xmlDocGetRootElement(doc);
-    bool need_xp = true;
-    std::string expr;
-    if (ctx->noXsltPort() || data_->xpointer_expr_.value().empty()) {
-        need_xp = false;
-    }
-    else {
-        expr = data_->xpointer_expr_.expression(ctx);
-        if (expr.empty()) {
-            need_xp = false;
-        }
-    }
-    if (!need_xp) {
+
+    boost::shared_ptr<XPathExpr> xpointer = isMeta() ?
+        invoke_ctx->metaXPointer() : invoke_ctx->xpointer();
+
+    if (NULL == xpointer.get()) {
         xmlNodePtr node = xmlCopyNode(root_node, 1);
         func(insert_node, node);
         if (meta_doc && data_->meta_block_.get()) {
-            return data_->meta_block_->processXPointer(ctx, meta_doc, NULL, node, &xmlAddNextSibling);
+            return data_->meta_block_->processXPointer(
+                invoke_ctx, meta_doc, NULL, node, &xmlAddNextSibling);
         }
         return node;
     }
 
-    if ("/.." == expr) {
-        return processEmptyXPointer(ctx, meta_doc, insert_node, func);
+    if ("/.." == xpointer->value()) {
+        return processEmptyXPointer(invoke_ctx, meta_doc, insert_node, func);
     }
 
     XmlXPathContextHelper context(xmlXPathNewContext(doc));
     XmlUtils::throwUnless(NULL != context.get());
 
     XmlUtils::regiserNsList(context.get(), data_->namespaces_);
-    XmlXPathObjectHelper xpathObj = data_->xpointer_expr_.eval(context.get(), ctx);
+    XmlXPathObjectHelper xpathObj = xpointer->eval(context.get(), NULL);
 
     xmlNodePtr node = NULL;
     if (XPATH_BOOLEAN == xpathObj->type) {
@@ -304,14 +300,15 @@ Block::processXPointer(const Context *ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
     if (node) {
         func(insert_node, node);
         if (meta_doc && data_->meta_block_.get()) {
-            return data_->meta_block_->processXPointer(ctx, meta_doc, NULL, node, &xmlAddNextSibling);
+            return data_->meta_block_->processXPointer(
+                invoke_ctx, meta_doc, NULL, node, &xmlAddNextSibling);
         }
         return node;
     }
 
     xmlNodeSetPtr nodeset = xpathObj->nodesetval;
     if (NULL == nodeset || 0 == nodeset->nodeNr) {
-        return processEmptyXPointer(ctx, meta_doc, insert_node, func);
+        return processEmptyXPointer(invoke_ctx, meta_doc, insert_node, func);
     }
 
     xmlNodePtr current_node = nodeset->nodeTab[0];
@@ -332,7 +329,8 @@ Block::processXPointer(const Context *ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
     }
 
     if (meta_doc && data_->meta_block_.get()) {
-        return data_->meta_block_->processXPointer(ctx, meta_doc, NULL, last_input_node, &xmlAddNextSibling);
+        return data_->meta_block_->processXPointer(
+            invoke_ctx, meta_doc, NULL, last_input_node, &xmlAddNextSibling);
     }
 
     return last_input_node;
@@ -454,18 +452,15 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
         invoke_ctx = boost::shared_ptr<InvokeContext>(new InvokeContext());
         invoke_ctx->xsltName(xsltName(ctx.get()));
         processArguments(ctx.get(), invoke_ctx.get());
+        invokeInternal(ctx, invoke_ctx);
         try {
-            invokeInternal(ctx, invoke_ctx);
             callMetaLua(ctx, invoke_ctx);
         }
         catch (const MetaInvokeError &e) {
-            evalXPath(ctx.get(), invoke_ctx.get(), invoke_ctx->resultDoc());
+            postInvoke(ctx.get(), invoke_ctx.get());
             throw e;
         }
-        evalXPath(ctx.get(), invoke_ctx.get(), invoke_ctx->resultDoc());
-        if (!invoke_ctx->error()) {
-            postInvoke(ctx.get(), invoke_ctx.get());
-        }
+        postInvoke(ctx.get(), invoke_ctx.get());
         callMeta(ctx, invoke_ctx);
     }
     catch (const CriticalInvokeError &e) {
@@ -938,7 +933,28 @@ Block::processArguments(Context *ctx, InvokeContext *invoke_ctx) {
 }
 
 void
-Block::postInvoke(Context *, InvokeContext *) {
+Block::postInvoke(Context *ctx, InvokeContext *invoke_ctx) {
+    bool is_meta = isMeta();
+    evalXPath(ctx, invoke_ctx, is_meta ? invoke_ctx->metaDoc() : invoke_ctx->resultDoc());
+    boost::shared_ptr<XPathExpr> xpointer;
+    if (data_->xpointer_expr_->compiled()) {
+        xpointer = data_->xpointer_expr_;
+    }
+    else {
+        std::string expr;
+        if (!ctx->noXsltPort() && !data_->xpointer_expr_->value().empty()) {
+            expr = data_->xpointer_expr_->expression(ctx);
+        }
+        if (!expr.empty()) {
+            xpointer.reset(new XPathExpr(expr.c_str(), NULL));
+        }
+    }
+    if (is_meta) {
+        invoke_ctx->setMetaXPointer(xpointer);
+    }
+    else {
+        invoke_ctx->setXPointer(xpointer);
+    }
 }
 
 void
@@ -985,7 +1001,7 @@ Block::callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext>
     }
     try {
         data_->meta_block_->call(ctx, invoke_ctx);
-        data_->meta_block_->evalXPath(ctx.get(), invoke_ctx.get(), invoke_ctx->metaDoc());
+        data_->meta_block_->postInvoke(ctx.get(), invoke_ctx.get());
     }
     catch (const InvokeError &e) {
         throw MetaInvokeError(e);
@@ -993,6 +1009,11 @@ Block::callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext>
     catch (const std::exception &e) {
         throw MetaInvokeError(e.what());
     }
+}
+
+bool
+Block::isMeta() const {
+    return NULL != dynamic_cast<const MetaBlock*>(this);
 }
 
 MetaBlock*
@@ -1059,7 +1080,7 @@ Block::parseXPathNode(const xmlNodePtr node) {
 
 void
 Block::parseXPointerNode(const xmlNodePtr node) {
-    if (!data_->xpointer_expr_.value().empty()) {
+    if (!data_->xpointer_expr_->value().empty()) {
         throw std::runtime_error("In block only one xpointer allowed");
     }
     parseXPointerExpr(XmlUtils::value(node), XmlUtils::attrValue(node, "type"));
@@ -1089,15 +1110,15 @@ Block::parseXPointerExpr(const char *value, const char *type) {
         xpointer.assign(value);
     }
 
-    if (!data_->xpointer_expr_.assign(xpointer.c_str(), type)) {
+    if (!data_->xpointer_expr_->assign(xpointer.c_str(), type)) {
         throw std::runtime_error("StateArg type in xpointer node allowed only");
     }
 
-    if ("/.." == data_->xpointer_expr_.value() && !data_->xpointer_expr_.fromState()) {
+    if ("/.." == data_->xpointer_expr_->value() && !data_->xpointer_expr_->fromState()) {
         disableOutput(true);
     }
     else {
-        data_->xpointer_expr_.compile();
+        data_->xpointer_expr_->compile();
     }
 }
 

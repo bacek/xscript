@@ -1729,7 +1729,7 @@ xscriptExtElementBlock(xsltTransformContextPtr tctx, xmlNodePtr node, xmlNodePtr
             if (!result->error()) {
                 xmlDocPtr meta_doc = result->meta_error() ? NULL : result->metaDoc().get();
                 xmlNodePtr last_node = block->processXPointer(
-                    ctx.get(), result->resultDoc().get(), meta_doc, tctx->insert, &xmlAddChild);
+                    result.get(), result->resultDoc().get(), meta_doc, tctx->insert, &xmlAddChild);
                 meta_doc = result->metaDoc().get();
                 xmlNodePtr root = meta_doc ? xmlDocGetRootElement(meta_doc) : NULL;
                 if (result->meta_error() && root) {  //add error meta

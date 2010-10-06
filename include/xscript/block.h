@@ -72,7 +72,7 @@ public:
     virtual void stopTimer(Context *ctx);
 
     typedef xmlNodePtr (*insertFunc)(xmlNodePtr, xmlNodePtr);
-    xmlNodePtr processXPointer(const Context *ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
+    xmlNodePtr processXPointer(const InvokeContext *invoke_ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
             xmlNodePtr insert_node, insertFunc func) const;
     
     const Extension* extension() const;
@@ -121,7 +121,7 @@ protected:
     void parseXPointerExpr(const char *value, const char *type);
     void disableOutput(bool flag);
     bool disableOutput() const;
-    xmlNodePtr processEmptyXPointer(const Context *ctx, xmlDocPtr meta_doc,
+    xmlNodePtr processEmptyXPointer(const InvokeContext *invoke_ctx, xmlDocPtr meta_doc,
             xmlNodePtr insert_node, insertFunc func) const;
     
     static std::string concatArguments(const ArgList *args, unsigned int first, unsigned int last);
@@ -130,6 +130,8 @@ protected:
     void detectBase();
     
     void addNamespaces(const std::map<std::string, std::string> &ns);
+
+    bool isMeta() const;
 
 private:
     std::string errorLocation() const;

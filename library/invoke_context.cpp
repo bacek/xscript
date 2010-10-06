@@ -38,6 +38,9 @@ struct InvokeContext::ContextData {
     InvokeContext* base_;
     boost::shared_ptr<Meta> meta_;
     boost::shared_ptr<ArgList> args_;
+
+    boost::shared_ptr<XPathExpr> xpointer_;
+    boost::shared_ptr<XPathExpr> meta_xpointer_;
 };
 
 InvokeContext::InvokeContext() : ctx_data_(new ContextData())
@@ -202,6 +205,26 @@ InvokeContext::setArgList(const boost::shared_ptr<ArgList> &args) {
 ArgList*
 InvokeContext::getArgList() const {
     return ctx_data_->args_.get();
+}
+
+void
+InvokeContext::setXPointer(const boost::shared_ptr<XPathExpr> &xpointer) {
+    ctx_data_->xpointer_ = xpointer;
+}
+
+const boost::shared_ptr<XPathExpr>&
+InvokeContext::xpointer() const {
+    return ctx_data_->xpointer_;
+}
+
+void
+InvokeContext::setMetaXPointer(const boost::shared_ptr<XPathExpr> &xpointer) {
+    ctx_data_->meta_xpointer_ = xpointer;
+}
+
+const boost::shared_ptr<XPathExpr>&
+InvokeContext::metaXPointer() const {
+    return ctx_data_->meta_xpointer_;
 }
 
 } // namespace xscript

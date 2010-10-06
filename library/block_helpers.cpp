@@ -100,11 +100,16 @@ XPathExpr::compile() {
     }
 }
 
+bool
+XPathExpr::compiled() const {
+    return NULL != compiled_expr_.get();
+}
+
 XmlXPathObjectHelper
 XPathExpr::eval(xmlXPathContextPtr context, const Context *ctx) const {
     try {
         XmlXPathObjectHelper xpathObj;
-        if (compiled_expr_.get()) {
+        if (compiled()) {
             xpathObj = XmlXPathObjectHelper(xmlXPathCompiledEval(
                     compiled_expr_.get(), context));
         }

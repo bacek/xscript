@@ -473,7 +473,7 @@ Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr new
                 else {
                     xmlDocPtr meta_doc = result->meta_error() ? NULL : result->metaDoc().get();
                     xmlNodePtr last_node = block(count)->processXPointer(
-                        ctx, doc, meta_doc, newnode, &xmlReplaceNode);
+                        result.get(), doc, meta_doc, newnode, &xmlReplaceNode);
                     meta_doc = result->metaDoc().get();
                     xmlNodePtr root = meta_doc ? xmlDocGetRootElement(meta_doc) : NULL;
                     if (result->meta_error() && root) {  //add error meta

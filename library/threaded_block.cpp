@@ -87,7 +87,11 @@ ThreadedBlock::property(const char *name, const char *value) {
 
 void
 ThreadedBlock::postInvoke(Context *ctx, InvokeContext *invoke_ctx) {
-    
+    Block::postInvoke(ctx, invoke_ctx);
+    if (invoke_ctx->error()) {
+        return;
+    }
+
     bool show_elapsed_time = trb_data_->check_elapsed_time_ ? trb_data_->check_elapsed_time_ :
     OperationMode::instance()->checkDevelopmentVariable(ctx->request(), ThreadedBlockData::SHOW_ELAPSED_TIME);
        

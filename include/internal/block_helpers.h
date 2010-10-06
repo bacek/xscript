@@ -41,6 +41,7 @@ public:
     std::string expression(const Context *ctx) const;
 
     void compile();
+    bool compiled() const;
     XmlXPathObjectHelper eval(xmlXPathContextPtr context, const Context *ctx) const;
 
 private:
