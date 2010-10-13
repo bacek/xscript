@@ -1,3 +1,9 @@
+xscript (5.73.6-8) unstable; urgency=low
+
+  * allow 201 status in http_helper & http_block
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Wed, 13 Oct 2010 19:43:21 +0400
+
 xscript (5.73.6-7) unstable; urgency=low
 
   * dynamic xpointer fixed

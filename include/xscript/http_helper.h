@@ -43,6 +43,8 @@ public:
     Tag createTag() const;
 
     bool isXml() const; 
+    bool isOk() const;
+
 protected:
     void detectContentType();
 

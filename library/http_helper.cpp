@@ -216,6 +216,10 @@ public:
         return status_;
     }
 
+    bool isOk() const {
+        return 200 == status_ || 201 == status_;
+    }
+
     void detectContentType() {
         std::multimap<std::string, std::string>::const_iterator i = headers_.find(HEADER_NAME_CONTENT_TYPE);
         if (headers_.end() != i) {
@@ -241,12 +245,12 @@ public:
             log()->debug("found %s, %s", content_type_.c_str(), charset_.c_str());
         }
         else if (content_->empty()) {
-            if (200 == status_ || 204 == status_) {
+            if (isOk() || 204 == status_) {
                 charset_.assign("utf-8");
                 content_type_.assign("text/plain");
             }
         }
-        else if (200 == status_ || 0 == status_) {
+        else if (isOk() || 0 == status_) {
             //charset_.assign("windows-1251");
             charset_.assign("utf-8");
             content_type_.assign("text/xml");
@@ -317,7 +321,7 @@ public:
                 throw std::runtime_error("server responded not-modified but if-modified-since was not sent");
             }
         }
-        else if (200 != status_) {
+        else if (!isOk()) {
             std::stringstream stream;
             stream << "server responded " << status_;
             if (301 == status_ || 302 == status_) {
@@ -448,7 +452,7 @@ HttpHelper::createTag() const {
     if (304 == data_->status_) {
         tag.modified = false;
     }
-    else if (200 == data_->status_ || 0 == data_->status_) {
+    else if (isOk() || 0 == data_->status_) {
         std::multimap<std::string, std::string>::const_iterator im = data_->headers_.find(HttpHelper::HelperData::HEADER_NAME_LAST_MODIFIED);
 
         if (im != data_->headers_.end()) {
@@ -507,6 +511,11 @@ HttpHelper::isXml() const {
     }
     
     return false;
+}
+
+bool
+HttpHelper::isOk() const {
+    return data_->isOk();
 }
 
 } // namespace xscript

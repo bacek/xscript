@@ -177,8 +177,8 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
     appendHeaders(helper, ctx->request(), NULL);
     httpCall(helper);
 
-    long status = helper.status();
-    if (status != 200) {
+    if (!helper.isOk()) {
+        long status = helper.status();
         RetryInvokeError error("Incorrect http status", "url", url);
         error.add("status", boost::lexical_cast<std::string>(status));
         throw error;
