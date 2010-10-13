@@ -30,7 +30,7 @@ public:
     void path(const std::string &value);
     const std::string& domain() const;
     void domain(const std::string &value);
-    time_t permanent() const;
+    bool permanent() const;
     void permanent(bool value);
     std::string toString() const;
     bool check() const;
@@ -112,7 +112,7 @@ Cookie::CookieData::domain(const std::string &value) {
     domain_ = value;
 }
 
-time_t
+bool
 Cookie::CookieData::permanent() const {
     return expires_ == HttpDateUtils::MAX_LIVE_TIME;
 }
@@ -237,7 +237,7 @@ Cookie::domain(const std::string &value) {
     data_->domain(value);
 }
 
-time_t
+bool
 Cookie::permanent() const {
     return data_->permanent();
 }

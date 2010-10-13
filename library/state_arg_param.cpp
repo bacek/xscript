@@ -45,6 +45,7 @@ StateArgParam::type() const {
 
 TypedParam::ValueResult
 StateArgParam::getValue(const Context *ctx) const {
+    (void)ctx;
     return ValueResult(StringUtils::EMPTY_STRING, false);
 }
 

@@ -27,7 +27,7 @@ public:
     void path(const std::string &value);
     const std::string& domain() const;
     void domain(const std::string &value);
-    time_t permanent() const;
+    bool permanent() const;
     void permanent(bool value);
     std::string toString() const;
     bool check() const;
