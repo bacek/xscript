@@ -207,7 +207,21 @@ LocalBlock::script() const {
 
 std::string
 LocalBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
-    std::string key(TaggedBlock::createTagKey(ctx, invoke_ctx));
+    std::string key(processMainKey(ctx, invoke_ctx));
+    key.push_back('|');
+    LocalArgList* args = dynamic_cast<LocalArgList*>(invoke_ctx->getArgList());
+    if (NULL == args) {
+        throw std::runtime_error("Incorrect arg list in local block");
+    }
+    for (unsigned int i = 0, size = args->size(); i < size; ++i) {
+        const TypedValue& value = args->typedValue(i);
+        if (i > 0) {
+            key.push_back(':');
+        }
+        std::string res;
+        value.serialize(res);
+        key.append(res);
+    }
     key.push_back('|');
     key.append(script_->name());
     key.push_back('|');
@@ -217,7 +231,6 @@ LocalBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) co
     key.push_back('|');
     key.append(node_id_);
     return key;
-
 }
 
 } // namespace xscript
