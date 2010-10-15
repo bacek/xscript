@@ -293,6 +293,9 @@ bool
 DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag,
         boost::shared_ptr<CacheData> &cache_data) {
 
+    log()->debug("loading %s, key: %s, expire: %ld, last-modified: %ld",
+        path.c_str(), key.c_str(), tag.expire_time, tag.last_modified);
+
     std::fstream is(path.c_str(), std::ios::in | std::ios::out);
     if (!is) {
         log()->debug("can not find cached doc");
@@ -364,6 +367,7 @@ DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag,
         }
         
         if (!cache_data->parse(&doc_data[0], doclen)) {
+            log()->info("cannot parse doc");
             return false;
         }
 
@@ -386,6 +390,7 @@ DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &t
     try {
         FILE *f = fopen(path.c_str(), "w");
         if (NULL == f) {
+            log()->info("cannot open file");
             return false;
         }
         WriteFile wf(f);

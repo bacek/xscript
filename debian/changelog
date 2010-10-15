@@ -1,3 +1,9 @@
+xscript (5.73.7-2) unstable; urgency=low
+
+  * add logging to disk cache
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Fri, 15 Oct 2010 15:39:19 +0400
+
 xscript (5.73.7-1) unstable; urgency=low
 
   * fixed tagged key in local block for complex args 
