@@ -239,7 +239,7 @@ MetaBlock::getLuaCode(Block *lua) const {
             return trim(createRange(code));
         }
     }
-    return Range();
+    return Range((const char*)NULL, (const char*)NULL);
 }
 
 const std::string&

@@ -22,7 +22,8 @@ createRange(const std::string &str) {
 
 inline Range
 createRange(const std::vector<char> &vec) {
-    return vec.empty() ? Range() : Range(&vec[0], &vec[0] + vec.size());
+    return vec.empty() ? Range((const char*)NULL, (const char*)NULL) :
+            Range(&vec[0], &vec[0] + vec.size());
 }
 
 } // namespace xscript
