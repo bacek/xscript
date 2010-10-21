@@ -3,8 +3,6 @@
 #include "stack.h"
 #include "exception.h"
 
-#include "xscript/logger.h"
-
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
