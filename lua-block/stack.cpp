@@ -3,6 +3,8 @@
 #include "stack.h"
 #include "exception.h"
 
+#include "xscript/logger.h"
+
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
@@ -98,12 +100,16 @@ isLongInteger(double d) {
 static TypedValue
 luaReadTableInternal(lua_State *lua, int index) {
     lua_pushnil(lua);
-    TypedValue value;
+    TypedValue value = TypedValue::createArrayValue();
     bool is_map  = false;
+    bool is_first  = true;
     while (lua_next(lua, index)) {
-        if (value.nil()) {
+        if (is_first) {
+            is_first = false;
             is_map = !lua_isnumber(lua, -2);
-            value = is_map ? TypedValue::createMapValue() : TypedValue::createArrayValue();
+            if (is_map) {
+                value = TypedValue::createMapValue();
+            }
         }
         std::string key;
         if (is_map) {
