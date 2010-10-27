@@ -75,6 +75,8 @@ public:
     virtual void storeXml(const std::string &name, const boost::shared_ptr<Xml> &xml);
 
     static time_t delay();
+    static time_t max_delay();
+
 protected:
     XmlStorage* findStorage(const std::string &name) const;
 
@@ -82,6 +84,7 @@ private:
     StringSet denied_;
     std::vector<XmlStorage*> storages_;
     static time_t delay_;
+    static time_t max_delay_;
 
     class StorageContainerHolder {
     public:
@@ -108,11 +111,11 @@ public:
 
 private:
     struct Element {
-        Element() : checked_(0), modified_(false) {}
-        Element(boost::shared_ptr<Xml> xml) : xml_(xml), checked_(time(NULL) + XmlCache::delay()), modified_(false) {}
+        Element() : check_time_(0), modified_(false) {}
+        Element(boost::shared_ptr<Xml> xml) : xml_(xml), check_time_(time(NULL) + XmlCache::delay()), modified_(false) {}
 
         boost::shared_ptr<Xml> xml_;
-        time_t checked_;
+        time_t check_time_;
         bool modified_;
 
         bool checkModified() const;
@@ -213,11 +216,11 @@ XmlStorage::XmlExpiredFunc::operator() (Element &element, const Tag &tag) const 
 
     if (!element.modified_) {
         time_t now = time(NULL);
-        if (now >= element.checked_) {
+        if (now >= element.check_time_ || (now + XmlCache::max_delay() < element.check_time_)) {
             if (element.checkModified()) {
                 element.modified_ = true;
             }
-            element.checked_ = now + XmlCache::delay();
+            element.check_time_ = now + XmlCache::delay();
         }
     }
     return element.modified_;
@@ -248,6 +251,7 @@ bool XmlStorage::Element::checkModified() const {
 }
 
 time_t XmlCache::delay_ = 0;
+time_t XmlCache::max_delay_ = 0;
 
 XmlCache::XmlCache() {
 }
@@ -265,14 +269,15 @@ void
 XmlCache::init(const Config *config, StatBuilder &statBuilder) {
 
     const std::string& name = statBuilder.getName();
+    const std::string section = "/xscript/" + name;
+    config->addForbiddenKey(section + "/*");
     
-    config->addForbiddenKey(std::string("/xscript/").append(name).append("/*"));
-    
-    int buckets = config->as<int>(std::string("/xscript/").append(name).append("/buckets"), 10);
-    int bucksize = config->as<int>(std::string("/xscript/").append(name).append("/bucket-size"), 200);
+    int buckets = config->as<int>(section + "/buckets", 20);
+    int bucksize = config->as<int>(section + "/bucket-size", 30);
 
     if (OperationMode::instance()->isProduction()) {
-        delay_ = config->as<time_t>(std::string("/xscript/").append(name).append("/refresh-delay"), 5);
+        delay_ = config->as<time_t>(section + "/refresh-delay", 5);
+        max_delay_ = delay_ * 12; // 60
     }
 
     StorageContainerHolder holder(storages_);
@@ -292,6 +297,11 @@ XmlCache::init(const Config *config, StatBuilder &statBuilder) {
 time_t
 XmlCache::delay() {
     return delay_;
+}
+
+time_t
+XmlCache::max_delay() {
+    return max_delay_;
 }
 
 boost::shared_ptr<Xml>
