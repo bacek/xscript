@@ -122,8 +122,8 @@ HttpBlock::parseSubNode(xmlNodePtr node) {
             continue;
         }
 
-	std::stringstream ss;
-	ss << "header param with incorrect character at " << i + 1 << " in id: " << id;
+        std::stringstream ss;
+        ss << "header param with incorrect character at " << i + 1 << " in id: " << id;
         throw std::runtime_error(ss.str());
     }
 
@@ -181,7 +181,7 @@ std::string
 HttpBlock::info(const Context *ctx) const {
 
     if (headers_.empty()) {
-	return RemoteTaggedBlock::info(ctx);
+        return RemoteTaggedBlock::info(ctx);
     }
 
     std::string info = RemoteTaggedBlock::info(ctx);
@@ -190,7 +190,7 @@ HttpBlock::info(const Context *ctx) const {
         if (i > 0) {
             info.append(", ");
         }
-	const Param *param = headers_[i];
+        const Param *param = headers_[i];
         info.append(param->type());
         const std::string& value =  param->value();
         if (!value.empty()) {
@@ -206,7 +206,7 @@ std::string
 HttpBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
 
     if (headers_.empty()) {
-	return RemoteTaggedBlock::createTagKey(ctx, invoke_ctx);
+        return RemoteTaggedBlock::createTagKey(ctx, invoke_ctx);
     }
 
     std::string key = RemoteTaggedBlock::createTagKey(ctx, invoke_ctx);
@@ -222,7 +222,7 @@ ArgList*
 HttpBlock::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
 
     if (!headers_.empty()) {
-	boost::shared_ptr<CommonArgList> args(new CommonArgList());
+        boost::shared_ptr<CommonArgList> args(new CommonArgList());
         for (std::vector<Param*>::const_iterator it = headers_.begin(), end = headers_.end(); it != end; ++it) {
             (*it)->add(ctx, *args);
         }
@@ -596,7 +596,7 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
     if (0 == strncmp(helper.contentType().c_str(), "text/", sizeof("text/") - 1)) {
         if (str->empty()) {
             XmlDocHelper result(xmlNewDoc((const xmlChar*) "1.0"));
-        	XmlUtils::throwUnless(NULL != result.get());
+            XmlUtils::throwUnless(NULL != result.get());
             XmlNodeHelper node(xmlNewDocNode(result.get(), NULL, (const xmlChar*)"text", NULL));
             XmlUtils::throwUnless(NULL != node.get());
             xmlDocSetRootElement(result.get(), node.release());
