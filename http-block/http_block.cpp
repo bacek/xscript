@@ -1,17 +1,13 @@
 #include "settings.h"
 
-#include <sys/stat.h>
-
-#include <cerrno>
-#include <cstring>
-#include <cstdlib>
+#include <algorithm>
+#include <cassert>
 #include <sstream>
 #include <stdexcept>
 
 #include <boost/tokenizer.hpp>
 #include <boost/current_function.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/filesystem/operations.hpp>
+#include <boost/checked_delete.hpp>
 
 #include <libxml/HTMLparser.h>
 
@@ -23,6 +19,7 @@
 #include "xscript/logger.h"
 #include "xscript/meta.h"
 #include "xscript/operation_mode.h"
+#include "xscript/param.h"
 #include "xscript/policy.h"
 #include "xscript/profiler.h"
 #include "xscript/request.h"
@@ -33,11 +30,26 @@
 #include "xscript/xml.h"
 #include "xscript/xml_util.h"
 
+#include "internal/hash.h"
+#include "internal/hashmap.h"
+
+#ifndef HAVE_HASHMAP
+#include <map>
+#endif
+
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
 #endif
 
+
 namespace xscript {
+
+#ifndef HAVE_HASHMAP
+typedef std::map<std::string, HttpMethod> MethodMap;
+#else
+typedef details::hash_map<std::string, HttpMethod, details::StringHash> MethodMap;
+#endif
+
 
 class HttpMethodRegistrator {
 public:
@@ -62,21 +74,69 @@ private:
     boost::shared_ptr<std::string> data_;
 };
 
-MethodMap HttpBlock::methods_;
+static MethodMap methods_;
+static std::string STR_HEADERS("headers");
 
 HttpBlock::HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), RemoteTaggedBlock(ext, owner, node),
-        proxy_(false), print_error_(false), method_(NULL) {
+        method_(NULL), proxy_(false), print_error_(false) {
 }
 
 HttpBlock::~HttpBlock() {
+    std::for_each(headers_.begin(), headers_.end(), boost::checked_deleter<Param>());
+}
+
+void
+HttpBlock::parseSubNode(xmlNodePtr node) {
+
+    if (NULL == node->name || 0 != xmlStrcasecmp(node->name, (const xmlChar*)"header")) {
+        Block::parseSubNode(node);
+        return;
+    }
+
+    const xmlChar* ref = node->ns ? node->ns->href : NULL;
+    if (NULL != ref && 0 != xmlStrcasecmp(ref, (const xmlChar*)XmlUtils::XSCRIPT_NAMESPACE)) {
+        Block::parseSubNode(node);
+        return;
+    }
+
+    std::auto_ptr<Param> p = createParam(node);
+    const std::string &id = p->id();
+    log()->debug("creating header param %s in http-block: %s", id.c_str(), owner()->name().c_str());
+    if (id.empty()) {
+        throw std::runtime_error("header param without id");
+    }
+
+    int size = id.size();
+    if (size > 128) {
+        throw UnboundRuntimeError(std::string("header param with too big size id: ") + id);
+    }
+
+    if (!isalpha(id[0])) {
+        throw std::runtime_error(std::string("header param with incorrect first character in id: ") + id);
+    }
+
+    for (int i = 1; i < size; ++i) {
+        char character = id[i];
+        if (isalnum(character) || character == '-') {
+            continue;
+        }
+
+	std::stringstream ss;
+	ss << "header param with incorrect character at " << i + 1 << " in id: " << id;
+        throw std::runtime_error(ss.str());
+    }
+
+    header_names_.insert(id);
+    headers_.push_back(p.get());
+    p.release();
 }
 
 void
 HttpBlock::postParse() {
 
     if (proxy_ && tagged()) {
-        log()->warn("%s, proxy in tagged http-block: %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+        log()->warn("swithch off tagging in proxy http-block: %s", owner()->name().c_str());
         tagged(false);
     }
 
@@ -118,6 +178,60 @@ HttpBlock::property(const char *name, const char *value) {
 }
 
 std::string
+HttpBlock::info(const Context *ctx) const {
+
+    if (headers_.empty()) {
+	return RemoteTaggedBlock::info(ctx);
+    }
+
+    std::string info = RemoteTaggedBlock::info(ctx);
+    info.append(" | Headers: ");
+    for (unsigned int i = 0, n = headers_.size(); i < n; ++i) {
+        if (i > 0) {
+            info.append(", ");
+        }
+	const Param *param = headers_[i];
+        info.append(param->type());
+        const std::string& value =  param->value();
+        if (!value.empty()) {
+            info.push_back('(');
+            info.append(value);
+            info.push_back(')');
+        }
+    }
+    return info;
+}
+
+std::string
+HttpBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
+
+    if (headers_.empty()) {
+	return RemoteTaggedBlock::createTagKey(ctx, invoke_ctx);
+    }
+
+    std::string key = RemoteTaggedBlock::createTagKey(ctx, invoke_ctx);
+    key.append("| Headers:");
+    const ArgList *args = invoke_ctx->getExtraArgList(STR_HEADERS);
+    assert(args);
+    assert(args->size() == headers_.size());
+    key.append(paramsKey(args));
+    return key;
+}
+
+ArgList*
+HttpBlock::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
+
+    if (!headers_.empty()) {
+	boost::shared_ptr<CommonArgList> args(new CommonArgList());
+        for (std::vector<Param*>::const_iterator it = headers_.begin(), end = headers_.end(); it != end; ++it) {
+            (*it)->add(ctx, *args);
+        }
+        invoke_ctx->setExtraArgList(STR_HEADERS, args);
+    }
+    return RemoteTaggedBlock::createArgList(ctx, invoke_ctx);
+}
+
+std::string
 HttpBlock::getUrl(const ArgList *args, unsigned int first, unsigned int last) const {
     std::string url = Block::concatArguments(args, first, last);
     if (strncasecmp(url.c_str(), "file://", sizeof("file://") - 1) == 0) {
@@ -133,17 +247,16 @@ HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) const {
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
-    if (size == 0) {
+    if (!size) {
         throwBadArityError();
     }
     
     std::string url = getUrl(args, 0, size - 1);
-    
     PROFILER(log(), "getHttp: " + url);
 
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), invoke_ctx);
+    appendHeaders(helper, ctx->request(), invoke_ctx, true);
     httpCall(helper);
     checkStatus(helper);
     
@@ -165,16 +278,19 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
-    if (size == 0 || tagged()) {
-        throw InvokeError("bad arity");
+    if (!size) {
+        throwBadArityError();
     }
-    
+    else if (tagged()) {
+        throw CriticalInvokeError("tag is not allowed");
+    }
+
     std::string url = getUrl(args, 0, size - 1);
     PROFILER(log(), "getBinaryPage: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), NULL);
+    appendHeaders(helper, ctx->request(), invoke_ctx, false);
     httpCall(helper);
 
     if (!helper.isOk()) {
@@ -217,12 +333,13 @@ HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
     if (size < 2) {
         throwBadArityError();
     }
-    
+
     std::string url = getUrl(args, 0, size - 2);
+    PROFILER(log(), "postHttp: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), invoke_ctx);
+    appendHeaders(helper, ctx->request(), invoke_ctx, true);
 
     const std::string& body = args->at(size-1);
     helper.postData(body.data(), body.size());
@@ -249,11 +366,15 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
-    if (size == 0 || tagged()) {
-        throw InvokeError("bad arity");
+    if (!size) {
+        throwBadArityError();
     }
-    
+    else if (tagged()) {
+        throw CriticalInvokeError("tag is not allowed");
+    }
+
     std::string url = getUrl(args, 0, size - 1);
+    PROFILER(log(), "postByRequest: " + url);
     
     bool is_get = (strcmp(ctx->request()->getRequestMethod().c_str(), "GET") == 0);
     
@@ -266,7 +387,7 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     }
     
     HttpHelper helper(url, getTimeout(ctx, url));
-    appendHeaders(helper, ctx->request(), NULL);
+    appendHeaders(helper, ctx->request(), invoke_ctx, false);
 
     if (is_get) {
         const std::string &query = ctx->request()->getQueryString();
@@ -292,12 +413,15 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
     
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
-    
-    if (size == 0 || tagged()) {
-        throw InvokeError("bad arity");
+    if (!size) {
+        throwBadArityError();
     }
-    
+    else if (tagged()) {
+        throw CriticalInvokeError("tag is not allowed");
+    }
+
     std::string url = getUrl(args, 0, size - 1);
+    PROFILER(log(), "getByState: " + url);
     
     bool has_query = url.find('?') != std::string::npos;
 
@@ -316,7 +440,7 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), NULL);
+    appendHeaders(helper, ctx->request(), invoke_ctx, false);
     httpCall(helper);
     checkStatus(helper);
     createMeta(helper, invoke_ctx);
@@ -332,12 +456,15 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
-    
-    if (size == 0 || tagged()) {
-        throw InvokeError("bad arity");
+    if (!size) {
+        throwBadArityError();
     }
-    
+    else if (tagged()) {
+        throw CriticalInvokeError("tag is not allowed");
+    }
+
     std::string url = getUrl(args, 0, size - 1);
+    PROFILER(log(), "getByRequest: " + url);
     
     bool is_post = (strcmp(ctx->request()->getRequestMethod().c_str(), "POST") == 0);
     
@@ -366,7 +493,7 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), NULL);
+    appendHeaders(helper, ctx->request(), invoke_ctx, false);
     httpCall(helper);
     checkStatus(helper);
     createMeta(helper, invoke_ctx);
@@ -375,21 +502,24 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
 }
 
 void
-HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, InvokeContext *invoke_ctx) const {
+HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, const InvokeContext *invoke_ctx, bool allow_tag) const {
     std::vector<std::string> headers;
     bool real_ip = false;
-    const std::string& ip_header_name = Policy::instance()->realIPHeaderName();
+    const std::string &ip_header_name = Policy::instance()->realIPHeaderName();
     if (proxy_ && request->countHeaders() > 0) {    
         std::vector<std::string> names;
         request->headerNames(names);
         for (std::vector<std::string>::const_iterator i = names.begin(), end = names.end(); i != end; ++i) {
-            const std::string& name = *i;
+            const std::string &name = *i;
             if (name.empty()) {
                 continue;
             }
-            const std::string& value = request->getHeader(name);
-            if (Policy::instance()->isSkippedProxyHeader(name)) {
-                log()->debug("%s, skipped %s: %s", BOOST_CURRENT_FUNCTION, name.c_str(), value.c_str());
+            const std::string &value = request->getHeader(name);
+            if (invoke_ctx && header_names_.end() != header_names_.find(name)) {
+                log()->debug("proxy header was skipped (override) %s: %s", name.c_str(), value.c_str());
+            }
+            else if (Policy::instance()->isSkippedProxyHeader(name)) {
+                log()->debug("proxy header was skipped (policy) %s: %s", name.c_str(), value.c_str());
             }
             else {
                 if (!real_ip && strcasecmp(ip_header_name.c_str(), name.c_str()) == 0) {
@@ -400,14 +530,33 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, InvokeConte
             }
         }
     }
-    
+
+    if (invoke_ctx && !headers_.empty()) {
+        const ArgList *args = invoke_ctx->getExtraArgList(STR_HEADERS);
+        assert(NULL != args);
+        unsigned int sz = args->size();
+        assert(sz == headers_.size());
+        for (unsigned int i = 0; i != sz; ++i) {
+            const Param *param = headers_[i];
+            const std::string &name = param->id();
+            if (!real_ip && strcasecmp(ip_header_name.c_str(), name.c_str()) == 0) {
+                real_ip = true;
+            }
+            headers.push_back(name);
+            headers.back().append(": ").append(args->at(i));
+        }
+    }
+
     if (!real_ip && !ip_header_name.empty()) {
         headers.push_back(ip_header_name);
         headers.back().append(": ").append(request->getRealIP());
     }
-    
-    helper.appendHeaders(headers,
-            invoke_ctx && invoke_ctx->tagged() ? invoke_ctx->tag().last_modified : Tag::UNDEFINED_TIME);
+    if (allow_tag && invoke_ctx && invoke_ctx->tagged()) {
+        helper.appendHeaders(headers, invoke_ctx->tag().last_modified);
+    }
+    else {
+        helper.appendHeaders(headers, Tag::UNDEFINED_TIME);
+    }
 }
 
 XmlDocHelper

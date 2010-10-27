@@ -64,7 +64,10 @@ public:
     void xsltName(const std::string &name);
 
     void setArgList(const boost::shared_ptr<ArgList> &args);
-    ArgList* getArgList() const;
+    ArgList* getArgList() const; // TODO: return const ArgList*
+
+    void setExtraArgList(const std::string &name, const boost::shared_ptr<ArgList> &args);
+    const ArgList* getExtraArgList(const std::string &name) const;
 
     void setXPointer(const boost::shared_ptr<XPathExpr> &xpointer);
     void setMetaXPointer(const boost::shared_ptr<XPathExpr> &xpointer);

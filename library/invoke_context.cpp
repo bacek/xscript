@@ -3,8 +3,7 @@
 #include <memory>
 #include <string>
 #include <stdexcept>
-
-#include <boost/thread/mutex.hpp>
+#include <map>
 
 #include "xscript/context.h"
 #include "xscript/doc_cache_strategy.h"
@@ -25,6 +24,7 @@ struct InvokeContext::ContextData {
         have_cached_copy_(false), base_(NULL), meta_(new Meta) {}
     ContextData(InvokeContext *base) :  tagged_(false), result_type_(ERROR),
         have_cached_copy_(false), base_(base), meta_(new Meta) {}
+
     XmlDocSharedHelper doc_;
     XmlDocSharedHelper meta_doc_;
     bool tagged_;
@@ -38,10 +38,34 @@ struct InvokeContext::ContextData {
     InvokeContext* base_;
     boost::shared_ptr<Meta> meta_;
     boost::shared_ptr<ArgList> args_;
+    std::map<std::string, boost::shared_ptr<ArgList> > extra_args_;
 
     boost::shared_ptr<XPathExpr> xpointer_;
     boost::shared_ptr<XPathExpr> meta_xpointer_;
+
+    void setExtraArgList(const std::string &name, const boost::shared_ptr<ArgList> &args) {
+        std::map<std::string, boost::shared_ptr<ArgList> >::iterator it = extra_args_.find(name);
+        if (extra_args_.end() == it) {
+            extra_args_.insert(std::make_pair(name, args));
+        }
+        else {
+            it->second = args;
+        }
+    }
+
+    const ArgList* getExtraArgList(const std::string &name) const {
+        std::map<std::string, boost::shared_ptr<ArgList> >::const_iterator it = extra_args_.find(name);
+        if (extra_args_.end() == it) {
+            return NULL;
+        }
+        return it->second.get();
+    }
+
+private:
+    ContextData(const ContextData &);
+    ContextData& operator = (const ContextData &);
 };
+
 
 InvokeContext::InvokeContext() : ctx_data_(new ContextData())
 {}
@@ -206,6 +230,17 @@ ArgList*
 InvokeContext::getArgList() const {
     return ctx_data_->args_.get();
 }
+
+void
+InvokeContext::setExtraArgList(const std::string &name, const boost::shared_ptr<ArgList> &args) {
+    ctx_data_->setExtraArgList(name, args);
+}
+
+const ArgList*
+InvokeContext::getExtraArgList(const std::string &name) const {
+    return ctx_data_->getExtraArgList(name);
+}
+
 
 void
 InvokeContext::setXPointer(const boost::shared_ptr<XPathExpr> &xpointer) {

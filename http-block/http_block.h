@@ -1,23 +1,20 @@
 #ifndef _XSCRIPT_HTTP_BLOCK_H_
 #define _XSCRIPT_HTTP_BLOCK_H_
 
-#include <iosfwd>
+#include <string>
+#include <set>
+#include <vector>
 
 #include "xscript/block.h"
 #include "xscript/extension.h"
+#include "xscript/functors.h"
 #include "xscript/remote_tagged_block.h"
-
-#include "internal/hash.h"
-#include "internal/hashmap.h"
-
-#ifndef HAVE_HASHMAP
-#include <map>
-#endif
 
 namespace xscript {
 
 class Loader;
 class Context;
+class Param;
 
 class HttpBlock;
 class HttpHelper;
@@ -26,12 +23,6 @@ class HttpMethodRegistrator;
 
 typedef XmlDocHelper (HttpBlock::*HttpMethod)(Context *ctx, InvokeContext *invoke_ctx) const;
 
-#ifndef HAVE_HASHMAP
-typedef std::map<std::string, HttpMethod> MethodMap;
-#else
-typedef details::hash_map<std::string, HttpMethod, details::StringHash> MethodMap;
-#endif
-
 // TODO: Why it is not virtual inherited?
 class HttpBlock : public RemoteTaggedBlock {
 public:
@@ -39,9 +30,14 @@ public:
     virtual ~HttpBlock();
 
 protected:
+    virtual void parseSubNode(xmlNodePtr node);
     virtual void postParse();
     virtual void property(const char *name, const char *value);
     virtual void retryCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception);
+
+    virtual std::string info(const Context *ctx) const;
+    virtual std::string createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const;
+    virtual ArgList* createArgList(Context *ctx, InvokeContext *invoke_ctx) const;
 
     std::string getUrl(const ArgList *args, unsigned int first, unsigned int last) const;
     
@@ -53,7 +49,7 @@ protected:
     XmlDocHelper getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const;
 
     XmlDocHelper response(const HttpHelper &h, bool error_mode = false) const;
-    void appendHeaders(HttpHelper &helper, const Request *request, InvokeContext *invoke_ctx) const;
+    void appendHeaders(HttpHelper &helper, const Request *request, const InvokeContext *invoke_ctx, bool allow_tag) const;
     void createTagInfo(const HttpHelper &h, InvokeContext *invoke_ctx) const;
 
     static void registerMethod(const char *name, HttpMethod method);
@@ -71,11 +67,12 @@ private:
     friend class HttpMethodRegistrator;
 
 private:
+    std::vector<Param*> headers_;
+    std::set<std::string, StringCILess> header_names_;
+    std::string charset_;
+    HttpMethod method_;
     bool proxy_;
     bool print_error_;
-    HttpMethod method_;
-    std::string charset_;
-    static MethodMap methods_;
 };
 
 class HttpExtension : public Extension {
