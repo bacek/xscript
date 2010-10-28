@@ -74,6 +74,21 @@ private:
     boost::shared_ptr<std::string> data_;
 };
 
+class HttpHeadersArgList : public CommonArgList {
+public:
+    HttpHeadersArgList() : CommonArgList() {}
+
+    virtual void add(const std::string &value) {
+        std::string::size_type pos = value.find_first_of("\r\n");
+        if (pos == std::string::npos) {
+            CommonArgList::add(value);
+        }
+        else {
+            CommonArgList::add(value.substr(0, pos));
+        }
+    }
+};
+
 static MethodMap methods_;
 static std::string STR_HEADERS("headers");
 
@@ -222,7 +237,7 @@ ArgList*
 HttpBlock::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
 
     if (!headers_.empty()) {
-        boost::shared_ptr<CommonArgList> args(new CommonArgList());
+        boost::shared_ptr<CommonArgList> args(new HttpHeadersArgList());
         for (std::vector<Param*>::const_iterator it = headers_.begin(), end = headers_.end(); it != end; ++it) {
             (*it)->add(ctx, *args);
         }
