@@ -1,12 +1,12 @@
 pkglib_LTLIBRARIES = xscript-http.la
 
-xscript_http_la_SOURCES = http_block.cpp
+xscript_http_la_SOURCES = http_block.cpp http_extension.cpp
 
 
 xscript_http_la_LIBADD = ../library/libxscript.la
 xscript_http_la_LDFLAGS = -module -export-dynamic @VERSION_INFO@
 
-noinst_HEADERS = http_block.h
+noinst_HEADERS = http_block.h http_extension.h
 
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -W -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread

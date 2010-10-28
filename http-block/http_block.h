@@ -5,8 +5,6 @@
 #include <set>
 #include <vector>
 
-#include "xscript/block.h"
-#include "xscript/extension.h"
 #include "xscript/functors.h"
 #include "xscript/remote_tagged_block.h"
 
@@ -73,26 +71,6 @@ private:
     HttpMethod method_;
     bool proxy_;
     bool print_error_;
-};
-
-class HttpExtension : public Extension {
-public:
-    HttpExtension();
-    virtual ~HttpExtension();
-
-    virtual const char* name() const;
-    virtual const char* nsref() const;
-
-    virtual void initContext(Context *ctx);
-    virtual void stopContext(Context *ctx);
-    virtual void destroyContext(Context *ctx);
-
-    virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);
-    virtual void init(const Config *config);
-
-private:
-    HttpExtension(const HttpExtension &);
-    HttpExtension& operator = (const HttpExtension &);
 };
 
 } // namespace xscript
