@@ -113,6 +113,9 @@ ArgList::addTag(const TaggedBlock *tb, const Context *ctx) {
     throw CriticalInvokeError("Tag param is not allowed in this context");
 }
 
+static const std::string STR_TRUE("1");
+static const std::string STR_FALSE("0");
+
 CommonArgList::CommonArgList() {
 }
 
@@ -121,7 +124,7 @@ CommonArgList::~CommonArgList() {
 
 void
 CommonArgList::add(bool value) {
-    args_.push_back(value ? "1" : "0");
+    args_.push_back(value ? STR_TRUE : STR_FALSE);
 }
 
 void
@@ -151,7 +154,7 @@ CommonArgList::add(boost::uint64_t value) {
 
 void
 CommonArgList::add(const std::string &value) {
-    args_.push_back(boost::lexical_cast<std::string>(value));
+    args_.push_back(value);
 }
 
 bool
