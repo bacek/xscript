@@ -1,3 +1,9 @@
+xscript (5.73.9-1) unstable; urgency=low
+
+  * erase state added to mist and lua
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Wed, 10 Nov 2010 16:48:29 +0300
+
 xscript (5.73.8-3) unstable; urgency=low
 
   * truncate overrided headers after CR or LF

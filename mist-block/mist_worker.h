@@ -72,6 +72,7 @@ private:
     XmlNodeHelper setStateSplitString(Context *ctx, const std::vector<std::string> &params) const;
     XmlNodeHelper setStateConcatString(Context *ctx, const std::vector<std::string> &params) const;
     XmlNodeHelper dropState(Context *ctx, const std::vector<std::string> &params) const;
+    XmlNodeHelper eraseState(Context *ctx, const std::vector<std::string> &params) const;
     XmlNodeHelper dumpState(Context *ctx, const std::vector<std::string> &params) const;
     XmlNodeHelper attachStylesheet(Context *ctx, const std::vector<std::string> &params) const;
     XmlNodeHelper location(Context *ctx, const std::vector<std::string> &params) const;

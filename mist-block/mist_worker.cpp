@@ -662,6 +662,20 @@ MistWorker::dropState(Context *ctx, const std::vector<std::string> &params) cons
 }
 
 XmlNodeHelper
+MistWorker::eraseState(Context *ctx, const std::vector<std::string> &params) const {
+    State* state = ctx->state();
+    if (1 != params.size()) {
+        throw std::invalid_argument("bad arity");
+    }
+    const std::string &key = params[0];
+    if (!key.empty()) {
+        state->erase(key);
+    }
+    StateNode node("erase", key.c_str(), StringUtils::EMPTY_STRING.c_str());
+    return XmlNodeHelper(node.releaseNode());
+}
+
+XmlNodeHelper
 MistWorker::dumpState(Context *ctx, const std::vector<std::string> &params) const {
     if (1 < params.size()) {
         throw std::invalid_argument("bad arity");
@@ -843,6 +857,9 @@ MistWorkerMethodRegistrator::MistWorkerMethodRegistrator() {
 
     MistWorker::registerMethod("dropState", &MistWorker::dropState);
     MistWorker::registerMethod("drop_state", &MistWorker::dropState);
+
+    MistWorker::registerMethod("eraseState", &MistWorker::eraseState);
+    MistWorker::registerMethod("erase_state", &MistWorker::eraseState);
 
     MistWorker::registerMethod("dumpState", &MistWorker::dumpState);
     MistWorker::registerMethod("dump_state", &MistWorker::dumpState);

@@ -38,6 +38,7 @@ extern "C" {
 
     int luaStateIs(lua_State *lua);
     int luaStateDrop(lua_State *lua);
+    int luaStateErase(lua_State *lua);
 }
 
 static const struct luaL_reg statelib [] = {
@@ -56,6 +57,7 @@ static const struct luaL_reg statelib [] = {
     {"setTable",        luaStateSetTable},
     {"is",              luaStateIs},
     {"drop",            luaStateDrop},
+    {"erase",           luaStateErase},
     {NULL, NULL}
 };
 
@@ -291,6 +293,29 @@ luaStateDrop(lua_State *lua) {
     }
     catch (const std::exception &e) {
         luaL_error(lua, "caught exception in state.drop: %s", e.what());
+        return 0;
+    }
+}
+
+int
+luaStateErase(lua_State *lua) {
+    log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+    try {
+        luaCheckStackSize(lua, 2);
+        luaReadStack<void>(lua, "xscript.state", 1);
+        State *state = getContext(lua)->state();
+        std::string key = luaReadStack<std::string>(lua, 2);
+        if (!key.empty()) {
+            log()->debug("luaStateErase: %s", key.c_str());
+            state->erase(key);
+        }
+        return 0;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        luaL_error(lua, "caught exception in state.erase: %s", e.what());
         return 0;
     }
 }
