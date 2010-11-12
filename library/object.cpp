@@ -139,10 +139,11 @@ Object::parseXsltParamNode(const xmlNodePtr node) {
 void
 Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh,
                         boost::shared_ptr<Context> ctx,
+                        boost::shared_ptr<InvokeContext> invoke_ctx,
                         XmlDocSharedHelper &doc,
                         bool need_copy) {
     assert(NULL != doc.get());
-    XmlDocHelper newdoc = sh->apply(this, ctx, doc.get());
+    XmlDocHelper newdoc = sh->apply(this, ctx, invoke_ctx, doc.get());
     ctx->addDoc(doc);
 
     if (need_copy) {

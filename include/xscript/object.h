@@ -38,7 +38,8 @@ protected:
     const std::string& xsltNameRaw() const;
 
     void parseXsltParamNode(const xmlNodePtr node);
-    void applyStylesheet(boost::shared_ptr<Stylesheet> sh, boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc, bool need_copy);
+    void applyStylesheet(boost::shared_ptr<Stylesheet> sh, boost::shared_ptr<Context> ctx,
+            boost::shared_ptr<InvokeContext> invoke_ctx, XmlDocSharedHelper &doc, bool need_copy);
     
     std::auto_ptr<Param> createParam(const xmlNodePtr node);
 

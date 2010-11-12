@@ -43,6 +43,8 @@ struct InvokeContext::ContextData {
     boost::shared_ptr<XPathExpr> xpointer_;
     boost::shared_ptr<XPathExpr> meta_xpointer_;
 
+    std::vector<std::string> xslt_params_;
+
     void setExtraArgList(const std::string &name, const boost::shared_ptr<ArgList> &args) {
         std::map<std::string, boost::shared_ptr<ArgList> >::iterator it = extra_args_.find(name);
         if (extra_args_.end() == it) {
@@ -59,6 +61,14 @@ struct InvokeContext::ContextData {
             return NULL;
         }
         return it->second.get();
+    }
+
+    void appendXsltParam(const std::string &value) {
+        xslt_params_.push_back(value);
+    }
+
+    const std::vector<std::string>& xsltParams() const{
+        return xslt_params_;
     }
 
 private:
@@ -260,6 +270,16 @@ InvokeContext::setMetaXPointer(const boost::shared_ptr<XPathExpr> &xpointer) {
 const boost::shared_ptr<XPathExpr>&
 InvokeContext::metaXPointer() const {
     return ctx_data_->meta_xpointer_;
+}
+
+void
+InvokeContext::appendXsltParam(const std::string &value) {
+    ctx_data_->appendXsltParam(value);
+}
+
+const std::vector<std::string>&
+InvokeContext::xsltParams() const {
+    return ctx_data_->xsltParams();
 }
 
 } // namespace xscript

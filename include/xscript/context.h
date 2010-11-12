@@ -131,7 +131,7 @@ public:
     const std::string& getLocalParam(const std::string &name, const std::string &default_value) const;
     const std::map<std::string, TypedValue>& localParams() const;
     const boost::shared_ptr<TypedMap>& localParamsMap() const;
-    
+
     friend class ContextStopper;
 
 private:

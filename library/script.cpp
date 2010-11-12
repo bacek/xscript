@@ -929,7 +929,7 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc)
     log()->info("applying stylesheet to %s", name().c_str());
     
     ctx->createDocumentWriter(stylesheet);
-    Object::applyStylesheet(stylesheet, ctx, doc, false);
+    Object::applyStylesheet(stylesheet, ctx, boost::shared_ptr<InvokeContext>(), doc, false);
     
     bool result = true;
     if (XmlUtils::hasXMLError()) {

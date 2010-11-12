@@ -87,6 +87,7 @@ public:
     std::string detectContentType(const XmlDocHelper &doc) const;
     void appendXsltParams(const std::vector<Param*>& params,
                           const Context *ctx,
+                          const InvokeContext *invoke_ctx,
                           xsltTransformContextPtr tctx);
     void attachContextData(xsltTransformContextPtr tctx,
                            boost::shared_ptr<Context> ctx,
@@ -267,6 +268,7 @@ Stylesheet::StylesheetData::detectContentType(const XmlDocHelper &doc) const {
 void
 Stylesheet::StylesheetData::appendXsltParams(const std::vector<Param*>& params,
                                              const Context *ctx,
+                                             const InvokeContext *invoke_ctx,
                                              xsltTransformContextPtr tctx) {
     if (params.empty()) {
         return;
@@ -276,7 +278,15 @@ Stylesheet::StylesheetData::appendXsltParams(const std::vector<Param*>& params,
 
     typedef std::set<std::string> ParamSetType;
     ParamSetType unique_params;
-    for(std::vector<Param*>::const_iterator it = params.begin(), end = params.end();
+
+    std::vector<std::string>::const_iterator val_iter;
+    if (invoke_ctx) {
+        if (invoke_ctx->xsltParams().size() != params.size()) {
+            throw std::logic_error("Incorrect xslt arg list");
+        }
+        val_iter = invoke_ctx->xsltParams().begin();
+    }
+    for (std::vector<Param*>::const_iterator it = params.begin(), end = params.end();
         it != end;
         ++it) {
         const Param *param = *it;
@@ -288,16 +298,18 @@ Stylesheet::StylesheetData::appendXsltParams(const std::vector<Param*>& params,
             OperationMode::instance()->processError(stream.str());
         }
         else {
-            std::string value = param->asString(ctx);
+            std::string value = invoke_ctx ? *val_iter : param->asString(ctx);
             if (!value.empty()) {
                 log()->debug("add xslt-param %s: %s", id.c_str(), value.c_str());
-                XmlUtils::throwUnless(
-                    xsltQuoteOneUserParam(
+                XmlUtils::throwUnless(xsltQuoteOneUserParam(
                         tctx, (const xmlChar*)id.c_str(), (const xmlChar*)value.c_str()) == 0);
             }
             else {
                 log()->debug("skip empty xslt-param: %s", id.c_str());
             }
+        }
+        if (invoke_ctx) {
+            ++val_iter;
         }
     }
 }
@@ -348,7 +360,8 @@ Stylesheet::haveOutputInfo() const {
 }
 
 XmlDocHelper
-Stylesheet::apply(Object *obj, boost::shared_ptr<Context> ctx, xmlDocPtr doc) {
+Stylesheet::apply(Object *obj, boost::shared_ptr<Context> ctx,
+        boost::shared_ptr<InvokeContext> invoke_ctx, xmlDocPtr doc) {
 
     log()->entering(BOOST_CURRENT_FUNCTION);
     
@@ -367,8 +380,8 @@ Stylesheet::apply(Object *obj, boost::shared_ptr<Context> ctx, xmlDocPtr doc) {
         tctx->globalVars = xmlHashCreate(20);
     }
 
-    if (NULL != obj) {
-        data_->appendXsltParams(obj->xsltParams(), ctx.get(), tctx.get());
+    if (obj) {
+        data_->appendXsltParams(obj->xsltParams(), ctx.get(), invoke_ctx.get(), tctx.get());
     }
 
     internal::Profiler profiler("Total apply time");

@@ -79,7 +79,7 @@ OfflineXsltProfiler::dumpProfileInfo(boost::shared_ptr<Context> ctx) {
 
         XmlDocHelper doc(xmlCopyDoc(it->second, 1));
         if (NULL != stylesheet.get()) {
-            doc = stylesheet->apply(NULL, ctx, doc.get());
+            doc = stylesheet->apply(NULL, ctx, boost::shared_ptr<InvokeContext>(), doc.get());
             xsltSaveResultTo(buf, doc.get(), stylesheet->stylesheet());
             xmlOutputBufferClose(buf);
         }

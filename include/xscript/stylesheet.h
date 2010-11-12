@@ -14,6 +14,7 @@ class Block;
 class Param;
 class Object;
 class Context;
+class InvokeContext;
 class StylesheetFactory;
 
 
@@ -27,7 +28,8 @@ public:
     const std::string& outputEncoding() const;
     bool haveOutputInfo() const;
 
-    XmlDocHelper apply(Object *obj, boost::shared_ptr<Context> ctx, xmlDocPtr doc);
+    XmlDocHelper apply(Object *obj, boost::shared_ptr<Context> ctx,
+            boost::shared_ptr<InvokeContext> invoke_ctx, xmlDocPtr doc);
     
     static boost::shared_ptr<Context> getContext(xsltTransformContextPtr tctx);
     static Stylesheet* getStylesheet(xsltTransformContextPtr tctx);

@@ -595,7 +595,7 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx,
         }
         str << ", owner: " << owner()->name();
         PROFILER(log(), str.str())
-        Object::applyStylesheet(sh, ctx, doc, XmlUtils::xmlVersionNumber() < 20619);
+        Object::applyStylesheet(sh, ctx, invoke_ctx, doc, XmlUtils::xmlVersionNumber() < 20619);
     }
 
     XmlUtils::throwUnless(NULL != doc.get());
@@ -930,6 +930,13 @@ Block::processArguments(Context *ctx, InvokeContext *invoke_ctx) {
         (*it)->add(ctx, *args);
     }
     invoke_ctx->setArgList(args);
+
+    const std::vector<Param*>& params = xsltParams();
+    for (std::vector<Param*>::const_iterator it = params.begin(), end = params.end();
+        it != end;
+        ++it) {
+        invoke_ctx->appendXsltParam((*it)->asString(ctx));
+    }
 }
 
 void
