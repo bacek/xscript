@@ -1,3 +1,9 @@
+xscript (5.73.10-2) unstable; urgency=low
+
+  * xpointer fixed
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Thu, 18 Nov 2010 15:13:45 +0300
+
 xscript (5.73.10-1) unstable; urgency=low
 
   * precomputation of perblock xslt params added
