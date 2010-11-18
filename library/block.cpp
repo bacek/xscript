@@ -944,16 +944,18 @@ Block::postInvoke(Context *ctx, InvokeContext *invoke_ctx) {
     bool is_meta = isMeta();
     evalXPath(ctx, invoke_ctx, is_meta ? invoke_ctx->metaDoc() : invoke_ctx->resultDoc());
     boost::shared_ptr<XPathExpr> xpointer;
-    if (data_->xpointer_expr_->compiled()) {
-        xpointer = data_->xpointer_expr_;
-    }
-    else {
-        std::string expr;
-        if (!ctx->noXsltPort() && !data_->xpointer_expr_->value().empty()) {
-            expr = data_->xpointer_expr_->expression(ctx);
+    if (!ctx->noXsltPort()) {
+        if (data_->xpointer_expr_->compiled()) {
+            xpointer = data_->xpointer_expr_;
         }
-        if (!expr.empty()) {
-            xpointer.reset(new XPathExpr(expr.c_str(), NULL));
+        else {
+            std::string expr;
+            if (!data_->xpointer_expr_->value().empty()) {
+                expr = data_->xpointer_expr_->expression(ctx);
+            }
+            if (!expr.empty()) {
+                xpointer.reset(new XPathExpr(expr.c_str(), NULL));
+            }
         }
     }
     if (is_meta) {
