@@ -55,8 +55,9 @@ public:
     virtual std::string fullName(const std::string &name) const;
 
     virtual void call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) = 0;
-    virtual boost::shared_ptr<InvokeContext> invoke(boost::shared_ptr<Context> ctx);
+    virtual boost::shared_ptr<InvokeContext> invoke(boost::shared_ptr<Context> ctx); //TODO: remove virtual
     virtual void invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot); //TODO: remove this
+
     bool invokeCheckThreadedEx(boost::shared_ptr<Context> ctx, unsigned int slot);
     virtual bool applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc);
 
@@ -81,18 +82,26 @@ public:
     const std::map<std::string, std::string>& namespaces() const;
 
 protected:
+    boost::shared_ptr<InvokeContext> createInvokeContext(boost::shared_ptr<Context> ctx) const;
+    boost::shared_ptr<InvokeContext> invoke_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+
     virtual void invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void postParse();
     virtual void processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void property(const char *name, const char *value);
     virtual void postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void postInvoke(Context *ctx, InvokeContext *invoke_ctx);
-    virtual void callInternal(boost::shared_ptr<Context> ctx, unsigned int slot);
-    virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot);
-    void callInternalThreaded_Ex(InvokeHelper helper, unsigned int slot);
+
+    virtual void callInternal(boost::shared_ptr<Context> ctx, unsigned int slot); //TODO: remove this
+    void callInternal_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot);
+
+    virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot); //TODO: remove this
+    void callInternalThreaded_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot);
+    void callInternalThreadedHelper(InvokeHelper helper, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot);
+
     virtual void callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual ArgList* createArgList(Context *ctx, InvokeContext *invoke_ctx) const;
-    void processArguments(Context *ctx, InvokeContext *invoke_ctx);
+    void processArguments(Context *ctx, InvokeContext *invoke_ctx) const;
     void callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     bool checkStateGuard(Context *ctx) const;
     bool hasGuard() const;

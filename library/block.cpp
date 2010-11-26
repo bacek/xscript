@@ -438,6 +438,12 @@ Block::fullName(const std::string &name) const {
 
 boost::shared_ptr<InvokeContext>
 Block::invoke(boost::shared_ptr<Context> ctx) {
+    boost::shared_ptr<InvokeContext> invoke_ctx = createInvokeContext(ctx);
+    return invoke_Ex(ctx, invoke_ctx);
+}
+
+boost::shared_ptr<InvokeContext>
+Block::invoke_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
     if (ctx->stopped()) {
@@ -446,12 +452,8 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
         return fakeResult(true);
     }
 
-    boost::shared_ptr<InvokeContext> invoke_ctx;
     try {
         BlockTimerStarter starter(ctx.get(), this);
-        invoke_ctx = boost::shared_ptr<InvokeContext>(new InvokeContext());
-        invoke_ctx->xsltName(xsltName(ctx.get()));
-        processArguments(ctx.get(), invoke_ctx.get());
         invokeInternal(ctx, invoke_ctx);
         try {
             callMetaLua(ctx, invoke_ctx);
@@ -509,24 +511,35 @@ Block::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
 }
 
 void
-Block::callInternalThreaded_Ex(InvokeHelper helper, unsigned int slot) {
-    callInternalThreaded(helper.context(), slot);
+Block::callInternalThreadedHelper(InvokeHelper helper, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot) {
+    callInternalThreaded_Ex(helper.context(), invoke_ctx, slot);
 }
 
 void
 Block::invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
-    invokeCheckThreadedEx(ctx, slot);
+    (void)ctx;
+    (void)slot;
+    assert(false);
+}
+
+boost::shared_ptr<InvokeContext>
+Block::createInvokeContext(boost::shared_ptr<Context> ctx) const {
+    boost::shared_ptr<InvokeContext> invoke_ctx = boost::shared_ptr<InvokeContext>(new InvokeContext());
+    invoke_ctx->xsltName(xsltName(ctx.get()));
+    processArguments(ctx.get(), invoke_ctx.get());
+    return invoke_ctx;
 }
 
 bool
 Block::invokeCheckThreadedEx(boost::shared_ptr<Context> ctx, unsigned int slot) {
+    boost::shared_ptr<InvokeContext> invoke_ctx = createInvokeContext(ctx);
     if (threaded()) {
         InvokeHelper helper(ctx);
-        boost::function<void()> f_threaded = boost::bind(&Block::callInternalThreaded_Ex, this, helper, slot);
-        boost::function<void()> f_unthreaded = boost::bind(&Block::callInternal, this, ctx, slot);
+        boost::function<void()> f_threaded = boost::bind(&Block::callInternalThreadedHelper, this, helper, invoke_ctx, slot);
+        boost::function<void()> f_unthreaded = boost::bind(&Block::callInternal_Ex, this, ctx, invoke_ctx, slot);
         return ThreadPool::instance()->invokeEx(f_threaded, f_unthreaded);
     }
-    callInternal(ctx, slot);
+    callInternal_Ex(ctx, invoke_ctx, slot);
     return false;
 }
 
@@ -921,7 +934,7 @@ Block::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
 }
 
 void
-Block::processArguments(Context *ctx, InvokeContext *invoke_ctx) {
+Block::processArguments(Context *ctx, InvokeContext *invoke_ctx) const {
     boost::shared_ptr<ArgList> args(createArgList(ctx, invoke_ctx));
     const std::vector<Param*>& prms = params();
     for (std::vector<Param*>::const_iterator it = prms.begin();
@@ -968,8 +981,15 @@ Block::postInvoke(Context *ctx, InvokeContext *invoke_ctx) {
 
 void
 Block::callInternal(boost::shared_ptr<Context> ctx, unsigned int slot) {
+    (void)ctx;
+    (void)slot;
+    assert(false);
+}
+
+void
+Block::callInternal_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot) {
     try {
-        ctx->result(slot, invoke(ctx));
+        ctx->result(slot, invoke_Ex(ctx, invoke_ctx));
     }
     catch(const std::exception &e) {
         log()->error("exception caught in block call: %s", e.what());
@@ -981,10 +1001,17 @@ Block::callInternal(boost::shared_ptr<Context> ctx, unsigned int slot) {
 
 void
 Block::callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
+    (void)ctx;
+    (void)slot;
+    assert(false);
+}
+
+void
+Block::callInternalThreaded_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot) {
     XmlUtils::registerReporters();
     VirtualHostData::instance()->set(ctx->rootContext()->request());
     Context::resetTimer();
-    callInternal(ctx, slot);
+    callInternal_Ex(ctx, invoke_ctx, slot);
 }
 
 void
