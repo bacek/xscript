@@ -91,6 +91,7 @@ public:
 
 static MethodMap methods_;
 static std::string STR_HEADERS("headers");
+static std::string CONTENT_TYPE_HEADER_NAME("Content-Type");
 
 HttpBlock::HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), RemoteTaggedBlock(ext, owner, node),
@@ -271,7 +272,7 @@ HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) const {
 
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), invoke_ctx, true);
+    appendHeaders(helper, ctx->request(), invoke_ctx, true, false);
     httpCall(helper);
     checkStatus(helper);
     
@@ -305,7 +306,7 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), invoke_ctx, false);
+    appendHeaders(helper, ctx->request(), invoke_ctx, false, false);
     httpCall(helper);
 
     if (!helper.isOk()) {
@@ -354,7 +355,7 @@ HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), invoke_ctx, true);
+    appendHeaders(helper, ctx->request(), invoke_ctx, true, true);
 
     const std::string& body = args->at(size-1);
     helper.postData(body.data(), body.size());
@@ -402,7 +403,7 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     }
     
     HttpHelper helper(url, getTimeout(ctx, url));
-    appendHeaders(helper, ctx->request(), invoke_ctx, false);
+    appendHeaders(helper, ctx->request(), invoke_ctx, false, !is_get);
 
     if (is_get) {
         const std::string &query = ctx->request()->getQueryString();
@@ -455,7 +456,7 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), invoke_ctx, false);
+    appendHeaders(helper, ctx->request(), invoke_ctx, false, false);
     httpCall(helper);
     checkStatus(helper);
     createMeta(helper, invoke_ctx);
@@ -508,7 +509,7 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), invoke_ctx, false);
+    appendHeaders(helper, ctx->request(), invoke_ctx, false, false);
     httpCall(helper);
     checkStatus(helper);
     createMeta(helper, invoke_ctx);
@@ -517,10 +518,12 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
 }
 
 void
-HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, const InvokeContext *invoke_ctx, bool allow_tag) const {
+HttpBlock::appendHeaders(HttpHelper &helper, const Request *request,
+        const InvokeContext *invoke_ctx, bool allow_tag, bool pass_ctype) const {
     std::vector<std::string> headers;
     bool real_ip = false;
     const std::string &ip_header_name = Policy::instance()->realIPHeaderName();
+    int ctype_pos = -1;
     if (proxy_ && request->countHeaders() > 0) {    
         std::vector<std::string> names;
         request->headerNames(names);
@@ -542,6 +545,9 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, const Invok
                 }
                 headers.push_back(name);
                 headers.back().append(": ").append(value);
+                if (pass_ctype && 0 == strcasecmp(name.c_str(), CONTENT_TYPE_HEADER_NAME.c_str())) {
+                    ctype_pos = headers.size() - 1;
+                }
             }
         }
     }
@@ -557,9 +563,27 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request, const Invok
             if (!real_ip && strcasecmp(ip_header_name.c_str(), name.c_str()) == 0) {
                 real_ip = true;
             }
-            headers.push_back(name);
-            headers.back().append(": ").append(args->at(i));
+
+            if (pass_ctype && 0 == strcasecmp(name.c_str(), CONTENT_TYPE_HEADER_NAME.c_str())) {
+                if (ctype_pos != -1) {
+                    headers[ctype_pos].assign(name).append(": ").append(args->at(i));
+                }
+                else {
+                    headers.push_back(name);
+                    headers.back().append(": ").append(args->at(i));
+                    ctype_pos = headers.size() - 1;
+                }
+            }
+            else {
+                headers.push_back(name);
+                headers.back().append(": ").append(args->at(i));
+            }
         }
+    }
+
+    if (pass_ctype && ctype_pos == -1 && request->hasHeader(CONTENT_TYPE_HEADER_NAME)) {
+        headers.push_back(CONTENT_TYPE_HEADER_NAME);
+        headers.back().append(": ").append(request->getHeader(CONTENT_TYPE_HEADER_NAME));
     }
 
     if (!real_ip && !ip_header_name.empty()) {

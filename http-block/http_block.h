@@ -47,7 +47,8 @@ protected:
     XmlDocHelper getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const;
 
     XmlDocHelper response(const HttpHelper &h, bool error_mode = false) const;
-    void appendHeaders(HttpHelper &helper, const Request *request, const InvokeContext *invoke_ctx, bool allow_tag) const;
+    void appendHeaders(HttpHelper &helper, const Request *request, const InvokeContext *invoke_ctx,
+            bool allow_tag, bool pass_ctype) const;
     void createTagInfo(const HttpHelper &h, InvokeContext *invoke_ctx) const;
 
     static void registerMethod(const char *name, HttpMethod method);
