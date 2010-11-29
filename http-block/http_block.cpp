@@ -355,7 +355,7 @@ HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), invoke_ctx, true, true);
+    appendHeaders(helper, ctx->request(), invoke_ctx, true, false);
 
     const std::string& body = args->at(size-1);
     helper.postData(body.data(), body.size());
