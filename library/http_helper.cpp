@@ -138,6 +138,7 @@ public:
             setopt(CURLOPT_WRITEFUNCTION, &curlWrite);
             setopt(CURLOPT_WRITEHEADER, &headers_);
             setopt(CURLOPT_HEADERFUNCTION, &curlHeaders);
+            setopt(CURLOPT_ENCODING, "gzip,deflate");
         }
     }
     
