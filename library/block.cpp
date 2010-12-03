@@ -369,11 +369,10 @@ void
 Block::parse() {
     try {       
         detectBase();
+        data_->parseNamespaces();
         
         XmlUtils::visitAttributes(data_->node_->properties,
             boost::bind(&Block::property, this, _1, _2));
-
-        data_->parseNamespaces();
         
         for (xmlNodePtr node = data_->node_->children; NULL != node; node = node->next) {
             parseSubNode(node);

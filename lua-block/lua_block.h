@@ -17,14 +17,20 @@ public:
     LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~LuaBlock();
 
-protected:
+private:
     virtual void postParse();
+    virtual void property(const char *name, const char *value);
 
     void reportError(const char *message, lua_State *lua);
     virtual void call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception);
 
+    void processEmptyLua(InvokeContext *invoke_ctx) const;
+    void processLuaError(lua_State *lua) const;
+
 private:
     const char* code_;
+    std::string root_name_;
+    xmlNsPtr root_ns_;
 };
 
 class LuaExtension : public Extension {

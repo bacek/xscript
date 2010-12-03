@@ -90,7 +90,7 @@ private:
 typedef boost::shared_ptr<LuaThread> LuaSharedThread;
 
 LuaBlock::LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
-        Block(ext, owner, node), code_(NULL) {
+        Block(ext, owner, node), code_(NULL), root_name_("lua"), root_ns_(NULL) {
 }
 
 LuaBlock::~LuaBlock() {
@@ -113,6 +113,43 @@ LuaBlock::postParse() {
     }
     else if (LUA_ERRMEM == res) {
         throw std::bad_alloc();
+    }
+}
+
+void
+LuaBlock::property(const char *name, const char *value) {
+    if (0 != strncasecmp(name, "name", sizeof("name"))) {
+        Block::property(name, value);
+        return;
+    }
+    if (NULL == value || '\0' == value[0]) {
+        throw std::runtime_error("Incorrect name attribute");
+    }
+    std::string root_ns;
+    const char* ch = strchr(value, ':');
+    if (NULL == ch) {
+        root_name_.assign(value);
+    }
+    else {
+        root_ns.assign(value, ch - value);
+        if ('\0' == *(ch + 1)) {
+            throw std::runtime_error("Incorrect name attribute");
+        }
+        root_name_.assign(ch + 1);
+    }
+
+    if (root_ns.empty()) {
+        return;
+    }
+
+    const std::map<std::string, std::string> names = namespaces();
+    std::map<std::string, std::string>::const_iterator it = names.find(root_ns);
+    if (names.end() == it) {
+        throw std::runtime_error("Incorrect namespace in name attribute");
+    }
+    root_ns_ = xmlSearchNsByHref(node()->doc, node(), (const xmlChar*)it->second.c_str());
+    if (NULL == root_ns_) {
+        throw std::logic_error("Internal error while parsing namespace in name attribute");
     }
 }
 
@@ -256,17 +293,49 @@ createLuaThread(lua_State *parent, Context::MutexPtr mutex) {
 }
 
 void
+LuaBlock::processEmptyLua(InvokeContext *invoke_ctx) const {
+    XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlUtils::throwUnless(NULL != doc.get());
+    XmlNodeHelper node(xmlNewDocNode(
+        doc.get(), NULL, (const xmlChar*)root_name_.c_str(), (const xmlChar*)""));
+    if (root_ns_) {
+        node->nsDef = xmlCopyNamespace(root_ns_);
+        xmlSetNs(node.get(), node->nsDef);
+    }
+    xmlDocSetRootElement(doc.get(), node.release());
+    invoke_ctx->resultDoc(doc);
+}
+
+void
+LuaBlock::processLuaError(lua_State *lua) const {
+    std::string msg(lua_tostring(lua, -1));
+    lua_pop(lua, 1);
+    // Just throw exception. It will be logger by Block.
+
+    if (OperationMode::instance()->isProduction()) {
+        throw InvokeError(msg);
+    }
+
+    XmlNodeHelper trace_node(xmlNewNode(NULL, (const xmlChar*)"stacktrace"));
+    LuaStackTrace* trace = getTrace(lua);
+    for (LuaStackTrace::iterator it = trace->begin(), end = trace->end();
+         it != end;
+         ++it) {
+        XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)"level"));
+        xmlNodeSetContent(node.get(), (const xmlChar*)it->c_str());
+        xmlAddChild(trace_node.get(), node.release());
+    }
+    throw InvokeError(msg, trace_node);
+}
+
+void
 LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     log()->entering(BOOST_CURRENT_FUNCTION);    
     
     PROFILER(log(), "Lua block execution, " + owner()->name());
     
     if (NULL == code_) {
-        XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
-        XmlUtils::throwUnless(NULL != doc.get());
-        XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*) "lua", (const xmlChar*) ""));
-        xmlDocSetRootElement(doc.get(), node.release());
-        invoke_ctx->resultDoc(doc);
+        processEmptyLua(invoke_ctx.get());
         return;
     }   
     
@@ -299,32 +368,14 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
 
     int res = lua_pcall(lua, 0, LUA_MULTRET, 0);    
     if (res != 0) {
-        std::string msg(lua_tostring(lua, -1));
-        lua_pop(lua, 1);
-        // Just throw exception. It will be logger by Block.
-
-        if (OperationMode::instance()->isProduction()) {
-            throw InvokeError(msg);
-        }
-
-        XmlNodeHelper trace_node(xmlNewNode(NULL, (const xmlChar*)"stacktrace"));
-        LuaStackTrace* trace = getTrace(lua);
-        for (LuaStackTrace::iterator it = trace->begin(), end = trace->end();
-             it != end;
-             ++it) {
-            XmlNodeHelper node(xmlNewNode(NULL, (const xmlChar*)"level"));
-            xmlNodeSetContent(node.get(), (const xmlChar*)it->c_str());
-            xmlAddChild(trace_node.get(), node.release());
-        }
-        throw InvokeError(msg, trace_node);
+        processLuaError(lua);
+        return;
     }
 
     const char* ret_buf = lua_tostring(lua, -1);
     std::string ret;
     if (ret_buf) {
-        ret.assign("<lua>");
-        ret.append(ret_buf);
-        ret.append("</lua>");
+        ret.assign("<lua>").append(ret_buf).append("</lua>");
     }
 
     XmlNodeHelper lua_content_node;
@@ -360,6 +411,14 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
         root->children ? xmlAddPrevSibling(root->children, lua_content_node.release()) :
             xmlAddChild(root, lua_content_node.release());
     }
+
+    xmlNodePtr root = xmlDocGetRootElement(ret_doc.get());
+    xmlNodeSetName(root, (const xmlChar*)root_name_.c_str());
+    if (root_ns_) {
+        root->nsDef = xmlCopyNamespace(root_ns_);
+        xmlSetNs(root, root->nsDef);
+    }
+
     invoke_ctx->resultDoc(ret_doc);
 }
 
