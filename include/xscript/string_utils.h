@@ -23,9 +23,9 @@ namespace StringUtils {
 
     void report(const char *what, int error, std::ostream &stream);
 
-    std::string urlencode(const Range &val);
-    template<typename Cont> static std::string urlencode(const Cont &cont) {
-        return urlencode(createRange(cont));
+    std::string urlencode(const Range &val, bool force_percent = false);
+    template<typename Cont> static std::string urlencode(const Cont &cont, bool force_percent = false) {
+        return urlencode(createRange(cont), force_percent);
     };
 
     std::string urldecode(const Range &val);

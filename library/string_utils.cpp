@@ -22,14 +22,14 @@ static const int NEXT_UTF8[256] = {
 };
 
 std::string
-StringUtils::urlencode(const Range &range) {
+StringUtils::urlencode(const Range &range, bool force_percent) {
 
     std::string result;
     result.reserve(3 * range.size());
 
     for (const char* i = range.begin(), *end = range.end(); i != end; ++i) {
         char symbol = (*i);
-        if (isalnum(symbol)) {
+        if (!force_percent && isalnum(symbol)) {
             result.append(1, symbol);
             continue;
         }
@@ -43,8 +43,10 @@ StringUtils::urlencode(const Range &range) {
         case '(':
         case ')':
         case '\'':
-            result.append(1, symbol);
-            break;
+            if (!force_percent) {
+                result.append(1, symbol);
+                break;
+            }
         default:
             result.append(1, '%');
             char bytes[3] = { 0, 0, 0 };

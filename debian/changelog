@@ -1,3 +1,9 @@
+xscript (5.73.13-1) unstable; urgency=low
+
+  * force_percent optional parameter added to lua urlencode
+
+ -- Ilya Golubtsov (Ilya) <golubtsov@yandex-team.ru>  Mon, 06 Dec 2010 18:26:04 +0300
+
 xscript (5.73.12-1) unstable; urgency=low
 
   * name attribute added to lua block
