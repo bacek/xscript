@@ -5,14 +5,14 @@
 
 namespace xscript {
 
-class Block;
 class Context;
 class InvokeContext;
+class LuaBlock;
 
 void setupXScript(lua_State *lua, std::string *buf);
 InvokeContext* getInvokeContext(lua_State *lua);
 Context* getContext(lua_State *lua);
-const Block* getBlock(lua_State *lua);
+const LuaBlock* getBlock(lua_State *lua);
 
 } // namespace xscript
 

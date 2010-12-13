@@ -4,7 +4,6 @@
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
 
-#include "xscript/block.h"
 #include "xscript/context.h"
 #include "xscript/encoder.h"
 #include "xscript/http_utils.h"
@@ -18,6 +17,7 @@
 
 #include "stack.h"
 #include "exception.h"
+#include "lua_block.h"
 #include "method_map.h"
 #include "xscript_methods.h"
 
@@ -53,13 +53,13 @@ InvokeContext* getInvokeContext(lua_State *lua) {
     return ctx;
 }
 
-const Block* getBlock(lua_State *lua) {
+const LuaBlock* getBlock(lua_State *lua) {
     lua_getglobal(lua, "xscript");
     lua_getfield(lua, -1, "_block");
 
-    pointer<const Block> *p = (pointer<const Block>*)lua_touserdata(lua, -1);
+    pointer<const LuaBlock> *p = (pointer<const LuaBlock>*)lua_touserdata(lua, -1);
     assert(p);
-    const Block* block = p->ptr;
+    const LuaBlock* block = p->ptr;
 
     lua_pop(lua, 2);
     
@@ -386,6 +386,21 @@ luaGetVHostArg(lua_State *lua) {
 }
 
 static int
+luaGetXmlBase(lua_State *lua) {
+    try {
+        luaCheckStackSize(lua, 0);
+        lua_pushstring(lua, getBlock(lua)->getBase().c_str());
+        // Our value on stack
+        return 1;
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:getXmlBase]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
+static int
 luaStrSplit(lua_State *lua) {
     try {
         luaCheckStackSize(lua, 2);
@@ -509,6 +524,9 @@ setupXScript(lua_State *lua, std::string * buf) {
     
     lua_pushcfunction(lua, &luaDateParse);
     lua_setfield(lua, -2, "dateparse");
+
+    lua_pushcfunction(lua, &luaGetXmlBase);
+    lua_setfield(lua, -2, "getXmlBase");
 
     lua_pop(lua, 2); // pop _G and xscript
 

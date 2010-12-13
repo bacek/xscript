@@ -96,6 +96,11 @@ LuaBlock::LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
 LuaBlock::~LuaBlock() {
 }
 
+const std::string&
+LuaBlock::getBase() const {
+    return Block::getBase();
+}
+
 void
 LuaBlock::postParse() {
     code_ = XmlUtils::cdataValue(node());
@@ -207,7 +212,7 @@ registerLibs(lua_State *lua, const char *name, Type *type,
 }
 
 static void
-setupLocalData(lua_State * lua, InvokeContext *invoke_ctx, Context *ctx, const Block *block) {
+setupLocalData(lua_State * lua, InvokeContext *invoke_ctx, Context *ctx, const LuaBlock *block) {
     lua_getglobal(lua, "xscript");
 
     pointer<InvokeContext> *pictx = (pointer<InvokeContext> *)lua_newuserdata(
@@ -219,7 +224,7 @@ setupLocalData(lua_State * lua, InvokeContext *invoke_ctx, Context *ctx, const B
     pctx->ptr = ctx;
     lua_setfield(lua, -2, "_ctx");
     
-    pointer<const Block> *pblock = (pointer<const Block> *)lua_newuserdata(lua, sizeof(pointer<const Block>));
+    pointer<const LuaBlock> *pblock = (pointer<const LuaBlock> *)lua_newuserdata(lua, sizeof(pointer<const LuaBlock>));
     pblock->ptr = block;
     lua_setfield(lua, -2, "_block");
 }

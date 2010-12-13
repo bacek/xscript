@@ -17,6 +17,7 @@ public:
     LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
     virtual ~LuaBlock();
 
+    const std::string& getBase() const;
 private:
     virtual void postParse();
     virtual void property(const char *name, const char *value);

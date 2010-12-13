@@ -350,6 +350,11 @@ Block::detectBase() {
     }
 }
 
+const std::string&
+Block::getBase() const {
+    return data_->base_;
+}
+
 const std::map<std::string, std::string>&
 Block::namespaces() const {
     return data_->namespaces_;

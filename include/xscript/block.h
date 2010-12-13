@@ -137,6 +137,7 @@ protected:
 
     void addParam(std::auto_ptr<Param> param);
     void detectBase();
+    const std::string& getBase() const;
     
     void addNamespaces(const std::map<std::string, std::string> &ns);
 
