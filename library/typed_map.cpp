@@ -101,7 +101,7 @@ TypedValue::TypedValue(double value) :
     type_(TYPE_DOUBLE), value_(boost::lexical_cast<std::string>(value))
 {
     if (isnan(value)) {
-        throw std::runtime_error("NAN double value");
+        throw std::runtime_error("Cannot create NAN double value");
     }
 }
 

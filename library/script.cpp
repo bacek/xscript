@@ -894,10 +894,18 @@ Script::invokeBlocks(boost::shared_ptr<Context> ctx) {
             ctx->result(count, (*it)->fakeResult(true));
             continue;
         }
-        if (!(*it)->checkGuard(ctx.get())) {
-            log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
-                name().c_str(), (*it)->name(), (*it)->method().c_str());
-            ctx->result(count, (*it)->fakeResult(false));
+        try {
+            if (!(*it)->checkGuard(ctx.get())) {
+                log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
+                    name().c_str(), (*it)->name(), (*it)->method().c_str());
+                ctx->result(count, (*it)->fakeResult(false));
+                continue;
+            }
+        }
+        catch (const std::exception &e) {
+            log()->error("Error while guard processing: %s. Owner: %s. Block: %s. Method: %s",
+                    e.what(), name().c_str(), (*it)->name(), (*it)->method().c_str());
+            ctx->result(count, (*it)->errorResult(e.what(), false));
             continue;
         }
         if ((*it)->invokeCheckThreadedEx(ctx, count)) {
