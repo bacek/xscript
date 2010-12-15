@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include <cmath>
 #include <stdexcept>
 
 #include "xscript/algorithm.h"
@@ -98,7 +99,11 @@ TypedValue::TypedValue(boost::uint64_t value) :
 
 TypedValue::TypedValue(double value) :
     type_(TYPE_DOUBLE), value_(boost::lexical_cast<std::string>(value))
-{}
+{
+    if (isnan(value)) {
+        throw std::runtime_error("NAN double value");
+    }
+}
 
 TypedValue::TypedValue(const std::string &value) :
     type_(TYPE_STRING), value_(value)
