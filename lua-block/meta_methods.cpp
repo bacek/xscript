@@ -5,10 +5,11 @@
 #include "xscript/block.h"
 #include "xscript/context.h"
 #include "xscript/logger.h"
+#include "xscript/message_interface.h"
 #include "xscript/meta.h"
 
 #include "exception.h"
-#include "meta_methods.h"
+#include "lua_block.h"
 #include "stack.h"
 #include "xscript_methods.h"
 
@@ -72,10 +73,6 @@ static const struct luaL_reg metalib [] = {
     {NULL, NULL}
 };
 
-const struct luaL_reg * getMetaLib() {
-    return metalib;
-}
-
 static const struct luaL_reg selfmetalib [] = {
     {"has",             luaSelfMetaHas},
     {"get",             luaSelfMetaGet},
@@ -95,10 +92,6 @@ static const struct luaL_reg selfmetalib [] = {
     {"setTable",        luaSelfMetaSetTable},
     {NULL, NULL}
 };
-
-const struct luaL_reg * getSelfMetaLib() {
-    return selfmetalib;
-}
 
 static void
 readMetaFromStack(lua_State *lua, bool self) {
@@ -520,6 +513,45 @@ luaSelfMetaSetTable(lua_State *lua) {
 }
 
 } // extern "C"
+
+class LuaMetaRegisterHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+        (void)result;
+        std::vector<LuaExtension::LuaRegisterFunc>* registerers =
+                params.getPtr<std::vector<LuaExtension::LuaRegisterFunc> >(0);
+        if (registerers) {
+            registerers->push_back(boost::bind(&LuaExtension::registerLib,
+                    _1, "meta", true, metalib, metalib));
+        }
+        return CONTINUE;
+    }
+};
+
+class LuaSelfMetaRegisterHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+        (void)result;
+        std::vector<LuaExtension::LuaRegisterFunc>* registerers =
+                params.getPtr<std::vector<LuaExtension::LuaRegisterFunc> >(0);
+        if (registerers) {
+            registerers->push_back(boost::bind(&LuaExtension::registerLib,
+                    _1, "selfmeta", true, selfmetalib, selfmetalib));
+        }
+        return CONTINUE;
+    }
+};
+
+class LuaMetaHandlerRegisterer {
+public:
+    LuaMetaHandlerRegisterer() {
+        MessageProcessor::instance()->registerBack("REGISTER_LUA_EXTENSION",
+            boost::shared_ptr<MessageHandler>(new LuaMetaRegisterHandler()));
+        MessageProcessor::instance()->registerBack("REGISTER_LUA_EXTENSION",
+            boost::shared_ptr<MessageHandler>(new LuaSelfMetaRegisterHandler()));
+    }
+};
+
+static LuaMetaHandlerRegisterer reg_lua_meta_handlers;
+
 
 } // namespace xscript
 

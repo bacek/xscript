@@ -1,6 +1,8 @@
 #ifndef _XSCRIPT_LUA_BLOCK_H_
 #define _XSCRIPT_LUA_BLOCK_H_
 
+#include <boost/function.hpp>
+
 #include <lua.hpp>
 
 #include "xscript/block.h"
@@ -8,13 +10,14 @@
 
 namespace xscript {
 
+class LuaExtension;
 class State;
 class Request;
 class Response;
 
 class LuaBlock : public Block {
 public:
-    LuaBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    LuaBlock(const LuaExtension *ext, Xml *owner, xmlNodePtr node);
     virtual ~LuaBlock();
 
     const std::string& getBase() const;
@@ -29,6 +32,7 @@ private:
     void processLuaError(lua_State *lua) const;
 
 private:
+    const LuaExtension* ext_;
     const char* code_;
     std::string root_name_;
     xmlNsPtr root_ns_;
@@ -49,9 +53,18 @@ public:
     virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);
     virtual void init(const Config *config);
     
+    static void registerLib(lua_State *lua, const char *name, bool builtin,
+            const struct luaL_reg *lib_methods, const struct luaL_reg *lib_funcs);
+
+    void registerExtensions(lua_State *lua) const;
+
+    typedef boost::function<void (lua_State*)> LuaRegisterFunc;
 private:
     LuaExtension(const LuaExtension &);
     LuaExtension& operator = (const LuaExtension &);
+
+private:
+    std::vector<LuaRegisterFunc> funcs_;
 };
 
 } // namespace xscript

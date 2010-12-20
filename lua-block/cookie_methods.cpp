@@ -3,9 +3,10 @@
 #include <boost/current_function.hpp>
 #include "xscript/logger.h"
 #include "xscript/cookie.h"
+#include "xscript/message_interface.h"
 
+#include "lua_block.h"
 #include "stack.h"
-#include "cookie_methods.h"
 #include "exception.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -280,12 +281,28 @@ int luaCookiePermanent(lua_State * lua) {
 
 } // extern "C"
 
-const struct luaL_reg * getCookieNewLib() {
-    return cookielib_f;
-}
 
-const struct luaL_reg * getCookieLib() {
-    return cookielib_m;
-}
+class LuaCookieRegisterHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+        (void)result;
+        std::vector<LuaExtension::LuaRegisterFunc>* registerers =
+                params.getPtr<std::vector<LuaExtension::LuaRegisterFunc> >(0);
+        if (registerers) {
+            registerers->push_back(boost::bind(&LuaExtension::registerLib,
+                    _1, "cookie", false, cookielib_m, cookielib_f));
+        }
+        return CONTINUE;
+    }
+};
+
+class LuaCookieHandlerRegisterer {
+public:
+    LuaCookieHandlerRegisterer() {
+        MessageProcessor::instance()->registerBack("REGISTER_LUA_EXTENSION",
+            boost::shared_ptr<MessageHandler>(new LuaCookieRegisterHandler()));
+    }
+};
+
+static LuaCookieHandlerRegisterer reg_lua_cookie_handlers;
 
 }

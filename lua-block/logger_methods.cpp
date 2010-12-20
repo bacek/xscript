@@ -6,12 +6,13 @@
 #include <functional>
 
 #include "xscript/logger.h"
+#include "xscript/message_interface.h"
 #include "xscript/request.h"
 
+#include "lua_block.h"
 #include "stack.h"
 #include "exception.h"
 #include "method_map.h"
-#include "logger_methods.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -33,10 +34,6 @@ static const struct luaL_reg loggerlib [] = {
 //    {"debug",         luaLoggerDebug},
     {NULL, NULL}
 };
-
-const struct luaL_reg * getLoggerLib() {
-    return loggerlib;
-}
 
 template<typename Func> int
 luaLoggerFoo(lua_State *lua, Func func) {
@@ -96,6 +93,28 @@ luaLoggerDebug(lua_State *lua) throw () {
     METHOD_BODY(debug);
 }
 
+class LuaLoggerRegisterHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+        (void)result;
+        std::vector<LuaExtension::LuaRegisterFunc>* registerers =
+                params.getPtr<std::vector<LuaExtension::LuaRegisterFunc> >(0);
+        if (registerers) {
+            registerers->push_back(boost::bind(&LuaExtension::registerLib,
+                    _1, "logger", false, (const luaL_Reg*)NULL, loggerlib));
+        }
+        return CONTINUE;
+    }
+};
+
+class LuaLoggerHandlerRegisterer {
+public:
+    LuaLoggerHandlerRegisterer() {
+        MessageProcessor::instance()->registerBack("REGISTER_LUA_EXTENSION",
+            boost::shared_ptr<MessageHandler>(new LuaLoggerRegisterHandler()));
+    }
+};
+
+static LuaLoggerHandlerRegisterer reg_lua_logger_handlers;
 
 }
 

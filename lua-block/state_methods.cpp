@@ -6,13 +6,15 @@
 
 #include "xscript/context.h"
 #include "xscript/logger.h"
+#include "xscript/message_interface.h"
 #include "xscript/state.h"
 #include "xscript/string_utils.h"
 
+#include "lua_block.h"
 #include "stack.h"
 #include "exception.h"
+#include "lua_block.h"
 #include "method_map.h"
-#include "state_methods.h"
 #include "xscript_methods.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -60,10 +62,6 @@ static const struct luaL_reg statelib [] = {
     {"erase",           luaStateErase},
     {NULL, NULL}
 };
-
-const struct luaL_reg * getStateLib() {
-    return statelib;
-}
 
 extern "C" {
 
@@ -321,6 +319,29 @@ luaStateErase(lua_State *lua) {
 }
 
 } // extern "C"
+
+class LuaStateRegisterHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+        (void)result;
+        std::vector<LuaExtension::LuaRegisterFunc>* registerers =
+                params.getPtr<std::vector<LuaExtension::LuaRegisterFunc> >(0);
+        if (registerers) {
+            registerers->push_back(boost::bind(&LuaExtension::registerLib,
+                    _1, "state", true, statelib, statelib));
+        }
+        return CONTINUE;
+    }
+};
+
+class LuaStateHandlerRegisterer {
+public:
+    LuaStateHandlerRegisterer() {
+        MessageProcessor::instance()->registerBack("REGISTER_LUA_EXTENSION",
+            boost::shared_ptr<MessageHandler>(new LuaStateRegisterHandler()));
+    }
+};
+
+static LuaStateHandlerRegisterer reg_lua_state_handlers;
 
 } // namespace xscript
 

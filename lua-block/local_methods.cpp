@@ -4,9 +4,10 @@
 
 #include "xscript/context.h"
 #include "xscript/logger.h"
+#include "xscript/message_interface.h"
 
 #include "exception.h"
-#include "local_methods.h"
+#include "lua_block.h"
 #include "stack.h"
 #include "xscript_methods.h"
 
@@ -32,10 +33,6 @@ static const struct luaL_reg locallib [] = {
     {"is",              luaLocalIs},
     {NULL, NULL}
 };
-
-const struct luaL_reg * getLocalLib() {
-    return locallib;
-}
 
 extern "C" {
 
@@ -166,6 +163,30 @@ luaLocalIs(lua_State *lua) {
 }
 
 } // extern "C"
+
+class LuaLocalArgsRegisterHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+        (void)result;
+        std::vector<LuaExtension::LuaRegisterFunc>* registerers =
+                params.getPtr<std::vector<LuaExtension::LuaRegisterFunc> >(0);
+        if (registerers) {
+            registerers->push_back(boost::bind(&LuaExtension::registerLib,
+                    _1, "localargs", true, locallib, locallib));
+        }
+        return CONTINUE;
+    }
+};
+
+class LuaLocalArgsHandlerRegisterer {
+public:
+    LuaLocalArgsHandlerRegisterer() {
+        MessageProcessor::instance()->registerBack("REGISTER_LUA_EXTENSION",
+            boost::shared_ptr<MessageHandler>(new LuaLocalArgsRegisterHandler()));
+    }
+};
+
+static LuaLocalArgsHandlerRegisterer reg_lua_localargs_handlers;
+
 
 } // namespace xscript
 

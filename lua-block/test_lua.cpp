@@ -47,6 +47,7 @@ private:
     CPPUNIT_TEST_SUITE(LuaTest);
 
     CPPUNIT_TEST(testPrint);
+
     CPPUNIT_TEST(testState);
     CPPUNIT_TEST(testStateHas);
     CPPUNIT_TEST(testStateIs);

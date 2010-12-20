@@ -5,12 +5,13 @@
 
 #include "xscript/context.h"
 #include "xscript/logger.h"
+#include "xscript/message_interface.h"
 #include "xscript/response.h"
 
 #include "stack.h"
 #include "exception.h"
+#include "lua_block.h"
 #include "method_map.h"
-#include "response_methods.h"
 #include "xscript_methods.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -35,10 +36,6 @@ static const struct luaL_reg responselib [] = {
     {"setExpireTimeDelta",  luaResponseSetExpireTimeDelta},
     {NULL, NULL}
 };
-
-const struct luaL_reg * getResponseLib() {
-    return responselib;
-}
 
 extern "C" int
 luaResponseSetStatus(lua_State *lua) throw () {
@@ -157,5 +154,28 @@ luaResponseSetExpireTimeDelta(lua_State *lua) throw () {
         return luaL_error(lua, "caught exception in response.setExpireTimeDelta: %s", e.what());
     }
 }
+
+class LuaResponseRegisterHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+        (void)result;
+        std::vector<LuaExtension::LuaRegisterFunc>* registerers =
+                params.getPtr<std::vector<LuaExtension::LuaRegisterFunc> >(0);
+        if (registerers) {
+            registerers->push_back(boost::bind(&LuaExtension::registerLib,
+                    _1, "response", true, responselib, responselib));
+        }
+        return CONTINUE;
+    }
+};
+
+class LuaResponseHandlerRegisterer {
+public:
+    LuaResponseHandlerRegisterer() {
+        MessageProcessor::instance()->registerBack("REGISTER_LUA_EXTENSION",
+            boost::shared_ptr<MessageHandler>(new LuaResponseRegisterHandler()));
+    }
+};
+
+static LuaResponseHandlerRegisterer reg_lua_response_handlers;
 
 } // namespace xscript

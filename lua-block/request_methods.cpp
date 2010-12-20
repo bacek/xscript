@@ -8,12 +8,13 @@
 
 #include "xscript/context.h"
 #include "xscript/logger.h"
+#include "xscript/message_interface.h"
 #include "xscript/request.h"
 
 #include "stack.h"
 #include "exception.h"
+#include "lua_block.h"
 #include "method_map.h"
-#include "request_methods.h"
 #include "xscript_methods.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -339,8 +340,27 @@ static const struct luaL_reg requestlib [] = {
     {NULL, NULL}
 };
 
-const struct luaL_reg * getRequestLib() {
-    return requestlib;
-}
+class LuaRequestRegisterHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+        (void)result;
+        std::vector<LuaExtension::LuaRegisterFunc>* registerers =
+                params.getPtr<std::vector<LuaExtension::LuaRegisterFunc> >(0);
+        if (registerers) {
+            registerers->push_back(boost::bind(&LuaExtension::registerLib,
+                    _1, "request", true, requestlib, requestlib));
+        }
+        return CONTINUE;
+    }
+};
+
+class LuaRequestHandlerRegisterer {
+public:
+    LuaRequestHandlerRegisterer() {
+        MessageProcessor::instance()->registerBack("REGISTER_LUA_EXTENSION",
+            boost::shared_ptr<MessageHandler>(new LuaRequestRegisterHandler()));
+    }
+};
+
+static LuaRequestHandlerRegisterer reg_lua_request_handlers;
 
 } // namespace xscript
