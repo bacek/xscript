@@ -19,7 +19,6 @@
 class InvokeTest : public CppUnit::TestFixture {
 public:
     void testInvoke();
-    void testMeta();
     void testFileBlockParams();
     void testHttpBlockScheme();
     void testParams();
@@ -33,7 +32,6 @@ public:
 private:
     CPPUNIT_TEST_SUITE(InvokeTest);
     CPPUNIT_TEST(testInvoke);
-    CPPUNIT_TEST(testMeta);
     CPPUNIT_TEST(testFileBlockParams);
     CPPUNIT_TEST(testHttpBlockScheme);
     CPPUNIT_TEST(testParams);
@@ -60,27 +58,6 @@ InvokeTest::testInvoke() {
     ContextStopper ctx_stopper(ctx);
     XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
     CPPUNIT_ASSERT(NULL != doc.get());
-}
-
-void
-InvokeTest::testMeta() {
-    using namespace xscript;
-    boost::shared_ptr<Context> ctx = TestUtils::createEnv("meta.xml");
-    ContextStopper ctx_stopper(ctx);
-    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
-    CPPUNIT_ASSERT(NULL != doc.get());
-
-    std::map<std::string, std::string> ns;
-    ns.insert(std::make_pair(std::string("g"), std::string("http://www.ya.ru")));
-
-    CPPUNIT_ASSERT_EQUAL(std::string("value0"),
-                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/param[@name='key0']", ns, "failed"));
-    CPPUNIT_ASSERT_EQUAL(std::string("value1"),
-                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/param[@name='key1']", ns, "failed"));
-    CPPUNIT_ASSERT_EQUAL(std::string("value2"),
-                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/param[@name='key2']", ns, "failed"));
-    CPPUNIT_ASSERT(XmlUtils::xpathNsExists(doc.get(), "/page/g:rootmeta/param[@name='elapsed-time']", ns));
-    CPPUNIT_ASSERT_EQUAL(std::string("value0"), ctx->state()->asString("key"));
 }
 
 void

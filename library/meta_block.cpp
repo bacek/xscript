@@ -5,6 +5,7 @@
 #include "xscript/algorithm.h"
 #include "xscript/meta.h"
 #include "xscript/meta_block.h"
+#include "xscript/operation_mode.h"
 #include "xscript/xml_util.h"
 
 #ifdef HAVE_DMALLOC_H
@@ -90,7 +91,8 @@ void
 MetaBlock::parseLuaSection(xmlNodePtr node, std::auto_ptr<Block> &block) {
     Extension *ext = ExtensionList::instance()->extension(node, false);
     if (NULL == ext) {
-        throw std::runtime_error("Lua module is not loaded");
+        OperationMode::instance()->processError("Lua module is not loaded");
+        return;
     }
     block = ext->createBlock(owner(), node);
     assert(block.get());

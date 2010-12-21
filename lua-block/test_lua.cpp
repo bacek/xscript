@@ -43,6 +43,7 @@ public:
     void testStrSplit();
     
     void testLogger();
+    void testMeta();
 private:
     CPPUNIT_TEST_SUITE(LuaTest);
 
@@ -70,6 +71,7 @@ private:
     CPPUNIT_TEST(testStrSplit);
 
     CPPUNIT_TEST(testLogger);
+    CPPUNIT_TEST(testMeta);
 
     CPPUNIT_TEST_SUITE_END();
 };
@@ -399,4 +401,25 @@ LuaTest::testStrSplit() {
     CPPUNIT_ASSERT_EQUAL(std::string("value3"), ctx->state()->asString("var3"));
     
     CPPUNIT_ASSERT_EQUAL(ctx->result(1)->error(), true);
+}
+
+void
+LuaTest::testMeta() {
+    using namespace xscript;
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-meta.xml");
+    ContextStopper ctx_stopper(ctx);
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc.get());
+
+    std::map<std::string, std::string> ns;
+    ns.insert(std::make_pair(std::string("g"), std::string("http://www.ya.ru")));
+
+    CPPUNIT_ASSERT_EQUAL(std::string("value0"),
+                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/param[@name='key0']", ns, "failed"));
+    CPPUNIT_ASSERT_EQUAL(std::string("value1"),
+                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/param[@name='key1']", ns, "failed"));
+    CPPUNIT_ASSERT_EQUAL(std::string("value2"),
+                         XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/param[@name='key2']", ns, "failed"));
+    CPPUNIT_ASSERT(XmlUtils::xpathNsExists(doc.get(), "/page/g:rootmeta/param[@name='elapsed-time']", ns));
+    CPPUNIT_ASSERT_EQUAL(std::string("value0"), ctx->state()->asString("key"));
 }
