@@ -35,6 +35,7 @@
 
 #include <libxslt/attributes.h>
 #include <libxslt/extensions.h>
+#include <libxslt/imports.h>
 #include <libxslt/transform.h>
 #include <libxslt/variables.h>
 #include <libxslt/xsltutils.h>
@@ -126,7 +127,7 @@ Stylesheet::StylesheetData::block(xmlNodePtr node) {
 
 void
 Stylesheet::StylesheetData::detectOutputMethod() {
-    if (NULL == stylesheet_->method || !xmlStrlen(stylesheet_->method)) {
+    if (NULL == stylesheet_->method || !stylesheet_->method[0]) {
         setupContentType("text/html");
         output_method_.assign("html");
 
@@ -176,14 +177,26 @@ Stylesheet::StylesheetData::detectOutputMethod() {
 
 void
 Stylesheet::StylesheetData::detectOutputEncoding() {
-    if (NULL == stylesheet_->encoding) {
-        output_encoding_.assign(Policy::instance()->getOutputEncoding(NULL));
-        stylesheet_->encoding =
-            xmlStrdup((const xmlChar*)(output_encoding_.c_str()));
-    }
-    else {
+
+    if (NULL != stylesheet_->encoding && stylesheet_->encoding[0]) {
         output_encoding_.assign((const char*)stylesheet_->encoding);
+        return;
     }
+
+    for (xsltStylesheetPtr cur = stylesheet_->imports; NULL != cur; cur = xsltNextImport(cur)) {
+        if (NULL != cur->encoding && cur->encoding[0]) {
+            output_encoding_.assign((const char*)cur->encoding);
+            break;
+        }
+    }
+    if (output_encoding_.empty()) {
+        output_encoding_.assign(Policy::instance()->getOutputEncoding(NULL));
+    }
+
+    if (NULL != stylesheet_->encoding) {
+        xmlFree(stylesheet_->encoding);
+    }
+    stylesheet_->encoding = xmlStrdup((const xmlChar*)(output_encoding_.c_str()));
 }
 
 void
@@ -248,7 +261,6 @@ Stylesheet::StylesheetData::parseNode(xmlNodePtr node) {
 
 std::string
 Stylesheet::StylesheetData::detectContentType(const XmlDocHelper &doc) const {
-    std::string res;
     XmlXPathContextHelper ctx(xmlXPathNewContext(doc.get()));
     XmlUtils::throwUnless(NULL != ctx.get());
 
@@ -259,10 +271,10 @@ Stylesheet::StylesheetData::detectContentType(const XmlDocHelper &doc) const {
     if (NULL != object->nodesetval && 0 != object->nodesetval->nodeNr) {
         const char *val = XmlUtils::value(object->nodesetval->nodeTab[0]);
         if (NULL != val) {
-            res.assign(val);
+            return val;
         }
     }
-    return res;
+    return StringUtils::EMPTY_STRING;
 }
 
 void
