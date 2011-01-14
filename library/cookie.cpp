@@ -32,6 +32,7 @@ public:
     void domain(const std::string &value);
     bool permanent() const;
     void permanent(bool value);
+    void urlEncode(bool value);
     std::string toString() const;
     bool check() const;
 private:
@@ -39,14 +40,16 @@ private:
     bool http_only_;
     time_t expires_;
     std::string name_, value_, path_, domain_;
+    bool url_encode_;
 };
 
-Cookie::CookieData::CookieData() {
-}
+Cookie::CookieData::CookieData() :
+    secure_(false), http_only_(false), expires_(0), url_encode_(false)
+{}
 
 Cookie::CookieData::CookieData(const std::string &name, const std::string &value) :
     secure_(false), http_only_(false), expires_(0),
-    name_(name), value_(value), path_("/")
+    name_(name), value_(value), path_("/"), url_encode_(false)
 {}
 
 Cookie::CookieData::~CookieData() {
@@ -122,11 +125,20 @@ Cookie::CookieData::permanent(bool value) {
     expires_ = value ? HttpDateUtils::MAX_LIVE_TIME : 0;
 }
 
+void
+Cookie::CookieData::urlEncode(bool value) {
+    url_encode_ = value;
+}
+
+void urlEncode(bool value);
+
 std::string
 Cookie::CookieData::toString() const {
 
     std::stringstream stream;
-    stream << name_ << '=' << value_;
+    stream << name_;
+    stream << '=' << (url_encode_ ? StringUtils::urlencode(value_) : value_);
+
     if (!domain_.empty()) {
         stream << "; domain=" << domain_;
     }
@@ -245,6 +257,11 @@ Cookie::permanent() const {
 void
 Cookie::permanent(bool value) {
     data_->permanent(value);
+}
+
+void
+Cookie::urlEncode(bool value) {
+    data_->urlEncode(value);
 }
 
 std::string

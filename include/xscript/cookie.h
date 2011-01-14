@@ -29,6 +29,7 @@ public:
     void domain(const std::string &value);
     bool permanent() const;
     void permanent(bool value);
+    void urlEncode(bool value);
     std::string toString() const;
     bool check() const;
 private:
