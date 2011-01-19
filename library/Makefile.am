@@ -9,9 +9,9 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp cached_o
 	sanitizer.cpp script.cpp script_factory.cpp state.cpp policy.cpp \
 	state_arg_param.cpp state_impl.cpp state_param.cpp \
 	stylesheet.cpp stylesheet_factory.cpp tag.cpp \
-	tag_param.cpp tagged_block.cpp remote_tagged_block.cpp \
+	tag_param.cpp tagged_block.cpp remote_tagged_block.cpp xslt_conv.cpp \
 	threaded_block.cpp util.cpp xml_util.cpp writer.cpp xml.cpp xslt_extension.cpp \
-	vhost_data.cpp protocol_arg_param.cpp \
+	vhost_data.cpp protocol_arg_param.cpp punycode_utils.cpp \
 	logger_factory.cpp syslog_logger.cpp file_logger.cpp server.cpp \
 	control_extension.cpp operation_mode.cpp \
 	thread_pool.cpp script_cache.cpp stylesheet_cache.cpp \

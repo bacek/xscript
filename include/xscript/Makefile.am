@@ -2,8 +2,8 @@ pkginclude_HEADERS = algorithm.h args.h authorizer.h average_counter.h cached_ob
 	block.h cache_counter.h cache_usage_counter.h tagged_cache_usage_counter.h component.h config.h context.h \
 	control_extension.h cookie.h counter_base.h doc_cache.h invoke_context.h \
 	doc_cache_strategy.h encoder.h extension.h functors.h logger_factory.h cache_strategy.h \
-	logger.h object.h operation_mode.h param.h policy.h \
-	profiler.h range.h remote_tagged_block.h request_data.h request.h \
+	logger.h object.h operation_mode.h param.h policy.h profiler.h \
+	punycode_utils.h range.h remote_tagged_block.h request_data.h request.h \
 	resource_holder.h response.h sanitizer.h protocol.h \
 	script_cache.h script_factory.h script.h server.h simple_counter.h \
 	stat_builder.h state.h status_info.h stylesheet_cache.h \

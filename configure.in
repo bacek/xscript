@@ -13,6 +13,8 @@ AC_PROG_LIBTOOL
 AC_LANG([C++])
 AM_MAINTAINER_MODE
 
+AC_CHECK_LIB([idn11], [main])
+
 AX_SET_VERSION_INFO(AC_PACKAGE_VERSION)
 
 PKG_CHECK_MODULES(yplatform, [yandex-platform], [], [AC_MSG_NOTICE([yandex platform configuration not found])])
