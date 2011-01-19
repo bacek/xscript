@@ -36,6 +36,7 @@ public:
     static std::auto_ptr<Encoder> createDefault(const char *from, const char *to);
     static std::auto_ptr<Encoder> createIgnoring(const char *from, const char *to);
     static std::auto_ptr<Encoder> createEscaping(const char *from, const char *to);
+    static std::auto_ptr<Encoder> createStrict(const char *from, const char *to);
 
 protected:
     Encoder(const char *from, const char *to);

@@ -18,6 +18,8 @@ public:
     void testEmpty();
     void testLatin();
     void testMixedDefault();
+    void testMixedStrict();
+    void testMixedStrictError();
     void testMixedIgnoring();
     void testMixedEscaping();
 
@@ -26,6 +28,8 @@ private:
     CPPUNIT_TEST(testEmpty);
     CPPUNIT_TEST(testLatin);
     CPPUNIT_TEST(testMixedDefault);
+    CPPUNIT_TEST(testMixedStrict);
+    CPPUNIT_TEST_EXCEPTION(testMixedStrictError, std::exception);
     CPPUNIT_TEST(testMixedIgnoring);
     CPPUNIT_TEST(testMixedEscaping);
     CPPUNIT_TEST_SUITE_END();
@@ -65,6 +69,26 @@ EncoderTest::testMixedDefault() {
     CPPUNIT_ASSERT_EQUAL(std::string("r?sum?"), conv->encode("résumé"));
     CPPUNIT_ASSERT_EQUAL(std::string("??????"), conv->encode("ტექსტი"));
     CPPUNIT_ASSERT_EQUAL(std::string("deportaci?n"), conv->encode("deportación"));
+}
+
+void
+EncoderTest::testMixedStrict() {
+
+    using namespace xscript;
+
+    std::auto_ptr<Encoder> conv = Encoder::createStrict("utf-8", "cp1251");
+
+    CPPUNIT_ASSERT_EQUAL(std::string("stone"), conv->encode("stone"));
+}
+
+void
+EncoderTest::testMixedStrictError() {
+
+    using namespace xscript;
+
+    std::auto_ptr<Encoder> conv = Encoder::createStrict("utf-8", "cp1251");
+
+    conv->encode("¹stone");
 }
 
 void

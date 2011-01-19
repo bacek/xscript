@@ -23,7 +23,10 @@ const iconv_t IconvTraits::DEFAULT_VALUE = reinterpret_cast<iconv_t>(-1);
 
 struct EncoderContext {
     size_t len;
-    ICONV_CONST char *data, *begin;
+    ICONV_CONST char *data;
+    ICONV_CONST char *begin;
+
+    void throwBadSymbolError() const;
 };
 
 class DefaultEncoder : public Encoder {
@@ -32,7 +35,7 @@ public:
     virtual ~DefaultEncoder();
 
 protected:
-    size_t rep(char *buf, size_t size, const EncoderContext &ctx) const;
+    virtual size_t rep(char *buf, size_t size, const EncoderContext &ctx) const;
 };
 
 class IgnoringEncoder : public Encoder {
@@ -41,8 +44,17 @@ public:
     virtual ~IgnoringEncoder();
 
 protected:
-    size_t rep(char *buf, size_t size, const EncoderContext &ctx) const;
+    virtual size_t rep(char *buf, size_t size, const EncoderContext &ctx) const;
 
+};
+
+class StrictEncoder : public Encoder {
+public:
+    StrictEncoder(const char *from, const char *to);
+    virtual ~StrictEncoder();
+
+protected:
+    virtual size_t rep(char *buf, size_t size, const EncoderContext &ctx) const;
 };
 
 class EscapingEncoder : public Encoder {
@@ -51,11 +63,20 @@ public:
     virtual ~EscapingEncoder();
 
 protected:
-    size_t rep(char *buf, size_t size, const EncoderContext &ctx) const;
+    virtual size_t rep(char *buf, size_t size, const EncoderContext &ctx) const;
 
 private:
     IconvHolder escaper_;
 };
+
+
+void
+EncoderContext::throwBadSymbolError() const {
+    std::stringstream stream;
+    stream << "bad symbol at pos " << (data - begin);
+    throw std::runtime_error(stream.str());
+}
+
 
 void
 IconvTraits::destroy(iconv_t conv) {
@@ -86,6 +107,11 @@ Encoder::createEscaping(const char *from, const char *to) {
     return std::auto_ptr<Encoder>(new EscapingEncoder(from, to));
 }
 
+std::auto_ptr<Encoder>
+Encoder::createStrict(const char *from, const char *to) {
+    return std::auto_ptr<Encoder>(new StrictEncoder(from, to));
+}
+
 void
 Encoder::encode(const Range &range, std::string &dst) const {
 
@@ -93,7 +119,7 @@ Encoder::encode(const Range &range, std::string &dst) const {
         return;
     }
 
-    std::vector<char> v(range.size());
+    std::vector<char> v(range.size() * 2);
     size_t rsize = range.size(), dsize = v.size();
     
     char *dch = &v[0];
@@ -115,6 +141,9 @@ Encoder::encode(const Range &range, std::string &dst) const {
                 char buf[16];
                 ICONV_CONST char *n = const_cast<ICONV_CONST char*>(next(ctx));
                 size_t tmp = n - sch;
+                if (tmp > rsize) {
+                    ctx.throwBadSymbolError();
+                }
                 size_t cur = v.size() - dsize;
 
                 ctx.len = tmp;
@@ -148,17 +177,18 @@ const char*
 Encoder::next(const EncoderContext &ctx) const {
 
     ICONV_CONST char *data = ctx.data;
-    if (strncasecmp(from_.c_str(), "utf-8", sizeof("utf-8")) == 0) {
+    if (!strncasecmp(from_.c_str(), "utf-8", sizeof("utf-8"))) {
         return StringUtils::nextUTF8(data);
     }
-    else if (strncasecmp(from_.c_str(), "utf-16", sizeof("utf-16") - 1) == 0) {
+    if (!strncasecmp(from_.c_str(), "utf-16", sizeof("utf-16") - 1)) {
         return data + 2;
     }
-    else {
-        std::stringstream stream;
-        stream << "can not find next character at pos " << (ctx.data - ctx.begin) << std::endl;
-        throw std::runtime_error(stream.str());
+    if (!strncasecmp(from_.c_str(), "ucs-4", sizeof("ucs-4") - 1)) {
+        return data + 4;
     }
+    std::stringstream stream;
+    stream << "can not find next character at pos " << (ctx.data - ctx.begin) << std::endl;
+    throw std::runtime_error(stream.str());
 }
 
 DefaultEncoder::DefaultEncoder(const char *from, const char *to) :
@@ -186,6 +216,18 @@ IgnoringEncoder::rep(char * /* buf */, size_t /* size */, const EncoderContext &
     return 0;
 }
 
+StrictEncoder::StrictEncoder(const char *from, const char *to) :
+        Encoder(from, to) {
+}
+
+StrictEncoder::~StrictEncoder() {
+}
+
+size_t
+StrictEncoder::rep(char * /* buf */, size_t /* size */, const EncoderContext &ctx) const {
+    ctx.throwBadSymbolError();
+}
+
 EscapingEncoder::EscapingEncoder(const char *from, const char *to) :
         Encoder(from, to) {
     escaper_ = IconvHolder(iconv_open("UCS-4LE", from)); //UTF-16LE
@@ -210,9 +252,7 @@ EscapingEncoder::rep(char *buf, size_t size, const EncoderContext &ctx) const {
 
     size_t res = iconv(escaper_.get(), &ch, &len, &dch, &vlen);
     if (0 != len) {
-        std::stringstream stream;
-        stream << "bad symbol at pos " << (ctx.data - ctx.begin);
-        throw std::runtime_error(stream.str());
+        ctx.throwBadSymbolError();
     }
     if (static_cast<size_t>(-1) == res) {
         std::stringstream stream;
