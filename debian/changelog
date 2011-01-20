@@ -1,3 +1,11 @@
+xscript (5.73.17-1) unstable; urgency=low
+
+  * added punycode support
+  * added xslt functions: domain, punycode-domain-encode, punycode-domain-decode
+  * added lua functions: punycodeDomainEncode, punycodeDomainDecode
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Thu, 20 Jan 2011 14:28:43 +0300
+
 xscript (5.73.16-1) unstable; urgency=low
 
   * cookie url encode option added
