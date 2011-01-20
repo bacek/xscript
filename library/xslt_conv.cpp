@@ -8,6 +8,7 @@
 #include "xscript/logger.h"
 #include "xscript/xml_util.h"
 #include "xscript/xslt_extension.h"
+#include "xscript/punycode_utils.h"
 #include "xscript/string_utils.h"
 
 
@@ -24,6 +25,110 @@ public:
 
 static XsltConv xsltConv;
 
+
+extern "C" void
+xscriptXsltPunycodeDomainEncode(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:punycode-domain-encode");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (nargs < 1 || nargs > 2) {
+        XmlUtils::reportXsltError("xscript:punycode-domain-encode: bad param count", ctxt);
+        return;
+    }
+
+    const char* value = params.str(0);
+    const char* encoding = NULL;
+    if (nargs == 2) {
+        encoding = params.str(1);
+    }
+
+    if (NULL == value || (2 == nargs && NULL == encoding)) {
+        XmlUtils::reportXsltError("xscript:punycode-domain-encode: bad parameter", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    if (!*value) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        PunycodeEncoder encoder(encoding);
+        std::string result;
+        encoder.domainEncode(createRange(value), result);
+        valuePush(ctxt, xmlXPathNewCString(result.c_str()));
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:punycode-domain-encode: caught exception: " + std::string(e.what()), ctxt);
+
+        // bad input data?
+        // ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:punycode-domain-encode: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
+xscriptXsltPunycodeDomainDecode(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:punycode-domain-decode");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (nargs < 1 || nargs > 2) {
+        XmlUtils::reportXsltError("xscript:punycode-domain-decode: bad param count", ctxt);
+        return;
+    }
+
+    const char* value = params.str(0);
+    const char* encoding = NULL;
+    if (nargs == 2) {
+        encoding = params.str(1);
+    }
+
+    if (NULL == value || (2 == nargs && NULL == encoding)) {
+        XmlUtils::reportXsltError("xscript:punycode-domain-decode: bad parameter", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    if (!*value) {
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        PunycodeDecoder encoder(encoding);
+        std::string result;
+        encoder.domainDecode(createRange(value), result);
+        valuePush(ctxt, xmlXPathNewCString(result.c_str()));
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:punycode-domain-decode: caught exception: " + std::string(e.what()), ctxt);
+
+        // bad input data?
+        // ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:punycode-domain-decode: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
 
 extern "C" void
 xscriptXsltUrlencode(xmlXPathParserContextPtr ctxt, int nargs) {
@@ -66,7 +171,9 @@ xscriptXsltUrlencode(xmlXPathParserContextPtr ctxt, int nargs) {
     }
     catch (const std::exception &e) {
         XmlUtils::reportXsltError("xscript:urlencode: caught exception: " + std::string(e.what()), ctxt);
-        ctxt->error = XPATH_EXPR_ERROR;
+
+        // bad input data?
+        // ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
     catch (...) {
@@ -118,7 +225,9 @@ xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
     }
     catch (const std::exception &e) {
         XmlUtils::reportXsltError("xscript:urldecode: caught exception: " + std::string(e.what()), ctxt);
-        ctxt->error = XPATH_EXPR_ERROR;
+
+        // bad input data?
+        // ctxt->error = XPATH_EXPR_ERROR;
         xmlXPathReturnEmptyNodeSet(ctxt);
     }
     catch (...) {
@@ -403,6 +512,9 @@ XsltConv::XsltConv() {
 
     XsltFunctionRegisterer("urlencode", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltUrlencode);
     XsltFunctionRegisterer("urldecode", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltUrldecode);
+
+    XsltFunctionRegisterer("punycode-domain-encode", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltPunycodeDomainEncode);
+    XsltFunctionRegisterer("punycode-domain-decode", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltPunycodeDomainDecode);
 
     XsltFunctionRegisterer("xmlescape", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltXmlEscape);
 }
