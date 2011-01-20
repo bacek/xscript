@@ -9,6 +9,7 @@
 #include "xscript/http_utils.h"
 #include "xscript/logger.h"
 #include "xscript/request.h"
+#include "xscript/punycode_utils.h"
 #include "xscript/string_utils.h"
 #include "xscript/util.h"
 #include "xscript/xml_util.h"
@@ -174,6 +175,66 @@ luaUrlDecode(lua_State *lua) {
     }
     catch (const std::exception &e) {
         log()->error("caught exception in [xscript:urldecode]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
+static int
+luaPunycodeDomainEncode(lua_State *lua) {
+    try {
+        int stack_size = lua_gettop(lua);
+        if (stack_size < 1 || stack_size > 2) 
+            throw BadArgCount(stack_size);
+
+        std::string value = luaReadStack<std::string>(lua, 1);
+        std::string encoding;
+        if (stack_size == 2) {
+            encoding = luaReadStack<std::string>(lua, 2);
+        }
+
+        std::string result;
+        if (!value.empty()) {
+            PunycodeEncoder encoder(encoding.c_str());
+            encoder.domainEncode(createRange(value), result);
+        }
+
+        lua_pushstring(lua, result.c_str());
+        // Our value on stack
+        return 1;
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:punycodeDomainEncode]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
+static int
+luaPunycodeDomainDecode(lua_State *lua) {
+    try {
+        int stack_size = lua_gettop(lua);
+        if (stack_size < 1 || stack_size > 2) 
+            throw BadArgCount(stack_size);
+
+        std::string value = luaReadStack<std::string>(lua, 1);
+        std::string encoding;
+        if (stack_size == 2) {
+            encoding = luaReadStack<std::string>(lua, 2);
+        }
+
+        std::string result;
+        if (!value.empty()) {
+            PunycodeDecoder decoder(encoding.c_str());
+            decoder.domainDecode(createRange(value), result);
+        }
+
+        lua_pushstring(lua, result.c_str());
+        // Our value on stack
+        return 1;
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:punycodeDomainDecode]: %s", e.what());
         luaL_error(lua, e.what());
     }
     return 0;
@@ -481,6 +542,12 @@ setupXScript(lua_State *lua, std::string * buf) {
     lua_setfield(lua, -2, "urlencode");
     lua_pushcfunction(lua, &luaUrlDecode);
     lua_setfield(lua, -2, "urldecode");
+
+    // Setup punycode domain encode and decode
+    lua_pushcfunction(lua, &luaPunycodeDomainEncode);
+    lua_setfield(lua, -2, "punycodeDomainEncode");
+    lua_pushcfunction(lua, &luaPunycodeDomainDecode);
+    lua_setfield(lua, -2, "punycodeDomainDecode");
 
     // Setup md5 function
     lua_pushcfunction(lua, &luaMD5);

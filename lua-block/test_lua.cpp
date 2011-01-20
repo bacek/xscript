@@ -28,6 +28,7 @@ public:
     void testResponse();
     void testResponseRedirect();
 
+    void testPunycode();
     void testEncode();
     void testCookie();
 
@@ -56,6 +57,7 @@ private:
     CPPUNIT_TEST(testResponse);
     CPPUNIT_TEST(testResponseRedirect);
 
+    CPPUNIT_TEST(testPunycode);
     CPPUNIT_TEST(testEncode);
     CPPUNIT_TEST(testCookie);
 
@@ -233,6 +235,25 @@ LuaTest::testResponseRedirect() {
     
     CPPUNIT_ASSERT_EQUAL(std::string("http://example.com/"), header);
 
+}
+
+void
+LuaTest::testPunycode() {
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-punycode.xml");
+    ContextStopper ctx_stopper(ctx);
+
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc.get());
+    CPPUNIT_ASSERT(XmlUtils::xpathExists(doc.get(), "/page/lua"));
+
+    for (int i = 1; i <= 3; ++i) {
+
+        std::string num = boost::lexical_cast<std::string>(i);
+        CPPUNIT_ASSERT(ctx->state()->is("s_" + num));
+        CPPUNIT_ASSERT(ctx->state()->is("s_" + num + "__"));
+        CPPUNIT_ASSERT_EQUAL(ctx->state()->asString("s_" + num), ctx->state()->asString("s_" + num + "_decoded"));
+        CPPUNIT_ASSERT_EQUAL(ctx->state()->asString("s_" + num + "__"), ctx->state()->asString("s_" + num + "_coded"));
+    }
 }
 
 void

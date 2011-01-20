@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<page xmlns:x="http://www.yandex.ru/xscript" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <x:lua>
+  <![CDATA[
+      local s = {'..а.б..в..г.д..', '.www.рф', 'www.ru'}
+      local p = {'..xn--80a.xn--90a..xn--b1a..xn--c1a.xn--d1a..', '.www.xn--p1ai', 'www.ru'}
+
+      for i,v in ipairs(s) do
+        local index = tostring(i)
+        xscript.state:setString('s_' .. index, v)
+        xscript.state:setString('s_' .. index .. '__', p[i])
+        xscript.state:setString('s_' .. index .. '_coded', xscript.punycodeDomainEncode(v))
+        xscript.state:setString('s_' .. index .. '_decoded', xscript.punycodeDomainDecode(p[i]))
+      end
+  ]]>
+  </x:lua>
+</page>
+
