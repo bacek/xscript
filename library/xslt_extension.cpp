@@ -5,6 +5,7 @@
 #include <exception>
 #include <boost/lexical_cast.hpp>
 #include <boost/current_function.hpp>
+#include <boost/cstdint.hpp>
 
 #include <libxslt/xsltutils.h>
 #include <libxslt/transform.h>
@@ -742,6 +743,67 @@ xscriptXsltXmlparse(xmlXPathParserContextPtr ctxt, int nargs) {
 }
 
 extern "C" void
+xscriptXsltDomain(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:domain");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (nargs < 1 || nargs > 2) {
+        XmlUtils::reportXsltError("xscript:domain: bad param count", ctxt);
+        return;
+    }
+
+    const char *url = params.str(0);
+    if (NULL == url) {
+        XmlUtils::reportXsltError("xscript:domain: bad parameter url", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        boost::int32_t level = 0;
+        if (nargs == 2) {
+            const char *level_str = params.str(1);
+            if (NULL == level_str) {
+                XmlUtils::reportXsltError("xscript:domain: bad parameter level", ctxt);
+                xmlXPathReturnEmptyNodeSet(ctxt);
+                return;
+            }
+            try {
+                if (*level_str) {
+                    level = boost::lexical_cast<boost::int32_t>(level_str);
+                }
+            }
+            catch(const boost::bad_lexical_cast &e) {
+                XmlUtils::reportXsltError("xscript:domain: bad format of level parameter", ctxt);
+                xmlXPathReturnEmptyNodeSet(ctxt);
+                return;
+            }
+        }
+
+        std::string result = StringUtils::parseDomainFromURL(url, level);
+        valuePush(ctxt, xmlXPathNewCString(result.c_str()));
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:domain: caught exception: " + std::string(e.what()), ctxt);
+
+        // bad input data?
+        // ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:domain: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+
+extern "C" void
 xscriptXsltMD5(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:md5");
@@ -1453,6 +1515,7 @@ XsltExtensions::XsltExtensions() {
 
     XsltFunctionRegisterer("sanitize", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltSanitize);
     XsltFunctionRegisterer("xmlparse", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltXmlparse);
+    XsltFunctionRegisterer("domain", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltDomain);
 
     XsltFunctionRegisterer("http-redirect", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltHttpRedirect);
     XsltFunctionRegisterer("http_redirect", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltHttpRedirect);
