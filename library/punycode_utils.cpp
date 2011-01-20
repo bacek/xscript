@@ -17,13 +17,8 @@
 
 namespace xscript {
 
-PunycodeEncoder::PunycodeEncoder() :
-    to_ucs4_(Encoder::createStrict("UTF-8", "UCS-4LE"))
-{
-}
-
 PunycodeEncoder::PunycodeEncoder(const char *from) :
-    to_ucs4_(Encoder::createStrict(from, "UCS-4LE"))
+    to_ucs4_(Encoder::createStrict(from && *from ? from : "UTF-8", "UCS-4LE"))
 {
 }
 
@@ -33,6 +28,11 @@ PunycodeEncoder::~PunycodeEncoder()
 
 void
 PunycodeEncoder::encode(const Range &val, std::string &dest) const {
+
+    if (val.empty()) {
+        dest.clear();
+        return;
+    }
 
     std::string dst;
     to_ucs4_->encode(val, dst);
@@ -63,6 +63,11 @@ PunycodeEncoder::encode(const Range &val, std::string &dest) const {
 
 void
 PunycodeEncoder::domainEncode(const Range &val, std::string &dest) const {
+
+    if (val.empty()) {
+        dest.clear();
+        return;
+    }
 
     typedef boost::char_separator<char> Separator;
     typedef boost::tokenizer<Separator> Tokenizer;
@@ -99,13 +104,8 @@ PunycodeEncoder::domainEncode(const Range &val, std::string &dest) const {
 }
 
 
-PunycodeDecoder::PunycodeDecoder() :
-    from_ucs4_(Encoder::createStrict("UCS-4LE", "UTF-8"))
-{
-}
-
 PunycodeDecoder::PunycodeDecoder(const char *to) :
-    from_ucs4_(Encoder::createStrict("UCS-4LE", to))
+    from_ucs4_(Encoder::createStrict("UCS-4LE", to && *to ? to : "UTF-8"))
 {
 }
 
@@ -114,6 +114,11 @@ PunycodeDecoder::~PunycodeDecoder() {
 
 void
 PunycodeDecoder::decode(const Range &val, std::string &dest) const {
+
+    if (val.empty()) {
+        dest.clear();
+        return;
+    }
 
     std::vector<punycode_uint> puny_out;
     puny_out.resize(5 + val.size());
@@ -140,6 +145,11 @@ PunycodeDecoder::decode(const Range &val, std::string &dest) const {
 
 void
 PunycodeDecoder::domainDecode(const Range &val, std::string &dest) const {
+
+    if (val.empty()) {
+        dest.clear();
+        return;
+    }
 
     typedef boost::char_separator<char> Separator;
     typedef boost::tokenizer<Separator> Tokenizer;

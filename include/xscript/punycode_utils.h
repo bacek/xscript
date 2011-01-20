@@ -13,9 +13,7 @@ class Encoder;
 
 class PunycodeEncoder {
 public:
-    PunycodeEncoder(); // from utf-8
-    explicit PunycodeEncoder(const char *from);
-
+    PunycodeEncoder(const char *from = NULL);
     virtual ~PunycodeEncoder();
 
 
@@ -42,9 +40,7 @@ private:
 
 class PunycodeDecoder {
 public:
-    PunycodeDecoder(); // to utf-8
-    explicit PunycodeDecoder(const char *to);
-
+    PunycodeDecoder(const char *to = NULL);
     virtual ~PunycodeDecoder();
 
 
