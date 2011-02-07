@@ -371,6 +371,16 @@ Stylesheet::haveOutputInfo() const {
     return data_->have_output_info_;
 }
 
+bool
+Stylesheet::omitXmlDecl() const {
+    return data_->stylesheet_->omitXmlDeclaration > 0;
+}
+
+bool
+Stylesheet::indent() const {
+    return data_->stylesheet_->indent > 0;
+}
+
 XmlDocHelper
 Stylesheet::apply(Object *obj, boost::shared_ptr<Context> ctx,
         boost::shared_ptr<InvokeContext> invoke_ctx, xmlDocPtr doc) {

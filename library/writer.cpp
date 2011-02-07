@@ -21,7 +21,11 @@ DocumentWriter::~DocumentWriter() {
 
 
 XmlWriter::XmlWriter(const std::string &encoding) :
-        encoding_(encoding) {
+        encoding_(encoding), indent_(true) {
+}
+
+XmlWriter::XmlWriter(const std::string &encoding, bool indent) :
+        encoding_(encoding), indent_(indent) {
 }
 
 XmlWriter::~XmlWriter() {
@@ -44,7 +48,7 @@ XmlWriter::addHeaders(Response *response) {
 int
 XmlWriter::write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf) {
     addHeaders(response);
-    return xmlSaveFormatFileTo(buf, doc, encoding_.c_str(), 1);
+    return xmlSaveFormatFileTo(buf, doc, encoding_.c_str(), indent_ ? 1 : 0);
 }
 
 
@@ -101,8 +105,13 @@ int
 XhtmlWriter::write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf) {
     addHeaders(response);
 
-    int options = XML_SAVE_FORMAT;
-    options |= 16; // XML_SAVE_XHTML
+    int options = 16; // XML_SAVE_XHTML
+    if (stylesheet_->indent()) {
+        options |= XML_SAVE_FORMAT;
+    }
+    if (stylesheet_->omitXmlDecl()) {
+        options |= XML_SAVE_NO_DECL;
+    }
 
     xmlSaveCtxtPtr ctx = xmlSaveToIO(
         buf->writecallback, buf->closecallback, buf->context, outputEncoding().c_str(), options);

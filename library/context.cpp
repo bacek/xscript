@@ -518,14 +518,14 @@ Context::documentWriter() {
 void
 Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
     const std::string &output_method = sh->outputMethod();
-    if (output_method == "xml" && !sh->haveOutputInfo()) {
-        ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new XmlWriter(sh->outputEncoding())));
+    if (output_method == "xml" && !sh->omitXmlDecl()) {
+        ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new XmlWriter(sh->outputEncoding(), sh->indent())));
         log()->debug("xml writer created");
     }
-    //else if (output_method == "xhtml") {
-    //    ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new XhtmlWriter(sh)));
-    //    log()->debug("xhtml writer created");
-    //}
+    else if (output_method == "xhtml") {
+        ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new XhtmlWriter(sh)));
+        log()->debug("xhtml writer created");
+    }
     else {
         ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new HtmlWriter(sh)));
         log()->debug("html writer created");

@@ -12,6 +12,7 @@ class Stylesheet;
 class XmlWriter : public DocumentWriter {
 public:
     explicit XmlWriter(const std::string &encoding);
+    explicit XmlWriter(const std::string &encoding, bool indent);
     virtual ~XmlWriter();
 
     virtual const std::string& outputEncoding() const;
@@ -21,6 +22,7 @@ public:
 
 private:
     std::string encoding_;
+    bool indent_;
 };
 
 class HtmlWriter : public DocumentWriter {
@@ -33,7 +35,7 @@ public:
     virtual void addHeaders(Response *response);
     virtual int write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf);
 
-private:
+protected:
     boost::shared_ptr<Stylesheet> stylesheet_;
 };
 
