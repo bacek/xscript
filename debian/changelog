@@ -1,3 +1,9 @@
+xscript (5.73.18-2) unstable; urgency=low
+
+  * disable x:xhtml writer
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 07 Feb 2011 20:09:29 +0300
+
 xscript (5.73.18-1) unstable; urgency=low
 
   * xhtml writer added

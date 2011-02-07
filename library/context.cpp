@@ -522,10 +522,10 @@ Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
         ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new XmlWriter(sh->outputEncoding())));
         log()->debug("xml writer created");
     }
-    else if (output_method == "xhtml") {
-        ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new XhtmlWriter(sh)));
-        log()->debug("xhtml writer created");
-    }
+    //else if (output_method == "xhtml") {
+    //    ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new XhtmlWriter(sh)));
+    //    log()->debug("xhtml writer created");
+    //}
     else {
         ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new HtmlWriter(sh)));
         log()->debug("html writer created");
