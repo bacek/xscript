@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <libxml/xmlIO.h>
+#include <libxml/xmlsave.h>
 #include <libxslt/xsltutils.h>
 
 #include "xscript/writer.h"
@@ -17,6 +18,7 @@ namespace xscript {
 
 DocumentWriter::~DocumentWriter() {
 }
+
 
 XmlWriter::XmlWriter(const std::string &encoding) :
         encoding_(encoding) {
@@ -44,6 +46,7 @@ XmlWriter::write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf) {
     addHeaders(response);
     return xmlSaveFormatFileTo(buf, doc, encoding_.c_str(), 1);
 }
+
 
 HtmlWriter::HtmlWriter(const boost::shared_ptr<Stylesheet> &sh) :
         stylesheet_(sh) {
@@ -85,6 +88,29 @@ HtmlWriter::write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf) {
     xmlOutputBufferClose(buf);
     return len;
 }
+
+
+XhtmlWriter::XhtmlWriter(const boost::shared_ptr<Stylesheet> &sh) :
+        HtmlWriter(sh) {
+}
+
+XhtmlWriter::~XhtmlWriter() {
+}
+
+int
+XhtmlWriter::write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf) {
+    addHeaders(response);
+
+    int options = XML_SAVE_FORMAT;
+    options |= 16; // XML_SAVE_XHTML
+
+    xmlSaveCtxtPtr ctx = xmlSaveToIO(
+        buf->writecallback, buf->closecallback, buf->context, outputEncoding().c_str(), options);
+    xmlOutputBufferClose(buf);
+    xmlSaveDoc(ctx, doc);
+    return xmlSaveClose(ctx);
+}
+
 
 BinaryWriter::~BinaryWriter() {
 }

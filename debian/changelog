@@ -1,3 +1,9 @@
+xscript (5.73.18-1) unstable; urgency=low
+
+  * xhtml writer added
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 04 Feb 2011 17:21:32 +0300
+
 xscript (5.73.17-1) unstable; urgency=low
 
   * added punycode support

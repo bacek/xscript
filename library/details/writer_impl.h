@@ -11,7 +11,7 @@ class Stylesheet;
 
 class XmlWriter : public DocumentWriter {
 public:
-    XmlWriter(const std::string &encoding);
+    explicit XmlWriter(const std::string &encoding);
     virtual ~XmlWriter();
 
     virtual const std::string& outputEncoding() const;
@@ -25,7 +25,7 @@ private:
 
 class HtmlWriter : public DocumentWriter {
 public:
-    HtmlWriter(const boost::shared_ptr<Stylesheet> &sh);
+    explicit HtmlWriter(const boost::shared_ptr<Stylesheet> &sh);
     virtual ~HtmlWriter();
 
     virtual const std::string& outputEncoding() const;
@@ -35,6 +35,14 @@ public:
 
 private:
     boost::shared_ptr<Stylesheet> stylesheet_;
+};
+
+class XhtmlWriter : public HtmlWriter {
+public:
+    explicit XhtmlWriter(const boost::shared_ptr<Stylesheet> &sh);
+    virtual ~XhtmlWriter();
+
+    virtual int write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf);
 };
 
 } // namespace xscript
