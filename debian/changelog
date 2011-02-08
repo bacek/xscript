@@ -1,3 +1,10 @@
+xscript (5.73.19-1) unstable; urgency=low
+
+  * load omitXmlDeclaration and indent from all xsl imports
+  * log errors on use page-cache (warn level)
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Tue, 08 Feb 2011 13:16:52 +0300
+
 xscript (5.73.18-3) unstable; urgency=low
 
   * fixed x:xhtml writer
