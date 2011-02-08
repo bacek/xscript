@@ -676,38 +676,40 @@ Script::CachableHandler::process(const MessageParams &params,
     }
     
     if (ctx->noCache() || ctx->response()->suppressBody(ctx->request())) {
-        log()->debug("Cannot cache script. Context is not cachable");
+        log()->warn("Cannot cache script. Owner: %s Context is not cachable", script->name().c_str());
         result.set(false);
         return CONTINUE;
     }
         
     if (script->binaryPage()) {
-        log()->debug("Cannot cache script. Binary content");
+        log()->warn("Cannot cache script. Owner: %s Content is binary", script->name().c_str());
         result.set(false);
         return CONTINUE;
     }
     
-    if (ctx->noMainXsltPort()) {
-        log()->debug("Cannot cache script. Alternate or noxslt port");
+    if (ctx->noMainXsltPort()) { // no warning
+        log()->info("Cannot cache script. Owner: %s Alternate or noxslt port", script->name().c_str());
         result.set(false);
         return CONTINUE;
     }
-    
-    if (ctx->request()->getRequestMethod() != GET_METHOD) {
-        log()->debug("Cannot cache script. Not GET method");
+
+    const std::string &method = ctx->request()->getRequestMethod();
+    if (method != GET_METHOD) {
+        log()->warn("Cannot cache script. Owner: %s Method %s is not GET method", method.c_str(), script->name().c_str());
         result.set(false);
         return CONTINUE;
     }
     
     if (for_save) {
         if (ctx->xsltChanged(script)) {
-            log()->debug("Cannot cache script. Main stylesheet changed");
+            log()->warn("Cannot cache script. Owner: %s Main stylesheet changed", script->name().c_str());
             result.set(false);
             return CONTINUE;
         }
-            
-        if (200 != ctx->response()->status()) {
-            log()->debug("Cannot cache script. Status is not OK");
+
+        int status = ctx->response()->status();
+        if (200 != status) {
+            log()->warn("Cannot cache script. Owner: %s Status %d is not 200 (OK)", script->name().c_str(), status);
             result.set(false);
             return CONTINUE;
         }
@@ -715,14 +717,14 @@ Script::CachableHandler::process(const MessageParams &params,
         const CookieSet &cookies = ctx->response()->outCookies();       
         for(CookieSet::const_iterator it = cookies.begin(); it != cookies.end(); ++it) {
             if (!Policy::instance()->allowCachingOutputCookie(it->name().c_str())) {
-                log()->debug("Cannot cache script. Output cookie %s is not allowed", it->name().c_str());
+                log()->warn("Cannot cache script. Owner: %s Output cookie %s is not allowed", script->name().c_str(), it->name().c_str());
                 result.set(false);
                 return CONTINUE;
             }
         }
     }
     
-    log()->debug("Script is cachable");
+    log()->info("Script %s is cacheable", script->name().c_str());
     result.set(true);
     return CONTINUE;
 }
@@ -896,14 +898,14 @@ Script::invokeBlocks(boost::shared_ptr<Context> ctx) {
         }
         try {
             if (!(*it)->checkGuard(ctx.get())) {
-                log()->info("Guard skipped block processing. Owner: %s. Block: %s. Method: %s",
+                log()->info("Guard skipped block processing. Owner: %s Block: %s. Method: %s",
                     name().c_str(), (*it)->name(), (*it)->method().c_str());
                 ctx->result(count, (*it)->fakeResult(false));
                 continue;
             }
         }
         catch (const std::exception &e) {
-            log()->error("Error while guard processing: %s. Owner: %s. Block: %s. Method: %s",
+            log()->error("Error while guard processing: %s. Owner: %s Block: %s. Method: %s",
                     e.what(), name().c_str(), (*it)->name(), (*it)->method().c_str());
             ctx->result(count, (*it)->errorResult(e.what(), false));
             continue;
