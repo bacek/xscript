@@ -26,7 +26,7 @@ public:
     const std::string& contentType() const;
     const std::string& outputMethod() const;
     const std::string& outputEncoding() const;
-    bool haveOutputInfo() const;
+
     bool omitXmlDecl() const;
     bool indent() const;
 
