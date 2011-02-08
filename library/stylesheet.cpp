@@ -101,11 +101,12 @@ public:
     std::string content_type_;
     std::string output_method_;
     std::string output_encoding_;
-    bool have_output_info_;
+    int omitXmlDeclaration;
+    int indent;
 };
 
 Stylesheet::StylesheetData::StylesheetData(Stylesheet *owner) :
-        owner_(owner), stylesheet_(NULL), blocks_(), have_output_info_(false)
+        owner_(owner), stylesheet_(NULL), blocks_(), omitXmlDeclaration(-1), indent(-1)
 {}
     
 Stylesheet::StylesheetData::~StylesheetData() {
@@ -201,12 +202,12 @@ Stylesheet::StylesheetData::detectOutputEncoding() {
 
 void
 Stylesheet::StylesheetData::detectOutputInfo() {
-    if (stylesheet_->omitXmlDeclaration > 0 || stylesheet_->indent > 0) {
-        have_output_info_ = true;
-    }
-    else {
-        have_output_info_ = false;
-    }
+
+    xsltStylesheetPtr s = stylesheet_.get();
+    XSLT_GET_IMPORT_INT(omitXmlDeclaration, s, omitXmlDeclaration);
+    XSLT_GET_IMPORT_INT(indent, s, indent);
+    log()->debug("%s, detectOutputInfo omitXmlDeclaration: %d, indent: %d",
+	owner_->name().c_str(), omitXmlDeclaration, indent);
 }
 
 void
@@ -367,18 +368,13 @@ Stylesheet::outputEncoding() const {
 }
 
 bool
-Stylesheet::haveOutputInfo() const {
-    return data_->have_output_info_;
-}
-
-bool
 Stylesheet::omitXmlDecl() const {
-    return data_->stylesheet_->omitXmlDeclaration > 0;
+    return data_->omitXmlDeclaration > 0;
 }
 
 bool
 Stylesheet::indent() const {
-    return data_->stylesheet_->indent > 0;
+    return data_->indent > 0;
 }
 
 XmlDocHelper
