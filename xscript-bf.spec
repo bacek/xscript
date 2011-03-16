@@ -147,8 +147,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-, root, root)
 %doc README
 %{_libdir}/xscript/xscript-memcached*so*
-%{_bindir}/xscriptcacheclean.sh
-/etc/cron.d/xscript-cache-clean
 
 %files daemon
 %defattr(-, root, root)
