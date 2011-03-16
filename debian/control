@@ -33,6 +33,13 @@ Depends: ${shlibs:Depends}, libxscript (=${Source-Version})
 Description: XScript is xml-based application server written in C++. 
  Standard modules such as logger, thread pool and various blocks.
 
+Package: xscript-memcached
+Section: libs
+Architecture: any
+Depends: ${shlibs:Depends}, libxscript (=${Source-Version})
+Description: XScript is xml-based application server written in C++. 
+ Module to work with distributed cache system.
+
 Package: xscript-daemon
 Section: libs
 Architecture: any

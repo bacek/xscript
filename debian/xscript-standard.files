@@ -1,3 +1,12 @@
-usr/lib/xscript/xscript*so*
+usr/lib/xscript/xscript-d*so*
+usr/lib/xscript/xscript-f*so*
+usr/lib/xscript/xscript-h*so*
+usr/lib/xscript/xscript-l*so*
+usr/lib/xscript/xscript-s*so*
+usr/lib/xscript/xscript-t*so*
+usr/lib/xscript/xscript-v*so*
+usr/lib/xscript/xscript-x*so*
+usr/lib/xscript/xscript-mist.so*
+usr/lib/xscript/xscript-memcache.so*
 usr/bin/xscriptcache*
 etc/cron.d/xscript-cache*

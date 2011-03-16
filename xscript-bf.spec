@@ -1,7 +1,7 @@
 Summary:       XScript is xml-based application server written in C++
 Name:          xscript
-Version:       5.73.19
-Release:       2%{?dist}
+Version:       5.73.20
+Release:       1%{?dist}
 Group:         System Environment/Libraries
 License:       GPLv2
 Source:        %{name}-%{version}.tar.bz2
@@ -40,6 +40,11 @@ Summary:       XScript is xml-based application server written in C++
 Group:         System Environment/Libraries
 Requires:      %{name} = %{version}-%{release}
 
+%package       memcached
+Summary:       XScript is xml-based application server written in C++
+Group:         System Environment/Libraries
+Requires:      %{name} = %{version}-%{release}
+
 %package       daemon
 Summary:       XScript is xml-based application server written in C++
 Group:         Networking/Daemons/FastCGI
@@ -68,6 +73,9 @@ Headers and libraries to develop XScript extensions
 
 %description   standard
 Standard modules such as logger, thread pool and various blocks
+
+%description   memcached
+Module to work with distributed cache system.
 
 %description   daemon
 Binary that runs as factcgi-daemon
@@ -122,7 +130,23 @@ rm -rf $RPM_BUILD_ROOT
 %files standard
 %defattr(-, root, root)
 %doc README
-%{_libdir}/xscript/xscript*so*
+%{_libdir}/xscript/xscript-d*so*
+%{_libdir}/xscript/xscript-f*so*
+%{_libdir}/xscript/xscript-h*so*
+%{_libdir}/xscript/xscript-l*so*
+%{_libdir}/xscript/xscript-s*so*
+%{_libdir}/xscript/xscript-t*so*
+%{_libdir}/xscript/xscript-v*so*
+%{_libdir}/xscript/xscript-x*so*
+%{_libdir}/xscript/xscript-mist.so*
+%{_libdir}/xscript/xscript-memcache.so*
+%{_bindir}/xscriptcacheclean.sh
+/etc/cron.d/xscript-cache-clean
+
+%files memcached
+%defattr(-, root, root)
+%doc README
+%{_libdir}/xscript/xscript-memcached*so*
 %{_bindir}/xscriptcacheclean.sh
 /etc/cron.d/xscript-cache-clean
 
