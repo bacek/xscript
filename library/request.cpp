@@ -426,7 +426,7 @@ class Request::AttachHandler : public MessageHandler {
         std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
         Parser::parse(request->data_.get(), env, enc.get());
 
-        if (is && "POST" == request->getRequestMethod()) {
+        if (is && ("POST" == request->getRequestMethod() || "PUT" == request->getRequestMethod())) {
             request->data_->body_.resize(request->getContentLength());
             is->exceptions(std::ios::badbit);
             is->read(&request->data_->body_[0], request->data_->body_.size());
