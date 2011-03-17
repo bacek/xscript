@@ -39,12 +39,12 @@ Summary:       XScript is xml-based application server written in C++
 Group:         System Environment/Libraries
 Requires:      %{name} = %{version}-%{release}
 
-%package       memcached
-Summary:       XScript is xml-based application server written in C++
-Group:         System Environment/Libraries
-Requires:      %{name} = %{version}-%{release}
-Requires:      memcached
-Requires:      libmemcached-devel
+#%package       memcached
+#Summary:       XScript is xml-based application server written in C++
+#Group:         System Environment/Libraries
+#Requires:      %{name} = %{version}-%{release}
+#Requires:      memcached
+#Requires:      libmemcached-devel
 
 %package       daemon
 Summary:       XScript is xml-based application server written in C++
@@ -75,8 +75,8 @@ Headers and libraries to develop XScript extensions
 %description   standard
 Standard modules such as logger, thread pool and various blocks
 
-%description   memcached
-Module to work with distributed cache system.
+#%description   memcached
+#Module to work with distributed cache system.
 
 %description   daemon
 Binary that runs as factcgi-daemon
@@ -144,10 +144,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/xscriptcacheclean.sh
 /etc/cron.d/xscript-cache-clean
 
-%files memcached
-%defattr(-, root, root)
-%doc README
-%{_libdir}/xscript/xscript-memcached.so*
+#%files memcached
+#%defattr(-, root, root)
+#%doc README
+#%{_libdir}/xscript/xscript-memcached.so*
 
 %files daemon
 %defattr(-, root, root)
