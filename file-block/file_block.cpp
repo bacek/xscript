@@ -257,7 +257,8 @@ FileBlock::loadJson(const std::string &file_name,
     if (!is) {
         throw InvokeError("Cannot open file");
     }
-    is.exceptions(std::ios::badbit | std::ios::eofbit);
+    //fixed crush : unexpected exception
+    //is.exceptions(std::ios::badbit | std::ios::eofbit);
 
     XmlNodeHelper node(Json2Xml::instance()->convert(is));
     if (NULL == node.get()) {
