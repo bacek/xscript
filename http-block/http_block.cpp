@@ -29,6 +29,7 @@
 #include "xscript/writer.h"
 #include "xscript/xml.h"
 #include "xscript/xml_util.h"
+#include "xscript/json2xml.h"
 
 #include "internal/hash.h"
 #include "internal/hashmap.h"
@@ -600,7 +601,7 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request,
 
 XmlDocHelper
 HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
-    XmlDocHelper result;
+
     boost::shared_ptr<std::string> str = helper.content();
     if (helper.isXml()) {
         XmlDocHelper result(xmlReadMemory(str->c_str(), str->size(), "",
@@ -608,6 +609,12 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
         XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());
         OperationMode::instance()->processXmlError(helper.url());
         return result;
+    }
+    if (helper.isJson()) {
+	XmlDocHelper result = Json2Xml::instance()->createDoc(*str, charset_.empty() ? NULL : charset_.c_str());
+	if (NULL != result.get()) {
+            return result;
+	}
     }
     
     if (!error_mode && helper.contentType() == "text/html") {

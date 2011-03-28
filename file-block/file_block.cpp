@@ -24,6 +24,7 @@
 #include <xscript/writer.h>
 #include <xscript/xml.h>
 #include <xscript/xml_util.h>
+#include <xscript/json2xml.h>
 
 #include "file_block.h"
 #include "file_extension.h"
@@ -104,6 +105,9 @@ FileBlock::postParse() {
         method_ = &FileBlock::invokeFile;
     }
     else if (0 == strcasecmp(met.c_str(), "test")) {
+    }
+    else if (0 == strcasecmp(met.c_str(), "loadJson") && Json2Xml::instance()->enabled()) {
+        method_ = &FileBlock::loadJson;
     }
     else {
         throw std::invalid_argument("Unknown method for file-block: " + met);
@@ -241,6 +245,33 @@ FileBlock::loadFile(const std::string &file_name,
 }
 
 XmlDocSharedHelper
+FileBlock::loadJson(const std::string &file_name,
+        boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
+    (void)ctx;
+    (void)invoke_ctx;
+    log()->debug("%s: loading json file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
+
+    PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
+
+    std::ifstream is(file_name.c_str(), std::ios::in);
+    if (!is) {
+        throw InvokeError("Cannot open file");
+    }
+    is.exceptions(std::ios::badbit | std::ios::eofbit);
+
+    XmlNodeHelper node(Json2Xml::instance()->convert(is));
+    if (NULL == node.get()) {
+        throw InvokeError("Cannot convert json file to xml");
+    }
+    XmlDocSharedHelper result(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlUtils::throwUnless(NULL != result.get());
+        
+    xmlDocSetRootElement(result.get(), node.release());
+    
+    return result;
+}
+
+XmlDocSharedHelper
 FileBlock::loadText(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     (void)ctx;
@@ -288,7 +319,6 @@ FileBlock::loadText(const std::string &file_name,
     OperationMode::instance()->processXmlError(file_name);
     
     return result;
-    
 }
 
 XmlDocSharedHelper

@@ -43,6 +43,7 @@ public:
     Tag createTag() const;
 
     bool isXml() const; 
+    bool isJson() const; 
     bool isOk() const;
 
 protected:

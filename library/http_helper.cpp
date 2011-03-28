@@ -515,6 +515,28 @@ HttpHelper::isXml() const {
 }
 
 bool
+HttpHelper::isJson() const {
+    const std::string &content_type = contentType();
+    std::string::size_type pos = content_type.find('/');
+    if (pos == std::string::npos) {
+        return false;
+    }
+
+    ++pos;
+    if (!strncasecmp(content_type.c_str(), "text/", sizeof("text/") - 1)) {
+        return !strcasecmp(content_type.c_str() + pos, "json");
+    }
+    if (!strncasecmp(content_type.c_str(), "application/", sizeof("application/") - 1)) {
+        std::string::size_type pos_plus = content_type.rfind('+');
+        if (pos_plus == std::string::npos) {
+            return !strcasecmp(content_type.c_str() + pos, "json");
+        }
+        return !strcasecmp(content_type.c_str() + pos_plus + 1, "json");
+    }
+    return false;
+}
+
+bool
 HttpHelper::isOk() const {
     return data_->isOk();
 }

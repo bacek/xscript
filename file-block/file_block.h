@@ -36,6 +36,9 @@ private:
     XmlDocSharedHelper loadFile(const std::string &file_name,
             boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const;
 
+    XmlDocSharedHelper loadJson(const std::string &file_name,
+            boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const;
+
     XmlDocSharedHelper loadText(const std::string &file_name,
             boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const;
 
