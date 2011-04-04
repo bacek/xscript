@@ -41,7 +41,7 @@
 
 #include "pcre++.h"
 
-using namespace pcrepp;
+using namespace xscript::pcrepp;
 
 /*
  * the search interface to pcre

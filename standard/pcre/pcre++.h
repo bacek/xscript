@@ -55,6 +55,8 @@ extern "C" {
     #include <locale.h>
 }
 
+namespace xscript {
+
 namespace pcrepp {
 
 #ifdef DEBUG
@@ -591,5 +593,7 @@ public:
 }; 
 
 } // end namespace pcre
+
+} // end namespace xscript
 
 #endif // HAVE_PCRE_PP_H

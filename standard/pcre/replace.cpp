@@ -41,7 +41,7 @@
 
 #include "pcre++.h"
 
-using namespace pcrepp;
+using namespace xscript::pcrepp;
 
 /*
  * replace method
@@ -142,6 +142,13 @@ Pcre::replace(const std::string &piece, const std::string &with) {
                 use_with = _replace_vars(with);
                                 
                 len = get_match_end() - get_match_start() + 1;
+
+                // yandex fix start
+                if (!len && !use_with.size()) {
+                    break;
+                }
+                // yandex fix end
+
                 Replaced.replace(get_match_start(0), len, use_with);
                                 
                 //# Next run should begin after the last char of the stuff we put in the text
