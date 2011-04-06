@@ -403,7 +403,7 @@ FileBlock::invokeFile(const std::string &file_name,
 
     boost::shared_ptr<TypedMap> local_params(new TypedMap());
     boost::shared_ptr<Context> local_ctx =
-        Context::createChildContext(script, ctx, invoke_ctx, local_params, true);
+        Context::createChildContext(script, ctx, invoke_ctx, local_params, Context::PROXY_ALL);
 
     ContextStopper ctx_stopper(local_ctx);
     

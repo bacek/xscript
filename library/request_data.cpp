@@ -31,4 +31,14 @@ RequestData::RequestData(const boost::shared_ptr<Request> &req,
 RequestData::~RequestData() {
 }
 
+boost::shared_ptr<RequestData>
+RequestData::clone(bool request, bool response, bool state) const {
+
+    boost::shared_ptr<Request> req = request ? request_ : boost::shared_ptr<Request>(new Request());
+    boost::shared_ptr<Response> resp = response ? response_ : boost::shared_ptr<Response>(new Response());
+    boost::shared_ptr<State> st = state ? state_ : boost::shared_ptr<State>(new State());
+
+    return boost::shared_ptr<RequestData>(new RequestData(req, resp, st));
+}
+
 } // namespace xscript

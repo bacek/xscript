@@ -23,7 +23,7 @@ namespace xscript {
 
 LocalBlock::LocalBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
     Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node),
-    proxy_(false), node_id_(XmlUtils::getUniqueNodeId(node)) {
+    node_id_(XmlUtils::getUniqueNodeId(node)), proxy_flags_(Context::PROXY_NONE) {
 }
 
 LocalBlock::~LocalBlock() {
@@ -39,7 +39,18 @@ LocalBlock::propertyInternal(const char *name, const char *value) {
 void
 LocalBlock::property(const char *name, const char *value) {
     if (strncasecmp(name, "proxy", sizeof("proxy")) == 0) {
-        proxy_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
+        if (!strcasecmp(value, "yes")) {
+            proxy_flags_ = Context::PROXY_ALL;
+        }
+        else if (!strcasecmp(value, "no")) {
+            proxy_flags_ = Context::PROXY_NONE;
+        }
+        else if (!strcasecmp(value, "request")) {
+            proxy_flags_ = Context::PROXY_REQUEST;
+        }
+        else {
+            propertyInternal(name, value);
+        }
     }
     else {
         propertyInternal(name, value);
@@ -74,7 +85,7 @@ LocalBlock::call(boost::shared_ptr<Context> ctx,
     }
 
     boost::shared_ptr<Context> local_ctx =
-        Context::createChildContext(script_, ctx, invoke_ctx, local_params, proxy_);
+        Context::createChildContext(script_, ctx, invoke_ctx, local_params, proxy_flags_);
 
     ContextStopper ctx_stopper(local_ctx);
     
@@ -191,13 +202,8 @@ LocalBlock::postParse() {
 }
 
 void
-LocalBlock::proxy(bool flag) {
-    proxy_ = flag;
-}
-
-bool
-LocalBlock::proxy() const {
-    return proxy_;
+LocalBlock::proxy_flags(unsigned int flags) {
+    proxy_flags_ = flags;
 }
 
 boost::shared_ptr<Script>

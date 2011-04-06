@@ -29,6 +29,8 @@ public:
         return response_.get();
     }
 
+    boost::shared_ptr<RequestData> clone(bool request, bool response, bool state) const;
+
 private:
     boost::shared_ptr<Request> request_;
     boost::shared_ptr<Response> response_;

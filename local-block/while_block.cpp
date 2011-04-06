@@ -50,7 +50,7 @@ ContextStopper::reset() {
 WhileBlock::WhileBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
     Block(ext, owner, node), LocalBlock(ext, owner, node)
 {
-    proxy(true);
+    proxy_flags(Context::PROXY_ALL);
 }
 
 WhileBlock::~WhileBlock() {
@@ -86,7 +86,7 @@ WhileBlock::call(boost::shared_ptr<Context> ctx,
         }
 
         main_child_ctx = Context::createChildContext(
-            script(), ctx, invoke_ctx, ctx->localParamsMap(), true);
+            script(), ctx, invoke_ctx, ctx->localParamsMap(), Context::PROXY_ALL);
         ctxs.push_back(main_child_ctx);
 
         ContextStopper ctx_stopper(main_child_ctx);

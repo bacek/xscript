@@ -104,7 +104,7 @@ struct Context::ContextData {
         script_(script), invoke_ctx_(NULL),
         clear_node_list_(new CleanupList<xmlNodePtr>(&xmlFreeNode)),
         clear_doc_list_(new CleanupList<XmlDocSharedHelper>()),
-        expire_delta_(-1), flags_(0), local_params_(new TypedMap())
+        expire_delta_(-1), flags_(0), init_(false), local_params_(new TypedMap())
     {
         if (!script->expireTimeDeltaUndefined()) {
             requestData()->response()->setExpireDelta(script->expireTimeDelta());
@@ -118,36 +118,36 @@ struct Context::ContextData {
     
     ContextData(const boost::shared_ptr<RequestData> request_data,
                 const boost::shared_ptr<Script> &script,
-                const boost::shared_ptr<Context> &ctx,
+                const boost::shared_ptr<Context> &parent_ctx,
                 InvokeContext *invoke_ctx,
                 const boost::shared_ptr<TypedMap> &local_params) :
         stopped_(false), common_data_(new CommonData(request_data, script->xsltName())),
-        script_(script), parent_context_(ctx), invoke_ctx_(invoke_ctx),
-        clear_node_list_(ctx->ctx_data_->clear_node_list_),
-        clear_doc_list_(ctx->ctx_data_->clear_doc_list_),
-        expire_delta_(-1), flags_(0),
-        local_params_(local_params)
+        script_(script), parent_context_(parent_ctx), invoke_ctx_(invoke_ctx),
+        clear_node_list_(parent_ctx->ctx_data_->clear_node_list_),
+        clear_doc_list_(parent_ctx->ctx_data_->clear_doc_list_),
+        expire_delta_(-1), flags_(0), init_(false), local_params_(local_params)
     {
         if (!script->expireTimeDeltaUndefined()) {
             requestData()->response()->setExpireDelta(script->expireTimeDelta());
         }
+        timer_.reset(parent_ctx->timer().remained());
     }
-    
+
     ContextData(const boost::shared_ptr<Script> &script,
-                const boost::shared_ptr<Context> &ctx,
+                const boost::shared_ptr<Context> &parent_ctx,
                 InvokeContext *invoke_ctx,
                 const boost::shared_ptr<CommonData> &common_data,
                 const boost::shared_ptr<TypedMap> &local_params) :
         stopped_(false), common_data_(common_data), script_(script),
-        parent_context_(ctx), invoke_ctx_(invoke_ctx),
-        clear_node_list_(ctx->ctx_data_->clear_node_list_),
-        clear_doc_list_(ctx->ctx_data_->clear_doc_list_),
-        expire_delta_(-1), flags_(0), local_params_(local_params)
+        parent_context_(parent_ctx), invoke_ctx_(invoke_ctx),
+        clear_node_list_(parent_ctx->ctx_data_->clear_node_list_),
+        clear_doc_list_(parent_ctx->ctx_data_->clear_doc_list_),
+        expire_delta_(-1), flags_(0), init_(false), local_params_(local_params)
     {       
         if (!script->expireTimeDeltaUndefined()) {
             requestData()->response()->setExpireDelta(script->expireTimeDelta());
         }
-        timer_.reset(ctx->timer().remained());
+        timer_.reset(parent_ctx->timer().remained());
     }
     
     ~ContextData() {
@@ -251,6 +251,7 @@ struct Context::ContextData {
     boost::condition condition_;
 
     unsigned int flags_;
+    bool init_;
 
     std::map<const Block*, std::string> runtime_errors_;
     TimeoutCounter timer_;
@@ -287,19 +288,28 @@ Context::Context(const boost::shared_ptr<Script> &script,
                  const boost::shared_ptr<Context> &ctx,
                  InvokeContext *invoke_ctx,
                  const boost::shared_ptr<TypedMap> &local_params,
-                 bool proxy) {
+                 unsigned int proxy_flags) {
     assert(script.get());
     assert(ctx.get());
     
-    if (proxy) {
+    if (proxy_flags == PROXY_ALL) {
         ctx_data_ = std::auto_ptr<ContextData>(new ContextData(
             script, ctx, invoke_ctx, ctx->ctx_data_->common_data_, local_params));
     }
     else {
-        boost::shared_ptr<RequestData> request_data(new RequestData());
+        bool proxy_request = 0 != (proxy_flags & PROXY_REQUEST);
+        boost::shared_ptr<RequestData> request_data = ctx->requestData()->clone(proxy_request, false, false);
+
         ctx_data_ = std::auto_ptr<ContextData>(new ContextData(
             request_data, script, ctx, invoke_ctx, local_params));
-        ctx_data_->authContext(Authorizer::instance()->checkAuth(this));
+
+        if (0 != (proxy_flags & PROXY_REQUEST)) {
+            ctx_data_->authContext(ctx->authContext());
+        }
+        else {
+            ctx_data_->authContext(Authorizer::instance()->checkAuth(this));
+        }
+
         init();
     }
 }
@@ -310,6 +320,7 @@ Context::~Context() {
 
 void
 Context::init() {
+    ctx_data_->init_ = true;
     ExtensionList::instance()->initContext(this);
     CacheStrategy *strategy = script()->cacheStrategy();
     if (NULL != strategy) {
@@ -322,9 +333,9 @@ Context::createChildContext(const boost::shared_ptr<Script> &script,
                             const boost::shared_ptr<Context> &ctx,
                             const boost::shared_ptr<InvokeContext> &invoke_ctx,
                             const boost::shared_ptr<TypedMap> &local_params,
-                            bool proxy) {
+                            unsigned int proxy_flags) {
     boost::shared_ptr<Context> child_ctx(
-        new Context(script, ctx, invoke_ctx.get(), local_params, proxy));
+        new Context(script, ctx, invoke_ctx.get(), local_params, proxy_flags));
     invoke_ctx->setLocalContext(child_ctx);
     return child_ctx;
 }
@@ -744,7 +755,8 @@ Context::localParamsMap() const {
 
 void
 Context::stop() {
-    if (!isProxy()) {
+    if (ctx_data_->init_) {
+        ctx_data_->init_ = false;
         ExtensionList::instance()->stopContext(this);
     }
        

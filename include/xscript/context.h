@@ -46,12 +46,19 @@ public:
             const boost::shared_ptr<Response> &response);
     virtual ~Context();
 
+    enum {
+	PROXY_NONE = 0,
+	PROXY_REQUEST = 1,
+	PROXY_OTHERS = 2, // response, state, lua ...
+	PROXY_ALL = PROXY_REQUEST | PROXY_OTHERS
+    };
+
     static boost::shared_ptr<Context> createChildContext(
             const boost::shared_ptr<Script> &script,
             const boost::shared_ptr<Context> &ctx,
             const boost::shared_ptr<InvokeContext> &invoke_ctx,
             const boost::shared_ptr<TypedMap> &local_params,
-            bool proxy);
+            unsigned int proxy_flags);
     
     void wait(const boost::xtime &until);
     void expect(unsigned int count);
@@ -139,7 +146,7 @@ private:
             const boost::shared_ptr<Context> &ctx,
             InvokeContext *invoke_ctx,
             const boost::shared_ptr<TypedMap> &local_params,
-            bool proxy);
+            unsigned int proxy_flags);
     void init();
     bool insertParam(const std::string &key, const boost::any &value);
     bool findParam(const std::string &key, boost::any &value) const;

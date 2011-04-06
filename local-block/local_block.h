@@ -29,8 +29,7 @@ protected:
     void propertyInternal(const char *name, const char *value);
     void postParseInternal();
 
-    void proxy(bool flag);
-    bool proxy() const;
+    void proxy_flags(unsigned int flags);
 
     boost::shared_ptr<Script> script() const;
 
@@ -41,9 +40,9 @@ private:
     virtual void property(const char *name, const char *value);
 
 private:
-    bool proxy_;
     boost::shared_ptr<Script> script_;
     std::string node_id_;
+    unsigned int proxy_flags_;
 };
 
 } // namespace xscript
