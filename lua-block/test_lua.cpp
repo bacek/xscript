@@ -45,6 +45,8 @@ public:
     
     void testLogger();
     void testMeta();
+    void testLocal();
+
 private:
     CPPUNIT_TEST_SUITE(LuaTest);
 
@@ -74,6 +76,7 @@ private:
 
     CPPUNIT_TEST(testLogger);
     CPPUNIT_TEST(testMeta);
+    CPPUNIT_TEST(testLocal);
 
     CPPUNIT_TEST_SUITE_END();
 };
@@ -443,4 +446,23 @@ LuaTest::testMeta() {
                          XmlUtils::xpathNsValue(doc.get(), "/page/g:rootmeta/param[@name='key2']", ns, "failed"));
     CPPUNIT_ASSERT(XmlUtils::xpathNsExists(doc.get(), "/page/g:rootmeta/param[@name='elapsed-time']", ns));
     CPPUNIT_ASSERT_EQUAL(std::string("value0"), ctx->state()->asString("key"));
+}
+
+void
+LuaTest::testLocal() {
+
+    using namespace xscript;
+
+    boost::shared_ptr<Context> ctx = TestUtils::createEnv("lua-local.xml");
+    ContextStopper ctx_stopper(ctx);
+
+    XmlDocSharedHelper doc = ctx->script()->invoke(ctx);
+    CPPUNIT_ASSERT(NULL != doc.get());
+    
+    CPPUNIT_ASSERT_EQUAL(1, ctx->state()->asLong("test1"));     // a=1
+    CPPUNIT_ASSERT_EQUAL(21, ctx->state()->asLong("test2"));    // proxy=no a+=20
+    CPPUNIT_ASSERT_EQUAL(301, ctx->state()->asLong("test3"));   // proxy=request a+=300
+    CPPUNIT_ASSERT_EQUAL(4001, ctx->state()->asLong("test4"));  // proxy=yes a+=4000
+    CPPUNIT_ASSERT_EQUAL(54001, ctx->state()->asLong("test5")); // proxy=no a+=50000
+    CPPUNIT_ASSERT_EQUAL(4001, ctx->state()->asLong("test6"));  // print a
 }

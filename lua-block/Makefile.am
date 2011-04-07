@@ -17,7 +17,7 @@ EXTRA_DIST = test.conf \
 	lua-badargcount.xml lua-badcode.xml lua-badtype.xml \
 	lua-cookie.xml lua-domain.xml lua-encode.xml lua-get-vhost-arg.xml \
 	lua-logger.xml lua-md5.xml lua-meta.xml lua-multi.xml lua-print.xml \
-	lua-punycode.xml lua-request.xml \
+	lua-punycode.xml lua-request.xml lua-local.xml \
 	lua-response-redirect.xml lua-response.xml \
 	lua-state-has.xml lua-state-is.xml lua-state.xml \
 	lua-strsplit.xml lua-xmlescape.xml

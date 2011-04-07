@@ -1,0 +1,51 @@
+<page xmlns:x="http://www.yandex.ru/xscript">
+
+  <!-- 1 a=1 -->
+  <lua>a=1; print(xscript.state:setLong("test1", a))</lua>
+
+  <!-- 2 proxy=no a+=20 -->
+  <x:local><root>
+    <lua><![CDATA[
+     print('was:' .. a); a = a + 20; print(a)
+     return '<x>' .. a .. '</x>'
+     ]]></lua>
+  </root>
+  <xpath expr="/root/lua/x" result="test2"/>
+  </x:local>
+
+  <!-- 3 proxy=request a+=300 -->
+  <x:local proxy="request"><root>
+    <lua><![CDATA[
+     print('was:' .. a); a = a + 300; print(a)
+     return '<x>' .. a .. '</x>'
+     ]]></lua>
+  </root>
+  <xpath expr="/root/lua/x" result="test3"/>
+  </x:local>
+
+  <!-- 4 proxy=yes a+=4000 -->
+  <x:local proxy="yes"><root>
+    <lua><![CDATA[
+     print('was:' .. a); a = a + 4000; print(a)
+     return '<x>' .. a .. '</x>'
+     ]]></lua>
+  </root>
+  <xpath expr="/root/lua/x" result="test4"/>
+  </x:local>
+
+  <!-- 5 proxy=no a+=50000 -->
+  <x:local><root>
+    <lua><![CDATA[
+     print('was:' .. a); a = a + 50000; print(a)
+     return '<x>' .. a .. '</x>'
+     ]]></lua>
+  </root>
+  <xpath expr="/root/lua/x" result="test5"/>
+  </x:local>
+
+  <!-- 6 -->
+  <lua>print(xscript.state:setLong("test6", a))</lua>
+
+  <!--mist method="dumpState"/-->
+
+</page>
