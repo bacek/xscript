@@ -54,6 +54,7 @@ class LuaThread {
 public:
     LuaThread(lua_State *parent, Context::MutexPtr mutex) :
         parent_(parent), state_(lua_newthread(parent)), mutex_(mutex) {
+
         lua_pushvalue(parent, -1);
         thread_id_ = luaL_ref(parent, LUA_REGISTRYINDEX);
         lua_newtable(parent);
@@ -75,6 +76,9 @@ public:
     }
 
 private:
+    LuaThread(const LuaThread &);
+    LuaThread& operator = (const LuaThread &);
+
     lua_State* parent_;
     lua_State* state_;
     int thread_id_;
@@ -316,7 +320,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
     }   
     
     Context *root_ctx = ctx->rootContext();
-    Context *orig_ctx = ctx->originalContext();
+    Context *orig_ctx = ctx->originalStateContext();
     
     Context::MutexPtr mutex = root_ctx->param<Context::MutexPtr>(LUA_CONTEXT_MUTEX);
     boost::function<LuaSharedContext ()> lua_creator = boost::bind(&createLua, ext_);

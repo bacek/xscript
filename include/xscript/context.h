@@ -80,8 +80,11 @@ public:
     const boost::shared_ptr<Context>& parentContext() const;
     Context* rootContext() const;
     Context* originalContext() const;
+    Context* originalStateContext() const;
+
     bool isRoot() const;
     bool isProxy() const;
+
     InvokeContext* invokeContext() const;
 
     bool hasXslt() const;

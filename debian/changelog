@@ -1,3 +1,10 @@
+xscript (5.73.21-5) unstable; urgency=low
+
+  * fixed lua-block for x:local proxy="request"
+  * added test for lua with local block
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Thu, 07 Apr 2011 14:02:08 +0400
+
 xscript (5.73.21-4) unstable; urgency=low
 
   * support x:local proxy="request"

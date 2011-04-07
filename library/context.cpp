@@ -628,12 +628,26 @@ Context::rootContext() const {
 
 Context*
 Context::originalContext() const {
-    const Context* ctx = this;
-    while(ctx->isProxy()) {
-        ctx = ctx->parentContext().get();
-        if (NULL == ctx) {
-            throw std::logic_error("NULL original context");
+    const Context *ctx = this;
+    for(;;) {
+        const Context *parent_ctx = ctx->parentContext().get();
+        if ((NULL == parent_ctx) || (ctx->request() != parent_ctx->request())) {
+            break;
         }
+        ctx = parent_ctx;
+    }
+    return const_cast<Context*>(ctx); 
+}
+
+Context*
+Context::originalStateContext() const {
+    const Context *ctx = this;
+    for(;;) {
+        const Context *parent_ctx = ctx->parentContext().get();
+        if ((NULL == parent_ctx) || (ctx->state() != parent_ctx->state())) {
+            break;
+        }
+        ctx = parent_ctx;
     }
     return const_cast<Context*>(ctx); 
 }
