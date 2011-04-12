@@ -19,6 +19,9 @@ public:
     virtual ~LocalBlock();
 
     virtual std::string createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const;
+
+    static const std::string ON_CREATE_BLOCK_METHOD;
+
 protected:
     virtual void parseSubNode(xmlNodePtr node);
     virtual void postParse();
@@ -38,6 +41,8 @@ private:
     LocalBlock& operator = (const LocalBlock &);
 
     virtual void property(const char *name, const char *value);
+
+    void notifyCreateBlock();
 
 private:
     boost::shared_ptr<Script> script_;

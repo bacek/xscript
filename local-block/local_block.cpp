@@ -6,6 +6,7 @@
 
 #include <xscript/context.h>
 #include <xscript/logger.h>
+#include "xscript/message_interface.h"
 #include <xscript/param.h>
 #include <xscript/script.h>
 #include <xscript/script_factory.h>
@@ -20,6 +21,8 @@
 #endif
 
 namespace xscript {
+
+const std::string LocalBlock::ON_CREATE_BLOCK_METHOD = "ON_CREATE_LOCAL_BLOCK";
 
 LocalBlock::LocalBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
     Block(ext, owner, node), ThreadedBlock(ext, owner, node), TaggedBlock(ext, owner, node),
@@ -171,7 +174,7 @@ LocalBlock::parseSubNode(xmlNodePtr node) {
         xmlRemoveProp(name_attr);
     }
 
-    script_ = ScriptFactory::createScriptFromXmlNode(owner()->name(), node);
+    script_ = ScriptFactory::createScriptFromXmlNode(owner()->name(), node, dynamic_cast<Script*>(owner()));
     Xml::TimeMapType modified_info = owner()->modifiedInfo();
     script_->swapModifiedInfo(modified_info);
 }
@@ -199,6 +202,7 @@ LocalBlock::postParse() {
         }
     }
     createCanonicalMethod("local.");
+    notifyCreateBlock();
 }
 
 void
@@ -238,5 +242,39 @@ LocalBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) co
     key.append(node_id_);
     return key;
 }
+
+void
+LocalBlock::notifyCreateBlock() {
+
+    MessageParam<Script> script_param(script_.get());
+    MessageParam<unsigned int> flags_param(&proxy_flags_);
+
+    MessageParamBase* param_list[2];
+    param_list[0] = &script_param;
+    param_list[1] = &flags_param;
+
+    MessageParams params(2, param_list);
+    MessageResultBase result;
+
+    MessageProcessor::instance()->process(ON_CREATE_BLOCK_METHOD, params, result);
+}
+
+class OnCreateLocalBlockHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+        (void)params;
+	(void)result;
+	return CONTINUE;
+    }
+};
+				
+class LocalBlockHandlerRegisterer {
+public:
+    LocalBlockHandlerRegisterer() {
+        MessageProcessor::instance()->registerBack(LocalBlock::ON_CREATE_BLOCK_METHOD,
+        boost::shared_ptr<MessageHandler>(new OnCreateLocalBlockHandler()));
+    }
+};
+							    
+static LocalBlockHandlerRegisterer reg_http_utils_handlers;
 
 } // namespace xscript

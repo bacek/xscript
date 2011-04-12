@@ -62,6 +62,8 @@ public:
     
     void addExpiresHeader(const Context *ctx) const;
 
+    const Script* parent() const;
+
     bool valid() const;
 
     class HandlerRegisterer;
@@ -75,7 +77,7 @@ protected:
 
     void parse();
     void parseFromXml(const std::string &xml);
-    void parseFromXml(xmlNodePtr node); 
+    void parseFromXml(xmlNodePtr node, const Script *parent); 
     void parseInternal(const boost::function<xmlDocPtr()> &parserFunc);    
     void parseXScript();
 

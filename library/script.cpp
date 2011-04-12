@@ -104,7 +104,8 @@ public:
     void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx);
     void property(const char *name, const char *value);
     bool cachable(const Context *ctx, bool for_save);
-    
+
+    const Script *parent_;
     Script *owner_;
     XmlDocHelper doc_;
     std::vector<Block*> blocks_;
@@ -133,7 +134,7 @@ class Script::CachableHandler : public MessageHandler {
 };
 
 Script::ScriptData::ScriptData(Script *owner) :
-    owner_(owner), flags_(FLAG_FORCE_STYLESHEET),
+    parent_(NULL), owner_(owner), flags_(FLAG_FORCE_STYLESHEET),
     expire_time_delta_(EXPIRE_TIME_DELTA_UNDEFINED)
 {}
 
@@ -853,7 +854,8 @@ Script::parseFromXml(const std::string &xml) {
 }
 
 void
-Script::parseFromXml(xmlNodePtr node) {
+Script::parseFromXml(xmlNodePtr node, const Script *parent) {
+    data_->parent_ = parent;
     data_->doc_ = XmlDocHelper(xmlNewDoc((const xmlChar*) "1.0"));
     XmlNodeHelper root_node(xmlCopyNode(node, 1));
     xmlDocSetRootElement(data_->doc_.get(), root_node.get());
@@ -1048,6 +1050,11 @@ Script::info(const Context *ctx) const {
 bool
 Script::cachable(const Context *ctx, bool for_save) const {
     return data_->cachable(ctx, for_save);
+}
+
+const Script*
+Script::parent() const {
+    return data_->parent_;
 }
 
 bool
