@@ -1,3 +1,9 @@
+xscript (5.73.22-2) unstable; urgency=low
+
+  * lua block: xscript.domain() returns nil on error
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 18 Apr 2011 16:06:55 +0400
+
 xscript (5.73.22-1) unstable; urgency=low
 
   * Script: added getter for parent Script, set in x:local, x:while

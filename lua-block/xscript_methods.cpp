@@ -307,7 +307,12 @@ luaDomain(lua_State *lua) {
             level = luaReadStack<boost::int32_t>(lua, 2);
         }
 
-        lua_pushstring(lua, StringUtils::parseDomainFromURL(url, level).c_str());
+        try {
+            lua_pushstring(lua, StringUtils::parseDomainFromURL(url, level).c_str());
+        }
+        catch (const std::exception &) {
+            lua_pushnil(lua);
+        }
         // Our value on stack
         return 1;
     }
