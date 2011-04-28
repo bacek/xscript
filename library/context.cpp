@@ -14,6 +14,7 @@
 #include "xscript/cache_strategy.h"
 #include "xscript/context.h"
 #include "xscript/logger.h"
+#include "xscript/message_interface.h"
 #include "xscript/policy.h"
 #include "xscript/script.h"
 #include "xscript/server.h"
@@ -94,8 +95,9 @@ struct CommonData {
     boost::shared_ptr<ParamsMap> params_;
     boost::shared_ptr<AuthContext> auth_;
     std::string xslt_name_;
-    std::auto_ptr<DocumentWriter> writer_;
 };
+
+const std::string Context::CREATE_DOCUMENT_WRITER_METHOD = "CONTEXT_CREATE_DOCUMENT_WRITER_METHOD";
 
 struct Context::ContextData {
     ContextData(const boost::shared_ptr<RequestData> request_data,
@@ -158,11 +160,11 @@ struct Context::ContextData {
     }
     
     DocumentWriter* documentWriter() const {
-        return common_data_->writer_.get();
+        return writer_.get();
     }
     
     void documentWriter(std::auto_ptr<DocumentWriter> writer) {
-        common_data_->writer_ = writer;
+        writer_ = writer;
     }
     
     const boost::shared_ptr<AuthContext>& authContext() const {
@@ -239,6 +241,7 @@ struct Context::ContextData {
  
     volatile bool stopped_;
     boost::shared_ptr<CommonData> common_data_;
+    std::auto_ptr<DocumentWriter> writer_;
     boost::shared_ptr<Script> script_;
     boost::shared_ptr<Context> parent_context_;
     InvokeContext* invoke_ctx_;
@@ -527,21 +530,27 @@ Context::documentWriter() {
 }
 
 void
-Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
-    const std::string &output_method = sh->outputMethod();
-    if (output_method == "xml" && !sh->omitXmlDecl()) {
-        ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new XmlWriter(sh->outputEncoding(), sh->indent())));
-        log()->debug("xml writer created");
-    }
-    else if (output_method == "xhtml") {
-        ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new XhtmlWriter(sh)));
-        log()->debug("xhtml writer created");
-    }
-    else {
-        ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(new HtmlWriter(sh)));
-        log()->debug("html writer created");
+Context::documentWriter(DocumentWriter *writer) {
+    if (NULL != writer) {
+        ctx_data_->documentWriter(std::auto_ptr<DocumentWriter>(writer));
     }
 }
+
+void
+Context::createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh) {
+    MessageParam<Context> context_param(this);
+    MessageParam<const boost::shared_ptr<Stylesheet> > stylesheet_param(&sh);
+
+    MessageParamBase* param_list[2];
+    param_list[0] = &context_param;
+    param_list[1] = &stylesheet_param;
+
+    MessageParams params(2, param_list);
+    MessageResultBase result;
+
+    MessageProcessor::instance()->process(CREATE_DOCUMENT_WRITER_METHOD, params, result);
+}
+
 
 bool
 Context::noXsltPort() const {
@@ -803,6 +812,39 @@ ParamsMap::find(const std::string &name, boost::any &value) const {
     return true;
 }
 
+class ContextCreateDocumentWriterHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+
+        (void)result;
+        Context *ctx = params.getPtr<Context>(0);
+        const boost::shared_ptr<Stylesheet> &sh = params.get<const boost::shared_ptr<Stylesheet> >(1);
+
+        const std::string &output_method = sh->outputMethod();
+        if (output_method == "xml" && !sh->omitXmlDecl()) {
+            ctx->documentWriter(new XmlWriter(sh->outputEncoding(), sh->indent()));
+            log()->debug("xml writer created");
+        }
+        else if (output_method == "xhtml") {
+            ctx->documentWriter(new XhtmlWriter(sh));
+            log()->debug("xhtml writer created");
+        }
+        else {
+            ctx->documentWriter(new HtmlWriter(sh));
+            log()->debug("html writer created");
+        }
+        return BREAK;
+    }
+};
+
+class ContextHandlersRegisterer {
+public:
+    ContextHandlersRegisterer() {
+        MessageProcessor::instance()->registerBack(Context::CREATE_DOCUMENT_WRITER_METHOD,
+            boost::shared_ptr<MessageHandler>(new ContextCreateDocumentWriterHandler()));
+    }
+};
+			    
+
 ContextStopper::ContextStopper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {
 }
 
@@ -816,5 +858,8 @@ void
 ContextStopper::reset() {
     return ctx_.reset();
 }
+
+
+static ContextHandlersRegisterer reg_context_handlers;
 
 } // namespace xscript

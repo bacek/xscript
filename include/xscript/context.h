@@ -96,6 +96,7 @@ public:
     void authContext(const boost::shared_ptr<AuthContext> &auth);
 
     DocumentWriter* documentWriter();
+    void documentWriter(DocumentWriter *writer);
 
     void createDocumentWriter(const boost::shared_ptr<Stylesheet> &sh);
 
@@ -141,6 +142,8 @@ public:
     const std::string& getLocalParam(const std::string &name, const std::string &default_value) const;
     const std::map<std::string, TypedValue>& localParams() const;
     const boost::shared_ptr<TypedMap>& localParamsMap() const;
+
+    static const std::string CREATE_DOCUMENT_WRITER_METHOD;
 
     friend class ContextStopper;
 
