@@ -17,6 +17,7 @@
 #include "xscript/context.h"
 #include "xscript/extension.h"
 #include "xscript/logger.h"
+#include "xscript/message_interface.h"
 #include "xscript/object.h"
 #include "xscript/operation_mode.h"
 #include "xscript/param.h"
@@ -59,12 +60,9 @@ struct ContextDataHelper {
 ContextDataHelper::ContextDataHelper() : stylesheet(NULL), block(NULL) {
 }
 
-
 class XsltInitalizer {
 public:
     XsltInitalizer();
-
-    static int XSCRIPT_NAMESPACE_SIZE;
 
 private:
     static void* ExtraDataInit(xsltTransformContextPtr, const xmlChar*);
@@ -72,6 +70,8 @@ private:
 };
 
 static XsltInitalizer xsltInitalizer;
+
+const std::string Stylesheet::DETECT_OUTPUT_METHOD = "STYLESHEET_DETECT_OUTPUT_METHOD";
 
 class Stylesheet::StylesheetData {
 public:
@@ -82,7 +82,7 @@ public:
     void detectOutputMethod();
     void detectOutputEncoding();
     void detectOutputInfo();
-    void setupContentType(const char *type);
+    void setContentType(const char *type);
     void parseStylesheet(xsltStylesheetPtr style);    
     void parseNode(xmlNodePtr node);
     std::string detectContentType(const XmlDocHelper &doc) const;
@@ -129,47 +129,32 @@ Stylesheet::StylesheetData::block(xmlNodePtr node) {
 void
 Stylesheet::StylesheetData::detectOutputMethod() {
     if (NULL == stylesheet_->method || !stylesheet_->method[0]) {
-        setupContentType("text/html");
+        setContentType("text/html");
         output_method_.assign("html");
 
         stylesheet_->methodURI = NULL;
         stylesheet_->method = xmlStrdup((const xmlChar*)"html");
     }
-    else if (strncmp("xhtml", (const char*)stylesheet_->method, sizeof("xhtml")) == 0 &&
-             strncasecmp(XmlUtils::XSCRIPT_NAMESPACE,
-                         (const char*)stylesheet_->methodURI,
-                         XsltInitalizer::XSCRIPT_NAMESPACE_SIZE) == 0) {
-        setupContentType("text/html");
-        output_method_.assign("xhtml");
-
-        xmlFree(stylesheet_->method);
-        xmlFree(stylesheet_->methodURI);
-
-        stylesheet_->methodURI = NULL;
-        stylesheet_->method = xmlStrdup((const xmlChar*)"xml");
-    }
-    else if (strncmp("wml", (const char*)stylesheet_->method, sizeof("wml")) == 0 &&
-             strncasecmp(XmlUtils::XSCRIPT_NAMESPACE,
-                         (const char*)stylesheet_->methodURI,
-                         XsltInitalizer::XSCRIPT_NAMESPACE_SIZE) == 0) {
-        setupContentType("text/vnd.wap.wml");
-        output_method_.assign("wml");
-
-        xmlFree(stylesheet_->method);
-        xmlFree(stylesheet_->methodURI);
-
-        stylesheet_->methodURI = NULL;
-        stylesheet_->omitXmlDeclaration = 0;
-        stylesheet_->method = xmlStrdup((const xmlChar*)"xml");
-    }
     else if (strncmp("xml", (const char*)stylesheet_->method, sizeof("xml")) == 0) {
-        setupContentType("text/xml");
+        setContentType("text/xml");
     }
     else if (strncmp("html", (const char*)stylesheet_->method, sizeof("html")) == 0) {
-        setupContentType("text/html");
+        setContentType("text/html");
     }
     else if (strncmp("text", (const char*)stylesheet_->method, sizeof("text")) == 0) {
-        setupContentType("text/plain");
+        setContentType("text/plain");
+    }
+    else {
+        MessageParam<Stylesheet> stylesheet_param(owner_);
+
+        MessageParamBase* param_list[1];
+        param_list[0] = &stylesheet_param;
+		    
+        MessageParams params(1, param_list);
+        MessageResult<std::string> result;
+
+        MessageProcessor::instance()->process(DETECT_OUTPUT_METHOD, params, result);
+        output_method_.swap(result.get());
     }
     if (output_method_.empty() && NULL != stylesheet_->method) {
         output_method_.assign((const char*)stylesheet_->method);
@@ -211,7 +196,7 @@ Stylesheet::StylesheetData::detectOutputInfo() {
 }
 
 void
-Stylesheet::StylesheetData::setupContentType(const char *type) {
+Stylesheet::StylesheetData::setContentType(const char *type) {
     if (content_type_.empty()) {
         content_type_.assign(type);
     }
@@ -340,11 +325,17 @@ Stylesheet::StylesheetData::attachContextData(xsltTransformContextPtr tctx,
     data->block = block;
 }
 
+
 Stylesheet::Stylesheet(const std::string &name) :
     Xml(name), data_(new StylesheetData(this)) {
 }
 
 Stylesheet::~Stylesheet() {
+}
+
+void
+Stylesheet::setContentType(const char *type) {
+    data_->setContentType(type);
 }
 
 xsltStylesheetPtr
@@ -518,11 +509,59 @@ Stylesheet::block(xmlNodePtr node) {
     return data_->block(node);
 }
 
-int XsltInitalizer::XSCRIPT_NAMESPACE_SIZE = 0;
+
+class StylesheetDetectOutputMethodHandler : public MessageHandler {
+    Result process(const MessageParams &params, MessageResultBase &result) {
+
+        Stylesheet *style = params.getPtr<Stylesheet>(0);
+        xsltStylesheetPtr st = style->stylesheet();
+
+        if (NULL == st->methodURI || !st->methodURI[0] ||
+            NULL == st->method || !st->method[0] ||
+            0 != strcasecmp(XmlUtils::XSCRIPT_NAMESPACE, (const char*)st->methodURI)) {
+            return CONTINUE;
+        }
+
+        if (!strncmp("xhtml", (const char*)st->method, sizeof("xhtml"))) {
+            style->setContentType("text/html");
+
+            xmlFree(st->method);
+            xmlFree(st->methodURI);
+
+            st->methodURI = NULL;
+            st->method = xmlStrdup((const xmlChar*)"xml");
+
+            result.set<std::string>("xhtml");
+            return BREAK;
+        }
+        if (!strncmp("wml", (const char*)st->method, sizeof("wml"))) {
+            style->setContentType("text/vnd.wap.wml");
+
+            xmlFree(st->method);
+            xmlFree(st->methodURI);
+
+            st->methodURI = NULL;
+            st->omitXmlDeclaration = 0;
+            st->method = xmlStrdup((const xmlChar*)"xml");
+
+            result.set<std::string>("wml");
+            return BREAK;
+        }
+        return CONTINUE;
+    }
+};
+				
+class StylesheetHandlersRegisterer {
+public:
+    StylesheetHandlersRegisterer() {
+        MessageProcessor::instance()->registerBack(Stylesheet::DETECT_OUTPUT_METHOD,
+            boost::shared_ptr<MessageHandler>(new StylesheetDetectOutputMethodHandler()));
+    }
+};
+
 
 XsltInitalizer::XsltInitalizer()  {
     xsltRegisterExtModule((const xmlChar*) XmlUtils::XSCRIPT_NAMESPACE, ExtraDataInit, ExtraDataShutdown);
-    XSCRIPT_NAMESPACE_SIZE = strlen(XmlUtils::XSCRIPT_NAMESPACE) + 1;
 }
 
 void*
@@ -539,5 +578,7 @@ XsltInitalizer::ExtraDataShutdown(xsltTransformContextPtr, const xmlChar*, void*
     log()->debug("%s, data is: %p", BOOST_CURRENT_FUNCTION, data);
     delete static_cast<ContextDataHelper*>(data);
 }
+
+static StylesheetHandlersRegisterer reg_stylesheet_handlers;
 
 } // namespace xscript

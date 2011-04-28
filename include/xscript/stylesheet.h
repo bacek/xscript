@@ -39,6 +39,10 @@ public:
     
     Block* block(xmlNodePtr node);
 
+    static const std::string DETECT_OUTPUT_METHOD;
+
+    void setContentType(const char *type);
+
 protected:
     Stylesheet(const std::string &name);
 
