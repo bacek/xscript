@@ -1,3 +1,13 @@
+xscript (5.73.23-1) unstable; urgency=low
+
+  * support detecting external xscript methods on parse stylesheet
+  * support custom document writer
+  * document writer moved from CommonData to ContextData
+  * find xml char endcoding convertor if output encoding != utf-8
+  * xscript-proc: fixed memory leaks in xslt profiler
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Thu, 28 Apr 2011 14:01:56 +0400
+
 xscript (5.73.22-2) unstable; urgency=low
 
   * lua block: xscript.domain() returns nil on error
