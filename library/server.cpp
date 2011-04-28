@@ -243,7 +243,7 @@ Server::sendResponse(Context *ctx, XmlDocSharedHelper doc) {
 
     xmlCharEncodingHandlerPtr encoder = NULL;
     const std::string &encoding = ctx->documentWriter()->outputEncoding();
-    if (!encoding.empty()) {
+    if (!encoding.empty() && 0 != strncasecmp(encoding.c_str(), "utf-8", sizeof("utf-8"))) {
         encoder = xmlFindCharEncodingHandler(encoding.c_str());
     }
     
