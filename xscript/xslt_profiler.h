@@ -5,6 +5,7 @@
 #include <boost/thread/mutex.hpp>
 
 #include "xscript/xslt_profiler.h"
+#include "xscript/xml_helpers.h"
 
 namespace xscript {
 
@@ -20,7 +21,7 @@ public:
 private:
     boost::mutex mutex_;
     std::string xslt_path_;
-    std::multimap<std::string, xmlDocPtr> docs_;
+    std::multimap<std::string, XmlDocSharedHelper> docs_;
 };
 
 }

@@ -29,6 +29,7 @@ private:
     std::string stylesheet_;
     bool apply_main_stylesheet_, apply_perblock_stylesheet_, use_remote_call_, need_output_;
     std::map<std::string, std::string> headers_;
+    bool xslt_profiler_;
 };
 
 } // namespace xscript

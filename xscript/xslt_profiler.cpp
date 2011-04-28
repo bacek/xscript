@@ -36,17 +36,13 @@ OfflineXsltProfiler::OfflineXsltProfiler(const std::string& xslt_path) :
 {}
 
 OfflineXsltProfiler::~OfflineXsltProfiler() {
-    for (std::multimap<std::string, xmlDocPtr>::const_iterator it = docs_.begin();
-            it != docs_.end();
-            ++it) {
-        xmlFreeDoc(it->second);
-    }
+    docs_.clear();
 }
 
 void
 OfflineXsltProfiler::insertProfileDoc(const std::string& name, xmlDocPtr doc) {
     boost::mutex::scoped_lock lock(mutex_);
-    docs_.insert(std::pair<std::string, xmlDocPtr>(name, doc));
+    docs_.insert(std::pair<std::string, XmlDocSharedHelper>(name, XmlDocSharedHelper(doc)));
 }
 
 void
@@ -69,7 +65,7 @@ OfflineXsltProfiler::dumpProfileInfo(boost::shared_ptr<Context> ctx) {
         }
     }
 
-    for (std::multimap<std::string, xmlDocPtr>::const_iterator it = docs_.begin();
+    for (std::multimap<std::string, XmlDocSharedHelper>::const_iterator it = docs_.begin();
             it != docs_.end();
             ++it) {
         xmlOutputBufferPtr buf = xmlOutputBufferCreateIO(&writeProfileFunc, &closeProfileFunc, ctx.get(), NULL);
@@ -77,7 +73,7 @@ OfflineXsltProfiler::dumpProfileInfo(boost::shared_ptr<Context> ctx) {
 
         std::cout << std::endl << it->first << std::endl;
 
-        XmlDocHelper doc(xmlCopyDoc(it->second, 1));
+        XmlDocHelper doc(xmlCopyDoc(it->second.get(), 1));
         if (NULL != stylesheet.get()) {
             doc = stylesheet->apply(NULL, ctx, boost::shared_ptr<InvokeContext>(), doc.get());
             xsltSaveResultTo(buf, doc.get(), stylesheet->stylesheet());
@@ -87,6 +83,7 @@ OfflineXsltProfiler::dumpProfileInfo(boost::shared_ptr<Context> ctx) {
             xmlSaveFormatFileTo(buf, doc.get(), NULL, 1);
         }
     }
+    docs_.clear();
 }
 
 extern "C" int

@@ -28,7 +28,7 @@ ProcServer::ProcServer(Config *config,
                        const std::multimap<std::string, std::string> &args) :
     Server(config), url_(url),
     apply_main_stylesheet_(true), apply_perblock_stylesheet_(true),
-    use_remote_call_(true), need_output_(true) {
+    use_remote_call_(true), need_output_(true), xslt_profiler_(false) {
 
     root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");
     
@@ -84,6 +84,7 @@ ProcServer::ProcServer(Config *config,
 
         ComponentImplRegisterer<XsltProfiler> reg2(new OfflineXsltProfiler(xslt_path));
         (void)reg2;
+        xslt_profiler_ = true;
     }
     
     if (!url_.empty() && url_[0] != '/' &&
@@ -107,7 +108,7 @@ ProcServer::~ProcServer() {
 
 bool
 ProcServer::useXsltProfiler() const {
-    return true;
+    return xslt_profiler_;
 }
 
 void
