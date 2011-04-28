@@ -16,6 +16,8 @@
 
 namespace xscript {
 
+static const std::string CONTENT_TYPE_HEADER = "Content-Type";
+
 DocumentWriter::~DocumentWriter() {
 }
 
@@ -38,11 +40,11 @@ XmlWriter::outputEncoding() const {
 
 void
 XmlWriter::addHeaders(Response *response) {
-    std::string val = response->outputHeader("Content-type");
+    std::string val = response->outputHeader(CONTENT_TYPE_HEADER);
     if (!val.empty()) {
         return;
     }
-    response->setHeader("Content-type", std::string("text/xml; charset=").append(encoding_));
+    response->setHeader(CONTENT_TYPE_HEADER, std::string("text/xml; charset=").append(encoding_));
 }
 
 int
@@ -66,7 +68,7 @@ HtmlWriter::outputEncoding() const {
 
 void
 HtmlWriter::addHeaders(Response *response) {
-    std::string val = response->outputHeader("Content-type");
+    std::string val = response->outputHeader(CONTENT_TYPE_HEADER);
     if (!val.empty()) {
         return;
     }
@@ -78,19 +80,18 @@ HtmlWriter::addHeaders(Response *response) {
         }
         std::stringstream stream;
         stream << type << "; charset=" << stylesheet_->outputEncoding();
-        response->setHeader("Content-type", stream.str());
+        response->setHeader(CONTENT_TYPE_HEADER, stream.str());
     }
     else {
-        response->setHeader("Content-type", type);
+        response->setHeader(CONTENT_TYPE_HEADER, type);
     }
 }
 
 int
 HtmlWriter::write(Response *response, xmlDocPtr doc, xmlOutputBufferPtr buf) {
     addHeaders(response);
-    int len = xsltSaveResultTo(buf, doc, stylesheet_->stylesheet());
-    xmlOutputBufferClose(buf);
-    return len;
+    xsltSaveResultTo(buf, doc, stylesheet_->stylesheet());
+    return xmlOutputBufferClose(buf);
 }
 
 
