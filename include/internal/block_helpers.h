@@ -51,12 +51,12 @@ private:
 
 class XPathNodeExpr {
 public:
-    XPathNodeExpr(const char *expression, const char *result, const char *delimeter, const char *type);
+    XPathNodeExpr(const char *expression, const char *result, const char *delimiter, const char *type);
     ~XPathNodeExpr();
 
     std::string expression(const Context *ctx) const;
     const std::string& result() const;
-    const std::string& delimeter() const;
+    const std::string& delimiter() const;
     const std::map<std::string, std::string>& namespaces() const;
     void addNamespace(const char *prefix, const char *uri);
 
@@ -66,7 +66,7 @@ public:
 private:
     XPathExpr expr_;
     std::string result_;
-    std::string delimeter_;
+    std::string delimiter_;
     std::map<std::string, std::string> namespaces_;
 };
 

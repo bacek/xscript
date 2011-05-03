@@ -237,7 +237,7 @@ StringUtils::parseDomainFromURL(std::string url, boost::int32_t level) {
 void
 StringUtils::split(const std::string &val, const std::string &delim, std::vector<std::string> &v) {
     if (delim.empty() || delim[0] == '\0') {
-        throw std::runtime_error("empty delimeter");
+        throw std::runtime_error("empty delimiter");
     }
 
     bool searching = true;

@@ -129,9 +129,9 @@ XPathExpr::eval(xmlXPathContextPtr context, const Context *ctx) const {
 
 
 XPathNodeExpr::XPathNodeExpr(const char *expression, const char *result,
-        const char *delimeter, const char *type) :
+        const char *delimiter, const char *type) :
     expr_(expression, type), result_(result ? result : ""),
-    delimeter_(delimeter ? delimeter : "")
+    delimiter_(delimiter ? delimiter : "")
 {}
 
 XPathNodeExpr::~XPathNodeExpr()
@@ -148,8 +148,8 @@ XPathNodeExpr::result() const {
 }
 
 const std::string&
-XPathNodeExpr::delimeter() const {
-    return delimeter_;
+XPathNodeExpr::delimiter() const {
+    return delimiter_;
 }
 
 const std::map<std::string, std::string>&

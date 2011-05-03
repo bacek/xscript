@@ -866,7 +866,7 @@ Block::evalXPath(Context *ctx, InvokeContext *invoke_ctx, const XmlDocSharedHelp
                 xmlNodePtr node = object->nodesetval->nodeTab[i];
                 appendNodeValue(node, val);
                 if (object->nodesetval->nodeNr - 1 != i) {
-                    val.append(iter->delimeter());
+                    val.append(iter->delimiter());
                 }
             }
 
