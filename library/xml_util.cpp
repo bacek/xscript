@@ -267,12 +267,12 @@ XmlUtils::escape(const std::string &str) {
     }
 
     std::string dest;
-    std::size_t left = str.size() - (pos - begin);
+    std::size_t to_append = pos - begin;
+    std::size_t left = str.size() - to_append;
     dest.reserve(str.size() + left / 4);
 
-    dest.append(begin.base(), pos - begin);
-
-    escape(Range(pos.base(), end.base()), dest);
+    dest.append(str.c_str(), to_append);
+    escape(Range(str.c_str() + to_append, str.c_str() + str.size()), dest);
     return dest;
 }
 
