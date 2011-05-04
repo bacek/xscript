@@ -1,3 +1,11 @@
+xscript (5.73.24-1) unstable; urgency=low
+
+  * js/json escapers moved to StringUtils
+  * optimize js/json escapers
+  * optimize XmlUtils::escape()
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Wed, 04 May 2011 17:49:56 +0400
+
 xscript (5.73.23-1) unstable; urgency=low
 
   * support detecting external xscript methods on parse stylesheet
