@@ -43,7 +43,8 @@
 
 namespace xscript {
 
-static const Range ESCAPE_PATTERN = createRange("&'\"<>");
+static const std::string ESCAPE_PATTERN_STR = "&'\"<>";
+static const Range ESCAPE_PATTERN = createRange(ESCAPE_PATTERN_STR);
 const char * const XmlUtils::XSCRIPT_NAMESPACE = "http://www.yandex.ru/xscript";
 static xmlExternalEntityLoader external_entity_default_loader_ = NULL;
 
@@ -200,16 +201,13 @@ XmlUtils::getXMLError() {
     return StringUtils::EMPTY_STRING;
 }
 
-std::string
-XmlUtils::escape(const Range &range) {
-
-    std::string dest;
-    dest.reserve(range.size());
+void
+XmlUtils::escape(const Range &range, std::string &dest) {
 
     Range::const_iterator begin = range.begin(), end = range.end();
     Range::const_iterator pb = ESCAPE_PATTERN.begin(), pe = ESCAPE_PATTERN.end();
 
-    while (true) {
+    while (begin < end) {
         Range::const_iterator pos = std::find_first_of(begin, end, pb, pe);
         if (end == pos) {
             dest.append(begin, end);
@@ -218,19 +216,19 @@ XmlUtils::escape(const Range &range) {
         dest.append(begin, pos);
         switch (*pos) {
         case '<':
-            dest.append("&lt;");
+            dest.append("&lt;", 4);
             break;
         case '>':
-            dest.append("&gt;");
+            dest.append("&gt;", 4);
             break;
         case '"':
-            dest.append("&quot;");
+            dest.append("&quot;", 6);
             break;
         case '\'':
-            dest.append("&#39;");
+            dest.append("&#39;", 5);
             break;
         case '&':
-            dest.append("&amp;");
+            dest.append("&amp;", 5);
             break;
         default:
             dest.push_back(*pos);
@@ -238,6 +236,43 @@ XmlUtils::escape(const Range &range) {
         }
         begin = pos + 1;
     }
+}
+
+std::string
+XmlUtils::escape(const Range &range) {
+
+    if (range.empty()) {
+        return StringUtils::EMPTY_STRING;
+    }
+
+    std::string dest;
+    dest.reserve(range.size() + range.size() / 4);
+    escape(range, dest);
+    return dest;
+}
+
+std::string
+XmlUtils::escape(const std::string &str) {
+
+    if (str.empty()) {
+        return StringUtils::EMPTY_STRING;
+    }
+
+    std::string::const_iterator begin = str.begin(), end = str.end();
+    std::string::const_iterator pb = ESCAPE_PATTERN_STR.begin(), pe = ESCAPE_PATTERN_STR.end();
+
+    std::string::const_iterator pos = std::find_first_of(begin, end, pb, pe);
+    if (end == pos) {
+        return str;
+    }
+
+    std::string dest;
+    std::size_t left = str.size() - (pos - begin);
+    dest.reserve(str.size() + left / 4);
+
+    dest.append(begin.base(), pos - begin);
+
+    escape(Range(pos.base(), end.base()), dest);
     return dest;
 }
 

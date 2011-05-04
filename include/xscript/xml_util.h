@@ -43,7 +43,11 @@ public:
 
     static xmlParserInputPtr entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt);
 
+    static void escape(const Range &value, std::string &result);
+    template<typename Cont> static void escape(const Cont &value, std::string &result);
+
     static std::string escape(const Range &value);
+    static std::string escape(const std::string &value);
     template<typename Cont> static std::string escape(const Cont &value);
 
     static std::string sanitize(const Range &value, const std::string &base_url, int line_limit);
@@ -126,6 +130,11 @@ public:
         ~Starter();
     };
 };
+
+template<typename Cont> inline void
+XmlUtils::escape(const Cont &value, std::string &result) {
+    escape(createRange(value), result);
+}
 
 template<typename Cont> inline std::string
 XmlUtils::escape(const Cont &value) {

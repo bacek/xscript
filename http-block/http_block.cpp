@@ -650,7 +650,10 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
         }
 
         std::string res;
-        res.append("<text>").append(XmlUtils::escape(*str)).append("</text>");
+        res.reserve(str->size() * 2 + 20);
+        res.append("<text>");
+        XmlUtils::escape(*str, res);
+        res.append("</text>");
         XmlDocHelper result(xmlReadMemory(res.c_str(), res.size(), "",
                 helper.charset().c_str(), XML_PARSE_DTDATTR | XML_PARSE_NOENT));
         XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());

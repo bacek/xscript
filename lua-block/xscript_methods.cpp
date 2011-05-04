@@ -329,13 +329,13 @@ luaXmlEscape(lua_State *lua) {
         luaCheckStackSize(lua, 1);
         std::string value = luaReadStack<std::string>(lua, 1);
 
-        std::string md5 = XmlUtils::escape(value.c_str());
-        lua_pushstring(lua, md5.c_str());
+        std::string escaped = XmlUtils::escape(value);
+        lua_pushstring(lua, escaped.c_str());
         // Our value on stack
         return 1;
     }
     catch (const std::exception &e) {
-        log()->error("caught exception in [xscript:md5]: %s", e.what());
+        log()->error("caught exception in [xscript:xmlescape]: %s", e.what());
         luaL_error(lua, e.what());
     }
     return 0;

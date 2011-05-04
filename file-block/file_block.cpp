@@ -310,8 +310,11 @@ FileBlock::loadText(const std::string &file_name,
         return doc;
     }
        
-    std::string res("<text>");
-    res.append(XmlUtils::escape(doc_data)).append("</text>");
+    std::string res;
+    res.reserve(doc_data.size() * 2 + 20);
+    res.append("<text>");
+    XmlUtils::escape(doc_data, res);
+    res.append("</text>");
 
     XmlDocSharedHelper result(xmlReadMemory(
         res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
