@@ -23,6 +23,22 @@ namespace StringUtils {
 
     void report(const char *what, int error, std::ostream &stream);
 
+    void jsonQuoteString(const Range &range, std::string &result);
+    template<typename Cont> static void jsonQuoteString(const Cont &cont, std::string &result) {
+        jsonQuoteString(createRange(cont), result);
+    };
+
+    void escapeString(const Range &range, std::string &result);
+    template<typename Cont> static void escapeString(const Cont &cont, std::string &result) {
+        escapeString(createRange(cont), result);
+    };
+
+    void jsQuoteString(const Range &range, std::string &result);
+    template<typename Cont> static void jsQuoteString(const Cont &cont, std::string &result) {
+        jsQuoteString(createRange(cont), result);
+    };
+
+
     std::string urlencode(const Range &val, bool force_percent = false);
     template<typename Cont> static std::string urlencode(const Cont &cont, bool force_percent = false) {
         return urlencode(createRange(cont), force_percent);

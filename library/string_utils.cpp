@@ -27,6 +27,140 @@ static const int NEXT_UTF8[256] = {
     3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,6,6,1,1
 };
 
+static bool ESC_CHECK_CHARSET[256] = { false };
+static bool JS_CHECK_CHARSET[256] = { false };
+
+struct StringUtilsInit {
+    StringUtilsInit() {
+        for (const char *s1 = "\\/-'\""; *s1; ++s1) {
+            ESC_CHECK_CHARSET[*(const unsigned char *)s1] = true;
+        }
+        for (const char *s2 = "\\/-'"; *s2; ++s2) {
+            JS_CHECK_CHARSET[*(const unsigned char *)s2] = true;
+        }
+    }
+};
+
+static StringUtilsInit string_utils_init_;
+
+
+void
+StringUtils::jsonQuoteString(const Range &range, std::string &result) {
+
+    const char *str = range.begin();
+    const char *end = range.end();
+    while (str < end) {
+        char ch = *str;
+        switch(ch) {
+            case '"':
+            case '/':
+                result.push_back('\\');
+                break;
+            case '\b':
+                result.push_back('\\');
+                ch = 'b';
+                break;
+            case '\f':
+                result.push_back('\\');
+                ch = 'f';
+                break;
+            case '\n':
+                result.push_back('\\');
+                ch = 'n';
+                break;
+            case '\r':
+                result.push_back('\\');
+                ch = 'r';
+                break;
+            case '\t':
+                result.push_back('\\');
+                ch = 't';
+                break;
+            case '\\':
+                result.push_back('\\');
+                if (end - str > 5 && str[1] == 'u' &&
+                    isxdigit(str[2]) && isxdigit(str[3]) &&
+                    isxdigit(str[4]) && isxdigit(str[5])) {
+
+                    result.append(str, 6);
+                    str += 6;
+                    continue;
+                }
+            default:
+                break;
+        }
+        result.push_back(ch);
+        ++str;
+    }
+}
+
+inline static void
+escapeTemplatedString(const Range &range, const bool * const esc_template_check, bool js_check, std::string &result) {
+
+    const char *str = range.begin();
+    const char *end = range.end();
+
+    const char *str_next = str;
+    while (str_next < end) {
+        str = str_next;
+        unsigned char ch = *(const unsigned char*)str;
+        const int char_size = NEXT_UTF8[ch]; //StringUtils::nextUTF8(str) - str;
+        str_next = str + char_size;
+        if (ch == '\n') {
+            result.append("\\n", 2);
+            continue;
+        }
+        if (ch == '\r') {
+            result.append("\\n", 2);
+            if (end - str > 1 && str[1] == '\n') {
+                ++str_next;
+            }
+            continue;
+        }
+        //if (char_size == 1 && NULL != strchr(esc_template, ch)) {
+        if (char_size == 1 && esc_template_check[ch]) {
+            result.push_back('\\');
+        }
+        else if (js_check && char_size > 1) {
+            if (char_size == 2) {
+                if (ch == 0xC2 && str[1] == '\x85') {
+                    result.append("\\u0085", 6);
+                    continue;
+                }
+            }
+            else if (char_size == 3) {
+                if (ch == 0xE2 && str[1] == '\x80') {
+                    if (str[2] == '\xA8') {
+                        result.append("\\u2028", 6);
+                        continue;
+                    }
+                    else if (str[2] == '\xA9') {
+                        result.append("\\u2029", 6);
+                        continue;
+                    }
+                }
+            }
+        }
+        result.append(str, str_next - str);
+    }
+}
+
+void
+StringUtils::escapeString(const Range &range, std::string &result) {
+    if (!range.empty()) {
+        //escapeTemplatedString(range, "\\/-'\"", false, result);
+        escapeTemplatedString(range, ESC_CHECK_CHARSET, false, result);
+    }
+}
+
+void
+StringUtils::jsQuoteString(const Range &range, std::string &result) {
+    if (!range.empty()) {
+        //escapeTemplatedString(range, "\\/-'", true, result);
+        escapeTemplatedString(range, JS_CHECK_CHARSET, true, result);
+    }
+}
+
 std::string
 StringUtils::urlencode(const Range &range, bool force_percent) {
 

@@ -237,112 +237,6 @@ xscriptXsltUrldecode(xmlXPathParserContextPtr ctxt, int nargs) {
     }
 }
 
-static void
-xscriptTemplatedEscStr(const char *str, const char *esc_template, bool js_check, std::string &result) {
-    const char* end = str + strlen(str);
-    const char* str_next = str;
-    while (str_next < end) {
-        str = str_next;
-        str_next = StringUtils::nextUTF8(str);
-        unsigned char ch = *str;
-        if (ch == '\r' && end - str > 0 && *(str + 1) == '\n') {
-            result.append("\\n");
-            ++str;
-            ++str_next;
-            continue;
-        }
-        else if (ch == '\r' || ch == '\n') {
-            result.append("\\n");
-            continue;
-        }
-        else if (str_next - str == 1 && NULL != strchr(esc_template, ch)) {
-            result.push_back('\\');
-        }
-        else if (js_check && str_next - str > 1) {
-            if (str_next - str == 2) {
-                unsigned char ch2 = *(str + 1);
-                if (ch == 0xC2 && ch2 == 0x85) {
-                    result.append("\\u0085");
-                    continue;
-                }
-            }
-            else if (str_next - str == 3) {
-                unsigned char ch2 = *(str + 1);
-                unsigned char ch3 = *(str + 2);
-                if (ch == 0xE2 && ch2 == 0x80 && ch3 == 0xA8) {
-                    result.append("\\u2028");
-                    continue;                    
-                }
-                else if (ch == 0xE2 && ch2 == 0x80 && ch3 == 0xA9) {
-                    result.append("\\u2029");
-                    continue;                    
-                }
-            }
-        }
-        result.append(str, str_next - str);
-    }
-}
-
-static void
-xscriptXsltJSONQuoteStr(const char *str, std::string &result) {
-
-    const char* end = str + strlen(str);
-    
-    while (str < end) {
-        char ch = *str;
-        if (ch == '"' || ch == '/') {
-            result.push_back('\\');
-        }
-        else if (ch == '\b') {
-            result.push_back('\\');
-            ch = 'b';
-        }
-        else if (ch == '\f') {
-            result.push_back('\\');
-            ch = 'f';
-        }
-        else if (ch == '\n') {
-            result.push_back('\\');
-            ch = 'n';
-        }
-        else if (ch == '\r') {
-            result.push_back('\\');
-            ch = 'r';
-        }
-        else if (ch == '\t') {
-            result.push_back('\\');
-            ch = 't';
-        }
-        else if (ch == '\\' && end - str > 5 && *(str + 1) == 'u' &&
-                 isxdigit(*(str + 2)) && isxdigit(*(str + 3)) &&
-                 isxdigit(*(str + 4)) && isxdigit(*(str + 5))) {
-            result.push_back('\\');
-            result.append(str, 6);
-            str += 6;
-            continue;
-        }
-        else if (ch == '\\') {
-            result.push_back('\\');
-        }
-        result.push_back(ch);
-        ++str;
-    }
-}
-
-static void
-xscriptXsltEscStr(const char *str, std::string &result) {
-
-    log()->debug("xscriptXsltEscStr: %s", str);
-    xscriptTemplatedEscStr(str, "\\/-'\"", false, result);
-}
-
-static void
-xscriptXsltJSQuoteStr(const char *str, std::string &result) {
-
-    log()->debug("xscriptXsltJSQuoteStr: %s", str);
-    xscriptTemplatedEscStr(str, "\\/-'", true, result);
-}
-
 extern "C" void
 xscriptXsltEsc(xmlXPathParserContextPtr ctxt, int nargs) {
 
@@ -367,7 +261,10 @@ xscriptXsltEsc(xmlXPathParserContextPtr ctxt, int nargs) {
 
     try {
         std::string result;
-        xscriptXsltEscStr(str, result);
+        Range range = createRange(str);
+        result.reserve(range.size() * 2);
+
+        StringUtils::escapeString(range, result);
         valuePush(ctxt, xmlXPathNewCString(result.c_str()));
     }
     catch (const std::exception &e) {
@@ -407,9 +304,13 @@ xscriptXsltJsQuote(xmlXPathParserContextPtr ctxt, int nargs) {
 
     try {
         std::string result;
+        Range range = createRange(str);
+        result.reserve(range.size() * 2 + 2);
+
         result.push_back('\'');
-        xscriptXsltJSQuoteStr(str, result);
+        StringUtils::jsQuoteString(range, result);
         result.push_back('\'');
+
         valuePush(ctxt, xmlXPathNewCString(result.c_str()));
     }
     catch (const std::exception &e) {
@@ -449,9 +350,13 @@ xscriptXsltJSONQuote(xmlXPathParserContextPtr ctxt, int nargs) {
 
     try {
         std::string result;
+        Range range = createRange(str);
+        result.reserve(range.size() * 2 + 2);
+
         result.push_back('"');
-        xscriptXsltJSONQuoteStr(str, result);
+        StringUtils::jsonQuoteString(range, result);
         result.push_back('"');
+
         valuePush(ctxt, xmlXPathNewCString(result.c_str()));
     }
     catch (const std::exception &e) {
