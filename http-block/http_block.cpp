@@ -518,13 +518,29 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     return response(helper);
 }
 
+inline static void
+setHeaderValue(std::string &s, const std::string &name, const std::string &value) {
+
+    s.reserve(name.size() + value.size() + 2);
+    s.append(name).append(": ", 2).append(value);
+}
+
+inline static void
+pushHeaderValue(std::vector<std::string> &headers, const std::string &name, const std::string &value) {
+
+    headers.push_back(StringUtils::EMPTY_STRING);
+    setHeaderValue(headers.back(), name, value);
+}
+
 void
 HttpBlock::appendHeaders(HttpHelper &helper, const Request *request,
         const InvokeContext *invoke_ctx, bool allow_tag, bool pass_ctype) const {
+
     std::vector<std::string> headers;
-    bool real_ip = false;
+    const std::string &xff_header_name = Request::X_FORWARDED_FOR_HEADER_NAME;
     const std::string &ip_header_name = Policy::instance()->realIPHeaderName();
     int ctype_pos = -1;
+    bool real_ip = false;
     if (proxy_ && request->countHeaders() > 0) {    
         std::vector<std::string> names;
         request->headerNames(names);
@@ -540,19 +556,22 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request,
             else if (Policy::instance()->isSkippedProxyHeader(name)) {
                 log()->debug("proxy header was skipped (policy) %s: %s", name.c_str(), value.c_str());
             }
+            else if (!strcasecmp(xff_header_name.c_str(), name.c_str())) {
+                log()->debug("proxy XFF header was skipped (will be recalculated) %s: %s", name.c_str(), value.c_str());
+            }
             else {
-                if (!real_ip && strcasecmp(ip_header_name.c_str(), name.c_str()) == 0) {
+                if (!real_ip && !strcasecmp(ip_header_name.c_str(), name.c_str())) {
                     real_ip = true;
                 }
-                headers.push_back(name);
-                headers.back().append(": ").append(value);
-                if (pass_ctype && 0 == strcasecmp(name.c_str(), CONTENT_TYPE_HEADER_NAME.c_str())) {
-                    ctype_pos = headers.size() - 1;
+                else if (pass_ctype && !strcasecmp(name.c_str(), CONTENT_TYPE_HEADER_NAME.c_str())) {
+                    ctype_pos = headers.size();
                 }
+                pushHeaderValue(headers, name, value);
             }
         }
     }
 
+    bool xff = false;
     if (invoke_ctx && !headers_.empty()) {
         const ArgList *args = invoke_ctx->getExtraArgList(STR_HEADERS);
         assert(NULL != args);
@@ -561,35 +580,32 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request,
         for (unsigned int i = 0; i != sz; ++i) {
             const Param *param = headers_[i];
             const std::string &name = param->id();
-            if (!real_ip && strcasecmp(ip_header_name.c_str(), name.c_str()) == 0) {
+            if (!real_ip && !strcasecmp(ip_header_name.c_str(), name.c_str())) {
                 real_ip = true;
             }
-
-            if (pass_ctype && 0 == strcasecmp(name.c_str(), CONTENT_TYPE_HEADER_NAME.c_str())) {
+            else if (!xff && !strcasecmp(xff_header_name.c_str(), name.c_str())) {
+                xff = true;
+            }
+            else if (pass_ctype && !strcasecmp(name.c_str(), CONTENT_TYPE_HEADER_NAME.c_str())) {
                 if (ctype_pos != -1) {
-                    headers[ctype_pos].assign(name).append(": ").append(args->at(i));
+                    setHeaderValue(headers[ctype_pos], name, args->at(i));
+                    continue;
                 }
-                else {
-                    headers.push_back(name);
-                    headers.back().append(": ").append(args->at(i));
-                    ctype_pos = headers.size() - 1;
-                }
+                ctype_pos = headers.size();
             }
-            else {
-                headers.push_back(name);
-                headers.back().append(": ").append(args->at(i));
-            }
+            pushHeaderValue(headers, name, args->at(i));
         }
     }
 
     if (pass_ctype && ctype_pos == -1 && request->hasHeader(CONTENT_TYPE_HEADER_NAME)) {
-        headers.push_back(CONTENT_TYPE_HEADER_NAME);
-        headers.back().append(": ").append(request->getHeader(CONTENT_TYPE_HEADER_NAME));
+        pushHeaderValue(headers, CONTENT_TYPE_HEADER_NAME, request->getHeader(CONTENT_TYPE_HEADER_NAME));
     }
 
     if (!real_ip && !ip_header_name.empty()) {
-        headers.push_back(ip_header_name);
-        headers.back().append(": ").append(request->getRealIP());
+        pushHeaderValue(headers, ip_header_name, request->getRealIP());
+    }
+    if (!xff && !xff_header_name.empty()) {
+        pushHeaderValue(headers, xff_header_name, request->getXForwardedFor());
     }
     if (allow_tag && invoke_ctx && invoke_ctx->tagged()) {
         helper.appendHeaders(headers, invoke_ctx->tag().last_modified);

@@ -1,3 +1,9 @@
+xscript (5.73.25-1) unstable; urgency=low
+
+  * http block: add patched X-Forwarded-For header (for proxy: yes or no)
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Tue, 10 May 2011 20:57:47 +0400
+
 xscript (5.73.24-1) unstable; urgency=low
 
   * js/json escapers moved to StringUtils

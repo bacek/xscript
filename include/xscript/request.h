@@ -49,6 +49,9 @@ public:
     const std::string& getContentType() const;
     const std::string& getContentEncoding() const;
 
+    const std::string& getOriginalXForwardedFor() const;
+    std::string getXForwardedFor() const;
+
     unsigned int countArgs() const;
     bool hasArg(const std::string &name) const;
     const std::string& getArg(const std::string &name) const;
@@ -86,6 +89,8 @@ public:
     bool suppressBody() const;
     
     void attach(std::istream *is, char *env[]);
+
+    static const std::string X_FORWARDED_FOR_HEADER_NAME;
 
     class HandlerRegisterer;
 protected:

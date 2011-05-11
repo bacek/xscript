@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "internal/parser.h"
 #include "internal/request_impl.h"
@@ -22,6 +23,8 @@
 #endif
 
 namespace xscript {
+
+const std::string Request::X_FORWARDED_FOR_HEADER_NAME = "X-Forwarded-For";
 
 const std::string Request::ATTACH_METHOD = "REQUEST_ATTACH";
 const std::string Request::REAL_IP_METHOD = "REQUEST_REAL_IP";
@@ -179,6 +182,43 @@ Request::getContentType() const {
 const std::string&
 Request::getContentEncoding() const {
     return getHeader(RequestImpl::CONTENT_ENCODING_KEY);
+}
+
+const std::string&
+Request::getOriginalXForwardedFor() const {
+    return getHeader(X_FORWARDED_FOR_HEADER_NAME);
+}
+
+std::string
+Request::getXForwardedFor() const {
+
+    const std::string &x_fwd_orig = getOriginalXForwardedFor();
+    const std::string &real_ip = getRealIP();
+    if (x_fwd_orig.empty()) {
+        return real_ip;
+    }
+    if (real_ip.empty()) {
+        return x_fwd_orig;
+    }
+
+    typedef boost::char_separator<char> Separator;
+    typedef boost::tokenizer<Separator> Tokenizer;
+    Separator sep(", ", NULL, boost::drop_empty_tokens);
+    Tokenizer tok(x_fwd_orig, sep);
+    for(Tokenizer::iterator it = tok.begin(), end = tok.end(); end != it; ++it) {
+        if (real_ip == *it) {
+            return x_fwd_orig;
+        }
+    }
+
+    std::string x_forwarded_for;
+    x_forwarded_for.reserve(x_fwd_orig.size() + real_ip.size() + 1);
+
+    x_forwarded_for.append(x_fwd_orig);
+    x_forwarded_for.push_back(',');
+    x_forwarded_for.append(real_ip);
+
+    return x_forwarded_for;
 }
 
 unsigned int
