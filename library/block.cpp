@@ -104,13 +104,16 @@ Block::BlockData::~BlockData() {
 
 void
 Block::BlockData::parseNamespaces() {
-    xmlNs* ns = node_->nsDef;
-    while(ns) {
-        if (ns->prefix && ns->href) {
-            namespaces_.insert(std::make_pair(std::string((const char*)ns->prefix),
-                                              std::string((const char*)ns->href)));
+
+    for (xmlNodePtr node = node_; NULL != node; node = node->parent) {
+        if (node->type == XML_ELEMENT_NODE) {
+            for(xmlNs *ns = node->nsDef; NULL != ns; ns = ns->next) {
+                if (ns->prefix && ns->href) {
+                    namespaces_.insert(std::make_pair(
+                        std::string((const char*)ns->prefix), std::string((const char*)ns->href)));
+                }
+            }
         }
-        ns = ns->next;
     }
 }
 
