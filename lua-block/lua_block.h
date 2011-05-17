@@ -21,7 +21,10 @@ public:
     virtual ~LuaBlock();
 
     const std::string& getBase() const;
+
 private:
+    static const char* findCode(xmlNodePtr node);
+
     virtual void postParse();
     virtual void property(const char *name, const char *value);
 

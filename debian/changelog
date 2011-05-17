@@ -1,3 +1,9 @@
+xscript (5.73.26-2) unstable; urgency=low
+
+  * lua block: find non-whitespace code in text nodes
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Tue, 17 May 2011 13:04:20 +0400
+
 xscript (5.73.26-1) unstable; urgency=low
 
   * find namespaces in parent xml elements for any blocks

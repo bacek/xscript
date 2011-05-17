@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include <ctype.h>
 #include <new>
 #include <memory>
 #include <stdexcept>
@@ -99,15 +100,33 @@ LuaBlock::getBase() const {
     return Block::getBase();
 }
 
-void
-LuaBlock::postParse() {
-    code_ = XmlUtils::cdataValue(node());
-    if (NULL == code_) {
-        code_ = XmlUtils::value(node());
-        if (NULL == code_) {
-            return;
+const char*
+LuaBlock::findCode(xmlNodePtr node) {
+    const char *code = XmlUtils::cdataValue(node);
+    if (NULL != code) {
+        return code;
+    }
+
+    for (xmlNodePtr child = node->children; NULL != child; child = child->next) {
+        code = (const char*) child->content;
+        if (NULL != code && XML_TEXT_NODE == child->type) {
+            for (const char *p = code; *p; ++p) {
+                if (!::isspace(*p)) {
+                    return code;
+                }
+            }
         }
     }
+    return NULL;
+}
+
+void
+LuaBlock::postParse() {
+    code_ = findCode(node());
+    if (NULL == code_) {
+        return;
+    }
+
     LuaHolder lua(luaL_newstate());
     int res = luaL_loadstring(lua.get(), code_);
     if (LUA_ERRSYNTAX == res) {
