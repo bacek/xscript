@@ -149,7 +149,7 @@ XmlUtils::sanitize(const Cont &value, const std::string &base_url, int line_limi
 template <typename NodePtr> inline const char*
 XmlUtils::value(NodePtr node) {
     xmlNodePtr child = node->children;
-    if (child && xmlNodeIsText(child) && child->content) {
+    if (child && XML_TEXT_NODE == child->type && child->content) {
         return (const char*) child->content;
     }
     return NULL;
