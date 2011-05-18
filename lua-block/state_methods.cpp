@@ -237,11 +237,16 @@ luaStateSetTable(lua_State *lua) {
         luaCheckStackSize(lua, 3);
         luaReadStack<void>(lua, "xscript.state", 1);
         State *state = getContext(lua)->state();
-        if (!luaIsNil(lua, 3)) {
-            std::string key = luaReadStack<std::string>(lua, 2);
-            state->setTypedValue(key, luaReadTable(lua, 3));
+        if (luaIsNil(lua, 3)) {
+            lua_pushnil(lua);
         }
-        return 0;
+        else {
+            std::string key = luaReadStack<std::string>(lua, 2);
+            TypedValue table = luaReadTable(lua, 3);
+            state->setTypedValue(key, table);
+            luaPushStack<const TypedValue &>(lua, table);
+        }
+        return 1;
     }
     catch (const LuaError &e) {
         return e.translate(lua);

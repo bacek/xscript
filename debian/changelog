@@ -1,3 +1,9 @@
+xscript (5.73.26-3) unstable; urgency=low
+
+  * lua block: setTable() returns converted complex value (table or nil)
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Wed, 18 May 2011 15:48:57 +0400
+
 xscript (5.73.26-2) unstable; urgency=low
 
   * lua block: find non-whitespace code in text nodes
