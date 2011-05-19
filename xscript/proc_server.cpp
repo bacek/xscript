@@ -31,7 +31,20 @@ ProcServer::ProcServer(Config *config,
     use_remote_call_(true), need_output_(true), xslt_profiler_(false) {
 
     root_ = config->as<std::string>("/xscript/offline/root-dir", "/usr/local/www");
-    
+
+    if (!url_.empty() && url_[0] != '/' &&
+         url_.find("://") == std::string::npos) {
+        
+        int max_path_size = 8192;
+        char dirname[max_path_size];
+        char *ret = getcwd(dirname, max_path_size);
+        if (ret == NULL) {
+            throw std::runtime_error("cannot read working directory");
+        }
+
+        root_ = std::string(dirname);
+    }
+
     std::multimap<std::string, std::string>::const_iterator profile_it = args.end();
     for (std::multimap<std::string, std::string>::const_iterator it = args.begin(); it != args.end(); ++it) {
         if (it->first == "header") {
@@ -86,20 +99,7 @@ ProcServer::ProcServer(Config *config,
         (void)reg2;
         xslt_profiler_ = true;
     }
-    
-    if (!url_.empty() && url_[0] != '/' &&
-         url_.find("://") == std::string::npos) {
-        
-        int max_path_size = 8192;
-        char dirname[max_path_size];
-        char *ret = getcwd(dirname, max_path_size);
-        if (ret == NULL) {
-            throw std::runtime_error("cannot read working directory");
-        }
 
-        root_ = std::string(dirname);
-    }
-    
     config->stopCollectCache();
 }
 

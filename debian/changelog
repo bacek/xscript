@@ -1,3 +1,9 @@
+xscript (5.73.26-4) unstable; urgency=low
+
+  * xscript-proc: high priority for arg param --docrot
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Thu, 19 May 2011 14:49:38 +0400
+
 xscript (5.73.26-3) unstable; urgency=low
 
   * lua block: setTable() returns converted complex value (table or nil)
