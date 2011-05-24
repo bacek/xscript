@@ -42,6 +42,7 @@ protected:
             boost::shared_ptr<InvokeContext> invoke_ctx, XmlDocSharedHelper &doc, bool need_copy);
     
     std::auto_ptr<Param> createParam(const xmlNodePtr node);
+    std::auto_ptr<Param> createUncheckedParam(const xmlNodePtr node);
 
 private:
     class ObjectData;

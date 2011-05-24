@@ -34,7 +34,7 @@ public:
     static ParamFactory* instance();
     
     void registerCreator(const char *name, ParamCreator c);
-    std::auto_ptr<Param> param(Object *owner, xmlNodePtr node);
+    std::auto_ptr<Param> param(Object *owner, xmlNodePtr node, bool visit_properties);
 
 private:
     friend class std::auto_ptr<ParamFactory>;

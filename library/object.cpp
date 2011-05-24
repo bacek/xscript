@@ -159,7 +159,13 @@ Object::applyStylesheet(boost::shared_ptr<Stylesheet> sh,
 std::auto_ptr<Param>
 Object::createParam(const xmlNodePtr node) {
     ParamFactory *pf = ParamFactory::instance();
-    return pf->param(this, node);
+    return pf->param(this, node, true);
+}
+
+std::auto_ptr<Param>
+Object::createUncheckedParam(const xmlNodePtr node) {
+    ParamFactory *pf = ParamFactory::instance();
+    return pf->param(this, node, false);
 }
 
 const std::string&

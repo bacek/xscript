@@ -33,6 +33,8 @@ public:
     virtual std::string asString(const Context *ctx) const = 0;
     virtual void add(const Context *ctx, ArgList &al) const = 0;
 
+    void visitProperties();
+
     // Check validator (if any). Will throw exception if validation fail.
     void checkValidator(const Context *ctx) const;
 

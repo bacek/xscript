@@ -62,7 +62,7 @@ ParamFactory::registerCreator(const char *name, ParamCreator creator) {
 }
 
 std::auto_ptr<Param>
-ParamFactory::param(Object *owner, xmlNodePtr node) {
+ParamFactory::param(Object *owner, xmlNodePtr node, bool visit_properties) {
 
     assert(node);
     assert(owner);
@@ -80,6 +80,9 @@ ParamFactory::param(Object *owner, xmlNodePtr node) {
 
             assert(p.get());
             p->parse();
+            if (visit_properties) {
+                p->visitProperties();
+            }
             return p;
         }
         else {

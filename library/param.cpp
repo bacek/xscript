@@ -22,7 +22,17 @@ public:
         assert(node_);
     }
     ~ParamData() {}
-    
+
+    void parse() {
+        // Create validator if any. Validators will remove used attributes.
+        validator_ = ValidatorFactory::instance()->createValidator(node_);
+
+        const char *content = XmlUtils::value(node_);
+        if (NULL != content) {
+            value_.assign(content);
+        }
+    }
+
     xmlNodePtr node_;
     std::string id_, value_;
     std::auto_ptr<Validator> validator_;
@@ -47,16 +57,13 @@ Param::constant() const {
 
 void
 Param::parse() {
-    // Create validator if any. Validators will remove used attributes.
-    data_->validator_ = ValidatorFactory::instance()->createValidator(data_->node_);
+    data_->parse();
+}
 
+void
+Param::visitProperties() {
     XmlUtils::visitAttributes(data_->node_->properties,
                               boost::bind(&Param::property, this, _1, _2));
-
-    xmlNodePtr c = data_->node_->children;
-    if (c && xmlNodeIsText(c) && c->content) {
-        data_->value_.assign((const char*) c->content);
-    }
 }
 
 const std::string&
@@ -66,7 +73,7 @@ Param::value() const {
 
 void
 Param::property(const char *name, const char *value) {
-    if (strncasecmp(name, "id", sizeof("id")) == 0) {
+    if (!strncasecmp(name, "id", sizeof("id"))) {
         data_->id_.assign(value);
     }
     else if (strncasecmp(name, "type", sizeof("type")) != 0) {
@@ -165,13 +172,12 @@ TypedParam::add(const Context *ctx, ArgList &al) const {
     const std::string& as = ConvertedParam::as();
     if (as.empty()) {
         al.add(asString(ctx));
-        return;
     }
-    ValueResult result = getValue(ctx);
-    if (NULL == dynamic_cast<CommonArgList*>(&al)) {
+    else if (NULL == dynamic_cast<CommonArgList*>(&al)) {
         ConvertedParam::add(ctx, al);
     }
     else {
+        ValueResult result = getValue(ctx);
         al.add(result.second ? result.first : defaultValue());
     }
 }
