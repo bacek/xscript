@@ -1,6 +1,9 @@
 #include "settings.h"
 
+#include <strings.h>
+
 #include <algorithm>
+#include <memory>
 #include <cassert>
 #include <sstream>
 #include <stdexcept>
@@ -15,6 +18,7 @@
 
 #include "xscript/args.h"
 #include "xscript/context.h"
+#include "xscript/encoder.h"
 #include "xscript/http_helper.h"
 #include "xscript/logger.h"
 #include "xscript/meta.h"
@@ -91,8 +95,14 @@ public:
 };
 
 static MethodMap methods_;
-static std::string STR_HEADERS("headers");
 static std::string CONTENT_TYPE_HEADER_NAME("Content-Type");
+static std::string STR_HEADERS("headers");
+static std::string STR_HEADER_PARAM_NAME("header");
+static std::string STR_HEADER_PARAM_REPR("header param");
+static std::string STR_QUERY_PARAMS("query-params");
+static std::string STR_QUERY_PARAM_NAME("query-param");
+static std::string STR_QUERY_PARAM_REPR("query param");
+
 
 HttpBlock::HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), RemoteTaggedBlock(ext, owner, node),
@@ -106,54 +116,51 @@ HttpBlock::~HttpBlock() {
 void
 HttpBlock::parseSubNode(xmlNodePtr node) {
 
-    if (NULL == node->name || 0 != xmlStrcasecmp(node->name, (const xmlChar*)"header")) {
+    if (NULL == node->name || !*node->name) {
         Block::parseSubNode(node);
         return;
     }
 
-    const xmlChar* ref = node->ns ? node->ns->href : NULL;
-    if (NULL != ref && 0 != xmlStrcasecmp(ref, (const xmlChar*)XmlUtils::XSCRIPT_NAMESPACE)) {
+    const xmlChar *ref = node->ns ? node->ns->href : NULL;
+    if (NULL != ref && 0 != strcasecmp((const char*) ref, XmlUtils::XSCRIPT_NAMESPACE)) {
         Block::parseSubNode(node);
         return;
     }
 
-    std::auto_ptr<Param> p = createParam(node);
+    if (!strcasecmp((const char*) node->name, STR_HEADER_PARAM_NAME.c_str())) {
+        std::auto_ptr<Param> p = createParam(node);
+        const std::string &id = p->id();
+        log()->debug("creating %s %s in http-block: %s", STR_HEADER_PARAM_REPR.c_str(), id.c_str(), owner()->name().c_str());
+        checkHeaderParamId(STR_HEADER_PARAM_REPR, id);
+        header_names_.insert(id);
+        headers_.push_back(p.get());
+        p.release();
+        return;
+    }
+
+    if (strcasecmp((const char*) node->name, STR_QUERY_PARAM_NAME.c_str())) {
+        Block::parseSubNode(node);
+        return;
+    }
+
+    QueryParamData data(createUncheckedParam(node));
+    const Param *p = data.param();
+    const char *t = p->type();
+    if (!strcasecmp(t, "requestdata") || !strcasecmp(t, "request")) {
+        throw std::invalid_argument(STR_QUERY_PARAM_REPR + " " + t + " disallowed in http block");
+    }
     const std::string &id = p->id();
-    log()->debug("creating header param %s in http-block: %s", id.c_str(), owner()->name().c_str());
-    if (id.empty()) {
-        throw std::runtime_error("header param without id");
-    }
-
-    int size = id.size();
-    if (size > 128) {
-        throw UnboundRuntimeError(std::string("header param with too big size id: ") + id);
-    }
-
-    if (!isalpha(id[0])) {
-        throw std::runtime_error(std::string("header param with incorrect first character in id: ") + id);
-    }
-
-    for (int i = 1; i < size; ++i) {
-        char character = id[i];
-        if (isalnum(character) || character == '-') {
-            continue;
-        }
-
-        std::stringstream ss;
-        ss << "header param with incorrect character at " << i + 1 << " in id: " << id;
-        throw std::runtime_error(ss.str());
-    }
-
-    header_names_.insert(id);
-    headers_.push_back(p.get());
-    p.release();
+    log()->debug("creating %s %s in http-block: %s", STR_QUERY_PARAM_REPR.c_str(), id.c_str(), owner()->name().c_str());
+    data.parse(node);
+    checkQueryParamId(STR_QUERY_PARAM_REPR, id);
+    query_params_.push_back(data);
 }
 
 void
 HttpBlock::postParse() {
 
     if (proxy_ && tagged()) {
-        log()->warn("swithch off tagging in proxy http-block: %s", owner()->name().c_str());
+        log()->warn("switch off tagging in proxy http-block: %s", owner()->name().c_str());
         tagged(false);
     }
 
@@ -162,14 +169,10 @@ HttpBlock::postParse() {
     createCanonicalMethod("http.");
 
     MethodMap::iterator i = methods_.find(method());
-    if (methods_.end() != i) {
-        method_ = i->second;
+    if (methods_.end() == i) {
+        throw std::invalid_argument("nonexistent http method call: " + method());
     }
-    else {
-        std::stringstream stream;
-        stream << "nonexistent http method call: " << method();
-        throw std::invalid_argument(stream.str());
-    }
+    method_ = i->second;
 }
 
 void
@@ -197,23 +200,35 @@ HttpBlock::property(const char *name, const char *value) {
 std::string
 HttpBlock::info(const Context *ctx) const {
 
-    if (headers_.empty()) {
-        return RemoteTaggedBlock::info(ctx);
-    }
-
     std::string info = RemoteTaggedBlock::info(ctx);
-    info.append(" | Headers: ");
-    for (unsigned int i = 0, n = headers_.size(); i < n; ++i) {
-        if (i > 0) {
-            info.append(", ");
+    if (!headers_.empty()) {
+        info.append(" | Headers: ");
+        for (unsigned int i = 0, n = headers_.size(); i < n; ++i) {
+            if (i > 0) {
+                info.append(", ", 2);
+            }
+            const Param *param = headers_[i];
+            info.append(param->type());
+            const std::string& value = param->value();
+            if (!value.empty()) {
+                info.push_back('(');
+                info.append(value);
+                info.push_back(')');
+            }
         }
-        const Param *param = headers_[i];
-        info.append(param->type());
-        const std::string& value =  param->value();
-        if (!value.empty()) {
-            info.push_back('(');
-            info.append(value);
-            info.push_back(')');
+    }
+    if (!query_params_.empty()) {
+        info.append(" | Query params:");
+        for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it) {
+            const Param *p = it->param();
+            info.push_back(' ');
+            info.append(p->type());
+            const std::string& value = p->value();
+            if (!value.empty()) {
+                info.push_back('(');
+                info.append(value);
+                info.push_back(')');
+            }
         }
     }
     return info;
@@ -222,16 +237,21 @@ HttpBlock::info(const Context *ctx) const {
 std::string
 HttpBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
 
-    if (headers_.empty()) {
-        return RemoteTaggedBlock::createTagKey(ctx, invoke_ctx);
-    }
-
     std::string key = RemoteTaggedBlock::createTagKey(ctx, invoke_ctx);
-    key.append("| Headers:");
-    const ArgList *args = invoke_ctx->getExtraArgList(STR_HEADERS);
-    assert(args);
-    assert(args->size() == headers_.size());
-    key.append(paramsKey(args));
+    if (!headers_.empty()) {
+        key.append("| Headers:");
+        const ArgList *args = invoke_ctx->getExtraArgList(STR_HEADERS);
+        assert(args);
+        assert(args->size() == headers_.size());
+        key.append(paramsKey(args));
+    }
+    if (!query_params_.empty()) {
+        key.append("| Query params:");
+        const ArgList *args = invoke_ctx->getExtraArgList(STR_QUERY_PARAMS);
+        assert(args);
+        assert(args->size() == query_params_.size());
+        key.append(paramsKey(args));
+    }
     return key;
 }
 
@@ -244,6 +264,13 @@ HttpBlock::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
             (*it)->add(ctx, *args);
         }
         invoke_ctx->setExtraArgList(STR_HEADERS, args);
+    }
+    if (!query_params_.empty()) {
+        boost::shared_ptr<CommonArgList> args(new CommonArgList());
+        for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it) {
+            args->add(it->asString(ctx));
+        }
+        invoke_ctx->setExtraArgList(STR_QUERY_PARAMS, args);
     }
     return RemoteTaggedBlock::createArgList(ctx, invoke_ctx);
 }
@@ -258,6 +285,39 @@ HttpBlock::getUrl(const ArgList *args, unsigned int first, unsigned int last) co
     
 }
 
+std::string
+HttpBlock::queryParams(const InvokeContext *invoke_ctx) const{
+
+    const ArgList *args = invoke_ctx->getExtraArgList(STR_QUERY_PARAMS);
+    std::string val;
+    if (NULL != args) {
+        unsigned int sz = args->size();
+        assert(sz == query_params_.size());
+
+        std::size_t future_size = 0;
+        for (unsigned int i = sz; i--;) {
+            const std::string &v = args->at(i);
+            if (!v.empty()) {
+                future_size += v.size();
+            }
+        }
+
+        if (future_size) {
+            val.reserve(future_size + sz - 1);
+            for (unsigned int i = 0; i != sz; ++i) {
+                const std::string &v = args->at(i);
+                if (!v.empty()) {
+                    if (!val.empty()) {
+                        val.push_back('&');
+                    }
+                    val.append(v);
+                }
+            }
+        }
+    }
+    return val;
+}
+
 XmlDocHelper
 HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) const {
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
@@ -269,6 +329,12 @@ HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) const {
     }
     
     std::string url = getUrl(args, 0, size - 1);
+    std::string query = queryParams(invoke_ctx);
+    if (!query.empty()) {
+        url.push_back(url.find('?') != std::string::npos ? '&' : '?');
+        url.append(query);
+    }
+
     PROFILER(log(), "getHttp: " + url);
 
     HttpHelper helper(url, getTimeout(ctx, url));
@@ -288,7 +354,6 @@ HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) const {
     return response(helper);
 }
 
-
 XmlDocHelper
 HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
@@ -303,6 +368,11 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
     }
 
     std::string url = getUrl(args, 0, size - 1);
+    std::string query = queryParams(invoke_ctx);
+    if (!query.empty()) {
+        url.push_back(url.find('?') != std::string::npos ? '&' : '?');
+        url.append(query);
+    }
     PROFILER(log(), "getBinaryPage: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
@@ -347,19 +417,29 @@ HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
-    if (size < 2) {
+    if (size < 1) {
         throwBadArityError();
     }
 
     std::string url = getUrl(args, 0, size - 2);
+    std::string query = queryParams(invoke_ctx);
+    if (!query.empty() && size > 1) {
+        url.push_back(url.find('?') != std::string::npos ? '&' : '?');
+        url.append(query);
+    }
     PROFILER(log(), "postHttp: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
     appendHeaders(helper, ctx->request(), invoke_ctx, true, false);
 
-    const std::string& body = args->at(size-1);
-    helper.postData(body.data(), body.size());
+    if (size == 1) {
+        helper.postData(query.data(), query.size());
+    }
+    else {
+        const std::string& body = args->at(size-1);
+        helper.postData(body.data(), body.size());
+    }
 
     httpCall(helper);
     checkStatus(helper);
@@ -391,34 +471,42 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     }
 
     std::string url = getUrl(args, 0, size - 1);
-    PROFILER(log(), "postByRequest: " + url);
-    
-    bool is_get = (strcmp(ctx->request()->getRequestMethod().c_str(), "GET") == 0);
-    
-    if (!is_get) {
+    bool has_query = url.find('?') != std::string::npos;
+
+    const std::string &method = ctx->request()->getRequestMethod();
+    bool is_post = !strcasecmp(method.c_str(), "POST") || !strcasecmp(method.c_str(), "PUT");
+    if (is_post) {
         const std::string &query = ctx->request()->getQueryString();
         if (!query.empty()) {
-            url.push_back(url.find('?') != std::string::npos ? '&' : '?');
+            url.push_back(has_query ? '&' : '?');
             url.append(query);
+            has_query = true;
         }
     }
+    std::string query = queryParams(invoke_ctx);
+    if (!query.empty()) {
+        url.push_back(has_query ? '&' : '?');
+        url.append(query);
+    }
+    
+    PROFILER(log(), "postByRequest: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
-    appendHeaders(helper, ctx->request(), invoke_ctx, false, !is_get);
+    appendHeaders(helper, ctx->request(), invoke_ctx, false, is_post);
 
-    if (is_get) {
-        const std::string &query = ctx->request()->getQueryString();
-        helper.postData(query.c_str(), query.length());
-    }
-    else {
+    if (is_post) {
         std::pair<const char*, std::streamsize> body = ctx->request()->requestBody();
         helper.postData(body.first, body.second);
+    }
+    else {
+        const std::string &query = ctx->request()->getQueryString();
+        helper.postData(query.c_str(), query.length());
     }
 
     httpCall(helper);
     checkStatus(helper);
     createMeta(helper, invoke_ctx);
-    
+
     return response(helper);
 }
 
@@ -438,9 +526,14 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
     }
 
     std::string url = getUrl(args, 0, size - 1);
-    PROFILER(log(), "getByState: " + url);
-    
     bool has_query = url.find('?') != std::string::npos;
+
+    std::string query = queryParams(invoke_ctx);
+    if (!query.empty()) {
+        url.push_back(has_query ? '&' : '?');
+        url.append(query);
+        has_query = true;
+    }
 
     State* state = ctx->state();
     std::vector<std::string> names;
@@ -454,6 +547,7 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
         url.append(state->asString(name));
         has_query = true;
     }
+    PROFILER(log(), "getByState: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
@@ -481,32 +575,37 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     }
 
     std::string url = getUrl(args, 0, size - 1);
-    PROFILER(log(), "getByRequest: " + url);
-    
-    bool is_post = (strcmp(ctx->request()->getRequestMethod().c_str(), "POST") == 0);
-    
-    if (!is_post) {
-        const std::string &query = ctx->request()->getQueryString();
-        if (!query.empty()) {
-            url.push_back(url.find('?') != std::string::npos ? '&' : '?');
-            url.append(query);
-        }
-    }
-    else {
+    bool has_query = url.find('?') != std::string::npos;
+
+    const std::string &method = ctx->request()->getRequestMethod();
+    if (!strcasecmp(method.c_str(), "POST") || !strcasecmp(method.c_str(), "PUT")) {
         const std::vector<StringUtils::NamedValue>& args = ctx->request()->args();
         if (!args.empty()) {
-            bool has_query = url.find('?') != std::string::npos;
             for(std::vector<StringUtils::NamedValue>::const_iterator it = args.begin(), end = args.end();
                 it != end;
                 ++it) {
                 url.push_back(has_query ? '&' : '?');
                 url.append(it->first);
                 url.push_back('=');
-                url.append(it->second);
+                url.append(StringUtils::urlencode(it->second)); // was: without urlencode()
                 has_query = true;
             }
         }
     }
+    else {
+        const std::string &query = ctx->request()->getQueryString();
+        if (!query.empty()) {
+            url.push_back(has_query ? '&' : '?');
+            url.append(query);
+            has_query = true;
+        }
+    }
+    std::string query = queryParams(invoke_ctx);
+    if (!query.empty()) {
+        url.push_back(has_query ? '&' : '?');
+        url.append(query);
+    }
+    PROFILER(log(), "getByRequest: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
@@ -767,6 +866,8 @@ HttpBlock::createMeta(HttpHelper &helper, InvokeContext *invoke_ctx) const {
     if (metaBlock()) {
         typedef std::multimap<std::string, std::string> HttpHeaderMap;
         typedef HttpHeaderMap::const_iterator HttpHeaderIter;
+
+        boost::shared_ptr<Meta> meta = invoke_ctx->meta();
         const HttpHeaderMap& headers = helper.headers();
         for (HttpHeaderIter it = headers.begin(); it != headers.end(); ) {
             std::pair<HttpHeaderIter, HttpHeaderIter> res = headers.equal_range(it->first);
@@ -777,10 +878,61 @@ HttpBlock::createMeta(HttpHelper &helper, InvokeContext *invoke_ctx) const {
                 result.push_back(itr->second);
             }
             result.size() == 1 ?
-                invoke_ctx->meta()->setString(name, result[0]) :
-                invoke_ctx->meta()->setArray(name, result);
+                meta->setString(name, result[0]) :
+                meta->setArray(name, result);
             it = itr;
         }
+        meta->setString("URL", helper.url());
+    }
+}
+
+void
+HttpBlock::checkHeaderParamId(const std::string &repr_name, const std::string &id) {
+    if (id.empty()) {
+        throw std::runtime_error(repr_name + " without id");
+    }
+
+    int size = id.size();
+    if (size > 128) {
+        throw UnboundRuntimeError(repr_name + " with too big size id: " + id);
+    }
+
+    if (!::isalpha(id[0])) {
+        throw std::runtime_error(repr_name + " with incorrect first character in id: " + id);
+    }
+
+    for (int i = 1; i < size; ++i) {
+        char character = id[i];
+        if (character == '-' || ::isalnum(character)) {
+            continue;
+        }
+
+        std::stringstream ss;
+        ss << repr_name << " with incorrect character at " << i + 1 << " in id: " << id;
+        throw std::runtime_error(ss.str());
+    }
+}
+
+void
+HttpBlock::checkQueryParamId(const std::string &repr_name, const std::string &id) {
+    if (id.empty()) {
+        throw std::runtime_error(repr_name + " without id");
+    }
+
+    int size = id.size();
+    if (size > 128) {
+        throw UnboundRuntimeError(repr_name + " with too big size id: " + id);
+    }
+
+    for (int i = 0; i < size; ++i) {
+        char character = id[i];
+        if (character == '-' || character == '_' || ::isalnum(character)) {
+            continue;
+        }
+
+        std::stringstream ss;
+        ss << repr_name << " with incorrect character at " << i + 1 << " in id: " << id;
+        throw std::runtime_error(ss.str());
     }
 }
 

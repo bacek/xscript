@@ -7,6 +7,7 @@
 
 #include "xscript/functors.h"
 #include "xscript/remote_tagged_block.h"
+#include "query_params.h"
 
 namespace xscript {
 
@@ -38,6 +39,7 @@ protected:
     virtual ArgList* createArgList(Context *ctx, InvokeContext *invoke_ctx) const;
 
     std::string getUrl(const ArgList *args, unsigned int first, unsigned int last) const;
+    std::string queryParams(const InvokeContext *invoke_ctx) const;
     
     XmlDocHelper getHttp(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper postHttp(Context *ctx, InvokeContext *invoke_ctx) const;
@@ -63,9 +65,13 @@ private:
     void httpCall(HttpHelper &helper) const;
     void createMeta(HttpHelper &helper, InvokeContext *invoke_ctx) const;
 
+    static void checkHeaderParamId(const std::string &repr_name, const std::string &id);
+    static void checkQueryParamId(const std::string &repr_name, const std::string &id);
+
     friend class HttpMethodRegistrator;
 
 private:
+    QueryParams query_params_;
     std::vector<Param*> headers_;
     std::set<std::string, StringCILess> header_names_;
     std::string charset_;

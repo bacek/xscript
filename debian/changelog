@@ -1,3 +1,15 @@
+xscript (5.73.27-1) unstable; urgency=low
+
+  * http block:
+   * support query-param, defaults: @allow-empty="no",
+     @urlencode="utf-8" (or "yes") - convert to encoding and urlencode
+   * support x:meta/param @name="URL"
+   * postHttp: allow single param - URL, body will be constructed from
+     query-param
+   * fixed bug: getByRequest: urlencoding request args values
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Tue, 24 May 2011 16:13:57 +0400
+
 xscript (5.73.26-4) unstable; urgency=low
 
   * xscript-proc: high priority for arg param --docrot
