@@ -1,6 +1,7 @@
 #include "settings.h"
 
 #include <sys/time.h>
+#include <strings.h>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
@@ -237,11 +238,13 @@ MistWorker::setStateUrlencode(Context *ctx, const std::vector<std::string> &para
     state->checkName(name);
 
     std::string val = params[1];
-    if (3 == params.size()) {
-        std::auto_ptr<Encoder> encoder = Encoder::createEscaping("utf-8", params[2].c_str());
-        val = encoder->encode(val);
+    if (!val.empty()) {
+        if (3 == params.size() && strcasecmp(params[2].c_str(), "utf-8")) {
+            std::auto_ptr<Encoder> encoder = Encoder::createEscaping("utf-8", params[2].c_str());
+            val = encoder->encode(val);
+        }
+        val = StringUtils::urlencode(val);
     }
-    val = StringUtils::urlencode(val);
 
     state->setString(name, val);
 
@@ -259,7 +262,7 @@ MistWorker::setStateUrldecode(Context *ctx, const std::vector<std::string> &para
     state->checkName(name);
 
     std::string val = StringUtils::urldecode(params[1]);
-    if (3 == params.size()) {
+    if (3 == params.size() && !val.empty() && strcasecmp(params[2].c_str(), "utf-8")) {
         std::auto_ptr<Encoder> encoder = Encoder::createEscaping(params[2].c_str(), "utf-8");
         val = encoder->encode(val);
     }

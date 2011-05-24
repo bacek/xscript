@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include <strings.h>
 #include <stdexcept>
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
@@ -124,23 +125,22 @@ luaUrlEncode(lua_State *lua) {
             throw BadArgCount(stack_size);
 
         std::string value = luaReadStack<std::string>(lua, 1);
-        std::string encoded;
-        if (stack_size >= 2) {
-            std::string encoding = luaReadStack<std::string>(lua, 2);
-            
-            std::auto_ptr<Encoder> encoder = Encoder::createEscaping("utf-8", encoding.c_str());
-            encoder->encode(createRange(value), encoded);
-        }
-        else {
-            encoded = value;
+        if (!value.empty()) {
+            if (stack_size >= 2) {
+                std::string encoding = luaReadStack<std::string>(lua, 2);
+                if (strcasecmp(encoding.c_str(), "utf-8")) {
+                    std::auto_ptr<Encoder> encoder = Encoder::createEscaping("utf-8", encoding.c_str());
+                    value = encoder->encode(createRange(value));
+                }
+            }
+            bool force_percent = false;
+            if (stack_size == 3) {
+                force_percent = luaReadStack<bool>(lua, 3);
+            }
+            value = StringUtils::urlencode(value, force_percent);
         }
 
-        bool force_percent = false;
-        if (stack_size == 3) {
-            force_percent = luaReadStack<bool>(lua, 3);
-        }
-
-        lua_pushstring(lua, StringUtils::urlencode(encoded, force_percent).c_str());
+        lua_pushstring(lua, value.c_str());
         // Our value on stack
         return 1;
     }
@@ -159,17 +159,18 @@ luaUrlDecode(lua_State *lua) {
             throw BadArgCount(stack_size);
 
         std::string value = luaReadStack<std::string>(lua, 1);
-        std::string decoded;
-        if (stack_size == 2) {
-            std::string encoding = luaReadStack<std::string>(lua, 2);
-            std::auto_ptr<Encoder> encoder = Encoder::createEscaping(encoding.c_str(), "utf-8");
-            encoder->encode(StringUtils::urldecode(value), decoded);
-        }
-        else {
-            decoded = StringUtils::urldecode(value);
+        if (!value.empty()) {
+            value = StringUtils::urldecode(value);
+            if (stack_size == 2) {
+                std::string encoding = luaReadStack<std::string>(lua, 2);
+                if (strcasecmp(encoding.c_str(), "utf-8")) {
+                    std::auto_ptr<Encoder> encoder = Encoder::createEscaping(encoding.c_str(), "utf-8");
+                    value = encoder->encode(StringUtils::urldecode(value));
+                }
+            }
         }
 
-        lua_pushstring(lua, decoded.c_str());
+        lua_pushstring(lua, value.c_str());
         // Our value on stack
         return 1;
     }

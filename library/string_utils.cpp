@@ -164,6 +164,10 @@ StringUtils::jsQuoteString(const Range &range, std::string &result) {
 std::string
 StringUtils::urlencode(const Range &range, bool force_percent) {
 
+    if (range.empty()) {
+        return EMPTY_STRING;
+    }
+
     std::string result;
     result.reserve(3 * range.size());
 
@@ -203,6 +207,10 @@ StringUtils::urlencode(const Range &range, bool force_percent) {
 
 std::string
 StringUtils::urldecode(const Range &range) {
+
+    if (range.empty()) {
+        return EMPTY_STRING;
+    }
 
     std::string result;
     result.reserve(range.size());
