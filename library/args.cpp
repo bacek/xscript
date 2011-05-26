@@ -1,12 +1,16 @@
 #include "settings.h"
 
 #include <string.h>
+#include <map>
 
 #include <boost/lexical_cast.hpp>
 
 #include "xscript/args.h"
 #include "xscript/context.h"
 #include "xscript/exception.h"
+#include "xscript/functors.h"
+#include "xscript/logger.h"
+#include "xscript/operation_mode.h"
 #include "xscript/state.h"
 #include "xscript/typed_map.h"
 
@@ -16,6 +20,99 @@
 
 namespace xscript {
 
+typedef void (*args_appender)(ArgList& args, const std::string &type, const std::string &value, bool suppress_error);
+
+inline static void
+processCastError(const std::string &type, const std::string &value, bool checked) {
+    if (checked) {
+        throw std::runtime_error("bad cast to '" + type + "' : " + value);
+    }
+}
+
+static void
+addBool(ArgList& args, const std::string &type, const std::string &value, bool checked) {
+    bool b = false;
+    if ("1" == value || !strncasecmp(value.c_str(), "true", sizeof("true"))) {
+        b = true;
+    }
+    else if (value.empty() || "0" == value || !strncasecmp(value.c_str(), "false", sizeof("false"))) {
+        b = false;
+    }
+    else {
+        processCastError(type, value, checked);
+    }
+    args.add(b);
+}
+
+static void
+addString(ArgList& args, const std::string &type, const std::string &value, bool checked) {
+    (void) type;
+    (void) checked;
+    args.add(value);
+}
+
+static void
+addDouble(ArgList& args, const std::string &type, const std::string &value, bool checked) {
+    double d = 0;
+    if (!value.empty()) {
+        try {
+            d = boost::lexical_cast<double>(value);
+        }
+        catch (const boost::bad_lexical_cast &) {
+            processCastError(type, value, checked);
+        }
+    }
+    args.add(d);
+}
+
+template <typename T>
+static void
+addNumeric(ArgList& args, const std::string &type, const std::string &value, bool checked) {
+    T d = 0;
+    if (!value.empty()) {
+        try {
+            d = boost::lexical_cast<T>(value);
+        }
+        catch (const boost::bad_lexical_cast &) {
+            processCastError(type, value, checked);
+
+            //try convert to double and cast to native type
+            try {
+                double dd = boost::lexical_cast<double>(value);
+                d = static_cast<T>(dd);
+            }
+            catch (const boost::bad_lexical_cast &) {
+            }
+        }
+    }
+    args.add(d);
+}
+
+typedef std::map< std::string, args_appender, CILess<std::string> > ArgAppenders;
+static ArgAppenders map_;
+
+struct ArgsAppenderRegisterer {
+    ArgsAppenderRegisterer() {
+        map_["bool"] = &addBool;
+        map_["boolean"] = &addBool;
+        map_["string"] = &addString;
+        map_["float"] = &addDouble;
+        map_["double"] = &addDouble;
+        map_["long"] = &addNumeric<boost::int32_t>;
+        map_["ulong"] = &addNumeric<boost::uint32_t>;
+        map_["unsigned long"] = &addNumeric<boost::uint32_t>;
+        map_["longlong"] = &addNumeric<boost::int64_t>;
+        map_["long long"] = &addNumeric<boost::int64_t>;
+        map_["ulonglong"] = &addNumeric<boost::uint64_t>;
+        map_["unsigned long long"] = &addNumeric<boost::uint64_t>;
+    }
+};
+
+static ArgsAppenderRegisterer args_appender_registerer_;
+
+static const std::string STR_TRUE("1");
+static const std::string STR_FALSE("0");
+
 ArgList::ArgList() {
 }
 
@@ -23,67 +120,31 @@ ArgList::~ArgList() {
 }
 
 void
-ArgList::addAs(const std::string &type, const std::string &value) {
-    if (strncasecmp(type.c_str(), "bool", sizeof("bool")) == 0 ||
-        strncasecmp(type.c_str(), "boolean", sizeof("boolean")) == 0) {
-        bool b = false;
-        if ("1" == value || strncasecmp(value.c_str(), "true", sizeof("true")) == 0) {
-            b = true;
-        }
-        add(b);
-    }
-    else if (strncasecmp(type.c_str(), "double", sizeof("double")) == 0 ||
-             strncasecmp(type.c_str(), "float", sizeof("float")) == 0) {
-        double d = 0.0;
-        try {
-            d = boost::lexical_cast<double>(value);
-        }
-        catch (const boost::bad_lexical_cast &e) {
-        }
-        add(d);
-    }
-    else if (strncasecmp(type.c_str(), "long", sizeof("long")) == 0) {
-        boost::int32_t l = 0;
-        try {
-            l = boost::lexical_cast<boost::int32_t>(value);
-        }
-        catch (const boost::bad_lexical_cast &e) {
-        }
-        add(l);
-    }
-    else if (strncasecmp(type.c_str(), "ulong", sizeof("ulong")) == 0 ||
-             strncasecmp(type.c_str(), "unsigned long", sizeof("unsigned long")) == 0) {
-        boost::uint32_t ul = 0;
-        try {
-            ul = boost::lexical_cast<boost::uint32_t>(value);
-        }
-        catch (const boost::bad_lexical_cast &e) {
-        }
-        add(ul);
-    }
-    else if (strncasecmp(type.c_str(), "longlong", sizeof("longlong")) == 0 ||
-             strncasecmp(type.c_str(), "long long", sizeof("long long")) == 0) {
-        boost::int64_t ll = 0;
-        try {
-            ll = boost::lexical_cast<boost::int64_t>(value);
-        }
-        catch (const boost::bad_lexical_cast &e) {
-        }
-        add(ll);
-    }
-    else if (strncasecmp(type.c_str(), "ulonglong", sizeof("ulonglong")) == 0 ||
-             strncasecmp(type.c_str(), "unsigned long long", sizeof("unsigned long long")) == 0) {
-        boost::uint64_t ull = 0;
-        try {
-            ull = boost::lexical_cast<boost::uint64_t>(value);
-        }
-        catch (const boost::bad_lexical_cast &e) {
-        }
-        add(ull);
-    }
-    else {
+ArgList::addAsChecked(const std::string &type, const std::string &value, bool checked) {
+
+    //log()->debug("converting %s to type '%s', value: %s", checked ? "" : "(checked)", type.c_str(), value.c_str());
+    if (type.empty()) {
         add(value);
+	return;
     }
+
+    const ArgAppenders::const_iterator it = map_.find(type);
+    if (it != map_.end()) {
+        args_appender f = it->second;
+        assert(f);
+        (*f)(*this, type, value, checked);
+	return;
+    }
+
+    if (checked || !OperationMode::instance()->isProduction()) {
+        throw CriticalInvokeError("bad cast to strange type '" + type + "' value: " + value);
+    }
+    add(value);
+}
+
+void
+ArgList::addAs(const std::string &type, const std::string &value) {
+    addAsChecked(type, value, false);
 }
 
 void
@@ -113,8 +174,80 @@ ArgList::addTag(const TaggedBlock *tb, const Context *ctx) {
     throw CriticalInvokeError("Tag param is not allowed in this context");
 }
 
-static const std::string STR_TRUE("1");
-static const std::string STR_FALSE("0");
+
+StringArgList::StringArgList() {
+}
+
+StringArgList::~StringArgList() {
+}
+
+void
+StringArgList::add(bool value) {
+    args_.push_back(value ? STR_TRUE : STR_FALSE);
+}
+
+void
+StringArgList::add(double value) {
+    args_.push_back(boost::lexical_cast<std::string>(value));
+}
+
+void
+StringArgList::add(boost::int32_t value) {
+    args_.push_back(boost::lexical_cast<std::string>(value));
+}
+
+void
+StringArgList::add(boost::int64_t value) {
+    args_.push_back(boost::lexical_cast<std::string>(value));
+}
+
+void
+StringArgList::add(boost::uint32_t value) {
+    args_.push_back(boost::lexical_cast<std::string>(value));
+}
+
+void
+StringArgList::add(boost::uint64_t value) {
+    args_.push_back(boost::lexical_cast<std::string>(value));
+}
+
+void
+StringArgList::add(const std::string &value) {
+    args_.push_back(value);
+}
+
+bool
+StringArgList::empty() const {
+    return args_.empty();
+}
+
+unsigned int
+StringArgList::size() const {
+    return args_.size();
+}
+
+const std::string&
+StringArgList::at(unsigned int i) const {
+    return args_.at(i);
+}
+
+const std::vector<std::string>&
+StringArgList::args() const {
+    return args_;
+}
+
+
+CheckedStringArgList::CheckedStringArgList(bool checked) : checked_(checked) {
+}
+
+CheckedStringArgList::~CheckedStringArgList() {
+}
+
+void
+CheckedStringArgList::addAs(const std::string &type, const std::string &value) {
+    addAsChecked(type, value, checked_);
+}
+
 
 CommonArgList::CommonArgList() {
 }
@@ -176,5 +309,6 @@ const std::vector<std::string>&
 CommonArgList::args() const {
     return args_;
 }
+
 
 } // namespace xscript

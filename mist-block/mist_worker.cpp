@@ -12,7 +12,6 @@
 #include "state_node.h"
 #include "state_prefix_node.h"
 
-#include <xscript/args.h>
 #include <xscript/context.h>
 #include <xscript/encoder.h>
 #include <xscript/state.h>
@@ -62,8 +61,8 @@ MistWorker::attachData(const std::string &data) {
 }
 
 XmlNodeHelper
-MistWorker::run(Context *ctx, const CommonArgList *params) const {
-    return (this->*method_)(ctx, params->args());
+MistWorker::run(Context *ctx, const std::vector<std::string> &params) const {
+    return (this->*method_)(ctx, params);
 }
 
 XmlNodeHelper

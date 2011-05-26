@@ -11,6 +11,7 @@
 
 namespace xscript {
 
+class ArgList;
 class Context;
 class Param;
 
@@ -18,17 +19,21 @@ class QueryParamData {
 public:
     explicit QueryParamData(std::auto_ptr<Param> param);
 
+    bool allowEmpty() const { return allow_empty_; }
     const Param* param() const { return param_.get(); }
 
     void parse(xmlNodePtr node);
 
-    std::string asString(const Context *ctx) const;
+    void add(const Context *ctx, ArgList &al) const;
 
 private:
+    std::string asString(const Context *ctx) const;
+
     boost::shared_ptr<Param> param_;
     std::string encoding_;
     bool urlencoding_;
     bool allow_empty_;
+    bool converted_;
 };
 
 

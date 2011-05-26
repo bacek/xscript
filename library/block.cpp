@@ -450,7 +450,7 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
 }
 
 boost::shared_ptr<InvokeContext>
-Block::invoke_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
+Block::invoke_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     log()->debug("%s", BOOST_CURRENT_FUNCTION);
 
     if (ctx->stopped()) {
@@ -461,16 +461,17 @@ Block::invoke_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext
 
     try {
         BlockTimerStarter starter(ctx.get(), this);
-        invokeInternal(ctx, invoke_ctx);
+        Block *self = const_cast<Block*>(this); //TODO: remove const_cast
+        self->invokeInternal(ctx, invoke_ctx);
         try {
-            callMetaLua(ctx, invoke_ctx);
+            self->callMetaLua(ctx, invoke_ctx);
         }
         catch (const MetaInvokeError &e) {
-            postInvoke(ctx.get(), invoke_ctx.get());
+            self->postInvoke(ctx.get(), invoke_ctx.get());
             throw e;
         }
-        postInvoke(ctx.get(), invoke_ctx.get());
-        callMeta(ctx, invoke_ctx);
+        self->postInvoke(ctx.get(), invoke_ctx.get());
+        self->callMeta(ctx, invoke_ctx);
     }
     catch (const CriticalInvokeError &e) {
         std::string full_error;
@@ -518,7 +519,7 @@ Block::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
 }
 
 void
-Block::callInternalThreadedHelper(InvokeHelper helper, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot) {
+Block::callInternalThreadedHelper(InvokeHelper helper, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot) const {
     callInternalThreaded_Ex(helper.context(), invoke_ctx, slot);
 }
 
@@ -538,7 +539,7 @@ Block::createInvokeContext(boost::shared_ptr<Context> ctx) const {
 }
 
 bool
-Block::invokeCheckThreadedEx(boost::shared_ptr<Context> ctx, unsigned int slot) {
+Block::invokeCheckThreadedEx(boost::shared_ptr<Context> ctx, unsigned int slot) const {
     boost::shared_ptr<InvokeContext> invoke_ctx = createInvokeContext(ctx);
     if (threaded()) {
         InvokeHelper helper(ctx);
@@ -994,7 +995,7 @@ Block::callInternal(boost::shared_ptr<Context> ctx, unsigned int slot) {
 }
 
 void
-Block::callInternal_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot) {
+Block::callInternal_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot) const {
     try {
         ctx->result(slot, invoke_Ex(ctx, invoke_ctx));
     }
@@ -1014,7 +1015,7 @@ Block::callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot) {
 }
 
 void
-Block::callInternalThreaded_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot) {
+Block::callInternalThreaded_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot) const {
     XmlUtils::registerReporters();
     VirtualHostData::instance()->set(ctx->rootContext()->request());
     Context::resetTimer();

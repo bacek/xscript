@@ -27,6 +27,7 @@
 #include "xscript/cache_strategy.h"
 #include "xscript/context.h"
 #include "xscript/doc_cache.h"
+#include "xscript/exception.h"
 #include "xscript/extension.h"
 #include "xscript/http_utils.h"
 #include "xscript/logger.h"
@@ -891,35 +892,53 @@ Script::invokeBlocks(boost::shared_ptr<Context> ctx) {
     for (std::vector<Block*>::iterator it = blocks.begin();
          it != blocks.end();
          ++it, ++count) {
+	const Block *block = *it;
         if (!stop && (ctx->skipNextBlocks() || ctx->stopBlocks())) {
             stop = true;
         }
         if (stop) {
-            ctx->result(count, (*it)->fakeResult(true));
+            ctx->result(count, block->fakeResult(true));
             continue;
         }
         try {
-            if (!(*it)->checkGuard(ctx.get())) {
+            if (!block->checkGuard(ctx.get())) {
                 log()->info("Guard skipped block processing. Owner: %s Block: %s. Method: %s",
-                    name().c_str(), (*it)->name(), (*it)->method().c_str());
-                ctx->result(count, (*it)->fakeResult(false));
+                    name().c_str(), block->name(), block->method().c_str());
+                ctx->result(count, block->fakeResult(false));
                 continue;
             }
         }
         catch (const std::exception &e) {
             log()->error("Error while guard processing: %s. Owner: %s Block: %s. Method: %s",
-                    e.what(), name().c_str(), (*it)->name(), (*it)->method().c_str());
-            ctx->result(count, (*it)->errorResult(e.what(), false));
+                    e.what(), name().c_str(), block->name(), block->method().c_str());
+            ctx->result(count, block->errorResult(e.what(), false));
             continue;
         }
-        if ((*it)->invokeCheckThreadedEx(ctx, count)) {
-            const ThreadedBlock *tb = dynamic_cast<const ThreadedBlock*>(*it);
-            assert(tb);
-            boost::xtime tmp = Context::delay(tb->timeout());
-            if (boost::xtime_cmp(tmp, end_time) > 0) {
-                end_time = tmp;
+
+        try {
+            if (block->invokeCheckThreadedEx(ctx, count)) {
+                const ThreadedBlock *tb = dynamic_cast<const ThreadedBlock*>(block);
+                assert(tb);
+                boost::xtime tmp = Context::delay(tb->timeout());
+                if (boost::xtime_cmp(tmp, end_time) > 0) {
+                    end_time = tmp;
+                }
             }
+            continue;
         }
+        catch (const CriticalInvokeError &e) {
+            std::string full_error;
+            ctx->result(count, block->errorResult(e, full_error));
+            OperationMode::instance()->assignBlockError(ctx.get(), block, full_error);
+            throw;
+        }
+        catch (const InvokeError &e) {
+            ctx->result(count, block->errorResult(e, false));
+        }
+        catch (const std::exception &e) {
+            ctx->result(count, block->errorResult(e.what(), false));
+        }
+        ctx->setNoCache();
     }
     return end_time;
 }

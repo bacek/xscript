@@ -1,3 +1,17 @@
+xscript (5.73.27-2) unstable; urgency=low
+
+  * ArgList:
+   * new classes StringsArgList, CheckedStringsArgList
+   * new boolean and numeric convertors
+  * Block: change some methods to const (a lot of TODO)
+  * Script: catch critical and others exceptions while invoking blocks
+  * http-block:
+   * fixed creation tag key
+   * converted values for headers or query-params:
+     fixing (default) or strong checking
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Thu, 26 May 2011 17:18:51 +0400
+
 xscript (5.73.27-1) unstable; urgency=low
 
   * http block:

@@ -58,19 +58,20 @@ public:
     virtual boost::shared_ptr<InvokeContext> invoke(boost::shared_ptr<Context> ctx); //TODO: remove virtual
     virtual void invokeCheckThreaded(boost::shared_ptr<Context> ctx, unsigned int slot); //TODO: remove this
 
-    bool invokeCheckThreadedEx(boost::shared_ptr<Context> ctx, unsigned int slot);
+    bool invokeCheckThreadedEx(boost::shared_ptr<Context> ctx, unsigned int slot) const;
     virtual bool applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc);
 
     boost::shared_ptr<InvokeContext> errorResult(const char *error, bool info) const;
     boost::shared_ptr<InvokeContext> errorResult(const InvokeError &error, bool info) const;
+    boost::shared_ptr<InvokeContext> errorResult(const InvokeError &error, std::string &full_error) const;
     boost::shared_ptr<InvokeContext> fakeResult(bool error) const;
 
     void throwBadArityError() const;
 
     Logger * log() const;
 
-    virtual void startTimer(Context *ctx);
-    virtual void stopTimer(Context *ctx);
+    virtual void startTimer(Context *ctx); //TODO: const
+    virtual void stopTimer(Context *ctx); //TODO: const
 
     typedef xmlNodePtr (*insertFunc)(xmlNodePtr, xmlNodePtr);
     xmlNodePtr processXPointer(const InvokeContext *invoke_ctx, xmlDocPtr doc, xmlDocPtr meta_doc,
@@ -83,26 +84,26 @@ public:
 
 protected:
     boost::shared_ptr<InvokeContext> createInvokeContext(boost::shared_ptr<Context> ctx) const;
-    boost::shared_ptr<InvokeContext> invoke_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+    boost::shared_ptr<InvokeContext> invoke_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const;
 
     virtual void invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void postParse();
     virtual void processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
     virtual void property(const char *name, const char *value);
-    virtual void postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
-    virtual void postInvoke(Context *ctx, InvokeContext *invoke_ctx);
+    virtual void postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx); //TODO:  const
+    virtual void postInvoke(Context *ctx, InvokeContext *invoke_ctx); //TODO:  const
 
     virtual void callInternal(boost::shared_ptr<Context> ctx, unsigned int slot); //TODO: remove this
-    void callInternal_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot);
+    void callInternal_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot) const;
 
     virtual void callInternalThreaded(boost::shared_ptr<Context> ctx, unsigned int slot); //TODO: remove this
-    void callInternalThreaded_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot);
-    void callInternalThreadedHelper(InvokeHelper helper, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot);
+    void callInternalThreaded_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot) const;
+    void callInternalThreadedHelper(InvokeHelper helper, boost::shared_ptr<InvokeContext> invoke_ctx, unsigned int slot) const;
 
-    virtual void callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+    virtual void callMetaLua(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx); //TODO: const
     virtual ArgList* createArgList(Context *ctx, InvokeContext *invoke_ctx) const;
     void processArguments(Context *ctx, InvokeContext *invoke_ctx) const;
-    void callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx);
+    void callMeta(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx); //TODO: const
     bool checkStateGuard(Context *ctx) const;
     bool hasGuard() const;
     bool hasStateGuard() const;
@@ -147,7 +148,6 @@ private:
     std::string errorLocation() const;
     std::string errorMessage(const InvokeError &error) const;
     boost::shared_ptr<InvokeContext> errorResult(XmlDocHelper doc) const;
-    boost::shared_ptr<InvokeContext> errorResult(const InvokeError &error, std::string &full_error) const;
     void errorResult(const char *error, bool info, boost::shared_ptr<InvokeContext> &ctx) const;
     void metaErrorResult(const MetaInvokeError &error, boost::shared_ptr<InvokeContext> &invoke_ctx) const;
     XmlDocHelper errorDoc(const InvokeError &error, const char *tag_name, std::string &full_error) const;
@@ -159,7 +159,7 @@ private:
 };
 
 struct BlockTimerStarter {
-    BlockTimerStarter(Context *ctx, Block *block) : ctx_(ctx), block_(block) {
+    BlockTimerStarter(Context *ctx, const Block *block) : ctx_(ctx), block_(const_cast<Block*>(block)) { //TODO: remove const_cast
         block_->startTimer(ctx_);
     }
     virtual ~BlockTimerStarter() {

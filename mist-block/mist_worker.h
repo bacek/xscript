@@ -2,6 +2,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include <boost/function.hpp>
 #include <boost/noncopyable.hpp>
@@ -15,7 +16,6 @@
 
 namespace xscript {
 
-class CommonArgList;
 class Context;
 class MistWorkerMethodRegistrator;
 class XsltParamFetcher;
@@ -27,7 +27,7 @@ public:
     static std::auto_ptr<MistWorker> create(const std::string &method);
     std::auto_ptr<MistWorker> clone() const;
    
-    XmlNodeHelper run(Context *ctx, const CommonArgList *params) const;
+    XmlNodeHelper run(Context *ctx, const std::vector<std::string> &params) const;
     XmlNodeHelper run(Context *ctx, const XsltParamFetcher &params) const;
     
     bool isAttachStylesheet() const;

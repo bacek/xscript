@@ -113,7 +113,7 @@ ConvertedParam::as() const {
 
 void
 ConvertedParam::add(const Context *ctx, ArgList &al) const {
-    al.addAs(as(), asString(ctx));
+    al.addAs(converted_data_->as_, asString(ctx));
 }
 
 void
@@ -170,15 +170,15 @@ TypedParam::getValue(const Context *ctx) const {
 void
 TypedParam::add(const Context *ctx, ArgList &al) const {
     const std::string& as = ConvertedParam::as();
+    std::string value = asString(ctx);
     if (as.empty()) {
-        al.add(asString(ctx));
+        al.add(value);
     }
     else if (NULL == dynamic_cast<CommonArgList*>(&al)) {
-        ConvertedParam::add(ctx, al);
+        al.addAs(as, value);
     }
     else {
-        ValueResult result = getValue(ctx);
-        al.add(result.second ? result.first : defaultValue());
+        al.add(value);
     }
 }
 

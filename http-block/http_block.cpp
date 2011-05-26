@@ -1,4 +1,5 @@
 #include "settings.h"
+#include "http_block.h"
 
 #include <strings.h>
 
@@ -14,7 +15,7 @@
 
 #include <libxml/HTMLparser.h>
 
-#include "http_block.h"
+#include "http_extension.h"
 
 #include "xscript/args.h"
 #include "xscript/context.h"
@@ -79,23 +80,24 @@ private:
     boost::shared_ptr<std::string> data_;
 };
 
-class HttpHeadersArgList : public CommonArgList {
+class HttpHeadersArgList : public CheckedStringArgList {
 public:
-    HttpHeadersArgList() : CommonArgList() {}
+    explicit HttpHeadersArgList(bool checked) : CheckedStringArgList(checked) {}
 
     virtual void add(const std::string &value) {
         std::string::size_type pos = value.find_first_of("\r\n");
         if (pos == std::string::npos) {
-            CommonArgList::add(value);
+            CheckedStringArgList::add(value);
         }
         else {
-            CommonArgList::add(value.substr(0, pos));
+            CheckedStringArgList::add(value.substr(0, pos));
         }
     }
 };
 
 static MethodMap methods_;
 static std::string CONTENT_TYPE_HEADER_NAME("Content-Type");
+static std::string STR_PARAM_ID("param-id");
 static std::string STR_HEADERS("headers");
 static std::string STR_HEADER_PARAM_NAME("header");
 static std::string STR_HEADER_PARAM_REPR("header param");
@@ -202,12 +204,12 @@ HttpBlock::info(const Context *ctx) const {
 
     std::string info = RemoteTaggedBlock::info(ctx);
     if (!headers_.empty()) {
-        info.append(" | Headers: ");
+        info.append(" | Headers:");
         for (unsigned int i = 0, n = headers_.size(); i < n; ++i) {
-            if (i > 0) {
-                info.append(", ", 2);
-            }
+            info.push_back(' ');
             const Param *param = headers_[i];
+            info.append(param->id());
+            info.push_back(':');
             info.append(param->type());
             const std::string& value = param->value();
             if (!value.empty()) {
@@ -222,6 +224,8 @@ HttpBlock::info(const Context *ctx) const {
         for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it) {
             const Param *p = it->param();
             info.push_back(' ');
+            info.append(p->id());
+            info.push_back(':');
             info.append(p->type());
             const std::string& value = p->value();
             if (!value.empty()) {
@@ -243,14 +247,26 @@ HttpBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) con
         const ArgList *args = invoke_ctx->getExtraArgList(STR_HEADERS);
         assert(args);
         assert(args->size() == headers_.size());
-        key.append(paramsKey(args));
+        unsigned int i = 0;
+        for (std::vector<Param*>::const_iterator it = headers_.begin(), end = headers_.end(); it != end; ++it, ++i) {
+            const Param *p = *it;
+            key.append(p->id());
+            key.push_back(':');
+            key.append(args->at(i));
+        }
     }
     if (!query_params_.empty()) {
         key.append("| Query params:");
         const ArgList *args = invoke_ctx->getExtraArgList(STR_QUERY_PARAMS);
         assert(args);
         assert(args->size() == query_params_.size());
-        key.append(paramsKey(args));
+        unsigned int i = 0;
+        for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it, ++i) {
+            const Param *p = it->param();
+            key.append(p->id());
+            key.push_back(':');
+            key.append(args->at(i));
+        }
     }
     return key;
 }
@@ -259,16 +275,36 @@ ArgList*
 HttpBlock::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
 
     if (!headers_.empty()) {
-        boost::shared_ptr<CommonArgList> args(new HttpHeadersArgList());
+        bool checked = static_cast<const HttpExtension*>(extension())->checked_headers();
+        boost::shared_ptr<ArgList> args(new HttpHeadersArgList(checked));
         for (std::vector<Param*>::const_iterator it = headers_.begin(), end = headers_.end(); it != end; ++it) {
-            (*it)->add(ctx, *args);
+            const Param *p = *it;
+            try {
+                p->add(ctx, *args);
+            }
+            catch (const CriticalInvokeError &e) {
+                throw CriticalInvokeError(STR_HEADER_PARAM_REPR + " error: " + e.what(), STR_PARAM_ID, p->id());
+            }
+            catch (const std::exception &e) {
+                throw InvokeError(STR_HEADER_PARAM_REPR + " error: " + e.what(), STR_PARAM_ID, p->id());
+            }
         }
         invoke_ctx->setExtraArgList(STR_HEADERS, args);
     }
     if (!query_params_.empty()) {
-        boost::shared_ptr<CommonArgList> args(new CommonArgList());
+        bool checked = static_cast<const HttpExtension*>(extension())->checked_query_params();
+        boost::shared_ptr<ArgList> args(new CheckedStringArgList(checked));
         for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it) {
-            args->add(it->asString(ctx));
+            const Param *p = it->param();
+            try {
+                it->add(ctx, *args);
+            }
+            catch (const CriticalInvokeError &e) {
+                throw CriticalInvokeError(STR_QUERY_PARAM_REPR + " error: " + e.what(), STR_PARAM_ID, p->id());
+            }
+            catch (const std::exception &e) {
+                throw InvokeError(STR_QUERY_PARAM_REPR + " error: " + e.what(), STR_PARAM_ID, p->id());
+            }
         }
         invoke_ctx->setExtraArgList(STR_QUERY_PARAMS, args);
     }
@@ -286,7 +322,7 @@ HttpBlock::getUrl(const ArgList *args, unsigned int first, unsigned int last) co
 }
 
 std::string
-HttpBlock::queryParams(const InvokeContext *invoke_ctx) const{
+HttpBlock::queryParams(const InvokeContext *invoke_ctx) const {
 
     const ArgList *args = invoke_ctx->getExtraArgList(STR_QUERY_PARAMS);
     std::string val;
@@ -295,22 +331,33 @@ HttpBlock::queryParams(const InvokeContext *invoke_ctx) const{
         assert(sz == query_params_.size());
 
         std::size_t future_size = 0;
-        for (unsigned int i = sz; i--;) {
+        QueryParams::const_iterator it = query_params_.begin();
+        for (unsigned int i = 0; i < sz; ++i, ++it) {
+            const Param *p = it->param();
+            future_size += p->id().size();
             const std::string &v = args->at(i);
             if (!v.empty()) {
-                future_size += v.size();
+                future_size += v.size() + 1;
             }
         }
 
         if (future_size) {
             val.reserve(future_size + sz - 1);
-            for (unsigned int i = 0; i != sz; ++i) {
+            QueryParams::const_iterator it = query_params_.begin();
+            for (unsigned int i = 0; i != sz; ++i, ++it) {
+                const Param *p = it->param();
                 const std::string &v = args->at(i);
                 if (!v.empty()) {
                     if (!val.empty()) {
                         val.push_back('&');
                     }
-                    val.append(v);
+                    val.append(p->id()).append("=", 1).append(v);
+                }
+                else if (it->allowEmpty()) {
+                    if (!val.empty()) {
+                        val.push_back('&');
+                    }
+                    val.append(p->id());
                 }
             }
         }

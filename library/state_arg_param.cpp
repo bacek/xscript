@@ -57,10 +57,10 @@ StateArgParam::asString(const Context *ctx) const {
 
 void
 StateArgParam::add(const Context *ctx, ArgList &al) const {
-    const std::string& as = ConvertedParam::as();
     const std::string& name = value();   
     TypedValue value = ctx->state()->typedValue(name);
     if (NULL == dynamic_cast<CommonArgList*>(&al)) {
+        const std::string& as = ConvertedParam::as();
         value.nil() ? al.addAs(as, defaultValue()) : al.addAs(as, value);
     }
     else {

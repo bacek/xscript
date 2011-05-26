@@ -8,6 +8,7 @@
 
 #include <boost/checked_delete.hpp>
 
+#include "xscript/args.h"
 #include "xscript/context.h"
 #include "xscript/encoder.h"
 #include "xscript/param.h"
@@ -25,7 +26,7 @@ namespace xscript {
 static std::string ALLOW_EMPTY_ERRORMSG_UNKNOW_VALUE("query-param, allow-empty tag: unknown value: ");
 
 QueryParamData::QueryParamData(std::auto_ptr<Param> param)
-    : param_(param), urlencoding_(true), allow_empty_(false)
+    : param_(param), urlencoding_(true), allow_empty_(false), converted_(false)
 {
     assert(NULL != param_.get());
 }
@@ -69,6 +70,11 @@ QueryParamData::parse(xmlNodePtr node) {
     }
 
     param_->visitProperties();
+
+    const ConvertedParam *cp = dynamic_cast<const ConvertedParam*>(param_.get());
+    if (NULL != cp) {
+        converted_ = !cp->as().empty();
+    }
 }
 
 std::string
@@ -80,9 +86,6 @@ QueryParamData::asString(const Context *ctx) const {
 
     std::string val = param_->asString(ctx);
     if (val.empty()) {
-        if (allow_empty_) {
-            return param_->id();
-        }
         return StringUtils::EMPTY_STRING;
     }
 
@@ -93,8 +96,20 @@ QueryParamData::asString(const Context *ctx) const {
     if (urlencoding_) {
         val = StringUtils::urlencode(val);
     }
-    return param_->id() + "=" + val;
+    return val;
 }
 
-	
+void
+QueryParamData::add(const Context *ctx, ArgList &al) const {
+    std::string value = asString(ctx);
+    if (converted_) {
+        const ConvertedParam *cp = static_cast<const ConvertedParam*>(param_.get());
+        al.addAs(cp->as(), value);
+    }
+    else {
+        al.add(value);
+    }
+}
+
+
 } // namespace xscript

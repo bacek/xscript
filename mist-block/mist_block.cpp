@@ -33,17 +33,29 @@ void
 MistBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     assert(worker_.get());
     
-    const CommonArgList* args = dynamic_cast<const CommonArgList*>(invoke_ctx->getArgList());
+    const ArgList *args = invoke_ctx->getArgList();
     assert(args);
+
+    const std::vector<std::string> *params = NULL;
+    const CommonArgList *common_args = dynamic_cast<const CommonArgList*>(args);
+    if (common_args) {
+        params = &common_args->args();
+    }
+    else {
+        const StringArgList* string_args = dynamic_cast<const StringArgList*>(args);
+        assert(string_args);
+        params = &string_args->args();
+    }
+
     XmlNodeHelper result;
     try {
         if (worker_->isAttachStylesheet() && !args->empty()) {
             std::auto_ptr<MistWorker> worker = worker_->clone();
             worker->attachData(fullName(args->at(0)));
-            result = worker->run(ctx.get(), args);
+            result = worker->run(ctx.get(), *params);
         }
         else {
-            result = worker_->run(ctx.get(), args);
+            result = worker_->run(ctx.get(), *params);
         }
     }
     catch(const std::invalid_argument &e) {

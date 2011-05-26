@@ -144,32 +144,38 @@ SimpleParam<T>::asString(const Context * /* ctx */) const {
 
 template<typename T> void
 SimpleParam<T>::add(const Context * /* ctx */, ArgList &al) const {
-    CommonArgList* args = dynamic_cast<CommonArgList*>(&al);
-    args ? args->add(value()) : al.add(typedValue());
+    if (NULL != dynamic_cast<CommonArgList*>(&al) || NULL != dynamic_cast<StringArgList*>(&al)) {
+        al.add(value());
+    }
+    else {
+        al.add(typedValue());
+    }
 }
 
 template<typename T> void
 SimpleParam<T>::parse() {
     Param::parse();
+    const std::string &val = value();
     try {
-        value_ = boost::lexical_cast<T>(value());
+        value_ = boost::lexical_cast<T>(val);
     }
     catch (const std::exception &e) {
-        throw std::invalid_argument(std::string("bad value: ").append(value()));
+        throw std::invalid_argument("bad value: " + val);
     }
 }
 
 template<> void
 SimpleParam<bool>::parse() {
     Param::parse();
-    if ("0" == value() || strncasecmp(value().c_str(), "false", sizeof("false")) == 0) {
+    const std::string &val = value();
+    if ("0" == val || !strncasecmp(val.c_str(), "false", sizeof("false"))) {
         value_ = false;
     }
-    else if ("1" == value() || strncasecmp(value().c_str(), "true", sizeof("true")) == 0) {
+    else if ("1" == val || !strncasecmp(val.c_str(), "true", sizeof("true"))) {
         value_ = true;
     }
     else {
-        throw std::invalid_argument(std::string("bad boolean value: ").append(value()));
+        throw std::invalid_argument("bad boolean value: " + val);
     }
 }
 

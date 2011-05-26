@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "xscript/context.h"
+#include "xscript/exception.h"
 #include "xscript/logger.h"
 #include "xscript/operation_mode.h"
 #include "xscript/remote_tagged_block.h"

@@ -17,6 +17,9 @@ class ArgList : private boost::noncopyable {
 public:
     ArgList();
     virtual ~ArgList();
+
+    void addAsChecked(const std::string &type, const std::string &value, bool checked);
+
     virtual void add(bool value) = 0;
     virtual void add(double value) = 0;
     virtual void add(boost::int32_t value) = 0;
@@ -36,6 +39,39 @@ public:
     virtual const std::string& at(unsigned int i) const = 0;
 };
 
+class StringArgList : public virtual ArgList {
+public:
+    StringArgList();
+    virtual ~StringArgList();
+    virtual void add(bool value);
+    virtual void add(double value);
+    virtual void add(boost::int32_t value);
+    virtual void add(boost::int64_t value);
+    virtual void add(boost::uint32_t value);
+    virtual void add(boost::uint64_t value);
+    virtual void add(const std::string &value);
+    virtual bool empty() const;
+    virtual unsigned int size() const;
+    virtual const std::string& at(unsigned int i) const;
+
+    const std::vector<std::string>& args() const;
+
+private:
+    std::vector<std::string> args_;
+};
+
+class CheckedStringArgList : public StringArgList {
+public:
+    explicit CheckedStringArgList(bool checked);
+    virtual ~CheckedStringArgList();
+
+    virtual void addAs(const std::string &type, const std::string &value);
+
+    bool checked_;
+};
+
+
+// TODO: inheririt from StringArgList
 class CommonArgList : public virtual ArgList {
 public:
     CommonArgList();

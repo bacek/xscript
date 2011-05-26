@@ -16,8 +16,8 @@ public:
     virtual bool threaded() const;
     virtual void threaded(bool value);
 
-    virtual void startTimer(Context *ctx);
-    virtual void stopTimer(Context *ctx);
+    virtual void startTimer(Context *ctx); //TODO: const
+    virtual void stopTimer(Context *ctx); //TODO: const
 
 protected:
     virtual void property(const char *name, const char *value);

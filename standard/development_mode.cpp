@@ -2,6 +2,7 @@
 
 #include <sstream>
 
+#include "xscript/exception.h"
 #include "xscript/context.h"
 #include "xscript/logger.h"
 #include "xscript/message_interface.h"
