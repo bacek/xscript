@@ -45,13 +45,6 @@ addBool(ArgList& args, const std::string &type, const std::string &value, bool c
 }
 
 static void
-addString(ArgList& args, const std::string &type, const std::string &value, bool checked) {
-    (void) type;
-    (void) checked;
-    args.add(value);
-}
-
-static void
 addDouble(ArgList& args, const std::string &type, const std::string &value, bool checked) {
     double d = 0;
     if (!value.empty()) {
@@ -95,7 +88,6 @@ struct ArgsAppenderRegisterer {
     ArgsAppenderRegisterer() {
         map_["bool"] = &addBool;
         map_["boolean"] = &addBool;
-        map_["string"] = &addString;
         map_["float"] = &addDouble;
         map_["double"] = &addDouble;
         map_["long"] = &addNumeric<boost::int32_t>;
@@ -123,7 +115,7 @@ void
 ArgList::addAsChecked(const std::string &type, const std::string &value, bool checked) {
 
     //log()->debug("converting %s to type '%s', value: %s", checked ? "" : "(checked)", type.c_str(), value.c_str());
-    if (type.empty()) {
+    if (type.empty() || !strncasecmp(type.c_str(), "string", sizeof("string"))) {
         add(value);
 	return;
     }
@@ -136,9 +128,11 @@ ArgList::addAsChecked(const std::string &type, const std::string &value, bool ch
 	return;
     }
 
+    std::string error_msg = "bad cast to strange type '" + type + "' value: " + value;
     if (checked || !OperationMode::instance()->isProduction()) {
-        throw CriticalInvokeError("bad cast to strange type '" + type + "' value: " + value);
+        throw CriticalInvokeError(error_msg);
     }
+    log()->warn("%s (add as string)", error_msg.c_str());
     add(value);
 }
 
