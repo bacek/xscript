@@ -17,6 +17,9 @@
 
 namespace xscript {
 
+bool HttpExtension::checked_headers_ = true;
+bool HttpExtension::checked_query_params_ = true;
+
 HttpExtension::HttpExtension() {
 }
 
@@ -59,8 +62,8 @@ HttpExtension::init(const Config *config) {
     try {
         HttpHelper::init();
         config->addForbiddenKey("/xscript/http-block");
-        checked_headers_ = 0 != config->as<unsigned int>("/xscript/http-block/checked-headers", 0);
-        checked_query_params_ = 0 != config->as<unsigned int>("/xscript/http-block/checked-query-params", 0);
+        checked_headers_ = 0 != config->as<unsigned int>("/xscript/http-block/checked-headers", 1);
+        checked_query_params_ = 0 != config->as<unsigned int>("/xscript/http-block/checked-query-params", 1);
     }
     catch (const std::exception &e) {
         std::string error_msg("HttpExtension construction: caught exception: ");

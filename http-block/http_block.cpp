@@ -275,8 +275,7 @@ ArgList*
 HttpBlock::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
 
     if (!headers_.empty()) {
-        bool checked = static_cast<const HttpExtension*>(extension())->checked_headers();
-        boost::shared_ptr<ArgList> args(new HttpHeadersArgList(checked));
+        boost::shared_ptr<ArgList> args(new HttpHeadersArgList(HttpExtension::checkedHeaders()));
         for (std::vector<Param*>::const_iterator it = headers_.begin(), end = headers_.end(); it != end; ++it) {
             const Param *p = *it;
             try {
@@ -292,8 +291,7 @@ HttpBlock::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
         invoke_ctx->setExtraArgList(STR_HEADERS, args);
     }
     if (!query_params_.empty()) {
-        bool checked = static_cast<const HttpExtension*>(extension())->checked_query_params();
-        boost::shared_ptr<ArgList> args(new CheckedStringArgList(checked));
+        boost::shared_ptr<ArgList> args(new CheckedStringArgList(HttpExtension::checkedQueryParams()));
         for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it) {
             const Param *p = it->param();
             try {

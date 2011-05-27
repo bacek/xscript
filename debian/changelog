@@ -1,3 +1,10 @@
+xscript (5.73.27-4) unstable; urgency=low
+
+  * header's and query-param's are checked by default
+    do not use @as or @as=string to skip checking 
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 27 May 2011 16:08:52 +0400
+
 xscript (5.73.27-3) unstable; urgency=low
 
   * Response::setCookie() override previous cookie with the same name

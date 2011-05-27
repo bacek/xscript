@@ -20,15 +20,15 @@ public:
     virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);
     virtual void init(const Config *config);
 
-    bool checked_headers() const { return checked_headers_; }
-    bool checked_query_params() const { return checked_query_params_; }
+    static bool checkedHeaders() { return checked_headers_; }
+    static bool checkedQueryParams() { return checked_query_params_; }
 
 private:
     HttpExtension(const HttpExtension &);
     HttpExtension& operator = (const HttpExtension &);
 
-    bool checked_headers_;
-    bool checked_query_params_;
+    static bool checked_headers_;
+    static bool checked_query_params_;
 };
 
 } // namespace xscript
