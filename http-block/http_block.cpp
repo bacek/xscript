@@ -333,11 +333,12 @@ HttpBlock::queryParams(const InvokeContext *invoke_ctx) const {
         std::size_t future_size = 0;
         QueryParams::const_iterator it = query_params_.begin();
         for (unsigned int i = 0; i < sz; ++i, ++it) {
-            const Param *p = it->param();
-            future_size += p->id().size();
             const std::string &v = args->at(i);
             if (!v.empty()) {
-                future_size += v.size() + 1;
+                future_size += it->param()->id().size() + v.size() + 1;
+            }
+            else if (it->allowEmpty()) {
+                future_size += it->param()->id().size();
             }
         }
 
@@ -345,19 +346,18 @@ HttpBlock::queryParams(const InvokeContext *invoke_ctx) const {
             val.reserve(future_size + sz - 1);
             QueryParams::const_iterator it = query_params_.begin();
             for (unsigned int i = 0; i != sz; ++i, ++it) {
-                const Param *p = it->param();
                 const std::string &v = args->at(i);
                 if (!v.empty()) {
                     if (!val.empty()) {
                         val.push_back('&');
                     }
-                    val.append(p->id()).append("=", 1).append(v);
+                    val.append(it->param()->id()).append("=", 1).append(v);
                 }
                 else if (it->allowEmpty()) {
                     if (!val.empty()) {
                         val.push_back('&');
                     }
-                    val.append(p->id());
+                    val.append(it->param()->id());
                 }
             }
         }
