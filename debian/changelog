@@ -1,3 +1,10 @@
+xscript (5.73.27-3) unstable; urgency=low
+
+  * Response::setCookie() override previous cookie with the same name
+  * ArgList: log warn on cast to strange type (production mode)
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 27 May 2011 11:49:53 +0400
+
 xscript (5.73.27-2) unstable; urgency=low
 
   * ArgList:
