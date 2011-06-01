@@ -1,3 +1,11 @@
+xscript (5.73.27-5) unstable; urgency=low
+
+  * http-block - add new methods
+   * "get" as alias "getHttp"
+   * "post" where url constructs from param's and body from query-param's
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Wed, 01 Jun 2011 18:39:51 +0400
+
 xscript (5.73.27-4) unstable; urgency=low
 
   * header's and query-param's are checked by default

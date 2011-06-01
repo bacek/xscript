@@ -96,14 +96,15 @@ public:
 };
 
 static MethodMap methods_;
-static std::string CONTENT_TYPE_HEADER_NAME("Content-Type");
-static std::string STR_PARAM_ID("param-id");
-static std::string STR_HEADERS("headers");
-static std::string STR_HEADER_PARAM_NAME("header");
-static std::string STR_HEADER_PARAM_REPR("header param");
-static std::string STR_QUERY_PARAMS("query-params");
-static std::string STR_QUERY_PARAM_NAME("query-param");
-static std::string STR_QUERY_PARAM_REPR("query param");
+static const std::string CONTENT_TYPE_HEADER_NAME("Content-Type");
+static const std::string STR_PARAM_ID("param-id");
+static const std::string STR_HEADERS("headers");
+static const std::string STR_HEADER_PARAM_NAME("header");
+static const std::string STR_HEADER_PARAM_REPR("header param");
+static const std::string STR_QUERY_PARAMS("query-params");
+static const std::string STR_QUERY_PARAM_NAME("query-param");
+static const std::string STR_QUERY_PARAM_REPR("query param");
+static const std::string STR_URL("URL");
 
 
 HttpBlock::HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
@@ -454,6 +455,41 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
     return doc;
 }
 
+
+XmlDocHelper
+HttpBlock::post(Context *ctx, InvokeContext *invoke_ctx) const {
+
+    log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+
+    const ArgList* args = invoke_ctx->getArgList();
+    unsigned int size = args->size();
+    if (size < 1) {
+        throwBadArityError();
+    }
+
+    std::string url = getUrl(args, 0, size - 1);
+    PROFILER(log(), "post: " + url);
+    
+    HttpHelper helper(url, getTimeout(ctx, url));
+    
+    appendHeaders(helper, ctx->request(), invoke_ctx, true, false);
+
+    std::string query = queryParams(invoke_ctx);
+    helper.postData(query.data(), query.size());
+
+    httpCall(helper);
+    checkStatus(helper);
+
+    createTagInfo(helper, invoke_ctx);
+
+    if (invoke_ctx->haveCachedCopy() && !invoke_ctx->tag().modified) {
+        return XmlDocHelper();
+    }
+
+    createMeta(helper, invoke_ctx);
+
+    return response(helper);
+}
 
 XmlDocHelper
 HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
@@ -927,7 +963,7 @@ HttpBlock::createMeta(HttpHelper &helper, InvokeContext *invoke_ctx) const {
                 meta->setArray(name, result);
             it = itr;
         }
-        meta->setString("URL", helper.url());
+        meta->setString(STR_URL, helper.url());
     }
 }
 
@@ -1010,6 +1046,9 @@ HttpMethodRegistrator::HttpMethodRegistrator() {
     HttpBlock::registerMethod("getHTTP", &HttpBlock::getHttp);
     HttpBlock::registerMethod("getPageT", &HttpBlock::getHttp);
     HttpBlock::registerMethod("curlGetHttp", &HttpBlock::getHttp);
+
+    HttpBlock::registerMethod("get", &HttpBlock::getHttp);
+    HttpBlock::registerMethod("post", &HttpBlock::post);
 
     HttpBlock::registerMethod("postHttp", &HttpBlock::postHttp);
     HttpBlock::registerMethod("post_http", &HttpBlock::postHttp);

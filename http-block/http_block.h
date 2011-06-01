@@ -42,6 +42,7 @@ protected:
     std::string queryParams(const InvokeContext *invoke_ctx) const;
     
     XmlDocHelper getHttp(Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper post(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper postHttp(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper getByState(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper getByRequest(Context *ctx, InvokeContext *invoke_ctx) const;
