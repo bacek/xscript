@@ -30,6 +30,7 @@ const std::string Request::ATTACH_METHOD = "REQUEST_ATTACH";
 const std::string Request::REAL_IP_METHOD = "REQUEST_REAL_IP";
 const std::string Request::ORIGINAL_URI_METHOD = "REQUEST_ORIGINAL_URI";
 const std::string Request::ORIGINAL_HOST_METHOD = "REQUEST_ORIGINAL_HOST";
+const unsigned short SECURE_PORT = 443;
 
 Request::Request() : data_(new RequestImpl()) {
 }
@@ -400,6 +401,9 @@ Request::fileNames(std::vector<std::string> &v) const {
 
 bool
 Request::isSecure() const {
+    if (getServerPort() == SECURE_PORT) {
+        return true;
+    }
     const std::string &val = Parser::get(data_->vars_, RequestImpl::HTTPS_KEY);
     return !val.empty() && strncasecmp(val.c_str(), "on", sizeof("on")) == 0;
 }
