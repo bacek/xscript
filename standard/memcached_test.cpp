@@ -69,14 +69,15 @@ private:
         boost::shared_ptr<BlockCacheData> saved(new BlockCacheData(doc, meta.getCore()));
         
         CacheContext cache_ctx(block, ctx.get());
-        InvokeContext invoke_ctx;
-        CPPUNIT_ASSERT(tcache->saveDoc(&invoke_ctx, &cache_ctx, tag, saved));
+        boost::shared_ptr<InvokeContext> invoke_ctx = ctx->result(0);
+        CPPUNIT_ASSERT(NULL != invoke_ctx.get());
+        CPPUNIT_ASSERT(tcache->saveDoc(invoke_ctx.get(), &cache_ctx, tag, saved));
         CPPUNIT_ASSERT(NULL != doc.get());
 
         // check load
         
         boost::shared_ptr<BlockCacheData> loaded =
-            tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
+            tcache->loadDoc(invoke_ctx.get(), &cache_ctx, tag_load);
 
         CPPUNIT_ASSERT(NULL != loaded.get());
         CPPUNIT_ASSERT(NULL != loaded->doc().get());
@@ -94,7 +95,7 @@ private:
         CPPUNIT_ASSERT(!loaded_meta.has("key3"));
 
         sleep(3);
-        loaded = tcache->loadDoc(&invoke_ctx, &cache_ctx, tag_load);
+        loaded = tcache->loadDoc(invoke_ctx.get(), &cache_ctx, tag_load);
         CPPUNIT_ASSERT(NULL == loaded.get());
     }
 };

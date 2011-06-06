@@ -124,29 +124,35 @@ FileBlock::isInvoke() const {
     return &FileBlock::invokeFile == method_;
 }
 
+std::string
+FileBlock::fileName(InvokeContext *invoke_ctx) const {
+    assert(invoke_ctx);
+    const std::string &fname = invoke_ctx->extraKey(FILENAME_PARAMNAME);
+    if (!fname.empty()) {
+        return fname;
+    }
+
+    const ArgList *args = invoke_ctx->getArgList();
+    unsigned int size = args->size();
+    if (size == 0) {
+        throwBadArityError();
+    }
+    
+    std::string filename = Block::concatArguments(args, 0, size - 1);
+    if (!filename.empty()) {
+        filename = fullName(filename);
+        invoke_ctx->extraKey(FILENAME_PARAMNAME, filename);
+    }
+    return filename;
+}
+
 void
 FileBlock::call(boost::shared_ptr<Context> ctx,
     boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     
     log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
 
-    const ArgList* args = invoke_ctx->getArgList();
-    unsigned int size = args->size();
-    if (size == 0) {
-        throwBadArityError();
-    }
-    
-    std::string file;
-    boost::function<std::string()> filename_creator = boost::bind(&FileBlock::fileName, this, args);
-    if (isInvoke() && tagged()) {
-        std::string param_name = FILENAME_PARAMNAME + boost::lexical_cast<std::string>(this);
-        Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);
-        file = ctx->param(param_name, filename_creator, *mutex);
-    }
-    else {
-        file = filename_creator();
-    }
-
+    std::string file = fileName(invoke_ctx.get());
     if (file.empty()) {
         if (isTest()) {
             invoke_ctx->resultDoc(testFileDoc(false, file));
@@ -392,7 +398,7 @@ FileBlock::invokeFile(const std::string &file_name,
 
     boost::shared_ptr<Script> script;
     if (tagged()) {
-        std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
+        std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + file_name;
         Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);
         script = ctx->param(script_param_name, script_creator, *mutex);
     }
@@ -439,22 +445,10 @@ FileBlock::testFileDoc(bool result, const std::string &file) const {
 }
 
 std::string
-FileBlock::fileName(const ArgList *args) const {
-    std::string filename = Block::concatArguments(args, 0, args->size() - 1);
-    return filename.empty() ? filename : fullName(filename);
-}
-
-std::string
 FileBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
     
     std::string key = processMainKey(ctx, invoke_ctx);
-    boost::function<std::string()> filename_creator =
-        boost::bind(&FileBlock::fileName, this, invoke_ctx->getArgList());
-    Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);
-    std::string param_name = FILENAME_PARAMNAME + boost::lexical_cast<std::string>(this);
-    std::string filename =
-        const_cast<Context*>(ctx)->param(param_name, filename_creator, *mutex);  
-
+    std::string filename = fileName(const_cast<InvokeContext*>(invoke_ctx));
     if (filename.empty()) {
         return key;
     }
@@ -466,10 +460,11 @@ FileBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) con
         return key;
     }
 
+    Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);
     boost::function<boost::shared_ptr<Script>()> script_creator =
         boost::bind(&ScriptFactory::createScript, filename);
 
-    std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + boost::lexical_cast<std::string>(this);
+    std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + filename;
     boost::shared_ptr<Script> script =
         const_cast<Context*>(ctx)->param(script_param_name, script_creator, *mutex);
         

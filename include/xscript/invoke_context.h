@@ -77,6 +77,10 @@ public:
 
     const boost::shared_ptr<XPathExpr>& xpointer() const;
     const boost::shared_ptr<XPathExpr>& metaXPointer() const;
+
+    const std::string& extraKey(const std::string &key) const;
+    void extraKey(const std::string &key, std::string &value);
+
 private:
     struct ContextData;
     std::auto_ptr<ContextData> ctx_data_;

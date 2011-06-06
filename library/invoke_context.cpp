@@ -9,6 +9,7 @@
 #include "xscript/doc_cache_strategy.h"
 #include "xscript/invoke_context.h"
 #include "xscript/meta.h"
+#include "xscript/string_utils.h"
 #include "xscript/tag.h"
 #include "xscript/typed_map.h"
 #include "xscript/xml_util.h"
@@ -39,6 +40,7 @@ struct InvokeContext::ContextData {
     boost::shared_ptr<Meta> meta_;
     boost::shared_ptr<ArgList> args_;
     std::map<std::string, boost::shared_ptr<ArgList> > extra_args_;
+    std::map<std::string, std::string> extra_keys_;
 
     boost::shared_ptr<XPathExpr> xpointer_;
     boost::shared_ptr<XPathExpr> meta_xpointer_;
@@ -280,6 +282,20 @@ InvokeContext::appendXsltParam(const std::string &value) {
 const std::vector<std::string>&
 InvokeContext::xsltParams() const {
     return ctx_data_->xsltParams();
+}
+
+const std::string&
+InvokeContext::extraKey(const std::string &key) const {
+    std::map<std::string, std::string>::const_iterator it = ctx_data_->extra_keys_.find(key);
+    if (it != ctx_data_->extra_keys_.end()) {
+        return it->second;
+    }
+    return StringUtils::EMPTY_STRING;
+}
+
+void
+InvokeContext::extraKey(const std::string &key, std::string &value) {
+    ctx_data_->extra_keys_[key].assign(value);
 }
 
 } // namespace xscript

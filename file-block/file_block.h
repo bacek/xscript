@@ -53,7 +53,7 @@ private:
     
     XmlDocSharedHelper testFileDoc(bool result, const std::string &file) const;
     
-    std::string fileName(const ArgList *args) const;
+    std::string fileName(InvokeContext *invoke_ctx) const;
     
     virtual void property(const char *name, const char *value);
     
