@@ -1,3 +1,10 @@
+xscript (5.73.28-1) unstable; urgency=low
+
+  * http-block: added recalculated xff value if x-forwarded-for="yes"
+    (default: "no")
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Tue, 05 Jul 2011 18:49:54 +0400
+
 xscript (5.73.27-7) unstable; urgency=low
 
   * file block: fixed tagged key creation

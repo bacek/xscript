@@ -109,7 +109,7 @@ static const std::string STR_URL("URL");
 
 HttpBlock::HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), RemoteTaggedBlock(ext, owner, node),
-        method_(NULL), proxy_(false), print_error_(false) {
+        method_(NULL), proxy_(false), xff_(false), print_error_(false) {
 }
 
 HttpBlock::~HttpBlock() {
@@ -191,6 +191,9 @@ HttpBlock::property(const char *name, const char *value) {
     }
     else if (strncasecmp(name, "encoding", sizeof("encoding")) == 0) {
         charset_ = value;
+    }
+    else if (strncasecmp(name, "x-forwarded-for", sizeof("x-forwarded-for")) == 0) {
+        xff_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
     }
     else if (strncasecmp(name, "print-error-body", sizeof("print-error-body")) == 0) {
         print_error_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
@@ -784,7 +787,7 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request,
     if (!real_ip && !ip_header_name.empty()) {
         pushHeaderValue(headers, ip_header_name, request->getRealIP());
     }
-    if (!xff && !xff_header_name.empty()) {
+    if (!xff && xff_ && !xff_header_name.empty()) {
         pushHeaderValue(headers, xff_header_name, request->getXForwardedFor());
     }
     if (allow_tag && invoke_ctx && invoke_ctx->tagged()) {

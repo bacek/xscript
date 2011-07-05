@@ -78,6 +78,7 @@ private:
     std::string charset_;
     HttpMethod method_;
     bool proxy_;
+    bool xff_;
     bool print_error_;
 };
 
