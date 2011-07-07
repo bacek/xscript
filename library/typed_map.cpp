@@ -35,6 +35,7 @@ public:
     virtual boost::uint32_t serializedSize() const = 0;
     virtual void serialize(std::string &result) const = 0;
     virtual bool add(const std::string &key, const TypedValue &value) = 0;
+    virtual bool asBool() const = 0;
     boost::uint32_t valueSerializedSize(const TypedValue &value) const {
         return value.serializedSize();
     }
@@ -52,6 +53,7 @@ public:
     virtual boost::uint32_t serializedSize() const;
     virtual void serialize(std::string &result) const;
     virtual bool add(const std::string &key, const TypedValue &value);
+    virtual bool asBool() const;
 private:
     static const std::string TYPE;
     TypedValue::ArrayType value_;
@@ -69,6 +71,7 @@ public:
     virtual boost::uint32_t serializedSize() const;
     virtual void serialize(std::string &result) const;
     virtual bool add(const std::string &key, const TypedValue &value);
+    virtual bool asBool() const;
 private:
     static const std::string TYPE;
     TypedValue::MapType value_;
@@ -205,7 +208,7 @@ TypedValue::stringType() const {
 bool
 TypedValue::asBool() const {
     if (NULL != complex_.get()) {
-        return true;
+        return complex_->asBool();
     }
     else if (trim(createRange(value_)).empty()) {
         return false;
@@ -537,6 +540,12 @@ ArrayTypedValue::add(const std::string &key, const TypedValue &value) {
     return true;
 }
 
+bool
+ArrayTypedValue::asBool() const {
+    return !value_.empty();
+}
+
+
 const std::string MapTypedValue::TYPE = "Map";
 
 MapTypedValue::MapTypedValue()
@@ -622,6 +631,11 @@ MapTypedValue::add(const std::string &key, const TypedValue &value) {
         return true;
     }
     return false;
+}
+
+bool
+MapTypedValue::asBool() const {
+    return !value_.empty();
 }
 
 } // namespace xscript
