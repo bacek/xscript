@@ -89,7 +89,7 @@ QueryParamData::asString(const Context *ctx) const {
         return StringUtils::EMPTY_STRING;
     }
 
-    if (encoding_.empty()) {
+    if (!encoding_.empty()) {
         std::auto_ptr<Encoder> encoder = Encoder::createEscaping("utf-8", encoding_.c_str());
         val = encoder->encode(val);
     }
