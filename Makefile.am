@@ -1,5 +1,5 @@
 AUTOMAKE_OPTIONS = 1.9 foreign
-ACLOCAL_AMFLAGS = -I config -I /usr/share/autoconf-archive/
+ACLOCAL_AMFLAGS = -I config
 SUBDIRS = include library xscript standard daemon
 
 EXTRA_DIST = ChangeLog Doxyfile AUTHORS COPYING INSTALL NEWS README \

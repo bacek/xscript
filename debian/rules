@@ -8,7 +8,7 @@ LDFLAGS = -lm
 
 ACLOCAL = /usr/bin/aclocal-1.9
 AUTOMAKE = /usr/bin/automake-1.9
-ACLOCAL_OPTIONS = "-I config -I /usr/share/autoconf-archive"
+ACLOCAL_OPTIONS = "-I config"
 
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
 	CXXFLAGS += -g -O0

@@ -1,3 +1,9 @@
+xscript (5.73.28-4) unstable; urgency=low
+
+  * remove dependence autoconf-extra-archive
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 25 Jul 2011 14:57:33 +0400
+
 xscript (5.73.28-3) unstable; urgency=low
 
   * http-block: fixed encoding in query-params
