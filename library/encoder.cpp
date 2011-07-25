@@ -226,6 +226,7 @@ StrictEncoder::~StrictEncoder() {
 size_t
 StrictEncoder::rep(char * /* buf */, size_t /* size */, const EncoderContext &ctx) const {
     ctx.throwBadSymbolError();
+    return 0;
 }
 
 EscapingEncoder::EscapingEncoder(const char *from, const char *to) :
