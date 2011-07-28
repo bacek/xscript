@@ -74,8 +74,12 @@ TaggedBlock::remote() const {
 
 void
 TaggedBlock::cacheLevel(unsigned char type, bool value) {
-    tb_data_->cache_level_ = value ?
-        (tb_data_->cache_level_ | type) : (tb_data_->cache_level_ &= ~type);
+    if (value) {
+        tb_data_->cache_level_ |= type;
+    }
+    else {
+        tb_data_->cache_level_ &= ~type;
+    }
 }
 
 bool
@@ -364,14 +368,18 @@ TaggedBlock::haveTagParam() const {
 }
 
 std::string
-TaggedBlock::info(const Context *ctx) const {
-    
+TaggedBlock::info(const Context *ctx, bool dump_id) const {
+
     std::string info = canonicalMethod(ctx);
-    
+    if (dump_id) {
+        const std::string &id_str = id();
+        if (!id_str.empty()) {
+            info.append(" | Block-id: ").append(id_str);
+        }
+    }
     const std::string &xslt = xsltNameRaw();
     if (!xslt.empty()) {        
-        info.append(" | Xslt: ");
-        info.append(xslt);
+        info.append(" | Xslt: ").append(xslt);
     }
 
     const std::vector<Param*> &block_params = params();
@@ -419,6 +427,11 @@ TaggedBlock::info(const Context *ctx) const {
     }
     
     return info;
+}
+
+std::string
+TaggedBlock::info(const Context *ctx) const {
+    return info(ctx, false);
 }
 
 std::string

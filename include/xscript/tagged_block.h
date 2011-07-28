@@ -27,6 +27,7 @@ public:
     virtual time_t cacheTime() const;
     virtual void cacheTime(time_t cache_time);
     
+    std::string info(const Context *ctx, bool dump_id) const;
     virtual std::string info(const Context *ctx) const;
 
     virtual std::string createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const;
