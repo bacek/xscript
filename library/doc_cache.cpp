@@ -157,20 +157,31 @@ DocCacheBase::minimalCacheTime() const {
     return 5;
 }
 
+
+static std::string
+createLogInfo(const Context *ctx, const TaggedBlock *block) {
+
+    std::string info;
+    if (ctx) {
+        if (block) {
+            info.append(" Block info: ").append(block->info(ctx, true));
+        }
+        info.append(" Url: ").append(ctx->rootContext()->request()->getOriginalUrl());
+    }
+    return info;
+}
+
 bool
-DocCacheBase::checkTag(const Context *ctx, const Tag &tag, const char *operation) {
+DocCacheBase::checkTag(const Context *ctx, const TaggedBlock *block, const Tag &tag, const char *operation) {
+
     if (tag.valid()) {
         return true;
     }
-    
-    if (ctx) {
-        log()->warn("Tag is not valid while %s. Url: %s", operation,
-            ctx->rootContext()->request()->getOriginalUrl().c_str());
+
+    if (log()->enabledWarn()) {
+        std::string log_info = createLogInfo(ctx, block);
+        log()->warn("Tag is not valid while %s.%s", operation, log_info.c_str());
     }
-    else {
-        log()->warn("Tag is not valid while %s.", operation);
-    }
-    
     return false;
 }
 
@@ -238,7 +249,8 @@ DocCacheBase::loadDocImpl(InvokeContext *invoke_ctx, CacheContext *cache_ctx,
     }
 
     if (!loaded) {
-        checkTag(ctx, tag, "loading doc from tagged cache");
+        const TaggedBlock *block = NULL == invoke_ctx ? NULL : dynamic_cast<const TaggedBlock*>(object);
+        checkTag(ctx, block, tag, "loading doc from tagged cache");
     }
     else {
         for(KeyMapType::iterator it = missed_keys.begin();
@@ -261,14 +273,30 @@ DocCacheBase::saveDocImpl(const InvokeContext *invoke_ctx, CacheContext *cache_c
     const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
     
     Context *ctx = cache_ctx->context();
+    CachedObject *object = cache_ctx->object();
 
-    if (!checkTag(ctx, tag, "saving doc from tagged cache")) {
+    TaggedBlock *block = NULL;
+    bool check_tag_key = NULL != invoke_ctx;
+    if (check_tag_key) {
+        block = dynamic_cast<TaggedBlock*>(object);
+        if (NULL == block) {
+            throw std::logic_error("NULL block while saving it to cache");
+        }
+        xmlDocPtr doc = cache_data->docPtr();
+        if (NULL == doc || NULL == xmlDocGetRootElement(doc)) {
+            if (log()->enabledWarn()) {
+                std::string log_info = createLogInfo(ctx, block);
+                log()->warn("Cannot save empty document or document with no root to tagged cache.%s",
+                    log_info.c_str());
+            }
+            return false;
+        }
+    }
+    if (!checkTag(ctx, block, tag, "saving doc to tagged cache")) {
         return false;
     }
     
     bool saved = false;
-    bool check_tag_key = NULL != invoke_ctx;
-    CachedObject* object = cache_ctx->object();
     for (DocCacheData::StrategyMap::iterator i = data_->strategies_.begin();
          i != data_->strategies_.end();
          ++i) {
@@ -282,12 +310,10 @@ DocCacheBase::saveDocImpl(const InvokeContext *invoke_ctx, CacheContext *cache_c
             check_tag_key = false;
             TagKey* load_key = invoke_ctx->tagKey();            
             if (load_key && key->asString() != load_key->asString()) {
-                TaggedBlock* block = dynamic_cast<TaggedBlock*>(object);
-                if (NULL == block) {
-                    throw std::logic_error("NULL block while saving it to cache");
+                if (log()->enabledWarn()) {
+                    std::string log_info = createLogInfo(ctx, block);
+                    log()->warn("Cache key modified during call.%s", log_info.c_str());
                 }
-                log()->warn("Cache key modified during call. Block info: %s. Url: %s",
-                        block->info(ctx).c_str(), ctx->rootContext()->request()->getOriginalUrl().c_str());
                 block->tagged(false);
                 return false;
             }
@@ -341,12 +367,6 @@ DocCache::loadDoc(InvokeContext *invoke_ctx, CacheContext *cache_ctx, Tag &tag) 
 bool
 DocCache::saveDoc(const InvokeContext *invoke_ctx, CacheContext *cache_ctx,
     const Tag &tag, const boost::shared_ptr<BlockCacheData> &cache_data) {
-    xmlDocPtr doc = cache_data->doc().get();
-    if (NULL == doc || NULL == xmlDocGetRootElement(doc)) {
-        log()->warn("cannot save empty document or document with no root to tagged cache. Url: %s",
-            cache_ctx->context()->request()->getOriginalUrl().c_str());
-        return false;
-    }
     if (saveDocImpl(invoke_ctx, cache_ctx, tag, boost::dynamic_pointer_cast<CacheData>(cache_data))) {
         log()->info("Doc saved to cache");
         return true;
@@ -460,6 +480,11 @@ PageCacheData::addHeader(const std::string &name, const std::string &value) {
 void
 PageCacheData::expireTimeDelta(boost::uint32_t delta) {
     expire_time_delta_ = delta;
+}
+
+xmlDocPtr
+PageCacheData::docPtr() const {
+    return NULL;
 }
 
 bool
@@ -646,6 +671,11 @@ BlockCacheData::doc() const {
 const boost::shared_ptr<MetaCore>&
 BlockCacheData::meta() const {
     return meta_;
+}
+
+xmlDocPtr
+BlockCacheData::docPtr() const {
+    return doc_.get();
 }
 
 bool

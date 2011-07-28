@@ -393,7 +393,7 @@ DocCacheMemcached::loadDoc(const TagKey *key, CacheContext *cache_ctx,
         value += sizeof(boost::int32_t);
         vallen -= 2*sizeof(boost::int32_t);
         
-        if (!DocCacheBase::checkTag(NULL, tag, "loading doc from memcached")) {
+        if (!DocCacheBase::checkTag(NULL, NULL, tag, "loading doc from memcached")) {
             return false;
         }
         

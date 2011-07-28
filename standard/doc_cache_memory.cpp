@@ -168,7 +168,7 @@ DocCacheMemory::loadDoc(const TagKey *key, CacheContext *cache_ctx,
         return false;
     }
 
-    if (!DocCacheBase::checkTag(NULL, tag, "loading doc from memory cache")) {
+    if (!DocCacheBase::checkTag(NULL, NULL, tag, "loading doc from memory cache")) {
         return false;
     }
     

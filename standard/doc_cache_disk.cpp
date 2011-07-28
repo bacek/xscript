@@ -322,7 +322,7 @@ DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag,
         }
         is.read((char*) &tag.last_modified, sizeof(time_t));
         
-        if (!DocCacheBase::checkTag(NULL, tag, "loading doc from disk cache")) {
+        if (!DocCacheBase::checkTag(NULL, NULL, tag, "loading doc from disk cache")) {
             return false;
         }
         

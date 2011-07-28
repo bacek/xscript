@@ -1,3 +1,9 @@
+xscript (5.73.28-5) unstable; urgency=low
+
+  * added block info on error while saving doc to cache
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Thu, 28 Jul 2011 13:04:56 +0400
+
 xscript (5.73.28-4) unstable; urgency=low
 
   * remove dependence autoconf-extra-archive

@@ -21,6 +21,7 @@ class Context;
 class DocCacheStrategy;
 class InvokeContext;
 class Tag;
+class TaggedBlock;
 
 /**
  * Cache result of block invocations using sequence of different strategies.
@@ -46,6 +47,8 @@ class CacheData : private boost::noncopyable {
 public:
     CacheData();
     virtual ~CacheData();
+
+    virtual xmlDocPtr docPtr() const = 0;
     
     virtual bool parse(const char *buf, boost::uint32_t size) = 0;
     virtual void serialize(std::string &buf) = 0;
@@ -58,10 +61,12 @@ public:
     BlockCacheData(XmlDocSharedHelper doc, boost::shared_ptr<MetaCore> meta);
     virtual ~BlockCacheData();
     
+    virtual xmlDocPtr docPtr() const;
+
     virtual bool parse(const char *buf, boost::uint32_t size);
     virtual void serialize(std::string &buf);
     virtual void cleanup(Context *ctx);
-    
+
     const XmlDocSharedHelper& doc() const;
     const boost::shared_ptr<MetaCore>& meta() const;
 private:
@@ -75,6 +80,8 @@ public:
     PageCacheData();
     PageCacheData(const char *buf, std::streamsize size);
     virtual ~PageCacheData();
+
+    virtual xmlDocPtr docPtr() const;
 
     virtual bool parse(const char *buf, boost::uint32_t size);
     virtual void serialize(std::string &buf);
@@ -110,9 +117,9 @@ public:
 
     virtual void init(const Config *config);
     void addStrategy(DocCacheStrategy *strategy, const std::string &name);
-    
-    static bool checkTag(const Context *ctx, const Tag &tag, const char *operation);
-    
+
+    static bool checkTag(const Context *ctx, const TaggedBlock *block, const Tag &tag, const char *operation);
+
 protected:
     bool loadDocImpl(InvokeContext *invoke_ctx, CacheContext *cache_ctx,
             Tag &tag, boost::shared_ptr<CacheData> &cache_data);
