@@ -55,6 +55,25 @@ public:
     static void xmllog(const char *format, va_list args);
     static void xmllog(void *ctx, const char *format, ...);
 
+    bool enabledCrit() const {
+        return level_ >= LEVEL_CRIT;
+    }
+
+    bool enabledError() const {
+        return level_ >= LEVEL_ERROR;
+    }
+
+    bool enabledWarn() const {
+        return level_ >= LEVEL_WARN;
+    }
+
+    bool enabledInfo() const {
+        return level_ >= LEVEL_INFO;
+    }
+
+    bool enabledDebug() const {
+        return level_ >= LEVEL_DEBUG;
+    }
 
     LogLevel level() const {
         return level_;
