@@ -1,3 +1,9 @@
+xscript (5.73.28-6) unstable; urgency=low
+
+  * xscript-bin: added option --daemon
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 01 Aug 2011 18:27:59 +0400
+
 xscript (5.73.28-5) unstable; urgency=low
 
   * added block info on error while saving doc to cache
