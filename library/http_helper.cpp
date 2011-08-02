@@ -34,6 +34,12 @@
 
 namespace xscript {
 
+static const std::string STR_TEXT_SLASH("text/");
+static const std::string STR_TEXT_HTML("text/html");
+static const std::string STR_TEXT_PLAIN("text/plain");
+static const std::string STR_TEXT_XML("text/xml");
+static const std::string STR_UTF8("utf-8");
+
 static pthread_mutex_t *lock_cs;
 
 extern "C" void
@@ -247,14 +253,14 @@ public:
         }
         else if (content_->empty()) {
             if (isOk() || 204 == status_) {
-                charset_.assign("utf-8");
-                content_type_.assign("text/plain");
+                charset_.assign(STR_UTF8);
+                content_type_.assign(STR_TEXT_PLAIN);
             }
         }
         else if (isOk() || 0 == status_) {
             //charset_.assign("windows-1251");
-            charset_.assign("utf-8");
-            content_type_.assign("text/xml");
+            charset_.assign(STR_UTF8);
+            content_type_.assign(STR_TEXT_XML);
         }
     }
     
@@ -418,6 +424,11 @@ HttpHelper::charset() const {
     return data_->charset_;
 }
 
+bool
+HttpHelper::hasContent() const {
+    return !data_->content_->empty();
+}
+
 boost::shared_ptr<std::string>
 HttpHelper::content() const {
     return data_->content_;
@@ -488,6 +499,21 @@ HttpHelper::destroyEnvironment() {
 }
 
 bool
+HttpHelper::isText() const {
+    return !strncasecmp(data_->content_type_.c_str(), STR_TEXT_SLASH.c_str(), STR_TEXT_SLASH.size());
+}
+
+bool
+HttpHelper::isHtml() const {
+    return !strcasecmp(data_->content_type_.c_str(), STR_TEXT_HTML.c_str());
+}
+
+bool
+HttpHelper::isPlain() const {
+    return !strcasecmp(data_->content_type_.c_str(), STR_TEXT_PLAIN.c_str());
+}
+
+bool
 HttpHelper::isXml() const {
     const std::string &content_type = contentType();
     std::string::size_type pos = content_type.find('/');
@@ -496,19 +522,19 @@ HttpHelper::isXml() const {
     }
 
     ++pos;
-    if (0 == strncasecmp(content_type.c_str(), "text/", sizeof("text/") - 1)) {
-        return 0 == strcasecmp(content_type.c_str() + pos, "xml") ||
-               0 == strcasecmp(content_type.c_str() + pos, "xml-external-parsed-entity");
+    if (!strncasecmp(content_type.c_str(), "text/", sizeof("text/") - 1)) {
+        return !strcasecmp(content_type.c_str() + pos, "xml") ||
+               !strcasecmp(content_type.c_str() + pos, "xml-external-parsed-entity");
     }
-    else if (0 == strncasecmp(content_type.c_str(), "application/", sizeof("application/") - 1)) {
+    if (!strncasecmp(content_type.c_str(), "application/", sizeof("application/") - 1)) {
         std::string::size_type pos_plus = content_type.rfind('+');
         if (pos_plus == std::string::npos) {
-            return 0 == strcasecmp(content_type.c_str() + pos, "xml") ||
-                   0 == strcasecmp(content_type.c_str() + pos, "xml-external-parsed-entity") ||
-                   0 == strcasecmp(content_type.c_str() + pos, "xml-dtd");
+            return !strcasecmp(content_type.c_str() + pos, "xml") ||
+                   !strcasecmp(content_type.c_str() + pos, "xml-external-parsed-entity") ||
+                   !strcasecmp(content_type.c_str() + pos, "xml-dtd");
         }
         ++pos_plus;
-        return 0 == strcasecmp(content_type.c_str() + pos_plus, "xml");
+        return !strcasecmp(content_type.c_str() + pos_plus, "xml");
     }
     
     return false;

@@ -33,7 +33,10 @@ public:
     long status() const;
     const std::string& url() const;
     const std::string& charset() const;
+
+    bool hasContent() const;
     boost::shared_ptr<std::string> content() const;
+
     const std::string& contentType() const;
     const std::multimap<std::string, std::string>& headers() const;
 
@@ -42,6 +45,9 @@ public:
 
     Tag createTag() const;
 
+    bool isText() const; 
+    bool isHtml() const; 
+    bool isPlain() const; 
     bool isXml() const; 
     bool isJson() const; 
     bool isOk() const;

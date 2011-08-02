@@ -1,3 +1,9 @@
+xscript (5.73.29-1) unstable; urgency=low
+
+  * http-block: do not print error body if content-type is text/html
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Tue, 02 Aug 2011 14:45:23 +0400
+
 xscript (5.73.28-6) unstable; urgency=low
 
   * xscript-bin: added option --daemon

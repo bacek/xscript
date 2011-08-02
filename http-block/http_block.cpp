@@ -816,7 +816,7 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
 	}
     }
     
-    if (!error_mode && helper.contentType() == "text/html") {
+    if (!error_mode && helper.isHtml()) {
         std::string data = XmlUtils::sanitize(*str, StringUtils::EMPTY_STRING, 0);
         if (data.empty()) {
             throw InvokeError("Empty sanitized text/html document");
@@ -838,7 +838,7 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
         return result;
     }
     
-    if (0 == strncmp(helper.contentType().c_str(), "text/", sizeof("text/") - 1)) {
+    if (helper.isText()) {
         if (str->empty()) {
             XmlDocHelper result(xmlNewDoc((const xmlChar*) "1.0"));
             XmlUtils::throwUnless(NULL != result.get());
@@ -912,7 +912,7 @@ HttpBlock::checkStatus(const HttpHelper &helper) const {
     }
     catch(const std::runtime_error &e) {
         XmlNodeHelper error_body_node;
-        if (print_error_ && 404 != helper.status() && helper.content()->size() > 0) {
+        if (print_error_ && helper.hasContent() && !helper.isHtml()) {
             XmlDocHelper doc = response(helper, true);
             if (NULL != doc.get()) {
                 xmlNodePtr root_node = xmlDocGetRootElement(doc.get());
