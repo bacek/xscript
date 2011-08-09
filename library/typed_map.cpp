@@ -1,5 +1,6 @@
 #include "settings.h"
 
+#include <algorithm>
 #include <cmath>
 #include <stdexcept>
 
@@ -107,6 +108,10 @@ TypedValue::TypedValue(double value) :
         throw std::runtime_error("Cannot create NAN double value");
     }
 }
+
+TypedValue::TypedValue(const char *value) :
+    type_(TYPE_STRING), value_(value)
+{}
 
 TypedValue::TypedValue(const std::string &value) :
     type_(TYPE_STRING), value_(value)
@@ -288,6 +293,14 @@ TypedValue::visit(TypedValueVisitor *visitor) const {
         visitor->visitString(value_);
     }
 }
+
+void
+TypedValue::swap(TypedValue &param) {
+    std::swap(type_, param.type_);
+    value_.swap(param.value_);
+    complex_.swap(param.complex_);
+}
+
 
 const TypedValue TypedMap::undefined_;
 

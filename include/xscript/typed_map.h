@@ -29,6 +29,7 @@ public:
     TypedValue(boost::int64_t value);
     TypedValue(boost::uint64_t value);
     TypedValue(double value);
+    TypedValue(const char *value);
     TypedValue(const std::string &value);
     TypedValue(const ArrayType &value);
     TypedValue(const MapType &value);
@@ -46,6 +47,8 @@ public:
     const std::string& asString() const;
     void serialize(std::string &result) const;
     void visit(TypedValueVisitor *visitor) const;
+
+    void swap(TypedValue &param);
 
     static const unsigned int TYPE_NIL = 0;
     static const unsigned int TYPE_BOOL = 1;
