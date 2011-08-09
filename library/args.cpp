@@ -143,7 +143,15 @@ ArgList::addAs(const std::string &type, const std::string &value) {
 
 void
 ArgList::addAs(const std::string &type, const TypedValue &value) {
-    addAs(type.empty() ? value.stringType() : type, value.asString());
+    if (!type.empty()) {
+        addAs(type, value.asString());
+    }
+    else if (value.type() == TypedValue::TYPE_STRING) {
+        add(value.asString());
+    }
+    else {
+        addAs(value.stringType(), value.asString());
+    }
 }
 
 void
