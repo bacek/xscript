@@ -164,7 +164,7 @@ luaStateGetAll(lua_State *lua) {
         return e.translate(lua);
     }
     catch (const std::exception &e) {
-        luaL_error(lua, "caught exception in localargs.getAll: %s", e.what());
+        luaL_error(lua, "caught exception in state.getAll: %s", e.what());
         return 0;
     }
 }
