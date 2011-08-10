@@ -61,6 +61,10 @@ RenamedBlock::property(const char *name, const char *value) {
 void
 RenamedBlock::wrapInvokeContext(InvokeContext &invoke_ctx) const throw (std::exception) {
 
+    if (root_name_.empty() && !root_ns_) {
+        return;
+    }
+
     XmlDocSharedHelper ret_doc = invoke_ctx.resultDoc();
     if (!ret_doc.get()) {
         return;
@@ -70,10 +74,7 @@ RenamedBlock::wrapInvokeContext(InvokeContext &invoke_ctx) const throw (std::exc
         return;
     }
 
-    if (root_name_.empty()) {
-        xmlNodeSetName(root, (const xmlChar*)extension()->name());
-    }
-    else {
+    if (!root_name_.empty()) {
         xmlNodeSetName(root, (const xmlChar*)root_name_.c_str());
     }
     if (root_ns_) {
