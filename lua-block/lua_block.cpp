@@ -1,6 +1,8 @@
 #include "settings.h"
 
 #include <ctype.h>
+#include <string.h>
+
 #include <new>
 #include <memory>
 #include <stdexcept>
@@ -89,7 +91,7 @@ private:
 typedef boost::shared_ptr<LuaThread> LuaSharedThread;
 
 LuaBlock::LuaBlock(const LuaExtension *ext, Xml *owner, xmlNodePtr node) :
-        Block(ext, owner, node), ext_(ext), code_(NULL), root_name_("lua"), root_ns_(NULL) {
+        RenamedBlock(ext, owner, node), ext_(ext), code_(NULL) {
 }
 
 LuaBlock::~LuaBlock() {
@@ -137,44 +139,6 @@ LuaBlock::postParse() {
         throw std::bad_alloc();
     }
 }
-
-void
-LuaBlock::property(const char *name, const char *value) {
-    if (0 != strncasecmp(name, "name", sizeof("name"))) {
-        Block::property(name, value);
-        return;
-    }
-    if (NULL == value || '\0' == value[0]) {
-        throw std::runtime_error("Incorrect name attribute");
-    }
-    std::string root_ns;
-    const char* ch = strchr(value, ':');
-    if (NULL == ch) {
-        root_name_.assign(value);
-    }
-    else {
-        root_ns.assign(value, ch - value);
-        if ('\0' == *(ch + 1)) {
-            throw std::runtime_error("Incorrect name attribute");
-        }
-        root_name_.assign(ch + 1);
-    }
-
-    if (root_ns.empty()) {
-        return;
-    }
-
-    const std::map<std::string, std::string> names = namespaces();
-    std::map<std::string, std::string>::const_iterator it = names.find(root_ns);
-    if (names.end() == it) {
-        throw std::runtime_error("Incorrect namespace in name attribute");
-    }
-    root_ns_ = xmlSearchNsByHref(node()->doc, node(), (const xmlChar*)it->second.c_str());
-    if (NULL == root_ns_) {
-        throw std::logic_error("Internal error while parsing namespace in name attribute");
-    }
-}
-
 void
 LuaExtension::registerLib(lua_State *lua, const char *name, bool builtin,
         const struct luaL_reg *lib_methods, const struct luaL_reg *lib_funcs) {
@@ -296,11 +260,7 @@ LuaBlock::processEmptyLua(InvokeContext *invoke_ctx) const {
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
     XmlNodeHelper node(xmlNewDocNode(
-        doc.get(), NULL, (const xmlChar*)root_name_.c_str(), (const xmlChar*)""));
-    if (root_ns_) {
-        node->nsDef = xmlCopyNamespace(root_ns_);
-        xmlSetNs(node.get(), node->nsDef);
-    }
+        doc.get(), NULL, (const xmlChar*)"lua", (const xmlChar*)""));
     xmlDocSetRootElement(doc.get(), node.release());
     invoke_ctx->resultDoc(doc);
 }
@@ -332,6 +292,8 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
     log()->entering(BOOST_CURRENT_FUNCTION);    
     
     PROFILER(log(), "Lua block execution, " + owner()->name());
+
+    CallResultWrapper wrapper(*this, *invoke_ctx);
     
     if (NULL == code_) {
         processEmptyLua(invoke_ctx.get());
@@ -371,18 +333,22 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
         return;
     }
 
-    const char* ret_buf = lua_tostring(lua, -1);
+    const char *ret_buf = lua_tostring(lua, -1);
     std::string ret;
     if (ret_buf) {
-        ret.assign("<lua>").append(ret_buf).append("</lua>");
+        size_t len = strlen(ret_buf);
+        ret.reserve(len + 12);
+        ret.assign("<lua>", 5).append(ret_buf, len).append("</lua>", 6);
     }
+
+    std::string lua_content_str;
+    lua_context->buffer.swap(lua_content_str);
+    lock.unlock();
 
     XmlNodeHelper lua_content_node;
-    if (!lua_context->buffer.empty()) {
-        lua_content_node = XmlNodeHelper(xmlNewText((const xmlChar*)lua_context->buffer.c_str()));
+    if (!lua_content_str.empty()) {
+        lua_content_node = XmlNodeHelper(xmlNewTextLen((const xmlChar*)lua_content_str.c_str(), lua_content_str.size()));
     }
-
-    lock.unlock();
 
     XmlDocHelper ret_doc;
     if (!ret.empty()) {
@@ -405,17 +371,10 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
         }
         xmlDocSetRootElement(ret_doc.get(), root.release());
     }
-    else {
+    else if (NULL != lua_content_node.get()) {
         xmlNodePtr root = xmlDocGetRootElement(ret_doc.get());
         root->children ? xmlAddPrevSibling(root->children, lua_content_node.release()) :
             xmlAddChild(root, lua_content_node.release());
-    }
-
-    xmlNodePtr root = xmlDocGetRootElement(ret_doc.get());
-    xmlNodeSetName(root, (const xmlChar*)root_name_.c_str());
-    if (root_ns_) {
-        root->nsDef = xmlCopyNamespace(root_ns_);
-        xmlSetNs(root, root->nsDef);
     }
 
     invoke_ctx->resultDoc(ret_doc);

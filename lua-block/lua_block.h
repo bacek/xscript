@@ -5,7 +5,7 @@
 
 #include <lua.hpp>
 
-#include "xscript/block.h"
+#include "xscript/renamed_block.h"
 #include "xscript/extension.h"
 
 namespace xscript {
@@ -15,7 +15,7 @@ class State;
 class Request;
 class Response;
 
-class LuaBlock : public Block {
+class LuaBlock : public RenamedBlock {
 public:
     LuaBlock(const LuaExtension *ext, Xml *owner, xmlNodePtr node);
     virtual ~LuaBlock();
@@ -26,7 +26,6 @@ private:
     static const char* findCode(xmlNodePtr node);
 
     virtual void postParse();
-    virtual void property(const char *name, const char *value);
 
     void reportError(const char *message, lua_State *lua);
     virtual void call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception);
@@ -37,8 +36,6 @@ private:
 private:
     const LuaExtension* ext_;
     const char* code_;
-    std::string root_name_;
-    xmlNsPtr root_ns_;
 };
 
 class LuaExtension : public Extension {
