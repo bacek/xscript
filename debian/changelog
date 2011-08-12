@@ -1,3 +1,11 @@
+xscript (5.73.30-1) unstable; urgency=low
+
+  * TypedParam : added public methods: defaultTypedValue(), getStringValue()
+  * added new classes: RenamedBlock, NilSupportedArgList
+  * improve error reporting
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 12 Aug 2011 18:58:21 +0400
+
 xscript (5.73.29-1) unstable; urgency=low
 
   * http-block: do not print error body if content-type is text/html
