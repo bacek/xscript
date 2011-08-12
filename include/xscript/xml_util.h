@@ -56,6 +56,8 @@ public:
     template<typename NodePtr> static const char* value(NodePtr node);
     template<typename NodePtr> static const char* cdataValue(NodePtr node);
 
+    static const char* findScriptCode(xmlNodePtr node);
+
     template<typename Visitor> static void visitAttributes(xmlAttrPtr attr, Visitor visitor);
 
     static inline const char* attrValue(xmlNodePtr node, const char *name) {

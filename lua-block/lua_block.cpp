@@ -1,6 +1,5 @@
 #include "settings.h"
 
-#include <ctype.h>
 #include <string.h>
 
 #include <new>
@@ -102,29 +101,9 @@ LuaBlock::getBase() const {
     return Block::getBase();
 }
 
-const char*
-LuaBlock::findCode(xmlNodePtr node) {
-    const char *code = XmlUtils::cdataValue(node);
-    if (NULL != code) {
-        return code;
-    }
-
-    for (xmlNodePtr child = node->children; NULL != child; child = child->next) {
-        code = (const char*) child->content;
-        if (NULL != code && XML_TEXT_NODE == child->type) {
-            for (const char *p = code; *p; ++p) {
-                if (!::isspace(*p)) {
-                    return code;
-                }
-            }
-        }
-    }
-    return NULL;
-}
-
 void
 LuaBlock::postParse() {
-    code_ = findCode(node());
+    code_ = XmlUtils::findScriptCode(node());
     if (NULL == code_) {
         return;
     }

@@ -276,6 +276,32 @@ XmlUtils::escape(const std::string &str) {
     return dest;
 }
 
+const char*
+XmlUtils::findScriptCode(xmlNodePtr node) {
+
+    const char *code = XmlUtils::cdataValue(node);
+    if (NULL != code) {
+        for (const char *p = code; *p; ++p) {
+            if (!::isspace(*p)) {
+                return code;
+            }
+        }
+        return NULL;
+    }
+
+    for (xmlNodePtr child = node->children; NULL != child; child = child->next) {
+        code = (const char*) child->content;
+        if (NULL != code && XML_TEXT_NODE == child->type) {
+            for (const char *p = code; *p; ++p) {
+                if (!::isspace(*p)) {
+                    return code;
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
 bool
 XmlUtils::validate(const std::string &data) {
     const char* str = data.c_str();

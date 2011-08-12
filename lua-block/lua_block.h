@@ -23,8 +23,6 @@ public:
     const std::string& getBase() const;
 
 private:
-    static const char* findCode(xmlNodePtr node);
-
     virtual void postParse();
 
     void reportError(const char *message, lua_State *lua);
