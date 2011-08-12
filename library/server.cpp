@@ -203,6 +203,7 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
             str_browse << "\n" << *it;
         }
         log()->error("parse exception caught: %s. Owner: %s", str_log.str().c_str(), request->getScriptFilename().c_str());
+        str_browse << "\nOwner: " << request->getScriptFilename();
         OperationMode::instance()->sendError(response.get(), 500, str_browse.str().c_str());
     }
     catch (const std::exception &e) {

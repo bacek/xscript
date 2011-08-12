@@ -288,7 +288,7 @@ Block::processXPointer(const InvokeContext *invoke_ctx, xmlDocPtr doc, xmlDocPtr
     xmlNodePtr node = NULL;
     if (XPATH_BOOLEAN == xpathObj->type) {
         const char *str = 0 != xpathObj->boolval ? "1" : "0";
-        node = xmlNewText((const xmlChar *)str);
+        node = xmlNewTextLen((const xmlChar *)str, 1);
     }
     else if (XPATH_NUMBER == xpathObj->type) {
         char str[40];
@@ -711,19 +711,19 @@ Block::errorDoc(const InvokeError &error,
     
     xmlNewProp(main_node.get(), (const xmlChar*)"error", (const xmlChar*)error.what());
     std::stringstream stream;
-    stream << error.what() << ". ";
+    stream << error.what() << "\n";
     
     xmlNewProp(main_node.get(), (const xmlChar*)"block", (const xmlChar*)name());
-    stream << "block: " << name() << ". ";
+    stream << "block: " << name() << " ";
     
     if (!method().empty()) {
         xmlNewProp(main_node.get(), (const xmlChar*)"method", (const xmlChar*)method().c_str());
-        stream << "method: " << method() << ". ";
+        stream << "method: " << method() << " ";
     }
 
     if (!id().empty()) {
         xmlNewProp(main_node.get(), (const xmlChar*)"id", (const xmlChar*)id().c_str());
-        stream << "id: " << id() << ". ";
+        stream << "id: " << id() << " ";
     }
 
     const InvokeError::InfoMapType& info = error.info();
@@ -732,11 +732,11 @@ Block::errorDoc(const InvokeError &error,
         ++it) {
         if (!it->second.empty()) {
             xmlNewProp(main_node.get(), (const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str());
-            stream << it->first << ": " << it->second << ". ";
+            stream << it->first << ": " << it->second << " ";
         }
     }
 
-    stream << "owner: " << owner()->name() << ".";
+    stream << "owner: " << owner()->name();
 
     XmlNodeHelper node = error.what_node();
     if (node.get()) {
