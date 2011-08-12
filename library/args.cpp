@@ -1,6 +1,7 @@
 #include "settings.h"
 
 #include <string.h>
+#include <set>
 #include <map>
 
 #include <boost/lexical_cast.hpp>
@@ -177,7 +178,19 @@ ArgList::addTag(const TaggedBlock *tb, const Context *ctx) {
 }
 
 
-StringArgList::StringArgList() {
+NilSupportedArgList::NilSupportedArgList() {
+}
+
+NilSupportedArgList::~NilSupportedArgList() {
+}
+
+
+struct StringArgList::Data {
+    std::vector<std::string> args;
+    std::set<unsigned int> nils;
+};
+
+StringArgList::StringArgList() : data_(new Data()) {
 }
 
 StringArgList::~StringArgList() {
@@ -185,61 +198,89 @@ StringArgList::~StringArgList() {
 
 void
 StringArgList::add(bool value) {
-    args_.push_back(value ? STR_TRUE : STR_FALSE);
+    data_->args.push_back(value ? STR_TRUE : STR_FALSE);
 }
 
 void
 StringArgList::add(double value) {
-    args_.push_back(boost::lexical_cast<std::string>(value));
+    data_->args.push_back(boost::lexical_cast<std::string>(value));
 }
 
 void
 StringArgList::add(boost::int32_t value) {
-    args_.push_back(boost::lexical_cast<std::string>(value));
+    data_->args.push_back(boost::lexical_cast<std::string>(value));
 }
 
 void
 StringArgList::add(boost::int64_t value) {
-    args_.push_back(boost::lexical_cast<std::string>(value));
+    data_->args.push_back(boost::lexical_cast<std::string>(value));
 }
 
 void
 StringArgList::add(boost::uint32_t value) {
-    args_.push_back(boost::lexical_cast<std::string>(value));
+    data_->args.push_back(boost::lexical_cast<std::string>(value));
 }
 
 void
 StringArgList::add(boost::uint64_t value) {
-    args_.push_back(boost::lexical_cast<std::string>(value));
+    data_->args.push_back(boost::lexical_cast<std::string>(value));
 }
 
 void
 StringArgList::add(const std::string &value) {
-    args_.push_back(value);
+    data_->args.push_back(value);
 }
 
 bool
 StringArgList::empty() const {
-    return args_.empty();
+    return data_->args.empty();
 }
 
 unsigned int
 StringArgList::size() const {
-    return args_.size();
+    return data_->args.size();
 }
 
 const std::string&
 StringArgList::at(unsigned int i) const {
-    return args_.at(i);
+    return data_->args.at(i);
 }
 
 const std::vector<std::string>&
 StringArgList::args() const {
-    return args_;
+    return data_->args;
+}
+
+void
+StringArgList::addNilAs(const std::string &type) {
+    if (type.empty()) {
+        data_->nils.insert(data_->args.size());
+	data_->args.push_back(StringUtils::EMPTY_STRING);
+    }
+    else {
+        addAs(type, StringUtils::EMPTY_STRING);
+    }
+}
+
+const std::string*
+StringArgList::get(unsigned int i) const {
+    if (data_->nils.find(i) != data_->nils.end()) {
+        return NULL;
+    }
+    return &(data_->args.at(i));
 }
 
 
-CheckedStringArgList::CheckedStringArgList(bool checked) : checked_(checked) {
+struct CheckedStringArgList::Data {
+    bool checked;
+};
+
+CheckedStringArgList::CheckedStringArgList() : data_(new Data()) {
+    data_->checked = true;
+}
+
+CheckedStringArgList::CheckedStringArgList(bool checked) : data_(new Data()) {
+    data_->checked = checked;
 }
 
 CheckedStringArgList::~CheckedStringArgList() {
@@ -247,7 +288,7 @@ CheckedStringArgList::~CheckedStringArgList() {
 
 void
 CheckedStringArgList::addAs(const std::string &type, const std::string &value) {
-    addAsChecked(type, value, checked_);
+    addAsChecked(type, value, data_->checked);
 }
 
 

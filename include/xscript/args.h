@@ -1,6 +1,7 @@
 #ifndef _XSCRIPT_ARG_LIST_H_
 #define _XSCRIPT_ARG_LIST_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -37,9 +38,20 @@ public:
     virtual bool empty() const = 0;
     virtual unsigned int size() const = 0;
     virtual const std::string& at(unsigned int i) const = 0;
+
+    //TODO: add member ArgListData
 };
 
-class StringArgList : public virtual ArgList {
+class NilSupportedArgList : public ArgList {
+public:
+    NilSupportedArgList();
+    virtual ~NilSupportedArgList();
+
+    virtual void addNilAs(const std::string &type) = 0;
+    virtual const std::string* get(unsigned int i) const = 0;
+};
+
+class StringArgList : public NilSupportedArgList {
 public:
     StringArgList();
     virtual ~StringArgList();
@@ -56,22 +68,29 @@ public:
 
     const std::vector<std::string>& args() const;
 
+    virtual void addNilAs(const std::string &type);
+    virtual const std::string* get(unsigned int i) const;
+
 private:
-    std::vector<std::string> args_;
+    struct Data;
+    std::auto_ptr<Data> data_;
 };
 
 class CheckedStringArgList : public StringArgList {
 public:
+    CheckedStringArgList();
     explicit CheckedStringArgList(bool checked);
     virtual ~CheckedStringArgList();
 
     virtual void addAs(const std::string &type, const std::string &value);
 
-    bool checked_;
+private:
+    struct Data;
+    std::auto_ptr<Data> data_;
 };
 
 
-// TODO: inheririt from StringArgList
+// TODO: inherit from StringArgList
 class CommonArgList : public virtual ArgList {
 public:
     CommonArgList();
