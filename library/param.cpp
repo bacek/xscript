@@ -6,6 +6,7 @@
 
 #include "xscript/args.h"
 #include "xscript/param.h"
+#include "xscript/typed_map.h"
 #include "xscript/validator.h"
 #include "xscript/validator_factory.h"
 #include "xscript/xml_util.h"
@@ -128,8 +129,8 @@ class TypedParam::TypedParamData {
 public:
     TypedParamData() {}
     ~TypedParamData() {}
-    
-    std::string default_value_;
+
+    TypedValue default_value_;
 };
 
 TypedParam::TypedParam(Object *owner, xmlNodePtr node) :
@@ -141,13 +142,18 @@ TypedParam::~TypedParam() {
 
 const std::string&
 TypedParam::defaultValue() const {
+    return typed_data_->default_value_.asString();
+}
+
+const TypedValue&
+TypedParam::defaultTypedValue() const {
     return typed_data_->default_value_;
 }
 
 void
 TypedParam::property(const char *name, const char *value) {
     if (strncasecmp(name, "default", sizeof("default")) == 0) {
-        typed_data_->default_value_.assign(value);
+        TypedValue(value).swap(typed_data_->default_value_);
     }
     else ConvertedParam::property(name, value);
 }
@@ -161,6 +167,20 @@ TypedParam::value() const {
     return id();
 }
 
+bool
+TypedParam::getStringValue(const Context *ctx, std::string &result) const {
+    ValueResult r = getValue(ctx);
+    if (r.second) {
+        result.swap(r.first);
+        return true;
+    }
+    if (!typed_data_->default_value_.nil()) {
+        result.assign(typed_data_->default_value_.asString());
+        return true;
+    }
+    return false;
+}
+
 TypedParam::ValueResult
 TypedParam::getValue(const Context *ctx) const {
     (void)ctx;
@@ -170,7 +190,16 @@ TypedParam::getValue(const Context *ctx) const {
 void
 TypedParam::add(const Context *ctx, ArgList &al) const {
     const std::string& as = ConvertedParam::as();
-    std::string value = asString(ctx);
+
+    std::string value;
+    if (!getStringValue(ctx, value)) {
+        NilSupportedArgList *ns_al = dynamic_cast<NilSupportedArgList*>(&al);
+        if (NULL != ns_al) {
+            ns_al->addNilAs(as);
+            return;
+        }
+    }
+    
     if (as.empty()) {
         al.add(value);
     }
@@ -178,14 +207,34 @@ TypedParam::add(const Context *ctx, ArgList &al) const {
         al.addAs(as, value);
     }
     else {
-        al.add(value);
+        al.add(value); //skip: as not empty
+    }
+}
+
+void
+TypedParam::addTypedValue(ArgList &al, const TypedValue &value) const {
+
+    if (value.nil() && typed_data_->default_value_.nil()) {
+        NilSupportedArgList *ns_al = dynamic_cast<NilSupportedArgList*>(&al);
+        if (NULL != ns_al) {
+            ns_al->addNilAs(ConvertedParam::as());
+            return;
+        }
+    }
+
+    if (NULL == dynamic_cast<CommonArgList*>(&al)) {
+        const std::string& as = ConvertedParam::as();
+	value.nil() ? al.addAs(as, defaultValue()) : al.addAs(as, value);
+    }
+    else {
+        al.add(value.nil() ? defaultValue() : value.asString());
     }
 }
 
 std::string
 TypedParam::asString(const Context *ctx) const {
     ValueResult result = getValue(ctx);
-    return result.second ? result.first : defaultValue();
+    return result.second ? result.first : typed_data_->default_value_.asString();
 }
 
 } // namespace xscript

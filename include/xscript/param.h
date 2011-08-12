@@ -11,6 +11,7 @@ namespace xscript {
 class Object;
 class Context;
 class ArgList;
+class TypedValue;
 class Validator;
 
 /**
@@ -69,12 +70,17 @@ public:
     virtual ~TypedParam();
 
     const std::string& defaultValue() const;
+    const TypedValue& defaultTypedValue() const;
 
     virtual void add(const Context *ctx, ArgList &al) const;
     virtual const std::string& value() const;
     virtual std::string asString(const Context *ctx) const;
 
+    bool getStringValue(const Context *ctx, std::string &result) const;
+
 protected:
+    void addTypedValue(ArgList &al, const TypedValue &value) const;
+
     virtual void property(const char *name, const char *value);
     typedef std::pair<std::string, bool> ValueResult;
     virtual ValueResult getValue(const Context *ctx) const;
