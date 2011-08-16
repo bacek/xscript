@@ -12,7 +12,12 @@
 
     <test>
         <source>--</source>
-        <result>'\-\-'</result>
+        <result>'-\-'</result>
+    </test>
+
+    <test>
+        <source>abc----def</source>
+        <result>'abc-\-\-\-def'</result>
     </test>
 
     <test>

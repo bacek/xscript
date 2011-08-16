@@ -119,7 +119,9 @@ escapeTemplatedString(const Range &range, const bool * const esc_template_check,
         }
         //if (char_size == 1 && NULL != strchr(esc_template, ch)) {
         if (char_size == 1 && esc_template_check[ch]) {
-            result.push_back('\\');
+            if (!js_check || ch != '-' || (str > range.begin() && str[-1] == '-')) {
+                result.push_back('\\');
+            }
         }
         else if (js_check && char_size > 1) {
             if (char_size == 2) {
