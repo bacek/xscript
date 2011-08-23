@@ -1,3 +1,9 @@
+xscript (5.73.30-3) unstable; urgency=low
+
+  * StringUtils::jsonQuoteString process '\v' into '\\v'
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Tue, 23 Aug 2011 15:57:59 +0400
+
 xscript (5.73.30-2) unstable; urgency=low
 
   * fixed x:js-quote(): do not escape first '-'

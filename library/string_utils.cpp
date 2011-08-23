@@ -76,6 +76,10 @@ StringUtils::jsonQuoteString(const Range &range, std::string &result) {
                 result.push_back('\\');
                 ch = 't';
                 break;
+            case '\v':
+                result.push_back('\\');
+                ch = 'v';
+                break;
             case '\\':
                 result.push_back('\\');
                 if (end - str > 5 && str[1] == 'u' &&
