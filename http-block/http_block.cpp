@@ -131,7 +131,7 @@ HttpBlock::parseSubNode(xmlNodePtr node) {
     }
 
     if (!strcasecmp((const char*) node->name, STR_HEADER_PARAM_NAME.c_str())) {
-        std::auto_ptr<Param> p = createParam(node);
+        std::auto_ptr<Param> p = createParam(node, "string");
         const std::string &id = p->id();
         log()->debug("creating %s %s in http-block: %s", STR_HEADER_PARAM_REPR.c_str(), id.c_str(), owner()->name().c_str());
         checkHeaderParamId(STR_HEADER_PARAM_REPR, id);
@@ -146,7 +146,7 @@ HttpBlock::parseSubNode(xmlNodePtr node) {
         return;
     }
 
-    QueryParamData data(createUncheckedParam(node));
+    QueryParamData data(createUncheckedParam(node, "string"));
     const Param *p = data.param();
     const char *t = p->type();
     if (!strcasecmp(t, "requestdata") || !strcasecmp(t, "request")) {

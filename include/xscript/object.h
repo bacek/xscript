@@ -41,8 +41,8 @@ protected:
     void applyStylesheet(boost::shared_ptr<Stylesheet> sh, boost::shared_ptr<Context> ctx,
             boost::shared_ptr<InvokeContext> invoke_ctx, XmlDocSharedHelper &doc, bool need_copy);
     
-    std::auto_ptr<Param> createParam(const xmlNodePtr node);
-    std::auto_ptr<Param> createUncheckedParam(const xmlNodePtr node);
+    std::auto_ptr<Param> createParam(const xmlNodePtr node, const char *default_type = NULL);
+    std::auto_ptr<Param> createUncheckedParam(const xmlNodePtr node, const char *default_type = NULL);
 
 private:
     class ObjectData;

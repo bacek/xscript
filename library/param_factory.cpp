@@ -62,13 +62,16 @@ ParamFactory::registerCreator(const char *name, ParamCreator creator) {
 }
 
 std::auto_ptr<Param>
-ParamFactory::param(Object *owner, xmlNodePtr node, bool visit_properties) {
+ParamFactory::param(Object *owner, xmlNodePtr node, bool visit_properties, const char *default_type) {
 
     assert(node);
     assert(owner);
     try {
         const char *attr = XmlUtils::attrValue(node, "type");
-        if (NULL != attr) {
+        if (NULL == attr) {
+            attr = default_type;
+        }
+        if ((NULL != attr) && ('\0' != *attr)) {
             Range range = trim(createRange(attr));
 
             std::string name;
