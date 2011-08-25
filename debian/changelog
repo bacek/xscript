@@ -1,3 +1,10 @@
+xscript (5.73.31-1) unstable; urgency=low
+
+  * http-block: default type "String" for query-param, header
+  * move common code from VhostArg to VirtualHostData
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Wed, 24 Aug 2011 19:30:46 +0400
+
 xscript (5.73.30-3) unstable; urgency=low
 
   * StringUtils::jsonQuoteString process '\v' into '\\v'
