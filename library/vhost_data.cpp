@@ -1,5 +1,8 @@
 #include "settings.h"
 
+#include <string.h>
+
+#include "xscript/context.h"
 #include "xscript/request.h"
 #include "xscript/string_utils.h"
 #include "xscript/util.h"
@@ -103,6 +106,23 @@ VirtualHostData::getVariable(const Request *request, const std::string &var) con
     return request->getVariable(var);
 }
 
+std::string
+VirtualHostData::getVariable(const Context *ctx, const std::string &var) const {
+    if (!ctx || var.empty()) {
+        return StringUtils::EMPTY_STRING;
+    }
+
+    if (!strncmp(var.c_str(), "XSCRIPT_", sizeof("XSCRIPT_") - 1)) {
+        return getVariable(ctx->rootContext()->request(), var);
+    }
+    std::string value;
+    const Config *config = getConfig();
+    if (config->getCacheParam(var, value)) {
+        return value;
+    }
+    return StringUtils::EMPTY_STRING;
+}
+					    
 bool
 VirtualHostData::checkVariable(const Request *request, const std::string &var) const {
 

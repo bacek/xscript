@@ -26,15 +26,7 @@ VHostArgParam::type() const {
 
 std::string
 VHostArgParam::variable(const Context *ctx, const std::string &name) {
-    if (strncmp(name.c_str(), "XSCRIPT_", sizeof("XSCRIPT_") - 1) == 0) {
-        return VirtualHostData::instance()->getVariable(ctx->rootContext()->request(), name);
-    }
-    std::string value;
-    const Config *config = VirtualHostData::instance()->getConfig();
-    if (config->getCacheParam(name, value)) {
-        return value;
-    }
-    return StringUtils::EMPTY_STRING;
+    return VirtualHostData::instance()->getVariable(ctx, name);
 }
 
 TypedParam::ValueResult

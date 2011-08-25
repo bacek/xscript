@@ -14,8 +14,7 @@
 #include "xscript/string_utils.h"
 #include "xscript/util.h"
 #include "xscript/xml_util.h"
-
-#include "internal/vhost_arg_param.h"
+#include "xscript/vhost_data.h"
 
 #include "stack.h"
 #include "exception.h"
@@ -441,7 +440,7 @@ luaGetVHostArg(lua_State *lua) {
         std::string name = luaReadStack<std::string>(lua, 1);
         
         Context *ctx = getContext(lua);
-        lua_pushstring(lua, VHostArgParam::variable(ctx, name).c_str());
+        lua_pushstring(lua, VirtualHostData::instance()->getVariable(ctx, name).c_str());
         // Our value on stack
         return 1;
     }

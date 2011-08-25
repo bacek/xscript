@@ -9,6 +9,7 @@
 namespace xscript {
 
 class Request;
+class Context;
 
 class VirtualHostData : public Component<VirtualHostData> {
 public:
@@ -23,6 +24,8 @@ public:
     bool hasVariable(const Request *request, const std::string &var) const;
     std::string getVariable(const Request *request, const std::string &var) const;
     bool checkVariable(const Request *request, const std::string &var) const;
+
+    std::string getVariable(const Context *ctx, const std::string &var) const;
 
     std::string getDocumentRoot(const Request *request) const;
 
