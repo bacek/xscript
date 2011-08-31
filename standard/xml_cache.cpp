@@ -236,7 +236,7 @@ bool XmlStorage::Element::checkModified() const {
             modified = FileUtils::modified(it->first);
         }
         catch(const std::exception &e) {
-            return true;
+            modified = 0;
         }
 
         log()->debug("is included xml %s expired: %llu, %llu", it->first.c_str(),
