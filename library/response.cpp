@@ -241,7 +241,7 @@ Response::setSuppressBody(bool value) {
 }
 
 std::streamsize
-Response::writeTextChunk(const char *buf, std::streamsize size, Context &ctx) {
+Response::write(const char *buf, std::streamsize size, Request *request) {
     boost::mutex::scoped_lock wl(data_->write_mutex_);
     if (data_->isBinary()) {
         throw std::runtime_error("Cannot write data. Output stream is already occupied");
@@ -251,7 +251,6 @@ Response::writeTextChunk(const char *buf, std::streamsize size, Context &ctx) {
         data_->stream_locked_ = true;
     }
     data_->sendHeaders();
-    Request *request = ctx.request();
     if (request && !request->suppressBody()) {
         if (data_->detached_) {
             return 0;
@@ -259,6 +258,11 @@ Response::writeTextChunk(const char *buf, std::streamsize size, Context &ctx) {
         writeBuffer(buf, size);
     }
     return size;
+}
+
+std::streamsize
+Response::writeTextChunk(const char *buf, std::streamsize size, Context &ctx) {
+    return write(buf, size, ctx.request());
 }
 
 bool
