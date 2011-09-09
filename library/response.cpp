@@ -64,21 +64,23 @@ public:
     CookieSet out_cookies_;
 
     std::auto_ptr<BinaryWriter> writer_;
-
-    bool headers_sent_;
-    unsigned short status_;
-    bool detached_, stream_locked_;
     mutable boost::mutex write_mutex_, resp_mutex_;
     boost::shared_ptr<PageCacheData> cache_data_;
+    boost::uint32_t expire_delta_;
+    unsigned short status_;
+    bool direct_binary_;
+    bool headers_sent_;
     bool have_cached_copy_;
     bool suppress_body_;
-    boost::uint32_t expire_delta_;
+    bool detached_;
+    bool stream_locked_;
 };
 
 Response::ResponseData::ResponseData(Response *response, std::ostream *stream) :
-    response_(response), stream_(stream), writer_(NULL), headers_sent_(false), status_(200),
-    detached_(false), stream_locked_(false), have_cached_copy_(false),
-    suppress_body_(false), expire_delta_(DEFAULT_EXPIRE_TIME_DELTA)
+    response_(response), stream_(stream), writer_(NULL),
+    expire_delta_(DEFAULT_EXPIRE_TIME_DELTA), status_(200),
+    direct_binary_(false), headers_sent_(false), have_cached_copy_(false),
+    suppress_body_(false), detached_(false), stream_locked_(false)
 {}
 
 Response::ResponseData::~ResponseData()
@@ -86,7 +88,7 @@ Response::ResponseData::~ResponseData()
 
 void
 Response::ResponseData::checkAllowedHeaders() const {
-    if (headers_sent_) {
+    if (headers_sent_ && !direct_binary_) {
         throw std::runtime_error("headers already sent");
     }
 }
@@ -94,9 +96,9 @@ Response::ResponseData::checkAllowedHeaders() const {
 void
 Response::ResponseData::sendHeaders() {
     boost::mutex::scoped_lock sl(resp_mutex_);
-    std::stringstream stream;
     if (!headers_sent_) {
         log()->debug("%s, sending headers", BOOST_CURRENT_FUNCTION);
+        std::stringstream stream;
         stream << status_ << " " << HttpUtils::statusToString(status_);
         out_headers_[STR_STATUS] = stream.str();
         response_->writeHeaders();
@@ -104,12 +106,12 @@ Response::ResponseData::sendHeaders() {
     }
 }
 
-bool
+inline bool
 Response::ResponseData::isBinary() const {
-    return NULL != writer_.get();
+    return NULL != writer_.get() || direct_binary_;
 }
 
-bool
+inline bool
 Response::ResponseData::cacheable() const {
     return NULL != cache_data_.get();
 }
@@ -239,7 +241,7 @@ Response::setSuppressBody(bool value) {
 }
 
 std::streamsize
-Response::write(const char *buf, std::streamsize size, Request *request) {
+Response::writeTextChunk(const char *buf, std::streamsize size, Context &ctx) {
     boost::mutex::scoped_lock wl(data_->write_mutex_);
     if (data_->isBinary()) {
         throw std::runtime_error("Cannot write data. Output stream is already occupied");
@@ -249,7 +251,8 @@ Response::write(const char *buf, std::streamsize size, Request *request) {
         data_->stream_locked_ = true;
     }
     data_->sendHeaders();
-    if (!request->suppressBody()) {
+    Request *request = ctx.request();
+    if (request && !request->suppressBody()) {
         if (data_->detached_) {
             return 0;
         }
@@ -258,10 +261,48 @@ Response::write(const char *buf, std::streamsize size, Request *request) {
     return size;
 }
 
+bool
+Response::writeBinaryChunk(const char *buf, std::streamsize size, Context &ctx) {
+    boost::mutex::scoped_lock wl(data_->write_mutex_);
+    if (data_->detached_) {
+        return false;
+    }
+
+    if (data_->stream_locked_ || NULL != data_->writer_.get()) {
+        throw std::runtime_error("Cannot write data. Output stream is already occupied");
+    }
+
+    bool cacheable = data_->cacheable();
+    if (!cacheable && !data_->stream_) {
+        throw std::runtime_error("Cannot write data. Output stream disallowed");
+    }
+
+    if (!data_->direct_binary_) {
+        data_->direct_binary_ = true;
+        ctx.script()->addHeaders(&ctx);
+        data_->sendHeaders();
+    }
+
+    Request *request = ctx.request();
+    if (request && !request->suppressBody()) {
+        if (data_->detached_) {
+            return false;
+        }
+        writeBuffer(buf, size);
+        if (!cacheable) {
+            if (!data_->stream_->good()) {
+                return false;
+            }
+            (*data_->stream_) << std::flush;
+        }
+    }
+    return true;
+}
+
 std::streamsize
 Response::write(std::auto_ptr<BinaryWriter> writer) {
     boost::mutex::scoped_lock wl(data_->write_mutex_);
-    if (data_->detached_) {
+    if (data_->detached_ || !writer.get()) {
         return 0;
     }
 
@@ -305,12 +346,12 @@ Response::detach(Context *ctx) {
             writeByWriter(data_->cache_data_.get());
         }
     }
-    else if (data_->isBinary()) {
+    else if (data_->writer_.get()) {
         data_->setHeaderValidName(STR_CONTENT_LENGTH, boost::lexical_cast<std::string>(data_->writer_->size()));
         data_->sendHeaders();
         writeByWriter(data_->writer_.get());
     }
-    else {
+    else if (!data_->direct_binary_) {
         data_->sendHeaders();
     }
 
@@ -348,7 +389,7 @@ Response::writeBuffer(const char *buf, std::streamsize size) {
     if (data_->cacheable()) {
         data_->cache_data_->append(buf, size);
     }
-    else {
+    else if (data_->stream_) {
         data_->stream_->write(buf, size);
     }
 }
@@ -373,6 +414,9 @@ Response::writeError(unsigned short status, const std::string &message) {
 void
 Response::writeHeaders() {
     bool cacheable = data_->cacheable();
+    if (!cacheable && !data_->stream_) {
+        return;
+    }
     const HeaderMap& headers = outHeaders();
     for (HeaderMap::const_iterator i = headers.begin(), end = headers.end(); i != end; ++i) {
         if (cacheable) {

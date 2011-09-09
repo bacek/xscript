@@ -32,8 +32,10 @@ public:
     void setExpireDelta(boost::uint32_t delta);
     void setSuppressBody(bool value);
 
-    std::streamsize write(const char *buf, std::streamsize size, Request *request);
+    std::streamsize writeTextChunk(const char *buf, std::streamsize size, Context &ctx);
+    bool writeBinaryChunk(const char *buf, std::streamsize size, Context &ctx);
     std::streamsize write(std::auto_ptr<BinaryWriter> buf);
+
     std::string outputHeader(const std::string &name) const;
 
     void sendHeaders();

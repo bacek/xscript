@@ -26,6 +26,7 @@ extern "C" int luaResponseSetCookie(lua_State *lua) throw ();
 extern "C" int luaResponseRedirectToPath(lua_State *lua) throw ();
 extern "C" int luaResponseSetContentType(lua_State *lua) throw ();
 extern "C" int luaResponseSetExpireTimeDelta(lua_State *lua) throw ();
+extern "C" int luaResponseWrite(lua_State *lua) throw ();
 
 static const struct luaL_reg responselib [] = {
     {"setStatus",       luaResponseSetStatus},
@@ -34,6 +35,7 @@ static const struct luaL_reg responselib [] = {
     {"redirectToPath",  luaResponseRedirectToPath},
     {"setContentType",  luaResponseSetContentType},
     {"setExpireTimeDelta",  luaResponseSetExpireTimeDelta},
+    {"write", luaResponseWrite},
     {NULL, NULL}
 };
 
@@ -90,7 +92,7 @@ luaResponseRedirectToPath(lua_State *lua) throw () {
         return e.translate(lua);
     }
     catch (const std::exception &e) {
-        return luaL_error(lua, "caught exception in response.setStatus: %s", e.what());
+        return luaL_error(lua, "caught exception in response.redirectToPath: %s", e.what());
     }
 }
 
@@ -109,7 +111,7 @@ luaResponseSetContentType(lua_State *lua) throw () {
         return e.translate(lua);
     }
     catch (const std::exception &e) {
-        return luaL_error(lua, "caught exception in response.setStatus: %s", e.what());
+        return luaL_error(lua, "caught exception in response.setContentType: %s", e.what());
     }
 }
 
@@ -128,7 +130,7 @@ luaResponseSetCookie(lua_State *lua) throw () {
         return e.translate(lua);
     }
     catch (const std::exception &e) {
-        return luaL_error(lua, "caught exception in response.setStatus: %s", e.what());
+        return luaL_error(lua, "caught exception in response.setCookie: %s", e.what());
     }
     return 0;
 }
@@ -152,6 +154,28 @@ luaResponseSetExpireTimeDelta(lua_State *lua) throw () {
     }
     catch (const std::exception &e) {
         return luaL_error(lua, "caught exception in response.setExpireTimeDelta: %s", e.what());
+    }
+}
+
+extern "C" int
+luaResponseWrite(lua_State *lua) throw () {
+    log()->debug("%s, stack size is: %d", BOOST_CURRENT_FUNCTION, lua_gettop(lua));
+    try {
+        luaCheckStackSize(lua, 2);
+        luaReadStack<void>(lua, "xscript.response", 1);
+        Context *ctx = getContext(lua);
+        Response *response = ctx->response();
+        std::string value = luaReadStack<std::string>(lua, 2);
+        bool result = response->writeBinaryChunk(value.c_str(), value.size(), *ctx);
+        log()->debug("%s, write size: %u, status: %d", BOOST_CURRENT_FUNCTION, value.size(), result);
+        lua_pushboolean(lua, result);
+        return 1;
+    }
+    catch (const LuaError &e) {
+        return e.translate(lua);
+    }
+    catch (const std::exception &e) {
+        return luaL_error(lua, "caught exception in response.write: %s", e.what());
     }
 }
 

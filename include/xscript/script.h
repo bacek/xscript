@@ -60,7 +60,7 @@ public:
     virtual std::string createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const;
     virtual std::string createBlockTagKey(const Context *ctx) const;
     
-    void addExpiresHeader(const Context *ctx) const;
+    void addHeaders(Context *ctx) const;
 
     const Script* parent() const;
 

@@ -82,7 +82,7 @@ public:
     void addBlock(Block *block);
     void addXscriptNode(xmlNodePtr node);
     void addHeader(const std::string &name, const std::string &value);
-    void setHeaders(Response *response);
+    void setHeaders(Response *response) const;
 
     void threaded(bool value);
     void forceStylesheet(bool value);
@@ -97,12 +97,12 @@ public:
     void parseXScriptNodes(std::vector<xmlNodePtr> &xscript_nodes);
     void parseBlocks();
     void buildXScriptNodeSet(std::vector<xmlNodePtr> &xscript_nodes);
-    void addHeaders(Context *ctx);
-    XmlDocSharedHelper fetchResults(Context *ctx);
+    void addHeaders(Context *ctx) const;
+    XmlDocSharedHelper fetchResults(Context *ctx) const;
     void fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
-                        unsigned int &count, unsigned int &xscript_count);
+                        unsigned int &count, unsigned int &xscript_count) const;
     void parseXScriptNode(const xmlNodePtr node);
-    void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx);
+    void replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const;
     void property(const char *name, const char *value);
     bool cachable(const Context *ctx, bool for_save);
 
@@ -254,7 +254,7 @@ Script::ScriptData::addHeader(const std::string &name, const std::string &value)
 }
 
 void
-Script::ScriptData::setHeaders(Response *response) {
+Script::ScriptData::setHeaders(Response *response) const {
     for (std::map<std::string, std::string>::const_iterator i = headers_.begin(), end = headers_.end(); i != end; ++i) {
         response->setHeader(i->first, i->second);
     }
@@ -426,17 +426,17 @@ Script::ScriptData::buildXScriptNodeSet(std::vector<xmlNodePtr>& xscript_nodes) 
 
 
 void
-Script::ScriptData::addHeaders(Context *ctx) {
+Script::ScriptData::addHeaders(Context *ctx) const {
     Response *response = ctx->response();
     if (NULL == response) { // request can be null only when running tests
         return;
     }
-    owner_->addExpiresHeader(ctx);
+    response->setExpiresHeader();
     setHeaders(response);
 }
 
 XmlDocSharedHelper
-Script::ScriptData::fetchResults(Context *ctx) {
+Script::ScriptData::fetchResults(Context *ctx) const {
 
     XmlDocSharedHelper newdoc(xmlCopyDoc(doc_.get(), 1));
     XmlUtils::throwUnless(NULL != newdoc.get());
@@ -455,7 +455,7 @@ Script::ScriptData::fetchResults(Context *ctx) {
 
 void
 Script::ScriptData::fetchRecursive(Context *ctx, xmlNodePtr node, xmlNodePtr newnode,
-                                   unsigned int &count, unsigned int &xscript_count) {
+                                   unsigned int &count, unsigned int &xscript_count) const {
     const std::set<xmlNodePtr>& xscript_node_set = xscriptNodes();
     unsigned int blocks_num = blocksNumber();
     while (node && count + xscript_count != blocks_num + xscript_node_set.size()) {
@@ -561,8 +561,8 @@ Script::ParseXScriptNodeHandler::process(const MessageParams &params,
 }
 
 void
-Script::ScriptData::replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) {
-    MessageParam<Script> script_param(owner_);
+Script::ScriptData::replaceXScriptNode(xmlNodePtr node, xmlNodePtr newnode, Context *ctx) const {
+    MessageParam<Script> script_param(const_cast<Script*>(owner_)); //TODO: remove const_cast
     MessageParam<xmlNodePtr> node_param(&node);
     MessageParam<xmlNodePtr> newnode_param(&newnode);
     MessageParam<Context> context_param(ctx);
@@ -972,8 +972,8 @@ Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc)
 }
 
 void
-Script::addExpiresHeader(const Context *ctx) const {
-    ctx->response()->setExpiresHeader();
+Script::addHeaders(Context *ctx) const {
+    data_->addHeaders(ctx);
 }
 
 void

@@ -352,8 +352,11 @@ writeFunc(void *ctx, const char *data, int len) {
         return 0;
     }
     Context *context = static_cast<Context*>(ctx);
+    if (NULL == context) {
+        return -1;
+    }
     try {
-        return context->response()->write(data, len, context->request());
+        return context->response()->writeTextChunk(data, len, *context);
     }
     catch (const std::exception &e) {
         log()->warn("caught exception while writing result: %s. Url: %s",
