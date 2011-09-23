@@ -164,22 +164,22 @@ Server::handleRequest(const boost::shared_ptr<Request> &request,
         
         if (!loaded) {
             XmlDocSharedHelper doc = script->invoke(ctx);
-            XmlUtils::throwUnless(NULL != doc.get());
-            
+            if (NULL == doc.get()) {
+                return;
+            }
+
+            ctx->addDoc(doc);
             if (script->binaryPage() || response->isBinary()) {
                 return;
             }
-            
+
             bool result = true;
             if (script->forceStylesheet() && !ctx->noMainXsltPort() && ctx->hasXslt()) {
                 result = script->applyStylesheet(ctx, doc);
                 if (response->isBinary()) {
-                    ctx->addDoc(doc);
                     return;
                 }
             }
-            
-            ctx->addDoc(doc);
 
             if (result && cachable && script->cachable(ctx.get(), true)) {
                 ctx->response()->setCacheable();
