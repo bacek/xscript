@@ -1,3 +1,11 @@
+xscript (5.73.32-3) unstable; urgency=low
+
+  * added headers from root context on write binary chunks
+  * faster binary output pages
+  * http-block: query-params with @as: fixed empty value checking
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 23 Sep 2011 13:33:48 +0400
+
 xscript (5.73.32-2) unstable; urgency=low
 
   * fixed compatibility

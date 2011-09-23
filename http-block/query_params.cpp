@@ -102,7 +102,10 @@ QueryParamData::asString(const Context *ctx) const {
 void
 QueryParamData::add(const Context *ctx, ArgList &al) const {
     std::string value = asString(ctx);
-    if (converted_) {
+    if (value.empty() && !allow_empty_) {
+        al.add(value);
+    }
+    else if (converted_) {
         const ConvertedParam *cp = static_cast<const ConvertedParam*>(param_.get());
         al.addAs(cp->as(), value);
     }
