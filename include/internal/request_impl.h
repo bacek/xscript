@@ -23,7 +23,8 @@ public:
     
 private:
     mutable boost::mutex mutex_;
-    VarMap vars_, cookies_;
+    VarMap vars_;
+    CookieMap cookies_;
     std::vector<char> body_;
     HeaderMap headers_;
     

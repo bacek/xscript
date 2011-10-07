@@ -34,6 +34,7 @@ typedef std::map<std::string, std::string> VarMap;
 
 #endif
 
+typedef HeaderMap CookieMap;
 typedef std::set<Cookie, CookieLess> CookieSet;
 
 } // namespace xscript
