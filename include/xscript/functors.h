@@ -27,7 +27,7 @@ struct CILess : public std::binary_function<const Cont&, const Cont&, bool> {
 
 struct CookieLess : public std::binary_function<const Cookie&, const Cookie&, bool> {
     inline bool operator() (const Cookie &cookie, const Cookie &target) const {
-        return cookie.name() < target.name();
+        return strcasecmp(cookie.name().c_str(), target.name().c_str()) < 0;
     }
 };
 
