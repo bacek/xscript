@@ -13,6 +13,9 @@
 
 namespace xscript {
 
+static const std::string STR_CRLF = "\r\n";
+static const std::string STR_ROOT = "/";
+
 class Cookie::CookieData {
 public:
     CookieData();
@@ -49,7 +52,7 @@ Cookie::CookieData::CookieData() :
 
 Cookie::CookieData::CookieData(const std::string &name, const std::string &value) :
     secure_(false), http_only_(false), expires_(0),
-    name_(name), value_(value), path_("/"), url_encode_(false)
+    name_(name), value_(value), path_(STR_ROOT), url_encode_(false)
 {}
 
 Cookie::CookieData::~CookieData() {
@@ -159,10 +162,10 @@ Cookie::CookieData::toString() const {
 
 bool
 Cookie::CookieData::check() const {
-     if (std::string::npos != name_.find_first_of("\r\n") ||
-         std::string::npos != value_.find_first_of("\r\n") ||
-         std::string::npos != domain_.find_first_of("\r\n") ||
-         std::string::npos != path_.find_first_of("\r\n")) {
+     if (std::string::npos != name_.find_first_of(STR_CRLF) ||
+         std::string::npos != value_.find_first_of(STR_CRLF) ||
+         std::string::npos != domain_.find_first_of(STR_CRLF) ||
+         std::string::npos != path_.find_first_of(STR_CRLF)) {
          return false;
      }
      return true;
