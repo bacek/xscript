@@ -1,3 +1,10 @@
+xscript (5.73.33-1) unstable; urgency=low
+
+  * case insensitive compare for cookie names
+  * support schemes and dependencies for xi:include parse="text"
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 07 Oct 2011 16:14:18 +0400
+
 xscript (5.73.32-3) unstable; urgency=low
 
   * added headers from root context on write binary chunks
