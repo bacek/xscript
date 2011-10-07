@@ -1,5 +1,6 @@
 #include "settings.h"
 #include <cstring>
+#include <set>
 
 #include <boost/current_function.hpp>
 
@@ -19,40 +20,41 @@ namespace xscript {
 
 static std::string UTF8_ENCODING = "utf-8";
 
-class ProxyHeadersHelper {
+static const char file_scheme[] = "file://";
+static const char root_scheme[] = "docroot://";
+static const char http_scheme[] = "http://";
+static const char https_scheme[] = "https://";
+
+
+class ProxyHeadersChecker {
 public:
-    static bool skipped(const char* name);
+    ProxyHeadersChecker();
 
-private:
-    struct StrSize {
-        const char* name;
-        int size;
-    };
-
-    static const StrSize skipped_headers[];
-};
-
-const ProxyHeadersHelper::StrSize
-ProxyHeadersHelper::skipped_headers[] = {
-    { "host", sizeof("host") },
-    { "if-modified-since", sizeof("if-modified-since") },
-    { "accept-encoding", sizeof("accept-encoding") },
-    { "keep-alive", sizeof("keep-alive") },
-    { "connection", sizeof("connection") },
-    { "content-length", sizeof("content-length") },
-};
-
-bool
-ProxyHeadersHelper::skipped(const char* name) {
-    for ( int i = sizeof(skipped_headers) / sizeof(skipped_headers[0]); i--; ) {
-        const StrSize& sh = skipped_headers[i];
-        if (strncasecmp(name, sh.name, sh.size) == 0) {
-            return true;
-        }
+    bool skipped(const char *name) const {
+        return disallow_proxy_headers_.find(name) != disallow_proxy_headers_.end();
     }
 
-    return false;
+private:
+    struct StringRawPtrLess {
+        bool operator() (const char *val, const char *target) const {
+            return strcasecmp(val, target) < 0;
+        }
+    };
+
+    std::set<const char*, StringRawPtrLess> disallow_proxy_headers_;
+};					    
+
+ProxyHeadersChecker::ProxyHeadersChecker() {
+    disallow_proxy_headers_.insert("host");
+    disallow_proxy_headers_.insert("if-modified-since");
+    disallow_proxy_headers_.insert("accept-encoding");
+    disallow_proxy_headers_.insert("keep-alive");
+    disallow_proxy_headers_.insert("connection");
+    disallow_proxy_headers_.insert("content-length");
 }
+
+static ProxyHeadersChecker proxy_headers_checker_;
+
 
 Policy::Policy()
 {}
@@ -67,8 +69,6 @@ Policy::realIPHeaderName() {
 
 std::string
 Policy::getPathByScheme(const Request *request, const std::string &url) {
-    const char file_scheme[] = "file://";
-    const char root_scheme[] = "docroot://";
     if (strncasecmp(url.c_str(), file_scheme, sizeof(file_scheme) - 1) == 0) {
         return url.substr(sizeof(file_scheme) - 1);
     }
@@ -82,16 +82,18 @@ Policy::getPathByScheme(const Request *request, const std::string &url) {
     return url;
 }
 
+bool
+Policy::isRemoteScheme(const char *url) {
+    return !strncasecmp(url, http_scheme, sizeof(http_scheme) - 1) ||
+           !strncasecmp(url, https_scheme, sizeof(https_scheme) - 1);
+}
+
 std::string
 Policy::getRootByScheme(const Request *request, const std::string &url) {
-    const char file_scheme[] = "file://";
-    const char root_scheme[] = "docroot://";
-    const char http_scheme[] = "http://";
-    const char https_scheme[] = "https://";
-    if ((strncasecmp(url.c_str(), file_scheme, sizeof(file_scheme) - 1) == 0) ||
-        (strncasecmp(url.c_str(), root_scheme, sizeof(root_scheme) - 1) == 0) ||
-        (strncasecmp(url.c_str(), http_scheme, sizeof(http_scheme) - 1) == 0) ||
-        (strncasecmp(url.c_str(), https_scheme, sizeof(https_scheme) - 1) == 0)) {
+    if (!strncasecmp(url.c_str(), file_scheme, sizeof(file_scheme) - 1) ||
+        !strncasecmp(url.c_str(), root_scheme, sizeof(root_scheme) - 1) ||
+	isRemoteScheme(url.c_str())) {
+
         return VirtualHostData::instance()->getDocumentRoot(request);
     }
     return StringUtils::EMPTY_STRING;
@@ -115,7 +117,7 @@ Policy::useDefaultSanitizer() {
 
 bool
 Policy::isSkippedProxyHeader(const std::string &header) {
-    return ProxyHeadersHelper::skipped(header.c_str());
+    return proxy_headers_checker_.skipped(header.c_str());
 }
 
 void

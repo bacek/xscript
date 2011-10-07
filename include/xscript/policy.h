@@ -30,6 +30,8 @@ public:
     virtual bool allowCachingOutputCookie(const char *name);
     virtual bool isSkippedProxyHeader(const std::string &header);
     virtual bool isErrorDoc(xmlDocPtr doc);
+
+    static bool isRemoteScheme(const char *url);
 };
 
 } // namespace xscript
