@@ -1,3 +1,10 @@
+xscript (5.73.34-1) unstable; urgency=low
+
+  * XmlUtils::loadScriptCode - retrieve script code from all child sections
+  * suppress fetching block results for binary page
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 10 Oct 2011 17:56:17 +0400
+
 xscript (5.73.33-1) unstable; urgency=low
 
   * case insensitive compare for cookie names

@@ -32,8 +32,8 @@ private:
     void processLuaError(lua_State *lua) const;
 
 private:
-    const LuaExtension* ext_;
-    const char* code_;
+    const LuaExtension *ext_;
+    std::string code_;
 };
 
 class LuaExtension : public Extension {

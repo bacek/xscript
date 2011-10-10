@@ -298,30 +298,53 @@ XmlUtils::escape(const std::string &str) {
     return dest;
 }
 
+static inline const char*
+is_not_space(const char *str) {
+    if (NULL != str && '\0' != *str) {
+        for (const char *p = str; *p; ++p) {
+            if (!::isspace(*p)) {
+                return str;
+            }
+        }
+    }
+    return NULL;
+}
+
 const char*
 XmlUtils::findScriptCode(xmlNodePtr node) {
 
     const char *code = XmlUtils::cdataValue(node);
     if (NULL != code) {
-        for (const char *p = code; *p; ++p) {
-            if (!::isspace(*p)) {
-                return code;
-            }
-        }
-        return NULL;
+        return is_not_space(code);
     }
 
     for (xmlNodePtr child = node->children; NULL != child; child = child->next) {
         code = (const char*) child->content;
         if (NULL != code && XML_TEXT_NODE == child->type) {
-            for (const char *p = code; *p; ++p) {
-                if (!::isspace(*p)) {
-                    return code;
-                }
+            if (is_not_space(code)) {
+                return code;
             }
         }
     }
     return NULL;
+}
+
+bool
+XmlUtils::loadScriptCode(xmlNodePtr node, std::string &code) {
+
+    std::string result;
+    for (xmlNodePtr child = node->children; NULL != child; child = child->next) {
+        const char *code_ptr = (const char*) child->content;
+        if (NULL != code_ptr && (XML_TEXT_NODE == child->type || XML_CDATA_SECTION_NODE == child->type)) {
+            result.append(code_ptr);
+        }
+    }
+    if (is_not_space(result.c_str())) {
+        code.swap(result);
+        return true;
+    }
+    code.clear();
+    return false;
 }
 
 bool

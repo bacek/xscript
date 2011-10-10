@@ -56,7 +56,8 @@ public:
     template<typename NodePtr> static const char* value(NodePtr node);
     template<typename NodePtr> static const char* cdataValue(NodePtr node);
 
-    static const char* findScriptCode(xmlNodePtr node);
+    static const char* findScriptCode(xmlNodePtr node); //legacy
+    static bool loadScriptCode(xmlNodePtr node, std::string &code);
 
     template<typename Visitor> static void visitAttributes(xmlAttrPtr attr, Visitor visitor);
 

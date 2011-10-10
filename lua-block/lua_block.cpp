@@ -90,7 +90,7 @@ private:
 typedef boost::shared_ptr<LuaThread> LuaSharedThread;
 
 LuaBlock::LuaBlock(const LuaExtension *ext, Xml *owner, xmlNodePtr node) :
-        RenamedBlock(ext, owner, node), ext_(ext), code_(NULL) {
+        RenamedBlock(ext, owner, node), ext_(ext) {
 }
 
 LuaBlock::~LuaBlock() {
@@ -103,18 +103,18 @@ LuaBlock::getBase() const {
 
 void
 LuaBlock::postParse() {
-    code_ = XmlUtils::findScriptCode(node());
-    if (NULL == code_) {
+
+    if (!XmlUtils::loadScriptCode(node(), code_) || code_.empty()) {
         return;
     }
 
     LuaHolder lua(luaL_newstate());
-    int res = luaL_loadstring(lua.get(), code_);
+    int res = luaL_loadstring(lua.get(), code_.c_str());
     if (LUA_ERRSYNTAX == res) {
         std::string msg(lua_tostring(lua.get(), -1));
-        throw std::runtime_error(std::string("bad lua code: ") + msg.c_str());
+        throw std::runtime_error("bad lua code: " + msg);
     }
-    else if (LUA_ERRMEM == res) {
+    if (LUA_ERRMEM == res) {
         throw std::bad_alloc();
     }
 }
@@ -274,7 +274,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
 
     CallResultWrapper wrapper(*this, *invoke_ctx);
     
-    if (NULL == code_) {
+    if (code_.empty()) {
         processEmptyLua(invoke_ctx.get());
         return;
     }   
@@ -302,7 +302,7 @@ LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> 
     
     setupLocalData(lua, invoke_ctx.get(), ctx.get(), this);
     
-    if (LUA_ERRMEM == luaL_loadstring(lua, code_)) {
+    if (LUA_ERRMEM == luaL_loadstring(lua, code_.c_str())) {
         throw std::bad_alloc();
     }
 
