@@ -947,6 +947,10 @@ XmlDocSharedHelper
 Script::processResults(boost::shared_ptr<Context> ctx) {
     OperationMode::instance()->processScriptError(ctx.get(), this);
     data_->addHeaders(ctx.get());
+    if (ctx->isRoot() && (binaryPage() || ctx->response()->isBinary())) {
+        log()->info("suppress fetching block results for binary page");
+        return XmlDocSharedHelper();
+    }
     return data_->fetchResults(ctx.get());
 }
 
