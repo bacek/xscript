@@ -56,6 +56,7 @@ const char * const XmlUtils::XSCRIPT_NAMESPACE = "http://www.yandex.ru/xscript";
 static xmlExternalEntityLoader external_entity_default_loader_ = NULL;
 
 static xmlParserInputBufferCreateFilenameFunc old_libxml_file_resolver_ = NULL;
+static xmlParserInputBufferCreateFilenameFunc old_libxml_thr_file_resolver_ = NULL;
 static xmlParserInputBufferPtr XmlUtilsFileResolver(const char *URI, xmlCharEncoding enc);
 
 static boost::thread_specific_ptr<Xml::TimeMapType> xml_info_collector_modified_info_;
@@ -155,7 +156,7 @@ XmlUtils::init(const Config *config) {
 
         xmlParserInputBufferCreateFilenameFunc libxml_thr_file_resolver =
             xmlThrDefParserInputBufferCreateFilenameDefault(XmlUtilsFileResolver);
-        assert(libxml_thr_file_resolver == old_libxml_file_resolver_);
+        old_libxml_thr_file_resolver_ = libxml_thr_file_resolver;
     }
     assert(xmlParserInputBufferCreateFilenameDefault(XmlUtilsFileResolver) == XmlUtilsFileResolver);
 }
@@ -610,7 +611,7 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
 }
 
 xmlParserInputBufferPtr
-XmlUtilsFileResolver(const char *uri, xmlCharEncoding enc) {
+XmlUtilsFileResolverCommon(const char *uri, xmlCharEncoding enc, xmlParserInputBufferCreateFilenameFunc func) {
 
     if (NULL == uri || !*uri) {
         return old_libxml_file_resolver_(uri, enc);
@@ -643,7 +644,7 @@ XmlUtilsFileResolver(const char *uri, xmlCharEncoding enc) {
             }
         }
 
-        ret = old_libxml_file_resolver_(fileName.c_str(), enc);
+        ret = func(fileName.c_str(), enc);
         if (NULL != ret) {
             patchModifiedInfo(fileName, url_str, NULL);
         }
@@ -658,6 +659,16 @@ XmlUtilsFileResolver(const char *uri, xmlCharEncoding enc) {
         log()->error("FileResolver unknown error. URL: %s Request URL: %s", uri, getOriginalUrl().c_str());
     }
     return ret;
+}
+
+xmlParserInputBufferPtr
+XmlUtilsFileResolver(const char *uri, xmlCharEncoding enc) {
+    return XmlUtilsFileResolverCommon(uri, enc, old_libxml_file_resolver_);
+}
+
+xmlParserInputBufferPtr
+XmlUtilsThrFileResolver(const char *uri, xmlCharEncoding enc) {
+    return XmlUtilsFileResolverCommon(uri, enc, old_libxml_thr_file_resolver_);
 }
 
 xmlDocPtr

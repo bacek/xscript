@@ -1,8 +1,9 @@
 xscript (5.73.35-1) unstable; urgency=low
 
   * added xslt-function x:crc32(.)
+  * fixed callback setting for FileResolver
 
- -- ponomarev <ponomarev@yandex-team.ru>  Mon, 17 Oct 2011 19:06:44 +0400
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 17 Oct 2011 19:10:02 +0400
 
 xscript (5.73.34-1) unstable; urgency=low
 
