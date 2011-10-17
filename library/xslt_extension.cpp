@@ -1,5 +1,8 @@
 #include "settings.h"
 
+#include <stdio.h>
+#include <string.h>
+
 #include <sstream>
 #include <algorithm>
 #include <exception>
@@ -804,6 +807,46 @@ xscriptXsltDomain(xmlXPathParserContextPtr ctxt, int nargs) {
 
 
 extern "C" void
+xscriptXsltCRC32(xmlXPathParserContextPtr ctxt, int nargs) {
+
+    log()->entering("xscript:crc32");
+    if (ctxt == NULL) {
+        return;
+    }
+
+    XsltParamFetcher params(ctxt, nargs);
+
+    if (1 != nargs) {
+        XmlUtils::reportXsltError("xscript:crc32: bad param count", ctxt);
+        return;
+    }
+
+    const char* str = params.str(0);
+    if (NULL == str) {
+        XmlUtils::reportXsltError("xscript:crc32: bad parameter", ctxt);
+        xmlXPathReturnEmptyNodeSet(ctxt);
+        return;
+    }
+
+    try {
+        boost::uint32_t value = HashUtils::crc32(str, strlen(str));
+        char buf[30];
+        snprintf(buf, sizeof(buf), "%u", value);
+        valuePush(ctxt, xmlXPathNewCString(&buf[0]));
+    }
+    catch (const std::exception &e) {
+        XmlUtils::reportXsltError("xscript:crc32: caught exception: " + std::string(e.what()), ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+    catch (...) {
+        XmlUtils::reportXsltError("xscript:crc32: caught unknown exception", ctxt);
+        ctxt->error = XPATH_EXPR_ERROR;
+        xmlXPathReturnEmptyNodeSet(ctxt);
+    }
+}
+
+extern "C" void
 xscriptXsltMD5(xmlXPathParserContextPtr ctxt, int nargs) {
 
     log()->entering("xscript:md5");
@@ -1508,6 +1551,7 @@ XsltParamFetcher::clear() {
 
 XsltExtensions::XsltExtensions() {
 
+    XsltFunctionRegisterer("crc32", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltCRC32);
     XsltFunctionRegisterer("md5", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltMD5);
     XsltFunctionRegisterer("wbr", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltWbr);
     XsltFunctionRegisterer("nl2br", XmlUtils::XSCRIPT_NAMESPACE, &xscriptXsltNl2br);
