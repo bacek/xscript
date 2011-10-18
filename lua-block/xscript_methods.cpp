@@ -1,6 +1,8 @@
 #include "settings.h"
 
+#include <stdio.h>
 #include <strings.h>
+
 #include <stdexcept>
 #include <boost/bind.hpp>
 #include <boost/current_function.hpp>
@@ -246,13 +248,33 @@ luaMD5(lua_State *lua) {
         luaCheckStackSize(lua, 1);
         std::string value = luaReadStack<std::string>(lua, 1);
 
-        std::string md5 = HashUtils::hexMD5(value.c_str());
+        std::string md5 = HashUtils::hexMD5(value.c_str(), value.size());
         lua_pushstring(lua, md5.c_str());
         // Our value on stack
         return 1;
     }
     catch (const std::exception &e) {
         log()->error("caught exception in [xscript:md5]: %s", e.what());
+        luaL_error(lua, e.what());
+    }
+    return 0;
+}
+
+static int
+luaCRC32(lua_State *lua) {
+    try {
+        luaCheckStackSize(lua, 1);
+        std::string str = luaReadStack<std::string>(lua, 1);
+
+        boost::uint32_t value = HashUtils::crc32(str);
+        char buf[30];
+        snprintf(buf, sizeof(buf), "%u", value);
+        lua_pushstring(lua, &buf[0]);
+        // Our value on stack
+        return 1;
+    }
+    catch (const std::exception &e) {
+        log()->error("caught exception in [xscript:crc32]: %s", e.what());
         luaL_error(lua, e.what());
     }
     return 0;
@@ -557,6 +579,9 @@ setupXScript(lua_State *lua, std::string * buf) {
     // Setup md5 function
     lua_pushcfunction(lua, &luaMD5);
     lua_setfield(lua, -2, "md5");
+
+    lua_pushcfunction(lua, &luaCRC32);
+    lua_setfield(lua, -2, "crc32");
 
     lua_pushcfunction(lua, &luaBase64Encode);
     lua_setfield(lua, -2, "base64encode");
