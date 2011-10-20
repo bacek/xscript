@@ -123,8 +123,10 @@ public:
     }
 
     HelperData(const std::string &url, long timeout) :
-        curl_(NULL), status_(0), url_(url), content_(new std::string),
-        sent_modified_since_(false) {
+        url_(url), content_(new std::string),
+        curl_(NULL), curl_code_(CURLE_OK), status_(0), 
+        sent_modified_since_(false), headers_received_(false), aborted_(false) {
+
         curl_ = curl_easy_init();
         if (NULL != curl_) {
             if (timeout > 0) {
@@ -140,9 +142,9 @@ public:
             setopt(CURLOPT_NOPROGRESS, static_cast<long>(1));
             setopt(CURLOPT_FORBID_REUSE, static_cast<long>(1));
 
-            setopt(CURLOPT_WRITEDATA, &*content_);
+            setopt(CURLOPT_WRITEDATA, this);
             setopt(CURLOPT_WRITEFUNCTION, &curlWrite);
-            setopt(CURLOPT_WRITEHEADER, &headers_);
+            setopt(CURLOPT_WRITEHEADER, this);
             setopt(CURLOPT_HEADERFUNCTION, &curlHeaders);
             setopt(CURLOPT_ENCODING, "gzip,deflate");
         }
@@ -155,12 +157,20 @@ public:
         }
     }
 
-   void check(CURLcode code) const {
+    static const char* errorText(CURLcode code) {
+        if (code > CURLE_OK && code < CURL_LAST) {
+            return curl_easy_strerror(code);
+        }
+        return NULL;
+    }
+
+    static void check(CURLcode code) {
         if (CURLE_OK != code) {
+            const char *error_text = errorText(code);
             if (CURLE_OPERATION_TIMEDOUT == code) {
-                throw HttpTimeoutError(curl_easy_strerror(code));
+                throw HttpTimeoutError(error_text);
             }
-            throw std::runtime_error(curl_easy_strerror(code));
+            throw std::runtime_error(error_text);
         }
     }
     
@@ -217,9 +227,25 @@ public:
     }
     
     long perform() {
-        check(curl_easy_perform(curl_));
+        curl_code_ = curl_easy_perform(curl_);
+        if (aborted_) {
+            curl_code_ = CURLE_ABORTED_BY_CALLBACK;
+            return 0; // unknown http status
+        }
+        check(curl_code_);
         getinfo(CURLINFO_RESPONSE_CODE, &status_);
         detectContentType();
+        return status_;
+    }
+
+    long fastPerform() {
+        curl_code_ = curl_easy_perform(curl_);
+        if (aborted_) {
+            curl_code_ = CURLE_ABORTED_BY_CALLBACK;
+        }
+        else if (CURLE_OK == curl_code_) {
+            getinfo(CURLINFO_RESPONSE_CODE, &status_);
+        }
         return status_;
     }
 
@@ -264,12 +290,16 @@ public:
         }
     }
     
- 
-    
     static size_t curlWrite(void *ptr, size_t size, size_t nmemb, void *arg) {
         try {
-            std::string *str = static_cast<std::string*>(arg);
-            str->append((const char*) ptr, size * nmemb);
+            HelperData *self = static_cast<HelperData*>(arg);
+            if (!self->headers_received_) {
+                self->headers_received_ = true;
+            }
+            if (self->aborted_) {
+                return -1; //CURL_WRITEFUNC_PAUSE;
+            }
+            self->content_->append((const char*) ptr, size * nmemb);
             return (size * nmemb);
         }
         catch(const std::exception &e) {
@@ -283,8 +313,11 @@ public:
 
     static size_t curlHeaders(void *ptr, size_t size, size_t nmemb, void *arg) {
         try {
-            typedef std::multimap<std::string, std::string> HeaderMap;
-            HeaderMap *m = static_cast<HeaderMap*>(arg);
+            HelperData *self = static_cast<HelperData*>(arg);
+            if (self->aborted_) {
+                return (size * nmemb);
+            }
+            HeaderMap *m = &(self->headers_);
             const char *header = (const char*) ptr, *pos = strchr(header, ':');
             if (NULL != pos) {
         
@@ -360,13 +393,18 @@ public:
         CRYPTO_thread_cleanup();
     }
     
+    typedef std::multimap<std::string, std::string> HeaderMap;
+
     HeadersHelper headers_helper_;
-    CURL *curl_;
-    long status_;
-    std::multimap<std::string, std::string> headers_;
+    HeaderMap headers_;
     std::string url_, charset_, content_type_;
     boost::shared_ptr<std::string> content_;
+    CURL *curl_;
+    CURLcode curl_code_;
+    long status_;
     bool sent_modified_since_;
+    bool headers_received_;
+    bool aborted_;
 
     static boost::once_flag init_flag_;
     static const std::string HEADER_NAME_LAST_MODIFIED;
@@ -405,13 +443,49 @@ HttpHelper::postData(const void* data, long size) {
 
 long
 HttpHelper::perform() {
-    log()->debug("%s", BOOST_CURRENT_FUNCTION);
+    log()->entering(BOOST_CURRENT_FUNCTION);
     return data_->perform();
+}
+
+long
+HttpHelper::fastPerform() {
+    log()->entering(BOOST_CURRENT_FUNCTION);
+    return data_->fastPerform();
 }
 
 long
 HttpHelper::status() const {
     return data_->status_;
+}
+
+long
+HttpHelper::errorCode() const {
+    return static_cast<long>(data_->curl_code_);
+}
+
+const char*
+HttpHelper::errorText() const {
+    return HelperData::errorText(data_->curl_code_);
+}
+
+const char*
+HttpHelper::errorTextByCode(long code) {
+    return HelperData::errorText((CURLcode)code);
+}
+
+bool
+HttpHelper::headersReceived() const {
+    return data_->headers_received_;
+}
+
+bool
+HttpHelper::aborted() const {
+    return data_->aborted_;
+}
+
+void
+HttpHelper::abort() {
+    data_->aborted_ = true;
 }
 
 const std::string&

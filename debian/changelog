@@ -1,3 +1,9 @@
+xscript (5.73.36-1) unstable; urgency=low
+
+  * HttpHelper: added new methods
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Thu, 20 Oct 2011 15:44:15 +0400
+
 xscript (5.73.35-2) unstable; urgency=low
 
   * added lua-function xscript.crc32(.)

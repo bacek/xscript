@@ -29,8 +29,19 @@ public:
     void postData(const void* data, long size);
 
     long perform();
+    long fastPerform(); // without checking result code and detecting content type
 
     long status() const;
+
+    long errorCode() const;
+    const char* errorText() const; // NULL if OK
+    static const char* errorTextByCode(long code); // NULL if code <= OK
+
+    bool headersReceived() const;
+    bool aborted() const;
+
+    void abort();
+
     const std::string& url() const;
     const std::string& charset() const;
 
