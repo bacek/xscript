@@ -166,7 +166,14 @@ luaResponseWrite(lua_State *lua) throw () {
         Context *ctx = getContext(lua);
         Response *response = ctx->response();
         std::string value = luaReadStack<std::string>(lua, 2);
-        bool result = response->writeBinaryChunk(value.c_str(), value.size(), *ctx);
+        bool result = false;
+        try {
+            result = response->writeBinaryChunk(value.c_str(), value.size(), *ctx);
+        }
+        catch (const std::exception &e) {
+	    // suppress write error
+	    log()->error("caught exception in lua response.write: %s", e.what());
+        }
         log()->debug("%s, write size: %u, status: %d", BOOST_CURRENT_FUNCTION, value.size(), result);
         lua_pushboolean(lua, result);
         return 1;
