@@ -172,7 +172,7 @@ luaResponseWrite(lua_State *lua) throw () {
         }
         catch (const std::exception &e) {
 	    // suppress write error
-	    log()->error("caught exception in lua response.write: %s", e.what());
+	    log()->warn("caught exception in lua response.write: %s", e.what());
         }
         log()->debug("%s, write size: %u, status: %d", BOOST_CURRENT_FUNCTION, value.size(), result);
         lua_pushboolean(lua, result);
