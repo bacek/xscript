@@ -480,7 +480,7 @@ Block::invoke_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext
     }
     catch (const SkipResultInvokeError &e) {
         log()->info("%s", errorMessage(e).c_str());
-        invoke_ctx = errorResult(fakeDoc());
+        invoke_ctx = fakeResult(false);
     }
     catch (const MetaInvokeError &e) {
         metaErrorResult(e, invoke_ctx);

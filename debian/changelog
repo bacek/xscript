@@ -1,3 +1,10 @@
+xscript (5.73.36-4) unstable; urgency=low
+
+  * do not skip cache for unexisted file with ignore-not-existed=yes
+  * fixed reportXsltError()
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Tue, 08 Nov 2011 19:50:43 +0300
+
 xscript (5.73.36-3) unstable; urgency=low
 
   * fixed response.write
