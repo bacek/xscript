@@ -456,7 +456,7 @@ XmlUtils::reportXsltError(const std::string &error, xsltTransformContextPtr tctx
     }
     else {
         log()->error("%s. Script: %s. Stylesheet: %s",
-            error.c_str(), ctx->script()->name().c_str(), ctx->xsltName().c_str());
+            error.c_str(), ctx->script()->name().c_str(), Stylesheet::getStylesheet(tctx)->name().c_str());
     }
 }
 
