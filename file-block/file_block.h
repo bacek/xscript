@@ -64,9 +64,6 @@ private:
     Method method_;
     bool processXInclude_;
     bool ignore_not_existed_;
-    
-    static const std::string FILENAME_PARAMNAME;
-    static const std::string INVOKE_SCRIPT_PARAMNAME;
 };
 
 

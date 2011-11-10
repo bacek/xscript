@@ -35,8 +35,19 @@
 
 namespace xscript {
 
-const std::string FileBlock::FILENAME_PARAMNAME = "FILEBLOCK_FILENAME_PARAMNAME";
-const std::string FileBlock::INVOKE_SCRIPT_PARAMNAME = "FILEBLOCK_INVOKE_SCRIPT_PARAMNAME";
+static const std::string FILENAME_PARAMNAME = "FILEBLOCK_FILENAME_PARAMNAME";
+static const std::string INVOKE_SCRIPT_PARAMNAME = "FILEBLOCK_INVOKE_SCRIPT_PARAMNAME";
+
+
+enum { GLB_MUTEX_SIZE = 57 };
+static boost::mutex global_mutex_[GLB_MUTEX_SIZE];
+
+inline static boost::mutex&
+getGlobalMutex(const void *ptr) {
+    size_t index = (reinterpret_cast<size_t>(ptr)) % GLB_MUTEX_SIZE;
+    return global_mutex_[index];
+}
+
 
 namespace fs = boost::filesystem;
 
@@ -378,19 +389,10 @@ FileBlock::invokeFile(const std::string &file_name,
 
     PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
     
-    Context* tmp_ctx = ctx.get();
-    unsigned int depth = 0;
-    while (tmp_ctx) {
+    for (Context* tmp_ctx = ctx.get(); tmp_ctx; tmp_ctx = tmp_ctx->parentContext().get()) {
         if (file_name == tmp_ctx->script()->name()) {
             throw InvokeError("self-recursive invocation");
         }
-
-        ++depth;
-        if (depth > FileExtension::max_invoke_depth_) {
-            throw InvokeError("too much recursive invocation depth");
-        }
-
-        tmp_ctx = tmp_ctx->parentContext().get();
     }
 
     boost::function<boost::shared_ptr<Script>()> script_creator =
@@ -399,8 +401,7 @@ FileBlock::invokeFile(const std::string &file_name,
     boost::shared_ptr<Script> script;
     if (tagged()) {
         std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + file_name;
-        Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);
-        script = ctx->param(script_param_name, script_creator, *mutex);
+        script = ctx->param(script_param_name, script_creator, getGlobalMutex(ctx.get()));
     }
     else {
         script = script_creator();
@@ -460,13 +461,12 @@ FileBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) con
         return key;
     }
 
-    Context::MutexPtr mutex = ctx->param<Context::MutexPtr>(FileExtension::FILE_CONTEXT_MUTEX);
     boost::function<boost::shared_ptr<Script>()> script_creator =
         boost::bind(&ScriptFactory::createScript, filename);
 
     std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + filename;
     boost::shared_ptr<Script> script =
-        const_cast<Context*>(ctx)->param(script_param_name, script_creator, *mutex);
+        const_cast<Context*>(ctx)->param(script_param_name, script_creator, getGlobalMutex(ctx));
         
     if (NULL == script.get()) {
         return key;

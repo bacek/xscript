@@ -22,11 +22,6 @@ public:
 
     virtual std::auto_ptr<Block> createBlock(Xml *owner, xmlNodePtr node);
     virtual void init(const Config *config);
-    
-private:
-    friend class FileBlock;
-    static unsigned int max_invoke_depth_;
-    static const std::string FILE_CONTEXT_MUTEX;
 };
 
 }
