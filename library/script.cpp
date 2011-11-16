@@ -3,7 +3,6 @@
 #include <cerrno>
 #include <cctype>
 #include <limits>
-#include <sstream>
 #include <stdexcept>
 #include <algorithm>
 
@@ -191,9 +190,7 @@ Script::ScriptData::block(const std::string &id, bool throw_error) const {
             }
         }
         if (throw_error) {
-            std::stringstream stream;
-            stream << "requested block with nonexistent id: " << id;
-            throw std::invalid_argument(stream.str());
+            throw std::invalid_argument("requested block with nonexistent id: " + id);
         }
         return NULL;
     }
@@ -832,9 +829,7 @@ Script::parse() {
     namespace fs = boost::filesystem;
     fs::path path(name());
     if (!fs::exists(path) || fs::is_directory(path)) {
-        std::stringstream stream;
-        stream << "can not open " << path.native_file_string();
-        throw std::runtime_error(stream.str());
+        throw CanNotOpenError(path.native_file_string());
     }
     XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar*)path.native_file_string().c_str()));
 

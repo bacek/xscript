@@ -11,6 +11,19 @@
 
 namespace xscript {
 
+static const std::string STR_CAN_NOT_OPEN_PREFIX = "can not open ";
+static const std::string STR_EMPTY_KEY = "empty key";
+
+
+CanNotOpenError::CanNotOpenError(const std::string &filename) :
+    UnboundRuntimeError(STR_CAN_NOT_OPEN_PREFIX + filename)
+{
+}
+
+CanNotOpenError::~CanNotOpenError() throw () {
+}
+
+
 ParseError::ParseError(const std::string &error) : UnboundRuntimeError(error)
 {}
 
@@ -43,7 +56,7 @@ InvokeError::InvokeError(const std::string &error, const InfoMapType &info) :
 void
 InvokeError::add(const std::string &name, const std::string &value) {
     if (name.empty()) {
-        throw std::runtime_error("empty key");
+        throw std::runtime_error(STR_EMPTY_KEY);
     }
     if (!value.empty()) {
         std::pair<std::string, std::string> info = std::make_pair(name, value);
@@ -72,7 +85,7 @@ std::string
 InvokeError::what_info() const throw() {
 
     std::stringstream stream;
-    stream << what() << ". ";
+    stream << whatStr() << ". ";
 
     for(InvokeError::InfoMapType::const_iterator it = info_.begin();
         it != info_.end();

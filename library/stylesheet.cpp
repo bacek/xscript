@@ -15,6 +15,7 @@
 
 #include "xscript/block.h"
 #include "xscript/context.h"
+#include "xscript/exception.h"
 #include "xscript/extension.h"
 #include "xscript/logger.h"
 #include "xscript/message_interface.h"
@@ -421,9 +422,7 @@ Stylesheet::parse() {
 
     fs::path path(name());
     if (!fs::exists(path) || fs::is_directory(path)) {
-        std::stringstream stream;
-        stream << "can not open " << path.native_file_string();
-        throw std::runtime_error(stream.str());
+        throw CanNotOpenError(path.native_file_string());
     }
 
     XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar *)path.native_file_string().c_str()));

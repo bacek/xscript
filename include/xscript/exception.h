@@ -11,10 +11,13 @@ namespace xscript {
 
 class UnboundRuntimeError : public std::exception {
 public:
-    UnboundRuntimeError(const std::string &error) : error_(error) {}
+    explicit UnboundRuntimeError(const std::string &error) : error_(error) {}
     virtual ~UnboundRuntimeError() throw () {}
     virtual const char* what() const throw () {
         return error_.c_str();
+    }
+    const std::string& whatStr() const throw () {
+        return error_;
     }
     void append(const std::string &str) {
         error_.append(str);
@@ -24,16 +27,22 @@ private:
     std::string error_;
 };
 
+class CanNotOpenError : public UnboundRuntimeError {
+public:
+    explicit CanNotOpenError(const std::string &filename);
+    virtual ~CanNotOpenError() throw ();
+};
+
 class BadRequestError : public UnboundRuntimeError {
 public:
-    BadRequestError(const std::string &error) : UnboundRuntimeError(error) {}
+    explicit BadRequestError(const std::string &error) : UnboundRuntimeError(error) {}
 };
 
 class ParseError : public UnboundRuntimeError {
 public:
     typedef std::vector<std::string> InfoType;
 
-    ParseError(const std::string &error);
+    explicit ParseError(const std::string &error);
     virtual ~ParseError() throw () {}
 
     void add(const std::string &info);
@@ -47,7 +56,7 @@ class InvokeError : public UnboundRuntimeError {
 public:
     typedef std::vector<std::pair<std::string, std::string> > InfoMapType;
 
-    InvokeError(const std::string &error);
+    explicit InvokeError(const std::string &error);
     InvokeError(const std::string &error, XmlNodeHelper node);
     InvokeError(const std::string &error, const std::string &name, const std::string &value);
     InvokeError(const std::string &error, const InfoMapType &info);
@@ -71,7 +80,7 @@ private:
 
 class CriticalInvokeError : public InvokeError {
 public:
-    CriticalInvokeError(const std::string &error) : InvokeError(error) {}
+    explicit CriticalInvokeError(const std::string &error) : InvokeError(error) {}
     CriticalInvokeError(const std::string &error, XmlNodeHelper node) :
         InvokeError(error, node) {}
     CriticalInvokeError(const std::string &error, const std::string &name, const std::string &value) :
@@ -80,14 +89,14 @@ public:
 
 class SkipResultInvokeError : public InvokeError {
 public:
-    SkipResultInvokeError(const std::string &error) : InvokeError(error) {}
+    explicit SkipResultInvokeError(const std::string &error) : InvokeError(error) {}
     SkipResultInvokeError(const std::string &error, const std::string &name, const std::string &value) :
         InvokeError(error, name, value) {}
 };
 
 class MetaInvokeError : public InvokeError {
 public:
-    MetaInvokeError(const std::string &error) : InvokeError(error) {}
+    explicit MetaInvokeError(const std::string &error) : InvokeError(error) {}
     MetaInvokeError(const InvokeError &error) : InvokeError(error.what(), error.info()) {}
 };
 
