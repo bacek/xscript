@@ -1,3 +1,10 @@
+xscript (5.73.36-6) unstable; urgency=low
+
+  * suppress open file error for file:invoke and ignore_not_existed="yes"
+  * strip "\n" from log message on process block error
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Wed, 16 Nov 2011 12:31:09 +0300
+
 xscript (5.73.36-5) unstable; urgency=low
 
   * file-block: remove max-invoke-depth
