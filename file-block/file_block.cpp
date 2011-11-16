@@ -445,6 +445,8 @@ FileBlock::testFileDoc(bool result, const std::string &file) const {
     return doc;
 }
 
+static const std::string STR_SCRIPTNAME_DELIMITER = ". Script: ";
+
 std::string
 FileBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
     
@@ -454,10 +456,12 @@ FileBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) con
         return key;
     }
 
+    bool is_invoke = isInvoke();
+    key.reserve(filename.size() + (is_invoke ? 300 : 1));
     key.push_back('|');
     key.append(filename);
 
-    if (!isInvoke()) {
+    if (!is_invoke) {
         return key;
     }
 
@@ -465,14 +469,25 @@ FileBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) con
         boost::bind(&ScriptFactory::createScript, filename);
 
     std::string script_param_name = INVOKE_SCRIPT_PARAMNAME + filename;
-    boost::shared_ptr<Script> script =
-        const_cast<Context*>(ctx)->param(script_param_name, script_creator, getGlobalMutex(ctx));
-        
+
+    boost::shared_ptr<Script> script;
+    try {
+        script = const_cast<Context*>(ctx)->param(script_param_name, script_creator, getGlobalMutex(ctx));
+    }
+    catch (const CanNotOpenError &e) {
+	if (ignore_not_existed_) {
+            throw SkipResultInvokeError(e.whatStr());
+	}
+	throw;
+    }
+
     if (NULL == script.get()) {
         return key;
     }
 
-    key.append(". Script: ").append(script->createBlockTagKey(ctx));
+    std::string script_key = script->createBlockTagKey(ctx);
+    key.reserve(STR_SCRIPTNAME_DELIMITER.size() + script_key.size());
+    key.append(STR_SCRIPTNAME_DELIMITER).append(script_key);
     return key;
 }
 

@@ -142,6 +142,9 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
             cache_tag.last_modified = 1;
         }
     }
+    catch (SkipResultInvokeError &) {
+        throw;
+    }
     catch (const MetaInvokeError &e) {
         log()->error("caught meta exception while fetching and processing cached doc: %s", e.what());
         if (processCachedDoc(ctx, invoke_ctx, cache_tag)) {
@@ -213,7 +216,7 @@ TaggedBlock::postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCo
         callMetaBeforeCacheSaveLua(ctx, invoke_ctx);
     }
     catch (const InvokeError &e) {
-        throw MetaInvokeError(e.what());
+        throw MetaInvokeError(e.whatStr());
     }
     catch (const std::exception &e) {
         throw MetaInvokeError(e.what());
