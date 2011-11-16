@@ -479,7 +479,7 @@ Block::invoke_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext
         OperationMode::instance()->assignBlockError(ctx.get(), this, full_error);
     }
     catch (const SkipResultInvokeError &e) {
-        log()->info("%s", errorMessage(e).c_str());
+        log()->info("suppressed : %s", errorMessage(e).c_str());
         invoke_ctx = fakeResult(false);
     }
     catch (const MetaInvokeError &e) {
@@ -711,7 +711,6 @@ Block::errorDoc(const InvokeError &error,
     
     xmlNewProp(main_node.get(), (const xmlChar*)"error", (const xmlChar*)error.what());
     std::stringstream stream;
-    stream << error.what() << "\n";
     
     xmlNewProp(main_node.get(), (const xmlChar*)"block", (const xmlChar*)name());
     stream << "block: " << name() << " ";
@@ -745,9 +744,13 @@ Block::errorDoc(const InvokeError &error,
     
     xmlDocSetRootElement(doc.get(), main_node.release());
     
-    full_error.assign(stream.str());
-    log()->error("%s", full_error.c_str());
-    
+    const std::string err = stream.str();
+    const std::string &error_str = error.whatStr();
+
+    full_error.reserve(error_str.size() + 1 + err.size());
+    full_error.assign(error_str).append("\n", 1).append(err);
+
+    log()->error("%s : %s", error_str.c_str(), err.c_str());
     return doc;
 }
 
@@ -768,7 +771,7 @@ Block::errorLocation() const {
 std::string
 Block::errorMessage(const InvokeError &error) const {
     std::stringstream stream;
-    stream << error.what() << errorLocation();
+    stream << error.whatStr() << " " << errorLocation();
     const InvokeError::InfoMapType& info = error.info();
     for (InvokeError::InfoMapType::const_iterator it = info.begin();
          it != info.end();
