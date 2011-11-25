@@ -1,3 +1,10 @@
+xscript (5.73.36-7) unstable; urgency=low
+
+  * suppress error messages about stopped context on start invoking block
+  * set root element doc node into context on processXPointer for any block
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 25 Nov 2011 13:36:37 +0300
+
 xscript (5.73.36-6) unstable; urgency=low
 
   * suppress open file error for file:invoke and ignore_not_existed="yes"
