@@ -12,6 +12,8 @@
 namespace xscript {
 
 static const std::string STATE_ARG_PARAM_NAME = "StateArg";
+static const std::string STRIP_XPOINTER = "/..";
+static const char STRIP_CHAR = '.';
 
 DynamicParam::DynamicParam() : state_(false)
 {}
@@ -83,6 +85,15 @@ XPathExpr::expression(const Context *ctx) const {
     return expression_.value(ctx);
 }
 
+bool
+XPathExpr::stripAll() const {
+    if (expression_.fromState()) {
+        return false;
+    }
+    const std::string &val = expression_.value();
+    return *val.c_str() == STRIP_CHAR || val == STRIP_XPOINTER;
+}
+
 void
 XPathExpr::compile() {
     try {
@@ -114,8 +125,15 @@ XPathExpr::eval(xmlXPathContextPtr context, const Context *ctx) const {
                     compiled_expr_.get(), context));
         }
         else {
-            xpathObj = XmlXPathObjectHelper(xmlXPathEvalExpression(
-                    (const xmlChar *)expression(ctx).c_str(), context));
+            const std::string expr = expression(ctx);
+            if (*expr.c_str() == STRIP_CHAR) {
+                xpathObj = XmlXPathObjectHelper(xmlXPathEvalExpression(
+                        (const xmlChar *)STRIP_XPOINTER.c_str(), context));
+            }
+            else {
+                xpathObj = XmlXPathObjectHelper(xmlXPathEvalExpression(
+                        (const xmlChar *)expr.c_str(), context));
+            }
         }
         XmlUtils::throwUnless(NULL != xpathObj.get());
         return xpathObj;

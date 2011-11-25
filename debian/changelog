@@ -1,3 +1,9 @@
+xscript (5.73.36-8) unstable; urgency=low
+
+  * strip all output if xpointer starts with '.'
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 25 Nov 2011 15:30:58 +0300
+
 xscript (5.73.36-7) unstable; urgency=low
 
   * suppress error messages about stopped context on start invoking block
