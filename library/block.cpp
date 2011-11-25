@@ -206,9 +206,7 @@ Block::param(const std::string &id, bool throw_error) const {
             }
         }
         if (throw_error) {
-            std::stringstream stream;
-            stream << "param with id not found: " << id;
-            throw std::invalid_argument(stream.str());
+            throw std::invalid_argument("param with id not found: " + id);
         }
         return NULL;
     }
@@ -451,12 +449,13 @@ Block::invoke(boost::shared_ptr<Context> ctx) {
 
 boost::shared_ptr<InvokeContext>
 Block::invoke_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
-    log()->debug("%s", BOOST_CURRENT_FUNCTION);
+    log()->entering(BOOST_CURRENT_FUNCTION);
 
     if (ctx->stopped()) {
-        log()->error("Context already stopped. Cannot invoke block. Owner: %s. Block: %s. Method: %s",
+        log()->info("Context already stopped. Cannot invoke block. Owner: %s. Block: %s. Method: %s",
             owner()->name().c_str(), name(), data_->method_.c_str());
-        return fakeResult(true);
+        ctx->setNoCache();
+        return fakeResult(false);
     }
 
     try {
@@ -501,7 +500,7 @@ Block::invoke_Ex(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext
 
 void
 Block::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
-    log()->debug("%s", BOOST_CURRENT_FUNCTION);
+    log()->entering(BOOST_CURRENT_FUNCTION);
 
     // Check validators for each param before calling it.
     for(std::vector<Param*>::const_iterator i = data_->params_.begin();
