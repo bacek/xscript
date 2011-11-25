@@ -43,6 +43,8 @@
 
 namespace xscript {
 
+static const std::string STRIP_XPOINTER = "/..";
+
 InvokeHelper::InvokeHelper(boost::shared_ptr<Context> ctx) : ctx_(ctx) {
     boost::shared_ptr<Context> ctx_tmp = ctx->parentContext();
     while (ctx_tmp.get()) {
@@ -273,7 +275,7 @@ Block::processXPointer(const InvokeContext *invoke_ctx, xmlDocPtr doc, xmlDocPtr
         return node;
     }
 
-    if ("/.." == xpointer->value()) {
+    if (STRIP_XPOINTER == xpointer->value()) {
         return processEmptyXPointer(invoke_ctx, meta_doc, insert_node, func);
     }
 
@@ -1161,7 +1163,7 @@ Block::parseXPointerExpr(const char *value, const char *type) {
         throw std::runtime_error("StateArg type in xpointer node allowed only");
     }
 
-    if ("/.." == data_->xpointer_expr_->value() && !data_->xpointer_expr_->fromState()) {
+    if (STRIP_XPOINTER == data_->xpointer_expr_->value() && !data_->xpointer_expr_->fromState()) {
         disableOutput(true);
     }
     else {
