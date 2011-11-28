@@ -1,3 +1,10 @@
+xscript (5.73.36-9) unstable; urgency=low
+
+  * strip all output if xpath/xpointer starts with "/.." or ".."
+    or equal "/", ".", "/."
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 28 Nov 2011 17:38:18 +0300
+
 xscript (5.73.36-8) unstable; urgency=low
 
   * strip all output if xpointer starts with '.'

@@ -22,7 +22,7 @@ public:
     const std::string& value() const;
     bool fromState() const;
 private:
-    bool isStateType(const char *type) const;
+    static bool isStateType(const char *type);
 private:
     std::string value_;
     bool state_;

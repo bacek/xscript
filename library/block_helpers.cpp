@@ -1,19 +1,21 @@
 #include "settings.h"
 
-#ifdef HAVE_DMALLOC_H
-#include <dmalloc.h>
-#endif
+#include <string.h>
+#include <strings.h>
 
 #include "internal/block_helpers.h"
 #include "xscript/context.h"
 #include "xscript/state.h"
 #include "xscript/xml_util.h"
 
+#ifdef HAVE_DMALLOC_H
+#include <dmalloc.h>
+#endif
+
 namespace xscript {
 
 static const std::string STATE_ARG_PARAM_NAME = "StateArg";
 static const std::string STRIP_XPOINTER = "/..";
-static const char STRIP_CHAR = '.';
 
 DynamicParam::DynamicParam() : state_(false)
 {}
@@ -50,7 +52,7 @@ DynamicParam::fromState() const {
 }
 
 bool
-DynamicParam::isStateType(const char *type) const {
+DynamicParam::isStateType(const char *type) {
     return type && strcasecmp(type, STATE_ARG_PARAM_NAME.c_str()) == 0;
 }
 
@@ -85,13 +87,34 @@ XPathExpr::expression(const Context *ctx) const {
     return expression_.value(ctx);
 }
 
+static bool
+stripAllOutput(const std::string &expr) {
+    if (expr.empty()) {
+        return false;
+    }
+    char ch = expr[0];
+    if (expr.size() == 1) {
+        return ch == '.' || ch == '/'; // "." || "/"
+    }
+
+    if (expr[1] != '.') {
+        return false;
+    }
+
+    // second char '.'
+    if (ch == '/') {
+        return expr.size() == 2; // "/."
+    }
+    return ch == '.'; // starts with ".."
+}
+
 bool
 XPathExpr::stripAll() const {
     if (expression_.fromState()) {
         return false;
     }
-    const std::string &val = expression_.value();
-    return *val.c_str() == STRIP_CHAR || val == STRIP_XPOINTER;
+    const std::string &expr = expression_.value();
+    return !strncmp(expr.c_str(), STRIP_XPOINTER.c_str(), STRIP_XPOINTER.size()) || stripAllOutput(expr);
 }
 
 void
@@ -126,7 +149,7 @@ XPathExpr::eval(xmlXPathContextPtr context, const Context *ctx) const {
         }
         else {
             const std::string expr = expression(ctx);
-            if (*expr.c_str() == STRIP_CHAR) {
+            if (stripAllOutput(expr)) {
                 xpathObj = XmlXPathObjectHelper(xmlXPathEvalExpression(
                         (const xmlChar *)STRIP_XPOINTER.c_str(), context));
             }

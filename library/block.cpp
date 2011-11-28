@@ -279,7 +279,8 @@ Block::processXPointer(const InvokeContext *invoke_ctx, xmlDocPtr doc, xmlDocPtr
 
     XmlXPathContextHelper context(xmlXPathNewContext(doc));
     XmlUtils::throwUnless(NULL != context.get());
-    context->node = xmlDocGetRootElement(doc);
+    //context->node = root_node && root_node->parent ? root_node->parent : root_node;
+    context->node = root_node;
 
     XmlUtils::regiserNsList(context.get(), data_->namespaces_);
     XmlXPathObjectHelper xpathObj = xpointer->eval(context.get(), NULL);
