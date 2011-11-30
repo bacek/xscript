@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <algorithm>
 
+#include <string.h>
+
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/lexical_cast.hpp>
@@ -68,7 +70,11 @@ struct Block::BlockData {
     ~BlockData();
     void parseNamespaces();
     void property(const char *name, const char *value);
-    
+
+    std::string errorLocation() const;
+    std::string info() const;
+    std::string xsltInfo(const std::string &xslt) const;
+
     const Extension *extension_;
     Xml *owner_;
     xmlNodePtr node_;
@@ -83,15 +89,12 @@ struct Block::BlockData {
     bool disable_output_;
 
     std::auto_ptr<MetaBlock> meta_block_;
-
-    static const std::string XSCRIPT_INVOKE_FAILED;
-    static const std::string META_INVOKE_FAILED;
-    static const std::string XSCRIPT_INVOKE_INFO;
 };
 
-const std::string Block::BlockData::XSCRIPT_INVOKE_FAILED = "xscript_invoke_failed";
-const std::string Block::BlockData::META_INVOKE_FAILED = "meta_invoke_failed";
-const std::string Block::BlockData::XSCRIPT_INVOKE_INFO = "xscript_invoke_info";
+static const std::string XSCRIPT_INVOKE_FAILED = "xscript_invoke_failed";
+static const std::string META_INVOKE_FAILED = "meta_invoke_failed";
+static const std::string XSCRIPT_INVOKE_INFO = "xscript_invoke_info";
+static const std::string STR_BAD_BLOCK_ATTRIBUTE = "bad block attribute: ";
 
 Block::BlockData::BlockData(const Extension *ext, Xml *owner, xmlNodePtr node, Block *block) :
     extension_(ext), owner_(owner), node_(node), block_(block), xpointer_expr_(new XPathExpr()),
@@ -115,6 +118,62 @@ Block::BlockData::parseNamespaces() {
             }
         }
     }
+}
+
+std::string
+Block::BlockData::errorLocation() const {
+
+    const char *block_name = extension_->name();
+    size_t block_name_size = strlen(block_name);
+
+    std::string str;
+    str.reserve(block_name_size + id_.size() + method_.size() + 30);
+
+    str.append("[Block: ").append(block_name, block_name_size);
+
+    if (!method_.empty()) {
+        str.append(", method: ").append(method_);
+    }
+    if (!id_.empty()) {
+        str.append(", id: ").append(id_);
+    }
+    str.push_back(']');
+    return str;
+}
+
+std::string
+Block::BlockData::info() const {
+
+    const std::string &owner_name = owner_->name();
+
+    const char *block_name = extension_->name();
+    size_t block_name_size = strlen(block_name);
+
+    std::string str;
+    str.reserve(owner_name.size() + block_name_size + id_.size() + method_.size() + 50);
+
+    str.append("block: ").append(block_name, block_name_size);
+
+    if (!id_.empty()) {
+        str.append(", block-id: ").append(id_);
+    }
+    if (!method_.empty()) {
+        str.append(", method: ").append(method_);
+    }
+    str.append(", owner: ").append(owner_name);
+    return str;
+}
+
+std::string
+Block::BlockData::xsltInfo(const std::string &xslt) const {
+
+    std::string str_info = info();
+
+    std::string str;
+    str.reserve(xslt.size() + str_info.size() + 20);
+    str.append("per-block-xslt: ").append(xslt).append(" ,", 2).append(str_info);
+
+    return str;
 }
 
 void
@@ -153,9 +212,7 @@ Block::BlockData::property(const char *name, const char *value) {
         block_->parseXPointerExpr(value, NULL);
     }
     else {
-        std::stringstream stream;
-        stream << "bad block attribute: " << name;
-        throw std::invalid_argument(stream.str());
+        throw std::invalid_argument(STR_BAD_BLOCK_ATTRIBUTE + name);
     }
 }
 
@@ -318,6 +375,12 @@ Block::processXPointer(const InvokeContext *invoke_ctx, xmlDocPtr doc, xmlDocPtr
     if (XML_ATTRIBUTE_NODE == current_node->type) {
         current_node = current_node->children;
     }
+    else if (current_node->type >= XML_DOCUMENT_NODE) {
+        log()->error("strange xpointer result node-type: %d, xpointer: \"%s\", %s => empty",
+            current_node->type, xpointer->value().c_str(),
+            data_->info().c_str());
+        return processEmptyXPointer(invoke_ctx, meta_doc, insert_node, func);
+    }
     node = xmlCopyNode(current_node, 1);
     func(insert_node, node);
     xmlNodePtr last_input_node = node;
@@ -325,6 +388,12 @@ Block::processXPointer(const InvokeContext *invoke_ctx, xmlDocPtr doc, xmlDocPtr
         xmlNodePtr current_node = nodeset->nodeTab[i];
         if (XML_ATTRIBUTE_NODE == current_node->type) {
             current_node = current_node->children;
+        }
+        else if (current_node->type >= XML_DOCUMENT_NODE) {
+            log()->error("strange xpointer result [%d] node-type: %d, xpointer: \"%s\", %s => skip node",
+                i, current_node->type, xpointer->value().c_str(),
+                data_->info().c_str());
+            continue;
         }
         xmlNodePtr node = xmlCopyNode(current_node, 1);
         xmlAddNextSibling(last_input_node, node);
@@ -388,12 +457,12 @@ Block::parse() {
         postParse();
     }
     catch (ParseError &e) {
-        e.add(errorLocation());
+        e.add(data_->errorLocation());
         throw e;
     }
     catch (const std::exception &e) {
         ParseError error(e.what());
-        error.add(errorLocation());
+        error.add(data_->errorLocation());
         throw error;
     }
 }
@@ -606,22 +675,12 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx,
     }
     boost::shared_ptr<Stylesheet> sh = StylesheetFactory::createStylesheet(xslt);
     {
-        std::stringstream str;
-        str << "per-block-xslt: " << xslt;
-        str << ", block: " << name();
-        if (!id().empty()) {
-            str << ", block-id: " << id();
-        }
-        if (!method().empty()) {
-            str << ", method: " << method();
-        }
-        str << ", owner: " << owner()->name();
-        PROFILER(log(), str.str())
+        PROFILER(log(), data_->xsltInfo(xslt));
         Object::applyStylesheet(sh, ctx, invoke_ctx, doc, XmlUtils::xmlVersionNumber() < 20619);
     }
 
     XmlUtils::throwUnless(NULL != doc.get());
-    log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
+    log()->debug("Block::applyStylesheet, got source document: %p", doc.get());
 
     bool result = true;
     if (XmlUtils::hasXMLError()) {
@@ -645,8 +704,8 @@ void
 Block::errorResult(const char *error, bool info, boost::shared_ptr<InvokeContext> &invoke_ctx) const {
     std::string full_error;
     InvokeError invoke_error(error);
-    XmlDocHelper doc = errorDoc(invoke_error, info ? BlockData::XSCRIPT_INVOKE_INFO.c_str() :
-        BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error);
+    XmlDocHelper doc = errorDoc(invoke_error, info ? XSCRIPT_INVOKE_INFO.c_str() :
+    	XSCRIPT_INVOKE_FAILED.c_str(), full_error);
     
     invoke_ctx->resultDoc(doc);
     invoke_ctx->metaDoc(XmlDocSharedHelper());
@@ -664,23 +723,23 @@ boost::shared_ptr<InvokeContext>
 Block::errorResult(const InvokeError &error, bool info) const {
     std::string full_error;
     if (info) {
-        return errorResult(errorDoc(error, BlockData::XSCRIPT_INVOKE_INFO.c_str(), full_error));    
+        return errorResult(errorDoc(error, XSCRIPT_INVOKE_INFO.c_str(), full_error));    
     }
-    return errorResult(errorDoc(error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error));
+    return errorResult(errorDoc(error, XSCRIPT_INVOKE_FAILED.c_str(), full_error));
 }
 
 void
 Block::metaErrorResult(const MetaInvokeError &error,
     boost::shared_ptr<InvokeContext> &invoke_ctx) const {
     std::string full_error;
-    XmlDocHelper doc(errorDoc(error, BlockData::META_INVOKE_FAILED.c_str(), full_error));
+    XmlDocHelper doc(errorDoc(error, META_INVOKE_FAILED.c_str(), full_error));
     invoke_ctx->metaDoc(doc);
     invoke_ctx->resultType(InvokeContext::META_ERROR);
 }
 
 boost::shared_ptr<InvokeContext>
 Block::errorResult(const InvokeError &error, std::string &full_error) const {
-    return errorResult(errorDoc(error, BlockData::XSCRIPT_INVOKE_FAILED.c_str(), full_error));
+    return errorResult(errorDoc(error, XSCRIPT_INVOKE_FAILED.c_str(), full_error));
 }
 
 boost::shared_ptr<InvokeContext>
@@ -757,22 +816,13 @@ Block::errorDoc(const InvokeError &error,
 
 std::string
 Block::errorLocation() const {
-    std::stringstream stream;
-    stream << "[Block: " << name();
-    if (!method().empty()) {
-        stream << ", method: " << method();
-    }
-    if (!id().empty()) {
-        stream << ", id: " << id();
-    }
-    stream << "]";
-    return stream.str();
+    return data_->errorLocation();
 }
 
 std::string
 Block::errorMessage(const InvokeError &error) const {
     std::stringstream stream;
-    stream << error.whatStr() << " " << errorLocation();
+    stream << error.whatStr() << " " << data_->errorLocation();
     const InvokeError::InfoMapType& info = error.info();
     for (InvokeError::InfoMapType::const_iterator it = info.begin();
          it != info.end();

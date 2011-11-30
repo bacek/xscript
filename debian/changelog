@@ -1,3 +1,9 @@
+xscript (5.73.36-10) unstable; urgency=low
+
+  * suppress crash if block xpointer returns strange node types
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Wed, 30 Nov 2011 12:45:01 +0300
+
 xscript (5.73.36-9) unstable; urgency=low
 
   * strip all output if xpath/xpointer starts with "/.." or ".."
