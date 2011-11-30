@@ -623,6 +623,10 @@ Block::invokeCheckThreadedEx(boost::shared_ptr<Context> ctx, unsigned int slot) 
 
 void
 Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) { 
+    if (!tagged() && ctx->stopped()) {
+        throw SkipResultInvokeError("context is already stopped, cannot process response");
+    }
+
     XmlDocSharedHelper doc = invoke_ctx->resultDoc();
     if (NULL == doc.get()) {
         throw InvokeError("null response document");
@@ -630,10 +634,6 @@ Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeC
 
     if (NULL == xmlDocGetRootElement(doc.get())) {
         throw InvokeError("got document with no root");
-    }
-
-    if (!tagged() && ctx->stopped()) {
-        throw InvokeError("context is already stopped, cannot process response");
     }
 
     bool is_error_doc = Policy::instance()->isErrorDoc(doc.get());
