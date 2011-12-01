@@ -1,7 +1,7 @@
 Summary:       XScript is xml-based application server written in C++
 Name:          xscript
 Version:       5.73.36
-Release:       10%{?dist}
+Release:       11%{?dist}
 Group:         System Environment/Libraries
 License:       GPLv2
 Source:        %{name}-%{version}.tar.bz2
