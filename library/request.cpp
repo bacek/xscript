@@ -359,7 +359,11 @@ Request::variableNames(std::vector<std::string> &v) const {
 
 unsigned int
 Request::countFiles() const {
-    return data_->files_.size();
+    unsigned int sz = 0;
+    for (std::map<std::string, RequestFiles>::const_iterator i = data_->files_.begin(), end = data_->files_.end(); i != end; ++i) {
+        sz += i->second.size();
+    }
+    return sz;
 }
 
 bool
@@ -369,27 +373,30 @@ Request::hasFile(const std::string &name) const {
 
 const std::string&
 Request::remoteFileName(const std::string &name) const {
-    std::map<std::string, File>::const_iterator i = data_->files_.find(name);
+    std::map<std::string, RequestFiles>::const_iterator i = data_->files_.find(name);
     if (data_->files_.end() != i) {
-        return i->second.remoteName();
+        const RequestFile &f = i->second.front();
+        return f.remoteName();
     }
     return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
 Request::remoteFileType(const std::string &name) const {
-    std::map<std::string, File>::const_iterator i = data_->files_.find(name);
+    std::map<std::string, RequestFiles>::const_iterator i = data_->files_.find(name);
     if (data_->files_.end() != i) {
-        return i->second.type();
+        const RequestFile &f = i->second.front();
+        return f.type();
     }
     return StringUtils::EMPTY_STRING;
 }
 
 std::pair<const char*, std::streamsize>
 Request::remoteFile(const std::string &name) const {
-    std::map<std::string, File>::const_iterator i = data_->files_.find(name);
+    std::map<std::string, RequestFiles>::const_iterator i = data_->files_.find(name);
     if (data_->files_.end() != i) {
-        return i->second.data();
+        const RequestFile &f = i->second.front();
+        return f.data();
     }
     return std::make_pair<const char*, std::streamsize>(NULL, 0);
 }
@@ -397,6 +404,15 @@ Request::remoteFile(const std::string &name) const {
 void
 Request::fileNames(std::vector<std::string> &v) const {
     Parser::keys(data_->files_, v);
+}
+
+const RequestFiles*
+Request::getFiles(const std::string &name) const {
+    std::map<std::string, RequestFiles>::const_iterator i = data_->files_.find(name);
+    if (data_->files_.end() == i) {
+        return NULL;
+    }
+    return &(i->second);
 }
 
 bool

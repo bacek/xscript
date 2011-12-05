@@ -12,8 +12,11 @@
 #include "xscript/functors.h"
 #include "xscript/string_utils.h"
 #include "xscript/types.h"
+#include "xscript/request_file.h"
 
 namespace xscript {
+
+typedef std::vector<RequestFile> RequestFiles;
 
 class RequestImpl;
 
@@ -82,6 +85,7 @@ public:
     const std::string& remoteFileType(const std::string &name) const;
     std::pair<const char*, std::streamsize> remoteFile(const std::string &name) const;
     void fileNames(std::vector<std::string> &v) const;
+    const RequestFiles* getFiles(const std::string &name) const;
 
     bool isSecure() const;
     bool isBot() const;

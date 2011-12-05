@@ -2,6 +2,7 @@
 #define _XSCRIPT_INTERNAL_REQUEST_IMPL_H_
 
 #include <string>
+#include <map>
 
 #include <boost/thread/mutex.hpp>
 
@@ -9,8 +10,6 @@
 #include "xscript/types.h"
 
 namespace xscript {
-
-class File;
 
 class RequestImpl {
 public:
@@ -22,13 +21,15 @@ public:
     friend class Request::AttachHandler;
     
 private:
+    void insertFile(const std::string &name, const std::map<Range, Range, RangeCILess> &m, const Range &content);
+
     mutable boost::mutex mutex_;
     VarMap vars_;
     CookieMap cookies_;
     std::vector<char> body_;
     HeaderMap headers_;
-    
-    std::map<std::string, File> files_;
+
+    std::map<std::string, RequestFiles> files_;
     std::vector<StringUtils::NamedValue> args_;
     bool is_bot_;
 
@@ -55,20 +56,6 @@ private:
     static const std::string QUERY_STRING_KEY;
     static const std::string REQUEST_METHOD_KEY;
     static const std::string REQUEST_URI_KEY;
-};
-
-class File {
-public:
-    File(const std::map<Range, Range, RangeCILess> &m, const Range &content);
-
-    const std::string& type() const;
-    const std::string& remoteName() const;
-
-    std::pair<const char*, std::streamsize> data() const;
-
-private:
-    std::string name_, type_;
-    std::pair<const char*, std::streamsize> data_;
 };
 
 } // namespace xscript

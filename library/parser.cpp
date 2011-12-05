@@ -27,6 +27,8 @@ const Range Parser::EMPTY_LINE_RANGE = createRange("\r\n\r\n");
 const Range Parser::CONTENT_TYPE_RANGE = createRange("CONTENT_TYPE");
 const Range Parser::CONTENT_TYPE_MULTIPART_RANGE = createRange("Content-Type");
 
+static const std::string STR_BOUNDARY_PREFIX = "--";
+
 std::string
 Parser::getBoundary(const Range &range) {
 
@@ -42,10 +44,14 @@ Parser::getBoundary(const Range &range) {
 
         Range comma = createRange("\"");
         if (startsWith(boundary, comma) && endsWith(boundary, comma)) {
-            return std::string("--").append(boundary.begin() + 1, boundary.end() - 1);
+            std::string res;
+            res.reserve(STR_BOUNDARY_PREFIX.size() + boundary.size() - 2);
+            return res.append(STR_BOUNDARY_PREFIX).append(boundary.begin() + 1, boundary.end() - 1);
         }
 
-        return std::string("--").append(boundary.begin(), boundary.end());
+        std::string res;
+        res.reserve(STR_BOUNDARY_PREFIX.size() + boundary.size());
+        return res.append(STR_BOUNDARY_PREFIX).append(boundary.begin(), boundary.end());
     }
     throw std::runtime_error("no boundary found");
 }
@@ -185,7 +191,7 @@ Parser::parsePart(RequestImpl *req, Range &part, Encoder *encoder) {
     }
 
     if (params.end() != params.find(FILENAME_RANGE)) {
-        req->files_.insert(std::make_pair(name, File(params, content)));
+        req->insertFile(name, params, content);
     }
     else {
         std::pair<std::string, std::string> p;

@@ -41,35 +41,33 @@ RequestImpl::RequestImpl() : is_bot_(false)
 RequestImpl::~RequestImpl()
 {}
 
-File::File(const std::map<Range, Range, RangeCILess> &m, const Range &content) :
-        data_(content.begin(), static_cast<std::streamsize>(content.size())) {
-    std::map<Range, Range, RangeCILess>::const_iterator i;
-    i = m.find(Parser::CONTENT_TYPE_MULTIPART_RANGE);
-    if (m.end() != i) {
-        type_.assign(i->second.begin(), i->second.end());
-    }
-    i = m.find(Parser::FILENAME_RANGE);
-    if (m.end() != i) {
-        name_.assign(i->second.begin(), i->second.end());
-    }
-    else {
+void
+RequestImpl::insertFile(
+    const std::string &name, const std::map<Range, Range, RangeCILess> &m, const Range &content) {
+
+    Range filename, type;
+
+    std::map<Range, Range, RangeCILess>::const_iterator i = m.find(Parser::FILENAME_RANGE);
+    if (m.end() == i) {
         throw std::runtime_error("uploaded file without name");
     }
-}
+    filename = i->second;
+    if (filename.empty()) {
+        return;
+    }
 
-const std::string&
-File::type() const {
-    return type_;
-}
+    i = m.find(Parser::CONTENT_TYPE_MULTIPART_RANGE);
+    if (m.end() != i) {
+        type = i->second;
+    }
 
-const std::string&
-File::remoteName() const {
-    return name_;
-}
+    std::map<std::string, RequestFiles>::iterator it = files_.find(name);
+    if (files_.end() == it) {
+        it = files_.insert(make_pair(name, RequestFiles())).first;
+    }
 
-std::pair<const char*, std::streamsize>
-File::data() const {
-    return data_;
+    RequestFile file(filename, type, content);
+    it->second.push_back(file);
 }
 
 } // namespace xscript
