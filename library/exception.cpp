@@ -17,10 +17,17 @@ static const std::string STR_EMPTY_KEY = "empty key";
 
 CanNotOpenError::CanNotOpenError(const std::string &filename) :
     UnboundRuntimeError(STR_CAN_NOT_OPEN_PREFIX + filename)
-{
-}
+{}
 
 CanNotOpenError::~CanNotOpenError() throw () {
+}
+
+
+SkipCacheException::SkipCacheException(const std::string &reason) :
+    UnboundRuntimeError(reason)
+{}
+
+SkipCacheException::~SkipCacheException() throw () {
 }
 
 

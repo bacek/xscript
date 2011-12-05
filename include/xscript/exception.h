@@ -33,6 +33,12 @@ public:
     virtual ~CanNotOpenError() throw ();
 };
 
+class SkipCacheException : public UnboundRuntimeError {
+public:
+    explicit SkipCacheException(const std::string &reason);
+    virtual ~SkipCacheException() throw ();
+};
+
 class BadRequestError : public UnboundRuntimeError {
 public:
     explicit BadRequestError(const std::string &error) : UnboundRuntimeError(error) {}
