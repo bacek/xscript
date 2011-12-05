@@ -29,6 +29,8 @@ public:
     virtual const char* type() const = 0;
     virtual const std::string& value() const;
     
+    bool multi() const;
+
     virtual bool constant() const;
 
     virtual std::string asString(const Context *ctx) const = 0;
@@ -41,6 +43,8 @@ public:
 
 protected:
     virtual void property(const char *name, const char *value);
+
+    void multi(bool enable);
 
 private:
     class ParamData;

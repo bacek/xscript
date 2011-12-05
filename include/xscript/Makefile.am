@@ -4,7 +4,7 @@ pkginclude_HEADERS = algorithm.h args.h authorizer.h average_counter.h cached_ob
 	doc_cache_strategy.h encoder.h extension.h functors.h logger_factory.h cache_strategy.h \
 	logger.h object.h operation_mode.h param.h policy.h profiler.h \
 	punycode_utils.h range.h renamed_block.h remote_tagged_block.h request_data.h request.h \
-	resource_holder.h response.h sanitizer.h protocol.h \
+	request_file.h resource_holder.h response.h sanitizer.h protocol.h \
 	script_cache.h script_factory.h script.h server.h simple_counter.h \
 	stat_builder.h state.h status_info.h stylesheet_cache.h \
 	stylesheet_factory.h stylesheet.h tagged_block.h tag.h threaded_block.h \

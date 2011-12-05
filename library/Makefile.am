@@ -5,7 +5,7 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp cached_o
 	extension.cpp extension_list.cpp header_param.cpp simple_param.cpp http_user_param.cpp \
 	loader.cpp logger.cpp object.cpp param.cpp param_factory.cpp \
 	query_arg_param.cpp renamed_block.cpp request.cpp request_param.cpp request_data.cpp \
-	request_data_param.cpp response.cpp \
+	request_arg_param.cpp request_file.cpp request_data_param.cpp response.cpp \
 	sanitizer.cpp script.cpp script_factory.cpp state.cpp policy.cpp \
 	state_arg_param.cpp state_impl.cpp state_param.cpp \
 	stylesheet.cpp stylesheet_factory.cpp tag.cpp \

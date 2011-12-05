@@ -19,7 +19,7 @@ namespace xscript {
 
 class Param::ParamData {
 public:
-    ParamData(xmlNodePtr node) : node_(node) {
+    ParamData(xmlNodePtr node) : node_(node), multi_(false) {
         assert(node_);
     }
     ~ParamData() {}
@@ -37,6 +37,7 @@ public:
     xmlNodePtr node_;
     std::string id_, value_;
     std::auto_ptr<Validator> validator_;
+    bool multi_;
 };
 
 Param::Param(Object * /* owner */, xmlNodePtr node) :
@@ -44,6 +45,16 @@ Param::Param(Object * /* owner */, xmlNodePtr node) :
 }
 
 Param::~Param() {
+}
+
+bool
+Param::multi() const {
+    return data_->multi_;
+}
+
+void
+Param::multi(bool enable) {
+    data_->multi_ = enable;
 }
 
 const std::string&
