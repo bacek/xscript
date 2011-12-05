@@ -115,8 +115,9 @@ TaggedKeyDisk::TaggedKeyDisk(const Context *ctx,
     number_ = HashUtils::crc32(hash) & 0xFF;
     
     char buf[255];
-    snprintf(buf, sizeof(buf), "%02x/%s", number_, hash.c_str());
-    filename_.assign(buf);
+    int sz = snprintf(buf, sizeof(buf), "%02x/", number_);
+    filename_.reserve(hash.size() + sz);
+    filename_.assign(buf, sz).append(hash);
 }
 
 boost::uint32_t
