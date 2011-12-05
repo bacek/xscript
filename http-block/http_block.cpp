@@ -27,6 +27,7 @@
 #include "xscript/param.h"
 #include "xscript/policy.h"
 #include "xscript/profiler.h"
+#include "xscript/range.h"
 #include "xscript/request.h"
 #include "xscript/state.h"
 #include "xscript/string_utils.h"
@@ -38,6 +39,7 @@
 
 #include "internal/hash.h"
 #include "internal/hashmap.h"
+#include "internal/parser.h"
 
 #ifndef HAVE_HASHMAP
 #include <map>
@@ -94,6 +96,7 @@ public:
         }
     }
 };
+
 
 static MethodMap methods_;
 static const std::string CONTENT_TYPE_HEADER_NAME("Content-Type");
@@ -207,7 +210,15 @@ std::string
 HttpBlock::info(const Context *ctx) const {
 
     std::string info = RemoteTaggedBlock::info(ctx);
+    if (!query_params_.empty()) {
+        info.reserve(info.size() + query_params_.size() * 64);
+        info.append(" | Query params:");
+        for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it) {
+            info.append(it->info());
+        }
+    }
     if (!headers_.empty()) {
+        info.reserve(info.size() + headers_.size() * 64);
         info.append(" | Headers:");
         for (unsigned int i = 0, n = headers_.size(); i < n; ++i) {
             info.push_back(' ');
@@ -215,23 +226,7 @@ HttpBlock::info(const Context *ctx) const {
             info.append(param->id());
             info.push_back(':');
             info.append(param->type());
-            const std::string& value = param->value();
-            if (!value.empty()) {
-                info.push_back('(');
-                info.append(value);
-                info.push_back(')');
-            }
-        }
-    }
-    if (!query_params_.empty()) {
-        info.append(" | Query params:");
-        for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it) {
-            const Param *p = it->param();
-            info.push_back(' ');
-            info.append(p->id());
-            info.push_back(':');
-            info.append(p->type());
-            const std::string& value = p->value();
+            const std::string &value = param->value();
             if (!value.empty()) {
                 info.push_back('(');
                 info.append(value);
@@ -241,11 +236,39 @@ HttpBlock::info(const Context *ctx) const {
     }
     return info;
 }
+static const std::string SKIP_CACHE_MESSAGE = "can not cache post data with attached files";
 
 std::string
 HttpBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
 
+    std::string query_key;
+    if (!query_params_.empty()) {
+        const QueryParamsArgList *args = dynamic_cast<const QueryParamsArgList*>(invoke_ctx->getExtraArgList(STR_QUERY_PARAMS));
+        assert(args);
+        if (args->multipart) {
+            throw SkipCacheException(SKIP_CACHE_MESSAGE);
+        }
+        assert(args->size() == query_params_.size());
+        unsigned int i = 0;
+        std::string query_key_data;
+        for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it, ++i) {
+            std::string value = it->queryStringValue(*args, i);
+            if (!value.empty()) {
+                if (query_key_data.empty()) {
+                    query_key_data.push_back('&');
+                }
+                query_key_data.append(value);
+            }
+        }
+
+        if (!query_key_data.empty()) {
+            query_key.assign("| Query params:").append(query_key_data);
+        }
+    }
+
     std::string key = RemoteTaggedBlock::createTagKey(ctx, invoke_ctx);
+    key.append(query_key);
+
     if (!headers_.empty()) {
         key.append("| Headers:");
         const ArgList *args = invoke_ctx->getExtraArgList(STR_HEADERS);
@@ -254,21 +277,11 @@ HttpBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) con
         unsigned int i = 0;
         for (std::vector<Param*>::const_iterator it = headers_.begin(), end = headers_.end(); it != end; ++it, ++i) {
             const Param *p = *it;
+            if (i) {
+                key.push_back(',');
+            }
             key.append(p->id());
-            key.push_back(':');
-            key.append(args->at(i));
-        }
-    }
-    if (!query_params_.empty()) {
-        key.append("| Query params:");
-        const ArgList *args = invoke_ctx->getExtraArgList(STR_QUERY_PARAMS);
-        assert(args);
-        assert(args->size() == query_params_.size());
-        unsigned int i = 0;
-        for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it, ++i) {
-            const Param *p = it->param();
-            key.append(p->id());
-            key.push_back(':');
+            key.push_back('=');
             key.append(args->at(i));
         }
     }
@@ -295,7 +308,14 @@ HttpBlock::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
         invoke_ctx->setExtraArgList(STR_HEADERS, args);
     }
     if (!query_params_.empty()) {
-        boost::shared_ptr<ArgList> args(new CheckedStringArgList(HttpExtension::checkedQueryParams()));
+        boost::shared_ptr<QueryParamsArgList> args(new QueryParamsArgList(HttpExtension::checkedQueryParams()));
+        if (method_ == &HttpBlock::post) {
+            for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it) {
+                if (NULL != it->files(ctx)) {
+                    args->multipart = true;
+                }
+            }
+        }
         for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it) {
             const Param *p = it->param();
             try {
@@ -320,51 +340,87 @@ HttpBlock::getUrl(const ArgList *args, unsigned int first, unsigned int last) co
         throw InvokeError("File scheme is not allowed", "url", url);
     }
     return url;
-    
+}
+
+static std::string
+createQueryParamsString(const QueryParams &query_params, const QueryParamsArgList &qargs) {
+    unsigned int sz = qargs.size();
+    assert(sz == query_params.size());
+
+    std::string val;
+    QueryParams::const_iterator it = query_params.begin();
+    for (unsigned int i = 0; i != sz; ++i, ++it) {
+        const std::string &v = it->queryStringValue(qargs, i);
+        if (!v.empty()) {
+            val.reserve(val.size() + v.size() + 1);
+            if (!val.empty()) {
+                val.push_back('&');
+            }
+            val.append(v);
+        }
+    }
+    return val;
 }
 
 std::string
 HttpBlock::queryParams(const InvokeContext *invoke_ctx) const {
 
     const ArgList *args = invoke_ctx->getExtraArgList(STR_QUERY_PARAMS);
-    std::string val;
-    if (NULL != args) {
-        unsigned int sz = args->size();
-        assert(sz == query_params_.size());
+    if (NULL == args) {
+        return StringUtils::EMPTY_STRING;
+    }
+    const QueryParamsArgList *qargs = dynamic_cast<const QueryParamsArgList*>(args);
+    assert(qargs);
+    return createQueryParamsString(query_params_, *qargs);
+}
 
-        std::size_t future_size = 0;
-        QueryParams::const_iterator it = query_params_.begin();
-        for (unsigned int i = 0; i < sz; ++i, ++it) {
-            const std::string &v = args->at(i);
-            if (!v.empty()) {
-                future_size += it->param()->id().size() + v.size() + 1;
-            }
-            else if (it->allowEmpty()) {
-                future_size += it->param()->id().size();
-            }
-        }
+bool
+HttpBlock::createPostData(const Context *ctx, const InvokeContext *invoke_ctx, std::string &result) const {
 
-        if (future_size) {
-            val.reserve(future_size + sz - 1);
-            QueryParams::const_iterator it = query_params_.begin();
-            for (unsigned int i = 0; i != sz; ++i, ++it) {
-                const std::string &v = args->at(i);
-                if (!v.empty()) {
-                    if (!val.empty()) {
-                        val.push_back('&');
-                    }
-                    val.append(it->param()->id()).append("=", 1).append(v);
-                }
-                else if (it->allowEmpty()) {
-                    if (!val.empty()) {
-                        val.push_back('&');
-                    }
-                    val.append(it->param()->id());
-                }
-            }
+    const ArgList *args = invoke_ctx->getExtraArgList(STR_QUERY_PARAMS);
+    if (NULL == args) {
+        return false;
+    }
+
+    const QueryParamsArgList *qargs = dynamic_cast<const QueryParamsArgList*>(args);
+    assert(qargs);
+    if (!qargs->multipart) {
+        createQueryParamsString(query_params_, *qargs).swap(result);
+        return false;
+    }
+    const std::string &ctype = ctx->request()->getHeader(CONTENT_TYPE_HEADER_NAME);
+    std::string boundary = Parser::getBoundary(createRange(ctype));
+
+    unsigned int sz = qargs->size();
+    assert(sz == query_params_.size());
+
+    const Request *req = ctx->request();
+    assert(req);
+
+    std::vector<std::string> values;
+    values.reserve(sz);
+    QueryParams::const_iterator it = query_params_.begin();
+    for (unsigned int i = 0; i != sz; ++i, ++it) {
+        std::string v = it->multipartValue(*qargs, i, boundary, *req);
+        if (!v.empty()) {
+            values.push_back(StringUtils::EMPTY_STRING);
+            values.back().swap(v);
         }
     }
-    return val;
+
+    size_t res_size = boundary.size() + 4;
+    for (std::vector<std::string>::const_iterator it = values.begin(); it != values.end(); ++it) {
+        res_size += it->size();
+    }
+
+    std::string res;
+    res.reserve(res_size);
+    for (std::vector<std::string>::const_iterator j = values.begin(); j != values.end(); ++j) {
+        res.append(*j);
+    }
+    res.append(boundary).append("--\r\n", 4);
+    res.swap(result);
+    return true;
 }
 
 XmlDocHelper
@@ -475,10 +531,12 @@ HttpBlock::post(Context *ctx, InvokeContext *invoke_ctx) const {
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), invoke_ctx, true, false);
 
-    std::string query = queryParams(invoke_ctx);
-    helper.postData(query.data(), query.size());
+    std::string post_data;
+    bool multipart = createPostData(ctx, invoke_ctx, post_data);
+
+    appendHeaders(helper, ctx->request(), invoke_ctx, !multipart, multipart);
+    helper.postData(post_data.data(), post_data.size());
 
     httpCall(helper);
     checkStatus(helper);

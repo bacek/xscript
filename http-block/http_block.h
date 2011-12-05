@@ -40,6 +40,7 @@ protected:
 
     std::string getUrl(const ArgList *args, unsigned int first, unsigned int last) const;
     std::string queryParams(const InvokeContext *invoke_ctx) const;
+    bool createPostData(const Context *ctx, const InvokeContext *invoke_ctx, std::string &result) const;
     
     XmlDocHelper getHttp(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper post(Context *ctx, InvokeContext *invoke_ctx) const;
