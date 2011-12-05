@@ -153,6 +153,9 @@ InvokeContext::metaDoc(XmlDocHelper doc) {
 
 void
 InvokeContext::resultType(ResultType type) {
+    if ((SUCCESS == type) && (NO_CACHE == ctx_data_->result_type_)) {
+        return;
+    }
     ctx_data_->result_type_ = type;
 }
 

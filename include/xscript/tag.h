@@ -11,7 +11,9 @@ public:
     Tag(bool mod, time_t last_mod, time_t exp_time);
 
     bool expired() const;
+
     static const time_t UNDEFINED_TIME;
+    static const time_t EXPIRED_TIME;
 
     bool needPrefetch(time_t stored_time) const;
     

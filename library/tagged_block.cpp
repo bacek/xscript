@@ -119,7 +119,9 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
 
     invoke_ctx->meta()->cacheParamsWritable(cacheTimeUndefined());
 
-    Tag cache_tag(true, 1, 1); // fake undefined Tag
+    const int EXPIRED_TIME = Tag::EXPIRED_TIME;
+
+    Tag cache_tag(true, EXPIRED_TIME, EXPIRED_TIME); // fake expired Tag
     try {
         CacheContext cache_ctx(this, ctx.get(), this->allowDistributed());
         boost::shared_ptr<BlockCacheData> cache_data = 
@@ -138,12 +140,18 @@ TaggedBlock::invokeInternal(boost::shared_ptr<Context> ctx, boost::shared_ptr<In
             }
         }
         else {
-            cache_tag.expire_time = 1;
-            cache_tag.last_modified = 1;
+            cache_tag.expire_time = EXPIRED_TIME;
+            cache_tag.last_modified = EXPIRED_TIME;
         }
     }
-    catch (SkipResultInvokeError &) {
+    catch (const SkipResultInvokeError &) {
         throw;
+    }
+    catch (const SkipCacheException &e) {
+        invoke_ctx->resultType(InvokeContext::NO_CACHE);
+        log()->info("skip block cache: %s", e.what());
+        cache_tag.expire_time = EXPIRED_TIME;
+        cache_tag.last_modified = EXPIRED_TIME;
     }
     catch (const MetaInvokeError &e) {
         log()->error("caught meta exception while fetching and processing cached doc: %s", e.what());
@@ -199,7 +207,7 @@ TaggedBlock::processCachedDoc(boost::shared_ptr<Context> ctx,
 void
 TaggedBlock::postCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) {
 
-    log()->debug("%s, tagged: %d", BOOST_CURRENT_FUNCTION, static_cast<int>(tagged()));
+    log()->debug("TaggedBlock::postCall, tagged: %d", static_cast<int>(tagged()));
     if (!tagged() || !invoke_ctx->success()) {
         return;
     }

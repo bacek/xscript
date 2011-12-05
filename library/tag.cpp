@@ -11,6 +11,7 @@
 namespace xscript {
 
 const time_t Tag::UNDEFINED_TIME = 0;
+const time_t Tag::EXPIRED_TIME = 1;
 
 class TagPrefetchCalculator {
 public:
@@ -67,6 +68,9 @@ Tag::valid() const {
 
 bool
 Tag::expired() const {
+    if (EXPIRED_TIME == expire_time) {
+        return true;
+    }
     return (UNDEFINED_TIME != expire_time) && (expire_time <= time(NULL));
 }
 
