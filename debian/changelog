@@ -1,3 +1,9 @@
+xscript (5.73.36-13) unstable; urgency=low
+
+  * support multiple values for local-block and typed arg lists
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Tue, 06 Dec 2011 15:17:54 +0300
+
 xscript (5.73.36-12) unstable; urgency=low
 
   * support multiple query-params for "RequestArg"

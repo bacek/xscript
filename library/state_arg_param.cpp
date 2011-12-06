@@ -60,8 +60,7 @@ StateArgParam::asString(const Context *ctx) const {
 
 void
 StateArgParam::add(const Context *ctx, ArgList &al) const {
-    const std::string& name = value();   
-    addTypedValue(al, ctx->state()->typedValue(name));
+    addTypedValue(al, ctx->state()->typedValue(value()), false);
 }
 
 std::auto_ptr<Param>

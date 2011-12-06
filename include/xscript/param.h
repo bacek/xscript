@@ -83,7 +83,7 @@ public:
     bool getStringValue(const Context *ctx, std::string &result) const;
 
 protected:
-    void addTypedValue(ArgList &al, const TypedValue &value) const;
+    void addTypedValue(ArgList &al, const TypedValue &value, bool add_nil) const;
 
     virtual void property(const char *name, const char *value);
     typedef std::pair<std::string, bool> ValueResult;

@@ -4,6 +4,7 @@
 #include "xscript/guard_checker.h"
 #include "xscript/param.h"
 #include "xscript/request.h"
+#include "xscript/typed_map.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -17,6 +18,8 @@ public:
     virtual ~RequestArgParam();
 
     virtual const char* type() const;
+
+    virtual void add(const Context *ctx, ArgList &al) const;
 
     static std::auto_ptr<Param> create(Object *owner, xmlNodePtr node);
     static bool is(const Context *ctx, const std::string &name, const std::string &value);
@@ -47,6 +50,15 @@ RequestArgParam::getValue(const Context *ctx) const {
         }
     }
     return ValueResult(StringUtils::EMPTY_STRING, false);
+}
+
+void
+RequestArgParam::add(const Context *ctx, ArgList &al) const {
+    const Request *req = ctx->request();
+    std::vector<std::string> values;
+    req->getArg(value(), values);
+    TypedValue typed_value(values);
+    addTypedValue(al, typed_value, true); //true - add nil
 }
 
 std::auto_ptr<Param>

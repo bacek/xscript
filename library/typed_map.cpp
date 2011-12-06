@@ -27,6 +27,9 @@ const std::string TypedValue::TYPE_ULONGLONG_STRING = "ULongLong";
 const std::string TypedValue::TYPE_DOUBLE_STRING = "Double";
 const std::string TypedValue::TYPE_STRING_STRING = "String";
 
+static const std::string STR_ONE = "1";
+static const std::string STR_ZERO = "0";
+
 class TypedValue::ComplexTypedValue {
 public:
     virtual ~ComplexTypedValue() {}
@@ -47,6 +50,7 @@ public:
     ArrayTypedValue();
     ArrayTypedValue(const TypedValue::ArrayType &value);
     ArrayTypedValue(const Range &value);
+    ArrayTypedValue(const TypedValue::StringArrayType &value);
     virtual ~ArrayTypedValue();
     virtual void visit(TypedValueVisitor *visitor) const;
     virtual const std::string& stringType() const;
@@ -55,6 +59,7 @@ public:
     virtual void serialize(std::string &result) const;
     virtual bool add(const std::string &key, const TypedValue &value);
     virtual bool asBool() const;
+
 private:
     static const std::string TYPE;
     TypedValue::ArrayType value_;
@@ -82,7 +87,7 @@ TypedValue::TypedValue() : type_(TYPE_NIL)
 {}
 
 TypedValue::TypedValue(bool value) :
-    type_(TYPE_BOOL), value_(value ? "1" : "0")
+    type_(TYPE_BOOL), value_(value ? STR_ONE : STR_ZERO)
 {} 
     
 TypedValue::TypedValue(boost::int32_t value) :
@@ -159,6 +164,16 @@ TypedValue::TypedValue(const Range &value) : type_(TYPE_NIL)
     }
 }
 
+TypedValue::TypedValue(const StringArrayType &value) :
+    type_(TYPE_NIL)
+{
+    if (!value.empty()) {
+        complex_.reset(new ArrayTypedValue(value));
+        type_ = TYPE_ARRAY;
+    }
+}
+
+
 TypedValue
 TypedValue::createArrayValue() {
     TypedValue value;
@@ -215,13 +230,13 @@ TypedValue::asBool() const {
     if (NULL != complex_.get()) {
         return complex_->asBool();
     }
-    else if (trim(createRange(value_)).empty()) {
+    if (trim(createRange(value_)).empty()) {
         return false;
     }
-    else if (type_ == TypedValue::TYPE_STRING) {
+    if (type_ == TypedValue::TYPE_STRING) {
         return true;
     }
-    else if (type_ == TypedValue::TYPE_DOUBLE) {
+    if (type_ == TypedValue::TYPE_DOUBLE) {
         double val = boost::lexical_cast<double>(value_);
         if (val > std::numeric_limits<double>::epsilon() ||
             val < -std::numeric_limits<double>::epsilon()) {
@@ -229,9 +244,7 @@ TypedValue::asBool() const {
         }
         return false;
     }
-    else {
-        return value_ != "0";
-    }
+    return value_ != STR_ZERO;
 }
 
 const std::string&
@@ -505,6 +518,12 @@ ArrayTypedValue::ArrayTypedValue(const Range &value) {
         TypedValue value(Range(buf, buf + size));
         value_.push_back(value);
         buf += size;
+    }
+}
+
+ArrayTypedValue::ArrayTypedValue(const TypedValue::StringArrayType &value) {
+    for (TypedValue::StringArrayType::const_iterator it = value.begin(), end = value.end(); it != end; ++it) {
+        value_.push_back(TypedValue(*it));
     }
 }
 

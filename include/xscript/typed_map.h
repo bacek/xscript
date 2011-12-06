@@ -21,6 +21,7 @@ class TypedValue {
 public:
     typedef std::vector<TypedValue> ArrayType;
     typedef std::vector<std::pair<std::string, TypedValue> > MapType;
+    typedef std::vector<std::string> StringArrayType;
 
     TypedValue();
     TypedValue(bool value);
@@ -34,6 +35,7 @@ public:
     TypedValue(const ArrayType &value);
     TypedValue(const MapType &value);
     TypedValue(const Range &value);
+    TypedValue(const StringArrayType &value);
 
     static TypedValue createArrayValue();
     static TypedValue createMapValue();
