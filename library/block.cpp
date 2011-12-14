@@ -705,11 +705,11 @@ Block::errorResult(const char *error, bool info, boost::shared_ptr<InvokeContext
     std::string full_error;
     InvokeError invoke_error(error);
     XmlDocHelper doc = errorDoc(invoke_error, info ? XSCRIPT_INVOKE_INFO.c_str() :
-    	XSCRIPT_INVOKE_FAILED.c_str(), full_error);
+    	XSCRIPT_INVOKE_FAILED.c_str(), full_error, info);
     
     invoke_ctx->resultDoc(doc);
     invoke_ctx->metaDoc(XmlDocSharedHelper());
-    invoke_ctx->resultType(InvokeContext::ERROR);
+    invoke_ctx->resultType(info ? InvokeContext::NO_CACHE : InvokeContext::ERROR);
 }
 
 boost::shared_ptr<InvokeContext>
@@ -723,23 +723,23 @@ boost::shared_ptr<InvokeContext>
 Block::errorResult(const InvokeError &error, bool info) const {
     std::string full_error;
     if (info) {
-        return errorResult(errorDoc(error, XSCRIPT_INVOKE_INFO.c_str(), full_error));    
+        return errorResult(errorDoc(error, XSCRIPT_INVOKE_INFO.c_str(), full_error, info));
     }
-    return errorResult(errorDoc(error, XSCRIPT_INVOKE_FAILED.c_str(), full_error));
+    return errorResult(errorDoc(error, XSCRIPT_INVOKE_FAILED.c_str(), full_error, info));
 }
 
 void
 Block::metaErrorResult(const MetaInvokeError &error,
     boost::shared_ptr<InvokeContext> &invoke_ctx) const {
     std::string full_error;
-    XmlDocHelper doc(errorDoc(error, META_INVOKE_FAILED.c_str(), full_error));
+    XmlDocHelper doc(errorDoc(error, META_INVOKE_FAILED.c_str(), full_error, false));
     invoke_ctx->metaDoc(doc);
     invoke_ctx->resultType(InvokeContext::META_ERROR);
 }
 
 boost::shared_ptr<InvokeContext>
 Block::errorResult(const InvokeError &error, std::string &full_error) const {
-    return errorResult(errorDoc(error, XSCRIPT_INVOKE_FAILED.c_str(), full_error));
+    return errorResult(errorDoc(error, XSCRIPT_INVOKE_FAILED.c_str(), full_error, false));
 }
 
 boost::shared_ptr<InvokeContext>
@@ -761,7 +761,7 @@ Block::fakeResult(bool error) const {
 XmlDocHelper
 Block::errorDoc(const InvokeError &error,
                 const char *tag_name,
-                std::string &full_error) const {
+                std::string &full_error, bool info) const {
     
     XmlDocHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != doc.get());
@@ -785,9 +785,9 @@ Block::errorDoc(const InvokeError &error,
         stream << "id: " << id() << " ";
     }
 
-    const InvokeError::InfoMapType& info = error.info();
-    for(InvokeError::InfoMapType::const_iterator it = info.begin();
-        it != info.end();
+    const InvokeError::InfoMapType &map_info = error.info();
+    for(InvokeError::InfoMapType::const_iterator it = map_info.begin();
+        it != map_info.end();
         ++it) {
         if (!it->second.empty()) {
             xmlNewProp(main_node.get(), (const xmlChar*)it->first.c_str(), (const xmlChar*)it->second.c_str());
@@ -810,7 +810,12 @@ Block::errorDoc(const InvokeError &error,
     full_error.reserve(error_str.size() + 1 + err.size());
     full_error.assign(error_str).append("\n", 1).append(err);
 
-    log()->error("%s : %s", error_str.c_str(), err.c_str());
+    if (info) {
+        log()->info("%s : %s", error_str.c_str(), err.c_str());
+    }
+    else {
+        log()->error("%s : %s", error_str.c_str(), err.c_str());
+    }
     return doc;
 }
 

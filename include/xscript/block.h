@@ -150,7 +150,7 @@ private:
     boost::shared_ptr<InvokeContext> errorResult(XmlDocHelper doc) const;
     void errorResult(const char *error, bool info, boost::shared_ptr<InvokeContext> &ctx) const;
     void metaErrorResult(const MetaInvokeError &error, boost::shared_ptr<InvokeContext> &invoke_ctx) const;
-    XmlDocHelper errorDoc(const InvokeError &error, const char *tag_name, std::string &full_error) const;
+    XmlDocHelper errorDoc(const InvokeError &error, const char *tag_name, std::string &full_error, bool info) const;
     XmlDocHelper fakeDoc() const;
     
 private:
