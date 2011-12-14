@@ -28,6 +28,8 @@ public:
     void appendHeaders(const std::vector<std::string> &headers, time_t modified_since);
     void postData(const void* data, long size);
 
+    void method(const std::string &value);
+
     long perform();
     long fastPerform(); // without checking result code and detecting content type
 

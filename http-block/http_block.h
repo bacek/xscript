@@ -22,7 +22,6 @@ class HttpMethodRegistrator;
 
 typedef XmlDocHelper (HttpBlock::*HttpMethod)(Context *ctx, InvokeContext *invoke_ctx) const;
 
-// TODO: Why it is not virtual inherited?
 class HttpBlock : public RemoteTaggedBlock {
 public:
     HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
@@ -41,9 +40,13 @@ protected:
     std::string getUrl(const ArgList *args, unsigned int first, unsigned int last) const;
     std::string queryParams(const InvokeContext *invoke_ctx) const;
     bool createPostData(const Context *ctx, const InvokeContext *invoke_ctx, std::string &result) const;
-    
-    XmlDocHelper getHttp(Context *ctx, InvokeContext *invoke_ctx) const;
+
+    XmlDocHelper head(Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper get(Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper del(Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper put(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper post(Context *ctx, InvokeContext *invoke_ctx) const;
+
     XmlDocHelper postHttp(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper getByState(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper getByRequest(Context *ctx, InvokeContext *invoke_ctx) const;
@@ -55,11 +58,14 @@ protected:
             bool allow_tag, bool pass_ctype) const;
     void createTagInfo(const HttpHelper &h, InvokeContext *invoke_ctx) const;
 
-    static void registerMethod(const char *name, HttpMethod method);
+    static void registerMethod(const std::string &name, HttpMethod method);
 
 private:
     HttpBlock(const HttpBlock &);
     HttpBlock& operator = (const HttpBlock &);
+
+    XmlDocHelper customGet(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper customPost(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const;
     
     int getTimeout(Context *ctx, const std::string &url) const;
     void wrapError(InvokeError &error, const HttpHelper &helper, const XmlNodeHelper &error_body_node) const;

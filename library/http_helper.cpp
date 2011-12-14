@@ -225,7 +225,16 @@ public:
         setopt(CURLOPT_POSTFIELDS, data);
         setopt(CURLOPT_POSTFIELDSIZE, size);
     }
-    
+
+    void method(const std::string &value) {
+        if (!strcasecmp(value.c_str(), "HEAD")) {
+            setopt(CURLOPT_NOBODY, static_cast<long>(1));
+        }
+        else {
+            setopt(CURLOPT_CUSTOMREQUEST, StringUtils::toupper(value).c_str());
+        }
+    }
+
     long perform() {
         curl_code_ = curl_easy_perform(curl_);
         if (aborted_) {
@@ -439,6 +448,13 @@ HttpHelper::appendHeaders(const std::vector<std::string> &headers, time_t modifi
 void
 HttpHelper::postData(const void* data, long size) {
     data_->postData(data, size);
+}
+
+void
+HttpHelper::method(const std::string &value) {
+    if (!value.empty()) {
+        data_->method(value);
+    }
 }
 
 long

@@ -4,13 +4,13 @@
 #include <strings.h>
 
 #include <algorithm>
-#include <memory>
 #include <cassert>
+#include <map>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 
 #include <boost/tokenizer.hpp>
-#include <boost/current_function.hpp>
 #include <boost/checked_delete.hpp>
 
 #include <libxml/HTMLparser.h>
@@ -37,13 +37,7 @@
 #include "xscript/xml_util.h"
 #include "xscript/json2xml.h"
 
-#include "internal/hash.h"
-#include "internal/hashmap.h"
 #include "internal/parser.h"
-
-#ifndef HAVE_HASHMAP
-#include <map>
-#endif
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -52,11 +46,7 @@
 
 namespace xscript {
 
-#ifndef HAVE_HASHMAP
-typedef std::map<std::string, HttpMethod> MethodMap;
-#else
-typedef details::hash_map<std::string, HttpMethod, details::StringHash> MethodMap;
-#endif
+typedef std::map<std::string, HttpMethod, StringCILess> MethodMap;
 
 
 class HttpMethodRegistrator {
@@ -82,21 +72,6 @@ private:
     boost::shared_ptr<std::string> data_;
 };
 
-class HttpHeadersArgList : public CheckedStringArgList {
-public:
-    explicit HttpHeadersArgList(bool checked) : CheckedStringArgList(checked) {}
-
-    virtual void add(const std::string &value) {
-        std::string::size_type pos = value.find_first_of("\r\n");
-        if (pos == std::string::npos) {
-            CheckedStringArgList::add(value);
-        }
-        else {
-            CheckedStringArgList::add(value.substr(0, pos));
-        }
-    }
-};
-
 
 static MethodMap methods_;
 static const std::string CONTENT_TYPE_HEADER_NAME("Content-Type");
@@ -108,6 +83,33 @@ static const std::string STR_QUERY_PARAMS("query-params");
 static const std::string STR_QUERY_PARAM_NAME("query-param");
 static const std::string STR_QUERY_PARAM_REPR("query param");
 static const std::string STR_URL("URL");
+static const std::string STR_GET = "get";
+static const std::string STR_HEAD = "head";
+static const std::string STR_DELETE = "delete";
+static const std::string STR_PUT = "put";
+static const std::string STR_POST = "post";
+static const std::string STR_CRLF = "\r\n";
+static const std::string STR_LWR_URL = "url";
+static const std::string STR_LWR_STATUS = "status";
+static const std::string STR_LWR_TIMEOUT = "timeout";
+static const std::string STR_LWR_CONTENT_TYPE = "content-type";
+static const std::string STR_MULTIPART_BODY_END = "--\r\n";
+
+
+class HttpHeadersArgList : public CheckedStringArgList {
+public:
+    explicit HttpHeadersArgList(bool checked) : CheckedStringArgList(checked) {}
+
+    virtual void add(const std::string &value) {
+        std::string::size_type pos = value.find_first_of(STR_CRLF);
+        if (pos == std::string::npos) {
+            CheckedStringArgList::add(value);
+        }
+        else {
+            CheckedStringArgList::add(value.substr(0, pos));
+        }
+    }
+};
 
 
 HttpBlock::HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
@@ -336,8 +338,8 @@ HttpBlock::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
 std::string
 HttpBlock::getUrl(const ArgList *args, unsigned int first, unsigned int last) const {
     std::string url = Block::concatArguments(args, first, last);
-    if (strncasecmp(url.c_str(), "file://", sizeof("file://") - 1) == 0) {
-        throw InvokeError("File scheme is not allowed", "url", url);
+    if (!strncasecmp(url.c_str(), "file://", sizeof("file://") - 1)) {
+        throw InvokeError("File scheme is not allowed", STR_LWR_URL, url);
     }
     return url;
 }
@@ -408,7 +410,7 @@ HttpBlock::createPostData(const Context *ctx, const InvokeContext *invoke_ctx, s
         }
     }
 
-    size_t res_size = boundary.size() + 4;
+    size_t res_size = boundary.size() + STR_MULTIPART_BODY_END.size();
     for (std::vector<std::string>::const_iterator it = values.begin(); it != values.end(); ++it) {
         res_size += it->size();
     }
@@ -418,14 +420,14 @@ HttpBlock::createPostData(const Context *ctx, const InvokeContext *invoke_ctx, s
     for (std::vector<std::string>::const_iterator j = values.begin(); j != values.end(); ++j) {
         res.append(*j);
     }
-    res.append(boundary).append("--\r\n", 4);
+    res.append(boundary).append(STR_MULTIPART_BODY_END);
     res.swap(result);
     return true;
 }
 
 XmlDocHelper
-HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) const {
-    log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+HttpBlock::customGet(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const {
+    log()->info("HttpBlock:%s, %s", method.c_str(), owner()->name().c_str());
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
@@ -440,11 +442,12 @@ HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) const {
         url.append(query);
     }
 
-    PROFILER(log(), "getHttp: " + url);
+    PROFILER(log(), "http." + method + ": " + url);
 
     HttpHelper helper(url, getTimeout(ctx, url));
-    
     appendHeaders(helper, ctx->request(), invoke_ctx, true, false);
+    helper.method(method);
+
     httpCall(helper);
     checkStatus(helper);
     
@@ -460,15 +463,112 @@ HttpBlock::getHttp(Context *ctx, InvokeContext *invoke_ctx) const {
 }
 
 XmlDocHelper
-HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
-    log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+HttpBlock::customPost(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const {
+
+    log()->info("HttpBlock:%s, %s", method.c_str(), owner()->name().c_str());
+
+    const ArgList* args = invoke_ctx->getArgList();
+    unsigned int size = args->size();
+    if (size < 1) {
+        throwBadArityError();
+    }
+
+    std::string url = getUrl(args, 0, size - 1);
+    PROFILER(log(), "http." + method + ": " + url);
+    
+    HttpHelper helper(url, getTimeout(ctx, url));
+
+    std::string post_data;
+    bool multipart = createPostData(ctx, invoke_ctx, post_data);
+
+    appendHeaders(helper, ctx->request(), invoke_ctx, !multipart, multipart);
+    helper.postData(post_data.data(), post_data.size());
+    helper.method(method);
+
+    httpCall(helper);
+    checkStatus(helper);
+
+    createTagInfo(helper, invoke_ctx);
+
+    if (invoke_ctx->haveCachedCopy() && !invoke_ctx->tag().modified) {
+        return XmlDocHelper();
+    }
+
+    createMeta(helper, invoke_ctx);
+
+    return response(helper);
+}
+
+XmlDocHelper
+HttpBlock::head(Context *ctx, InvokeContext *invoke_ctx) const {
+    log()->info("HttpBlock:head, %s", owner()->name().c_str());
+
+    if (tagged()) {
+        throw CriticalInvokeError("tag is not allowed");
+    }
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
     if (!size) {
         throwBadArityError();
     }
-    else if (tagged()) {
+    
+    std::string url = getUrl(args, 0, size - 1);
+    std::string query = queryParams(invoke_ctx);
+    if (!query.empty()) {
+        url.push_back(url.find('?') != std::string::npos ? '&' : '?');
+        url.append(query);
+    }
+
+    PROFILER(log(), "http.head: " + url);
+
+    HttpHelper helper(url, getTimeout(ctx, url));
+    appendHeaders(helper, ctx->request(), invoke_ctx, true, false);
+    helper.method(STR_HEAD);
+
+    httpCall(helper);
+    checkStatus(helper);
+    
+    createMeta(helper, invoke_ctx);
+
+    XmlDocHelper result(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlUtils::throwUnless(NULL != result.get());
+    XmlNodeHelper node(xmlNewDocNode(result.get(), NULL, (const xmlChar*)"empty", NULL));
+    XmlUtils::throwUnless(NULL != node.get());
+    xmlDocSetRootElement(result.get(), node.release());
+    return result;
+}
+
+XmlDocHelper
+HttpBlock::get(Context *ctx, InvokeContext *invoke_ctx) const {
+    return customGet(STR_GET, ctx, invoke_ctx);
+}
+
+XmlDocHelper
+HttpBlock::del(Context *ctx, InvokeContext *invoke_ctx) const {
+    return customGet(STR_DELETE, ctx, invoke_ctx);
+}
+
+XmlDocHelper
+HttpBlock::put(Context *ctx, InvokeContext *invoke_ctx) const {
+    return customPost(STR_PUT, ctx, invoke_ctx);
+}
+
+XmlDocHelper
+HttpBlock::post(Context *ctx, InvokeContext *invoke_ctx) const {
+    return customPost(STR_POST, ctx, invoke_ctx);
+}
+
+XmlDocHelper
+HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
+    log()->info("HttpBlock::getBinaryPage, %s", owner()->name().c_str());
+
+    const ArgList* args = invoke_ctx->getArgList();
+    unsigned int size = args->size();
+    if (!size) {
+        throwBadArityError();
+    }
+    if (tagged()) {
         throw CriticalInvokeError("tag is not allowed");
     }
 
@@ -478,7 +578,7 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
         url.push_back(url.find('?') != std::string::npos ? '&' : '?');
         url.append(query);
     }
-    PROFILER(log(), "getBinaryPage: " + url);
+    PROFILER(log(), "http.getBinaryPage: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
@@ -487,7 +587,7 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
 
     if (!helper.isOk()) {
         long status = helper.status();
-        RetryInvokeError error("Incorrect http status", "url", url);
+        RetryInvokeError error("Incorrect http status", STR_LWR_URL, url);
         error.add("status", boost::lexical_cast<std::string>(status));
         throw error;
     }
@@ -506,56 +606,18 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
     const std::string& content_type = helper.contentType();
     if (!content_type.empty()) {
         xmlNewProp(node.get(), (const xmlChar*)"content-type", (const xmlChar*)XmlUtils::escape(content_type).c_str());
-        ctx->response()->setHeader("Content-type", content_type);
+        ctx->response()->setHeader(CONTENT_TYPE_HEADER_NAME, content_type);
     }        
-    xmlNewProp(node.get(), (const xmlChar*)"url", (const xmlChar*)XmlUtils::escape(url).c_str());
+    xmlNewProp(node.get(), (const xmlChar*)STR_LWR_URL.c_str(), (const xmlChar*)XmlUtils::escape(url).c_str());
     xmlDocSetRootElement(doc.get(), node.release());
 
     return doc;
 }
 
-
-XmlDocHelper
-HttpBlock::post(Context *ctx, InvokeContext *invoke_ctx) const {
-
-    log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
-
-    const ArgList* args = invoke_ctx->getArgList();
-    unsigned int size = args->size();
-    if (size < 1) {
-        throwBadArityError();
-    }
-
-    std::string url = getUrl(args, 0, size - 1);
-    PROFILER(log(), "post: " + url);
-    
-    HttpHelper helper(url, getTimeout(ctx, url));
-    
-
-    std::string post_data;
-    bool multipart = createPostData(ctx, invoke_ctx, post_data);
-
-    appendHeaders(helper, ctx->request(), invoke_ctx, !multipart, multipart);
-    helper.postData(post_data.data(), post_data.size());
-
-    httpCall(helper);
-    checkStatus(helper);
-
-    createTagInfo(helper, invoke_ctx);
-
-    if (invoke_ctx->haveCachedCopy() && !invoke_ctx->tag().modified) {
-        return XmlDocHelper();
-    }
-
-    createMeta(helper, invoke_ctx);
-
-    return response(helper);
-}
-
 XmlDocHelper
 HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
 
-    log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+    log()->info("HttpBlock::postHttp, %s", owner()->name().c_str());
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
@@ -569,7 +631,7 @@ HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
         url.push_back(url.find('?') != std::string::npos ? '&' : '?');
         url.append(query);
     }
-    PROFILER(log(), "postHttp: " + url);
+    PROFILER(log(), "http.postHttp: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
@@ -601,7 +663,7 @@ XmlDocHelper
 HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     (void)invoke_ctx;
     
-    log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+    log()->info("HttpBlock::postByRequest, %s", owner()->name().c_str());
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
@@ -616,8 +678,10 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     bool has_query = url.find('?') != std::string::npos;
 
     const std::string &method = ctx->request()->getRequestMethod();
-    bool is_post = !strcasecmp(method.c_str(), "POST") || !strcasecmp(method.c_str(), "PUT");
-    if (is_post) {
+    bool is_postdata =
+        !strcasecmp(method.c_str(), STR_POST.c_str()) ||
+        !strcasecmp(method.c_str(), STR_PUT.c_str());
+    if (is_postdata) {
         const std::string &query = ctx->request()->getQueryString();
         if (!query.empty()) {
             url.push_back(has_query ? '&' : '?');
@@ -631,12 +695,12 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
         url.append(query);
     }
     
-    PROFILER(log(), "postByRequest: " + url);
+    PROFILER(log(), "http.postByRequest: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
-    appendHeaders(helper, ctx->request(), invoke_ctx, false, is_post);
+    appendHeaders(helper, ctx->request(), invoke_ctx, false, is_postdata);
 
-    if (is_post) {
+    if (is_postdata) {
         std::pair<const char*, std::streamsize> body = ctx->request()->requestBody();
         helper.postData(body.first, body.second);
     }
@@ -656,14 +720,14 @@ XmlDocHelper
 HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
     (void)invoke_ctx;
 
-    log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+    log()->info("HttpBlock::getByState, %s", owner()->name().c_str());
     
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
     if (!size) {
         throwBadArityError();
     }
-    else if (tagged()) {
+    if (tagged()) {
         throw CriticalInvokeError("tag is not allowed");
     }
 
@@ -689,7 +753,7 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
         url.append(state->asString(name));
         has_query = true;
     }
-    PROFILER(log(), "getByState: " + url);
+    PROFILER(log(), "http.getByState: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
@@ -705,14 +769,14 @@ XmlDocHelper
 HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     (void)invoke_ctx;
 
-    log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
+    log()->info("HttpBlock::getByRequest, %s", owner()->name().c_str());
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
     if (!size) {
         throwBadArityError();
     }
-    else if (tagged()) {
+    if (tagged()) {
         throw CriticalInvokeError("tag is not allowed");
     }
 
@@ -720,7 +784,7 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     bool has_query = url.find('?') != std::string::npos;
 
     const std::string &method = ctx->request()->getRequestMethod();
-    if (!strcasecmp(method.c_str(), "POST") || !strcasecmp(method.c_str(), "PUT")) {
+    if (!strcasecmp(method.c_str(), STR_POST.c_str()) || !strcasecmp(method.c_str(), STR_PUT.c_str())) {
         const std::vector<StringUtils::NamedValue>& args = ctx->request()->args();
         if (!args.empty()) {
             for(std::vector<StringUtils::NamedValue>::const_iterator it = args.begin(), end = args.end();
@@ -747,7 +811,7 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
         url.push_back(has_query ? '&' : '?');
         url.append(query);
     }
-    PROFILER(log(), "getByRequest: " + url);
+    PROFILER(log(), "http.getByRequest: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
@@ -918,11 +982,10 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
         return result;
     }
 
-    if (error_mode) {
-        return XmlDocHelper();
+    if (!error_mode) {
+        throw InvokeError("format is not recognized: " + helper.contentType(), STR_LWR_URL, helper.url());
     }
-        
-    throw InvokeError("format is not recognized: " + helper.contentType(), "url", helper.url());
+    return XmlDocHelper();
 }
 
 void
@@ -942,17 +1005,17 @@ HttpBlock::getTimeout(Context *ctx, const std::string &url) const {
     }
     
     InvokeError error("block is timed out");
-    error.add("url", url);
-    error.add("timeout", boost::lexical_cast<std::string>(ctx->timer().timeout()));
+    error.add(STR_LWR_URL, url);
+    error.add(STR_LWR_TIMEOUT, boost::lexical_cast<std::string>(ctx->timer().timeout()));
     throw error;
 }
 
 void
 HttpBlock::wrapError(InvokeError &error, const HttpHelper &helper, const XmlNodeHelper &error_body_node) const {
-    error.add("url", helper.url());
-    error.add("status", boost::lexical_cast<std::string>(helper.status()));
+    error.add(STR_LWR_URL, helper.url());
+    error.add(STR_LWR_STATUS, boost::lexical_cast<std::string>(helper.status()));
     if (!helper.contentType().empty()) {
-        error.add("content-type", helper.contentType());
+        error.add(STR_LWR_CONTENT_TYPE, helper.contentType());
     }
     if (NULL != error_body_node.get()) {
         error.attachNode(error_body_node);
@@ -998,9 +1061,9 @@ HttpBlock::httpCall(HttpHelper &helper) const {
         helper.perform();
     }
     catch(const std::runtime_error &e) {
-        throw RetryInvokeError(e.what(), "url", helper.url());
+        throw RetryInvokeError(e.what(), STR_LWR_URL, helper.url());
     }
-    log()->debug("%s, http call performed", BOOST_CURRENT_FUNCTION);
+    log()->debug("HttpBlock::httpCall, http call performed");
 }
 
 void
@@ -1079,41 +1142,36 @@ HttpBlock::checkQueryParamId(const std::string &repr_name, const std::string &id
 }
 
 void
-HttpBlock::registerMethod(const char *name, HttpMethod method) {
+HttpBlock::registerMethod(const std::string &name, HttpMethod method) {
     try {
-        std::string n(name);
-        std::pair<std::string, HttpMethod> p(n, method);
+        MethodMap::iterator i = methods_.find(name);
+        if (methods_.end() != i) {
+            throw std::invalid_argument("registering duplicate http method: " + name);
+        }
 
-        MethodMap::iterator i = methods_.find(n);
-        if (methods_.end() == i) {
-            methods_.insert(p);
-        }
-        else {
-            std::stringstream stream;
-            stream << "registering duplicate http method: " << n;
-            throw std::invalid_argument(stream.str());
-        }
+        std::pair<std::string, HttpMethod> p(name, method);
+        methods_.insert(p);
     }
     catch (const std::exception &e) {
-        xscript::log()->error("%s, caught exception: %s", BOOST_CURRENT_FUNCTION, e.what());
+        xscript::log()->error("HttpBlock::registerMethod, caught exception: %s", e.what());
         throw;
     }
 }
 
 HttpMethodRegistrator::HttpMethodRegistrator() {
-    HttpBlock::registerMethod("getHttp", &HttpBlock::getHttp);
-    HttpBlock::registerMethod("get_http", &HttpBlock::getHttp);
+    HttpBlock::registerMethod("getHttp", &HttpBlock::get);
+    HttpBlock::registerMethod("get_http", &HttpBlock::get);
+    HttpBlock::registerMethod("getPageT", &HttpBlock::get);
+    HttpBlock::registerMethod("curlGetHttp", &HttpBlock::get);
 
-    HttpBlock::registerMethod("getHTTP", &HttpBlock::getHttp);
-    HttpBlock::registerMethod("getPageT", &HttpBlock::getHttp);
-    HttpBlock::registerMethod("curlGetHttp", &HttpBlock::getHttp);
-
-    HttpBlock::registerMethod("get", &HttpBlock::getHttp);
-    HttpBlock::registerMethod("post", &HttpBlock::post);
+    HttpBlock::registerMethod(STR_GET, &HttpBlock::get);
+    HttpBlock::registerMethod(STR_HEAD, &HttpBlock::head);
+    HttpBlock::registerMethod(STR_DELETE, &HttpBlock::del);
+    HttpBlock::registerMethod(STR_PUT, &HttpBlock::put);
+    HttpBlock::registerMethod(STR_POST, &HttpBlock::post);
 
     HttpBlock::registerMethod("postHttp", &HttpBlock::postHttp);
     HttpBlock::registerMethod("post_http", &HttpBlock::postHttp);
-    HttpBlock::registerMethod("postHTTP", &HttpBlock::postHttp);
 
     HttpBlock::registerMethod("getByState", &HttpBlock::getByState);
     HttpBlock::registerMethod("get_by_state", &HttpBlock::getByState);
