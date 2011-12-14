@@ -9,7 +9,6 @@
 #include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/checked_delete.hpp>
-#include <boost/current_function.hpp>
 #include <boost/tokenizer.hpp>
 
 #include <boost/thread/xtime.hpp>
@@ -52,6 +51,7 @@ namespace xscript {
 
 static const boost::uint32_t EXPIRE_TIME_DELTA_UNDEFINED = std::numeric_limits<boost::uint32_t>::max();
 static const std::string GET_METHOD = "GET";
+static const std::string POST_METHOD = "POST";
 
 const std::string Script::PARSE_XSCRIPT_NODE_METHOD = "SCRIPT_PARSE_XSCRIPT_NODE";
 const std::string Script::REPLACE_XSCRIPT_NODE_METHOD = "SCRIPT_REPLACE_XSCRIPT_NODE";
@@ -189,15 +189,16 @@ Script::ScriptData::block(const std::string &id, bool throw_error) const {
                 return (*i);
             }
         }
-        if (throw_error) {
-            throw std::invalid_argument("requested block with nonexistent id: " + id);
-        }
-        return NULL;
     }
     catch (const std::exception &e) {
-        log()->error("%s, %s, caught exception: %s", BOOST_CURRENT_FUNCTION, owner_->name().c_str(), e.what());
+        log()->error("Can not get block by id: %s, owner: %s, error: %s", id.c_str(), owner_->name().c_str(), e.what());
         throw;
     }
+
+    if (throw_error) {
+        throw std::invalid_argument("requested block with nonexistent id: " + id + " owner: " + owner_->name());
+    }
+    return NULL;
 }
 
 std::vector<Block*>&
@@ -692,8 +693,13 @@ Script::CachableHandler::process(const MessageParams &params,
         return CONTINUE;
     }
 
-    const std::string &method = ctx->request()->getRequestMethod();
-    if (method != GET_METHOD) {
+    const Request *req = ctx->request();
+    const std::string &method = req->getRequestMethod();
+    bool cached_method = (method == GET_METHOD);
+    if (!cached_method && (method == POST_METHOD)) {
+        cached_method = (0 == req->requestBody().second); // allowed for POSTs with empty body
+    }
+    if (!cached_method) {
         log()->warn("Cannot cache script. Owner: %s Method %s is not GET method", method.c_str(), script->name().c_str());
         result.set(false);
         return CONTINUE;
@@ -871,7 +877,7 @@ Script::xsltName() const {
 
 XmlDocSharedHelper
 Script::invoke(boost::shared_ptr<Context> ctx) {
-    log()->info("%s, invoking %s", BOOST_CURRENT_FUNCTION, name().c_str());
+    log()->info("Script::invoke, invoking %s", name().c_str());
     PROFILER(log(), "invoke script " + name());
     ctx->wait(invokeBlocks(ctx));
     return processResults(ctx);
