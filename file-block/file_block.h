@@ -51,8 +51,6 @@ private:
     XmlDocSharedHelper invokeMethod(const std::string &file_name,
             boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const;
     
-    XmlDocSharedHelper testFileDoc(bool result, const std::string &file) const;
-    
     std::string fileName(InvokeContext *invoke_ctx) const;
     
     virtual void property(const char *name, const char *value);

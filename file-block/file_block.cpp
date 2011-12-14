@@ -5,7 +5,6 @@
 #include <fstream>
 
 #include <boost/bind.hpp>
-#include <boost/current_function.hpp>
 #include <boost/filesystem/path.hpp>
 
 #include <libxml/xinclude.h>
@@ -37,6 +36,9 @@ namespace xscript {
 
 static const std::string FILENAME_PARAMNAME = "FILEBLOCK_FILENAME_PARAMNAME";
 static const std::string INVOKE_SCRIPT_PARAMNAME = "FILEBLOCK_INVOKE_SCRIPT_PARAMNAME";
+static const std::string STR_FILE = "file";
+static const std::string STR_TIMEOUT = "timeout";
+static const std::string STR_EMPTY_PATH = "empty path";
 
 
 enum { GLB_MUTEX_SIZE = 57 };
@@ -157,25 +159,47 @@ FileBlock::fileName(InvokeContext *invoke_ctx) const {
     return filename;
 }
 
+static XmlDocSharedHelper
+testFileDoc(const std::string &file, const struct stat *st) {
+    XmlDocSharedHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlUtils::throwUnless(NULL != doc.get());
+    
+    XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"exist", (const xmlChar*)(NULL != st ? "1" : "0")));
+    XmlUtils::throwUnless(NULL != node.get());
+    if (!file.empty()) {
+        xmlNewProp(node.get(), (const xmlChar*)STR_FILE.c_str(), (const xmlChar*)XmlUtils::escape(file).c_str());
+        if (NULL != st) {
+            xmlNewProp(node.get(), (const xmlChar*)"mtime",
+                (const xmlChar*)boost::lexical_cast<std::string>(st->st_mtime).c_str());
+        }
+    }
+
+    xmlDocSetRootElement(doc.get(), node.release());
+    return doc;
+}
+
+
 void
 FileBlock::call(boost::shared_ptr<Context> ctx,
     boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     
-    log()->info("%s, %s", BOOST_CURRENT_FUNCTION, owner()->name().c_str());
-
     std::string file = fileName(invoke_ctx.get());
+    if (log()->enabledDebug()) {
+        log()->debug("FileBlock.%s %s %s", method().c_str(), file.c_str(), owner()->name().c_str());
+    }
+
     if (file.empty()) {
         if (isTest()) {
-            invoke_ctx->resultDoc(testFileDoc(false, file));
+            invoke_ctx->resultDoc(testFileDoc(file, NULL));
             return;
         }
-        ignore_not_existed_ ? throw SkipResultInvokeError("empty path") :
-            throw InvokeError("empty path");
+        ignore_not_existed_ ? throw SkipResultInvokeError(STR_EMPTY_PATH) :
+            throw InvokeError(STR_EMPTY_PATH);
     }
     
     if (remainedTime(ctx.get()) <= 0) {
-        InvokeError error("block is timed out", "file", file);
-        error.add("timeout", boost::lexical_cast<std::string>(ctx->timer().timeout()));
+        InvokeError error("block is timed out", STR_FILE, file);
+        error.add(STR_TIMEOUT, boost::lexical_cast<std::string>(ctx->timer().timeout()));
         throw error;
     }
 
@@ -183,15 +207,15 @@ FileBlock::call(boost::shared_ptr<Context> ctx,
     int res = stat(file.c_str(), &st);
     
     if (isTest()) {
-        invoke_ctx->resultDoc(testFileDoc(!res, file));
+        invoke_ctx->resultDoc(testFileDoc(file, !res ? &st : NULL));
         return;
     }
     
     if (res != 0) {
         std::stringstream stream;
         StringUtils::report("failed to stat file: ", errno, stream);
-        ignore_not_existed_ ? throw SkipResultInvokeError(stream.str(), "file", file) :
-            throw InvokeError(stream.str(), "file", file);
+        ignore_not_existed_ ? throw SkipResultInvokeError(stream.str(), STR_FILE, file) :
+            throw InvokeError(stream.str(), STR_FILE, file);
     }
     
     if (!tagged()) {
@@ -224,11 +248,11 @@ FileBlock::invokeMethod(const std::string &file_name,
         return (this->*method_)(file_name, ctx, invoke_ctx);
     }
     catch(InvokeError &e) {
-        e.add("file", file_name);
+        e.add(STR_FILE, file_name);
         throw e;
     }
     catch(const std::exception &e) {
-        throw InvokeError(e.what(), "file", file_name);
+        throw InvokeError(e.what(), STR_FILE, file_name);
     }
 }
 
@@ -237,9 +261,8 @@ FileBlock::loadFile(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     (void)ctx;
     (void)invoke_ctx;
-    log()->debug("%s: loading file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
-    PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
+    PROFILER(log(), "file.load: " + file_name + " , " + owner()->name());
 
     XmlInfoCollector::Starter starter;
     XmlDocSharedHelper doc(xmlReadFile(
@@ -266,9 +289,8 @@ FileBlock::loadJson(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     (void)ctx;
     (void)invoke_ctx;
-    log()->debug("%s: loading json file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
-    PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
+    PROFILER(log(), "file.loadJson: " + file_name + " , " + owner()->name());
 
     std::ifstream is(file_name.c_str(), std::ios::in);
     if (!is) {
@@ -294,9 +316,8 @@ FileBlock::loadText(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     (void)ctx;
     (void)invoke_ctx;
-    log()->debug("%s: loading text file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
-    PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
+    PROFILER(log(), "file.loadText: " + file_name + " , " + owner()->name());
 
     std::ifstream is(file_name.c_str(), std::ios::in);
     if (!is) {
@@ -346,9 +367,8 @@ XmlDocSharedHelper
 FileBlock::loadBinary(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
     (void)invoke_ctx;
-    log()->debug("%s: loading binary file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
-    PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
+    PROFILER(log(), "file.loadBinary: " + file_name + " , " + owner()->name());
 
     boost::shared_ptr<std::ifstream> is(
         new std::ifstream(file_name.c_str(), std::ios::in | std::ios::binary));
@@ -376,7 +396,7 @@ FileBlock::loadBinary(const std::string &file_name,
     XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"success", (const xmlChar*)"1"));
     XmlUtils::throwUnless(NULL != node.get());
           
-    xmlNewProp(node.get(), (const xmlChar*)"file", (const xmlChar*)XmlUtils::escape(file_name).c_str());
+    xmlNewProp(node.get(), (const xmlChar*)STR_FILE.c_str(), (const xmlChar*)XmlUtils::escape(file_name).c_str());
     xmlDocSetRootElement(doc.get(), node.release());
 
     return doc;
@@ -385,9 +405,8 @@ FileBlock::loadBinary(const std::string &file_name,
 XmlDocSharedHelper
 FileBlock::invokeFile(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
-    log()->debug("%s: invoking file %s", BOOST_CURRENT_FUNCTION, file_name.c_str());
 
-    PROFILER(log(), std::string(BOOST_CURRENT_FUNCTION) + ", " + owner()->name());
+    PROFILER(log(), "file.invoke: " + file_name + " , " + owner()->name());
     
     for (Context* tmp_ctx = ctx.get(); tmp_ctx; tmp_ctx = tmp_ctx->parentContext().get()) {
         if (file_name == tmp_ctx->script()->name()) {
@@ -408,7 +427,7 @@ FileBlock::invokeFile(const std::string &file_name,
     }
     
     if (NULL == script.get()) {
-        throw InvokeError("Cannot create script", "file", file_name);
+        throw InvokeError("Cannot create script", STR_FILE, file_name);
     }
 
     boost::shared_ptr<TypedMap> local_params(new TypedMap());
@@ -428,22 +447,6 @@ FileBlock::invokeFile(const std::string &file_name,
     return doc;
 }
 
-
-XmlDocSharedHelper
-FileBlock::testFileDoc(bool result, const std::string &file) const {
-    XmlDocSharedHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
-    XmlUtils::throwUnless(NULL != doc.get());
-    
-    std::string res = boost::lexical_cast<std::string>(result);
-    XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"exist", (const xmlChar*)res.c_str()));
-    XmlUtils::throwUnless(NULL != node.get());
-    if (!file.empty()) {
-        xmlNewProp(node.get(), (const xmlChar*)"file", (const xmlChar*)XmlUtils::escape(file).c_str());
-    }
-
-    xmlDocSetRootElement(doc.get(), node.release());
-    return doc;
-}
 
 static const std::string STR_SCRIPTNAME_DELIMITER = ". Script: ";
 
