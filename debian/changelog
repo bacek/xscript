@@ -1,3 +1,13 @@
+xscript (5.73.37-1) unstable; urgency=low
+
+  * http block: support new methods: head, delete, put
+  * file block:
+    improve profile messages, writing filename, dump mtime for "test"
+  * switch to info level log messages: "stopped : block"
+  * allow page-cache for POSTs with empty body
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Wed, 14 Dec 2011 20:09:06 +0300
+
 xscript (5.73.36-13) unstable; urgency=low
 
   * support multiple values for local-block and typed arg lists
