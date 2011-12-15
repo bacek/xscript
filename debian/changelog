@@ -1,3 +1,9 @@
+xscript (5.73.37-3) unstable; urgency=low
+
+  * fixed guard checking for RequestArg
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Thu, 15 Dec 2011 18:16:22 +0300
+
 xscript (5.73.37-2) unstable; urgency=low
 
   * set flag headers_received after successful request

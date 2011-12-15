@@ -56,6 +56,7 @@ public:
     std::string getXForwardedFor() const;
 
     unsigned int countArgs() const;
+    bool hasArgData(const std::string &name) const;
     bool hasArg(const std::string &name) const;
     const std::string& getArg(const std::string &name) const;
     void getArg(const std::string &name, std::vector<std::string> &v) const;

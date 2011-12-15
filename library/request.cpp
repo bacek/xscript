@@ -228,8 +228,32 @@ Request::countArgs() const {
 }
 
 bool
+Request::hasArgData(const std::string &name) const {
+
+    //std::vector<std::string> values;
+    //getArg(name, values);
+    //return values.size() > 1 || !values.front().empty();
+
+    bool found = false;
+    for (std::vector<StringUtils::NamedValue>::const_iterator i = data_->args_.begin(),
+            end = data_->args_.end(); i != end; ++i) {
+
+        if (i->first == name) {
+            if (found) {
+                return true; // values.size() > 1
+            }
+            if (!i->second.empty()) {
+                return true; // the first param value is not empty
+            }
+            found = true; // the first param value found but it's empty
+        }
+    }
+    return false;
+}
+
+bool
 Request::hasArg(const std::string &name) const {
-    for(std::vector<StringUtils::NamedValue>::const_iterator i = data_->args_.begin(),
+    for (std::vector<StringUtils::NamedValue>::const_iterator i = data_->args_.begin(),
             end = data_->args_.end();
         i != end;
         ++i) {

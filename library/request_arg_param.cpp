@@ -69,11 +69,11 @@ RequestArgParam::create(Object *owner, xmlNodePtr node) {
 bool
 RequestArgParam::is(const Context *ctx, const std::string &name, const std::string &value) {
     const Request *req = ctx->request();
-    if (value.empty()) {
-        return !req->getArg(name).empty() || req->hasFile(name);
+    if (!value.empty()) {
+        return req->getArg(name) == value;
     }
-    
-    return req->getArg(name) == value;
+
+    return req->hasFile(name) || req->hasArgData(name);
 }
 
 static CreatorRegisterer reg_("requestarg", &RequestArgParam::create);
