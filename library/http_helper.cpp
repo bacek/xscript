@@ -40,6 +40,8 @@ static const std::string STR_TEXT_PLAIN("text/plain");
 static const std::string STR_TEXT_XML("text/xml");
 static const std::string STR_UTF8("utf-8");
 
+static const long UNKNOWN_HTTP_STATUS = 0;
+
 static pthread_mutex_t *lock_cs;
 
 extern "C" void
@@ -109,23 +111,43 @@ private:
 };
 
 
-class HttpHelper::HelperData {
-public:
+struct HttpCurlCheck {
 
+    static const char* errorText(CURLcode code) {
+        if (code > CURLE_OK && code < CURL_LAST) {
+            return curl_easy_strerror(code);
+        }
+        return NULL;
+    }
+
+    static void check(CURLcode code) {
+        if (CURLE_OK != code) {
+            const char *error_text = errorText(code);
+            if (CURLE_OPERATION_TIMEDOUT == code) {
+                throw HttpTimeoutError(error_text);
+            }
+            throw std::runtime_error(error_text);
+        }
+    }
+};
+
+
+class HttpHelper::HelperData : public HttpCurlCheck {
+public:
     template<typename T> void
     setopt(CURLoption opt, T t) {
         check(curl_easy_setopt(curl_, opt, t));
     }
 
     template<typename T> void
-    getinfo(CURLINFO info, T *t) {
+    getinfo(CURLINFO info, T *t) const {
         check(curl_easy_getinfo(curl_, info, t));
     }
 
     HelperData(const std::string &url, long timeout) :
         url_(url), content_(new std::string),
         curl_(NULL), curl_code_(CURLE_OK), status_(0), 
-        sent_modified_since_(false), headers_received_(false), aborted_(false) {
+        sent_modified_since_(false), headers_received_(false), aborted_(false), no_body_(false) {
 
         curl_ = curl_easy_init();
         if (NULL != curl_) {
@@ -157,23 +179,6 @@ public:
         }
     }
 
-    static const char* errorText(CURLcode code) {
-        if (code > CURLE_OK && code < CURL_LAST) {
-            return curl_easy_strerror(code);
-        }
-        return NULL;
-    }
-
-    static void check(CURLcode code) {
-        if (CURLE_OK != code) {
-            const char *error_text = errorText(code);
-            if (CURLE_OPERATION_TIMEDOUT == code) {
-                throw HttpTimeoutError(error_text);
-            }
-            throw std::runtime_error(error_text);
-        }
-    }
-    
     void appendHeaders(const std::vector<std::string> &headers, time_t modified_since) {
 
         bool expect = false;
@@ -228,6 +233,7 @@ public:
 
     void method(const std::string &value) {
         if (!strcasecmp(value.c_str(), "HEAD")) {
+            no_body_ = true;
             setopt(CURLOPT_NOBODY, static_cast<long>(1));
         }
         else {
@@ -239,10 +245,11 @@ public:
         curl_code_ = curl_easy_perform(curl_);
         if (aborted_) {
             curl_code_ = CURLE_ABORTED_BY_CALLBACK;
-            return 0; // unknown http status
+            return UNKNOWN_HTTP_STATUS;
         }
         check(curl_code_);
         getinfo(CURLINFO_RESPONSE_CODE, &status_);
+        headers_received_ = true;
         detectContentType();
         return status_;
     }
@@ -251,10 +258,13 @@ public:
         curl_code_ = curl_easy_perform(curl_);
         if (aborted_) {
             curl_code_ = CURLE_ABORTED_BY_CALLBACK;
+            return UNKNOWN_HTTP_STATUS;
         }
-        else if (CURLE_OK == curl_code_) {
-            getinfo(CURLINFO_RESPONSE_CODE, &status_);
+        if (CURLE_OK != curl_code_) {
+            return UNKNOWN_HTTP_STATUS;
         }
+        getinfo(CURLINFO_RESPONSE_CODE, &status_);
+        headers_received_ = true;
         return status_;
     }
 
@@ -414,6 +424,7 @@ public:
     bool sent_modified_since_;
     bool headers_received_;
     bool aborted_;
+    bool no_body_;
 
     static boost::once_flag init_flag_;
     static const std::string HEADER_NAME_LAST_MODIFIED;
