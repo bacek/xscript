@@ -247,11 +247,19 @@ FileBlock::invokeMethod(const std::string &file_name,
     try {
         return (this->*method_)(file_name, ctx, invoke_ctx);
     }
-    catch(InvokeError &e) {
+    catch (SkipResultInvokeError &e) {
         e.add(STR_FILE, file_name);
         throw e;
     }
-    catch(const std::exception &e) {
+    catch (CriticalInvokeError &e) {
+        e.add(STR_FILE, file_name);
+        throw e;
+    }
+    catch (InvokeError &e) {
+        e.add(STR_FILE, file_name);
+        throw e;
+    }
+    catch (const std::exception &e) {
         throw InvokeError(e.what(), STR_FILE, file_name);
     }
 }

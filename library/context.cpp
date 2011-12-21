@@ -402,12 +402,14 @@ Context::wait(const boost::xtime &until) {
     }
 }
 
+static const std::string STR_CONTEXT_ALREADY_STOPPED = "context already stopped";
+
 void
 Context::expect(unsigned int count) {
 
     boost::mutex::scoped_lock sl(ctx_data_->results_mutex_);
     if (stopped()) {
-        throw std::logic_error("context already stopped");
+        throw SkipResultInvokeError(STR_CONTEXT_ALREADY_STOPPED);
     }
     if (ctx_data_->results_.size() == 0) {
         ctx_data_->results_.resize(count);

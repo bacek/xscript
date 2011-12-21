@@ -9,6 +9,7 @@
 
 #include "xscript/context.h"
 #include "xscript/doc_cache.h"
+#include "xscript/exception.h"
 #include "xscript/http_utils.h"
 #include "xscript/logger.h"
 #include "xscript/request.h"
@@ -89,7 +90,7 @@ Response::ResponseData::~ResponseData()
 void
 Response::ResponseData::checkAllowedHeaders() const {
     if (headers_sent_ && !direct_binary_) {
-        throw std::runtime_error("headers already sent");
+        throw SkipResultInvokeError("headers already sent");
     }
 }
 
