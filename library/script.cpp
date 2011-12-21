@@ -51,7 +51,6 @@ namespace xscript {
 
 static const boost::uint32_t EXPIRE_TIME_DELTA_UNDEFINED = std::numeric_limits<boost::uint32_t>::max();
 static const std::string GET_METHOD = "GET";
-static const std::string POST_METHOD = "POST";
 
 const std::string Script::PARSE_XSCRIPT_NODE_METHOD = "SCRIPT_PARSE_XSCRIPT_NODE";
 const std::string Script::REPLACE_XSCRIPT_NODE_METHOD = "SCRIPT_REPLACE_XSCRIPT_NODE";
@@ -696,8 +695,8 @@ Script::CachableHandler::process(const MessageParams &params,
     const Request *req = ctx->request();
     const std::string &method = req->getRequestMethod();
     bool cached_method = (method == GET_METHOD);
-    if (!cached_method && (method == POST_METHOD)) {
-        cached_method = (0 == req->requestBody().second); // allowed for POSTs with empty body
+    if (!cached_method && req->hasPostData()) {
+        cached_method = (0 == req->requestBody().second); // allowed for POST/PUT with empty body
     }
     if (!cached_method) {
         log()->warn("Cannot cache script. Owner: %s Method %s is not GET method", method.c_str(), script->name().c_str());

@@ -677,10 +677,7 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     std::string url = getUrl(args, 0, size - 1);
     bool has_query = url.find('?') != std::string::npos;
 
-    const std::string &method = ctx->request()->getRequestMethod();
-    bool is_postdata =
-        !strcasecmp(method.c_str(), STR_POST.c_str()) ||
-        !strcasecmp(method.c_str(), STR_PUT.c_str());
+    bool is_postdata = ctx->request()->hasPostData();
     if (is_postdata) {
         const std::string &query = ctx->request()->getQueryString();
         if (!query.empty()) {
@@ -783,8 +780,7 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
     std::string url = getUrl(args, 0, size - 1);
     bool has_query = url.find('?') != std::string::npos;
 
-    const std::string &method = ctx->request()->getRequestMethod();
-    if (!strcasecmp(method.c_str(), STR_POST.c_str()) || !strcasecmp(method.c_str(), STR_PUT.c_str())) {
+    if (ctx->request()->hasPostData()) {
         const std::vector<StringUtils::NamedValue>& args = ctx->request()->args();
         if (!args.empty()) {
             for(std::vector<StringUtils::NamedValue>::const_iterator it = args.begin(), end = args.end();
