@@ -311,7 +311,7 @@ HttpBlock::createArgList(Context *ctx, InvokeContext *invoke_ctx) const {
     }
     if (!query_params_.empty()) {
         boost::shared_ptr<QueryParamsArgList> args(new QueryParamsArgList(HttpExtension::checkedQueryParams()));
-        if (method_ == &HttpBlock::post) {
+        if (method_ == &HttpBlock::post || method_ == &HttpBlock::put) {
             for (QueryParams::const_iterator it = query_params_.begin(), end = query_params_.end(); it != end; ++it) {
                 if (NULL != it->files(ctx)) {
                     args->multipart = true;
