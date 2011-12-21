@@ -463,6 +463,15 @@ Request::suppressBody() const {
     return RequestImpl::HEAD == getRequestMethod();
 }
 
+static const std::string STR_POST = "POST";
+static const std::string STR_PUT = "PUT";
+
+bool
+Request::hasPostData() const {
+    const std::string &method = getRequestMethod();
+    return method == STR_POST || method == STR_PUT;
+}
+
 void
 Request::addInputHeader(const std::string &name, const std::string &value) {
     Range key_range = createRange(name);
@@ -471,7 +480,7 @@ Request::addInputHeader(const std::string &name, const std::string &value) {
     boost::mutex::scoped_lock lock(data_->mutex_);
     Parser::addHeader(data_.get(), key_range, value_range, enc.get());
 }
-
+			
 void
 Request::attach(std::istream *is, char *env[]) {
     try {
@@ -500,6 +509,9 @@ Request::attach(std::istream *is, char *env[]) {
     }
 }
 
+static const std::string STR_MULTIPART_FORM_DATA = "multipart/form-data";
+static const std::string STR_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
+
 class Request::AttachHandler : public MessageHandler {
     Result process(const MessageParams &params, MessageResultBase &result) {
         (void)result;
@@ -510,22 +522,24 @@ class Request::AttachHandler : public MessageHandler {
         std::auto_ptr<Encoder> enc = Encoder::createDefault("cp1251", "UTF-8");
         Parser::parse(request->data_.get(), env, enc.get());
 
-        if (is && ("POST" == request->getRequestMethod() || "PUT" == request->getRequestMethod())) {
+        if (is && request->hasPostData()) {
             request->data_->body_.resize(request->getContentLength());
             is->exceptions(std::ios::badbit);
             is->read(&request->data_->body_[0], request->data_->body_.size());
-            
+
             if (is->gcount() != static_cast<std::streamsize>(request->data_->body_.size())) {
                 throw std::runtime_error("failed to read request entity");
             }
-            
+
             const std::string &type = request->getContentType();
-            if (strncasecmp("multipart/form-data", type.c_str(), sizeof("multipart/form-data") - 1) == 0) {
+            if (!strncasecmp(STR_MULTIPART_FORM_DATA.c_str(), type.c_str(), STR_MULTIPART_FORM_DATA.size())) {
                 Range body = createRange(request->data_->body_);
                 std::string boundary = Parser::getBoundary(createRange(type));
                 Parser::parseMultipart(request->data_.get(), body, boundary, enc.get());
             }
-            else if (!request->data_->body_.empty()) {
+            else if (!request->data_->body_.empty() &&
+                !strncasecmp(STR_WWW_FORM_URLENCODED.c_str(), type.c_str(), STR_WWW_FORM_URLENCODED.size())) {
+
                 StringUtils::parse(createRange(request->data_->body_), request->data_->args_, enc.get());
             }
         }

@@ -72,6 +72,7 @@ RequestTest::testPost() {
         (char*)"REQUEST_METHOD=POST",
         (char*)"HTTP_CONTENT_LENGTH=29",
         (char*)"HTTP_HOST=yandex.ru",
+        (char*)"CONTENT_TYPE=application/x-www-form-urlencoded",
         (char*)NULL
     };
 

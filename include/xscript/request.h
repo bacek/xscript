@@ -92,7 +92,9 @@ public:
     bool isBot() const;
     std::pair<const char*, std::streamsize> requestBody() const;
     bool suppressBody() const;
-    
+
+    bool hasPostData() const;
+
     void attach(std::istream *is, char *env[]);
 
     static const std::string X_FORWARDED_FOR_HEADER_NAME;
