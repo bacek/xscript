@@ -1,3 +1,11 @@
+xscript (5.73.37-4) unstable; urgency=low
+
+  * parse body for query params if content type is
+    application/x-www-form-urlencoded
+  * http-block: allow attached files for method put
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Wed, 21 Dec 2011 18:49:03 +0300
+
 xscript (5.73.37-3) unstable; urgency=low
 
   * fixed guard checking for RequestArg
