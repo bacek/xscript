@@ -247,17 +247,15 @@ FileBlock::invokeMethod(const std::string &file_name,
     try {
         return (this->*method_)(file_name, ctx, invoke_ctx);
     }
-    catch (SkipResultInvokeError &e) {
-        e.add(STR_FILE, file_name);
-        throw e;
-    }
-    catch (CriticalInvokeError &e) {
-        e.add(STR_FILE, file_name);
-        throw e;
+    catch (const CanNotOpenError &e) {
+        if (ignore_not_existed_) {
+            throw SkipResultInvokeError(e.whatStr());
+        }
+        throw;
     }
     catch (InvokeError &e) {
         e.add(STR_FILE, file_name);
-        throw e;
+        throw;
     }
     catch (const std::exception &e) {
         throw InvokeError(e.what(), STR_FILE, file_name);
@@ -302,7 +300,7 @@ FileBlock::loadJson(const std::string &file_name,
 
     std::ifstream is(file_name.c_str(), std::ios::in);
     if (!is) {
-        throw InvokeError("Cannot open file");
+        throw CanNotOpenError(file_name);
     }
     //fixed crush : unexpected exception
     //is.exceptions(std::ios::badbit | std::ios::eofbit);
@@ -319,6 +317,19 @@ FileBlock::loadJson(const std::string &file_name,
     return result;
 }
 
+static std::streamsize
+detectStreamSize(std::ifstream &is) {
+    is.exceptions(std::ios::badbit | std::ios::eofbit);
+
+    if (is.seekg(0, std::ios::end)) {
+        std::ifstream::pos_type size = is.tellg();
+        if (is.seekg(0, std::ios::beg)) {
+            return size;
+	}
+    }
+    throw InvokeError("Seek error");
+}
+
 XmlDocSharedHelper
 FileBlock::loadText(const std::string &file_name,
         boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const {
@@ -329,18 +340,10 @@ FileBlock::loadText(const std::string &file_name,
 
     std::ifstream is(file_name.c_str(), std::ios::in);
     if (!is) {
-        throw InvokeError("Cannot open file");
+        throw CanNotOpenError(file_name);
     }
-    is.exceptions(std::ios::badbit | std::ios::eofbit);
 
-    std::ifstream::pos_type size = 0;
-    if (!is.seekg(0, std::ios::end)) {
-        throw InvokeError("Seek error");
-    }
-    size = is.tellg();
-    if (!is.seekg(0, std::ios::beg)) {
-        throw InvokeError("Seek error");
-    }
+    std::streamsize size = detectStreamSize(is);
 
     std::vector<char> doc_data(size);
     is.read(&doc_data[0], size);
@@ -382,18 +385,10 @@ FileBlock::loadBinary(const std::string &file_name,
         new std::ifstream(file_name.c_str(), std::ios::in | std::ios::binary));
     
     if (!is.get()) {
-        throw InvokeError("Cannot open file");
+        throw CanNotOpenError(file_name);
     }
-    is->exceptions(std::ios::badbit | std::ios::eofbit);
 
-    std::ifstream::pos_type size = 0;
-    if (!is->seekg(0, std::ios::end)) {
-        throw InvokeError("Seek error");
-    }
-    size = is->tellg();
-    if (!is->seekg(0, std::ios::beg)) {
-        throw InvokeError("Seek error");
-    }
+    std::streamsize size = detectStreamSize(*is);
 
     ctx->response()->write(
         std::auto_ptr<BinaryWriter>(new FStreamBinaryWriter(is, size)));
