@@ -1,3 +1,10 @@
+xscript (5.73.37-5) unstable; urgency=low
+
+  * RequestArg fixed: check non-existed (nil) value for common blocks
+  * file-block: improve exception handling 
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Thu, 22 Dec 2011 14:57:49 +0300
+
 xscript (5.73.37-4) unstable; urgency=low
 
   * parse body for query params if content type is
