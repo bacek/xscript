@@ -226,13 +226,13 @@ void
 TypedParam::addTypedValue(ArgList &al, const TypedValue &value, bool add_nil) const {
 
     if (value.nil() && typed_data_->default_value_.nil()) {
-        if (add_nil) { //HACK for new types
-            al.addAs(ConvertedParam::as(), value);
-            return;
-        }
         NilSupportedArgList *ns_al = dynamic_cast<NilSupportedArgList*>(&al);
         if (NULL != ns_al) {
             ns_al->addNilAs(ConvertedParam::as());
+            return;
+        }
+        if (add_nil) { //HACK for new types
+            al.addAs(ConvertedParam::as(), value);
             return;
         }
     }

@@ -21,7 +21,11 @@
 
 namespace xscript {
 
-typedef void (*args_appender)(ArgList& args, const std::string &type, const std::string &value, bool suppress_error);
+static const std::string STR_TRUE("1");
+static const std::string STR_FALSE("0");
+
+
+typedef void (*args_appender)(ArgList &args, const std::string &type, const std::string &value, bool suppress_error);
 
 inline static void
 processCastError(const std::string &type, const std::string &value, bool checked) {
@@ -31,12 +35,12 @@ processCastError(const std::string &type, const std::string &value, bool checked
 }
 
 static void
-addBool(ArgList& args, const std::string &type, const std::string &value, bool checked) {
+addBool(ArgList &args, const std::string &type, const std::string &value, bool checked) {
     bool b = false;
-    if ("1" == value || !strncasecmp(value.c_str(), "true", sizeof("true"))) {
+    if (STR_TRUE == value || !strncasecmp(value.c_str(), "true", sizeof("true"))) {
         b = true;
     }
-    else if (value.empty() || "0" == value || !strncasecmp(value.c_str(), "false", sizeof("false"))) {
+    else if (value.empty() || STR_FALSE == value || !strncasecmp(value.c_str(), "false", sizeof("false"))) {
         b = false;
     }
     else {
@@ -46,7 +50,7 @@ addBool(ArgList& args, const std::string &type, const std::string &value, bool c
 }
 
 static void
-addDouble(ArgList& args, const std::string &type, const std::string &value, bool checked) {
+addDouble(ArgList &args, const std::string &type, const std::string &value, bool checked) {
     double d = 0;
     if (!value.empty()) {
         try {
@@ -61,7 +65,7 @@ addDouble(ArgList& args, const std::string &type, const std::string &value, bool
 
 template <typename T>
 static void
-addNumeric(ArgList& args, const std::string &type, const std::string &value, bool checked) {
+addNumeric(ArgList &args, const std::string &type, const std::string &value, bool checked) {
     T d = 0;
     if (!value.empty()) {
         try {
@@ -103,9 +107,6 @@ struct ArgsAppenderRegisterer {
 
 static ArgsAppenderRegisterer args_appender_registerer_;
 
-static const std::string STR_TRUE("1");
-static const std::string STR_FALSE("0");
-
 ArgList::ArgList() {
 }
 
@@ -146,6 +147,9 @@ void
 ArgList::addAs(const std::string &type, const TypedValue &value) {
     if (!type.empty()) {
         addAs(type, value.asString());
+    }
+    else if (value.nil()) {
+        add(StringUtils::EMPTY_STRING);
     }
     else if (value.type() == TypedValue::TYPE_STRING) {
         add(value.asString());
