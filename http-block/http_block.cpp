@@ -112,9 +112,11 @@ public:
 };
 
 
-HttpBlock::HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node) :
+HttpBlock::HttpBlock(const HttpExtension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), RemoteTaggedBlock(ext, owner, node),
-        method_(NULL), proxy_(false), xff_(false), print_error_(false) {
+        method_(NULL), proxy_(false), xff_(false), print_error_(false),
+        replace_entities_(ext->replaceEntities())
+{
 }
 
 HttpBlock::~HttpBlock() {
@@ -191,17 +193,20 @@ HttpBlock::retryCall(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeCon
 void
 HttpBlock::property(const char *name, const char *value) {
 
-    if (strncasecmp(name, "proxy", sizeof("proxy")) == 0) {
-        proxy_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
+    if (!strncasecmp(name, "proxy", sizeof("proxy"))) {
+        proxy_ = !strncasecmp(value, "yes", sizeof("yes"));
     }
-    else if (strncasecmp(name, "encoding", sizeof("encoding")) == 0) {
+    else if (!strncasecmp(name, "encoding", sizeof("encoding"))) {
         charset_ = value;
     }
-    else if (strncasecmp(name, "x-forwarded-for", sizeof("x-forwarded-for")) == 0) {
-        xff_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
+    else if (!strncasecmp(name, "x-forwarded-for", sizeof("x-forwarded-for"))) {
+        xff_ = !strncasecmp(value, "yes", sizeof("yes"));
     }
-    else if (strncasecmp(name, "print-error-body", sizeof("print-error-body")) == 0) {
-        print_error_ = (strncasecmp(value, "yes", sizeof("yes")) == 0);
+    else if (!strncasecmp(name, "print-error-body", sizeof("print-error-body"))) {
+        print_error_ = !strncasecmp(value, "yes", sizeof("yes"));
+    }
+    else if (!strncasecmp(name, "replace-entities", sizeof("replace-entities"))) {
+        replace_entities_ = !strncasecmp(value, "yes", sizeof("yes"));
     }
     else {
         RemoteTaggedBlock::property(name, value);
@@ -922,7 +927,7 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
     boost::shared_ptr<std::string> str = helper.content();
     if (helper.isXml()) {
         XmlDocHelper result(xmlReadMemory(str->c_str(), str->size(), "",
-            charset_.empty() ? NULL : charset_.c_str(), XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+            charset_.empty() ? NULL : charset_.c_str(), XML_PARSE_DTDATTR | (replace_entities_ ? XML_PARSE_NOENT : 0)));
         XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());
         OperationMode::instance()->processXmlError(helper.url());
         return result;
@@ -941,7 +946,7 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
         }
 
         XmlDocHelper result(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
-                helper.charset().c_str(), XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+                helper.charset().c_str(), XML_PARSE_DTDATTR | (replace_entities_ ? XML_PARSE_NOENT : 0)));
 
         if (NULL == result.get()) {
             log()->error("Invalid sanitized text/html document. Url: %s", helper.url().c_str());
@@ -972,7 +977,7 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
         XmlUtils::escape(*str, res);
         res.append("</text>");
         XmlDocHelper result(xmlReadMemory(res.c_str(), res.size(), "",
-                helper.charset().c_str(), XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+                helper.charset().c_str(), XML_PARSE_DTDATTR | (replace_entities_ ? XML_PARSE_NOENT : 0)));
         XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());
         OperationMode::instance()->processXmlError(helper.url());
         return result;

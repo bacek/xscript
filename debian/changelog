@@ -1,3 +1,10 @@
+xscript (5.73.37-6) unstable; urgency=low
+
+  * http-block: added property replace-entiies=yes|no (default:yes)
+    the same option in config into /xscript/http-block/ (default:yes)
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 23 Dec 2011 14:23:53 +0300
+
 xscript (5.73.37-5) unstable; urgency=low
 
   * RequestArg fixed: check non-existed (nil) value for common blocks

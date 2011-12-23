@@ -17,6 +17,7 @@ class Param;
 
 class HttpBlock;
 class HttpHelper;
+class HttpExtension;
 
 class HttpMethodRegistrator;
 
@@ -24,7 +25,7 @@ typedef XmlDocHelper (HttpBlock::*HttpMethod)(Context *ctx, InvokeContext *invok
 
 class HttpBlock : public RemoteTaggedBlock {
 public:
-    HttpBlock(const Extension *ext, Xml *owner, xmlNodePtr node);
+    HttpBlock(const HttpExtension *ext, Xml *owner, xmlNodePtr node);
     virtual ~HttpBlock();
 
 protected:
@@ -87,6 +88,7 @@ private:
     bool proxy_;
     bool xff_;
     bool print_error_;
+    bool replace_entities_;
 };
 
 } // namespace xscript
