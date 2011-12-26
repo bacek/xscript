@@ -4,6 +4,8 @@
 #include <cstdarg>
 #include <cassert>
 
+#include <string.h>
+
 #include <boost/thread/tss.hpp>
 #include <boost/current_function.hpp>
 #include <boost/filesystem/path.hpp>
@@ -61,6 +63,7 @@ static xmlParserInputBufferPtr XmlUtilsFileResolver(const char *URI, xmlCharEnco
 
 static boost::thread_specific_ptr<Xml::TimeMapType> xml_info_collector_modified_info_;
 static boost::thread_specific_ptr<XmlInfoCollector::ErrorMapType> xml_info_collector_error_info_;
+static boost::thread_specific_ptr<bool> xml_entity_disable_;
 
 static int xmlVersion = 0;
 static int xsltVersion = 0;
@@ -113,6 +116,23 @@ const unsigned int XmlErrorReporter::MESSAGE_SIZE_LIMIT = 10 * 1024;
 extern "C" void xmlNullError(void *, const char *, ...);
 extern "C" void xmlReportPlainError(void *, const char *, ...);
 extern "C" void xmlReportStructuredError(void *, xmlErrorPtr error);
+
+XmlEntityBlocker::XmlEntityBlocker() : prev_(false) {
+    bool *value = xml_entity_disable_.get();
+    if (value) {
+        prev_ = true;
+    }
+    else {
+        xml_entity_disable_.reset(new bool(true));
+    }
+}
+
+XmlEntityBlocker::~XmlEntityBlocker() {
+    if (!prev_) {
+        xml_entity_disable_.reset(NULL);
+    }
+}
+
 
 XmlUtils::XmlUtils() {
 
@@ -178,27 +198,34 @@ XmlUtils::resetReporter() {
 
 void
 XmlUtils::throwUnless(bool value) {
-    XmlErrorReporter *rep = XmlErrorReporter::reporter();
-    if (!value) {
-        UnboundRuntimeError e(rep->message());
-        resetReporter();
-        throw e;
+    if (value) {
+        return;
     }
+    XmlErrorReporter *rep = XmlErrorReporter::reporter();
+    UnboundRuntimeError e(rep->message());
+    rep->reset();
+    throw e;
 }
 
 void
 XmlUtils::throwUnless(bool value, const char *attr, const char *attr_value) {
-    try {
-        throwUnless(value);
+    if (value) {
+        return;
     }
-    catch(UnboundRuntimeError &error) {
-        std::string message(" ");
-        message.append(attr);
-        message.append(": ");
-        message.append(attr_value);
-        error.append(message);
-        throw error;
-    }
+    int attr_size = attr ? strlen(attr) : 0;
+    int attr_value_size = attr_value ? strlen(attr_value) : 0;
+
+    XmlErrorReporter *rep = XmlErrorReporter::reporter();
+    std::string message = rep->message();
+    rep->reset();
+
+    message.reserve(message.size() + attr_size + attr_value_size + 3);
+    message.push_back(' ');
+    message.append(attr, attr_size);
+    message.append(": ", 2);
+    message.append(attr_value, attr_value_size);
+
+    throw UnboundRuntimeError(message);
 }
 
 bool
@@ -506,6 +533,8 @@ patchModifiedInfoUnexisted(const std::string &fileName) {
     modified_info->insert(std::make_pair(path.native_file_string(), 0));
 }
 
+static const std::string STR_SCHEME_DELIMITER = "://";
+
 static void
 patchModifiedInfo(const std::string &fileName, const std::string &url, const char *id) {
 
@@ -514,7 +543,7 @@ patchModifiedInfo(const std::string &fileName, const std::string &url, const cha
         return;
     }
 
-    if (fileName.find("://") == std::string::npos) {
+    if (fileName.find(STR_SCHEME_DELIMITER) == std::string::npos) {
         namespace fs = boost::filesystem;
         try {
             fs::path path(fileName);
@@ -543,8 +572,12 @@ XmlUtils::entityResolver(const char *url, const char *id, xmlParserCtxtPtr ctxt)
 
     xmlParserInputPtr ret = NULL;
     try {
+        bool disabled = NULL != xml_entity_disable_.get();
         Logger *l = log();
-        if (l->enabledDebug()) l->debug("entityResolver. url: %s, id: %s", url, id);
+        if (l->enabledDebug()) l->debug("entityResolver. url: %s, id: %s%s", url, id, disabled ? " disabled" : "");
+        if (disabled) {
+            return NULL;
+        }
 
         if ('\0' != *url && Policy::isRemoteScheme(url)) {
             if (l->enabledWarn()) {

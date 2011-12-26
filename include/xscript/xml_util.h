@@ -134,6 +134,14 @@ public:
     };
 };
 
+class XmlEntityBlocker {
+public:
+    XmlEntityBlocker();
+    ~XmlEntityBlocker();
+private:
+    bool prev_;
+};
+
 template<typename Cont> inline void
 XmlUtils::escape(const Cont &value, std::string &result) {
     escape(createRange(value), result);

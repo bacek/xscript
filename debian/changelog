@@ -1,3 +1,11 @@
+xscript (5.73.37-7) unstable; urgency=low
+
+  * http-block:
+    rename option: replace-entities to load-entities
+    suppress loading external entities if load-entities=no
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 26 Dec 2011 15:25:07 +0300
+
 xscript (5.73.37-6) unstable; urgency=low
 
   * http-block: added property replace-entiies=yes|no (default:yes)

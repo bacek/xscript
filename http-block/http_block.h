@@ -88,7 +88,7 @@ private:
     bool proxy_;
     bool xff_;
     bool print_error_;
-    bool replace_entities_;
+    bool load_entities_;
 };
 
 } // namespace xscript

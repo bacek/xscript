@@ -115,7 +115,7 @@ public:
 HttpBlock::HttpBlock(const HttpExtension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), RemoteTaggedBlock(ext, owner, node),
         method_(NULL), proxy_(false), xff_(false), print_error_(false),
-        replace_entities_(ext->replaceEntities())
+        load_entities_(ext->loadEntities())
 {
 }
 
@@ -205,8 +205,8 @@ HttpBlock::property(const char *name, const char *value) {
     else if (!strncasecmp(name, "print-error-body", sizeof("print-error-body"))) {
         print_error_ = !strncasecmp(value, "yes", sizeof("yes"));
     }
-    else if (!strncasecmp(name, "replace-entities", sizeof("replace-entities"))) {
-        replace_entities_ = !strncasecmp(value, "yes", sizeof("yes"));
+    else if (!strncasecmp(name, "load-entities", sizeof("load-entities"))) {
+        load_entities_ = !strncasecmp(value, "yes", sizeof("yes"));
     }
     else {
         RemoteTaggedBlock::property(name, value);
@@ -921,13 +921,27 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request,
     }
 }
 
+static XmlDocHelper
+parseXmlData(const char *buffer, int size, const char *URL, const char *encoding, bool load_entities) {
+
+    if (encoding && !*encoding) {
+        encoding = NULL;
+    }
+
+    if (load_entities) {
+        return XmlDocHelper(xmlReadMemory(buffer, size, URL, encoding, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+    }
+
+    XmlEntityBlocker blocker;
+    return XmlDocHelper(xmlReadMemory(buffer, size, URL, encoding, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+}
+
 XmlDocHelper
 HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
 
     boost::shared_ptr<std::string> str = helper.content();
     if (helper.isXml()) {
-        XmlDocHelper result(xmlReadMemory(str->c_str(), str->size(), "",
-            charset_.empty() ? NULL : charset_.c_str(), XML_PARSE_DTDATTR | (replace_entities_ ? XML_PARSE_NOENT : 0)));
+        XmlDocHelper result(parseXmlData(str->c_str(), str->size(), "", charset_.c_str(), load_entities_));
         XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());
         OperationMode::instance()->processXmlError(helper.url());
         return result;
@@ -945,8 +959,8 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
             throw InvokeError("Empty sanitized text/html document");
         }
 
-        XmlDocHelper result(xmlReadMemory(data.c_str(), data.size(), helper.base().c_str(),
-                helper.charset().c_str(), XML_PARSE_DTDATTR | (replace_entities_ ? XML_PARSE_NOENT : 0)));
+        XmlDocHelper result(parseXmlData(
+            data.c_str(), data.size(), helper.base().c_str(), helper.charset().c_str(), load_entities_));
 
         if (NULL == result.get()) {
             log()->error("Invalid sanitized text/html document. Url: %s", helper.url().c_str());
@@ -973,11 +987,10 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
 
         std::string res;
         res.reserve(str->size() * 2 + 20);
-        res.append("<text>");
+        res.append("<text>", 6);
         XmlUtils::escape(*str, res);
-        res.append("</text>");
-        XmlDocHelper result(xmlReadMemory(res.c_str(), res.size(), "",
-                helper.charset().c_str(), XML_PARSE_DTDATTR | (replace_entities_ ? XML_PARSE_NOENT : 0)));
+        res.append("</text>", 7);
+        XmlDocHelper result(parseXmlData(res.c_str(), res.size(), "", helper.charset().c_str(), load_entities_));
         XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());
         OperationMode::instance()->processXmlError(helper.url());
         return result;
