@@ -41,6 +41,7 @@ protected:
     std::string getUrl(const ArgList *args, unsigned int first, unsigned int last) const;
     std::string queryParams(const InvokeContext *invoke_ctx) const;
     bool createPostData(const Context *ctx, const InvokeContext *invoke_ctx, std::string &result) const;
+    std::string createGetByRequestUrl(const Context *ctx, const InvokeContext *invoke_ctx) const;
 
     XmlDocHelper head(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper get(Context *ctx, InvokeContext *invoke_ctx) const;
@@ -48,10 +49,16 @@ protected:
     XmlDocHelper put(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper post(Context *ctx, InvokeContext *invoke_ctx) const;
 
+    XmlDocHelper putHttp(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper postHttp(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper getByState(Context *ctx, InvokeContext *invoke_ctx) const;
+
+    XmlDocHelper headByRequest(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper getByRequest(Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper deleteByRequest(Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper putByRequest(Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper postByRequest(Context *ctx, InvokeContext *invoke_ctx) const;
+
     XmlDocHelper getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const;
 
     XmlDocHelper response(const HttpHelper &h, bool error_mode = false) const;
@@ -67,6 +74,9 @@ private:
 
     XmlDocHelper customGet(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper customPost(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper customPostHttp(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper customGetByRequest(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const;
+    XmlDocHelper customPostByRequest(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const;
     
     int getTimeout(Context *ctx, const std::string &url) const;
     void wrapError(InvokeError &error, const HttpHelper &helper, const XmlNodeHelper &error_body_node) const;

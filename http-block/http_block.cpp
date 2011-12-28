@@ -94,6 +94,9 @@ static const std::string STR_LWR_STATUS = "status";
 static const std::string STR_LWR_TIMEOUT = "timeout";
 static const std::string STR_LWR_CONTENT_TYPE = "content-type";
 static const std::string STR_MULTIPART_BODY_END = "--\r\n";
+static const std::string STR_BLOCK_TIMEOUT = "block is timed out";
+static const std::string SKIP_CACHE_MESSAGE = "can not cache post data with attached files";
+static const std::string TAG_IS_NOT_ALLOWED = "tag is not allowed";
 
 
 class HttpHeadersArgList : public CheckedStringArgList {
@@ -243,7 +246,6 @@ HttpBlock::info(const Context *ctx) const {
     }
     return info;
 }
-static const std::string SKIP_CACHE_MESSAGE = "can not cache post data with attached files";
 
 std::string
 HttpBlock::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
@@ -504,12 +506,22 @@ HttpBlock::customPost(const std::string &method, Context *ctx, InvokeContext *in
     return response(helper);
 }
 
+static XmlDocHelper
+emptyDoc() {
+    XmlDocHelper result(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlUtils::throwUnless(NULL != result.get());
+    XmlNodeHelper node(xmlNewDocNode(result.get(), NULL, (const xmlChar*)"empty", NULL));
+    XmlUtils::throwUnless(NULL != node.get());
+    xmlDocSetRootElement(result.get(), node.release());
+    return result;
+}
+
 XmlDocHelper
 HttpBlock::head(Context *ctx, InvokeContext *invoke_ctx) const {
     log()->info("HttpBlock:head, %s", owner()->name().c_str());
 
     if (tagged()) {
-        throw CriticalInvokeError("tag is not allowed");
+        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
     }
 
     const ArgList* args = invoke_ctx->getArgList();
@@ -535,13 +547,7 @@ HttpBlock::head(Context *ctx, InvokeContext *invoke_ctx) const {
     checkStatus(helper);
     
     createMeta(helper, invoke_ctx);
-
-    XmlDocHelper result(xmlNewDoc((const xmlChar*) "1.0"));
-    XmlUtils::throwUnless(NULL != result.get());
-    XmlNodeHelper node(xmlNewDocNode(result.get(), NULL, (const xmlChar*)"empty", NULL));
-    XmlUtils::throwUnless(NULL != node.get());
-    xmlDocSetRootElement(result.get(), node.release());
-    return result;
+    return emptyDoc();
 }
 
 XmlDocHelper
@@ -574,7 +580,7 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
         throwBadArityError();
     }
     if (tagged()) {
-        throw CriticalInvokeError("tag is not allowed");
+        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
     }
 
     std::string url = getUrl(args, 0, size - 1);
@@ -620,9 +626,9 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
 }
 
 XmlDocHelper
-HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
+HttpBlock::customPostHttp(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const {
 
-    log()->info("HttpBlock::postHttp, %s", owner()->name().c_str());
+    log()->info("HttpBlock:%sHttp, %s", method.c_str(), owner()->name().c_str());
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
@@ -636,7 +642,7 @@ HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
         url.push_back(url.find('?') != std::string::npos ? '&' : '?');
         url.append(query);
     }
-    PROFILER(log(), "http.postHttp: " + url);
+    PROFILER(log(), "http." + method + "Http: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
@@ -649,6 +655,7 @@ HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
         const std::string& body = args->at(size-1);
         helper.postData(body.data(), body.size());
     }
+    helper.method(method);
 
     httpCall(helper);
     checkStatus(helper);
@@ -665,10 +672,20 @@ HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
 }
 
 XmlDocHelper
-HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
-    (void)invoke_ctx;
+HttpBlock::putHttp(Context *ctx, InvokeContext *invoke_ctx) const {
+    return customPostHttp(STR_PUT, ctx, invoke_ctx);
+}
+
+XmlDocHelper
+HttpBlock::postHttp(Context *ctx, InvokeContext *invoke_ctx) const {
+    return customPostHttp(STR_POST, ctx, invoke_ctx);
+}
+
+
+XmlDocHelper
+HttpBlock::customPostByRequest(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const {
     
-    log()->info("HttpBlock::postByRequest, %s", owner()->name().c_str());
+    log()->info("HttpBlock::%sByRequest, %s", method.c_str(), owner()->name().c_str());
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
@@ -676,7 +693,7 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
         throwBadArityError();
     }
     else if (tagged()) {
-        throw CriticalInvokeError("tag is not allowed");
+        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
     }
 
     std::string url = getUrl(args, 0, size - 1);
@@ -697,7 +714,7 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
         url.append(query);
     }
     
-    PROFILER(log(), "http.postByRequest: " + url);
+    PROFILER(log(), "http." + method + "ByRequest: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     appendHeaders(helper, ctx->request(), invoke_ctx, false, is_postdata);
@@ -710,6 +727,7 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
         const std::string &query = ctx->request()->getQueryString();
         helper.postData(query.c_str(), query.length());
     }
+    helper.method(method);
 
     httpCall(helper);
     checkStatus(helper);
@@ -719,8 +737,17 @@ HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
 }
 
 XmlDocHelper
+HttpBlock::putByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
+    return customPostByRequest(STR_PUT, ctx, invoke_ctx);
+}
+
+XmlDocHelper
+HttpBlock::postByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
+    return customPostByRequest(STR_POST, ctx, invoke_ctx);
+}
+
+XmlDocHelper
 HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
-    (void)invoke_ctx;
 
     log()->info("HttpBlock::getByState, %s", owner()->name().c_str());
     
@@ -730,7 +757,7 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
         throwBadArityError();
     }
     if (tagged()) {
-        throw CriticalInvokeError("tag is not allowed");
+        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
     }
 
     std::string url = getUrl(args, 0, size - 1);
@@ -767,19 +794,15 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
     return response(helper);
 }
 
-XmlDocHelper
-HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
-    (void)invoke_ctx;
-
-    log()->info("HttpBlock::getByRequest, %s", owner()->name().c_str());
-
+std::string
+HttpBlock::createGetByRequestUrl(const Context *ctx, const InvokeContext *invoke_ctx) const {
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
     if (!size) {
         throwBadArityError();
     }
     if (tagged()) {
-        throw CriticalInvokeError("tag is not allowed");
+        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
     }
 
     std::string url = getUrl(args, 0, size - 1);
@@ -812,16 +835,57 @@ HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
         url.push_back(has_query ? '&' : '?');
         url.append(query);
     }
-    PROFILER(log(), "http.getByRequest: " + url);
+    return url;
+}
+
+XmlDocHelper
+HttpBlock::headByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
+
+    log()->info("HttpBlock:headByRequest, %s", owner()->name().c_str());
+
+    std::string url = createGetByRequestUrl(ctx, invoke_ctx);
+    PROFILER(log(), "http.headByRequest: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
     appendHeaders(helper, ctx->request(), invoke_ctx, false, false);
+    helper.method(STR_HEAD);
+
     httpCall(helper);
     checkStatus(helper);
+
     createMeta(helper, invoke_ctx);
+    return emptyDoc();
+}
+
+XmlDocHelper
+HttpBlock::customGetByRequest(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const {
+
+    log()->info("HttpBlock:%sByRequest, %s", method.c_str(), owner()->name().c_str());
+
+    std::string url = createGetByRequestUrl(ctx, invoke_ctx);
+    PROFILER(log(), "http." + method + "ByRequest: " + url);
     
+    HttpHelper helper(url, getTimeout(ctx, url));
+    
+    appendHeaders(helper, ctx->request(), invoke_ctx, false, false);
+    helper.method(method);
+
+    httpCall(helper);
+    checkStatus(helper);
+
+    createMeta(helper, invoke_ctx);
     return response(helper);
+}
+
+XmlDocHelper
+HttpBlock::getByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
+    return customGetByRequest(STR_GET, ctx, invoke_ctx);
+}
+
+XmlDocHelper
+HttpBlock::deleteByRequest(Context *ctx, InvokeContext *invoke_ctx) const {
+    return customGetByRequest(STR_DELETE, ctx, invoke_ctx);
 }
 
 inline static void
@@ -1018,7 +1082,7 @@ HttpBlock::getTimeout(Context *ctx, const std::string &url) const {
         return timeout;
     }
     
-    InvokeError error("block is timed out");
+    InvokeError error(STR_BLOCK_TIMEOUT);
     error.add(STR_LWR_URL, url);
     error.add(STR_LWR_TIMEOUT, boost::lexical_cast<std::string>(ctx->timer().timeout()));
     throw error;
@@ -1184,15 +1248,27 @@ HttpMethodRegistrator::HttpMethodRegistrator() {
     HttpBlock::registerMethod(STR_PUT, &HttpBlock::put);
     HttpBlock::registerMethod(STR_POST, &HttpBlock::post);
 
+    HttpBlock::registerMethod("putHttp", &HttpBlock::putHttp);
+    HttpBlock::registerMethod("put_http", &HttpBlock::putHttp);
+
     HttpBlock::registerMethod("postHttp", &HttpBlock::postHttp);
     HttpBlock::registerMethod("post_http", &HttpBlock::postHttp);
 
     HttpBlock::registerMethod("getByState", &HttpBlock::getByState);
     HttpBlock::registerMethod("get_by_state", &HttpBlock::getByState);
 
+    HttpBlock::registerMethod("headByRequest", &HttpBlock::headByRequest);
+    HttpBlock::registerMethod("head_by_request", &HttpBlock::headByRequest);
+
     HttpBlock::registerMethod("getByRequest", &HttpBlock::getByRequest);
     HttpBlock::registerMethod("get_by_request", &HttpBlock::getByRequest);
-    
+
+    HttpBlock::registerMethod("deleteByRequest", &HttpBlock::deleteByRequest);
+    HttpBlock::registerMethod("delete_by_request", &HttpBlock::deleteByRequest);
+
+    HttpBlock::registerMethod("putByRequest", &HttpBlock::putByRequest);
+    HttpBlock::registerMethod("put_by_request", &HttpBlock::putByRequest);
+
     HttpBlock::registerMethod("postByRequest", &HttpBlock::postByRequest);
     HttpBlock::registerMethod("post_by_request", &HttpBlock::postByRequest);
 
