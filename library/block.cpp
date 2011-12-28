@@ -171,7 +171,7 @@ Block::BlockData::xsltInfo(const std::string &xslt) const {
 
     std::string str;
     str.reserve(xslt.size() + str_info.size() + 20);
-    str.append("per-block-xslt: ").append(xslt).append(" ,", 2).append(str_info);
+    str.append("per-block-xslt: ").append(xslt).append(" ", 1).append(str_info);
 
     return str;
 }
@@ -621,24 +621,28 @@ Block::invokeCheckThreadedEx(boost::shared_ptr<Context> ctx, unsigned int slot) 
     return false;
 }
 
+static const std::string STR_ERROR_PROCESS_RESPONSE_CONTEXT_ALREADY_STOPPED = "context is already stopped, cannot process response";
+static const std::string STR_ERROR_PROCESS_RESPONSE_DOC_NULL = "null response document";
+static const std::string STR_ERROR_PROCESS_RESPONSE_DOC_WITHOUT_ROOT = "got document without root";
+
 void
 Block::processResponse(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) { 
     if (!tagged() && ctx->stopped()) {
-        throw SkipResultInvokeError("context is already stopped, cannot process response");
+        throw SkipResultInvokeError(STR_ERROR_PROCESS_RESPONSE_CONTEXT_ALREADY_STOPPED);
     }
 
     XmlDocSharedHelper doc = invoke_ctx->resultDoc();
     if (NULL == doc.get()) {
-        throw InvokeError("null response document");
+        throw InvokeError(STR_ERROR_PROCESS_RESPONSE_DOC_NULL);
     }
 
     if (NULL == xmlDocGetRootElement(doc.get())) {
-        throw InvokeError("got document with no root");
+        throw InvokeError(STR_ERROR_PROCESS_RESPONSE_DOC_WITHOUT_ROOT);
     }
 
     bool is_error_doc = Policy::instance()->isErrorDoc(doc.get());
     
-    log()->debug("%s, got source document: %p", BOOST_CURRENT_FUNCTION, doc.get());
+    log()->debug("Block::processResponse, got source document: %p", doc.get());
 
     boost::shared_ptr<Context> local_ctx = invoke_ctx->getLocalContext();
     bool success = applyStylesheet(local_ctx.get() ? local_ctx : ctx, invoke_ctx, doc);
@@ -682,13 +686,8 @@ Block::applyStylesheet(boost::shared_ptr<Context> ctx,
     XmlUtils::throwUnless(NULL != doc.get());
     log()->debug("Block::applyStylesheet, got source document: %p", doc.get());
 
-    bool result = true;
-    if (XmlUtils::hasXMLError()) {
-        result = false;
-    }
-
+    bool result = !XmlUtils::hasXMLError();
     OperationMode::instance()->processPerblockXsltError(ctx.get(), invoke_ctx.get(), this);
-
     return result;
 }
 

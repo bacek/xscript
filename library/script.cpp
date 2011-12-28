@@ -785,6 +785,9 @@ Script::headers() const {
     return data_->headers();
 }
 
+static const std::string STR_ERROR_EMPTY_XML_DOC = "got empty xml doc";
+static const std::string STR_ERROR_XML_DOC_WITHOUT_ROOT = "got xml doc without root";
+
 void
 Script::parseInternal(const boost::function<xmlDocPtr()> &parserFunc) {
     XmlDocHelper doc(NULL);
@@ -794,13 +797,13 @@ Script::parseInternal(const boost::function<xmlDocPtr()> &parserFunc) {
 
         XmlUtils::throwUnless(NULL != doc.get());
         if (NULL == doc->children) {
-            throw std::runtime_error("got empty xml doc");
+            throw std::runtime_error(STR_ERROR_EMPTY_XML_DOC);
         }
 
         XmlUtils::throwUnless(xmlXIncludeProcessFlags(doc.get(), XML_PARSE_NOENT) >= 0);
 
         if (NULL == xmlDocGetRootElement(doc.get())) {
-            throw std::runtime_error("got xml doc with no root");
+            throw std::runtime_error(STR_ERROR_XML_DOC_WITHOUT_ROOT);
         }
         
         TimeMapType* modified_info = XmlInfoCollector::getModifiedInfo();
@@ -876,8 +879,9 @@ Script::xsltName() const {
 
 XmlDocSharedHelper
 Script::invoke(boost::shared_ptr<Context> ctx) {
-    log()->info("Script::invoke, invoking %s", name().c_str());
-    PROFILER(log(), "invoke script " + name());
+    const std::string &script_name = name();
+    log()->info("Script::invoke, invoking %s", script_name.c_str());
+    PROFILER(log(), "invoke script " + script_name);
     ctx->wait(invokeBlocks(ctx));
     return processResults(ctx);
 }
@@ -957,20 +961,18 @@ Script::processResults(boost::shared_ptr<Context> ctx) {
 bool
 Script::applyStylesheet(boost::shared_ptr<Context> ctx, XmlDocSharedHelper &doc) {    
 
-    boost::shared_ptr<Stylesheet> stylesheet(
-        StylesheetFactory::createStylesheet(ctx->xsltName()));
-    
-    PROFILER(log(), "apply stylesheet " + name());
-    log()->info("applying stylesheet to %s", name().c_str());
+    const std::string xslt_name = ctx->xsltName();
+    boost::shared_ptr<Stylesheet> stylesheet(StylesheetFactory::createStylesheet(xslt_name));
+
+    const std::string &script_name = name();
+
+    PROFILER(log(), "apply stylesheet " + xslt_name + " for " + script_name);
+    log()->info("applying stylesheet %s for %s", xslt_name.c_str(), script_name.c_str());
     
     ctx->createDocumentWriter(stylesheet);
     Object::applyStylesheet(stylesheet, ctx, boost::shared_ptr<InvokeContext>(), doc, false);
     
-    bool result = true;
-    if (XmlUtils::hasXMLError()) {
-        result = false;
-    }
-		    
+    bool result = !XmlUtils::hasXMLError();	    
     OperationMode::instance()->processMainXsltError(ctx.get(), this, stylesheet.get());
     return result;
 }
@@ -989,6 +991,8 @@ Script::expireTimeDeltaUndefined() const {
     return data_->expireTimeDeltaUndefined();
 }
 
+static const std::string STR_SCHEME_DELIMITER = "://";
+
 std::string
 Script::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const {
     (void)invoke_ctx;
@@ -1003,7 +1007,7 @@ Script::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const 
         key.erase(pos);
     }
 
-    pos = key.find("://");
+    pos = key.find(STR_SCHEME_DELIMITER);
     if (std::string::npos != pos) {
         pos += 2;
     }
@@ -1017,12 +1021,18 @@ Script::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const 
         }
     }
 
+    std::string key_strategy = strategy->createKey(ctx);
+    std::string key_xslt = fileModifiedKey(xsltName());
+    std::string key_common = commonTagKey(ctx);
+
+    key.reserve(key.size() + key_strategy.size() + key_xslt.size() + key_common.size() + 3);
+
     key.push_back('|');
-    key.append(strategy->createKey(ctx));
+    key.append(key_strategy);
     key.push_back('|');
-    key.append(fileModifiedKey(xsltName()));
+    key.append(key_xslt);
     key.push_back('|');
-    key.append(commonTagKey(ctx));
+    key.append(key_common);
 
     return key;
 }
@@ -1030,8 +1040,11 @@ Script::createTagKey(const Context *ctx, const InvokeContext *invoke_ctx) const 
 std::string
 Script::createBlockTagKey(const Context *ctx) const {
     std::string key = name();
+    std::string key_common = commonTagKey(ctx);
+
+    key.reserve(key.size() + key_common.size() + 1);
     key.push_back('|');
-    key.append(commonTagKey(ctx));
+    key.append(key_common);
     return key;
 }
 
@@ -1039,8 +1052,11 @@ std::string
 Script::commonTagKey(const Context *ctx) const {
     (void)ctx;
     std::string key = modifiedKey(modifiedInfo());
+    std::string key_blocks = blocksModifiedKey(data_->blocks());
+
+    key.reserve(key.size() + key_blocks.size() + 1);
     key.push_back('|');
-    key.append(blocksModifiedKey(data_->blocks()));
+    key.append(key_blocks);
     return key;
 }
 
