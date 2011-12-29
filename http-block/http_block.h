@@ -72,7 +72,8 @@ private:
     HttpBlock(const HttpBlock &);
     HttpBlock& operator = (const HttpBlock &);
 
-    XmlDocHelper customGet(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const;
+    std::string createCustomGetUrl(const InvokeContext *invoke_ctx) const;
+
     XmlDocHelper customPost(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper customPostHttp(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const;
     XmlDocHelper customGetByRequest(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const;

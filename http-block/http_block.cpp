@@ -186,6 +186,11 @@ HttpBlock::postParse() {
         throw std::invalid_argument("nonexistent http method call: " + method());
     }
     method_ = i->second;
+    if (method_ != &HttpBlock::get && tagged()) {
+        //TODO: throw std::invalid_argument(...) for development
+        log()->error("switch off tagging in non-get http-block: %s method: %s", owner()->name().c_str(), i->first.c_str());
+        tagged(false);
+    }
 }
 
 void
@@ -432,11 +437,19 @@ HttpBlock::createPostData(const Context *ctx, const InvokeContext *invoke_ctx, s
     return true;
 }
 
-XmlDocHelper
-HttpBlock::customGet(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const {
-    log()->info("HttpBlock:%s, %s", method.c_str(), owner()->name().c_str());
+static XmlDocHelper
+emptyDoc() {
+    XmlDocHelper result(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlUtils::throwUnless(NULL != result.get());
+    XmlNodeHelper node(xmlNewDocNode(result.get(), NULL, (const xmlChar*)"empty", NULL));
+    XmlUtils::throwUnless(NULL != node.get());
+    xmlDocSetRootElement(result.get(), node.release());
+    return result;
+}
 
-    const ArgList* args = invoke_ctx->getArgList();
+std::string
+HttpBlock::createCustomGetUrl(const InvokeContext *invoke_ctx) const {
+    const ArgList *args = invoke_ctx->getArgList();
     unsigned int size = args->size();
     if (!size) {
         throwBadArityError();
@@ -445,15 +458,44 @@ HttpBlock::customGet(const std::string &method, Context *ctx, InvokeContext *inv
     std::string url = getUrl(args, 0, size - 1);
     std::string query = queryParams(invoke_ctx);
     if (!query.empty()) {
+        url.reserve(url.size() + query.size() + 1);
         url.push_back(url.find('?') != std::string::npos ? '&' : '?');
         url.append(query);
     }
+    return url;
+}
 
-    PROFILER(log(), "http." + method + ": " + url);
+XmlDocHelper
+HttpBlock::head(Context *ctx, InvokeContext *invoke_ctx) const {
+    log()->info("HttpBlock:head, %s", owner()->name().c_str());
+
+    if (tagged()) {
+        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
+    }
+
+    std::string url = createCustomGetUrl(invoke_ctx);
+    PROFILER(log(), "http.head: " + url);
+
+    HttpHelper helper(url, getTimeout(ctx, url));
+    appendHeaders(helper, ctx->request(), invoke_ctx, false, false);
+    helper.method(STR_HEAD);
+
+    httpCall(helper);
+    checkStatus(helper);
+    
+    createMeta(helper, invoke_ctx);
+    return emptyDoc();
+}
+
+XmlDocHelper
+HttpBlock::get(Context *ctx, InvokeContext *invoke_ctx) const {
+    log()->info("HttpBlock:get, %s", owner()->name().c_str());
+
+    std::string url = createCustomGetUrl(invoke_ctx);
+    PROFILER(log(), "http.get: " + url);
 
     HttpHelper helper(url, getTimeout(ctx, url));
     appendHeaders(helper, ctx->request(), invoke_ctx, true, false);
-    helper.method(method);
 
     httpCall(helper);
     checkStatus(helper);
@@ -465,7 +507,28 @@ HttpBlock::customGet(const std::string &method, Context *ctx, InvokeContext *inv
     }
 
     createMeta(helper, invoke_ctx);
+    return response(helper);
+}
 
+XmlDocHelper
+HttpBlock::del(Context *ctx, InvokeContext *invoke_ctx) const {
+    log()->info("HttpBlock:delete, %s", owner()->name().c_str());
+
+    if (tagged()) {
+        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
+    }
+
+    std::string url = createCustomGetUrl(invoke_ctx);
+    PROFILER(log(), "http.delete: " + url);
+
+    HttpHelper helper(url, getTimeout(ctx, url));
+    appendHeaders(helper, ctx->request(), invoke_ctx, false, false);
+    helper.method(STR_DELETE);
+
+    httpCall(helper);
+    checkStatus(helper);
+
+    createMeta(helper, invoke_ctx);
     return response(helper);
 }
 
@@ -473,6 +536,10 @@ XmlDocHelper
 HttpBlock::customPost(const std::string &method, Context *ctx, InvokeContext *invoke_ctx) const {
 
     log()->info("HttpBlock:%s, %s", method.c_str(), owner()->name().c_str());
+
+    if (tagged()) {
+        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
+    }
 
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
@@ -488,76 +555,15 @@ HttpBlock::customPost(const std::string &method, Context *ctx, InvokeContext *in
     std::string post_data;
     bool multipart = createPostData(ctx, invoke_ctx, post_data);
 
-    appendHeaders(helper, ctx->request(), invoke_ctx, !multipart, multipart);
+    appendHeaders(helper, ctx->request(), invoke_ctx, false, multipart);
     helper.postData(post_data.data(), post_data.size());
     helper.method(method);
 
     httpCall(helper);
     checkStatus(helper);
 
-    createTagInfo(helper, invoke_ctx);
-
-    if (invoke_ctx->haveCachedCopy() && !invoke_ctx->tag().modified) {
-        return XmlDocHelper();
-    }
-
     createMeta(helper, invoke_ctx);
-
     return response(helper);
-}
-
-static XmlDocHelper
-emptyDoc() {
-    XmlDocHelper result(xmlNewDoc((const xmlChar*) "1.0"));
-    XmlUtils::throwUnless(NULL != result.get());
-    XmlNodeHelper node(xmlNewDocNode(result.get(), NULL, (const xmlChar*)"empty", NULL));
-    XmlUtils::throwUnless(NULL != node.get());
-    xmlDocSetRootElement(result.get(), node.release());
-    return result;
-}
-
-XmlDocHelper
-HttpBlock::head(Context *ctx, InvokeContext *invoke_ctx) const {
-    log()->info("HttpBlock:head, %s", owner()->name().c_str());
-
-    if (tagged()) {
-        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
-    }
-
-    const ArgList* args = invoke_ctx->getArgList();
-    unsigned int size = args->size();
-    if (!size) {
-        throwBadArityError();
-    }
-    
-    std::string url = getUrl(args, 0, size - 1);
-    std::string query = queryParams(invoke_ctx);
-    if (!query.empty()) {
-        url.push_back(url.find('?') != std::string::npos ? '&' : '?');
-        url.append(query);
-    }
-
-    PROFILER(log(), "http.head: " + url);
-
-    HttpHelper helper(url, getTimeout(ctx, url));
-    appendHeaders(helper, ctx->request(), invoke_ctx, true, false);
-    helper.method(STR_HEAD);
-
-    httpCall(helper);
-    checkStatus(helper);
-    
-    createMeta(helper, invoke_ctx);
-    return emptyDoc();
-}
-
-XmlDocHelper
-HttpBlock::get(Context *ctx, InvokeContext *invoke_ctx) const {
-    return customGet(STR_GET, ctx, invoke_ctx);
-}
-
-XmlDocHelper
-HttpBlock::del(Context *ctx, InvokeContext *invoke_ctx) const {
-    return customGet(STR_DELETE, ctx, invoke_ctx);
 }
 
 XmlDocHelper
@@ -574,21 +580,11 @@ XmlDocHelper
 HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
     log()->info("HttpBlock::getBinaryPage, %s", owner()->name().c_str());
 
-    const ArgList* args = invoke_ctx->getArgList();
-    unsigned int size = args->size();
-    if (!size) {
-        throwBadArityError();
-    }
     if (tagged()) {
         throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
     }
 
-    std::string url = getUrl(args, 0, size - 1);
-    std::string query = queryParams(invoke_ctx);
-    if (!query.empty()) {
-        url.push_back(url.find('?') != std::string::npos ? '&' : '?');
-        url.append(query);
-    }
+    std::string url = createCustomGetUrl(invoke_ctx);
     PROFILER(log(), "http.getBinaryPage: " + url);
     
     HttpHelper helper(url, getTimeout(ctx, url));
@@ -599,7 +595,7 @@ HttpBlock::getBinaryPage(Context *ctx, InvokeContext *invoke_ctx) const {
     if (!helper.isOk()) {
         long status = helper.status();
         RetryInvokeError error("Incorrect http status", STR_LWR_URL, url);
-        error.add("status", boost::lexical_cast<std::string>(status));
+        error.add(STR_LWR_STATUS, boost::lexical_cast<std::string>(status));
         throw error;
     }
 
@@ -630,6 +626,10 @@ HttpBlock::customPostHttp(const std::string &method, Context *ctx, InvokeContext
 
     log()->info("HttpBlock:%sHttp, %s", method.c_str(), owner()->name().c_str());
 
+    if (tagged()) {
+        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
+    }
+
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
     if (size < 1) {
@@ -646,7 +646,7 @@ HttpBlock::customPostHttp(const std::string &method, Context *ctx, InvokeContext
     
     HttpHelper helper(url, getTimeout(ctx, url));
     
-    appendHeaders(helper, ctx->request(), invoke_ctx, true, false);
+    appendHeaders(helper, ctx->request(), invoke_ctx, false, false);
 
     if (size == 1) {
         helper.postData(query.data(), query.size());
@@ -660,14 +660,7 @@ HttpBlock::customPostHttp(const std::string &method, Context *ctx, InvokeContext
     httpCall(helper);
     checkStatus(helper);
 
-    createTagInfo(helper, invoke_ctx);
-
-    if (invoke_ctx->haveCachedCopy() && !invoke_ctx->tag().modified) {
-        return XmlDocHelper();
-    }
-
     createMeta(helper, invoke_ctx);
-
     return response(helper);
 }
 
@@ -687,13 +680,14 @@ HttpBlock::customPostByRequest(const std::string &method, Context *ctx, InvokeCo
     
     log()->info("HttpBlock::%sByRequest, %s", method.c_str(), owner()->name().c_str());
 
+    if (tagged()) {
+        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
+    }
+
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
     if (!size) {
         throwBadArityError();
-    }
-    else if (tagged()) {
-        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
     }
 
     std::string url = getUrl(args, 0, size - 1);
@@ -751,13 +745,14 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
 
     log()->info("HttpBlock::getByState, %s", owner()->name().c_str());
     
+    if (tagged()) {
+        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
+    }
+
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
     if (!size) {
         throwBadArityError();
-    }
-    if (tagged()) {
-        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
     }
 
     std::string url = getUrl(args, 0, size - 1);
@@ -796,15 +791,16 @@ HttpBlock::getByState(Context *ctx, InvokeContext *invoke_ctx) const {
 
 std::string
 HttpBlock::createGetByRequestUrl(const Context *ctx, const InvokeContext *invoke_ctx) const {
+
+    if (tagged()) {
+        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
+    }
+
     const ArgList* args = invoke_ctx->getArgList();
     unsigned int size = args->size();
     if (!size) {
         throwBadArityError();
     }
-    if (tagged()) {
-        throw CriticalInvokeError(TAG_IS_NOT_ALLOWED);
-    }
-
     std::string url = getUrl(args, 0, size - 1);
     bool has_query = url.find('?') != std::string::npos;
 
