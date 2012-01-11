@@ -270,7 +270,7 @@ void
 LuaBlock::call(boost::shared_ptr<Context> ctx, boost::shared_ptr<InvokeContext> invoke_ctx) const throw (std::exception) {
     log()->entering(BOOST_CURRENT_FUNCTION);    
     
-    PROFILER(log(), "Lua block execution, " + owner()->name());
+    PROFILER(log(), "Lua block execution, " + logInfo());
 
     CallResultWrapper wrapper(*this, *invoke_ctx);
     

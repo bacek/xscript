@@ -72,6 +72,7 @@ struct Block::BlockData {
     void property(const char *name, const char *value);
 
     std::string errorLocation() const;
+    std::string logInfo() const;
     std::string info() const;
     std::string xsltInfo(const std::string &xslt) const;
 
@@ -127,17 +128,38 @@ Block::BlockData::errorLocation() const {
     size_t block_name_size = strlen(block_name);
 
     std::string str;
-    str.reserve(block_name_size + id_.size() + method_.size() + 30);
+    str.reserve(block_name_size + id_.size() + method_.size() + 24);
 
-    str.append("[Block: ").append(block_name, block_name_size);
+    str.append("[Block: ", 8).append(block_name, block_name_size);
 
     if (!method_.empty()) {
-        str.append(", method: ").append(method_);
+        str.append(", method: ", 10).append(method_);
     }
     if (!id_.empty()) {
-        str.append(", id: ").append(id_);
+        str.append(", id: ", 6).append(id_);
     }
     str.push_back(']');
+    return str;
+}
+
+std::string
+Block::BlockData::logInfo() const {
+
+    const std::string &owner_name = owner_->name();
+    if (id_.empty() && method_.empty()) {
+        return owner_name;
+    }
+
+    std::string str;
+    str.reserve(owner_name.size() + method_.size() + id_.size() + 14);
+
+    if (!method_.empty()) {
+        str.append("method: ", 8).append(method_).append(" ", 1);
+    }
+    if (!id_.empty()) {
+        str.append("id: ", 4).append(id_).append(" ", 1);
+    }
+    str.append(owner_name);
     return str;
 }
 
@@ -150,17 +172,17 @@ Block::BlockData::info() const {
     size_t block_name_size = strlen(block_name);
 
     std::string str;
-    str.reserve(owner_name.size() + block_name_size + id_.size() + method_.size() + 50);
+    str.reserve(owner_name.size() + block_name_size + id_.size() + method_.size() + 38);
 
-    str.append("block: ").append(block_name, block_name_size);
+    str.append("block: ", 7).append(block_name, block_name_size);
 
     if (!id_.empty()) {
-        str.append(", block-id: ").append(id_);
+        str.append(", block-id: ", 12).append(id_);
     }
     if (!method_.empty()) {
-        str.append(", method: ").append(method_);
+        str.append(", method: ", 10).append(method_);
     }
-    str.append(", owner: ").append(owner_name);
+    str.append(", owner: ", 9).append(owner_name);
     return str;
 }
 
@@ -170,9 +192,9 @@ Block::BlockData::xsltInfo(const std::string &xslt) const {
     std::string str_info = info();
 
     std::string str;
-    str.reserve(xslt.size() + str_info.size() + 20);
-    str.append("per-block-xslt: ").append(xslt).append(" ", 1).append(str_info);
+    str.reserve(xslt.size() + str_info.size() + 17);
 
+    str.append("per-block-xslt: ", 16).append(xslt).append(" ", 1).append(str_info);
     return str;
 }
 
@@ -249,6 +271,11 @@ Block::method() const {
 const char*
 Block::name() const {
     return data_->extension_->name();
+}
+
+std::string
+Block::logInfo() const {
+    return data_->logInfo();
 }
 
 const Param*

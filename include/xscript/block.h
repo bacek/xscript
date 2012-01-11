@@ -68,6 +68,7 @@ public:
 
     void throwBadArityError() const;
 
+    std::string logInfo() const;
     Logger * log() const;
 
     virtual void startTimer(Context *ctx); //TODO: const
