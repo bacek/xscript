@@ -8,6 +8,7 @@
 #include <boost/checked_delete.hpp>
 #include <boost/current_function.hpp>
 
+#include "xscript/external.h"
 #include "xscript/logger.h"
 #include "xscript/xslt_extension.h"
 
@@ -27,6 +28,7 @@ ExtensionList::ExtensionList() {
 
 ExtensionList::~ExtensionList() {
     ThreadPool::instance()->stop();
+    ExternalModules::instance()->unregisterAll();
     std::for_each(extensions_.begin(), extensions_.end(),
                   boost::checked_deleter<Extension>());
 }

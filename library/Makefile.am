@@ -2,7 +2,8 @@ lib_LTLIBRARIES = libxscript.la
 
 libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp cached_object.cpp \
 	config.cpp context.cpp cookie.cpp encoder.cpp cookie_param.cpp \
-	extension.cpp extension_list.cpp header_param.cpp simple_param.cpp http_user_param.cpp \
+	extension.cpp extension_list.cpp external.cpp \
+	header_param.cpp simple_param.cpp http_user_param.cpp \
 	loader.cpp logger.cpp object.cpp param.cpp param_factory.cpp \
 	query_arg_param.cpp renamed_block.cpp request.cpp request_param.cpp request_data.cpp \
 	request_arg_param.cpp request_file.cpp request_data_param.cpp response.cpp \
