@@ -1,3 +1,12 @@
+xscript (5.73.39-1) unstable; urgency=low
+
+  * added external modules interface, support functions
+  * lua block: improve profile logging
+  * http block: added http status into meta
+  * added profile logging on parse for xml/xsl scripts
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Tue, 17 Jan 2012 14:58:36 +0300
+
 xscript (5.73.38-2) unstable; urgency=low
 
   * http-block: only get/get_http are cacheable (tagged)
