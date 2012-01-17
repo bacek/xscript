@@ -373,7 +373,7 @@ XmlDocHelper
 Stylesheet::apply(Object *obj, boost::shared_ptr<Context> ctx,
         boost::shared_ptr<InvokeContext> invoke_ctx, xmlDocPtr doc) {
 
-    log()->entering(BOOST_CURRENT_FUNCTION);
+    log()->entering("Stylesheet::apply");
     
     XsltTransformContextHelper tctx(xsltNewTransformContext(data_->stylesheet_.get(), doc));
     XmlUtils::throwUnless(NULL != tctx.get());
@@ -425,6 +425,7 @@ Stylesheet::parse() {
         throw CanNotOpenError(path.native_file_string());
     }
 
+    PROFILER(log(), "Stylesheet.parse " + path.native_file_string());
     XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar *)path.native_file_string().c_str()));
 
     {

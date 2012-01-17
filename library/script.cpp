@@ -839,6 +839,7 @@ Script::parse() {
     if (!fs::exists(path) || fs::is_directory(path)) {
         throw CanNotOpenError(path.native_file_string());
     }
+    PROFILER(log(), "Script.parse " + path.native_file_string());
     XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar*)path.native_file_string().c_str()));
 
     boost::function<xmlDocPtr()> parserFunc =
