@@ -1142,27 +1142,31 @@ HttpBlock::httpCall(HttpHelper &helper) const {
 
 void
 HttpBlock::createMeta(HttpHelper &helper, InvokeContext *invoke_ctx) const {
-    if (metaBlock()) {
-        typedef std::multimap<std::string, std::string> HttpHeaderMap;
-        typedef HttpHeaderMap::const_iterator HttpHeaderIter;
-
-        boost::shared_ptr<Meta> meta = invoke_ctx->meta();
-        const HttpHeaderMap& headers = helper.headers();
-        for (HttpHeaderIter it = headers.begin(); it != headers.end(); ) {
-            std::pair<HttpHeaderIter, HttpHeaderIter> res = headers.equal_range(it->first);
-            HttpHeaderIter itr = res.first;
-            std::vector<std::string> result;
-            std::string name = "HTTP_" + StringUtils::toupper(it->first);
-            for (; itr != res.second; ++itr) {
-                result.push_back(itr->second);
-            }
-            result.size() == 1 ?
-                meta->setString(name, result[0]) :
-                meta->setArray(name, result);
-            it = itr;
-        }
-        meta->setString(STR_URL, helper.url());
+    if (!metaBlock()) {
+        return;
     }
+
+    typedef std::multimap<std::string, std::string> HttpHeaderMap;
+    typedef HttpHeaderMap::const_iterator HttpHeaderIter;
+
+    boost::shared_ptr<Meta> meta = invoke_ctx->meta();
+    const HttpHeaderMap& headers = helper.headers();
+    for (HttpHeaderIter it = headers.begin(); it != headers.end(); ) {
+        std::pair<HttpHeaderIter, HttpHeaderIter> res = headers.equal_range(it->first);
+        std::vector<std::string> result;
+        HttpHeaderIter itr = res.first;
+        std::string name = "HTTP_" + StringUtils::toupper(it->first);
+        for (; itr != res.second; ++itr) {
+            result.push_back(itr->second);
+        }
+        result.size() == 1 ?
+            meta->setString(name, result[0]) :
+            meta->setArray(name, result);
+        it = itr;
+    }
+
+    meta->setString(STR_URL, helper.url());
+    meta->setLong(STR_LWR_STATUS, helper.status());
 }
 
 void
