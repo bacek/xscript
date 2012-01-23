@@ -398,6 +398,8 @@ Block::processXPointer(const InvokeContext *invoke_ctx, xmlDocPtr doc, xmlDocPtr
         return processEmptyXPointer(invoke_ctx, meta_doc, insert_node, func);
     }
 
+    log()->info("Processing xpointer %d results, xpointer: \"%s\"", nodeset->nodeNr, xpointer->value().c_str());
+
     xmlNodePtr current_node = nodeset->nodeTab[0];
     if (XML_ATTRIBUTE_NODE == current_node->type) {
         current_node = current_node->children;
@@ -422,9 +424,11 @@ Block::processXPointer(const InvokeContext *invoke_ctx, xmlDocPtr doc, xmlDocPtr
                 data_->info().c_str());
             continue;
         }
+
         xmlNodePtr node = xmlCopyNode(current_node, 1);
-        xmlAddNextSibling(last_input_node, node);
-        last_input_node = node;
+        //xmlAddNextSibling(last_input_node, node);
+        //last_input_node = node;
+        last_input_node = xmlAddNextSibling(last_input_node, node);
     }
 
     if (meta_doc && data_->meta_block_.get()) {

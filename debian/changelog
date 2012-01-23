@@ -1,3 +1,9 @@
+xscript (5.73.39-2) unstable; urgency=low
+
+  * fixed block xpointer processing with text result nodes
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 23 Jan 2012 19:05:03 +0300
+
 xscript (5.73.39-1) unstable; urgency=low
 
   * added external modules interface, support functions
