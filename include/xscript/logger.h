@@ -94,8 +94,6 @@ public:
     virtual void logRotate() = 0;
 
 protected:
-    enum { FLAG_PRINT_THREAD_ID = 1, FLAG_REQUEST_ID = 2 };
-
     LogLevel level_;
     unsigned char flags_;
 
