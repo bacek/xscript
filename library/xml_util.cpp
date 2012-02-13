@@ -948,7 +948,7 @@ XmlErrorReporter::report(const char *format, ...) {
     va_list args;
     va_start(args, format);
     report(format, args);
-    log()->xmllog(format, args);
+    Logger::xmllog(format, args);
     va_end(args);
 }
 
