@@ -41,6 +41,9 @@ public:
      */
     void logRotate() const;
 
+    // flags != 0
+    static bool wrapFormat(const char *fmt, unsigned char flags, std::string &fmt_new);
+
 private:
     // Get level from string. Fallback to LEVEL_CRIT if passed something wrong.
     Logger::LogLevel stringToLevel(const std::string& level);

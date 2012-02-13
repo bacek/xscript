@@ -95,6 +95,8 @@ public:
 
     bool hasPostData() const;
 
+    boost::uint64_t requestID() const; // 0 - for children
+
     void attach(std::istream *is, char *env[]);
 
     static const std::string X_FORWARDED_FOR_HEADER_NAME;

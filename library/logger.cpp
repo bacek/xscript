@@ -18,8 +18,8 @@
 
 namespace xscript {
 
-Logger::Logger(LogLevel level, bool printThreadId)
-        : level_(level), printThreadId_(printThreadId) {
+Logger::Logger(LogLevel level) : level_(level), flags_(0)
+{
 }
 
 Logger::~Logger() {
@@ -37,15 +37,16 @@ Logger::entering(const char *function) {
 
 template<typename F>
 void out(F func, Logger *l, const char* format, va_list args) {
-    if (l->printThreadId()) {
-        size_t bufLen = strlen(format) + 30;
-        char buf[bufLen];
-        snprintf(buf, bufLen, "[thread: %lu] %s", (unsigned long) pthread_self(), format);
-        (l->*func)(buf, args);
+
+    unsigned char flags = l->flags();
+    if (flags) {
+        std::string fmt_new;
+        if (LoggerFactory::wrapFormat(format, flags, fmt_new)) {
+            (l->*func)(fmt_new.c_str(), args);
+            return;
+        }
     }
-    else {
-        (l->*func)(format, args);
-    }
+    (l->*func)(format, args);
 }
 
 void

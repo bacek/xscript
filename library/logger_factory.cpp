@@ -7,6 +7,8 @@
 #include "xscript/logger_factory.h"
 #include "xscript/config.h"
 #include "xscript/control_extension.h"
+#include "xscript/request.h"
+#include "xscript/vhost_data.h"
 #include "xscript/xml_util.h"
 #include "details/syslog_logger.h"
 #include "details/file_logger.h"
@@ -16,6 +18,10 @@
 #endif
 
 namespace xscript {
+
+static const unsigned char FLAG_PRINT_THREAD_ID = 1;
+static const unsigned char FLAG_PRINT_REQUEST_ID = 2;
+
 
 LoggerFactory::LoggerFactory() : defaultLogger_(0)
 {
@@ -73,8 +79,12 @@ LoggerFactory::init(const Config * config) {
             logger.reset(new SyslogLogger(level, config, *i));
         }
 
-        std::string pti = config->as<std::string>((*i) + "/print-thread-id", "");
-        logger->printThreadId(pti == "yes");
+        if (config->as<std::string>((*i) + "/print-thread-id", "") == "yes") {
+            logger->setFlag(FLAG_PRINT_THREAD_ID);
+        }
+        if (config->as<std::string>((*i) + "/print-request-id", "") == "yes") {
+            logger->setFlag(FLAG_PRINT_REQUEST_ID);
+        }
 
         loggers_[id] = logger;
         if ((defaultLogger_ == 0) || (id == "default")) {
@@ -130,6 +140,43 @@ LoggerFactory::logRotate() const {
         l->second->logRotate();
     }
     getDefaultLogger()->info("Log rotated");
+}
+
+bool
+LoggerFactory::wrapFormat(const char *fmt, unsigned char flags, std::string &fmt_new) {
+    assert(flags);
+
+    char thread_buf[40];
+    char request_buf[50];
+
+    int thread_buf_size = 0;
+    int request_buf_size = 0;
+
+    size_t fmt_len = strlen(fmt);
+
+    if (flags & FLAG_PRINT_REQUEST_ID) {
+        const Request *req = VirtualHostData::instance()->get();
+        if (NULL != req) {
+            boost::uint64_t request_id = req->requestID();
+            if (request_id) {
+                request_buf_size = snprintf(request_buf, sizeof(request_buf), "[requestID: %llu] ", request_id);
+            }
+        }
+    }
+
+    if (flags & FLAG_PRINT_THREAD_ID) {
+        thread_buf_size = snprintf(thread_buf, sizeof(thread_buf), "[thread: %lu] ", (unsigned long) pthread_self());
+    }
+
+    if (!thread_buf_size && !request_buf_size) {
+        return false;
+    }
+
+    std::string res;
+    res.reserve(fmt_len + thread_buf_size + request_buf_size);
+    res.append(request_buf, request_buf_size).append(thread_buf, thread_buf_size).append(fmt, fmt_len);
+    res.swap(fmt_new);
+    return true;
 }
 
 static ComponentRegisterer<LoggerFactory> reg;

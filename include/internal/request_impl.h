@@ -4,6 +4,7 @@
 #include <string>
 #include <map>
 
+#include <boost/cstdint.hpp>
 #include <boost/thread/mutex.hpp>
 
 #include "xscript/request.h"
@@ -31,6 +32,7 @@ private:
 
     std::map<std::string, RequestFiles> files_;
     std::vector<StringUtils::NamedValue> args_;
+    boost::uint64_t id_;
     bool is_bot_;
 
     static const std::string HEAD;

@@ -17,6 +17,7 @@
 #include "xscript/message_interface.h"
 #include "xscript/range.h"
 #include "xscript/request.h"
+#include "xscript/vhost_data.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -480,10 +481,27 @@ Request::addInputHeader(const std::string &name, const std::string &value) {
     boost::mutex::scoped_lock lock(data_->mutex_);
     Parser::addHeader(data_.get(), key_range, value_range, enc.get());
 }
-			
+
+boost::uint64_t
+Request::requestID() const {
+    return data_->id_;
+}
+
+static boost::uint64_t request_id_ = 0;
+static boost::mutex request_id_mutex_;
+
+static boost::uint64_t
+createRequestID() {
+    boost::mutex::scoped_lock lock(request_id_mutex_);
+    return ++request_id_;
+}
+
 void
 Request::attach(std::istream *is, char *env[]) {
     try {
+        data_->id_ = createRequestID();
+        VirtualHostData::instance()->set(this);
+
         MessageParam<Request> request_param(this);
         MessageParam<std::istream> stream_param(is);
         MessageParam<char*> env_param(env);

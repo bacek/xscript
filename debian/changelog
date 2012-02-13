@@ -1,3 +1,9 @@
+xscript (5.73.39-3) unstable; urgency=low
+
+  * added requestID into log, switch print-request-id=yes (default:no)
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Mon, 13 Feb 2012 18:54:23 +0300
+
 xscript (5.73.39-2) unstable; urgency=low
 
   * fixed block xpointer processing with text result nodes

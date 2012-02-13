@@ -16,7 +16,7 @@ public:
         LEVEL_DEBUG = 5,
     };
 
-    Logger(LogLevel level, bool printThreadId = false);
+    explicit Logger(LogLevel level);
     virtual ~Logger();
 
     void exiting(const char *function);
@@ -83,19 +83,21 @@ public:
         level_ = value;
     }
 
-    bool printThreadId() const {
-        return printThreadId_;
+    unsigned char flags() const {
+        return flags_;
     }
 
-    void printThreadId(bool p) {
-        printThreadId_ = p;
+    void setFlag(unsigned char mask) {
+        flags_ |= mask;
     }
 
     virtual void logRotate() = 0;
 
 protected:
+    enum { FLAG_PRINT_THREAD_ID = 1, FLAG_REQUEST_ID = 2 };
+
     LogLevel level_;
-    bool printThreadId_;
+    unsigned char flags_;
 
     virtual void critInternal(const char *format, va_list args) = 0;
     virtual void errorInternal(const char *format, va_list args) = 0;

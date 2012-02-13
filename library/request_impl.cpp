@@ -35,7 +35,7 @@ const std::string RequestImpl::QUERY_STRING_KEY("QUERY_STRING");
 const std::string RequestImpl::REQUEST_METHOD_KEY("REQUEST_METHOD");
 const std::string RequestImpl::REQUEST_URI_KEY("REQUEST_URI");
 
-RequestImpl::RequestImpl() : is_bot_(false)
+RequestImpl::RequestImpl() : id_(0), is_bot_(false)
 {}
 
 RequestImpl::~RequestImpl()
