@@ -98,6 +98,8 @@ static const std::string STR_BLOCK_TIMEOUT = "block is timed out";
 static const std::string SKIP_CACHE_MESSAGE = "can not cache post data with attached files";
 static const std::string TAG_IS_NOT_ALLOWED = "tag is not allowed";
 
+enum { PARSE_FLAGS_NONE = 0, PARSE_FLAGS_XML, PARSE_FLAGS_TEXT };
+
 
 class HttpHeadersArgList : public CheckedStringArgList {
 public:
@@ -117,7 +119,7 @@ public:
 
 HttpBlock::HttpBlock(const HttpExtension *ext, Xml *owner, xmlNodePtr node) :
         Block(ext, owner, node), RemoteTaggedBlock(ext, owner, node),
-        method_(NULL), proxy_(false), xff_(false), print_error_(false),
+        method_(NULL), parse_flags_(PARSE_FLAGS_NONE), proxy_(false), xff_(false), print_error_(false),
         load_entities_(ext->loadEntities())
 {
 }
@@ -215,6 +217,17 @@ HttpBlock::property(const char *name, const char *value) {
     }
     else if (!strncasecmp(name, "load-entities", sizeof("load-entities"))) {
         load_entities_ = !strncasecmp(value, "yes", sizeof("yes"));
+    }
+    else if (!strncasecmp(name, "parse", sizeof("parse"))) {
+        if (!strncasecmp(value, "xml", sizeof("xml"))) {
+            parse_flags_ = PARSE_FLAGS_XML;
+        }
+        else if (!strncasecmp(value, "text", sizeof("text"))) {
+            parse_flags_ = PARSE_FLAGS_TEXT;
+        }
+        else {
+            RemoteTaggedBlock::property(name, value);
+        }
     }
     else {
         RemoteTaggedBlock::property(name, value);
@@ -996,16 +1009,40 @@ parseXmlData(const char *buffer, int size, const char *URL, const char *encoding
     return XmlDocHelper(xmlReadMemory(buffer, size, URL, encoding, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
 }
 
+static XmlDocHelper
+responseText(const std::string &str) {
+
+    XmlDocHelper result(xmlNewDoc((const xmlChar*) "1.0"));
+    XmlUtils::throwUnless(NULL != result.get());
+    XmlNodeHelper node(xmlNewDocNode(result.get(), NULL, (const xmlChar*)"text", NULL));
+    XmlUtils::throwUnless(NULL != node.get());
+
+    if (!str.empty()) {
+        std::string res;
+        res.reserve(str.size() * 2 + 20);
+        XmlUtils::escape(str, res);
+	xmlNodeSetContent(node.get(), (const xmlChar*) res.c_str());
+    }
+    xmlDocSetRootElement(result.get(), node.release());
+    return result;
+}
+
 XmlDocHelper
 HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
 
     boost::shared_ptr<std::string> str = helper.content();
-    if (helper.isXml()) {
+
+    if (!error_mode && (parse_flags_ == PARSE_FLAGS_TEXT)) {
+        return responseText(*str);
+    }
+
+    if ((!error_mode && (parse_flags_ == PARSE_FLAGS_XML)) || helper.isXml()) {
         XmlDocHelper result(parseXmlData(str->c_str(), str->size(), "", charset_.c_str(), load_entities_));
         XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());
         OperationMode::instance()->processXmlError(helper.url());
         return result;
     }
+
     if (helper.isJson()) {
 	XmlDocHelper result = Json2Xml::instance()->createDoc(*str, charset_.empty() ? NULL : charset_.c_str());
 	if (NULL != result.get()) {
@@ -1024,36 +1061,18 @@ HttpBlock::response(const HttpHelper &helper, bool error_mode) const {
 
         if (NULL == result.get()) {
             log()->error("Invalid sanitized text/html document. Url: %s", helper.url().c_str());
-            std::string error = "Invalid sanitized text/html document. Url: " + helper.url() + ". Error: ";
+            std::string error = "Invalid sanitized text/html document. Url: " + helper.url() + " Error: ";
             std::string xml_error = XmlUtils::getXMLError();
             xml_error.empty() ? error.append("Unknown XML error") : error.append(xml_error);
             OperationMode::instance()->processCriticalInvokeError(error);
         }
         
         OperationMode::instance()->processXmlError(helper.url());
-        
         return result;
     }
     
     if (helper.isText()) {
-        if (str->empty()) {
-            XmlDocHelper result(xmlNewDoc((const xmlChar*) "1.0"));
-            XmlUtils::throwUnless(NULL != result.get());
-            XmlNodeHelper node(xmlNewDocNode(result.get(), NULL, (const xmlChar*)"text", NULL));
-            XmlUtils::throwUnless(NULL != node.get());
-            xmlDocSetRootElement(result.get(), node.release());
-            return result;
-        }
-
-        std::string res;
-        res.reserve(str->size() * 2 + 20);
-        res.append("<text>", 6);
-        XmlUtils::escape(*str, res);
-        res.append("</text>", 7);
-        XmlDocHelper result(parseXmlData(res.c_str(), res.size(), "", helper.charset().c_str(), load_entities_));
-        XmlUtils::throwUnless(NULL != result.get(), "Url", helper.url().c_str());
-        OperationMode::instance()->processXmlError(helper.url());
-        return result;
+        return responseText(*str);
     }
 
     if (!error_mode) {

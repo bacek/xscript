@@ -96,6 +96,7 @@ private:
     std::set<std::string, StringCILess> header_names_;
     std::string charset_;
     HttpMethod method_;
+    int parse_flags_;
     bool proxy_;
     bool xff_;
     bool print_error_;

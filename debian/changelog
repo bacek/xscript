@@ -1,3 +1,10 @@
+xscript (5.73.40-1) unstable; urgency=low
+
+  * http block: support property parse (xml,text) to override processing
+    response
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Fri, 17 Feb 2012 12:51:14 +0300
+
 xscript (5.73.39-3) unstable; urgency=low
 
   * added requestID into log, switch print-request-id=yes (default:no)
