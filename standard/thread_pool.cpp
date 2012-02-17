@@ -18,6 +18,7 @@
 #include "xscript/thread_pool.h"
 #include "xscript/simple_counter.h"
 #include "xscript/status_info.h"
+#include "xscript/vhost_data.h"
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -111,6 +112,16 @@ StandardThreadPool::stop() {
     }
 }
 
+struct VirtaulHostDataAutoCleaner {
+
+    VirtaulHostDataAutoCleaner() {
+        VirtualHostData::instance()->set(NULL);
+    }
+    ~VirtaulHostDataAutoCleaner() {
+        VirtualHostData::instance()->set(NULL);
+    }
+};
+
 void
 StandardThreadPool::handle() {
     while (true) {
@@ -118,6 +129,7 @@ StandardThreadPool::handle() {
         if (f.empty()) {
             return;
         }
+        VirtaulHostDataAutoCleaner vhost_data_cleaner;
         SimpleCounter::ScopedCount c(counter_.get());
         f();
     }

@@ -347,30 +347,21 @@ FileBlock::loadText(const std::string &file_name,
 
     std::vector<char> doc_data(size);
     is.read(&doc_data[0], size);
+    is.close();
 
-    if (doc_data.empty()) {
-        XmlDocSharedHelper doc(xmlNewDoc((const xmlChar*) "1.0"));
-        XmlUtils::throwUnless(NULL != doc.get());
-        
-        XmlNodeHelper node(xmlNewDocNode(doc.get(), NULL, (const xmlChar*)"text", NULL));
-        XmlUtils::throwUnless(NULL != node.get());
-
-        xmlDocSetRootElement(doc.get(), node.release());
-        return doc;
-    }
-       
-    std::string res;
-    res.reserve(doc_data.size() * 2 + 20);
-    res.append("<text>");
-    XmlUtils::escape(doc_data, res);
-    res.append("</text>");
-
-    XmlDocSharedHelper result(xmlReadMemory(
-        res.c_str(), res.size(), "", NULL, XML_PARSE_DTDATTR | XML_PARSE_NOENT));
+    XmlDocSharedHelper result(xmlNewDoc((const xmlChar*) "1.0"));
     XmlUtils::throwUnless(NULL != result.get());
-    
-    OperationMode::instance()->processXmlError(file_name);
-    
+
+    XmlNodeHelper node(xmlNewDocNode(result.get(), NULL, (const xmlChar*)"text", NULL));
+    XmlUtils::throwUnless(NULL != node.get());
+
+    if (!doc_data.empty()) {
+        std::string res;
+        res.reserve(doc_data.size() * 2 + 20);
+        XmlUtils::escape(doc_data, res);
+        xmlNodeSetContent(node.get(), (const xmlChar*) res.c_str());
+    }
+    xmlDocSetRootElement(result.get(), node.release());
     return result;
 }
 
