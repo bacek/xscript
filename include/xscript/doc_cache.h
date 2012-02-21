@@ -51,7 +51,7 @@ public:
     virtual xmlDocPtr docPtr() const = 0;
     
     virtual bool parse(const char *buf, boost::uint32_t size) = 0;
-    virtual void serialize(std::string &buf) = 0;
+    virtual bool serialize(std::string &buf) = 0;
     virtual void cleanup(Context *ctx) = 0;
 };
 
@@ -64,7 +64,7 @@ public:
     virtual xmlDocPtr docPtr() const;
 
     virtual bool parse(const char *buf, boost::uint32_t size);
-    virtual void serialize(std::string &buf);
+    virtual bool serialize(std::string &buf);
     virtual void cleanup(Context *ctx);
 
     const XmlDocSharedHelper& doc() const;
@@ -84,7 +84,7 @@ public:
     virtual xmlDocPtr docPtr() const;
 
     virtual bool parse(const char *buf, boost::uint32_t size);
-    virtual void serialize(std::string &buf);
+    virtual bool serialize(std::string &buf);
     virtual void cleanup(Context *ctx);
     
     void append(const char *buf, std::streamsize size);

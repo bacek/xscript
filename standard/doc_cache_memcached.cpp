@@ -316,6 +316,11 @@ DocCacheMemcached::saveDoc(const TagKey *key, CacheContext *cache_ctx,
     const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
     (void)cache_ctx;
     log()->debug("saving doc in memcached");
+
+    std::string buf;
+    if (!cache_data->serialize(buf)) {
+        return false;
+    }
     
     std::string mc_key = key->asString();
     std::string val;
@@ -326,8 +331,6 @@ DocCacheMemcached::saveDoc(const TagKey *key, CacheContext *cache_ctx,
     time = std::min(tag.expire_time, HttpDateUtils::MAX_LIVE_TIME);
     val.append((char*)&time, sizeof(time));
 
-    std::string buf;
-    cache_data->serialize(buf);
     val.append(buf);
     
     boost::uint32_t size = val.length();

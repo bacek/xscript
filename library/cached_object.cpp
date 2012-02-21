@@ -52,6 +52,11 @@ CachedObject::CachedObject() : data_(new ObjectData())
 CachedObject::~CachedObject() {
 }
 
+void
+CachedObject::setCacheStrategyLocal() {
+    data_->strategy_ = LOCAL;
+}
+
 time_t
 CachedObject::cacheTime() const {
     return data_->cache_time_;

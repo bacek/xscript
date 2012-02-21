@@ -1,7 +1,6 @@
 #include "settings.h"
 
 #include <boost/bind.hpp>
-#include <boost/current_function.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -133,7 +132,9 @@ DocCacheBase::init(const Config *config) {
         builder->addCounter(stat_info->hitCounter_.get());
         builder->addCounter(stat_info->missCounter_.get());
         builder->addCounter(stat_info->saveCounter_.get());
-        builder->addCounter(stat_info->usageCounter_.get());
+        if (stat_info->usageCounter_.get()) {
+            builder->addCounter(stat_info->usageCounter_.get());
+        }
         
         i->first->fillStatBuilder(builder.get());
         
@@ -146,7 +147,7 @@ void
 DocCacheBase::addStrategy(DocCacheStrategy *strategy, const std::string &name) {
     // FIXME Add into proper position
     (void)name;
-    log()->debug("%s %s", BOOST_CURRENT_FUNCTION, name.c_str());
+    log()->debug("DocCacheBase::addStrategy %s", name.c_str());
     data_->strategies_.push_back(std::make_pair(strategy, boost::shared_ptr<StatInfo>()));
 }
 
@@ -203,8 +204,8 @@ DocCacheBase::allow(const DocCacheStrategy* strategy, const CacheContext *cache_
 bool
 DocCacheBase::loadDocImpl(InvokeContext *invoke_ctx, CacheContext *cache_ctx,
     Tag &tag, boost::shared_ptr<CacheData> &cache_data) {
-    
-    log()->debug("%s", BOOST_CURRENT_FUNCTION);
+
+    log()->entering("DocCacheBase::loadDocImpl");
     
     typedef std::vector<std::pair<
         DocCacheData::StrategyMap::iterator, boost::shared_ptr<TagKey> > > KeyMapType;
@@ -230,11 +231,15 @@ DocCacheBase::loadDocImpl(InvokeContext *invoke_ctx, CacheContext *cache_ctx,
         std::pair<bool, uint64_t> res = profile(f);
         
         if (res.first) {
-            i->second->usageCounter_->fetchedHit(ctx, object);
+            if (i->second->usageCounter_.get()) {
+                i->second->usageCounter_->fetchedHit(ctx, object);
+            }
             i->second->hitCounter_->add(res.second);
         }
         else {
-            i->second->usageCounter_->fetchedMiss(ctx, object);
+            if (i->second->usageCounter_.get()) {
+                i->second->usageCounter_->fetchedMiss(ctx, object);
+            }
             i->second->missCounter_->add(res.second);
             missed_keys.push_back(std::make_pair(i, key));
         }
@@ -272,6 +277,8 @@ bool
 DocCacheBase::saveDocImpl(const InvokeContext *invoke_ctx, CacheContext *cache_ctx,
     const Tag &tag, const boost::shared_ptr<CacheData> &cache_data) {
     
+    log()->entering("DocCacheBase::saveDocImpl");
+
     Context *ctx = cache_ctx->context();
     CachedObject *object = cache_ctx->object();
 
@@ -544,15 +551,25 @@ PageCacheData::parse(const char *buf, boost::uint32_t size) {
     return true;
 }
 
-void
+bool
 PageCacheData::serialize(std::string &buf) {
-    buf.clear();
-    buf.append((char*)&SIGNATURE, sizeof(SIGNATURE));
-    buf.append((char*)&expire_time_delta_, sizeof(expire_time_delta_));
 
     checkETag();
-    boost::uint32_t size = etag_.size();
-    buf.append((char*)&size, sizeof(size));
+    boost::uint32_t etag_size = etag_.size();
+
+    size_t sz = 0;
+    for(std::vector<std::pair<std::string, std::string> >::iterator i = headers_.begin();
+        i != headers_.end(); ++i) {
+        sz += i->first.size() + i->second.size() + 3;
+    }
+
+    buf.clear();
+    buf.reserve(sizeof(SIGNATURE) + sizeof(expire_time_delta_) + sizeof(etag_size) + etag_size + sz + 2 + data_.size());
+
+    buf.append((const char*)&SIGNATURE, sizeof(SIGNATURE));
+    buf.append((const char*)&expire_time_delta_, sizeof(expire_time_delta_));
+
+    buf.append((char*)&etag_size, sizeof(etag_size));
     buf.append(etag_);
 
     for(std::vector<std::pair<std::string, std::string> >::iterator it = headers_.begin();
@@ -561,10 +578,11 @@ PageCacheData::serialize(std::string &buf) {
         buf.append(it->first);
         buf.push_back(':');
         buf.append(it->second);
-        buf.append("\r\n");
+        buf.append("\r\n", 2);
     }
-    buf.append("\r\n");
+    buf.append("\r\n", 2);
     buf.append(data_);
+    return true;
 }
 
 void
@@ -748,7 +766,7 @@ cacheCloseFunc(void *ctx) {
     return 0;
 }
 
-void
+bool
 BlockCacheData::serialize(std::string &buf) {
     buf.clear();
     buf.append((char*)&SIGNATURE, sizeof(SIGNATURE));
@@ -765,6 +783,7 @@ BlockCacheData::serialize(std::string &buf) {
     xmlOutputBufferPtr buffer = NULL;
     buffer = xmlOutputBufferCreateIO(&cacheWriteFunc, &cacheCloseFunc, &buf, NULL);
     xmlSaveFormatFileTo(buffer, doc_.get(), "UTF-8", 0);
+    return true;
 }
 
 void

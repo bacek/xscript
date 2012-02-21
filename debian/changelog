@@ -1,3 +1,9 @@
+xscript (5.73.41-1) unstable; urgency=low
+
+  * support external module xscript.cache, methods: save, load, loadData
+
+ -- ponomarev <ponomarev@yandex-team.ru>  Tue, 21 Feb 2012 17:53:53 +0300
+
 xscript (5.73.40-1) unstable; urgency=low
 
   * http block: support property parse (xml,text) to override processing

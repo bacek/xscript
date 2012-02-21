@@ -73,7 +73,7 @@ private:
     static bool load(const std::string &path, const std::string &key, Tag &tag,
             boost::shared_ptr<CacheData> &cache_data);
     static bool save(const std::string &path, const std::string &key, const Tag &tag,
-            const boost::shared_ptr<CacheData> &cache_data);
+            const std::string &buffer);
 
     static const time_t DEFAULT_CACHE_TIME;
     static const boost::uint32_t VERSION_SIGNATURE_UNMARKED;
@@ -229,6 +229,11 @@ DocCacheDisk::saveDoc(const TagKey *key, CacheContext *cache_ctx,
     const TaggedKeyDisk *dkey = dynamic_cast<const TaggedKeyDisk*>(key);
     assert(NULL != dkey);
 
+    std::string buffer;
+    if (!cache_data->serialize(buffer)) {
+        return false;
+    }
+
     const std::string &key_str = key->asString();
 
     std::string path(root_);
@@ -250,7 +255,7 @@ DocCacheDisk::saveDoc(const TagKey *key, CacheContext *cache_ctx,
 
         close(fd);
 
-        if (!save(buf, key_str, tag, cache_data)) {
+        if (!save(buf, key_str, tag, buffer)) {
             log()->error("can not create doc in disk cache: %s, key: %s", path.c_str(), key_str.c_str());
             return false;
         }
@@ -383,7 +388,7 @@ DocCacheDisk::load(const std::string &path, const std::string &key, Tag &tag,
 
 bool
 DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &tag,
-        const boost::shared_ptr<CacheData> &cache_data) {
+        const std::string &buffer) {
 
     log()->debug("saving %s, key: %s, expire: %ld, last-modified: %ld",
         path.c_str(), key.c_str(), tag.expire_time, tag.last_modified);
@@ -407,8 +412,6 @@ DocCacheDisk::save(const std::string &path, const std::string &key, const Tag &t
         wf.write(key.data(), key_size);
 
         wf.write(&DOC_SIGNATURE_START, sizeof(boost::uint32_t));
-        std::string buffer;
-        cache_data->serialize(buffer);
         wf.write(buffer.c_str(), buffer.size());
         wf.write(&DOC_SIGNATURE_END, sizeof(boost::uint32_t));
 

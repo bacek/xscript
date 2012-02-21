@@ -53,6 +53,7 @@ public:
 protected:
     virtual bool checkProperty(const char *name, const char *value);
     bool cacheTimeUndefined() const;
+    void setCacheStrategyLocal();
     
 private:
     class ObjectData;

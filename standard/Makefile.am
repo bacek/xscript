@@ -20,7 +20,7 @@ xscript_thrpool_la_SOURCES = thread_pool.cpp
 xscript_thrpool_la_LIBADD = ../library/libxscript.la
 xscript_thrpool_la_LDFLAGS = -module
 
-xscript_memcache_la_SOURCES = doc_cache_memory.cpp doc_pool.cpp tag_key_memory.cpp
+xscript_memcache_la_SOURCES = doc_cache_memory.cpp doc_pool.cpp tag_key_memory.cpp module_cache.cpp
 
 xscript_memcache_la_LIBADD = ../library/libxscript.la
 xscript_memcache_la_LDFLAGS = -module

@@ -25,6 +25,7 @@
 #include "xscript/tag.h"
 #include "xscript/tagged_block.h"
 #include "xscript/util.h"
+#include "xscript/typed_cache.h"
 
 #include "doc_pool.h"
 #include "tag_key_memory.h"
@@ -103,6 +104,8 @@ DocCacheMemory::createKey(const Context *ctx,
     return std::auto_ptr<TagKey>(new TagKeyMemory(ctx, invoke_ctx, obj));
 }
 
+static bool init_typed_cache = false;
+
 void
 DocCacheMemory::init(const Config *config) {
     DocCacheStrategy::init(config);
@@ -129,6 +132,12 @@ DocCacheMemory::init(const Config *config) {
         config->as<std::string>("/xscript/tagged-cache-memory/no-cache", StringUtils::EMPTY_STRING);
 
     insert2Cache(no_cache);
+
+    if (!init_typed_cache) {
+        init_typed_cache = true;
+        TypedCache::instance()->addStrategy(this, name());
+        TypedCache::instance()->init(config);
+    }
 }
 
 void
