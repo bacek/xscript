@@ -561,7 +561,7 @@ patchModifiedInfo(const std::string &fileName, const std::string &url, const cha
 
 #ifdef BOOST_FILESYSTEM_VERSION
     #if BOOST_FILESYSTEM_VERSION == 3
-        modified_info->insert(std::make_pair(path.native_(), modified));
+        modified_info->insert(std::make_pair(path.native(), modified));
     #else
         modified_info->insert(std::make_pair(path.native_file_string(), modified));
     #endif
