@@ -247,11 +247,30 @@ XmlConfig::XmlConfigData::XmlConfigData(const char *file) :
 
     if (!fs::exists(path)) {
         std::stringstream stream;
+
+#ifdef BOOST_FILESYSTEM_VERSION
+    #if BOOST_FILESYSTEM_VERSION == 3
         stream << "can not read " << path.native();
+    #else
+        stream << "can not read " << path.native_file_string();
+    #endif
+#else
+    stream << "can not read " << path.native_file_string();
+#endif
+        
         throw std::runtime_error(stream.str());
     }
 
+#ifdef BOOST_FILESYSTEM_VERSION
+    #if BOOST_FILESYSTEM_VERSION == 3
+        doc_ = XmlDocHelper(xmlParseFile(path.native().c_str()));
+    #else
+        doc_ = XmlDocHelper(xmlParseFile(path.native_file_string().c_str()));
+    #endif
+#else
     doc_ = XmlDocHelper(xmlParseFile(path.native_file_string().c_str()));
+#endif
+
     XmlUtils::throwUnless(NULL != doc_.get());
     if (NULL == xmlDocGetRootElement(doc_.get())) {
         throw std::logic_error("got empty config");
