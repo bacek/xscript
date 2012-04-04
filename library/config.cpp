@@ -54,6 +54,8 @@ typedef std::map<std::string, std::string> VarMap;
 typedef details::hash_map<std::string, std::string, details::StringHash> VarMap;
 #endif
 
+#define BOOST_FILESYSTEM_VERSION 2
+
 Config::Config() : stop_collect_cache_(false), default_block_timeout_(5000) {
 }
 
