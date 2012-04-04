@@ -836,7 +836,7 @@ void
 Script::parse() {
     namespace fs = boost::filesystem;
     fs::path path(name());
-    std:string file_str;
+    std::string file_str;
 
 #ifdef BOOST_FILESYSTEM_VERSION
     #if BOOST_FILESYSTEM_VERSION == 3
