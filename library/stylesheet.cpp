@@ -421,20 +421,24 @@ Stylesheet::parse() {
     namespace fs = boost::filesystem;
 
     fs::path path(name());
-    if (!fs::exists(path) || fs::is_directory(path)) {
+    std::string file_str;
+
 #ifdef BOOST_FILESYSTEM_VERSION
     #if BOOST_FILESYSTEM_VERSION == 3
-        throw CanNotOpenError(path.native());
+        file_str = path.native();
     #else
-        throw CanNotOpenError(path.native_file_string());
+        file_str = path.native_file_string();
     #endif
 #else
-    throw CanNotOpenError(path.native_file_string());
+    file_str = path.native_file_string();
 #endif
+
+    if (!fs::exists(path) || fs::is_directory(path)) {
+        throw CanNotOpenError(file_str);
     }
 
-    PROFILER(log(), "Stylesheet.parse " + path.native_file_string());
-    XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar *)path.native_file_string().c_str()));
+    PROFILER(log(), "Stylesheet.parse " + file_str);
+    XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar *)file_str.c_str()));
 
     {
         XmlInfoCollector::Starter starter;
