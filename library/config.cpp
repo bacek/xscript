@@ -237,9 +237,9 @@ XmlConfig::XmlConfigData::XmlConfigData(const char *file) :
 
 #ifdef BOOST_FILESYSTEM_VERSION
     #if BOOST_FILESYSTEM_VERSION == 3
-
+        fs::path path(file);
     #else
-        fs::path path(file);    
+        fs::path path(file, fs::no_check);
     #endif
 #else
     fs::path path(file, fs::no_check);
