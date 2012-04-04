@@ -308,18 +308,43 @@ Server::findScript(const std::string &name) {
     bool path_exists = fs::exists(path);
 
     if (!path_exists || !fs::is_directory(path)) {
+#ifdef BOOST_FILESYSTEM_VERSION
+    #if BOOST_FILESYSTEM_VERSION == 3
+        return std::make_pair(path.native(), path_exists);
+    #else
         return std::make_pair(path.native_file_string(), path_exists);
+    #endif
+#else
+    return std::make_pair(path.native_file_string(), path_exists);
+#endif
     }
 
     fs::path path_local = path / "index.html";
     path_exists = fs::exists(path_local);
     if (path_exists) {
+#ifdef BOOST_FILESYSTEM_VERSION
+    #if BOOST_FILESYSTEM_VERSION == 3
+        return std::make_pair(path_local.native(), path_exists);
+    #else
         return std::make_pair(path_local.native_file_string(), path_exists);
+    #endif
+#else
+    return std::make_pair(path_local.native_file_string(), path_exists);
+#endif
     }
 
     path_local = path / "index.xml";
     path_exists = fs::exists(path_local);
+
+#ifdef BOOST_FILESYSTEM_VERSION
+    #if BOOST_FILESYSTEM_VERSION == 3
+        return std::make_pair(path_local.native(), path_exists);
+    #else
+        return std::make_pair(path_local.native_file_string(), path_exists);
+    #endif
+#else
     return std::make_pair(path_local.native_file_string(), path_exists);
+#endif
 }
 
 void

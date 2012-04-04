@@ -234,42 +234,28 @@ XmlConfig::XmlConfigData::XmlConfigData(const char *file) :
     doc_(NULL), filename_(file) {
 
     namespace fs = boost::filesystem;
+    std::string file_str;
 
 #ifdef BOOST_FILESYSTEM_VERSION
     #if BOOST_FILESYSTEM_VERSION == 3
         fs::path path(file);
+        file_str = path.native();
     #else
         fs::path path(file, fs::no_check);
+        file_str = path.native_file_string();
     #endif
 #else
     fs::path path(file, fs::no_check);
+    file_str = path.native_file_string();
 #endif
 
     if (!fs::exists(path)) {
         std::stringstream stream;
-
-#ifdef BOOST_FILESYSTEM_VERSION
-    #if BOOST_FILESYSTEM_VERSION == 3
-        stream << "can not read " << path.native();
-    #else
-        stream << "can not read " << path.native_file_string();
-    #endif
-#else
-    stream << "can not read " << path.native_file_string();
-#endif
-        
+        stream << "can not read " << file_str;        
         throw std::runtime_error(stream.str());
     }
-
-#ifdef BOOST_FILESYSTEM_VERSION
-    #if BOOST_FILESYSTEM_VERSION == 3
-        doc_ = XmlDocHelper(xmlParseFile(path.native().c_str()));
-    #else
-        doc_ = XmlDocHelper(xmlParseFile(path.native_file_string().c_str()));
-    #endif
-#else
-    doc_ = XmlDocHelper(xmlParseFile(path.native_file_string().c_str()));
-#endif
+    
+    doc_ = XmlDocHelper(xmlParseFile(file_str.c_str()));
 
     XmlUtils::throwUnless(NULL != doc_.get());
     if (NULL == xmlDocGetRootElement(doc_.get())) {

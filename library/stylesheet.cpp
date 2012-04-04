@@ -422,7 +422,15 @@ Stylesheet::parse() {
 
     fs::path path(name());
     if (!fs::exists(path) || fs::is_directory(path)) {
+#ifdef BOOST_FILESYSTEM_VERSION
+    #if BOOST_FILESYSTEM_VERSION == 3
+        throw CanNotOpenError(path.native());
+    #else
         throw CanNotOpenError(path.native_file_string());
+    #endif
+#else
+    throw CanNotOpenError(path.native_file_string());
+#endif
     }
 
     PROFILER(log(), "Stylesheet.parse " + path.native_file_string());

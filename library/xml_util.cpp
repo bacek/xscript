@@ -530,7 +530,16 @@ patchModifiedInfoUnexisted(const std::string &fileName) {
         return;
     }
     boost::filesystem::path path(fileName);
+
+#ifdef BOOST_FILESYSTEM_VERSION
+    #if BOOST_FILESYSTEM_VERSION == 3
+        modified_info->insert(std::make_pair(path.native(), 0));
+    #else
+        modified_info->insert(std::make_pair(path.native_file_string(), 0));
+    #endif
+#else
     modified_info->insert(std::make_pair(path.native_file_string(), 0));
+#endif
 }
 
 static const std::string STR_SCHEME_DELIMITER = "://";
@@ -549,7 +558,17 @@ patchModifiedInfo(const std::string &fileName, const std::string &url, const cha
             fs::path path(fileName);
             if (fs::exists(path) && !fs::is_directory(path)) {
                 time_t modified = fs::last_write_time(path);
-                modified_info->insert(std::make_pair(path.native_file_string(), modified));
+
+#ifdef BOOST_FILESYSTEM_VERSION
+    #if BOOST_FILESYSTEM_VERSION == 3
+        modified_info->insert(std::make_pair(path.native_(), modified));
+    #else
+        modified_info->insert(std::make_pair(path.native_file_string(), modified));
+    #endif
+#else
+    modified_info->insert(std::make_pair(path.native_file_string(), modified));
+#endif
+
             }
         }
         catch (const fs::filesystem_error &e) {
