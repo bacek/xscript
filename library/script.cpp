@@ -836,11 +836,24 @@ void
 Script::parse() {
     namespace fs = boost::filesystem;
     fs::path path(name());
+    std:string file_str;
+
+#ifdef BOOST_FILESYSTEM_VERSION
+    #if BOOST_FILESYSTEM_VERSION == 3
+        file_str = path.native();
+    #else
+        file_str = path.native_file_string();
+    #endif
+#else
+    file_str = path.native_file_string();
+#endif
+
     if (!fs::exists(path) || fs::is_directory(path)) {
-        throw CanNotOpenError(path.native_file_string());
+        throw CanNotOpenError(file_str);
     }
-    PROFILER(log(), "Script.parse " + path.native_file_string());
-    XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar*)path.native_file_string().c_str()));
+
+    PROFILER(log(), "Script.parse " + file_str);
+    XmlCharHelper canonic_path(xmlCanonicPath((const xmlChar*)file_str.c_str()));
 
     boost::function<xmlDocPtr()> parserFunc =
         boost::bind(&xmlReadFile, (const char*)canonic_path.get(),
