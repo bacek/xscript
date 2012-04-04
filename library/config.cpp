@@ -236,7 +236,17 @@ XmlConfig::XmlConfigData::XmlConfigData(const char *file) :
     doc_(NULL), filename_(file) {
 
     namespace fs = boost::filesystem;
+
+#ifdef BOOST_FILESYSTEM_VERSION
+    #if BOOST_FILESYSTEM_VERSION == 3
+
+    #else
+        fs::path path(file);    
+    #endif
+#else
     fs::path path(file, fs::no_check);
+#endif
+
     if (!fs::exists(path)) {
         std::stringstream stream;
         stream << "can not read " << path.native_file_string();
