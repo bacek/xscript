@@ -3,7 +3,9 @@ bin_PROGRAMS = xscript-bin
 xscript_bin_SOURCES = fcgi_server.cpp main.cpp uptime_counter.cpp
 
 xscript_bin_LDADD = ../library/libxscript.la
-xscript_bin_LDFLAGS = -lfcgi -lfcgi++ -export-dynamic
+xscript_bin_LDFLAGS = -lfcgi -lfcgi++ -export-dynamic \
+	@BOOST_THREAD_LDFLAGS@ @BOOST_FILESYSTEM_LDFLAGS@ \
+	@BOOST_SYSTEM_LDFLAGS@ @yandex_platform_LIBS@
 
 noinst_HEADERS = fcgi_server.h uptime_counter.h
 

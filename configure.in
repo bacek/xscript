@@ -1,10 +1,11 @@
 AC_PREREC(2.5.3)
 
-AC_INIT([xscript],[m4_esyscmd([head -n 1 debian/changelog | sed -e 's/.*[(]//' | sed -e 's/[-].*//' | tr -d '\n'])],[highpower@yandex-team.ru])
+AC_INIT([xscript], m4_esyscmd([head -n 1 debian/changelog | sed -e 's/.*[(]//' | sed -e 's/[-].*//' | tr -d '\n']), [highpower@yandex-team.ru])
 AM_INIT_AUTOMAKE
 
 AC_GNU_SOURCE
 AC_CONFIG_HEADERS(config/settings.h)
+AC_CONFIG_MACRO_DIR(config)
 
 AC_PROG_CXX
 AC_PROG_CXXCPP
@@ -25,6 +26,7 @@ CPPFLAGS="$CPPFLAGS $yplatform_CFLAGS -pthread"
 AX_BOOST_BASE
 AX_BOOST_THREAD
 AX_BOOST_FILESYSTEM
+AX_BOOST_SYSTEM
 
 AM_ICONV
 AM_ICONV_LINK
