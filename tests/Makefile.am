@@ -13,7 +13,8 @@ test_SOURCES = main.cpp test_config.cpp test_date.cpp test_encoder.cpp \
 	test_validator.cpp
 
 test_LDADD = ../library/libxscript.la
-test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic
+test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic @BOOST_THREAD_LDFLAGS@ \
+	@BOOST_FILESYSTEM_LDFLAGS@ @BOOST_SYSTEM_LDFLAGS@ @yandex_platform_LIBS@
 
 endif
 
