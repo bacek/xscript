@@ -75,6 +75,8 @@ private:
 
 static MethodMap methods_;
 static const std::string CONTENT_TYPE_HEADER_NAME("Content-Type");
+static const std::string KEEP_ALIVE_HEADER_NAME("Connection");
+static const std::string KEEP_ALIVE_HEADER_VALUE("Keep-Alive");
 static const std::string STR_PARAM_ID("param-id");
 static const std::string STR_HEADERS("headers");
 static const std::string STR_HEADER_PARAM_NAME("header");
@@ -985,6 +987,9 @@ HttpBlock::appendHeaders(HttpHelper &helper, const Request *request,
     }
     if (!xff && xff_ && !xff_header_name.empty()) {
         pushHeaderValue(headers, xff_header_name, request->getXForwardedFor());
+    }
+    if (HttpExtension::keepAlive()) {
+        pushHeaderValue(headers, KEEP_ALIVE_HEADER_NAME, KEEP_ALIVE_HEADER_VALUE);
     }
     if (allow_tag && invoke_ctx && invoke_ctx->tagged()) {
         helper.appendHeaders(headers, invoke_ctx->tag().last_modified);

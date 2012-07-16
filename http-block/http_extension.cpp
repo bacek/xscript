@@ -22,6 +22,7 @@ namespace xscript {
 bool HttpExtension::checked_headers_ = true;
 bool HttpExtension::checked_query_params_ = true;
 bool HttpExtension::load_entities_ = true;
+bool HttpExtension::keep_alive_ = true;
 
 HttpExtension::HttpExtension() {
 }
@@ -70,6 +71,9 @@ HttpExtension::init(const Config *config) {
 
         std::string value = config->as<std::string>("/xscript/http-block/load-entities", "yes"); // TODO: default "no"
         load_entities_ = !strcasecmp(value.c_str(), "yes");
+
+        value = config->as<std::string>("/xscript/http-block/keep-alive", "no");
+        keep_alive_ = !strcasecmp(value.c_str(), "yes");
     }
     catch (const std::exception &e) {
         std::string error_msg("HttpExtension construction: caught exception: ");

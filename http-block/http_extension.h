@@ -23,6 +23,7 @@ public:
     static bool checkedHeaders() { return checked_headers_; }
     static bool checkedQueryParams() { return checked_query_params_; }
     static bool loadEntities() { return load_entities_; }
+    static bool keepAlive() {return keep_alive_; }
 
 private:
     HttpExtension(const HttpExtension &);
@@ -31,6 +32,7 @@ private:
     static bool checked_headers_;
     static bool checked_query_params_;
     static bool load_entities_;
+    static bool keep_alive_;
 };
 
 } // namespace xscript
