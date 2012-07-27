@@ -2,6 +2,7 @@
 
 #include "xscript/extension.h"
 #include "xscript/logger_factory.h"
+#include <internal/extension_list.h>
 
 #ifdef HAVE_DMALLOC_H
 #include <dmalloc.h>
@@ -30,5 +31,10 @@ Extension::allowEmptyNamespace() const {
 }
 
 Extension* const Extension::ExtensionResourceTraits::DEFAULT_VALUE = static_cast<Extension*>(NULL);
+
+Extension*
+getExtension(const char *name, const char *ref, bool allow_empty_namespace) {
+    return ExtensionList::instance()->extension(name, ref, allow_empty_namespace);
+}
 
 } // namespace xscript

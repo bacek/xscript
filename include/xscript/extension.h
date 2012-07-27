@@ -54,6 +54,8 @@ private:
 
 typedef ResourceHolder<Extension*, Extension::ExtensionResourceTraits > ExtensionHolder;
 
+Extension* getExtension(const char *name, const char *ref, bool allow_empty_namespace);
+
 class ExtensionRegisterer : private boost::noncopyable {
 public:
     ExtensionRegisterer(ExtensionHolder holder) throw ();

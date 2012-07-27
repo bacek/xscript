@@ -1,3 +1,10 @@
+xscript (5.73.41-3) UNRELEASED; urgency=low
+
+  * XSCRIPT-234: Добавили функцию getExtension, чтобы была возможность
+    получить объект расширения вне блока (например, из xslt-расширения).
+
+ -- Marat Abdullin <hoho@yandex-team.ru>  Fri, 27 Jul 2012 19:39:12 +0400
+
 xscript (5.73.41-2) unstable; urgency=low
 
   * added keep-alive support to http block
