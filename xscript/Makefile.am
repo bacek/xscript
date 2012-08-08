@@ -12,7 +12,7 @@ bin_PROGRAMS = xscript-proc
 xscript_proc_SOURCES = proc_server.cpp main.cpp xslt_profiler.cpp
 
 xscript_proc_LDADD = libxscript-offline.la ../library/libxscript.la
-xscript_proc_LDFLAGS = -export-dynamic @BOOST_THREAD_LDFLAGS@ @BOOST_SYSTEM_LDFLAGS@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@
+xscript_proc_LDFLAGS = -export-dynamic @BOOST_THREAD_LIB@ @BOOST_SYSTEM_LDFLAGS@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@
 
 xsldir = $(datadir)/xscript-proc
 dist_xsl_DATA = profile.xsl
@@ -21,5 +21,5 @@ dist_sysconf_DATA = offline.conf
 
 AM_CPPFLAGS = -I@top_srcdir@/include  -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -W -Wall -fexceptions -frtti -fPIC -ftemplate-depth-128 -finline -pthread
-AM_LDFLAGS = @BOOST_THREAD_LDFLAGS@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@
+AM_LDFLAGS = @BOOST_THREAD_LIB@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@
 

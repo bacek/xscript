@@ -84,7 +84,7 @@ endif
 
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -W -Wall -fexceptions -frtti -fPIC -ftemplate-depth-128 -finline -pthread
-AM_LDFLAGS = @BOOST_THREAD_LDFLAGS@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@ @VERSION_INFO@
+AM_LDFLAGS = @BOOST_THREAD_LIB@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@ @VERSION_INFO@
 
 EXTRA_DIST = test.conf badregexp.xml badregexp.xsl http-local-tagged.xml include.xml regexp.xml regexp.xsl \
 	x-tolower.xml x-tolower.xsl x-toupper.xml x-toupper.xsl x-tests.xsl

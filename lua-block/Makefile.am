@@ -11,7 +11,7 @@ noinst_HEADERS = exception.h lua_block.h method_map.h stack.h xscript_methods.h
 
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @lua_CFLAGS@ @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -W -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
-AM_LDFLAGS = @BOOST_THREAD_LDFLAGS@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@
+AM_LDFLAGS = @BOOST_THREAD_LIB@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@
 
 EXTRA_DIST = test.conf \
 	lua-badargcount.xml lua-badcode.xml lua-badtype.xml \

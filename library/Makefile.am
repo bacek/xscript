@@ -38,9 +38,9 @@ libxscript_la_SOURCES = args.cpp authorizer.cpp block.cpp component.cpp cached_o
 
 libxscript_la_LDFLAGS = @VERSION_INFO@ -lcurl
 
-libxscript_la_LIBADD = -lpthread @LTLIBICONV@ @BOOST_THREAD_LDFLAGS@ @BOOST_FILESYSTEM_LDFLAGS@
+libxscript_la_LIBADD = -lpthread @LTLIBICONV@ @BOOST_THREAD_LIB@ @BOOST_FILESYSTEM_LDFLAGS@
 
 AM_CXXFLAGS = -W -Wall -fexceptions -frtti -fPIC -ftemplate-depth-128 -finline -pthread -I@top_srcdir@/include -I@builddir@ @yandex_platform_CFLAGS@
-AM_LDFLAGS = @BOOST_THREAD_LDFLAGS@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@
+AM_LDFLAGS = @BOOST_THREAD_LIB@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@
 
 SUBDIRS = details

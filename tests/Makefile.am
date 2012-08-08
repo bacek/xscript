@@ -13,14 +13,14 @@ test_SOURCES = main.cpp test_config.cpp test_date.cpp test_encoder.cpp \
 	test_validator.cpp
 
 test_LDADD = ../library/libxscript.la
-test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic @BOOST_THREAD_LDFLAGS@ \
+test_LDFLAGS = @CPPUNIT_LIBS@ -export-dynamic @BOOST_THREAD_LIB@ \
 	@BOOST_FILESYSTEM_LDFLAGS@ @BOOST_SYSTEM_LDFLAGS@ @yandex_platform_LIBS@
 
 endif
 
 AM_CPPFLAGS = -I@top_srcdir@/include -I@builddir@/config -D_REENTRANT @yandex_platform_CFLAGS@
 AM_CXXFLAGS = -W -Wall -fexceptions -frtti -ftemplate-depth-128 -finline -pthread
-AM_LDFLAGS = @BOOST_THREAD_LDFLAGS@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@
+AM_LDFLAGS = @BOOST_THREAD_LIB@ @BOOST_FILESYSTEM_LDFLAGS@ @yandex_platform_LIBS@
 
 EXTRA_DIST = test.conf badinclude.xml custom.xsl empty-cdata.xml \
 	file-include.xml file-load.xml file-unknownMethod.xml htmlout.xsl \
