@@ -1,7 +1,7 @@
 xscript (5.73.41-3) UNRELEASED; urgency=low
 
-  * XSCRIPT-234: Добавили функцию getExtension, чтобы была возможность
-    получить объект расширения вне блока (например, из xslt-расширения).
+  * XSCRIPT-234: added getExtension function to get registered extension
+    objects outside XScript blocks (from XSL extensions in xscript-js).
 
  -- Marat Abdullin <hoho@yandex-team.ru>  Fri, 27 Jul 2012 19:39:12 +0400
 
