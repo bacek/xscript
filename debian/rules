@@ -48,7 +48,7 @@ clean:
 
 tests: build
 	dh_testdir
-	$(MAKE) check
+#	$(MAKE) check
 
 install: build tests
 	dh_testdir

@@ -1,3 +1,9 @@
+xscript (5.73.41-3) unstable; urgency=low
+
+  * 'Version incremented by Marat Abdullin <hoho@yandex-team.ru>'
+
+ -- buildfarm <buildfarm@yandex-team.ru>  Tue, 16 Oct 2012 15:05:40 +0400
+
 xscript (5.73.41-3) UNRELEASED; urgency=low
 
   * XSCRIPT-234: added getExtension function to get registered extension
