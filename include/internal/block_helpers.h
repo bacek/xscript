@@ -21,11 +21,14 @@ public:
     std::string value(const Context *ctx) const;
     const std::string& value() const;
     bool fromState() const;
+    bool isLocal() const;
 private:
     static bool isStateType(const char *type);
+    static bool isLocalType(const char *type);
 private:
     std::string value_;
     bool state_;
+    bool local_;
 };
 
 class XPathExpr {
@@ -38,6 +41,7 @@ public:
 
     const std::string& value() const;
     bool fromState() const;
+    bool isLocal() const;
     std::string expression(const Context *ctx) const;
 
     bool stripAll() const;

@@ -1244,7 +1244,7 @@ Block::parseXPointerExpr(const char *value, const char *type) {
     }
 
     if (!data_->xpointer_expr_->assign(xpointer.c_str(), type)) {
-        throw std::runtime_error("StateArg type in xpointer node allowed only");
+        throw std::runtime_error("StateArg/LocalArg types in xpointer node allowed only");
     }
 
     if (data_->xpointer_expr_->stripAll()) {

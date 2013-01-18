@@ -83,7 +83,7 @@ Object::~Object() {
 std::string
 Object::xsltName(const Context *ctx) const {
     std::string xslt = data_->xslt_name_.value(ctx);
-    if (!data_->xslt_name_.fromState()) {
+    if (!(data_->xslt_name_.fromState() || data_->xslt_name_.isLocal())) {
         return xslt;
     }
     return xslt.empty() ? xslt : fullName(xslt);

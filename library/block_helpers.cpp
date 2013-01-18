@@ -15,30 +15,38 @@
 namespace xscript {
 
 static const std::string STATE_ARG_PARAM_NAME = "StateArg";
+static const std::string LOCAL_ARG_PARAM_NAME = "LocalArg";
 static const std::string STRIP_XPOINTER = "/..";
 
-DynamicParam::DynamicParam() : state_(false)
+DynamicParam::DynamicParam() : state_(false), local_(false)
 {}
 
 DynamicParam::DynamicParam(const char *value, const char *type) :
     value_(value ? value : ""),
-    state_(isStateType(type))
+    state_(isStateType(type)),
+    local_(isLocalType(type))
 {}
 
 bool
 DynamicParam::assign(const char *value, const char *type) {
     value_ = value ? value : "";
     state_ = isStateType(type);
-    return NULL == type || state_;
+    local_ = isLocalType(type);
+    return NULL == type || state_ || local_;
 }
 
 std::string
 DynamicParam::value(const Context *ctx) const {
-    if (!state_) {
+    if (!state_ && !local_) {
         return value_;
     }
-    return ctx ? ctx->state()->asString(value_, StringUtils::EMPTY_STRING) :
-        StringUtils::EMPTY_STRING;
+    else if (ctx && state_) {
+    	return ctx->state()->asString(value_, StringUtils::EMPTY_STRING);
+    }
+    else if (ctx && local_) {
+    	return ctx->getLocalParam(value_, StringUtils::EMPTY_STRING);
+    }
+    return StringUtils::EMPTY_STRING;
 }
 
 const std::string&
@@ -52,10 +60,19 @@ DynamicParam::fromState() const {
 }
 
 bool
+DynamicParam::isLocal() const {
+    return local_;
+}
+
+bool
 DynamicParam::isStateType(const char *type) {
     return type && strcasecmp(type, STATE_ARG_PARAM_NAME.c_str()) == 0;
 }
 
+bool
+DynamicParam::isLocalType(const char *type) {
+    return type && strcasecmp(type, LOCAL_ARG_PARAM_NAME.c_str()) == 0;
+}
 
 XPathExpr::XPathExpr()
 {}
@@ -80,6 +97,11 @@ XPathExpr::value() const {
 bool
 XPathExpr::fromState() const {
     return expression_.fromState();
+}
+
+bool
+XPathExpr::isLocal() const {
+    return expression_.isLocal();
 }
 
 std::string
@@ -120,7 +142,7 @@ XPathExpr::stripAll() const {
 void
 XPathExpr::compile() {
     try {
-        if (fromState()) {
+        if (fromState() || isLocal()) {
             return;
         }
         compiled_expr_ = XmlXPathCompExprHelper(xmlXPathCompile(
