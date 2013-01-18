@@ -1,8 +1,8 @@
-xscript (5.73.41-3) unstable; urgency=low
-
-  * 'Version incremented by Marat Abdullin <hoho@yandex-team.ru>'
-
- -- buildfarm <buildfarm@yandex-team.ru>  Tue, 16 Oct 2012 15:05:40 +0400
+xscript (5.73.42-1) unstable; urgency=low
+ 
+  * XSCRIPT-241 - ability to use 'LocalArg' into xslt/xpointer
+ 
+ -- Alexey Shakin <dieash@yandex-team.ru>  Fri, 18 Jan 2013 02:36:00 +0200
 
 xscript (5.73.41-3) UNRELEASED; urgency=low
 
