@@ -19,7 +19,7 @@ Build-Depends:
  liblua5.1-0-dev,
  memcached,
  libidn11-dev
-Standards-Version: 3.6.1
+Standards-Version: 3.8.0
 Section: libs
 
 Package: libxscript
