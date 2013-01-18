@@ -3,7 +3,7 @@ Priority: optional
 Maintainer: Oleg Obolenskiy <highpower@yandex-team.ru>
 Build-Depends:
  debhelper (>= 4.0.0),
- automake1.9,
+ automake,
  autotools-dev,
  pkg-config,
  libboost-dev,
