@@ -32,9 +32,13 @@ configure-stamp:
 
 build: build-stamp
 
+#
+jobs_per_cpu_core=2
+default_jobs_amount=$(shell echo $$((`grep processor /proc/cpuinfo | wc -l` * $(jobs_per_cpu_core))))
+
 build-stamp: autogen-stamp configure-stamp 
 	dh_testdir
-	$(MAKE) release=1
+	$(MAKE) --jobs=$(default_jobs_amount) release=1
 	touch build-stamp
 
 clean:
