@@ -2,23 +2,23 @@ Source: xscript
 Priority: optional
 Maintainer: Oleg Obolenskiy <highpower@yandex-team.ru>
 Build-Depends:
- debhelper (>= 7.0.0),
  automake,
- pkg-config,
+ debhelper (>= 7.0.0),
  libboost-dev,
- libboost-thread-dev,
  libboost-filesystem-dev,
  libboost-python-dev,
+ libboost-thread-dev,
+ libcppunit-dev,
  libcurl3-dev,
  libfcgi-dev,
- libcppunit-dev,
+ libidn11-dev,
+ liblua5.1-0-dev, 
+ libssl-dev,
+ libtool,
  libxml2-dev,
  libxslt1-dev,
- libtool,
- libssl-dev,
- liblua5.1-0-dev,
- memcached,
- libidn11-dev
+ memcached, 
+ pkg-config
 Standards-Version: 3.8.0
 Section: libs
 
@@ -33,12 +33,12 @@ Package: libxscript-dev
 Section: libdevel
 Architecture: any
 Depends:
- libxscript (=${Source-Version}),
  libboost-thread-dev,
+ libcurl3-dev, 
+ libidn11-dev,
  libxml2-dev,
- libxslt1-dev,
- libcurl3-dev,
- libidn11-dev
+ libxscript (=${Source-Version}),
+ libxslt1-dev
 Description: Xscript is xml-based application server. 
  Headers and libraries to develop XScript extensions.
 
