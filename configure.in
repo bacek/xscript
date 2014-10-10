@@ -68,12 +68,12 @@ if test "f$ac_have_fcgi" != "fyes"; then
 	AC_MSG_ERROR([libfcgi++ not found])
 fi
 
+PKG_CHECK_MODULES(xml,
+	[libxml-2.0], [], [ AC_MSG_ERROR([libxml-2.0 not found]) ])
 PKG_CHECK_MODULES(xslt, 
 	[libxslt], [], [ AC_MSG_ERROR([libxslt not found]) ])
 PKG_CHECK_MODULES(exslt, 
 	[libexslt], [], [ AC_MSG_ERROR([libexslt not found]) ])
-PKG_CHECK_MODULES(xml, 
-	[libxml-2.0], [], [ AC_MSG_ERROR([libxml-2.0 not found]) ])
 
 LIBS="$LIBS $xml_LIBS $xslt_LIBS $exslt_LIBS $yandex_platform_LIBS -lcrypto"
 CPPFLAGS="$CPPFLAGS $xml_CFLAGS $xslt_CFLAGS $exslt_CFLAGS $yandex_platform_CFLABS"
