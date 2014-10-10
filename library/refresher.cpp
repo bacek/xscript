@@ -32,7 +32,7 @@ public:
         while (!stopping_) {
             boost::mutex::scoped_lock lock(mutex_);
             boost::xtime t;
-            boost::xtime_get(&t, boost::TIME_UTC);
+            boost::xtime_get(&t, boost::TIME_UTC_);
             t.sec += timeout_;
             condition_.timed_wait(lock, t);
             if (!stopping_) {
