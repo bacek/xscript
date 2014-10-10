@@ -27,7 +27,8 @@ configure-stamp:
 	dh_testdir
 	CXX="$(CXX)" CPPFLAGS="$(CPPFLAGS)" CXXFLAGS="$(CXXFLAGS) -g" LDFLAGS="$(LDFLAGS)" \
 		./configure --prefix=/usr --sysconfdir=/etc/xscript \
-		--enable-cppunit --enable-maintainer-mode
+		--enable-cppunit --enable-maintainer-mode \
+		--with-boost-thread=boost_thread
 	touch configure-stamp
 
 build: build-stamp
