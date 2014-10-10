@@ -177,7 +177,7 @@ struct Context::ContextData {
     
     void flag(unsigned int type, bool value) {
         boost::mutex::scoped_lock lock(attr_mutex_);
-        flags_ = value ? (flags_ | type) : (flags_ &= ~type);
+        flags_ = value ? (flags_ | type) : (flags_ & ~type);
     }
     
     bool flag(unsigned int type) const {
@@ -476,7 +476,7 @@ boost::xtime
 Context::delay(int millis) {
 
     boost::xtime xt;
-    boost::xtime_get(&xt, boost::TIME_UTC);
+    boost::xtime_get(&xt, boost::TIME_UTC_);
     boost::uint64_t usec = (xt.sec * 1000000) + (xt.nsec / 1000) + (millis * 1000);
 
     xt.sec = usec / 1000000;
